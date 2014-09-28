@@ -6,7 +6,7 @@ defmodule Exleveldb.Mixfile do
      version: "0.0.1",
      elixir: "~> 1.0.0",
      description: description,
-     pacakge: package,
+     package: package,
      deps: deps]
   end
 
@@ -54,7 +54,7 @@ defmodule Exleveldb.Mixfile do
       files: ["lib", "mix.exs", "README", "LICENSE", "test"],
       contributors: ["Jonas Skovsgaard Christensen"],
       licenses: ["Apache v2.0"],
-      linkes: %{"Github" => "https://github.com/skovsgaard/exleveldb.git"}
+      links: %{"Github" => "https://github.com/skovsgaard/exleveldb.git"}
     ]
   end
 end
