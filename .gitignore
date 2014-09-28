@@ -1,6 +1,6 @@
 /_build
 /deps
-/dbtest
+/dbtest*
 erl_crash.dump
 *.ez
 mix.lock
