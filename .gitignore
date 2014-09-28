@@ -1,0 +1,6 @@
+/_build
+/deps
+/dbtest
+erl_crash.dump
+*.ez
+mix.lock
