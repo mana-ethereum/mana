@@ -1,4 +1,10 @@
 defmodule Exleveldb do
+  @moduledoc """
+  Exleveldb is a thin wrapper around [Basho's eleveldb](https://github.com/basho/eleveldb).
+  
+  At the moment, Exleveldb exposes the functions defined in this module. The idea is to eventually add support for LevelDB's batch operations as well.
+  """
+
   def open(name, opts) do
     name
     |> :binary.bin_to_list
