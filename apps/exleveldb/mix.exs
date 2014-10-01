@@ -3,7 +3,7 @@ defmodule Exleveldb.Mixfile do
 
   def project do
     [app: :exleveldb,
-     version: "0.0.1",
+     version: "0.0.2",
      elixir: "~> 1.0.0",
      description: description,
      package: package,
@@ -44,6 +44,8 @@ defmodule Exleveldb.Mixfile do
     * Storing individual key-value pairs.
     * Deleting stored key-value pairs.
     * Checking if a datastore is empty.
+    * Folding over key-value pairs in the datastore.
+    * Folding over keys in the datastore.
 
     The idea is to eventually add support for LevelDB's batch operations as well.
     """
