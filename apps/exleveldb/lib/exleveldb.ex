@@ -54,4 +54,23 @@ defmodule Exleveldb do
       false
     end
   end
+
+  @doc """
+  Folds over the key-value pairs in the datastore specified in `db_ref`.
+
+  Returns the result of the last call to the anonymous function used in the fold.
+
+  The two arguments passed to the anonymous function, `fun` are a tuple of the key value pair and `acc`.
+  """
+  def fold(db_ref, fun, acc, opts), do: :eleveldb.fold(db_ref, fun, acc, opts)
+
+  @doc """
+  Folds over the keys of the open datastore specified by `db_ref`.
+
+  Returns the result of the last call to the anonymous function used in the fold.
+
+  The two arguments passed to the anonymous function, `fun` are a key and `acc`.
+  """
+  def fold_keys(db_ref, fun, acc, opts), do: :exleveldb.fold_keys(db_ref, fun, acc, opts)
+
 end
