@@ -1,6 +1,6 @@
 /_build
 /deps
-/dbtest*
+tmp*
 /config
 erl_crash.dump
 *.ez

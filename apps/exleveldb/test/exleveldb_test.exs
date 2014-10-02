@@ -2,8 +2,8 @@ defmodule ExleveldbTest do
   use ExUnit.Case
 
   def db_dir do
-    File.mkdir("dbtest")
-    "dbtest"
+    File.mkdir("/tmp/dbtest")
+    "/tmp/dbtest"
   end
 
   def mock_db(name) do
@@ -14,7 +14,7 @@ defmodule ExleveldbTest do
 
   test "it's possible to open a new datastore" do
     assert mock_db("dbtest1") == ""
-    assert File.exists? "dbtest/dbtest1"
+    assert File.exists? "/tmp/dbtest/dbtest1"
   end
 
   test "it's possible to put a key-value pair in the datastore" do
@@ -37,5 +37,32 @@ defmodule ExleveldbTest do
 
   test "it's possible to close a currently open datastore" do
     assert Exleveldb.close(mock_db("dbtest6")) == :ok
+  end
+
+  test "it's possible to iterate over the key-value pairs in the currently open datastore" do
+    File.rm_rf("/tmp/dbtest/dbtest7")
+    {:ok, ref} = Exleveldb.open("/tmp/dbtest/dbtest7", [{:create_if_missing, :true}])
+    Exleveldb.put(ref, "def", "456", [])
+    Exleveldb.put(ref, "abc", "123", [])
+    Exleveldb.put(ref, "hij", "789", [])
+    assert [
+      {"abc", "123"},
+      {"def", "456"},
+      {"hij", "789"}
+    ] == :lists.reverse(:eleveldb.fold(ref, fn({k,v}, acc) -> [{k,v}|acc] end, [], []))
+  end
+
+  test "it's possible to iterate over the keys of the currently open datastore" do
+    File.rm_rf("/tmp/dbtest/dbtest8")
+    {:ok, ref} = Exleveldb.open("/tmp/dbtest/dbtest8", [{:create_if_missing, :true}])
+    Exleveldb.put(ref, "def", "456", [])
+    Exleveldb.put(ref, "abc", "123", [])
+    Exleveldb.put(ref, "hij", "789", [])
+    assert [
+      "abc",
+      "def",
+      "hij"
+    ] == :lists.reverse(:eleveldb.fold_keys(ref, fn(k, acc) ->
+      [k|acc] end, [], []))
   end
 end
