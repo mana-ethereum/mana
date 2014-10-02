@@ -46,10 +46,10 @@ defmodule ExleveldbTest do
     Exleveldb.put(ref, "abc", "123", [])
     Exleveldb.put(ref, "hij", "789", [])
     assert [
-      {"abc", "123"},
+      {"hij", "789"},
       {"def", "456"},
-      {"hij", "789"}
-    ] == :lists.reverse(:eleveldb.fold(ref, fn({k,v}, acc) -> [{k,v}|acc] end, [], []))
+      {"abc", "123"}
+    ] == Exleveldb.fold(ref, fn({k,v}, acc) -> [{k,v}|acc] end, [], [])
   end
 
   test "it's possible to iterate over the keys of the currently open datastore" do
@@ -59,10 +59,17 @@ defmodule ExleveldbTest do
     Exleveldb.put(ref, "abc", "123", [])
     Exleveldb.put(ref, "hij", "789", [])
     assert [
-      "abc",
+      "hij",
       "def",
-      "hij"
-    ] == :lists.reverse(:eleveldb.fold_keys(ref, fn(k, acc) ->
-      [k|acc] end, [], []))
+      "abc"
+    ] == Exleveldb.fold_keys(ref, fn(k, acc) -> [k|acc] end, [], [])
+  end
+
+  test "its' possible to perform atomic batch writes" do
+    assert Exleveldb.write(mock_db("dbtest9"), [
+      {:put, "a", "1"},
+      {:put, "b", "2"},
+      {:delete, "a"}
+    ], []) == :ok
   end
 end

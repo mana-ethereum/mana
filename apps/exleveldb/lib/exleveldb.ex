@@ -71,6 +71,12 @@ defmodule Exleveldb do
 
   The two arguments passed to the anonymous function, `fun` are a key and `acc`.
   """
-  def fold_keys(db_ref, fun, acc, opts), do: :exleveldb.fold_keys(db_ref, fun, acc, opts)
+  def fold_keys(db_ref, fun, acc, opts), do: :eleveldb.fold_keys(db_ref, fun, acc, opts)
 
+  @doc """
+  Takes a reference to an open datastore, a list of tuples (containing atoms for operations and strings for keys and values) designating operations (delete or put) to be done, and a list of options.
+
+  Returns `:ok` on success and `{:error, reference, {:type, reason}}` on error.
+  """
+  def write(db_ref, updates, opts), do: :eleveldb.write(db_ref, updates, opts)
 end
