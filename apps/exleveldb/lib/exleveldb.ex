@@ -2,7 +2,7 @@ defmodule Exleveldb do
   @moduledoc """
   Exleveldb is a thin wrapper around [Basho's eleveldb](https://github.com/basho/eleveldb).
   
-  At the moment, Exleveldb exposes the functions defined in this module. The idea is to eventually add support for iterators and LevelDB's batch operations as well.
+  At the moment, Exleveldb exposes the functions defined in this module.
   """
 
   @doc """
@@ -74,6 +74,8 @@ defmodule Exleveldb do
   def fold_keys(db_ref, fun, acc, opts), do: :eleveldb.fold_keys(db_ref, fun, acc, opts)
 
   @doc """
+  Performs a batch write to the datastore, either deleting or putting key-value pairs.
+  
   Takes a reference to an open datastore, a list of tuples (containing atoms for operations and strings for keys and values) designating operations (delete or put) to be done, and a list of options.
 
   Returns `:ok` on success and `{:error, reference, {:type, reason}}` on error.
