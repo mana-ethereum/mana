@@ -6,6 +6,11 @@ defmodule Exleveldb do
   """
 
   @doc """
+  Behaves like `open/2` but with a default options list of `[{:create_if_missing, :true}]`.
+  """
+  def open(name), do: name |> :binary.bin_to_list |> :eleveldb.open [{:create_if_missing, :true}]
+
+  @doc """
   Opens a new datastore in the directory called `name`. If `name` does not exist already, `opts` needs to include `[{:create_if_missing, :true}]` to work properly.
   
   Returns `{:ok, ""}` where the empty string is a reference to the opened datastore or, on error, `{:error, {:type, 'reason for error'}}`.
@@ -24,6 +29,11 @@ defmodule Exleveldb do
   def close(db_ref), do: :eleveldb.close(db_ref)
 
   @doc """
+  Behaves like `get/3` but with a default options list of `[]`.
+  """
+  def get(db_ref, key), do: :eleveldb.get(db_ref, key, []);
+  
+  @doc """
   Retrieves a value in LevelDB by key. Takes a reference as returned by `open/2`, a key, and an options list.
 
   Returns `{:ok, value}` when successful or `:not_found` on failed lookup.
@@ -31,11 +41,21 @@ defmodule Exleveldb do
   def get(db_ref, key, opts), do: :eleveldb.get(db_ref, key, opts)
  
   @doc """
+  Behaves like `put/4` but with the default options list of `[]`.
+  """
+  def put(db_ref, key, val), do: :eleveldb.put(db_ref, key, val, [])
+
+  @doc """
   Puts a single key-value pair into the datastore specified by the reference, `db_ref`.
 
   Returns `:ok` if successful or `{:error, reference {:type, action}}` on error.
   """
   def put(db_ref, key, val, opts), do: :eleveldb.put(db_ref, key, val, opts)
+
+  @doc """
+  Behaves like `delete/3` but with the default options list of `[]`.
+  """
+  def delete(db_ref, key), do: :eleveldb.delete(db_ref, key, [])
 
   @doc """
   Deletes the value associated with `key` in the datastore, `db_ref`.
