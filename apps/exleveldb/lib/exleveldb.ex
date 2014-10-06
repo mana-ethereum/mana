@@ -41,7 +41,7 @@ defmodule Exleveldb do
   def get(db_ref, key, opts), do: :eleveldb.get(db_ref, key, opts)
  
   @doc """
-  Behaves like `put/4` but with the default options list of `[]`.
+  Behaves like `put/4` but with a default options list of `[]`.
   """
   def put(db_ref, key, val), do: :eleveldb.put(db_ref, key, val, [])
 
@@ -53,7 +53,7 @@ defmodule Exleveldb do
   def put(db_ref, key, val, opts), do: :eleveldb.put(db_ref, key, val, opts)
 
   @doc """
-  Behaves like `delete/3` but with the default options list of `[]`.
+  Behaves like `delete/3` but with a default options list of `[]`.
   """
   def delete(db_ref, key), do: :eleveldb.delete(db_ref, key, [])
 
@@ -76,6 +76,11 @@ defmodule Exleveldb do
   end
 
   @doc """
+  Behaves like `fold/4` but with a default options list of `[]`.
+  """
+  def fold(db_ref, fun, acc), do: :eleveldb.fold(db_ref, fun, acc, [])
+
+  @doc """
   Folds over the key-value pairs in the datastore specified in `db_ref`.
 
   Returns the result of the last call to the anonymous function used in the fold.
@@ -85,6 +90,11 @@ defmodule Exleveldb do
   def fold(db_ref, fun, acc, opts), do: :eleveldb.fold(db_ref, fun, acc, opts)
 
   @doc """
+  Behaves like `fold_kes/4` but with a default options list of `[]`.
+  """
+  def fold_keys(db_ref, fun, acc), do: :eleveldb.fold_keys(db_ref, fun, acc, [])
+
+  @doc """
   Folds over the keys of the open datastore specified by `db_ref`.
 
   Returns the result of the last call to the anonymous function used in the fold.
@@ -92,6 +102,11 @@ defmodule Exleveldb do
   The two arguments passed to the anonymous function, `fun` are a key and `acc`.
   """
   def fold_keys(db_ref, fun, acc, opts), do: :eleveldb.fold_keys(db_ref, fun, acc, opts)
+
+  @doc """
+  Behaves like `write/3` but with the defaul options list of `[]`.
+  """
+  def write(db_ref, updates), do: :eleveldb.write(db_ref, updates, [])
 
   @doc """
   Performs a batch write to the datastore, either deleting or putting key-value pairs.
