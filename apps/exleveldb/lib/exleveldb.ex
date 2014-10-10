@@ -6,16 +6,11 @@ defmodule Exleveldb do
   """
 
   @doc """
-  Behaves like `open/2` but with a default options list of `[{:create_if_missing, :true}]`.
-  """
-  def open(name), do: name |> :binary.bin_to_list |> :eleveldb.open [{:create_if_missing, :true}]
-
-  @doc """
   Opens a new datastore in the directory called `name`. If `name` does not exist already, `opts` needs to include `[{:create_if_missing, :true}]` to work properly.
   
   Returns `{:ok, ""}` where the empty string is a reference to the opened datastore or, on error, `{:error, {:type, 'reason for error'}}`.
   """
-  def open(name, opts) do
+  def open(name, opts \\ []) do
     name
     |> :binary.bin_to_list
     |> :eleveldb.open opts
@@ -29,40 +24,25 @@ defmodule Exleveldb do
   def close(db_ref), do: :eleveldb.close(db_ref)
 
   @doc """
-  Behaves like `get/3` but with a default options list of `[]`.
-  """
-  def get(db_ref, key), do: :eleveldb.get(db_ref, key, []);
-  
-  @doc """
   Retrieves a value in LevelDB by key. Takes a reference as returned by `open/2`, a key, and an options list.
 
   Returns `{:ok, value}` when successful or `:not_found` on failed lookup.
   """
-  def get(db_ref, key, opts), do: :eleveldb.get(db_ref, key, opts)
- 
-  @doc """
-  Behaves like `put/4` but with a default options list of `[]`.
-  """
-  def put(db_ref, key, val), do: :eleveldb.put(db_ref, key, val, [])
+  def get(db_ref, key, opts \\ []), do: :eleveldb.get(db_ref, key, opts)
 
   @doc """
   Puts a single key-value pair into the datastore specified by the reference, `db_ref`.
 
   Returns `:ok` if successful or `{:error, reference {:type, action}}` on error.
   """
-  def put(db_ref, key, val, opts), do: :eleveldb.put(db_ref, key, val, opts)
-
-  @doc """
-  Behaves like `delete/3` but with a default options list of `[]`.
-  """
-  def delete(db_ref, key), do: :eleveldb.delete(db_ref, key, [])
+  def put(db_ref, key, val, opts \\ []), do: :eleveldb.put(db_ref, key, val, opts)
 
   @doc """
   Deletes the value associated with `key` in the datastore, `db_ref`.
 
   Returns `:ok` when successful or `{:error, reference, {:type, action}}` on error.
   """
-  def delete(db_ref, key, opts), do: :eleveldb.delete(db_ref, key, opts)
+  def delete(db_ref, key, opts \\ []), do: :eleveldb.delete(db_ref, key, opts)
 
   @doc """
   Checks whether the datastore specified by `db_ref` is empty and returns an Elixir boolean.
@@ -76,23 +56,13 @@ defmodule Exleveldb do
   end
 
   @doc """
-  Behaves like `fold/4` but with a default options list of `[]`.
-  """
-  def fold(db_ref, fun, acc), do: :eleveldb.fold(db_ref, fun, acc, [])
-
-  @doc """
   Folds over the key-value pairs in the datastore specified in `db_ref`.
 
   Returns the result of the last call to the anonymous function used in the fold.
 
   The two arguments passed to the anonymous function, `fun` are a tuple of the key value pair and `acc`.
   """
-  def fold(db_ref, fun, acc, opts), do: :eleveldb.fold(db_ref, fun, acc, opts)
-
-  @doc """
-  Behaves like `fold_kes/4` but with a default options list of `[]`.
-  """
-  def fold_keys(db_ref, fun, acc), do: :eleveldb.fold_keys(db_ref, fun, acc, [])
+  def fold(db_ref, fun, acc, opts \\ []), do: :eleveldb.fold(db_ref, fun, acc, opts)
 
   @doc """
   Folds over the keys of the open datastore specified by `db_ref`.
@@ -101,12 +71,7 @@ defmodule Exleveldb do
 
   The two arguments passed to the anonymous function, `fun` are a key and `acc`.
   """
-  def fold_keys(db_ref, fun, acc, opts), do: :eleveldb.fold_keys(db_ref, fun, acc, opts)
-
-  @doc """
-  Behaves like `write/3` but with the defaul options list of `[]`.
-  """
-  def write(db_ref, updates), do: :eleveldb.write(db_ref, updates, [])
+  def fold_keys(db_ref, fun, acc, opts \\ []), do: :eleveldb.fold_keys(db_ref, fun, acc, opts)
 
   @doc """
   Performs a batch write to the datastore, either deleting or putting key-value pairs.
@@ -115,5 +80,5 @@ defmodule Exleveldb do
 
   Returns `:ok` on success and `{:error, reference, {:type, reason}}` on error.
   """
-  def write(db_ref, updates, opts), do: :eleveldb.write(db_ref, updates, opts)
+  def write(db_ref, updates, opts \\ []), do: :eleveldb.write(db_ref, updates, opts)
 end

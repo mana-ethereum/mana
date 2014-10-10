@@ -19,6 +19,7 @@ defmodule ExleveldbTest do
 
   test "it's possible to put a key-value pair in the datastore" do
     assert Exleveldb.put(mock_db("dbtest2"), "test1", "test1 value", []) == :ok
+    assert Exleveldb.put(mock_db("dbtest2_1"), "test1", "test1 value") == :ok
   end
 
   test "it's possible to get a value from the datastore by key" do
@@ -29,6 +30,7 @@ defmodule ExleveldbTest do
   test "it's possible to delete a stored value by key" do
     Exleveldb.put(mock_db("dbtest4"), "test3", "test3 value", [])
     assert Exleveldb.delete(mock_db("dbtest4"), "test3", []) == :ok
+    assert Exleveldb.delete(mock_db("dbtest4_1"), "test3") == :ok
   end
 
   test "it's possible to check if a datastore is empty" do
@@ -42,9 +44,9 @@ defmodule ExleveldbTest do
   test "it's possible to iterate over the key-value pairs in the currently open datastore" do
     File.rm_rf("/tmp/dbtest/dbtest7")
     {:ok, ref} = Exleveldb.open("/tmp/dbtest/dbtest7", [{:create_if_missing, :true}])
-    Exleveldb.put(ref, "def", "456", [])
-    Exleveldb.put(ref, "abc", "123", [])
-    Exleveldb.put(ref, "hij", "789", [])
+    Exleveldb.put(ref, "def", "456")
+    Exleveldb.put(ref, "abc", "123")
+    Exleveldb.put(ref, "hij", "789")
     assert [
       {"hij", "789"},
       {"def", "456"},
@@ -55,9 +57,9 @@ defmodule ExleveldbTest do
   test "it's possible to iterate over the keys of the currently open datastore" do
     File.rm_rf("/tmp/dbtest/dbtest8")
     {:ok, ref} = Exleveldb.open("/tmp/dbtest/dbtest8", [{:create_if_missing, :true}])
-    Exleveldb.put(ref, "def", "456", [])
-    Exleveldb.put(ref, "abc", "123", [])
-    Exleveldb.put(ref, "hij", "789", [])
+    Exleveldb.put(ref, "def", "456")
+    Exleveldb.put(ref, "abc", "123")
+    Exleveldb.put(ref, "hij", "789")
     assert [
       "hij",
       "def",
