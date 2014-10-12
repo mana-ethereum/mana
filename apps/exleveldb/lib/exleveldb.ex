@@ -8,7 +8,7 @@ defmodule Exleveldb do
   Opens a new datastore in the directory called `name`. If `name` does not exist already, `opts` needs to include `[{:create_if_missing, :true}]` to work properly.
   Returns `{:ok, ""}` where the empty string is a reference to the opened datastore or, on error, `{:error, {:type, 'reason for error'}}`.
   """
-  def open(name, opts \\ []) do
+  def open(name, opts \\ [create_if_missing: true]) do
     name
     |> :binary.bin_to_list
     |> :eleveldb.open opts
@@ -41,13 +41,7 @@ defmodule Exleveldb do
   @doc """
   Checks whether the datastore specified by `db_ref` is empty and returns an Elixir boolean.
   """
-  def is_empty?(db_ref) do
-    if is_atom(:eleveldb.is_empty(db_ref)) do
-      true
-    else
-      false
-    end
-  end
+  def is_empty?(db_ref), do: :eleveldb.is_empty(db_ref)
 
   @doc """
   Folds over the key-value pairs in the datastore specified in `db_ref`.
