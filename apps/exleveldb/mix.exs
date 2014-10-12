@@ -47,6 +47,8 @@ defmodule Exleveldb.Mixfile do
     * Folding over key-value pairs in the datastore.
     * Folding over keys in the datastore.
     * Batch writes to the datastore (put or delete).
+
+    *Note:* Because eleveldb is not a hex package, run `mix do deps.get, compile` in the `deps/exleveldb` directory of your project once Exleveldb is installed.
     """
   end
 
