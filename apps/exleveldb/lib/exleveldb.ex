@@ -5,7 +5,7 @@ defmodule Exleveldb do
   """
 
   @doc """
-  Opens a new datastore in the directory called `name`. If `name` does not exist already, `opts` needs to include `[{:create_if_missing, :true}]` to work properly.
+  Opens a new datastore in the directory called `name`. If `name` does not exist already and no `opts` list was provided, `opts` will default to `[{:create_if_missing, :true}]`.
   Returns `{:ok, ""}` where the empty string is a reference to the opened datastore or, on error, `{:error, {:type, 'reason for error'}}`.
   """
   def open(name, opts \\ [create_if_missing: true]) do
