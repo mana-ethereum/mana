@@ -7,7 +7,7 @@ It may include a few extra convenience functions in the future, for more idiomat
 
 As the module is expanded, the docs will be copied to this file for Github-friendliness, but for now, please refer to lib/exleveldb for the heredocs.
 
-*Note:* Because eleveldb is not a hex package, you may need to specify it as a separate dependency in `mix.exs` when using Exleveldb in other projects.
+*Note:* Because eleveldb is not a hex package, you will need to run `mix do deps.get, deps.compile` in your project when using this wrapper.
 
 ## Usage
 
