@@ -34,21 +34,29 @@ defmodule Exleveldb.Mixfile do
 
   defp description do
     """
-    Exleveldb is a thin wrapper around [Basho's eleveldb](https://github.com/basho/eleveldb).
+    Exleveldb is a thin wrapper around Basho's eleveldb (github.com/basho/eleveldb).
 
     At the moment, Exleveldb exposes functions for the following features of LevelDB:
 
-    * Opening a new datastore.
-    * Closing an open datastore.
-    * Getting values by key.
-    * Storing individual key-value pairs.
-    * Deleting stored key-value pairs.
-    * Checking if a datastore is empty.
-    * Folding over key-value pairs in the datastore.
-    * Folding over keys in the datastore.
-    * Batch writes to the datastore (put or delete).
+    - Opening a new datastore.
 
-    *Note:* Because eleveldb is not a hex package, you may need to specify it as a separate dependency in `mix.exs` when using Exleveldb in other projects. 
+    - Closing an open datastore.
+
+    - Getting values by key.
+
+    - Storing individual key-value pairs.
+
+    - Deleting stored key-value pairs.
+
+    - Checking if a datastore is empty.
+
+    - Folding over key-value pairs in the datastore.
+
+    - Folding over keys in the datastore.
+
+    - Batch writes to the datastore (put or delete).
+
+    Note: Because eleveldb is not a hex package, you will need to run mix do deps.get, deps.compile when using it in your project. 
     """
   end
 
