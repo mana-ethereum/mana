@@ -14,6 +14,10 @@ Opens a new datastore in the directory called `name`. If `name` does not exist a
 
 Returns `{:ok, ""}` where the empty string is a reference to the opened datastore or, on error, `{:error, {:type, 'reason for error'}}`.
 
+The reference to the database appears to be an empty binary but isn't. This is because `db_ref` is defined as an opaque type in eleveldb.
+
+The best way to use the reference is to pattern match on the pair returned by `open/2` and keep the value for use with functions that take a `db_ref`.
+
 ### close/1
 Takes a reference as returned by `open/2` and closes the specified datastore if open.
 

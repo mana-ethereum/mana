@@ -9,7 +9,7 @@ defmodule Exleveldb do
   directory called `name`. If `name` does not exist already and no `opts` list
   was provided, `opts` will default to `[{:create_if_missing, :true}]`.
   
-  Returns `{:ok, ""}` where the empty string is a reference to the opened
+  Returns `{:ok, ""}` where what appears to be an empty binary is a reference to the opened
   datastore or, on error, `{:error, {:type, 'reason for error'}}`.
   """
   def open(name, opts \\ [create_if_missing: true]) do
