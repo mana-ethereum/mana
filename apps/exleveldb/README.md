@@ -35,7 +35,7 @@ Deletes the value associated with `key` in the datastore, `db_ref`.
 Returns `:ok` when successful or `{:error, reference, {:type, action}}` on error.
 
 ### is\_empty?/1
-Checks whether the datastore specified by `db_ref` is empty and returns an Elixir boolean.
+Checks whether the datastore specified by `db_ref` is empty and returns a boolean.
 
 ### fold/4
 Folds over the key-value pairs in the datastore specified in `db_ref`.
