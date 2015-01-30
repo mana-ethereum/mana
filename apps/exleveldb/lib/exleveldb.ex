@@ -90,4 +90,28 @@ defmodule Exleveldb do
   Returns `:ok` on success and `{:error, reference, {:type, reason}}` on error.
   """
   def write(db_ref, updates, opts \\ []), do: :eleveldb.write(db_ref, updates, opts)
+
+  @doc """
+  Takes a reference to a data store, then creates and returns `{:ok, ""}` where the 
+  seemingly empty binary is a reference to the iterator. As with `db_ref`, the iterator
+  reference is an opaque type and as such appears to be an empty binary because it's
+  internal to the eleveldb module.
+
+  If the `:keys_only` atom is given after opts, the iterator will only traverse keys.
+  """
+  def iterator(db_ref, opts \\ []), do: :eleveldb.iterator(db_ref, opts)
+  def iterator(db_ref, opts, :keys_only), do: :eleveldb.iterator(db_ref, opts, :keys_only)
+
+  @doc """
+  Takes an iterator reference and an action and returns the corresponding key-value pair.
+
+  An action can either be `:first`, `:last`, `:next`, `:prev`, `:prefetch`, or a binary
+  representing the key of the pair you want to fetch.
+  """
+  def iterator_move(iter_ref, action), do: :eleveldb.iterator_move(iter_ref, action)
+
+  @doc """
+  Takes an iterator reference, closes the iterator, and returns `:ok`.
+  """
+  def iterator_close(iter_ref), do: :eleveldb.iterator_close(iter_ref)
 end
