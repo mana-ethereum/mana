@@ -33,7 +33,7 @@ defmodule Exleveldb do
 
   Returns `{:ok, value}` when successful or `:not_found` on failed lookup.
   """
-  def get(db_ref, key, opts \\ []), do: :eleveldb.get(db_ref, key, opts)
+  def get(db_ref, key, opts \\ []), do: :eleveldb.get(db_ref, Keys(key), opts)
 
   @doc """
   Takes a reference as returned by `open/2`, a key and an options list and
