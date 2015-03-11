@@ -1,4 +1,6 @@
 defmodule Exleveldb do
+  alias Exleveldb.Keys
+
   @moduledoc """
   Exleveldb is a thin wrapper around [Basho's eleveldb](https://github.com/basho/eleveldb).
   At the moment, Exleveldb exposes the functions defined in this module.
@@ -39,7 +41,9 @@ defmodule Exleveldb do
 
   Returns `:ok` if successful or `{:error, reference {:type, action}}` on error.
   """
-  def put(db_ref, key, val, opts \\ []), do: :eleveldb.put(db_ref, key, val, opts)
+  def put(db_ref, key, val, opts \\ []) do
+    :eleveldb.put(db_ref, Keys.to_key(key), val, opts)
+  end
 
   @doc """
   Takes a reference as returned by `open/2`, a key and an options list and
