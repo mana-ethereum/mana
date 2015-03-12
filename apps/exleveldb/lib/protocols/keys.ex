@@ -1,8 +1,7 @@
 defprotocol Exleveldb.Keys do
   @doc """
   Implicitly converts integer, atom, or list keys
-  to strings when passed to either `Exleveldb.put/3` or
-  `Exleveldb.get/2` in order to please the binary LevelDB gods.
+  to strings in order to please the binary LevelDB gods.
   """
   def to_key(name)
 end
