@@ -1,4 +1,4 @@
-def Exleveldb.Values do
+defprotocol Exleveldb.Values do
   @doc "Implicitly converts integer, atom, or list keys to strings."
   def to_value(non_string)
 end
