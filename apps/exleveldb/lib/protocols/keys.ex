@@ -18,3 +18,6 @@ defimpl Exleveldb.Keys, for: List do
   def to_key(charlist), do: List.to_string(charlist)
 end
 
+defimpl Exleveldb.Keys, for: BitString do
+  def to_key(string), do: string
+end
