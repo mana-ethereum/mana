@@ -23,13 +23,15 @@ defmodule ExleveldbTest do
   end
 
   test "it's possible to get a value from the datastore by key" do
-    Exleveldb.put(mock_db("dbtest3"), "test2", "test2 value", [])
-    assert Exleveldb.get(mock_db("dbtest3"), "test2", []) == {:ok, "test2 value"}
+		ref = mock_db("dbtest3")
+    Exleveldb.put(ref, "test2", "test2 value", [])
+    assert Exleveldb.get(ref, "test2", []) == {:ok, "test2 value"}
   end
 
   test "it's possible to delete a stored value by key" do
-    Exleveldb.put(mock_db("dbtest4"), "test3", "test3 value", [])
-    assert Exleveldb.delete(mock_db("dbtest4"), "test3", []) == :ok
+    ref  = mock_db("dbtest4")
+    Exleveldb.put(ref, "test3", "test3 value", [])
+    assert Exleveldb.delete(ref, "test3", []) == :ok
     assert Exleveldb.delete(mock_db("dbtest4_1"), "test3") == :ok
   end
 
