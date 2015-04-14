@@ -18,20 +18,20 @@ defmodule ExleveldbTest do
   end
 
   test "it's possible to put a key-value pair in the datastore" do
-    assert Exleveldb.put(mock_db("dbtest2"), "test1", "test1 value", []) == :ok
+    assert Exleveldb.put(mock_db("dbtest2"), "test1", "test1 value") == :ok
     assert Exleveldb.put(mock_db("dbtest2_1"), "test1", "test1 value") == :ok
   end
 
   test "it's possible to get a value from the datastore by key" do
     ref = mock_db("dbtest3")
-    Exleveldb.put(ref, "test2", "test2 value", [])
+    Exleveldb.put(ref, "test2", "test2 value")
     assert Exleveldb.get(ref, "test2", []) == {:ok, "test2 value"}
   end
 
   test "it's possible to delete a stored value by key" do
     ref  = mock_db("dbtest4")
-    Exleveldb.put(ref, "test3", "test3 value", [])
-    assert Exleveldb.delete(ref, "test3", []) == :ok
+    Exleveldb.put(ref, "test3", "test3 value")
+    assert Exleveldb.delete(ref, "test3") == :ok
     assert Exleveldb.delete(mock_db("dbtest4_1"), "test3") == :ok
   end
 
@@ -53,7 +53,7 @@ defmodule ExleveldbTest do
       {"hij", "789"},
       {"def", "456"},
       {"abc", "123"}
-    ] == Exleveldb.fold(ref, fn({k,v}, acc) -> [{k,v}|acc] end, [], [])
+    ] == Exleveldb.fold(ref, fn({k,v}, acc) -> [{k,v}|acc] end, [])
   end
 
   test "it's possible to iterate over the keys of the currently open datastore" do
@@ -66,7 +66,7 @@ defmodule ExleveldbTest do
       "hij",
       "def",
       "abc"
-    ] == Exleveldb.fold_keys(ref, fn(k, acc) -> [k|acc] end, [], [])
+    ] == Exleveldb.fold_keys(ref, fn(k, acc) -> [k|acc] end, [])
   end
 
   test "its' possible to perform atomic batch writes" do
@@ -74,6 +74,6 @@ defmodule ExleveldbTest do
       {:put, "a", "1"},
       {:put, "b", "2"},
       {:delete, "a"}
-    ], []) == :ok
+    ]) == :ok
   end
 end
