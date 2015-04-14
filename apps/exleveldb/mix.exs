@@ -61,6 +61,8 @@ defmodule Exleveldb.Mixfile do
 
     - Batch writes to the datastore (put or delete).
 
+    - Destroying a datastore.
+
     Note: Because eleveldb is not a hex package, you will need to run mix do deps.get, deps.compile when using it in your project. 
     """
   end
