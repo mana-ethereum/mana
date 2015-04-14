@@ -23,7 +23,7 @@ defmodule ExleveldbTest do
   end
 
   test "it's possible to get a value from the datastore by key" do
-		ref = mock_db("dbtest3")
+    ref = mock_db("dbtest3")
     Exleveldb.put(ref, "test2", "test2 value", [])
     assert Exleveldb.get(ref, "test2", []) == {:ok, "test2 value"}
   end
