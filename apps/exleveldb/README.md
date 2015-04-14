@@ -55,6 +55,9 @@ Returns the result of the last call to the anonymous function used in the fold.
 
 The two arguments passed to the anonymous function, `fun` are a key and `acc`.
 
+### destroy/2
+Remove a database, which implies that the database folder is deleted. 
+
 ## write/3
 Performs a batch write to the datastore, either deleting or putting key-value pairs.
 

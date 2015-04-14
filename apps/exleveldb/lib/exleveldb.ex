@@ -118,4 +118,15 @@ defmodule Exleveldb do
   Takes an iterator reference, closes the iterator, and returns `:ok`.
   """
   def iterator_close(iter_ref), do: :eleveldb.iterator_close(iter_ref)
+
+  @doc """
+  Destroy a database, which implies the deletion of the database folder. Takes a string with the path to the database and a list of options. 
+  Returns `:ok` on success and `{:error, any}` on error. 
+  """
+  def destroy(path, opts \\ []) do
+    path
+    |> :binary.bin_to_list
+    |> :eleveldb.destroy opts
+  end
+
 end

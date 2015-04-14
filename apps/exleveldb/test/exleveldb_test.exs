@@ -69,11 +69,20 @@ defmodule ExleveldbTest do
     ] == Exleveldb.fold_keys(ref, fn(k, acc) -> [k|acc] end, [])
   end
 
-  test "its' possible to perform atomic batch writes" do
+  test "it's possible to perform atomic batch writes" do
     assert Exleveldb.write(mock_db("dbtest9"), [
       {:put, "a", "1"},
       {:put, "b", "2"},
       {:delete, "a"}
     ]) == :ok
   end
+  test "it's attainable to destroy a database" do
+		File.rm_rf("/tmp/eleveldb.destroy.test")
+		{:ok, ref} = Exleveldb.open("/tmp/eleveldb.destroy.test",[{:create_if_missing,:true}])
+		:ok = Exleveldb.put(ref,<<"qwe">>,<<"123">>,[])
+		Exleveldb.close(ref)
+		:ok = Exleveldb.destroy("/tmp/eleveldb.destroy.test",[])
+		{:error,{:db_open,_}} = Exleveldb.open("/tmp/eleveldb.destroy.test",[{:error_if_exists, :true}])
+  end
 end
+
