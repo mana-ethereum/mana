@@ -58,7 +58,7 @@ The two arguments passed to the anonymous function, `fun` are a key and `acc`.
 ### destroy/2
 Remove a database, which implies that the database folder is deleted. 
 
-## write/3
+### write/3
 Performs a batch write to the datastore, either deleting or putting key-value pairs.
 
 Takes a reference to an open datastore, a list of tuples (containing atoms for operations and strings for keys and values) designating operations (delete or put) to be done, and a list of options.
