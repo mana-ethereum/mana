@@ -78,12 +78,12 @@ defmodule ExleveldbTest do
   end
 
   test "it's attainable to destroy a database" do
-		File.rm_rf("/tmp/eleveldb.destroy.test")
-		{:ok, ref} = Exleveldb.open("/tmp/eleveldb.destroy.test",[{:create_if_missing,:true}])
-		:ok = Exleveldb.put(ref,<<"qwe">>,<<"123">>,[])
-		Exleveldb.close(ref)
-		:ok = Exleveldb.destroy("/tmp/eleveldb.destroy.test",[])
-		{:error,{:db_open,_}} = Exleveldb.open("/tmp/eleveldb.destroy.test",[{:error_if_exists, :true}])
+    File.rm_rf("/tmp/eleveldb.destroy.test")
+    {:ok, ref} = Exleveldb.open("/tmp/eleveldb.destroy.test",[{:create_if_missing,:true}])
+    :ok = Exleveldb.put(ref,<<"qwe">>,<<"123">>,[])
+    Exleveldb.close(ref)
+    :ok = Exleveldb.destroy("/tmp/eleveldb.destroy.test",[])
+    {:error,{:db_open,_}} = Exleveldb.open("/tmp/eleveldb.destroy.test",[{:error_if_exists, :true}])
   end
 
   test "it's possible to call repair from eleveldb" do

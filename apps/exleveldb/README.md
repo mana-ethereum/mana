@@ -59,8 +59,8 @@ The two arguments passed to the anonymous function, `fun` are a key and `acc`.
 Remove a database, which implies that the database folder is deleted. Before calling `destroy/2` the database has to be closed with `close/1`. Returns `:ok` on success and `{:type, 'reason for error'}` on error.
 
 ### repair/2
-According to Basho, "In the event of major hardware or filesystem problems, LevelDB can become corrupted. These failures are uncommon, but they could happen, as heavy loads can push I/O limits."
-This function takes the path to the leveldb database and a list of options. The standard recomended option is the empty list `[]`. Before calling `repair/2`, close the connection to the database with `close/1`.
+This function takes the path to the leveldb database and a list of options. The standard recomended option is the empty list `[]`.
+Before calling `repair/2`, close the connection to the database with `close/1`.
 Returns `:ok` on success and `{:type, 'reason for error'}` on error.
 
 ### write/3
