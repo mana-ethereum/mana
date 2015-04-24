@@ -62,6 +62,54 @@ defmodule Exleveldb do
   def is_empty?(db_ref), do: :eleveldb.is_empty(db_ref)
 
   @doc """
+  Takes a reference as returned by `open/2` and an anonymous function,
+  and maps over the key-value pairs in the datastore.
+
+  Returns the list of everything in the datastore.
+
+  The argument to the anonymous function is `i` for the current item,
+  i.e. pair, in the list.
+  """
+  def map(db_ref, fun) do
+    {:ok, iter} = iterator db_ref
+    do_map(db_ref, fun, [], iter)
+  end
+  
+  @doc false
+  defp do_map(db_ref, fun, [], iter) do
+    {:ok, first_key, first_val} = iterator_move(iter, :first)
+    do_map(db_ref, fun, [fun.({first_key, first_val})], iter)
+  end
+
+  defp do_map(db_ref, fun, list, iter) do
+    case List.last(list) do
+      {:error, :invalid_iterator} ->
+        [h|t] = Enum.reverse(list)
+        Enum.reverse t
+      _ ->
+        next_step = iterator_move(iter, :next)
+        case next_step do
+          {:ok, new_key, new_val} ->
+            {:ok, new_key, new_val} = next_step
+            do_map(db_ref, fun, list ++ [fun.({new_key, new_val})], iter)
+          {:error, :invalid_iterator} -> do_map(db_ref, fun, list ++ [next_step], iter)
+        end
+    end
+  end
+
+  @doc """
+  Takes a reference as returned by `open/2` and an anonymous function,
+  and constructs a map stream running the supplied function
+  on all values in the referenced datastore.
+
+  Returns a Stream struct with the datastore's values as enumerable,
+  and map as its operation.
+  """
+  def stream(db_ref, fun) do
+    map(db_ref, &(&1)) |> Stream.map(fun)
+  end
+
+  @doc """
   Takes a reference as returned by `open/2`, an anonymous function,
   an accumulator, and an options list and folds over the key-value pairs
   in the datastore specified in `db_ref`.
