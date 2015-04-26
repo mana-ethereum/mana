@@ -71,7 +71,7 @@ defmodule Exleveldb do
   The argument to the anonymous function is `i` for the current item,
   i.e. key-value pair, in the list.
   """
-  def map(db_ref, fun), do: fold db_ref, fn(pair, acc) -> acc ++ [fun.(pair)] end, []
+  def map(db_ref, fun), do: fold(db_ref, fn(pair, acc) -> acc ++ [fun.(pair)] end, [])
 
   @doc """
   Takes a reference as returned by `open/2` and an anonymous function,
@@ -83,17 +83,17 @@ defmodule Exleveldb do
   The argument to the anonymous function is `i` for the current item,
   i..e key, in the list.
   """
-  def map_keys(db_ref, fun), do: fold_keys db_ref, fn(key, acc) -> acc ++ [fun.(key)] end, []
+  def map_keys(db_ref, fun), do: fold_keys(db_ref, fn(key, acc) -> acc ++ [fun.(key)] end, [])
 
   @doc """
   Takes a reference as returned by `open/2`,
-  and constructs a stream of all values in the referenced datastore.
+  and constructs a stream of all key-value pairs in the referenced datastore.
 
-  Returns a Stream struct with the datastore's values as enumerable.
+  Returns a `Stream` struct with the datastore's key-value pairs as its enumerable.
 
-  The key-value pairs emitted by the stream follow the format,
-  `{:ok, key, value}`, and nonexistent values (typically places past the last entry)
-  will yield `{:error, :no_entry}`.
+  When calling `Enum.take/2` or similar on the resulting stream,
+  specifying more entries than are in the referenced datastore
+  will not yield an error but simply return a list of all pairs in the datastore.
   """
   def stream(db_ref) do
     {:ok, iter} = iterator db_ref
@@ -103,6 +103,35 @@ defmodule Exleveldb do
     |> Stream.map(fn(item) ->
       case item do
         {:ok, k, v} -> {k,v}
+        {:error, _} -> {:error, :no_entry}
+      end
+    end)
+    |> Stream.take_while(fn(item) ->
+      case item do
+        {:error, _} -> false
+        _ -> true
+      end
+    end)
+  end
+
+  @doc """
+  Takes a reference as returned by `open/2`,
+  and constructs a stream of all the keys in the referenced datastore.
+
+  Returns a `Stream` struct with the datastore's keys as its enum field.
+
+  When calling `Enum.take/2` or similar on the resulting stream,
+  specifying more entries than are in the referenced datastore
+  will not yield an error but simply return a list of all pairs in the datastore.
+  """
+  def stream_keys(db_ref) do
+    {:ok, iter} = iterator db_ref, [], :keys_only
+    Stream.iterate(iterator_move(iter, :first), fn(x) ->
+      iterator_move iter, :next
+    end)
+    |> Stream.map(fn(item) ->
+      case item do
+        {:ok, key} -> key
         {:error, _} -> {:error, :no_entry}
       end
     end)
