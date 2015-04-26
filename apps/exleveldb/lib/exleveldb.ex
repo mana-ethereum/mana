@@ -65,12 +65,25 @@ defmodule Exleveldb do
   Takes a reference as returned by `open/2` and an anonymous function,
   and maps over the key-value pairs in the datastore.
 
-  Returns the list of everything in the datastore.
+  Returns the results of applying the anonymous function to
+  every key-value pair currently in the datastore.
 
   The argument to the anonymous function is `i` for the current item,
-  i.e. pair, in the list.
+  i.e. key-value pair, in the list.
   """
   def map(db_ref, fun), do: fold db_ref, fn(pair, acc) -> acc ++ [fun.(pair)] end, []
+
+  @doc """
+  Takes a reference as returned by `open/2` and an anonymous function,
+  and maps over the keys in the datastore.
+
+  Returns the results of applying the anonymous function to
+  every key in currently in the datastore.
+
+  The argument to the anonymous function is `i` for the current item,
+  i..e key, in the list.
+  """
+  def map_keys(db_ref, fun), do: fold_keys db_ref, fn(key, acc) -> acc ++ [fun.(key)] end, []
 
   @doc """
   Takes a reference as returned by `open/2`,
