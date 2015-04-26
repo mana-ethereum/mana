@@ -63,6 +63,8 @@ defmodule Exleveldb.Mixfile do
 
     - Destroying a datastore.
 
+    Additionally, the option of streaming key-value pairs or keys from the datastore has been added in v0.5.0.
+
     Note: Because eleveldb is not a hex package, you will need to run mix do deps.get, deps.compile when using it in your project. 
     """
   end
