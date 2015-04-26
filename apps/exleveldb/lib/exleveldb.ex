@@ -84,7 +84,7 @@ defmodule Exleveldb do
   defp do_map(db_ref, fun, list, iter) do
     case List.last(list) do
       {:error, :invalid_iterator} ->
-        [h|t] = Enum.reverse(list)
+        [_|t] = Enum.reverse(list)
         Enum.reverse t
       _ ->
         next_step = iterator_move(iter, :next)
@@ -105,8 +105,19 @@ defmodule Exleveldb do
   Returns a Stream struct with the datastore's values as enumerable,
   and map as its operation.
   """
-  def stream(db_ref, fun) do
-    map(db_ref, &(&1)) |> Stream.map(fun)
+  def stream(db_ref), do: db_ref |> do_stream
+
+  defp do_stream(db_ref) do
+    {:ok, iter} = iterator db_ref
+    Stream.iterate(iterator_move(iter, :first), fn(x) ->
+      iterator_move iter, :next
+    end)
+    |> Stream.map(fn(item) ->
+      case item do
+        {:ok, k, v} -> {k,v}
+        {:error, _} -> {:error, :no_entry}
+      end
+    end)
   end
 
   @doc """
