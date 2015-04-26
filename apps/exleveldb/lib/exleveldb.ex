@@ -70,32 +70,7 @@ defmodule Exleveldb do
   The argument to the anonymous function is `i` for the current item,
   i.e. pair, in the list.
   """
-  def map(db_ref, fun) do
-    {:ok, iter} = iterator db_ref
-    do_map(db_ref, fun, [], iter)
-  end
-  
-  @doc false
-  defp do_map(db_ref, fun, [], iter) do
-    {:ok, first_key, first_val} = iterator_move(iter, :first)
-    do_map(db_ref, fun, [fun.({first_key, first_val})], iter)
-  end
-
-  defp do_map(db_ref, fun, list, iter) do
-    case List.last(list) do
-      {:error, :invalid_iterator} ->
-        [_|t] = Enum.reverse(list)
-        Enum.reverse t
-      _ ->
-        next_step = iterator_move(iter, :next)
-        case next_step do
-          {:ok, new_key, new_val} ->
-            {:ok, new_key, new_val} = next_step
-            do_map(db_ref, fun, list ++ [fun.({new_key, new_val})], iter)
-          {:error, :invalid_iterator} -> do_map(db_ref, fun, list ++ [next_step], iter)
-        end
-    end
-  end
+  def map(db_ref, fun), do: fold db_ref, fn(pair, acc) -> acc ++ [fun.(pair)] end, []
 
   @doc """
   Takes a reference as returned by `open/2`,
