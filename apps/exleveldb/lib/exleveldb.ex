@@ -105,9 +105,7 @@ defmodule Exleveldb do
   Returns a Stream struct with the datastore's values as enumerable,
   and map as its operation.
   """
-  def stream(db_ref), do: db_ref |> do_stream
-
-  defp do_stream(db_ref) do
+  def stream(db_ref) do
     {:ok, iter} = iterator db_ref
     Stream.iterate(iterator_move(iter, :first), fn(x) ->
       iterator_move iter, :next
