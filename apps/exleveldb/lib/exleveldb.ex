@@ -98,12 +98,14 @@ defmodule Exleveldb do
   end
 
   @doc """
-  Takes a reference as returned by `open/2` and an anonymous function,
-  and constructs a map stream running the supplied function
-  on all values in the referenced datastore.
+  Takes a reference as returned by `open/2`,
+  and constructs a stream of all values in the referenced datastore.
 
-  Returns a Stream struct with the datastore's values as enumerable,
-  and map as its operation.
+  Returns a Stream struct with the datastore's values as enumerable.
+
+  The key-value pairs emitted by the stream follow the format,
+  `{:ok, key, value}`, and nonexistent values (typically places past the last entry)
+  will yield `{:error, :no_entry}`.
   """
   def stream(db_ref) do
     {:ok, iter} = iterator db_ref
@@ -114,6 +116,12 @@ defmodule Exleveldb do
       case item do
         {:ok, k, v} -> {k,v}
         {:error, _} -> {:error, :no_entry}
+      end
+    end)
+    |> Stream.take_while(fn(item) ->
+      case item do
+        {:error, _} -> false
+        _ -> true
       end
     end)
   end
