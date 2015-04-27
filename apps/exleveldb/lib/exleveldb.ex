@@ -97,7 +97,7 @@ defmodule Exleveldb do
   """
   def stream(db_ref) do
     {:ok, iter} = iterator db_ref
-    Stream.iterate(iterator_move(iter, :first), fn(x) ->
+    Stream.iterate(iterator_move(iter, :first), fn(_) ->
       iterator_move iter, :next
     end)
     |> Stream.map(fn(item) ->
@@ -126,7 +126,7 @@ defmodule Exleveldb do
   """
   def stream_keys(db_ref) do
     {:ok, iter} = iterator db_ref, [], :keys_only
-    Stream.iterate(iterator_move(iter, :first), fn(x) ->
+    Stream.iterate(iterator_move(iter, :first), fn(_) ->
       iterator_move iter, :next
     end)
     |> Stream.map(fn(item) ->
