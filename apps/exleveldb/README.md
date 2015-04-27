@@ -53,6 +53,46 @@ Returns the result of the last call to the anonymous function used in the fold.
 
 The two arguments passed to the anonymous function, `fun` are a key and `acc`.
 
+### map/2
+Takes a reference as returned by `open/2` and an anonymous function,
+and maps over the key-value pairs in the datastore.
+
+Returns the results of applying the anonymous function to
+every key-value pair currently in the datastore.
+
+The argument to the anonymous function is `i` for the current item,
+i.e. key-value pair, in the list.
+
+### map_keys/2
+Takes a reference as returned by `open/2` and an anonymous function,
+and maps over the keys in the datastore.
+
+Returns the results of applying the anonymous function to
+every key in currently in the datastore.
+
+The argument to the anonymous function is `i` for the current item,
+i..e key, in the list.
+
+### stream/1
+Takes a reference as returned by `open/2`,
+and constructs a stream of all key-value pairs in the referenced datastore.
+
+Returns a `Stream` struct with the datastore's key-value pairs as its enumerable.
+
+When calling `Enum.take/2` or similar on the resulting stream,
+specifying more entries than are in the referenced datastore
+will not yield an error but simply return a list of all pairs in the datastore.
+
+### stream_keys/1
+Takes a reference as returned by `open/2`,
+and constructs a stream of all the keys in the referenced datastore.
+
+Returns a `Stream` struct with the datastore's keys as its enum field.
+
+When calling `Enum.take/2` or similar on the resulting stream,
+specifying more entries than are in the referenced datastore
+will not yield an error but simply return a list of all pairs in the datastore.
+
 ### destroy/2
 Remove a database, which implies that the database folder is deleted. Before calling `destroy/2` the database has to be closed with `close/1`. Returns `:ok` on success and `{:type, 'reason for error'}` on error.
 
