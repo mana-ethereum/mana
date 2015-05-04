@@ -88,6 +88,8 @@ defmodule Exleveldb do
   @doc """
   Takes a reference as returned by `open/2`,
   and constructs a stream of all key-value pairs in the referenced datastore.
+  When called with `:keys_only` as its second argument, only keys,
+  not values will be emitted by the stream.
 
   Returns a `Stream` struct with the datastore's key-value pairs as its enumerable.
 
@@ -96,50 +98,36 @@ defmodule Exleveldb do
   will not yield an error but simply return a list of all pairs in the datastore.
   """
   def stream(db_ref) do
-    {:ok, iter} = iterator db_ref
-    Stream.iterate(iterator_move(iter, :first), fn(_) ->
-      iterator_move iter, :next
-    end)
-    |> Stream.map(fn(item) ->
-      case item do
-        {:ok, k, v} -> {k,v}
-        {:error, _} -> {:error, :no_entry}
+    Stream.resource(
+    fn ->
+      {:ok, iter} = iterator(db_ref)
+      {:first, iter}
+    end,
+    fn {state, iter} ->
+      case iterator_move(iter, state) do
+        {:ok, k, v} -> {[{k,v}], {:next, iter}}
+        _ -> {:halt, {state, iter}}
       end
-    end)
-    |> Stream.take_while(fn(item) ->
-      case item do
-        {:error, _} -> false
-        _ -> true
-      end
+    end,
+    fn {_, iter} ->
+      iterator_close(iter)
     end)
   end
 
-  @doc """
-  Takes a reference as returned by `open/2`,
-  and constructs a stream of all the keys in the referenced datastore.
-
-  Returns a `Stream` struct with the datastore's keys as its enum field.
-
-  When calling `Enum.take/2` or similar on the resulting stream,
-  specifying more entries than are in the referenced datastore
-  will not yield an error but simply return a list of all pairs in the datastore.
-  """
-  def stream_keys(db_ref) do
-    {:ok, iter} = iterator db_ref, [], :keys_only
-    Stream.iterate(iterator_move(iter, :first), fn(_) ->
-      iterator_move iter, :next
-    end)
-    |> Stream.map(fn(item) ->
-      case item do
-        {:ok, key} -> key
-        {:error, _} -> {:error, :no_entry}
+  def stream(db_ref, :keys_only) do
+    Stream.resource(
+    fn ->
+      {:ok, iter} = iterator(db_ref, [], :keys_only)
+      {:first, iter}
+    end,
+    fn {state, iter} ->
+      case iterator_move(iter, state) do
+        {:ok, k} -> {[k], {:next, iter}}
+        _ -> {:halt, {state, iter}}
       end
-    end)
-    |> Stream.take_while(fn(item) ->
-      case item do
-        {:error, _} -> false
-        _ -> true
-      end
+    end,
+    fn {_, iter} ->
+      iterator_close(iter)
     end)
   end
 
