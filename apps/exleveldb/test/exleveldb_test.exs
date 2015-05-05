@@ -109,7 +109,7 @@ defmodule ExleveldbTest do
   end
 
   test "it's possible to stream keys from the currently open datastore" do
-    File.rm_rf("/tmp/dbtest/dbtest/stream_keys")
+    File.rm_rf("/tmp/dbtest/dbtest_stream_keys")
     {:ok, ref} = Exleveldb.open("/tmp/dbtest/dbtest_stream_keys")
     Exleveldb.put(ref, "def", "456")
     Exleveldb.put(ref, "abc", "123")
