@@ -43,7 +43,7 @@ defmodule ExleveldbTest do
     assert Exleveldb.close(mock_db("dbtest6")) == :ok
   end
 
-  test "it's possible to iterate over the key-value pairs in the currently open datastore" do
+  test "it's possible to fold over the key-value pairs in the currently open datastore" do
     File.rm_rf("/tmp/dbtest/dbtest7")
     {:ok, ref} = Exleveldb.open("/tmp/dbtest/dbtest7", [{:create_if_missing, :true}])
     Exleveldb.put(ref, "def", "456")
@@ -56,7 +56,7 @@ defmodule ExleveldbTest do
     ] == Exleveldb.fold(ref, fn({k,v}, acc) -> [{k,v}|acc] end, [])
   end
 
-  test "it's possible to iterate over the keys of the currently open datastore" do
+  test "it's possible to fold over the keys of the currently open datastore" do
     File.rm_rf("/tmp/dbtest/dbtest8")
     {:ok, ref} = Exleveldb.open("/tmp/dbtest/dbtest8", [{:create_if_missing, :true}])
     Exleveldb.put(ref, "def", "456")
