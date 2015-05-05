@@ -69,6 +69,32 @@ defmodule ExleveldbTest do
     ] == Exleveldb.fold_keys(ref, fn(k, acc) -> [k|acc] end, [])
   end
 
+  test "it's possible to map over the key-value pairs in te currently open datastore" do
+    File.rm_rf("/tmp/dbtest/dbtest_map")
+    {:ok, ref} = Exleveldb.open("/tmp/dbtest/dbtest_map")
+    Exleveldb.put(ref, "def", "456")
+    Exleveldb.put(ref, "abc", "123")
+    Exleveldb.put(ref, "hij", "789")
+    assert [
+      {"hij", "789"},
+      {"def", "456"},
+      {"abc", "123"}
+    ] == Exleveldb.map(ref, &(&1)) |> Enum.reverse
+  end
+
+  test "it's possible to map over the keys of the currently open datastore" do
+    File.rm_rf("/tmp/dbtest/dbtest_map")
+    {:ok, ref} = Exleveldb.open("/tmp/dbtest_dbtest_map")
+    Exleveldb.put(ref, "def", "456")
+    Exleveldb.put(ref, "abc", "123")
+    Exleveldb.put(ref, "hij", "789")
+    assert [
+      "hij",
+      "def",
+      "abc"
+    ] == Exleveldb.map_keys(ref, &(&1)) |> Enum.reverse
+  end
+
   test "it's possible to perform atomic batch writes" do
     assert Exleveldb.write(mock_db("dbtest9"), [
       {:put, "a", "1"},
