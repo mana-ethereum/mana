@@ -89,7 +89,7 @@ defmodule ExleveldbTest do
   test "it's possible to call repair from eleveldb" do
     {:ok,ref} = Exleveldb.open("/tmp/dbtest10", [{:create_if_missing,:true}])
     :ok       = Exleveldb.close(ref)
-    :ok       = Exleveldb.repair("/tmp/dbtest10")
+    assert Exleveldb.repair("/tmp/dbtest10") == :ok
     Exleveldb.destroy("/tmp/dbtest10")
   end
 end
