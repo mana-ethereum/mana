@@ -8,7 +8,7 @@ defmodule ExleveldbTest do
 
   def mock_db(name) do
     File.rm_rf name
-    {:ok, mockDb} = Exleveldb.open("#{db_dir}/#{name}", [{:create_if_missing, :true}])
+    {:ok, mockDb} = Exleveldb.open("#{db_dir}/#{name}")
     mockDb
   end
 
@@ -69,30 +69,57 @@ defmodule ExleveldbTest do
     ] == Exleveldb.fold_keys(ref, fn(k, acc) -> [k|acc] end, [])
   end
 
-  test "it's possible to map over the key-value pairs in te currently open datastore" do
+  test "it's possible to map over the key-value pairs in the currently open datastore" do
     File.rm_rf("/tmp/dbtest/dbtest_map")
     {:ok, ref} = Exleveldb.open("/tmp/dbtest/dbtest_map")
     Exleveldb.put(ref, "def", "456")
     Exleveldb.put(ref, "abc", "123")
     Exleveldb.put(ref, "hij", "789")
     assert [
-      {"hij", "789"},
+      {"abc", "123"},
       {"def", "456"},
-      {"abc", "123"}
-    ] == Exleveldb.map(ref, &(&1)) |> Enum.reverse
+      {"hij", "789"}
+    ] == Exleveldb.map(ref, &(&1))
   end
 
   test "it's possible to map over the keys of the currently open datastore" do
-    File.rm_rf("/tmp/dbtest/dbtest_map")
-    {:ok, ref} = Exleveldb.open("/tmp/dbtest_dbtest_map")
+    File.rm_rf("/tmp/dbtest/dbtest_map_keys")
+    {:ok, ref} = Exleveldb.open("/tmp/dbtest/dbtest_map_keys")
     Exleveldb.put(ref, "def", "456")
     Exleveldb.put(ref, "abc", "123")
     Exleveldb.put(ref, "hij", "789")
     assert [
-      "hij",
+      "abc",
       "def",
-      "abc"
-    ] == Exleveldb.map_keys(ref, &(&1)) |> Enum.reverse
+      "hij"
+    ] == Exleveldb.map_keys(ref, &(&1))
+  end
+
+  test "it's possible to stream key-value pairs from the currently open datastore" do
+    File.rm_rf("/tmp/dbtest/dbtest_stream")
+    {:ok, ref} = Exleveldb.open("/tmp/dbtest/dbtest_stream")
+    Exleveldb.put(ref, "def", "456")
+    Exleveldb.put(ref, "abc", "123")
+    Exleveldb.put(ref, "hij", "789")
+    assert [
+      {"abc", "123"},
+      {"def", "456"},
+      {"hij", "789"}
+    ] == Exleveldb.stream(ref) |> Enum.take(3)
+  end
+
+  test "it's possible to stream keys from the currently open datastore" do
+    File.rm_rf("/tmp/dbtest/dbtest/stream_keys")
+    {:ok, ref} = Exleveldb.open("/tmp/dbtest/dbtest_stream_keys")
+    Exleveldb.put(ref, "def", "456")
+    Exleveldb.put(ref, "abc", "123")
+    Exleveldb.put(ref, "hij", "789")
+    assert [
+      "abc",
+      "def",
+      "hij"
+    ] == Exleveldb.stream(ref, :keys_only) |> Enum.take(3)
+    assert 3 == Exleveldb.stream(ref, :keys_only) |> Enum.take(500) |> Enum.count
   end
 
   test "it's possible to perform atomic batch writes" do
@@ -105,7 +132,7 @@ defmodule ExleveldbTest do
 
   test "it's possible to destroy a datastore" do
     File.rm_rf("/tmp/eleveldb.destroy.test")
-    {:ok, ref} = Exleveldb.open("/tmp/eleveldb.destroy.test",[{:create_if_missing,:true}])
+    {:ok, ref} = Exleveldb.open("/tmp/eleveldb.destroy.test")
     :ok = Exleveldb.put(ref,<<"qwe">>,<<"123">>,[])
     Exleveldb.close(ref)
     assert Exleveldb.destroy("/tmp/eleveldb.destroy.test",[]) == :ok
