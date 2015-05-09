@@ -119,7 +119,6 @@ defmodule ExleveldbTest do
       "def",
       "hij"
     ] == Exleveldb.stream(ref, :keys_only) |> Enum.take(3)
-    assert 3 == Exleveldb.stream(ref, :keys_only) |> Enum.take(500) |> Enum.count
   end
 
   test "it's possible to perform atomic batch writes" do
