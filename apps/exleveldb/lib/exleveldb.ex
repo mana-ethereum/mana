@@ -1,7 +1,7 @@
 defmodule Exleveldb do
   @type db_location    :: binary
   @type db_reference   :: binary
-  @type open_options() :: [{:create_if_missing, boolean} |
+  @type open_options   :: [{:create_if_missing, boolean} |
                            {:error_if_exists, boolean} |
                            {:write_buffer_size, pos_integer} |
                            {:block_size, pos_integer} |
@@ -24,6 +24,9 @@ defmodule Exleveldb do
                            {:tiered_slow_level, pos_integer} |
                            {:tiered_fast_prefix, char_list} |
                            {:tiered_slow_prefix, char_list}]
+  @type read_options   :: [{:verify_checksums, boolean} |
+                           {:fill_cache, boolean} |
+                           {:iterator_refresh, boolean}]
 
   alias Exleveldb.Keys
 
@@ -52,6 +55,7 @@ defmodule Exleveldb do
 
   Returns `:ok` or `{:error, {:type, 'reason for error'}}` on error.
   """
+  @spec close(db_reference) :: :ok | {:error, any}
   def close(db_ref), do: :eleveldb.close(db_ref)
 
   @doc """
@@ -60,6 +64,7 @@ defmodule Exleveldb do
 
   Returns `{:ok, value}` when successful or `:not_found` on failed lookup.
   """
+  @spec get(db_reference, Atom | String, read_options) :: {:ok, String} | :not_found
   def get(db_ref, key, opts \\ []), do: :eleveldb.get(db_ref, Keys.to_key(key), opts)
 
   @doc """
