@@ -86,6 +86,7 @@ defmodule Exleveldb do
   
   Returns `:ok` when successful or `{:error, reference, {:type, action}}` on error.
   """
+  @spec delete(db_reference, db_key, write_options) :: :ok | {:error, any}
   def delete(db_ref, key, opts \\ []), do: :eleveldb.delete(db_ref, key, opts)
 
   @doc """
