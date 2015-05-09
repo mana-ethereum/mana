@@ -91,7 +91,7 @@ defmodule Exleveldb do
   When called with `:keys_only` as its second argument, only keys,
   not values will be emitted by the stream.
 
-  Returns a `Stream` struct with the datastore's key-value pairs as its enumerable.
+  Returns a stream with the datastore's key-value pairs as its enumerable.
 
   When calling `Enum.take/2` or similar on the resulting stream,
   specifying more entries than are in the referenced datastore
