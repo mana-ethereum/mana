@@ -1,4 +1,30 @@
 defmodule Exleveldb do
+  @type db_location    :: binary
+  @type db_reference   :: binary
+  @type open_options() :: [{:create_if_missing, boolean} |
+                           {:error_if_exists, boolean} |
+                           {:write_buffer_size, pos_integer} |
+                           {:block_size, pos_integer} |
+                           {:sst_block_size, pos_integer} |
+                           {:block_restart_interval, pos_integer} |
+                           {:block_size_steps, pos_integer} |
+                           {:paranoid_checks, boolean} |
+                           {:verify_compactions, boolean} |
+                           {:compression, boolean} |
+                           {:use_bloomfilter, boolean | pos_integer} |
+                           {:total_memory, pos_integer} |
+                           {:total_leveldb_mem, pos_integer} |
+                           {:total_leveldb_mem_percent, pos_integer} |
+                           {:is_internal_db, boolean} |
+                           {:limited_developer_mem, boolean} |
+                           {:eleveldb_threads, pos_integer} |
+                           {:fadvise_willneed, boolean} |
+                           {:block_cache_threshold, pos_integer} |
+                           {:delete_threshold, pos_integer} |
+                           {:tiered_slow_level, pos_integer} |
+                           {:tiered_fast_prefix, char_list} |
+                           {:tiered_slow_prefix, char_list}]
+
   alias Exleveldb.Keys
 
   @moduledoc """
@@ -14,6 +40,7 @@ defmodule Exleveldb do
   Returns `{:ok, ""}` where what appears to be an empty binary is a reference to the opened
   datastore or, on error, `{:error, {:type, 'reason for error'}}`.
   """
+  @spec open(db_location, open_options) :: {:ok, db_reference} | {:error, any}
   def open(name, opts \\ [create_if_missing: true]) do
     name
     |> :binary.bin_to_list
