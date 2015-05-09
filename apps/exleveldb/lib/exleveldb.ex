@@ -1,7 +1,8 @@
 defmodule Exleveldb do
   @type db_location    :: binary
   @type db_reference   :: binary
-  @type db_key         :: Atom | String
+  @type itr_reference  :: binary
+  @type db_key         :: Atom | Bitstring
   @type db_acc         :: any
   @type open_options   :: [{:create_if_missing, boolean} |
                            {:error_if_exists, boolean} |
@@ -30,6 +31,9 @@ defmodule Exleveldb do
                            {:fill_cache, boolean} |
                            {:iterator_refresh, boolean}]
   @type write_options  :: [{:sync, boolean}]
+  @type write_actions  :: [{:put, db_key, Bitstring} |
+                           {:delete, db_key} |
+                           :clear]
 
   alias Exleveldb.Keys
 
@@ -67,7 +71,7 @@ defmodule Exleveldb do
 
   Returns `{:ok, value}` when successful or `:not_found` on failed lookup.
   """
-  @spec get(db_reference, db_key, read_options) :: {:ok, String} | :not_found
+  @spec get(db_reference, db_key, read_options) :: {:ok, Bitstring} | :not_found
   def get(db_ref, key, opts \\ []), do: :eleveldb.get(db_ref, Keys.to_key(key), opts)
 
   @doc """
@@ -194,6 +198,7 @@ defmodule Exleveldb do
 
   The two arguments passed to the anonymous function, `fun` are a key and `acc`.
   """
+  @spec fold_keys(db_reference, Fun, db_acc, read_options) :: any
   def fold_keys(db_ref, fun, acc, opts \\ []), do: :eleveldb.fold_keys(db_ref, fun, acc, opts)
 
   @doc """
@@ -205,6 +210,7 @@ defmodule Exleveldb do
 
   Returns `:ok` on success and `{:error, reference, {:type, reason}}` on error.
   """
+  @spec write(db_reference, write_actions, write_options) :: :ok | {:error, any}
   def write(db_ref, updates, opts \\ []), do: :eleveldb.write(db_ref, updates, opts)
 
   @doc """
@@ -215,7 +221,9 @@ defmodule Exleveldb do
 
   If the `:keys_only` atom is given after opts, the iterator will only traverse keys.
   """
+  @spec iterator(db_reference, read_options) :: {:ok, itr_reference} | {:error, any}
   def iterator(db_ref, opts \\ []), do: :eleveldb.iterator(db_ref, opts)
+  @spec iterator(db_reference, read_options, :keys_only) :: {:ok, itr_reference} | {:error, any}
   def iterator(db_ref, opts, :keys_only), do: :eleveldb.iterator(db_ref, opts, :keys_only)
 
   @doc """
@@ -224,17 +232,20 @@ defmodule Exleveldb do
   An action can either be `:first`, `:last`, `:next`, `:prev`, `:prefetch`, or a binary
   representing the key of the pair you want to fetch.
   """
+  @spec iterator_move(itr_reference, Atom) :: {:ok, Atom, Atom} | {:error, Atom}
   def iterator_move(iter_ref, action), do: :eleveldb.iterator_move(iter_ref, action)
 
   @doc """
   Takes an iterator reference, closes the iterator, and returns `:ok`.
   """
+  @spec iterator_close(itr_reference) :: :ok
   def iterator_close(iter_ref), do: :eleveldb.iterator_close(iter_ref)
 
   @doc """
   Destroy a database, which implies the deletion of the database folder. Takes a string with the path to the database and a list of options. 
-  Returns `:ok` on success and `{:error, any}` on error. 
+  Returns `:ok` on success and `{:error, reason}` on error. 
   """
+  @spec destroy(db_location, open_options) :: :ok | {:error, any}
   def destroy(path, opts \\ []) do
     path
     |> :binary.bin_to_list
@@ -243,8 +254,9 @@ defmodule Exleveldb do
   @doc """
   Takes the path to the leveldb database and a list of options. The standard recomended option is the empty list `[]`.
   Before calling `repair/2`, close the connection to the database with `close/1`.
-  Returns `:ok` on success and `{:type, 'reason for error'}` on error.
+  Returns `:ok` on success and `{:error, reason}` on error.
   """
+  @spec repair(db_location, open_options) :: :ok | {:error, any}
   def repair(path,opts \\ []) do 	
     path
     |> :binary.bin_to_list
