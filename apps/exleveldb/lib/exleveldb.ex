@@ -2,6 +2,7 @@ defmodule Exleveldb do
   @type db_location    :: binary
   @type db_reference   :: binary
   @type db_key         :: Atom | String
+  @type db_acc         :: any
   @type open_options   :: [{:create_if_missing, boolean} |
                            {:error_if_exists, boolean} |
                            {:write_buffer_size, pos_integer} |
@@ -181,6 +182,7 @@ defmodule Exleveldb do
   The two arguments passed to the anonymous function, `fun` are a tuple of the
   key value pair and `acc`.
   """
+  @spec fold(db_reference, Fun, db_acc, read_options) :: any
   def fold(db_ref, fun, acc, opts \\ []), do: :eleveldb.fold(db_ref, fun, acc, opts)
 
   @doc """
