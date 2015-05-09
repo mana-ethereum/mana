@@ -95,6 +95,7 @@ defmodule Exleveldb do
   
   Returns `true` if empty and `false` if not.
   """
+  @spec is_empty?(db_reference) :: true | false
   def is_empty?(db_ref), do: :eleveldb.is_empty(db_ref)
 
   @doc """
@@ -107,6 +108,7 @@ defmodule Exleveldb do
   The argument to the anonymous function is `i` for the current item,
   i.e. key-value pair, in the list.
   """
+  @spec map(db_reference, Fun) :: List
   def map(db_ref, fun), do: fold(db_ref, fn(pair, acc) -> acc ++ [fun.(pair)] end, [])
 
   @doc """
@@ -119,6 +121,7 @@ defmodule Exleveldb do
   The argument to the anonymous function is `i` for the current item,
   i..e key, in the list.
   """
+  @spec map_keys(db_reference, Fun) :: List
   def map_keys(db_ref, fun), do: fold_keys(db_ref, fn(key, acc) -> acc ++ [fun.(key)] end, [])
 
   @doc """
@@ -133,6 +136,7 @@ defmodule Exleveldb do
   specifying more entries than are in the referenced datastore
   will not yield an error but simply return a list of all pairs in the datastore.
   """
+  @spec stream(db_reference) :: Enumerable.t
   def stream(db_ref) do
     Stream.resource(
     fn ->
