@@ -7,6 +7,8 @@ This is an Elixir module wrapping the functions exposed by the Erlang module, [e
 
 ## Usage
 
+Also availbable at [hexdocs.pm/exleveldb](http://hexdocs.pm/exleveldb/)
+
 ### open/2
 Opens a new datastore in the directory called `name`. If `name` does not exist already and no `opts` list was provided, `opts` will default to `[{:create_if_missing, :true}]`.
 
