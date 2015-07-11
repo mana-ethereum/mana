@@ -65,7 +65,7 @@ defmodule Exleveldb.Mixfile do
 
     Additionally, the option of streaming key-value pairs or keys from the datastore has been added in v0.5.0.
 
-    Note: Because eleveldb is not a hex package, you will need to include it as a separate dependency in your project (See `mix.exs`).
+    Note: Because eleveldb is not a hex package, you will need to include it as a separate dependency in your project (See `README.md`).
     """
   end
 
