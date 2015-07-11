@@ -3,7 +3,16 @@ Exleveldb
 
 This is an Elixir module wrapping the functions exposed by the Erlang module, [eleveldb](https://github.com/basho/eleveldb).
 
-*Note:* Because eleveldb is not a hex package, you will need to run `mix do deps.get, deps.compile` in your project when using this wrapper.
+*Note:* Because eleveldb is not a hex package and I haven't found a way to automate this yet, you will need to add eleveldb in your `mix.exs` as well, when requiring this wrapper, so that your `deps` looks like this (in addition to other deps you might have):
+
+```elixir
+defp deps do
+  [{:exleveldb, "~> 0.5"},
+   {:eleveldb, github: "basho/eleveldb", tag: "2.1.0"}]
+end
+```
+
+*Because this is a bit silly and verbose, I'd be happy to get PRs on ways to automate this away.*
 
 ## Usage
 
