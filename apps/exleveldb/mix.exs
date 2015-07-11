@@ -3,7 +3,7 @@ defmodule Exleveldb.Mixfile do
 
   def project do
     [app: :exleveldb,
-     version: "0.5.3",
+     version: "0.5.4",
      elixir: "~> 1.0",
      name: "Exleveldb",
      source_url: "https://github.com/skovsgaard/exleveldb",
@@ -65,7 +65,7 @@ defmodule Exleveldb.Mixfile do
 
     Additionally, the option of streaming key-value pairs or keys from the datastore has been added in v0.5.0.
 
-    Note: Because eleveldb is not a hex package, you will need to run mix do deps.get, deps.compile when using it in your project. 
+    Note: Because eleveldb is not a hex package, you will need to include it as a separate dependency in your project (See `mix.exs`).
     """
   end
 
