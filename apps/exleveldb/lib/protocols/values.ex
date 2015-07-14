@@ -14,3 +14,7 @@ end
 defimpl Exleveldb.Values, for: List do
   def to_value(charlist), do: List.to_string(charlist)
 end
+
+defimpl Exleveldb.Values, for: BitString do
+  def to_value(string), do: string
+end

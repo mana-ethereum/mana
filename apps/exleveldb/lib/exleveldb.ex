@@ -36,6 +36,7 @@ defmodule Exleveldb do
                            :clear]
 
   alias Exleveldb.Keys
+  alias Exleveldb.Values
 
   @moduledoc """
   Exleveldb is a thin wrapper around [Basho's eleveldb](https://github.com/basho/eleveldb).
@@ -211,7 +212,15 @@ defmodule Exleveldb do
   Returns `:ok` on success and `{:error, reference, {:type, reason}}` on error.
   """
   @spec write(db_reference, write_actions, write_options) :: :ok | {:error, any}
-  def write(db_ref, updates, opts \\ []), do: :eleveldb.write(db_ref, updates, opts)
+  def write(db_ref, updates, opts \\ []) do
+    prepped_updates = Enum.map(updates, fn update ->
+      case update do
+        {:put, k, v} -> {:put, Keys.to_key(k), Values.to_value(v)}
+        {:delete, k} -> {:delete, Keys.to_key(k)}
+      end
+    end)
+    :eleveldb.write(db_ref, updates, opts)
+  end
 
   @doc """
   Takes a reference to a data store, then creates and returns `{:ok, ""}` where the 
