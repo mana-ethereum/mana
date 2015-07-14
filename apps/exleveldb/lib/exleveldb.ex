@@ -82,7 +82,7 @@ defmodule Exleveldb do
   """
   @spec put(db_reference, db_key, write_options) :: :ok | {:error, any}
   def put(db_ref, key, val, opts \\ []) do
-    :eleveldb.put(db_ref, Keys.to_key(key), val, opts)
+    :eleveldb.put(db_ref, Keys.to_key(key), Values.to_value(val), opts)
   end
 
   @doc """
