@@ -9,7 +9,7 @@ This is an Elixir module wrapping the functions exposed by the Erlang module, [e
 
 ```elixir
 defp deps do
-  [{:exleveldb, "~> 0.5"},
+  [{:exleveldb, "~> 0.6"},
    {:eleveldb, github: "basho/eleveldb", tag: "2.1.0"}]
 end
 ```
