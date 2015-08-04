@@ -1,7 +1,7 @@
 Exleveldb
 =========
 
-[![Hex Version](http://img.shields.io/hexpm/v/exleveldb.svg?style=flat)](https://hex.pm/packages/exleveldb)
+[![Hex Version](http://img.shields.io/hexpm/v/exleveldb.svg?style=flat-square)](https://hex.pm/packages/exleveldb)
 
 This is an Elixir module wrapping the functions exposed by the Erlang module, [eleveldb](https://github.com/basho/eleveldb).
 
