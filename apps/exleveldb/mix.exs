@@ -71,10 +71,11 @@ defmodule Exleveldb.Mixfile do
 
   defp package do
     [
-      files: ["lib", "mix.exs", "README", "LICENSE", "test"],
-      contributors: ["Jonas Skovsgaard Christensen"],
+      files: ["lib", "mix.exs", "README.md", "LICENSE", "test"],
+      authors: ["Jonas Skovsgaard Christensen", "Oscar Felipe Toro"],
       licenses: ["Apache v2.0"],
-      links: %{"Github" => "https://github.com/skovsgaard/exleveldb.git"}
+      links: %{"Github" => "https://github.com/skovsgaard/exleveldb.git"},
+      maintainers: ["Jonas Skovsgaard Christensen"]
     ]
   end
 end
