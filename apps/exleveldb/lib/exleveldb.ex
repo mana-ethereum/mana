@@ -55,7 +55,7 @@ defmodule Exleveldb do
   def open(name, opts \\ [create_if_missing: true]) do
     name
     |> :binary.bin_to_list
-    |> :eleveldb.open opts
+    |> :eleveldb.open(opts)
   end
 
   @doc """
@@ -219,7 +219,7 @@ defmodule Exleveldb do
         {:delete, k} -> {:delete, Keys.to_key(k)}
       end
     end)
-    :eleveldb.write(db_ref, updates, opts)
+    :eleveldb.write(db_ref, prepped_updates, opts)
   end
 
   @doc """
@@ -258,7 +258,7 @@ defmodule Exleveldb do
   def destroy(path, opts \\ []) do
     path
     |> :binary.bin_to_list
-    |> :eleveldb.destroy opts
+    |> :eleveldb.destroy(opts)
   end
   @doc """
   Takes the path to the leveldb database and a list of options. The standard recomended option is the empty list `[]`.
@@ -269,6 +269,6 @@ defmodule Exleveldb do
   def repair(path,opts \\ []) do 	
     path
     |> :binary.bin_to_list
-    |> :eleveldb.repair opts
+    |> :eleveldb.repair(opts)
   end
 end
