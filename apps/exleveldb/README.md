@@ -1,8 +1,6 @@
 Exleveldb
 =========
 
-**Warning:** Note that the master branch of `eleveldb` is not yet compatible with OTP18 due to a dependency. If you're not planning on running your Elixir project on OTP17.x, watch this space for whenever that's fixed. Sorry for the inconvenience.
-
 [![Hex Version](http://img.shields.io/hexpm/v/exleveldb.svg?style=flat-square)](https://hex.pm/packages/exleveldb)
 
 This is an Elixir module wrapping the functions exposed by the Erlang module, [eleveldb](https://github.com/basho/eleveldb).
