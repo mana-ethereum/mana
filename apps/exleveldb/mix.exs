@@ -34,7 +34,7 @@ defmodule Exleveldb.Mixfile do
       {:eleveldb, github: "basho/eleveldb", tag: "2.1.0"},
       {:cuttlefish, github: "basho/cuttlefish", branch: "develop", override: true},
       {:earmark, "~> 0.1", only: :dev},
-      {:ex_doc, "~> 0.7", only: :dev}
+      {:ex_doc, "~> 0.11", only: :dev}
     ]
   end
 
