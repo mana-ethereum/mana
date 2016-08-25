@@ -1,6 +1,7 @@
 Exleveldb
 =========
 
+[![Apache Licensed](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/skovsgaard/exleveldb/blob/master/LICENSE)
 [![Hex Version](http://img.shields.io/hexpm/v/exleveldb.svg?style=flat-square)](https://hex.pm/packages/exleveldb)
 
 This is an Elixir module wrapping the functions exposed by the Erlang module, [eleveldb](https://github.com/basho/eleveldb).
