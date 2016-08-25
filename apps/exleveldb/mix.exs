@@ -3,8 +3,8 @@ defmodule Exleveldb.Mixfile do
 
   def project do
     [app: :exleveldb,
-     version: "0.7.0",
-     elixir: "~> 1.2.0",
+     version: "0.8.0",
+     elixir: "~> 1.3.0",
      name: "Exleveldb",
      source_url: "https://github.com/skovsgaard/exleveldb",
      homepage_url: "https://hex.pm/packages/exleveldb",
@@ -31,8 +31,8 @@ defmodule Exleveldb.Mixfile do
   # Type `mix help deps` for more examples and options
   defp deps do
     [
-      {:eleveldb, github: "basho/eleveldb", tag: "2.1.0"},
-      {:cuttlefish, github: "basho/cuttlefish", branch: "develop", override: true},
+      {:eleveldb, github: "basho/eleveldb", tag: "2.2.19"},
+      {:cuttlefish, github: "skovsgaard/cuttlefish", branch: "develop", override: true},
       {:earmark, "~> 0.1", only: :dev},
       {:ex_doc, "~> 0.11", only: :dev}
     ]
