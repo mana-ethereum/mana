@@ -3,8 +3,8 @@ defmodule Exleveldb.Mixfile do
 
   def project do
     [app: :exleveldb,
-     version: "0.9.0",
-     elixir: "~> 1.3.0",
+     version: "0.10.0",
+     elixir: "~> 1.3",
      name: "Exleveldb",
      source_url: "https://github.com/skovsgaard/exleveldb",
      homepage_url: "https://hex.pm/packages/exleveldb",
@@ -31,8 +31,7 @@ defmodule Exleveldb.Mixfile do
   # Type `mix help deps` for more examples and options
   defp deps do
     [
-      {:eleveldb, github: "basho/eleveldb", tag: "2.2.19"},
-      {:cuttlefish, github: "skovsgaard/cuttlefish", branch: "develop", override: true},
+      {:eleveldb, "~> 2.2.19"},
       {:earmark, "~> 1.0", only: :dev},
       {:ex_doc, "~> 0.12", only: :dev},
       {:dialyxir, "~> 0.3.5", only: :dev}
@@ -43,31 +42,7 @@ defmodule Exleveldb.Mixfile do
     """
     Exleveldb is a thin wrapper around Basho's eleveldb (github.com/basho/eleveldb).
 
-    At the moment, Exleveldb exposes functions for the following features of LevelDB:
-
-    - Opening a new datastore.
-
-    - Closing an open datastore.
-
-    - Getting values by key.
-
-    - Storing individual key-value pairs.
-
-    - Deleting stored key-value pairs.
-
-    - Checking if a datastore is empty.
-
-    - Folding over key-value pairs in the datastore.
-
-    - Folding over keys in the datastore.
-
-    - Batch writes to the datastore (put or delete).
-
-    - Destroying a datastore.
-
-    Additionally, the option of streaming key-value pairs or keys from the datastore has been added in v0.5.0.
-
-    Note: Because eleveldb is not a hex package, you will need to include it as a separate dependency in your project (See `README.md`).
+    At the moment, Exleveldb exposes functions for all features of LevelDB as well as an Elixir stream interface to Eleveldb's iterators.
     """
   end
 
