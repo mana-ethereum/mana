@@ -8,7 +8,7 @@ defmodule ExleveldbTest do
 
   def mock_db(name) do
     File.rm_rf name
-    {:ok, mockDb} = Exleveldb.open("#{db_dir}/#{name}")
+    {:ok, mockDb} = Exleveldb.open("#{db_dir()}/#{name}")
     mockDb
   end
 
@@ -21,7 +21,7 @@ defmodule ExleveldbTest do
       File.rm_rf test_db_name
     end
 
-    [db: mock_db(test_db_name), test_location: "#{db_dir}/#{test_db_name}"]
+    [db: mock_db(test_db_name), test_location: "#{db_dir()}/#{test_db_name}"]
   end
 
   test "it's possible to open a new datastore", context do
