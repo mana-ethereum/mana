@@ -3,8 +3,8 @@ defmodule Exleveldb.Mixfile do
 
   def project do
     [app: :exleveldb,
-     version: "0.10.0",
-     elixir: "~> 1.3",
+     version: "0.11.0",
+     elixir: "~> 1.4",
      name: "Exleveldb",
      source_url: "https://github.com/skovsgaard/exleveldb",
      homepage_url: "https://hex.pm/packages/exleveldb",
