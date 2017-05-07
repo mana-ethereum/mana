@@ -93,7 +93,9 @@ defmodule Exleveldb do
   Returns `:ok` when successful or `{:error, reference, {:type, action}}` on error.
   """
   @spec delete(db_reference, db_key, write_options) :: :ok | {:error, any}
-  def delete(db_ref, key, opts \\ []), do: :eleveldb.delete(db_ref, key, opts)
+  def delete(db_ref, key, opts \\ []) do
+    :eleveldb.delete(db_ref, Keys.to_key(key), opts)
+  end
 
   @doc """
   Takes a reference as returned by `open/2` and checks whether the datastore
