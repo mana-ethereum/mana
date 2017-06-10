@@ -1,4 +1,4 @@
-defmodule ExRlp.Mixfile do
+defmodule ExRLP.Mixfile do
   use Mix.Project
 
   def project do

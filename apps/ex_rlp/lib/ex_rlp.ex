@@ -1,4 +1,6 @@
 defmodule ExRLP do
+  alias ExRLP.Serializer
+
   def encode(item) when is_binary(item) and byte_size(item) == 1 do
     item |> encode_hex
   end
@@ -19,6 +21,12 @@ defmodule ExRLP do
 
     encoded_item = << 183 + byte_size >> <> big_endian_size <> item
     encoded_item |> encode_hex
+  end
+
+  def encode(item) do
+    item
+    |> Serializer.serialize
+    |> encode
   end
 
   defp encode_hex(binary) do

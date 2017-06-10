@@ -111,4 +111,94 @@ defmodule ExRLPTest do
 
     assert result == expected_result
   end
+
+  test "encodes zero" do
+    string = 0
+    expected_result = "80"
+
+    result = string |> ExRLP.encode
+
+    assert result == expected_result
+  end
+
+  test "encodes small integer (1)" do
+    string = 1
+    expected_result = "01"
+
+    result = string |> ExRLP.encode
+
+    assert result == expected_result
+  end
+
+  test "encodes small integer (2)" do
+    string = 16
+    expected_result = "10"
+
+    result = string |> ExRLP.encode
+
+    assert result == expected_result
+  end
+
+  test "encodes small integer (3)" do
+    string = 79
+    expected_result = "4f"
+
+    result = string |> ExRLP.encode
+
+    assert result == expected_result
+  end
+
+  test "encodes small integer (4)" do
+    string = 127
+    expected_result = "7f"
+
+    result = string |> ExRLP.encode
+
+    assert result == expected_result
+  end
+
+  test "encodes medium integer (1)" do
+    string = 128
+    expected_result = "8180"
+
+    result = string |> ExRLP.encode
+
+    assert result == expected_result
+  end
+
+  test "encodes medium integer (2)" do
+    string = 1000
+    expected_result = "8203e8"
+
+    result = string |> ExRLP.encode
+
+    assert result == expected_result
+  end
+
+  test "encodes medium integer (3)" do
+    string = 100000
+    expected_result = "830186a0"
+
+    result = string |> ExRLP.encode
+
+    assert result == expected_result
+  end
+
+  test "encodes medium integer (4)" do
+    string = 83729609699884896815286331701780722
+    expected_result = "8f102030405060708090a0b0c0d0e0f2"
+
+    result = string |> ExRLP.encode
+
+    assert result == expected_result
+  end
+
+  test "encodes medium integer (5)" do
+    string = 105315505618206987246253880190783558935785933862974822347068935681
+    expected_result = "9c0100020003000400050006000700080009000a000b000c000d000e01"
+
+    result = string |> ExRLP.encode
+
+    assert result == expected_result
+  end
 end
