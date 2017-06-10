@@ -305,4 +305,46 @@ defmodule ExRLPTest do
 
     assert result == expected_result
   end
+
+  test "encodes list of lists (1)" do
+    list = [ [ [], [] ], [] ]
+    expected_result = "c4c2c0c0c0"
+
+    result = list |> ExRLP.encode
+
+    assert result == expected_result
+  end
+
+  test "encodes list of lists (2)" do
+    list = [ [], [[]], [ [], [[]] ] ]
+    expected_result = "c7c0c1c0c3c0c1c0"
+
+    result = list |> ExRLP.encode
+
+    assert result == expected_result
+  end
+
+  test "encodes dictionary" do
+    list = [
+      ["key1", "val1"],
+      ["key2", "val2"],
+      ["key3", "val3"],
+      ["key4", "val4"]
+    ]
+    expected_result = "ecca846b6579318476616c31ca846b65" <>
+      "79328476616c32ca846b6579338476616c33ca846b6579348476616c34"
+
+    result = list |> ExRLP.encode
+
+    assert result == expected_result
+  end
+
+  test "encoded big integer" do
+    big_integer = 115792089237316195423570985008687907853269984665640564039457584007913129639936
+    expected_result = "a1010000000000000000000000000000000000000000000000000000000000000000"
+
+    result = big_integer |> ExRLP.encode
+
+    assert result == expected_result
+  end
 end
