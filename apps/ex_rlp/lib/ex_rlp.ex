@@ -7,7 +7,10 @@ defmodule ExRLP do
     |> encode_hex
   end
 
-  defp encode_item(item) when is_binary(item) and byte_size(item) == 1 do
+  defp encode_item(<< byte >> = item)
+      when is_binary(item) and
+           byte_size(item) == 1 and
+           byte < 128  do
     item
   end
 
