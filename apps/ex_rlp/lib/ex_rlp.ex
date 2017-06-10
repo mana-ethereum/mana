@@ -1,12 +1,13 @@
-defmodule ExRlp do
+defmodule ExRLP do
   def encode(item) when is_binary(item) and byte_size(item) == 1 do
-    item
+    item |> encode_hex
   end
 
   def encode(item) when is_binary(item) and byte_size(item) < 56 do
     prefix = 128 + byte_size(item)
 
-    << prefix >> <> item
+    encoded_item = << prefix >> <> item
+    encoded_item |> encode_hex
   end
 
   def encode(item) when is_binary(item) do
@@ -16,6 +17,11 @@ defmodule ExRlp do
       |> :binary.encode_unsigned
     byte_size = byte_size(big_endian_size)
 
-    << 183 + byte_size >> <> big_endian_size <> item
+    encoded_item = << 183 + byte_size >> <> big_endian_size <> item
+    encoded_item |> encode_hex
+  end
+
+  defp encode_hex(binary) do
+    binary |> Base.encode16(case: :lower)
   end
 end
