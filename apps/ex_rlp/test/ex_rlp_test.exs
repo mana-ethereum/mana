@@ -201,4 +201,108 @@ defmodule ExRLPTest do
 
     assert result == expected_result
   end
+
+  test "encodes string list" do
+    list = [ "dog", "god", "cat" ]
+    expected_result = "cc83646f6783676f6483636174"
+
+    result = list |> ExRLP.encode
+
+    assert result == expected_result
+  end
+
+  test "encodes multilist" do
+    list = [ "zw", [ 4 ], 1 ]
+    expected_result = "c6827a77c10401"
+
+    result = list |> ExRLP.encode
+
+    assert result == expected_result
+  end
+
+  test "encodes max short list" do
+    list = [ "asdf", "qwer", "zxcv", "asdf","qwer",
+               "zxcv", "asdf", "qwer", "zxcv", "asdf", "qwer"]
+    expected_result = "f784617364668471776572847a7863768461736466847" <>
+      "1776572847a78637684617364668471776572847a78637684617364668471776572"
+
+    result = list |> ExRLP.encode
+
+    assert result == expected_result
+  end
+
+  test "encodes long list (1)" do
+    list = [
+      ["asdf","qwer","zxcv"],
+      ["asdf","qwer","zxcv"],
+      ["asdf","qwer","zxcv"],
+      ["asdf","qwer","zxcv"]
+    ]
+    expected_result = "f840cf84617364668471776572847a786376cf84617364668" <>
+      "471776572847a786376cf84617364668471776572847a786376cf84617364668471776572847a786376"
+
+    result = list |> ExRLP.encode
+
+    assert result == expected_result
+  end
+
+  test "encodes long list (2)" do
+    list = [
+      ["asdf","qwer","zxcv"],
+      ["asdf","qwer","zxcv"],
+      ["asdf","qwer","zxcv"],
+      ["asdf","qwer","zxcv"],
+      ["asdf","qwer","zxcv"],
+      ["asdf","qwer","zxcv"],
+      ["asdf","qwer","zxcv"],
+      ["asdf","qwer","zxcv"],
+      ["asdf","qwer","zxcv"],
+      ["asdf","qwer","zxcv"],
+      ["asdf","qwer","zxcv"],
+      ["asdf","qwer","zxcv"],
+      ["asdf","qwer","zxcv"],
+      ["asdf","qwer","zxcv"],
+      ["asdf","qwer","zxcv"],
+      ["asdf","qwer","zxcv"],
+      ["asdf","qwer","zxcv"],
+      ["asdf","qwer","zxcv"],
+      ["asdf","qwer","zxcv"],
+      ["asdf","qwer","zxcv"],
+      ["asdf","qwer","zxcv"],
+      ["asdf","qwer","zxcv"],
+      ["asdf","qwer","zxcv"],
+      ["asdf","qwer","zxcv"],
+      ["asdf","qwer","zxcv"],
+      ["asdf","qwer","zxcv"],
+      ["asdf","qwer","zxcv"],
+      ["asdf","qwer","zxcv"],
+      ["asdf","qwer","zxcv"],
+      ["asdf","qwer","zxcv"],
+      ["asdf","qwer","zxcv"],
+      ["asdf","qwer","zxcv"]
+    ]
+    expected_result = "f90200cf84617364668471776572847a786376cf" <>
+      "84617364668471776572847a786376cf84617364668471776572847a" <>
+      "786376cf84617364668471776572847a786376cf8461736466847177" <>
+      "6572847a786376cf84617364668471776572847a786376cf84617364" <>
+      "668471776572847a786376cf84617364668471776572847a786376cf" <>
+      "84617364668471776572847a786376cf84617364668471776572847a" <>
+      "786376cf84617364668471776572847a786376cf8461736466847177" <>
+      "6572847a786376cf84617364668471776572847a786376cf84617364" <>
+      "668471776572847a786376cf84617364668471776572847a786376cf" <>
+      "84617364668471776572847a786376cf84617364668471776572847a" <>
+      "786376cf84617364668471776572847a786376cf8461736466847177" <>
+      "6572847a786376cf84617364668471776572847a786376cf84617364" <>
+      "668471776572847a786376cf84617364668471776572847a786376cf" <>
+      "84617364668471776572847a786376cf84617364668471776572847a" <>
+      "786376cf84617364668471776572847a786376cf8461736466847177" <>
+      "6572847a786376cf84617364668471776572847a786376cf84617364" <>
+      "668471776572847a786376cf84617364668471776572847a786376cf" <>
+      "84617364668471776572847a786376cf84617364668471776572847a" <>
+      "786376cf84617364668471776572847a786376"
+
+    result = list |> ExRLP.encode
+
+    assert result == expected_result
+  end
 end
