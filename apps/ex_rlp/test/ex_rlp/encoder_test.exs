@@ -1,4 +1,4 @@
-defmodule ExRLPTest do
+defmodule ExRLP.EncoderTest do
   use ExUnit.Case
 
   test "encodes empty string" do
