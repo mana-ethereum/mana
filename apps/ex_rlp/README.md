@@ -1,4 +1,4 @@
-# ExRlp
+# ExRLP [![CircleCI](https://circleci.com/gh/exthereum/ex_rlp.svg?style=svg)](https://circleci.com/gh/exthereum/ex_rlp)
 
 **TODO: Add description**
 
