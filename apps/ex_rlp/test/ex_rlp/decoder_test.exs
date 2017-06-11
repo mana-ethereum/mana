@@ -37,4 +37,23 @@ defmodule ExRLP.DecoderTest do
 
     assert result == expected_result
   end
+
+  test "decodes short string (1)" do
+    rlp_binary = "83646f67"
+    expected_result = "dog"
+
+    result = rlp_binary |> Decoder.decode
+
+    assert result == expected_result
+  end
+
+  test "decodes short string (2)" do
+    rlp_binary = "b74c6f72656d20697073756d20646f6c6f722073697" <>
+      "420616d65742c20636f6e7365637465747572206164697069736963696e6720656c69"
+    expected_result = "Lorem ipsum dolor sit amet, consectetur adipisicing eli"
+
+    result = rlp_binary |> Decoder.decode
+
+    assert result == expected_result
+  end
 end

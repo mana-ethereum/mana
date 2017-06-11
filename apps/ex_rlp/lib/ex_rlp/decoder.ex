@@ -15,7 +15,7 @@ defmodule ExRLP.Decoder do
   end
 
   defp decode_item(item) when byte_size(item) <= 56  do
-    << _prefix :: size(1), data :: binary >> = item
+    << _prefix :: binary-size(1), data :: binary >> = item
 
     data
   end
