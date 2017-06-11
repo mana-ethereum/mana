@@ -1,15 +1,12 @@
 defmodule ExRLP.Encoder do
-  
+
   def encode(item) do
     item
     |> encode_item
     |> encode_hex
   end
 
-  defp encode_item(<< byte >> = item)
-      when is_binary(item) and
-           byte_size(item) == 1 and
-           byte < 128  do
+  defp encode_item(<< byte >> = item) when byte_size(item) == 1 and byte < 128  do
     item
   end
 
