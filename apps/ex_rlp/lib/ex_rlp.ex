@@ -6,7 +6,7 @@ defmodule ExRLP do
     item |> Encoder.encode
   end
 
-  def decode(item) do
-    item |> Decoder.decode
+  def decode(item, type \\ :binary) do
+    item |> Decoder.decode(type)
   end
 end

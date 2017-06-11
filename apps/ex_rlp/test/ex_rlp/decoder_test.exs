@@ -62,7 +62,7 @@ defmodule ExRLP.DecoderTest do
       "420616d65742c20636f6e7365637465747572206164697069736963696e6720656c6974"
     expected_result = "Lorem ipsum dolor sit amet, consectetur adipisicing elit"
 
-    result = rlp_binary |> Decoder.decode
+    result = rlp_binary |> Decoder.decode(:binary)
 
     assert result == expected_result
   end
@@ -109,6 +109,96 @@ defmodule ExRLP.DecoderTest do
       "metus ac ornare cursus, dolor justo ultrices metus, at ullamcorper volutpat"
 
     result = rlp_binary |> Decoder.decode
+
+    assert result == expected_result
+  end
+
+  test "decodes zero" do
+    rlp_binary = "80"
+    expected_result = 0
+
+    result = rlp_binary |> Decoder.decode(:integer)
+
+    assert result == expected_result
+  end
+
+  test "decodes small integer (1)" do
+    rlp_binary = "01"
+    expected_result = 1
+
+    result = rlp_binary |> Decoder.decode(:integer)
+
+    assert result == expected_result
+  end
+
+  test "decodes small integer (2)" do
+    rlp_binary = "10"
+    expected_result = 16
+
+    result = rlp_binary |> Decoder.decode(:integer)
+
+    assert result == expected_result
+  end
+
+  test "decodes small integer (3)" do
+    rlp_binary = "4f"
+    expected_result = 79
+
+    result = rlp_binary |> Decoder.decode(:integer)
+
+    assert result == expected_result
+  end
+
+  test "decodes small integer (4)" do
+    rlp_binary = "7f"
+    expected_result = 127
+
+    result = rlp_binary |> Decoder.decode(:integer)
+
+    assert result == expected_result
+  end
+
+  test "decodes medium integer (1)" do
+    rlp_binary = "8180"
+    expected_result = 128
+
+    result = rlp_binary |> Decoder.decode(:integer)
+
+    assert result == expected_result
+  end
+
+  test "decodes medium integer (2)" do
+    rlp_binary = "8203e8"
+    expected_result = 1000
+
+    result = rlp_binary |> Decoder.decode(:integer)
+
+    assert result == expected_result
+  end
+
+  test "decodes medium integer (3)" do
+    rlp_binary = "830186a0"
+    expected_result = 100000
+
+    result = rlp_binary |> Decoder.decode(:integer)
+
+    assert result == expected_result
+  end
+
+  test "decodes medium integer (4)" do
+    rlp_binary = "8f102030405060708090a0b0c0d0e0f2"
+    expected_result = 83729609699884896815286331701780722
+
+    result = rlp_binary |> Decoder.decode(:integer)
+
+    assert result == expected_result
+  end
+
+  test "decodes medium integer (5)" do
+    rlp_binary = "9c0100020003000400050006000700080009000a000b000c000d000e01"
+    expected_result = 105315505618206987246253880190783558935785933862974822347068935681
+
+    result = rlp_binary |> Decoder.decode(:integer)
 
     assert result == expected_result
   end
