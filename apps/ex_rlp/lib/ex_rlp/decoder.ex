@@ -1,4 +1,5 @@
 defmodule ExRLP.Decoder do
+  alias ExRLP.Prefix
 
   def decode(item, type \\ :binary) when is_binary(item) do
     item
@@ -23,7 +24,7 @@ defmodule ExRLP.Decoder do
   defp decode_item(item, :binary) do
     << be_size_prefix :: binary-size(1), data_with_be :: binary >> = item
     << be_size_prefix >> = be_size_prefix
-    be_size = be_size_prefix - 183
+    be_size = be_size_prefix - Prefix.binary
     << _prefix :: binary-size(be_size), data :: binary >> = data_with_be
 
     data
@@ -33,6 +34,10 @@ defmodule ExRLP.Decoder do
     item
     |> decode_item(:binary)
     |> :binary.decode_unsigned
+  end
+
+  defp decode_item(items, types) when byte_size(items) <= 56 and is_list(types) do
+    types
   end
 
   defp decode_hex(binary) do
