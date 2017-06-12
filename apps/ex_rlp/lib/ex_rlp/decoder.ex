@@ -32,9 +32,9 @@ defmodule ExRLP.Decoder do
   end
 
   defp decode_item(items, :list) when byte_size(items) <= 56 do
-    items
-    |> binary_without_prefix(Prefix.short_list)
-    |> decode_list_items([])
+    << _prefix :: binary-size(1), encoded_items :: binary >> = items
+
+    encoded_items |> decode_list_items([])
   end
 
   defp decode_list_items("", items) do
