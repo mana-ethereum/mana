@@ -1,18 +1,16 @@
 defmodule ExDevp2p do
-  @moduledoc """
-  Documentation for ExDevp2p.
-  """
+  @network_adapter Application.get_env(:ex_devp2p, :network_adapter)
 
-  @doc """
-  Hello world.
+  use Application
 
-  ## Examples
+  def start(_type, _args) do
+    import Supervisor.Spec
 
-      iex> ExDevp2p.hello
-      :world
+    children = [
+      worker(@network_adapter, [ExDevp2p.Network])
+    ]
 
-  """
-  def hello do
-    :world
+    opts = [strategy: :one_for_one, name: ExDevp2p]
+    Supervisor.start_link(children, opts)
   end
 end

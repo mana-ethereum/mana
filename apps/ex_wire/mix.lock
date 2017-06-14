@@ -1,0 +1,5 @@
+%{"bunt": {:hex, :bunt, "0.2.0", "951c6e801e8b1d2cbe58ebbd3e616a869061ddadcc4863d0a2182541acae9a38", [:mix], [], "hexpm"},
+  "credo": {:hex, :credo, "0.8.1", "137efcc99b4bc507c958ba9b5dff70149e971250813cbe7d4537ec7e36997402", [:mix], [{:bunt, "~> 0.2.0", [hex: :bunt, repo: "hexpm", optional: false]}], "hexpm"},
+  "ex_rlp": {:git, "https://github.com/exthereum/ex_rlp.git", "f81d449d4654a10230c2367aef3f06f6a601061a", []},
+  "keccakf1600": {:git, "https://github.com/jur0/erlang-keccakf1600", "a87d31d32250091262e0da5ee2c2a4535bc50945", [branch: "original-keccak"]},
+  "libsecp256k1": {:git, "https://github.com/mbrix/libsecp256k1.git", "671be513a6c19db47fbeea0ceefbf61421d196cc", []}}
