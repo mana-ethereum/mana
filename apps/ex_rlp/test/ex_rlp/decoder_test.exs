@@ -203,22 +203,82 @@ defmodule ExRLP.DecoderTest do
   #   assert result == expected_result
   # end
 
-  # test "decodes string list" do
-  #   rlp_binary = "cc83646f6783676f6483636174"
-  #   expected_result = [ "dog", "god", "cat" ]
+  test "decodes string list" do
+    rlp_binary = "cc83646f6783676f6483636174"
+    expected_result = [ "dog", "god", "cat" ]
 
-  #   result = rlp_binary |> Decoder.decode(:list)
+    result = rlp_binary |> Decoder.decode
 
-  #   assert result == expected_result
-  # end
+    assert result == expected_result
+  end
 
-  # test "decodes max short list" do
-  #   rlp_binary = "f784617364668471776572847a7863768461736466847" <>
-  #     "1776572847a78637684617364668471776572847a78637684617364668471776572"
-  #   expected_result = [ "asdf", "qwer", "zxcv", "asdf","qwer",
-  #                       "zxcv", "asdf", "qwer", "zxcv", "asdf", "qwer"]
+  test "decodes max short list" do
+    rlp_binary = "f784617364668471776572847a7863768461736466847" <>
+      "1776572847a78637684617364668471776572847a78637684617364668471776572"
+    expected_result = [ "asdf", "qwer", "zxcv", "asdf","qwer",
+                        "zxcv", "asdf", "qwer", "zxcv", "asdf", "qwer"]
 
-  #   result = rlp_binary |> Decoder.decode(:list)
+    result = rlp_binary |> Decoder.decode
+
+    assert result == expected_result
+  end
+
+  # test "encodes long list (2)" do
+  #   rlp_binary = "f90200cf84617364668471776572847a786376cf" <>
+  #     "84617364668471776572847a786376cf84617364668471776572847a" <>
+  #     "786376cf84617364668471776572847a786376cf8461736466847177" <>
+  #     "6572847a786376cf84617364668471776572847a786376cf84617364" <>
+  #     "668471776572847a786376cf84617364668471776572847a786376cf" <>
+  #     "84617364668471776572847a786376cf84617364668471776572847a" <>
+  #     "786376cf84617364668471776572847a786376cf8461736466847177" <>
+  #     "6572847a786376cf84617364668471776572847a786376cf84617364" <>
+  #     "668471776572847a786376cf84617364668471776572847a786376cf" <>
+  #     "84617364668471776572847a786376cf84617364668471776572847a" <>
+  #     "786376cf84617364668471776572847a786376cf8461736466847177" <>
+  #     "6572847a786376cf84617364668471776572847a786376cf84617364" <>
+  #     "668471776572847a786376cf84617364668471776572847a786376cf" <>
+  #     "84617364668471776572847a786376cf84617364668471776572847a" <>
+  #     "786376cf84617364668471776572847a786376cf8461736466847177" <>
+  #     "6572847a786376cf84617364668471776572847a786376cf84617364" <>
+  #     "668471776572847a786376cf84617364668471776572847a786376cf" <>
+  #     "84617364668471776572847a786376cf84617364668471776572847a" <>
+  #     "786376cf84617364668471776572847a786376"
+  #   expected_result = [
+  #     ["asdf","qwer","zxcv"],
+  #     ["asdf","qwer","zxcv"],
+  #     ["asdf","qwer","zxcv"],
+  #     ["asdf","qwer","zxcv"],
+  #     ["asdf","qwer","zxcv"],
+  #     ["asdf","qwer","zxcv"],
+  #     ["asdf","qwer","zxcv"],
+  #     ["asdf","qwer","zxcv"],
+  #     ["asdf","qwer","zxcv"],
+  #     ["asdf","qwer","zxcv"],
+  #     ["asdf","qwer","zxcv"],
+  #     ["asdf","qwer","zxcv"],
+  #     ["asdf","qwer","zxcv"],
+  #     ["asdf","qwer","zxcv"],
+  #     ["asdf","qwer","zxcv"],
+  #     ["asdf","qwer","zxcv"],
+  #     ["asdf","qwer","zxcv"],
+  #     ["asdf","qwer","zxcv"],
+  #     ["asdf","qwer","zxcv"],
+  #     ["asdf","qwer","zxcv"],
+  #     ["asdf","qwer","zxcv"],
+  #     ["asdf","qwer","zxcv"],
+  #     ["asdf","qwer","zxcv"],
+  #     ["asdf","qwer","zxcv"],
+  #     ["asdf","qwer","zxcv"],
+  #     ["asdf","qwer","zxcv"],
+  #     ["asdf","qwer","zxcv"],
+  #     ["asdf","qwer","zxcv"],
+  #     ["asdf","qwer","zxcv"],
+  #     ["asdf","qwer","zxcv"],
+  #     ["asdf","qwer","zxcv"],
+  #     ["asdf","qwer","zxcv"]
+  #   ]
+
+  #   result = rlp_binary |> Decoder.decode
 
   #   assert result == expected_result
   # end
