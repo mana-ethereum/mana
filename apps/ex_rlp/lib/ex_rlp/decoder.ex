@@ -13,7 +13,13 @@ defmodule ExRLP.Decoder do
     result
   end
 
-  defp decode_item(<< << prefix >>, tail :: binary >>, result) when prefix < 183 do
+  defp decode_item(<< << prefix >>, tail :: binary >>, result) when prefix < 128 do
+    new_item = << prefix >>
+
+    decode_item(tail, [new_item | result])
+  end
+
+  defp decode_item(<< << prefix >>, tail :: binary >>, result) when prefix <= 183 do
     item_length = prefix - 128
 
     << new_item :: binary-size(item_length), new_tail :: binary >> = tail
@@ -28,12 +34,11 @@ defmodule ExRLP.Decoder do
 
   #   data
 
-  defp decode_item(<< << prefix >>, tail :: binary >>, result) do
-    << be_size_prefix >> = prefix
-    be_size = be_size_prefix - prefix
-    item_length = be_size |> :binary.decode_unsigned
+  defp decode_item(<< << be_size_prefix >>, tail :: binary >>, result) do
+    be_size = be_size_prefix - 183
 
-    << _prefix :: binary-size(be_size), data :: binary >> = tail
+    << be :: binary-size(be_size), data :: binary >> = tail
+    item_length = be |> :binary.decode_unsigned
     << new_item :: binary-size(item_length), new_tail :: binary >> = data
 
     decode_item(new_tail, [new_item | result])
