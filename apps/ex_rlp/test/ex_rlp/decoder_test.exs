@@ -282,4 +282,37 @@ defmodule ExRLP.DecoderTest do
 
     assert result == expected_result
   end
+
+  test "decodes list of lists (1)" do
+    rlp_binary = "c4c2c0c0c0"
+    expected_result = [ [ [], [] ], [] ]
+
+    result = rlp_binary |> Decoder.decode
+
+    assert result == expected_result
+  end
+
+  test "decodes list of lists (2)" do
+    rlp_binary = "c7c0c1c0c3c0c1c0"
+    expected_result = [ [], [[]], [ [], [[]] ] ]
+
+    result = rlp_binary |> Decoder.decode
+
+    assert result == expected_result
+  end
+
+  test "decodes dictionary" do
+    rlp_binary = "ecca846b6579318476616c31ca846b65" <>
+      "79328476616c32ca846b6579338476616c33ca846b6579348476616c34"
+    expected_result = [
+      ["key1", "val1"],
+      ["key2", "val2"],
+      ["key3", "val3"],
+      ["key4", "val4"]
+    ]
+
+    result = rlp_binary |> Decoder.decode
+
+    assert result == expected_result
+  end
 end

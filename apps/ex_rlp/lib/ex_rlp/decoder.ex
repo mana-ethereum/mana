@@ -29,7 +29,7 @@ defmodule ExRLP.Decoder do
     decode_item(new_tail, new_result)
   end
 
-  defp decode_item(<< << be_size_prefix >>, tail :: binary >>, result, in_list) when be_size_prefix <= 192 do
+  defp decode_item(<< << be_size_prefix >>, tail :: binary >>, result, in_list) when be_size_prefix < 192 do
     be_size = be_size_prefix - 183
 
     << be :: binary-size(be_size), data :: binary >> = tail
@@ -40,12 +40,17 @@ defmodule ExRLP.Decoder do
     decode_item(new_tail, new_result)
   end
 
+  defp decode_item(<< << be_size_prefix >>, tail :: binary >>, result, in_list) when be_size_prefix == 192 do
+    new_result = if length(result) == 0, do: [[]], else: result ++ [[]]
+    decode_item(tail, new_result)
+  end
+
   defp decode_item(<< << prefix >>, tail :: binary >>, result, in_list) when prefix <= 247 do
     list_length = prefix - 192
 
     << list :: binary-size(list_length), new_tail :: binary >> = tail
 
-    list_items = decode_item(list)
+    list_items = decode_item(list, [], true)
     list_items = if in_list, do: [list_items], else: list_items
     new_result = if length(result) == 0, do: list_items, else: result ++ [list_items]
     decode_item(new_tail, new_result)
