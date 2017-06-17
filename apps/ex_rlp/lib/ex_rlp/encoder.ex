@@ -1,5 +1,5 @@
 defmodule ExRLP.Encoder do
-  alias ExRLP.Prefix
+  @moduledoc false
 
   def encode(item) do
     item
@@ -12,7 +12,7 @@ defmodule ExRLP.Encoder do
   end
 
   defp encode_item(item) when is_binary(item) and byte_size(item) < 56 do
-    prefix = Prefix.short_binary + byte_size(item)
+    prefix = 128 + byte_size(item)
 
     << prefix >> <> item
   end
@@ -21,7 +21,7 @@ defmodule ExRLP.Encoder do
     be_size = item |> big_endian_size
     byte_size = be_size |> byte_size
 
-    << Prefix.binary + byte_size >> <> be_size <> item
+    << 183 + byte_size >> <> be_size <> item
   end
 
   defp encode_item(items) when is_list(items) do
@@ -45,14 +45,14 @@ defmodule ExRLP.Encoder do
   defp prefix_list(encoded_concat) when byte_size(encoded_concat) < 56 do
     size = encoded_concat |> byte_size
 
-    << Prefix.short_list + size >> <> encoded_concat
+    << 192 + size >> <> encoded_concat
   end
 
   defp prefix_list(encoded_concat) do
     be_size = encoded_concat |> big_endian_size
     byte_size = be_size |> byte_size
 
-    << Prefix.list + byte_size >> <> be_size <> encoded_concat
+    << 247 + byte_size >> <> be_size <> encoded_concat
   end
 
   defp big_endian_size(binary) do

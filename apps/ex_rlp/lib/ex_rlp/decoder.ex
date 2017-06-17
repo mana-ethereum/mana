@@ -1,4 +1,6 @@
 defmodule ExRLP.Decoder do
+  @moduledoc false
+
   def decode(item) when is_binary(item) do
     item
     |> decode_hex

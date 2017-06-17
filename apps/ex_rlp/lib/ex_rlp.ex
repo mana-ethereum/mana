@@ -1,6 +1,7 @@
 defmodule ExRLP do
   alias ExRLP.Encoder
   alias ExRLP.Decoder
+  @moduledoc File.read!("#{__DIR__}/../README.md")
 
   @spec encode(String.t | non_neg_integer | list) :: String.t
   def encode(item) do
