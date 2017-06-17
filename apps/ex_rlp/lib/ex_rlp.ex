@@ -7,9 +7,8 @@ defmodule ExRLP do
     item |> Encoder.encode
   end
 
-  @spec decode(String.t) :: String.t
-  @spec decode(String.t, atom) :: String.t | non_neg_integer | list
-  def decode(item, type \\ :binary) do
-    item |> Decoder.decode(type)
+  @spec decode(String.t) :: String.t | list
+  def decode(item) do
+    item |> Decoder.decode
   end
 end

@@ -7,11 +7,11 @@ defmodule ExRLP.Decoder do
 
   defp decode_item(rlp_binary, result \\ [], in_list \\ false)
 
-  defp decode_item("", result, in_list) do
+  defp decode_item("", result, _in_list) do
     result
   end
 
-  defp decode_item(<< << prefix >>, tail :: binary >>, _result, false) when prefix < 128 do
+  defp decode_item(<< << prefix >>, _tail :: binary >>, _result, false) when prefix < 128 do
     item = << prefix >>
 
     decode_item("", item)
@@ -37,29 +37,20 @@ defmodule ExRLP.Decoder do
     decode_item(new_tail, new_result, in_list)
   end
 
-  defp decode_item(<< << be_size_prefix >>, tail :: binary >>, result, false) when be_size_prefix < 192 do
-    be_size = be_size_prefix - 183
-
-    << be :: binary-size(be_size), data :: binary >> = tail
-    item_length = be |> :binary.decode_unsigned
-    << item :: binary-size(item_length), new_tail :: binary >> = data
+  defp decode_item(<< << be_size_prefix >>, _tail :: binary >> = rlp_binary, _result, false) when be_size_prefix < 192 do
+    {item, _} = rlp_binary |> decode_long_binary(183)
 
     decode_item("", item)
   end
 
-  defp decode_item(<< << be_size_prefix >>, tail :: binary >>, result, in_list) when be_size_prefix < 192 do
-    be_size = be_size_prefix - 183
-
-    << be :: binary-size(be_size), data :: binary >> = tail
-    item_length = be |> :binary.decode_unsigned
-    << new_item :: binary-size(item_length), new_tail :: binary >> = data
+  defp decode_item(<< << be_size_prefix >>, _tail :: binary >> = rlp_binary, result, in_list) when be_size_prefix < 192 do
+    {new_item, new_tail} = rlp_binary |> decode_long_binary(183)
 
     new_result = result ++ [new_item]
     decode_item(new_tail, new_result, in_list)
   end
 
   defp decode_item(<< << be_size_prefix >>, tail :: binary >>, result, in_list) when be_size_prefix == 192 do
-    #new_result = if in_list, do: [[]], else: []
     new_result = if (length(result) == 0), do: [[]], else: result ++ [[]]
     decode_item(tail, new_result, in_list)
   end
@@ -76,16 +67,22 @@ defmodule ExRLP.Decoder do
     decode_item(new_tail, new_result)
   end
 
-  defp decode_item(<< << be_size_prefix >>, tail :: binary >>, result, in_list) do
-    be_size = be_size_prefix - 247
-
-    << be :: binary-size(be_size), data :: binary >> = tail
-    list_length = be |> :binary.decode_unsigned
-    << list :: binary-size(list_length), new_tail :: binary >> = data
+  defp decode_item(rlp_binary, result, _in_list) do
+    {list, new_tail} = rlp_binary |> decode_long_binary(247)
 
     list_items = decode_item(list, [], true)
     new_result = if length(result) == 0, do: list_items, else: result ++ [list_items]
     decode_item(new_tail, new_result)
+  end
+
+  defp decode_long_binary(<< << be_size_prefix >>, tail :: binary >>, prefix) do
+    be_size = be_size_prefix - prefix
+
+    << be :: binary-size(be_size), data :: binary >> = tail
+    item_size = be |> :binary.decode_unsigned
+    << item :: binary-size(item_size), new_tail :: binary >> = data
+
+    {item, new_tail}
   end
 
   defp decode_hex(binary) do
