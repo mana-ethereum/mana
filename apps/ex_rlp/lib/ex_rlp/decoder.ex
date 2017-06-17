@@ -14,9 +14,7 @@ defmodule ExRLP.Decoder do
   end
 
   defp decode_item(<< << prefix >>, _tail :: binary >>, nil) when prefix < 128 do
-    item = << prefix >>
-
-    decode_item("", item)
+    << prefix >>
   end
 
   defp decode_item(<< << prefix >>, tail :: binary >>, result) when prefix < 128 do
@@ -27,60 +25,70 @@ defmodule ExRLP.Decoder do
   end
 
   defp decode_item(<< << prefix >>, item :: binary >>, nil) when prefix <= 183 do
-    decode_item("", item)
+    item
   end
 
   defp decode_item(<< << prefix >>, tail :: binary >>, result) when prefix <= 183 do
-    item_length = prefix - 128
-    << new_item :: binary-size(item_length), new_tail :: binary >> = tail
-
-    new_result = result ++ [new_item]
-
-    decode_item(new_tail, new_result)
-  end
-
-  defp decode_item(<< << be_size_prefix >>, _tail :: binary >> = rlp_binary, nil) when be_size_prefix < 192 do
-    {item, _} = rlp_binary |> decode_long_binary(183)
-
-    decode_item("", item)
-  end
-
-  defp decode_item(<< << be_size_prefix >>, _tail :: binary >> = rlp_binary, result) when be_size_prefix < 192 do
-    {new_item, new_tail} = rlp_binary |> decode_long_binary(183)
+    {new_item, new_tail} = decode_medium_binary(prefix, tail, 128)
 
     new_result = result ++ [new_item]
     decode_item(new_tail, new_result)
+  end
+
+  defp decode_item(<< << be_size_prefix >>, tail :: binary >>, nil) when be_size_prefix < 192 do
+    {item, _} = decode_long_binary(be_size_prefix, tail, 183)
+
+    item
+  end
+
+  defp decode_item(<< << be_size_prefix >>, tail :: binary >>, result) when be_size_prefix < 192 do
+    {new_item, new_tail} = decode_long_binary(be_size_prefix, tail, 183)
+
+    new_result = result ++ [new_item]
+    decode_item(new_tail, new_result)
+  end
+
+  defp decode_item(<< << be_size_prefix >>, _tail :: binary >>, nil) when be_size_prefix == 192 do
+    [[]]
   end
 
   defp decode_item(<< << be_size_prefix >>, tail :: binary >>, result) when be_size_prefix == 192 do
-    new_result = if (length(result) == 0), do: [[]], else: result ++ [[]]
+    new_result = result ++ [[]]
     decode_item(tail, new_result)
   end
 
   defp decode_item(<< << prefix >>, tail :: binary >>, result) when prefix <= 247 do
-    list_length = prefix - 192
-    << list :: binary-size(list_length), new_tail :: binary >> = tail
+    {list, new_tail} = decode_medium_binary(prefix, tail, 192)
 
     new_result = result |> add_decoded_list(list)
-
     decode_item(new_tail, new_result)
   end
 
-  defp decode_item(rlp_binary, result) do
-    {list, new_tail} = rlp_binary |> decode_long_binary(247)
+  defp decode_item(<< << be_size_prefix >>, tail :: binary >>, result) do
+    {list, new_tail} = decode_long_binary(be_size_prefix, tail, 247)
 
     new_result = result |> add_decoded_list(list)
-
     decode_item(new_tail, new_result)
+  end
+
+  defp add_decoded_list(nil, rlp_list_binary) do
+    decode_item(rlp_list_binary, [])
   end
 
   defp add_decoded_list(result, rlp_list_binary) do
     list_items = decode_item(rlp_list_binary, [])
 
-    if is_nil(result), do: list_items, else: result ++ [list_items]
+    result ++ [list_items]
   end
 
-  defp decode_long_binary(<< << be_size_prefix >>, tail :: binary >>, prefix) do
+  defp decode_medium_binary(length_prefix, tail, prefix) do
+    item_length = length_prefix - prefix
+    << item :: binary-size(item_length), new_tail :: binary >> = tail
+
+    {item, new_tail}
+  end
+
+  defp decode_long_binary(be_size_prefix, tail, prefix) do
     be_size = be_size_prefix - prefix
 
     << be :: binary-size(be_size), data :: binary >> = tail
