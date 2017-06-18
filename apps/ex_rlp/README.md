@@ -57,7 +57,69 @@ Use ExRLP.decode/1 method to decode a rlp encoded data. All items except lists a
   [[[], []], []]
 ```
 
-More example can be found in test files.
+More examples can be found in test files.
+
+## Protocols
+
+You can define protocols for encoding/decoding custom data types.
+
+Custom protocols for Map have already been implemented in ExRLP:
+
+```elixir
+
+defimpl ExRLP.Encoder, for: Map do
+  alias ExRLP.Encode
+
+  def encode(map, _) when map_size(map) < 1 do
+    "827b7d"
+  end
+
+  def encode(map, _) do
+    map
+    |> Map.keys
+    |> Enum.reduce([], fn(key, acc) ->
+      value = Map.get(map, key)
+
+      acc ++ [value]
+    end)
+    |> Encode.encode
+  end
+end
+
+defimpl ExRLP.Decoder, for: BitString do
+  alias ExRLP.Decode
+
+  def decode("827b7d", :map, _) do
+    %{}
+  end
+
+  def decode(value, :map, options) do
+    keys =
+      options
+      |> Keyword.fetch!(:keys)
+      |> Enum.sort
+
+    value
+    |> Decode.decode
+    |> Enum.with_index
+    |> Enum.reduce(%{}, fn({value, index}, acc) ->
+      key = keys |> Enum.at(index)
+
+      acc |> Map.put(key, value)
+    end)
+
+    ...
+  end
+end
+```
+So now it's possible to encode/decode maps:
+```elixir
+iex(1)> %{name: "Vitalik", surname: "Buterin"} |> ExRLP.encode
+"d087566974616c696b874275746572696e"
+
+iex(2)> "d087566974616c696b874275746572696e" |> ExRLP.decode(:map, keys: [:surname, :name])
+%{name: "Vitalik", surname: "Buterin"}
+```
 
 ## Contributing
 
