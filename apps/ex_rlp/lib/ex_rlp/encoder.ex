@@ -1,4 +1,4 @@
-defmodule ExRLP.Encoder do
+defmodule ExRLP.Encode do
   @moduledoc false
 
   def encode(item) do
@@ -71,5 +71,52 @@ defmodule ExRLP.Encoder do
 
   defp encode_binary(object) when is_integer(object) and object > 0 do
     object |> :binary.encode_unsigned
+  end
+end
+
+defprotocol ExRLP.Encoder do
+  def encode(value, options \\ nil)
+end
+
+defimpl ExRLP.Encoder, for: BitString do
+  alias ExRLP.Encode
+
+  def encode(value, _) do
+    value |> Encode.encode
+  end
+end
+
+defimpl ExRLP.Encoder, for: Integer do
+  alias ExRLP.Encode
+
+  def encode(value, _) when value >= 0 do
+    value |> Encode.encode
+  end
+end
+
+defimpl ExRLP.Encoder, for: List do
+  alias ExRLP.Encode
+
+  def encode(value, _) do
+    value |> Encode.encode
+  end
+end
+
+defimpl ExRLP.Encoder, for: Map do
+  alias ExRLP.Encode
+
+  def encode(map, _) when map_size(map) < 1 do
+    "827b7d"
+  end
+
+  def encode(map, _) do
+    map
+    |> Map.keys
+    |> Enum.reduce([], fn(key, acc) ->
+      value = Map.get(map, key)
+
+      acc ++ [value]
+    end)
+    |> Encode.encode
   end
 end

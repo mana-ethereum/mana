@@ -348,4 +348,13 @@ defmodule ExRLP.EncoderTest do
 
     assert result == expected_result
   end
+
+  test "encodes Map" do
+    map = %{name: "Ayrat", surname: "Badykov", music: "Rock'n'Roll"}
+    expected_result = "da8b526f636b276e27526f6c6c85417972617487426164796b6f76"
+
+    result = map |> Encoder.encode
+
+    assert result == expected_result
+  end
 end

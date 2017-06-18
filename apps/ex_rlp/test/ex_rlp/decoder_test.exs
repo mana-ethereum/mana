@@ -225,4 +225,13 @@ defmodule ExRLP.DecoderTest do
 
     assert result == expected_result
   end
+
+  test "decoders Map" do
+    rlp_binary = "da8b526f636b276e27526f6c6c85417972617487426164796b6f76"
+    expected_result = %{name: "Ayrat", surname: "Badykov", music: "Rock'n'Roll"}
+
+    result = rlp_binary |> Decoder.decode(:map, keys: [:name, :surname, :music])
+
+    assert result == expected_result
+  end
 end

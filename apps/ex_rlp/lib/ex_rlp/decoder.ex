@@ -1,4 +1,4 @@
-defmodule ExRLP.Decoder do
+defmodule ExRLP.Decode do
   @moduledoc false
 
   def decode(item) when is_binary(item) do
@@ -100,5 +100,37 @@ defmodule ExRLP.Decoder do
     {:ok, decoded_binary} = binary |> Base.decode16(case: :lower)
 
     decoded_binary
+  end
+end
+
+defprotocol ExRLP.Decoder do
+  def decode(value, type \\ :binary, options \\ nil)
+end
+
+defimpl ExRLP.Decoder, for: BitString do
+  alias ExRLP.Decode
+
+  def decode("827b7d", :map, _) do
+    %{}
+  end
+
+  def decode(value, :map, options) do
+    keys =
+      options
+      |> Keyword.fetch!(:keys)
+      |> Enum.sort
+
+    value
+    |> Decode.decode
+    |> Enum.with_index
+    |> Enum.reduce(%{}, fn({value, index}, acc) ->
+      key = keys |> Enum.at(index)
+
+      acc |> Map.put(key, value)
+    end)
+  end
+
+  def decode(value, :binary, _) do
+    value |> Decode.decode
   end
 end
