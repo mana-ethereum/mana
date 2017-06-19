@@ -135,5 +135,5 @@ Ayrat Badykov (@ayrat555)
 
 ## License
 
-Rock is released under the MIT License. See the LICENSE file for further details.
+ExRLP is released under the MIT License. See the LICENSE file for further details.
 

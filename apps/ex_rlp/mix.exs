@@ -3,7 +3,7 @@ defmodule ExRLP.Mixfile do
 
   def project do
     [app: :ex_rlp,
-     version: "0.1.0",
+     version: "0.1.1",
      elixir: "~> 1.4",
      description: "Ethereum's Recursive Length Prefix (RLP) encoding",
      package: [
