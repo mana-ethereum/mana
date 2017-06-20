@@ -26,27 +26,22 @@ defmodule MerklePatriciaTree.HexPrefix do
     first_nibble ++ nibbles
   end
 
-  defp add_flags([first_nibble | nibbles], _oddness, term) do
-    new_first_nibbles = 16 * (f(term) + 1) + first_nibble
+  defp add_flags(nibbles, _oddness, term) do
+    first_nibble = 16 * (f(term) + 1)
 
-    [new_first_nibbles | nibbles]
+    [first_nibble | nibbles]
   end
 
-  defp encode_nibbles(nibbles, prev_nibble \\ nil, result \\ "")
+  defp encode_nibbles(nibbles, result \\ [])
 
-  defp encode_nibbles([], _, result) do
+  defp encode_nibbles([], result) do
     result
   end
 
-  defp encode_nibbles([nibble | tail], nil, result) do
-    encode_nibbles(tail, nibble, result)
-  end
+  defp encode_nibbles([prev_nibble | [cur_nibble | tail]], result) do
+    cur_enc = [16 * prev_nibble + cur_nibble]
 
-  defp encode_nibbles([nibble | tail], prev_nibble, result) do
-    cur_enc = 16 * prev_nibble + nibble
-    cur_enc = << cur_enc :: size(16) >>
-
-    encode_nibbles(tail, nibble, result <> cur_enc)
+    encode_nibbles(tail, result ++ cur_enc)
   end
 
   defp f(true) do
