@@ -21,13 +21,13 @@ defmodule MerklePatriciaTree.HexPrefix do
   end
 
   defp add_flags(nibbles, 0, term) do
-    first_nibble = [16 * f(term), 0]
+    first_nibble = [f(term), 0]
 
     first_nibble ++ nibbles
   end
 
   defp add_flags(nibbles, _oddness, term) do
-    first_nibble = 16 * (f(term) + 1)
+    first_nibble = f(term) + 1
 
     [first_nibble | nibbles]
   end
