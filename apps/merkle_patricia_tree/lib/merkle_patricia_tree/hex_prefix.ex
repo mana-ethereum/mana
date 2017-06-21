@@ -1,7 +1,7 @@
 defmodule MerklePatriciaTree.HexPrefix do
   def encode(nibbles) when is_list(nibbles) do
+    {nibbles, term} = nibbles |> term?
     odd = nibbles |> odd?
-    term = nibbles |> term?
 
     nibbles
     |> add_flags(odd, term)
@@ -16,8 +16,10 @@ defmodule MerklePatriciaTree.HexPrefix do
 
   defp term?(nibbles) do
     last_nibble = nibbles |> List.last
+    term = last_nibble == 16
+    nibbles = if term, do: nibbles |> Enum.drop(-1), else: nibbles
 
-    last_nibble == 16
+    {nibbles, term}
   end
 
   defp add_flags(nibbles, 0, term) do
