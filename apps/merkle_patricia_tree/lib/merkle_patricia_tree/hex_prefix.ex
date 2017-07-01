@@ -1,4 +1,20 @@
 defmodule MerklePatriciaTree.HexPrefix do
+
+  def to_nibbles(binary, result \\ [])
+
+  def to_nibbles(<< << byte >>, tail :: binary >>, result) do
+    first_nibble = div(byte, 16)
+    second_nibble = rem(byte, 16)
+
+    current_result = result ++ [first_nibble, second_nibble]
+
+    to_nibbles(tail, current_result)
+  end
+
+  def to_nibbles(<<>>, result) do
+    result
+  end
+
   def encode(nibbles) when is_list(nibbles) do
     {nibbles, term} = nibbles |> term?
     odd = nibbles |> odd?
