@@ -6,7 +6,12 @@ defmodule MerklePatriciaTree.DB do
   end
 
   def get(key) do
-    :ets.lookup(@table_name, key)
+    {_key, value} =
+      @table_name
+      |> :ets.lookup(key)
+      |> Enum.at(0)
+
+    value
   end
 
   def put(key, value) do

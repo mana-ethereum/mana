@@ -13,8 +13,8 @@ defmodule MerklePatriciaTree.DBTest do
     value = "value"
 
     DB.put(key, value)
-    result = DB.get(key) |> Enum.at(0)
+    result = DB.get(key)
 
-    {^key, ^value} = result
+    ^value = result
   end
 end
