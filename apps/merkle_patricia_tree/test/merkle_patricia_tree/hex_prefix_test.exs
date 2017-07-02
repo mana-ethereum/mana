@@ -11,6 +11,15 @@ defmodule MerklePatriciaTree.HexPrefixTest do
     assert result == expected_result
   end
 
+  test 'convers nibble list to binary' do
+    nibble_list = [7, 2, 6, 15, 6, 3, 6, 11]
+    expected_result = "rock"
+
+    result = nibble_list |> HexPrefix.to_binary
+
+    assert result == expected_result
+  end
+
   test 'encodes nibble list to hex prefix (1)' do
     nibbles = [1, 2, 3, 4, 5]
     expected_result = "\x11\x23\x45"

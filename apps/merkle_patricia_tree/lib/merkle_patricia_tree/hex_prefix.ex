@@ -15,6 +15,15 @@ defmodule MerklePatriciaTree.HexPrefix do
     result
   end
 
+  def to_binary(nibbles) when is_list(nibbles) do
+    nibbles
+    |> Enum.chunk(2)
+    |> Enum.map(fn([first_nibble, second_nibble]) ->
+      first_nibble * 16 + second_nibble
+    end)
+    |> to_string
+  end
+
   def encode(nibbles) when is_list(nibbles) do
     {nibbles, term} = nibbles |> term?
     odd = nibbles |> odd?
