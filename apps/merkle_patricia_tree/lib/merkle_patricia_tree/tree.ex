@@ -1,20 +1,54 @@
 defmodule MerklePatriciaTree.Tree do
-  alias MerklePatriciaTree.{DB, Utils}
+  alias MerklePatriciaTree.{DB, Utils, HexPrefix}
 
   def new(key, value) do
-    node = node_cap_function(key, value)
-
-    DB.put(node, {key, value})
-
-    node
+    update(:new, key, value)
   end
 
-  def update(node, key, value) do
-
+  def update(node_cap, [], value) do
+    node_cap
+    |> find_node
+    |> update_key(16, value)
+    |> save_node
   end
 
-  defp node_cap_function(key, value) do
-    binary = key <> value
+  def update(node_cap, [key | tail], value) do
+    current_node = node_cap |> find_node
+
+    updated_node_cap =
+      current_node
+      |> Enum.at(key)
+      |> update(tail, value)
+
+    current_node
+    |> update_key(key, updated_node_cap)
+    |> save_node
+  end
+
+  defp update_key(node, key, value) do
+    node |> List.replace_at(key, value)
+  end
+
+  defp find_node(node) do
+    db_node = DB.get(node)
+
+    if is_nil(db_node), do: new_node(), else: db_node
+  end
+
+  defp save_node(node) do
+    node_cap = node |> node_cap_function
+
+    DB.put(node_cap, node)
+
+    node_cap
+  end
+
+  defp new_node do
+    0..16 |> Enum.map(fn(_) -> end)
+  end
+
+  defp node_cap_function(node) do
+    binary = node |> IO.inspect |> HexPrefix.to_binary
     rlp_encoding = binary |> ExRLP.encode
 
     if byte_size(rlp_encoding) > 32,

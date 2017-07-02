@@ -17,4 +17,10 @@ defmodule MerklePatriciaTree.DBTest do
 
     ^value = result
   end
+
+  test 'returns nil on not existing key' do
+    key = "key1"
+
+    nil = DB.get(key)
+  end
 end
