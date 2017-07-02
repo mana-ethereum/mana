@@ -28,6 +28,16 @@ defmodule MerklePatriciaTree.TreeTest do
     assert get(new_root, key) == new_value
   end
 
+  test 'deletes node' do
+    key = "dog" |> HexPrefix.to_nibbles
+    value = "cat"
+    root = Tree.new(key, value)
+
+    new_root = Tree.delete(root, key)
+
+    assert get(new_root, key) |> is_nil
+  end
+
   def get(node_cap, []) do
     node_cap
     |> DB.get

@@ -25,8 +25,32 @@ defmodule MerklePatriciaTree.Tree do
     |> save_node
   end
 
+  def delete(node_cap, []) do
+    node_cap
+    |> find_node
+    |> delete_key(16)
+    |> save_node
+  end
+
+  def delete(node_cap, [key | tail]) do
+    current_node = node_cap |> find_node
+
+    updated_node_cap =
+      current_node
+      |> Enum.at(key)
+      |> delete(tail)
+
+    current_node
+    |> update_key(key, updated_node_cap)
+    |> save_node
+  end
+
   defp update_key(node, key, value) do
     node |> List.replace_at(key, value)
+  end
+
+  defp delete_key(node, key) do
+    node |> List.delete_at(key)
   end
 
   defp find_node(node) do
