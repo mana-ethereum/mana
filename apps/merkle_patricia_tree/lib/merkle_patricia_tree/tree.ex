@@ -1,5 +1,5 @@
 defmodule MerklePatriciaTree.Tree do
-  alias MerklePatriciaTree.{DB, Utils, HexPrefix}
+  alias MerklePatriciaTree.{DB, Utils}
 
   def new(key, value) do
     update(:new, key, value)
@@ -44,12 +44,11 @@ defmodule MerklePatriciaTree.Tree do
   end
 
   defp new_node do
-    0..16 |> Enum.map(fn(_) -> end)
+    0..16 |> Enum.map(fn(_) -> "" end)
   end
 
   defp node_cap_function(node) do
-    binary = node |> IO.inspect |> HexPrefix.to_binary
-    rlp_encoding = binary |> ExRLP.encode
+    rlp_encoding = node |> ExRLP.encode
 
     if byte_size(rlp_encoding) > 32,
       do: Utils.keccak(rlp_encoding),
