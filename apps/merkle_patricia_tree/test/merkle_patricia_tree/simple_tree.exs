@@ -1,6 +1,6 @@
-defmodule MerklePatriciaTree.TreeTest do
+defmodule MerklePatriciaTree.SimpleTreeTest do
   use ExUnit.Case
-  alias MerklePatriciaTree.{Tree, DB, HexPrefix}
+  alias MerklePatriciaTree.{SimpleTree, DB, HexPrefix}
 
   setup do
     DB.new

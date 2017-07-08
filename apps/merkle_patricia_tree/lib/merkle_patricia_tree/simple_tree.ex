@@ -1,4 +1,4 @@
-defmodule MerklePatriciaTree.Tree do
+defmodule MerklePatriciaTree.SimpleTree do
   alias MerklePatriciaTree.{DB, Utils}
 
   def new(key, value) do
