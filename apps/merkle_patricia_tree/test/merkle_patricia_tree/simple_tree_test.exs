@@ -1,6 +1,6 @@
 defmodule MerklePatriciaTree.SimpleTreeTest do
   use ExUnit.Case
-  alias MerklePatriciaTree.{SimpleTree, DB, HexPrefix}
+  alias MerklePatriciaTree.{SimpleTree, DB, Nibbles}
 
   setup do
     DB.new
@@ -9,31 +9,31 @@ defmodule MerklePatriciaTree.SimpleTreeTest do
   end
 
   test 'creates new tree' do
-    key = "dog" |> HexPrefix.to_nibbles
+    key = "dog" |> Nibbles.from_binary
     value = "cat"
 
-    root = Tree.new(key, value)
+    root = SimpleTree.new(key, value)
 
     assert get(root, key) == value
   end
 
   test 'updates node' do
-    key = "dog" |> HexPrefix.to_nibbles
+    key = "dog" |> Nibbles.from_binary
     value = "cat"
-    root = Tree.new(key, value)
+    root = SimpleTree.new(key, value)
 
     new_value = "tiger"
-    new_root = Tree.update(root, key, new_value)
+    new_root = SimpleTree.update(root, key, new_value)
 
     assert get(new_root, key) == new_value
   end
 
   test 'deletes node' do
-    key = "dog" |> HexPrefix.to_nibbles
+    key = "dog" |> Nibbles.from_binary
     value = "cat"
-    root = Tree.new(key, value)
+    root = SimpleTree.new(key, value)
 
-    new_root = Tree.delete(root, key)
+    new_root = SimpleTree.delete(root, key)
 
     assert get(new_root, key) |> is_nil
   end

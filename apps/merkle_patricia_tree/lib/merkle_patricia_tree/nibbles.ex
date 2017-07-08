@@ -28,4 +28,8 @@ defmodule MerklePatriciaTree.Nibbles do
   def hex_prefix(nibbles) when is_list(nibbles) do
     nibbles |> HexPrefix.encode
   end
+
+  def add_terminator(nibbles) when is_list(nibbles) do
+    nibbles ++ [16]
+  end
 end
