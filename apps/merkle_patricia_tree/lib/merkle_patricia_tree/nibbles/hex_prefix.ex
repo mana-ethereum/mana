@@ -1,29 +1,4 @@
-defmodule MerklePatriciaTree.HexPrefix do
-
-  def to_nibbles(binary, result \\ [])
-
-  def to_nibbles(<< << byte >>, tail :: binary >>, result) do
-    first_nibble = div(byte, 16)
-    second_nibble = rem(byte, 16)
-
-    current_result = result ++ [first_nibble, second_nibble]
-
-    to_nibbles(tail, current_result)
-  end
-
-  def to_nibbles(<<>>, result) do
-    result
-  end
-
-  def to_binary(nibbles) when is_list(nibbles) do
-    nibbles
-    |> Enum.chunk(2)
-    |> Enum.map(fn([first_nibble, second_nibble]) ->
-      first_nibble * 16 + second_nibble
-    end)
-    |> to_string
-  end
-
+defmodule MerklePatriciaTree.Nibbles.HexPrefix do
   def encode(nibbles) when is_list(nibbles) do
     {nibbles, term} = nibbles |> term?
     odd = nibbles |> odd?
