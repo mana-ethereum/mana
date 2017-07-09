@@ -48,6 +48,21 @@ defmodule MerklePatriciaTree.Tree do
     node |> List.replace_at(node_key, new_node_hash)
   end
 
+  defp update_node([node_key, node_value], :leaf, key, value, db) do
+    current_key =
+      node_key
+      |> Nibbles.hex_prefix_decode
+      |> Nibbles.remove_terminator
+
+    common_prefix_length = Nibbles.common_prefix_length(current_key, key)
+
+    remaining_key = key |> Enum.drop(common_prefix_length)
+    remaining_current_key = current_key |> Enum.drop(common_prefix_length)
+  end
+
+  defp update_node(node, :extension, key, value) do
+  end
+
   defp decode_to_node("") do
     ""
   end
