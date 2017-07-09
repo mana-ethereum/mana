@@ -8,7 +8,18 @@ defmodule MerklePatriciaTree.Nibbles.HexPrefixTest do
 
     result = nibbles |> HexPrefix.encode
 
-    assert_equal result, expected_result
+    assert result == expected_result
+  end
+
+  test 'decodes hex prefix encoded nibbles (1)' do
+    nibbles = [1, 2, 3, 4, 5]
+
+    result =
+      nibbles
+      |> HexPrefix.encode
+      |> HexPrefix.decode
+
+    assert result == nibbles
   end
 
   test 'encodes nibble list to hex prefix (2)' do
@@ -17,7 +28,18 @@ defmodule MerklePatriciaTree.Nibbles.HexPrefixTest do
 
     result = nibbles |> HexPrefix.encode
 
-    assert_equal result, expected_result
+    assert result == expected_result
+  end
+
+  test 'decodes hex prefix encoded nibbles (2)' do
+    nibbles = [0, 1, 2, 3, 4, 5]
+
+    result =
+      nibbles
+      |> HexPrefix.encode
+      |> HexPrefix.decode
+
+    assert result == nibbles
   end
 
   test 'encodes nibble list to hex prefix (3)' do
@@ -26,7 +48,18 @@ defmodule MerklePatriciaTree.Nibbles.HexPrefixTest do
 
     result = nibbles |> HexPrefix.encode
 
-    assert_equal result, expected_result
+    assert result == expected_result
+  end
+
+  test 'decodes hex prefix encoded nibbles (3)' do
+    nibbles = [0, 15, 1, 12, 11, 8]
+
+    result =
+      nibbles
+      |> HexPrefix.encode
+      |> HexPrefix.decode
+
+    assert result == nibbles
   end
 
   test 'encodes nibble list to hex prefix (4)' do
@@ -35,15 +68,17 @@ defmodule MerklePatriciaTree.Nibbles.HexPrefixTest do
 
     result = nibbles |> HexPrefix.encode
 
-    assert_equal result, expected_result
+    assert result == expected_result
   end
 
-  def assert_equal(bytes, binary) do
-    bytes
-    |> Enum.reduce(binary, fn(byte, << <<cur_byte>>, tail :: binary >>) ->
-      assert byte == cur_byte
+  test 'decodes hex prefix encoded nibbles (4)' do
+    nibbles = [15, 1, 12, 11, 8, 16]
 
-      tail
-    end)
+    result =
+      nibbles
+      |> HexPrefix.encode
+      |> HexPrefix.decode
+
+    assert result == nibbles
   end
 end

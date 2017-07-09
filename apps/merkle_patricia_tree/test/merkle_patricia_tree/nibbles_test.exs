@@ -28,4 +28,13 @@ defmodule MerklePatriciaTree.NibblesTest do
 
     assert result == expected_result
   end
+
+  test 'removes terminator' do
+    nibble_list = [11, 15, 16]
+    expected_result = [11, 15]
+
+    result = nibble_list |> Nibbles.remove_terminator
+
+    assert result == expected_result
+  end
 end

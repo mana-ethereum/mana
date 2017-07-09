@@ -16,13 +16,19 @@ defmodule MerklePatriciaTree.Nibbles do
     result
   end
 
-  def to_binary(nibbles) when is_list(nibbles) do
-    nibbles
-    |> Enum.chunk(2)
-    |> Enum.map(fn([first_nibble, second_nibble]) ->
-      first_nibble * 16 + second_nibble
+  def to_binary(nibbles, result \\ [])
+
+  def to_binary([], result) do
+    result
+    |> Enum.reduce(<<>>, fn(byte, acc) ->
+      acc <> << byte >>
     end)
-    |> to_string
+  end
+
+  def to_binary([prev_nibble | [cur_nibble | tail]], result) do
+    cur_enc = [16 * prev_nibble + cur_nibble]
+
+    to_binary(tail, result ++ cur_enc)
   end
 
   def hex_prefix(nibbles) when is_list(nibbles) do
@@ -31,5 +37,9 @@ defmodule MerklePatriciaTree.Nibbles do
 
   def add_terminator(nibbles) when is_list(nibbles) do
     nibbles ++ [16]
+  end
+
+  def remove_terminator(nibbles) when is_list(nibbles) do
+    nibbles -- [16]
   end
 end

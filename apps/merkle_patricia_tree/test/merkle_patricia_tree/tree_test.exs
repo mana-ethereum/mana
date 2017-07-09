@@ -35,4 +35,14 @@ defmodule MerklePatriciaTree.TreeTest do
 
     assert value == "roll"
   end
+
+  # test 'rewrites value' do
+  #   db = DB.new
+  #   tree =
+  #     db
+  #     |> Tree.new
+  #     |> Tree.update("rock", "climb")
+
+  #   new_tree = tree |> Tree.update("rock", "roll")
+  # end
 end

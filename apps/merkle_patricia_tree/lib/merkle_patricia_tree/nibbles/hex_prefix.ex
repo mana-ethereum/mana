@@ -1,11 +1,22 @@
 defmodule MerklePatriciaTree.Nibbles.HexPrefix do
+  import MerklePatriciaTree.Nibbles, only: [from_binary: 1, to_binary: 1]
+  use Bitwise, only_operators: true
+
+  def decode(hex_prefix_bin) when is_binary(hex_prefix_bin) do
+    nibbles = hex_prefix_bin |> from_binary
+    [flags | _] = nibbles
+
+    nibbles = if (flags &&& 2) > 0, do: nibbles ++ [16], else: nibbles
+    if (flags &&& 1) > 0, do: Enum.drop(nibbles, 1), else: Enum.drop(nibbles, 2)
+  end
+
   def encode(nibbles) when is_list(nibbles) do
     {nibbles, term} = nibbles |> term?
     odd = nibbles |> odd?
 
     nibbles
     |> add_flags(odd, term)
-    |> encode_nibbles
+    |> to_binary
   end
 
   defp odd?(nibbles) do
@@ -32,18 +43,6 @@ defmodule MerklePatriciaTree.Nibbles.HexPrefix do
     first_nibble = f(term) + 1
 
     [first_nibble | nibbles]
-  end
-
-  defp encode_nibbles(nibbles, result \\ [])
-
-  defp encode_nibbles([], result) do
-    result
-  end
-
-  defp encode_nibbles([prev_nibble | [cur_nibble | tail]], result) do
-    cur_enc = [16 * prev_nibble + cur_nibble]
-
-    encode_nibbles(tail, result ++ cur_enc)
   end
 
   defp f(true) do
