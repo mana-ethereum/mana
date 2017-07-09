@@ -31,8 +31,12 @@ defmodule MerklePatriciaTree.Nibbles do
     to_binary(tail, result ++ cur_enc)
   end
 
-  def hex_prefix(nibbles) when is_list(nibbles) do
+  def hex_prefix_encode(nibbles) when is_list(nibbles) do
     nibbles |> HexPrefix.encode
+  end
+
+  def hex_prefix_decode(binary) when is_binary(binary) do
+    binary |> HexPrefix.decode
   end
 
   def add_terminator(nibbles) when is_list(nibbles) do
@@ -41,5 +45,23 @@ defmodule MerklePatriciaTree.Nibbles do
 
   def remove_terminator(nibbles) when is_list(nibbles) do
     nibbles -- [16]
+  end
+
+  def common_prefix_length(nibbles1, nibbles2, length \\ 0)
+
+  def common_prefix_length([], _, length) do
+    length
+  end
+
+  def common_prefix_length(_, [], length) do
+    length
+  end
+
+  def common_prefix_length([nibble1 | tail1], [nibble2 | tail2], length) when nibble1 == nibble2 do
+    common_prefix_length(tail1, tail2, length + 1)
+  end
+
+  def common_prefix_length(_, _, length)  do
+    length
   end
 end

@@ -28,9 +28,13 @@ defmodule MerklePatriciaTree.Tree do
       key
       |> Nibbles.from_binary
       |> Nibbles.add_terminator
-      |> Nibbles.hex_prefix
+      |> Nibbles.hex_prefix_encode
 
     [binary_key, value]
+  end
+
+  defp update_node(node, :leaf, key, value) do
+
   end
 
   defp decode_to_node("") do
