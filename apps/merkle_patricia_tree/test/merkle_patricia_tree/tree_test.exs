@@ -23,4 +23,16 @@ defmodule MerklePatriciaTree.TreeTest do
     [_, value_in_db] = DB.get(new_root) |> ExRLP.decode
     assert value_in_db == value
   end
+
+  test 'initializes tree root with existing node' do
+    db = DB.new
+    %Tree{root: node_hash} =
+      db
+      |> Tree.new
+      |> Tree.update("rock", "roll")
+
+    %Tree{root: [_key, value]} = Tree.new(db, node_hash)
+
+    assert value == "roll"
+  end
 end

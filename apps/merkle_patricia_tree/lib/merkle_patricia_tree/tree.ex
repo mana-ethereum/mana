@@ -3,6 +3,8 @@ defmodule MerklePatriciaTree.Tree do
   alias MerklePatriciaTree.{Tree, Nibbles, Utils, DB}
 
   def new(db, root \\ "") do
+    root = root |> decode_to_node
+
     %Tree{db: db, root: root}
   end
 
@@ -29,6 +31,16 @@ defmodule MerklePatriciaTree.Tree do
       |> Nibbles.hex_prefix
 
     [binary_key, value]
+  end
+
+  defp decode_to_node("") do
+    ""
+  end
+
+  defp decode_to_node(hash) when byte_size(hash) <= 32 do
+    hash
+    |> DB.get
+    |> ExRLP.decode
   end
 
   defp update_root(root, db) do
