@@ -1,13 +1,16 @@
 defmodule MerklePatriciaTree.Tree do
   defstruct [:db, :root]
-  alias MerklePatriciaTree.{Tree, Nibbles}
+  alias MerklePatriciaTree.{Tree, Nibbles, Utils, DB}
 
   def new(db, root \\ "") do
     %Tree{db: db, root: root}
   end
 
   def update(%Tree{db: db, root: root}, key, value) do
-    new_root = update_and_delete_storage(root, key, value, db)
+    new_root =
+      root
+      |> update_and_delete_storage(key, value, db)
+      |> update_root(db)
 
     %Tree{db: db, root: new_root}
   end
@@ -26,6 +29,15 @@ defmodule MerklePatriciaTree.Tree do
       |> Nibbles.hex_prefix
 
     [binary_key, value]
+  end
+
+  defp update_root(root, db) do
+    rlp_encoding = root |> ExRLP.encode
+    sha3_encoding = rlp_encoding |> Utils.keccak
+
+    DB.put(sha3_encoding, rlp_encoding)
+
+    sha3_encoding
   end
 
   defp node_type("") do

@@ -19,5 +19,8 @@ defmodule MerklePatriciaTree.TreeTest do
     %Tree{root: new_root} = tree |> Tree.update(key, value)
 
     assert new_root != root
+
+    [_, value_in_db] = DB.get(new_root) |> ExRLP.decode
+    assert value_in_db == value
   end
 end
