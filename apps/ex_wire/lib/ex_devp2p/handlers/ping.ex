@@ -1,6 +1,8 @@
 defmodule ExDevp2p.Handlers.Ping do
-  alias ExDevp2p.Actions.Pong
-  alias ExDevp2p.Encodings.Ping
+  alias ExDevp2p.Network
+  alias ExDevp2p.Messages.Pong
+  alias ExDevp2p.Messages.Ping
+  alias ExDevp2p.Utils.Timestamp
 
   def handle(%{
     signature: _signature,
@@ -11,10 +13,10 @@ defmodule ExDevp2p.Handlers.Ping do
   }) do
     ping = Ping.decode(data)
 
-    Pong.send(
-      to: ping[:from],
+    %Pong{
+      to: ping.from,
       hash: hash,
-      pid: pid,
-    )
+      timestamp: Timestamp.now
+    } |> Network.send(pid: pid, to: ping.from)
   end
 end

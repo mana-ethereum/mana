@@ -10,6 +10,10 @@ defmodule ExDevp2p.Network do
     handle(data, pid)
   end
 
+  def assert_hash(<< hash :: size(256), payload :: bits >>) do
+    Crypto.assert_hash(hash, payload)
+  end
+
   def handle(
     <<
       hash :: size(256),
@@ -29,26 +33,18 @@ defmodule ExDevp2p.Network do
 
       case type do
         @ping -> Ping.handle(params)
-        _ -> IO.puts "Message code: " <> Integer.to_string(type) <> " not implemented"
+        _ -> IO.puts "Message code: 0x" <> Base.encode16(<<type>>) <> " not implemented"
       end
   end
 
-  def assert_hash(<< hash :: size(256), payload :: bits >>) do
-    Crypto.assert_hash(hash, payload)
-  end
-
-  def send(data: data, to: to, pid: pid) do
-    data = data
-      |> Protocol.sign
-      |> Protocol.hash
-
+  def send(message, pid: pid, to: to) do
     GenServer.cast(
       pid,
       {
         :send,
         %{
           to: to,
-          data: data
+          data: Protocol.encode(message),
         }
       }
     )

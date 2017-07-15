@@ -22,6 +22,6 @@ defmodule ExDevp2p.Crypto do
   end
 
   def sign(message, signature) do
-    :libsecp256k1.ecdsa_sign_compact(message, signature, :default, <<>>)
+    :libsecp256k1.ecdsa_sign_compact(message, :binary.encode_unsigned(signature), :default, <<>>)
   end
 end

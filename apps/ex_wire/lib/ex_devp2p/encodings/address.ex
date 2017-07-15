@@ -1,6 +1,4 @@
 defmodule ExDevp2p.Encodings.Address do
-  alias ExDevp2p.Encodings.Binary
-
   def decode([ip, udp_port, tcp_port]) do
     %{
       ip: decode_ip(ip),
@@ -17,14 +15,14 @@ defmodule ExDevp2p.Encodings.Address do
 
   def decode_port(data) do
     value = data
-      |> Binary.decode
+      |> :binary.decode_unsigned
     if value == 0, do: nil, else: value
   end
 
   def encode(%{ip: ip, tcp_port: tcp_port, udp_port: udp_port}) do
-    encode_ip(ip) <>
-      encode_port(tcp_port) <>
-      encode_port(udp_port)
+    [encode_ip(ip),
+      encode_port(udp_port),
+      encode_port(tcp_port)]
   end
 
   def encode_ip(data) do
@@ -34,6 +32,6 @@ defmodule ExDevp2p.Encodings.Address do
   end
 
   def encode_port(data) do
-    if data == nil, do: <<0>>, else: <<data>>
+    if data == nil, do: 0, else: data
   end
 end

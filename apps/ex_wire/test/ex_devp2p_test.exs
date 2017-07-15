@@ -1,12 +1,61 @@
 defmodule ExDevp2pTest do
-  @network_adapter Application.get_env(:ex_devp2p, :network_adapter)
-  use ExUnit.Case
+  alias ExDevp2p.Protocol
+  alias ExDevp2p.Messages.Ping
+  alias ExDevp2p.Messages.Pong
+  alias ExDevp2p.Utils.Timestamp
+  use ExUnit.Case, async: true
   doctest ExDevp2p
 
-  test "`ping` triggers a `pong` " do
-    ping = :binary.encode_unsigned(0x0607c19d05f05b58ef12a371eb5749bdf9887ea46be9cc93dc95cad24ad2f98122a78db1ddd42ee1715607d460f9d108df92d621a90f75296ffe8130df310dfb642d47f40968e304f5282cc042728e6fd0e445704ce7382d11de56af7248d3590001da04c784000000008080cb847f00000182765f82000084595005a1)
+  @them %{
+    ip: {0, 0, 0, 1},
+    udp_port: 30303,
+    tcp_port: nil,
+  }
 
-    # @network_adapter.handle_info({:udp, nil, nil, nil, ping}, %{})
-    #ExDevp2p.Network.handle_info({:udp, nil, nil, nil, ping}, %{})
+  @us %{
+    ip: {0, 0, 0, 2},
+    udp_port: 30303,
+    tcp_port: nil,
+  }
+
+  setup do
+    Process.register self(), :test
+
+    :ok
+  end
+
+  test "`ping` responds with a `pong` " do
+    timestamp = Timestamp.now
+
+    ping = %Ping{
+      version: 4,
+      to: @them,
+      from: @us,
+      timestamp: timestamp
+    }
+
+    fake_send(ping)
+
+    assert_recieve_message(%Pong{
+      to: @us,
+      hash: Protocol.hash(ping),
+      timestamp: timestamp
+    })
+
+  end
+
+  def assert_recieve_message(message) do
+    message = message |> Protocol.encode
+    assert_receive(%{data: ^message, to: @us})
+  end
+
+  def fake_send(message) do
+    GenServer.cast(
+      :test_network_adapter,
+      {
+        :fake_recieve,
+        Protocol.encode(message)
+      }
+    )
   end
 end
