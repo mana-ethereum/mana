@@ -116,6 +116,60 @@ defmodule MerklePatriciaTree.Tree do
   end
 
   defp update_node(node, :extension, key, value) do
+    current_key =
+      node
+      |> Enum.at(0)
+      |> Nibbles.hex_prefix_decode
+      |> Nibbles.remove_terminator
+
+    common_prefix_length = Nibbles.common_prefix_length(current_key, key)
+
+    remaining_key = key |> Enum.drop(common_prefix_length)
+    current_remaining_key = current_key |> Enum.drop(common_prefix_length)
+
+    new_node = update_extension_node(
+      node,
+      current_remaining_key,
+      remaining_key,
+      value,
+      db
+    )
+  end
+
+  defp update_extension_node([node_key | node_value], current_remaining_key, [], value, db) do
+    node_value
+    |> decode_to_node(node_value)
+    |> update_and_delete_storage(current_remaining_key, value, db)
+  end
+
+  defp update_extension_node([node_key | node_value], cur_remaining_key, remaining_key, value, db) do
+    new_node = new_branch_node()
+    [key | key_tail] = remaining_key
+    [cur_key | cur_key_tail] = cur_remaining_key
+
+    new_node = if size(remaining_key) == 1 do
+        new_node |> List.replace_at(key, node_value)
+      else
+        remaing_key_hash =
+          key_tail
+          |> Nibbles.hex_prefix_encode
+        new_remaining_node = [remaing_key_hash | node_value] |> decode_to_node
+
+        new_node |> List.replace_at(key, new_remaining_node)
+      end
+
+    if size(current_remaining_key) == 0 do
+      new_node |> List.replace_at(16, value)
+    else
+      cur_remaining_key_hash =
+        cur_key_tail
+        |> Nibbles.add_terminator
+        |> Nibbles.hex_prefix_encode
+      new_cur_remaining_node =
+        [cur_remaining_key_hash | value] |> decode_to_node
+
+      new_node |> List.replace_at(cur_key, new_cur_remaining_node)
+    end
   end
 
   defp new_branch_node do
