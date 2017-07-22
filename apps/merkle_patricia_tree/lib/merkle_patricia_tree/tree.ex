@@ -8,6 +8,61 @@ defmodule MerklePatriciaTree.Tree do
     %Tree{db: db, root: root}
   end
 
+  def get(%Tree{db: db, root: root}, key) do
+    node = root |> decode_to_node
+    nibble_key = key |> Nibbles.from_binary
+
+    get_node_value(node, nibble_key)
+  end
+
+  defp get_node_value(node, key) do
+    type = node |> node_type
+
+    get_node_value(node, type, key)
+  end
+
+  defp get_node_value(_node, :blank, _key) do
+    ""
+  end
+
+  defp get_node_value(node, :branch, []) do
+    node |> Enum.at(17)
+  end
+
+  defp get_node_value(node, :branch, [key | key_tail]) do
+    node
+    |> Enum.at(key)
+    |> decode_to_node
+    |> get_node_value(key_tail)
+  end
+
+  defp get_node_value([node_key, node_value], :leaf, key) do
+    cur_key =
+      node_key
+      |> Nibbles.hex_prefix_decode
+      |> Nibbles.remove_terminator
+
+    if cur_key == key, do: node_value, else: ""
+  end
+
+  defp get_node_value([node_key, node_value], :extension, key) do
+    cur_key =
+      node_key
+      |> Nibbles.hex_prefix_decode
+      |> Nibbles.remove_terminator
+
+    common_prefix_length = Nibbles.common_prefix_length(key, node_key)
+    key_length = key |> Enum.count
+
+    if Nibbles.starts_with?(key, node_key) do
+      node_value
+      |> decode_to_node
+      |> get(key -- node_key)
+    else
+      ""
+    end
+  end
+
   def update(%Tree{db: db, root: root}, key, value) do
     nibble_key = key |> IO.inspect |> Nibbles.from_binary
     new_root =

@@ -87,7 +87,12 @@ defmodule MerklePatriciaTree.TreeTest do
       db
       |> Tree.new
       |> Tree.update("do", "verb")
-      |> Tree.update("dog", "puppy")
+      |> Tree.update("ether", "wookiedoo")
+      |> Tree.update("shaman", "horse")
       |> Tree.update("doge", "coin")
+      |> Tree.update("ether", "")
+      |> Tree.update("dog", "puppy")
+      |> Tree.update("shaman", "")
+      |> IO.inspect
   end
 end

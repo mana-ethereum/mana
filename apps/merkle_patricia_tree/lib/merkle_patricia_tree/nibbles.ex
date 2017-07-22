@@ -64,4 +64,18 @@ defmodule MerklePatriciaTree.Nibbles do
   def common_prefix_length(_, _, length)  do
     length
   end
+
+  def starts_with?(nibbles1, nibbles2)
+
+  def starts_with?(_, []) do
+    true
+  end
+
+  def starts_with?([nibble1 | tail1], [nibble2 | tail2]) when nibble1 == nibble2 do
+    starts_with?(tail1, tail2)
+  end
+
+  def starts_with?(_, _, length)  do
+    false
+  end
 end
