@@ -11,6 +11,7 @@ defmodule MerklePatriciaTree.Tree do
   def update(%Tree{db: db, root: root}, key, value) do
     new_root =
       root
+      |> decode_to_node
       |> update_and_delete_storage(key, value, db)
       |> encode_node(db)
 
@@ -55,6 +56,10 @@ defmodule MerklePatriciaTree.Tree do
       |> Nibbles.hex_prefix_decode
       |> Nibbles.remove_terminator
 
+    key =
+      key
+      |> Nibbles.from_binary
+
     common_prefix_length = Nibbles.common_prefix_length(current_key, key)
 
     remaining_key = key |> Enum.drop(common_prefix_length)
@@ -73,7 +78,7 @@ defmodule MerklePatriciaTree.Tree do
     [node_key, value]
   end
 
-  defp update_leaf_node([node_key | node_value], [key | key_tail], [], value, db) do
+  defp update_leaf_node([node_key, node_value], [key | key_tail], [], value, db) do
     new_node =
       new_branch_node()
       |> List.replace_at(16, node_value)
@@ -83,7 +88,7 @@ defmodule MerklePatriciaTree.Tree do
       |> Nibbles.add_terminator
       |> Nibbles.hex_prefix_encode
 
-    new_leaf_node = [remaining_tail_hash | value] |> encode_node(db)
+    new_leaf_node = [remaining_tail_hash, value] |> encode_node(db)
 
     new_node |> List.replace_at(key, new_leaf_node)
   end
@@ -202,7 +207,7 @@ defmodule MerklePatriciaTree.Tree do
   defp node_type([key, _]) do
     last_nibble =
       key
-      |> Nibbles.from_binary
+      |> Nibbles.hex_prefix_decode
       |> List.last
 
     node_type(last_nibble)

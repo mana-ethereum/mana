@@ -36,13 +36,48 @@ defmodule MerklePatriciaTree.TreeTest do
     assert value == "roll"
   end
 
-  # test 'rewrites value' do
-  #   db = DB.new
-  #   tree =
-  #     db
-  #     |> Tree.new
-  #     |> Tree.update("rock", "climb")
+  test 'update leaf node value with existing key' do
+    db = DB.new
+    tree =
+      db
+      |> Tree.new
+      |> Tree.update("rock", "climb")
 
-  #   new_tree = tree |> Tree.update("rock", "roll")
-  # end
+    %Tree{root: new_root} = tree |> Tree.update("rock", "roll")
+
+    [_, value_in_db] = DB.get(new_root) |> ExRLP.decode
+    assert value_in_db == "roll"
+  end
+
+  test 'updates leaf node with intersecting key (1)' do
+    db = DB.new
+    tree =
+      db
+      |> Tree.new
+      |> Tree.update("rock", "roll")
+
+    %Tree{root: new_root} = tree |> Tree.update("rockabilly", "roll")
+    branch_node = DB.get(new_root) |> ExRLP.decode
+    assert List.last(branch_node) == "roll"
+
+    [_key, value] = <<115, 17, 145, 201, 35, 55, 34, 78, 79, 68, 141, 144, 123, 189, 93, 164, 13,
+      23, 136, 88, 27, 239, 7, 238, 16, 30, 22, 57, 194, 56, 134, 74>> |> DB.get |> ExRLP.decode
+    assert value == "roll"
+  end
+
+  test 'updates leaf node with intersecting key (2)' do
+    db = DB.new
+    tree =
+      db
+      |> Tree.new
+      |> Tree.update("rockabilly", "roll")
+
+    %Tree{root: new_root} = tree |> Tree.update("rock", "roll")
+    branch_node = DB.get(new_root) |> ExRLP.decode
+    assert List.last(branch_node) == "roll"
+
+    [_key, value] = <<115, 17, 145, 201, 35, 55, 34, 78, 79, 68, 141, 144, 123, 189, 93, 164, 13,
+      23, 136, 88, 27, 239, 7, 238, 16, 30, 22, 57, 194, 56, 134, 74>> |> DB.get |> ExRLP.decode
+    assert value == "roll"
+  end
 end
