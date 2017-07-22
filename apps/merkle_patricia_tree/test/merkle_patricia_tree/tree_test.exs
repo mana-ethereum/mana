@@ -60,8 +60,8 @@ defmodule MerklePatriciaTree.TreeTest do
     branch_node = DB.get(new_root) |> ExRLP.decode
     assert List.last(branch_node) == "roll"
 
-    [_key, value] = <<115, 17, 145, 201, 35, 55, 34, 78, 79, 68, 141, 144, 123, 189, 93, 164, 13,
-      23, 136, 88, 27, 239, 7, 238, 16, 30, 22, 57, 194, 56, 134, 74>> |> DB.get |> ExRLP.decode
+    [_key, value] = <<22, 183, 223, 194, 236, 202, 241, 229, 68, 124, 116, 80, 6, 21, 37, 184, 200,
+      49, 100, 200, 47, 23, 37, 82, 36, 73, 46, 133, 102, 23, 151, 105>> |> DB.get |> ExRLP.decode
     assert value == "roll"
   end
 
@@ -76,8 +76,8 @@ defmodule MerklePatriciaTree.TreeTest do
     branch_node = DB.get(new_root) |> ExRLP.decode
     assert List.last(branch_node) == "roll"
 
-    [_key, value] = <<115, 17, 145, 201, 35, 55, 34, 78, 79, 68, 141, 144, 123, 189, 93, 164, 13,
-      23, 136, 88, 27, 239, 7, 238, 16, 30, 22, 57, 194, 56, 134, 74>> |> DB.get |> ExRLP.decode
+    [_key, value] = <<22, 183, 223, 194, 236, 202, 241, 229, 68, 124, 116, 80, 6, 21, 37, 184, 200,
+      49, 100, 200, 47, 23, 37, 82, 36, 73, 46, 133, 102, 23, 151, 105>> |> DB.get |> ExRLP.decode
     assert value == "roll"
   end
 end

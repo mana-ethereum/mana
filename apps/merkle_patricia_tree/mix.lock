@@ -3,4 +3,5 @@
   "ex_rlp": {:hex, :ex_rlp, "0.1.1", "d5e82b79a98709cc48cb482bec4301f25fe9cbb36042a4b4ef7ca1cb8abba9e7", [:mix], [], "hexpm"},
   "hex2bin": {:hex, :hex2bin, "1.0.0", "aac26eab998ae80eacee1c7607c629ab503ebf77a62b9242bae2b94d47dcb71e", [:rebar3], [], "hexpm"},
   "keccak": {:hex, :keccak, "2.0.0", "bb5a84544591d52eb5bf4d9edba767c5cfb6f8523ed70cc7a38082d53ca32be7", [:rebar3], [{:hex2bin, "1.0.0", [hex: :hex2bin, repo: "hexpm", optional: false]}], "hexpm"},
+  "keccakf1600": {:hex, :keccakf1600, "2.0.0", "69d02d844a101bf3c75484c9e334fd04b0f57280727e881cac3bd8240432f43a", [:rebar3], [], "hexpm"},
   "sha3": {:hex, :sha3, "2.0.0", "fbe5db75a8389fdc810b682446c053b91e591d38d5422808f3a702ed2b270515", [:rebar3], [{:hex2bin, "1.0.0", [hex: :hex2bin, repo: "hexpm", optional: false]}], "hexpm"}}

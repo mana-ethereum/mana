@@ -17,7 +17,8 @@ defmodule MerklePatriciaTree.Mixfile do
   defp deps do
     [
       {:credo, "~> 0.8", only: [:dev, :test], runtime: false},
-      {:ex_rlp, "~> 0.1.1"}
+      {:ex_rlp, "~> 0.1.1"},
+      {:keccakf1600, "~> 2.0.0"}
     ]
   end
 end
