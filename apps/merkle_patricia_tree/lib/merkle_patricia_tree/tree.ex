@@ -54,17 +54,17 @@ defmodule MerklePatriciaTree.Tree do
     common_prefix_length = Nibbles.common_prefix_length(key, node_key)
     key_length = key |> Enum.count
 
-    if Nibbles.starts_with?(key, node_key) do
+    if Nibbles.starts_with?(key, cur_key) do
       node_value
       |> decode_to_node
-      |> get(key -- node_key)
+      |> get_node_value(key -- cur_key)
     else
       ""
     end
   end
 
   def update(%Tree{db: db, root: root}, key, value) do
-    nibble_key = key |> IO.inspect |> Nibbles.from_binary
+    nibble_key = key |> Nibbles.from_binary
     new_root =
       root
       |> decode_to_node
@@ -76,7 +76,7 @@ defmodule MerklePatriciaTree.Tree do
   end
 
   defp update_and_delete_storage(node, key, value, db) do
-    type = node |> node_type |> IO.inspect
+    type = node |> node_type
 
     update_node(node, type, key, value, db)
   end
@@ -124,13 +124,25 @@ defmodule MerklePatriciaTree.Tree do
       value,
       db
     )
+
+    if common_prefix_length == 0 do
+      new_node
+    else
+      encoded_new_node = encode_node(new_node, db)
+      new_node_key =
+        current_key
+        |> Enum.take(common_prefix_length)
+        |> Nibbles.hex_prefix_encode
+
+      [new_node_key, encoded_new_node]
+    end
   end
 
-  defp update_leaf_node([node_key | _], [], [], value, db) do
+  defp update_leaf_node([node_key, _], [], [], value, db) do
     [node_key, value]
   end
 
-  defp update_leaf_node([node_key, node_value], [key | key_tail], [], value, db) do
+  defp update_leaf_node([node_key, node_value], [], [key | key_tail], value, db) do
     new_node =
       new_branch_node()
       |> List.replace_at(16, node_value)
@@ -145,30 +157,30 @@ defmodule MerklePatriciaTree.Tree do
     new_node |> List.replace_at(key, new_leaf_node)
   end
 
-  defp update_leaf_node([node_key | node_value], current_remaining_key, [key | key_tail], value, db) do
+  defp update_leaf_node([node_key, node_value], [cur_key | cur_tail], remaining_key, value, db) do
     new_node = new_branch_node()
 
-    remaining_key_tail =
-      key_tail
+    remaining_cur_key_tail =
+      cur_tail
       |> Nibbles.add_terminator
       |> Nibbles.hex_prefix_encode
-    new_remaining_node = [remaining_key_tail | node_value] |> encode_node(db)
-    new_node = new_node |> List.replace_at(key, new_remaining_node)
+    new_remaining_node = [remaining_cur_key_tail, node_value] |> encode_node(db)
+    new_node = new_node |> List.replace_at(cur_key, new_remaining_node)
 
-    if length(current_remaining_key) == 0  do
-      new_node |> List.replace_at(16, value) |> IO.inspect
+    if length(remaining_key) == 0  do
+      new_node |> List.replace_at(16, value)
     else
-      [cur_key | cur_key_tail] = current_remaining_key
+      [key | key_tail] = remaining_key
 
-      remaining_cur_key_tail =
-        cur_key_tail
+      remaining_key_tail =
+        key_tail
         |> Nibbles.add_terminator
         |> Nibbles.hex_prefix_encode
       new_cur_remaining_node =
-        [remaining_cur_key_tail,  value]
+        [remaining_key_tail, value]
         |> encode_node(db)
 
-      new_node |> List.replace_at(cur_key, new_cur_remaining_node)
+      new_node |> List.replace_at(key, new_cur_remaining_node)
     end
   end
 
@@ -191,6 +203,18 @@ defmodule MerklePatriciaTree.Tree do
       value,
       db
     )
+
+    if common_prefix_length == 0 do
+      new_node
+    else
+      encoded_new_node = encode_node(new_node, db)
+      new_node_key =
+        current_key
+        |> Enum.take(common_prefix_length)
+        |> Nibbles.hex_prefix_encode
+
+      [new_node_key, encoded_new_node]
+    end
   end
 
   defp update_extension_node([node_key, node_value], current_remaining_key, [], value, db) do
@@ -244,7 +268,7 @@ defmodule MerklePatriciaTree.Tree do
   end
 
   defp encode_node(root, db) do
-    rlp_encoding = root |> IO.inspect |> ExRLP.encode
+    rlp_encoding = root |> ExRLP.encode
     sha3_encoding = rlp_encoding |> Utils.keccak
 
     DB.put(sha3_encoding, rlp_encoding)
