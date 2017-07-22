@@ -80,4 +80,14 @@ defmodule MerklePatriciaTree.TreeTest do
       49, 100, 200, 47, 23, 37, 82, 36, 73, 46, 133, 102, 23, 151, 105>> |> DB.get |> ExRLP.decode
     assert value == "roll"
   end
+
+  test 'updates leaf node with intersecting key (3)' do
+    db = DB.new
+    tree =
+      db
+      |> Tree.new
+      |> Tree.update("do", "verb")
+      |> Tree.update("dog", "puppy")
+      |> Tree.update("doge", "coin")
+  end
 end
