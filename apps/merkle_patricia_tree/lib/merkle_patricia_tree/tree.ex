@@ -26,7 +26,7 @@ defmodule MerklePatriciaTree.Tree do
   end
 
   defp get_node_value(node, :branch, []) do
-    node |> Enum.at(17)
+    node |> Enum.at(16)
   end
 
   defp get_node_value(node, :branch, [key | key_tail]) do
@@ -258,7 +258,11 @@ defmodule MerklePatriciaTree.Tree do
     ""
   end
 
-  def decode_to_node(hash) when byte_size(hash) <= 32 do
+  def decode_to_node(rlp_encoding) when byte_size(rlp_encoding) < 32 do
+    rlp_encoding |> ExRLP.decode
+  end
+
+  def decode_to_node(hash) do
     hash
     |> DB.get
     |> ExRLP.decode
@@ -266,11 +270,16 @@ defmodule MerklePatriciaTree.Tree do
 
   defp encode_node(root, db) do
     rlp_encoding = root |> ExRLP.encode
-    sha3_encoding = rlp_encoding |> Utils.keccak
 
-    DB.put(sha3_encoding, rlp_encoding)
+    if byte_size(rlp_encoding) < 32 do
+      rlp_encoding
+    else
+      sha3_encoding = rlp_encoding |> Utils.keccak
 
-    sha3_encoding
+      DB.put(sha3_encoding, rlp_encoding)
+
+      sha3_encoding
+    end
   end
 
   defp node_type("") do
