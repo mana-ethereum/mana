@@ -6,7 +6,7 @@ defmodule ExRLP.EncoderTest do
     string = ""
     expected_result = "80"
 
-    result = string |> Encoder.encode
+    result = string |> Encoder.encode(encoding: :hex)
 
     assert result == expected_result
   end
@@ -15,7 +15,7 @@ defmodule ExRLP.EncoderTest do
     string =  "\u0000"
     expected_result = "00"
 
-    result = string |> Encoder.encode
+    result = string |> Encoder.encode(encoding: :hex)
 
     assert result == expected_result
   end
@@ -24,7 +24,7 @@ defmodule ExRLP.EncoderTest do
     string = "\u0001"
     expected_result = "01"
 
-    result = string |> Encoder.encode
+    result = string |> Encoder.encode(encoding: :hex)
 
     assert result == expected_result
   end
@@ -33,7 +33,7 @@ defmodule ExRLP.EncoderTest do
     string = "\u007F"
     expected_result = "7f"
 
-    result = string |> Encoder.encode
+    result = string |> Encoder.encode(encoding: :hex)
 
     assert result == expected_result
   end
@@ -42,7 +42,7 @@ defmodule ExRLP.EncoderTest do
     string = "dog"
     expected_result = "83646f67"
 
-    result = string |> Encoder.encode
+    result = string |> Encoder.encode(encoding: :hex)
 
     assert result == expected_result
   end
@@ -52,7 +52,7 @@ defmodule ExRLP.EncoderTest do
     expected_result = "b74c6f72656d20697073756d20646f6c6f722073697" <>
       "420616d65742c20636f6e7365637465747572206164697069736963696e6720656c69"
 
-    result = string |> Encoder.encode
+    result = string |> Encoder.encode(encoding: :hex)
 
     assert result == expected_result
   end
@@ -62,7 +62,7 @@ defmodule ExRLP.EncoderTest do
     expected_result = "b8384c6f72656d20697073756d20646f6c6f722073697" <>
       "420616d65742c20636f6e7365637465747572206164697069736963696e6720656c6974"
 
-    result = string |> Encoder.encode
+    result = string |> Encoder.encode(encoding: :hex)
 
     assert result == expected_result
   end
@@ -108,7 +108,7 @@ defmodule ExRLP.EncoderTest do
       "e6375732c206d65747573206163206f726e617265206375727375732c20646f6c6f72206a7573746f20" <>
       "756c747269636573206d657475732c20617420756c6c616d636f7270657220766f6c7574706174"
 
-    result = string |> Encoder.encode
+    result = string |> Encoder.encode(encoding: :hex)
 
     assert result == expected_result
   end
@@ -117,7 +117,7 @@ defmodule ExRLP.EncoderTest do
     string = 0
     expected_result = "80"
 
-    result = string |> Encoder.encode
+    result = string |> Encoder.encode(encoding: :hex)
 
     assert result == expected_result
   end
@@ -126,7 +126,7 @@ defmodule ExRLP.EncoderTest do
     string = 1
     expected_result = "01"
 
-    result = string |> Encoder.encode
+    result = string |> Encoder.encode(encoding: :hex)
 
     assert result == expected_result
   end
@@ -135,7 +135,7 @@ defmodule ExRLP.EncoderTest do
     string = 16
     expected_result = "10"
 
-    result = string |> Encoder.encode
+    result = string |> Encoder.encode(encoding: :hex)
 
     assert result == expected_result
   end
@@ -144,7 +144,7 @@ defmodule ExRLP.EncoderTest do
     string = 79
     expected_result = "4f"
 
-    result = string |> Encoder.encode
+    result = string |> Encoder.encode(encoding: :hex)
 
     assert result == expected_result
   end
@@ -153,7 +153,7 @@ defmodule ExRLP.EncoderTest do
     string = 127
     expected_result = "7f"
 
-    result = string |> Encoder.encode
+    result = string |> Encoder.encode(encoding: :hex)
 
     assert result == expected_result
   end
@@ -162,7 +162,7 @@ defmodule ExRLP.EncoderTest do
     string = 128
     expected_result = "8180"
 
-    result = string |> Encoder.encode
+    result = string |> Encoder.encode(encoding: :hex)
 
     assert result == expected_result
   end
@@ -171,7 +171,7 @@ defmodule ExRLP.EncoderTest do
     string = 1000
     expected_result = "8203e8"
 
-    result = string |> Encoder.encode
+    result = string |> Encoder.encode(encoding: :hex)
 
     assert result == expected_result
   end
@@ -180,7 +180,7 @@ defmodule ExRLP.EncoderTest do
     string = 100000
     expected_result = "830186a0"
 
-    result = string |> Encoder.encode
+    result = string |> Encoder.encode(encoding: :hex)
 
     assert result == expected_result
   end
@@ -189,7 +189,7 @@ defmodule ExRLP.EncoderTest do
     string = 83729609699884896815286331701780722
     expected_result = "8f102030405060708090a0b0c0d0e0f2"
 
-    result = string |> Encoder.encode
+    result = string |> Encoder.encode(encoding: :hex)
 
     assert result == expected_result
   end
@@ -198,7 +198,7 @@ defmodule ExRLP.EncoderTest do
     string = 105315505618206987246253880190783558935785933862974822347068935681
     expected_result = "9c0100020003000400050006000700080009000a000b000c000d000e01"
 
-    result = string |> Encoder.encode
+    result = string |> Encoder.encode(encoding: :hex)
 
     assert result == expected_result
   end
@@ -207,7 +207,7 @@ defmodule ExRLP.EncoderTest do
     list = [ "dog", "god", "cat" ]
     expected_result = "cc83646f6783676f6483636174"
 
-    result = list |> Encoder.encode
+    result = list |> Encoder.encode(encoding: :hex)
 
     assert result == expected_result
   end
@@ -216,7 +216,7 @@ defmodule ExRLP.EncoderTest do
     list = [ "zw", [ 4 ], 1 ]
     expected_result = "c6827a77c10401"
 
-    result = list |> Encoder.encode
+    result = list |> Encoder.encode(encoding: :hex)
 
     assert result == expected_result
   end
@@ -227,7 +227,7 @@ defmodule ExRLP.EncoderTest do
     expected_result = "f784617364668471776572847a7863768461736466847" <>
       "1776572847a78637684617364668471776572847a78637684617364668471776572"
 
-    result = list |> Encoder.encode
+    result = list |> Encoder.encode(encoding: :hex)
 
     assert result == expected_result
   end
@@ -242,7 +242,7 @@ defmodule ExRLP.EncoderTest do
     expected_result = "f840cf84617364668471776572847a786376cf84617364668" <>
       "471776572847a786376cf84617364668471776572847a786376cf84617364668471776572847a786376"
 
-    result = list |> Encoder.encode
+    result = list |> Encoder.encode(encoding: :hex)
 
     assert result == expected_result
   end
@@ -302,7 +302,7 @@ defmodule ExRLP.EncoderTest do
       "84617364668471776572847a786376cf84617364668471776572847a" <>
       "786376cf84617364668471776572847a786376"
 
-    result = list |> Encoder.encode
+    result = list |> Encoder.encode(encoding: :hex)
 
     assert result == expected_result
   end
@@ -311,7 +311,7 @@ defmodule ExRLP.EncoderTest do
     list = [ [ [], [] ], [] ]
     expected_result = "c4c2c0c0c0"
 
-    result = list |> Encoder.encode
+    result = list |> Encoder.encode(encoding: :hex)
 
     assert result == expected_result
   end
@@ -320,7 +320,7 @@ defmodule ExRLP.EncoderTest do
     list = [ [], [[]], [ [], [[]] ] ]
     expected_result = "c7c0c1c0c3c0c1c0"
 
-    result = list |> Encoder.encode
+    result = list |> Encoder.encode(encoding: :hex)
 
     assert result == expected_result
   end
@@ -335,7 +335,7 @@ defmodule ExRLP.EncoderTest do
     expected_result = "ecca846b6579318476616c31ca846b65" <>
       "79328476616c32ca846b6579338476616c33ca846b6579348476616c34"
 
-    result = list |> Encoder.encode
+    result = list |> Encoder.encode(encoding: :hex)
 
     assert result == expected_result
   end
@@ -344,7 +344,7 @@ defmodule ExRLP.EncoderTest do
     big_integer = 115792089237316195423570985008687907853269984665640564039457584007913129639936
     expected_result = "a1010000000000000000000000000000000000000000000000000000000000000000"
 
-    result = big_integer |> Encoder.encode
+    result = big_integer |> Encoder.encode(encoding: :hex)
 
     assert result == expected_result
   end
@@ -353,8 +353,9 @@ defmodule ExRLP.EncoderTest do
     map = %{name: "Ayrat", surname: "Badykov", music: "Rock'n'Roll"}
     expected_result = "da8b526f636b276e27526f6c6c85417972617487426164796b6f76"
 
-    result = map |> Encoder.encode
+    result = map |> Encoder.encode(encoding: :hex)
 
     assert result == expected_result
   end
+
 end

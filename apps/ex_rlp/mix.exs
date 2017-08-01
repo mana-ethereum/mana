@@ -7,7 +7,7 @@ defmodule ExRLP.Mixfile do
      elixir: "~> 1.4",
      description: "Ethereum's Recursive Length Prefix (RLP) encoding",
      package: [
-       maintainers: ["Ayrat Badykov"],
+       maintainers: ["Ayrat Badykov", "Geoffrey Hayes"],
        licenses: ["MIT"],
        links: %{"GitHub" => "https://github.com/exthereum/ex_rlp"}
      ],
@@ -23,7 +23,8 @@ defmodule ExRLP.Mixfile do
   defp deps do
     [
       {:credo, "~> 0.8", only: [:dev, :test], runtime: false},
-      {:ex_doc, "~> 0.14", only: :dev, runtime: false}
+      {:ex_doc, "~> 0.14", only: :dev, runtime: false},
+      {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
     ]
   end
 end
