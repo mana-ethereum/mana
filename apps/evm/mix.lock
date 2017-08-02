@@ -1,0 +1,11 @@
+%{"bunt": {:hex, :bunt, "0.2.0", "951c6e801e8b1d2cbe58ebbd3e616a869061ddadcc4863d0a2182541acae9a38", [:mix], [], "hexpm"},
+  "credo": {:hex, :credo, "0.8.4", "4e50acac058cf6292d6066e5b0d03da5e1483702e1ccde39abba385c9f03ead4", [:mix], [{:bunt, "~> 0.2.0", [hex: :bunt, repo: "hexpm", optional: false]}], "hexpm"},
+  "dialyxir": {:hex, :dialyxir, "0.5.1", "b331b091720fd93e878137add264bac4f644e1ddae07a70bf7062c7862c4b952", [:mix], [], "hexpm"},
+  "earmark": {:hex, :earmark, "1.2.3", "206eb2e2ac1a794aa5256f3982de7a76bf4579ff91cb28d0e17ea2c9491e46a4", [:mix], [], "hexpm"},
+  "eleveldb": {:hex, :eleveldb, "2.2.20", "1fff63a5055bbf4bf821f797ef76065882b193f5e8095f95fcd9287187773b58", [:rebar3], [], "hexpm"},
+  "ex_doc": {:hex, :ex_doc, "0.16.2", "3b3e210ebcd85a7c76b4e73f85c5640c011d2a0b2f06dcdf5acdb2ae904e5084", [:mix], [{:earmark, "~> 1.1", [hex: :earmark, repo: "hexpm", optional: false]}], "hexpm"},
+  "ex_rlp": {:git, "https://github.com/exthereum/ex_rlp.git", "262546b8705452a1893ab07638159dce0a410993", []},
+  "exleveldb": {:hex, :exleveldb, "0.11.1", "37c0414208a50d2419d8246305e6c4a33ed339c25c0bdfa27774795e1e089f7b", [:mix], [{:eleveldb, "~> 2.2.19", [hex: :eleveldb, repo: "hexpm", optional: false]}], "hexpm"},
+  "hex_prefix": {:hex, :hex_prefix, "0.1.0", "e96b5cbb6ad8493196ce193726240023f5ce0ae0753118a19a5b43e2db0267ca", [:mix], [], "hexpm"},
+  "keccakf1600": {:hex, :keccakf1600, "2.0.0", "69d02d844a101bf3c75484c9e334fd04b0f57280727e881cac3bd8240432f43a", [:rebar3], [], "hexpm"},
+  "merkle_patricia_tree": {:git, "https://github.com/exthereum/merkle_patricia_tree.git", "c587675ddaeb0a9ecc8864c13d1feca0ef70bf5a", [branch: "hayesgm/merkle-tree-implementation"]}}

@@ -1,0 +1,18 @@
+jobs:
+  build:
+    working_directory: ~/evm
+    docker:
+      - image: elixir:latest
+    steps:
+      - checkout
+      - restore_cache:
+          key: _build
+      - run: mix local.hex --force
+      - run: mix local.rebar --force
+      - run: mix deps.get
+      - run: mix test
+      - run: mix dialyzer
+      - save_cache:
+          key: _build
+          paths:
+            - _build
