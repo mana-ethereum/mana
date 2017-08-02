@@ -1,4 +1,4 @@
-# EVM
+# EVM [![CircleCI](https://circleci.com/gh/exthereum/evm.svg?style=svg)](https://circleci.com/gh/exthereum/evm)
 
 The EVM is a fully working Ethereum Virtual Machine. This machine effective encodes Section 9 "Execution Model" of the [Yellow Paper](http://gavwood.com/Paper.pdf).
 
