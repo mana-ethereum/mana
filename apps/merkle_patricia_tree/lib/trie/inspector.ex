@@ -101,7 +101,7 @@ defmodule MerklePatriciaTree.Trie.Inspector do
   end
 
   defp do_inspect_trie(trie, depth, prefix \\ "") do
-    whitespace = if depth > 0, do: for _ <- 1..(2*depth), do: " ", else: ""
+    whitespace = if depth > 0, do: (for _ <- 1..(2*depth), do: " "), else: ""
     trie_node = Node.decode_trie(trie)
     node_info = inspect_trie_node(trie_node, trie, depth)
     "#{whitespace}#{prefix}Node: #{node_info}"
