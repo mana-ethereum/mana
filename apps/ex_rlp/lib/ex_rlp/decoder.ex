@@ -1,12 +1,18 @@
 defmodule ExRLP.Decode do
   @moduledoc false
 
-  def decode(item) when is_binary(item) do
+  @spec decode(binary(), :binary | :hex) :: ExRLP.t
+  def decode(item, encoding) when is_binary(item) do
     item
-    |> decode_hex
+    |> maybe_decode_hex(encoding)
     |> decode_item
   end
 
+  @spec maybe_decode_hex(binary(), atom()) :: binary()
+  defp maybe_decode_hex(value, :binary), do: value
+  defp maybe_decode_hex(value, :hex), do: decode_hex(value)
+
+  @spec decode_item(binary(), ExRLP.t) :: ExRLP.t
   defp decode_item(rlp_binary, result \\ nil)
 
   defp decode_item("", result) do
@@ -61,6 +67,7 @@ defmodule ExRLP.Decode do
     decode_item(new_tail, new_result)
   end
 
+  @spec add_new_item(ExRLP.t, ExRLP.t) :: ExRLP.t
   def add_new_item(nil, new_item) do
     new_item
   end
@@ -69,6 +76,7 @@ defmodule ExRLP.Decode do
     result ++ [new_item]
   end
 
+  @spec add_decoded_list(ExRLP.t, binary()) :: ExRLP.t
   defp add_decoded_list(nil, rlp_list_binary) do
     decode_item(rlp_list_binary, [])
   end
@@ -79,6 +87,7 @@ defmodule ExRLP.Decode do
     result ++ [list_items]
   end
 
+  @spec decode_medium_binary(integer(), binary(), integer()) :: {binary(), binary()}
   defp decode_medium_binary(length_prefix, tail, prefix) do
     item_length = length_prefix - prefix
     << item :: binary-size(item_length), new_tail :: binary >> = tail
@@ -86,6 +95,7 @@ defmodule ExRLP.Decode do
     {item, new_tail}
   end
 
+  @spec decode_long_binary(integer(), binary(), integer()) :: {binary(), binary()}
   defp decode_long_binary(be_size_prefix, tail, prefix) do
     be_size = be_size_prefix - prefix
     << be :: binary-size(be_size), data :: binary >> = tail
@@ -96,6 +106,7 @@ defmodule ExRLP.Decode do
     {item, new_tail}
   end
 
+  @spec decode_hex(binary()) :: binary()
   defp decode_hex(binary) do
     {:ok, decoded_binary} = binary |> Base.decode16(case: :lower)
 
@@ -110,18 +121,16 @@ end
 defimpl ExRLP.Decoder, for: BitString do
   alias ExRLP.Decode
 
-  def decode("827b7d", :map, _) do
-    %{}
-  end
-
+  @spec decode(binary(), atom(), keyword()) :: ExRLP.t
+  def decode(value, type \\ :binary, options \\ [])
   def decode(value, :map, options) do
     keys =
       options
-      |> Keyword.fetch!(:keys)
+      |> Keyword.get(:keys, [])
       |> Enum.sort
 
     value
-    |> Decode.decode
+    |> Decode.decode(Keyword.get(options, :encoding, :binary))
     |> Enum.with_index
     |> Enum.reduce(%{}, fn({value, index}, acc) ->
       key = keys |> Enum.at(index)
@@ -130,7 +139,7 @@ defimpl ExRLP.Decoder, for: BitString do
     end)
   end
 
-  def decode(value, :binary, _) do
-    value |> Decode.decode
+  def decode(value, :binary, options) do
+    value |> Decode.decode(Keyword.get(options, :encoding, :binary))
   end
 end

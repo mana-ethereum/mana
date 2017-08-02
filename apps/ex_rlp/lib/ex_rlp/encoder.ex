@@ -1,12 +1,18 @@
 defmodule ExRLP.Encode do
   @moduledoc false
 
-  def encode(item) do
+  @spec encode(ExRLP.t, :binary | :hex) :: binary()
+  def encode(item, encoding) do
     item
     |> encode_item
-    |> encode_hex
+    |> maybe_encode_hex(encoding)
   end
 
+  @spec maybe_encode_hex(binary(), atom()) :: binary()
+  def maybe_encode_hex(value, :binary), do: value
+  def maybe_encode_hex(value, :hex), do: encode_hex(value)
+
+  @spec encode_item(binary()) :: binary()
   defp encode_item(<< byte >> = item) when byte_size(item) == 1 and byte < 128  do
     item
   end
@@ -42,6 +48,7 @@ defmodule ExRLP.Encode do
     |> encode_item
   end
 
+  @spec prefix_list(binary()) :: binary()
   defp prefix_list(encoded_concat) when byte_size(encoded_concat) < 56 do
     size = encoded_concat |> byte_size
 
@@ -55,16 +62,19 @@ defmodule ExRLP.Encode do
     << 247 + byte_size >> <> be_size <> encoded_concat
   end
 
+  @spec big_endian_size(binary()) :: bitstring()
   defp big_endian_size(binary) do
     binary
     |> byte_size
     |> :binary.encode_unsigned
   end
 
+  @spec encode_hex(binary()) :: binary()
   defp encode_hex(binary) do
     binary |> Base.encode16(case: :lower)
   end
 
+  @spec encode_binary(integer()) :: binary()
   defp encode_binary(object) when is_integer(object) and object == 0 do
     ""
   end
@@ -75,41 +85,42 @@ defmodule ExRLP.Encode do
 end
 
 defprotocol ExRLP.Encoder do
+  @dialyzer {:nowarn_function, __protocol__: 1}
   def encode(value, options \\ nil)
 end
 
 defimpl ExRLP.Encoder, for: BitString do
   alias ExRLP.Encode
 
-  def encode(value, _) do
-    value |> Encode.encode
+  @spec encode(ExRLP.t, keyword()) :: binary()
+  def encode(value, options) do
+    value |> Encode.encode(Keyword.get(options, :encoding, :binary))
   end
 end
 
 defimpl ExRLP.Encoder, for: Integer do
   alias ExRLP.Encode
 
-  def encode(value, _) when value >= 0 do
-    value |> Encode.encode
+  @spec encode(ExRLP.t, keyword()) :: binary()
+  def encode(value, options) when value >= 0 do
+    value |> Encode.encode(Keyword.get(options, :encoding, :binary))
   end
 end
 
 defimpl ExRLP.Encoder, for: List do
   alias ExRLP.Encode
 
-  def encode(value, _) do
-    value |> Encode.encode
+  @spec encode(ExRLP.t, keyword()) :: binary()
+  def encode(value, options) do
+    value |> Encode.encode(Keyword.get(options, :encoding, :binary))
   end
 end
 
 defimpl ExRLP.Encoder, for: Map do
   alias ExRLP.Encode
 
-  def encode(map, _) when map_size(map) < 1 do
-    "827b7d"
-  end
-
-  def encode(map, _) do
+  @spec encode(map(), keyword()) :: binary()
+  def encode(map, options) do
     map
     |> Map.keys
     |> Enum.reduce([], fn(key, acc) ->
@@ -117,6 +128,6 @@ defimpl ExRLP.Encoder, for: Map do
 
       acc ++ [value]
     end)
-    |> Encode.encode
+    |> Encode.encode(Keyword.get(options, :encoding, :binary))
   end
 end
