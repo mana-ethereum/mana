@@ -5,6 +5,13 @@ jobs:
       - image: elixir:latest
     steps:
       - checkout
+      - restore_cache:
+          key: _build
       - run: mix local.hex --force
       - run: mix deps.get
       - run: mix test
+      - run: mix dialyzer
+      - save_cache:
+          key: _build
+          paths:
+            - _build
