@@ -42,7 +42,7 @@ defmodule EVM.Mixfile do
     [
       {:credo, "~> 0.8", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.14", only: :dev, runtime: false},
-      {:merkle_patricia_tree, github: "exthereum/merkle_patricia_tree", branch: "hayesgm/merkle-tree-implementation"},
+      {:merkle_patricia_tree, "~> 0.2.0"},
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
     ]
   end
