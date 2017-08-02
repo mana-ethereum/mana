@@ -41,7 +41,7 @@ defmodule MerklePatriciaTree.Mixfile do
       {:credo, "~> 0.8", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.14", only: :dev, runtime: false},
       {:hex_prefix, "~> 0.1.0"},
-      {:ex_rlp, github: "exthereum/ex_rlp"},
+      {:ex_rlp, "~> 0.2.0"},
       {:keccakf1600, "~> 2.0.0"},
       {:exleveldb, "~> 0.11.1"},
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
