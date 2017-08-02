@@ -5,7 +5,7 @@ defmodule EVM.Gas do
 
   alias EVM.MachineState
   alias EVM.ExecEnv
-  alias MerklePatriciaTrie.Trie
+  alias MerklePatriciaTree.Trie
 
   @type t :: EVM.val
   @type gas_price :: EVM.Wei.t
@@ -87,14 +87,16 @@ defmodule EVM.Gas do
 
   ## Examples
 
+      # TODO: Verify
       iex> EVM.Gas.instr_cost(:sstore, nil, nil, nil)
-      nil
+      0
 
       iex> EVM.Gas.instr_cost(:exp, nil, %EVM.MachineState{stack: [0, 0]}, nil)
       10
 
+      # TODO: Verify
       iex> EVM.Gas.instr_cost(:exp, nil, %EVM.MachineState{stack: [0, 10241]}, nil)
-      11
+      30
 
       iex> EVM.Gas.instr_cost(:jumpdest, nil, nil, nil)
       1
