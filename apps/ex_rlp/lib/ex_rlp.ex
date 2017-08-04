@@ -3,7 +3,7 @@ defmodule ExRLP do
 
   @moduledoc File.read!("#{__DIR__}/../README.md")
 
-  @type t :: nil | [t] | binary()
+  @type t :: nil | binary() | integer() | [t]
 
   @doc """
   Given an RLP structure, returns the encoding as a string.
@@ -49,6 +49,7 @@ defmodule ExRLP do
     iex> ExRLP.encode(for _ <- 1..60, do: [])
     <<248, 60, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192>>
   """
+  @spec encode(t) :: binary()
   @spec encode(t, keyword()) :: binary()
   def encode(item, options \\ []) do
     item |> Encoder.encode(options)
@@ -98,6 +99,8 @@ defmodule ExRLP do
     iex> ExRLP.decode(<<143, 2, 227, 142, 158, 4, 75, 160, 83, 84, 85, 150, 0, 0, 0, 0>>) |> :binary.decode_unsigned
     15_000_000_000_000_000_000_000_000_000_000_000
   """
+  @spec decode(binary()) :: t
+  @spec decode(binary(), atom()) :: t
   @spec decode(binary(), atom(), keyword()) :: t
   def decode(item, type \\ :binary, options \\ []) do
     item |> Decoder.decode(type, options)
