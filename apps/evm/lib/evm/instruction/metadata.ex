@@ -13,7 +13,7 @@ defmodule EVM.Instruction.Metadata do
     description: nil
   ]
 
-  @type t :: %{
+  @type t :: %__MODULE__{
     id: integer(),
     sym: atom(),
     fun: atom(),

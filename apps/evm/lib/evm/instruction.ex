@@ -6,10 +6,11 @@ defmodule EVM.Instruction do
 
   alias EVM.ExecEnv
   alias EVM.MachineState
+  alias EVM.SubState
 
   require Logger
 
-  @type instruction :: binary()
+  @type instruction :: atom()
   @type opcode :: byte()
 
   @instructions [
@@ -169,7 +170,7 @@ defmodule EVM.Instruction do
       iex> EVM.Instruction.get_instruction_at(<<0x11, 0x01, 0x02>>, 3)
       0x00
   """
-  @spec get_instruction_at(ExecEnv.t, MachineState.pc) :: opcode
+  @spec get_instruction_at(EVM.MachineCode.t, MachineState.pc) :: opcode
   def get_instruction_at(machine_code, pc) when is_binary(machine_code) and is_integer(pc) do
     if pc < byte_size(machine_code) do
       EVM.Helpers.binary_get(machine_code, pc)
@@ -196,7 +197,7 @@ defmodule EVM.Instruction do
       iex> EVM.Instruction.next_instr_pos(10, :push32)
       43
   """
-  @spec next_instr_pos(MachineState.pc, opcode) :: MachineState.pc
+  @spec next_instr_pos(MachineState.pc, instruction) :: MachineState.pc
   def next_instr_pos(pos, instr) do
     encoded_instruction = instr |> encode
 
@@ -274,7 +275,7 @@ defmodule EVM.Instruction do
       iex> EVM.Instruction.metadata(nil)
       nil
   """
-  @spec metadata(instruction | opcode) :: Metadata.t | nil
+  @spec metadata(instruction | opcode) :: EVM.Instruction.Metadata.t | nil
   def metadata(nil), do: nil
   def metadata(instruction) when is_atom(instruction) do
     instruction |> encode |> metadata

@@ -3,7 +3,7 @@ defmodule EVM do
   Documentation for EVM.
   """
 
-  @type state :: Trie.t
+  @type state :: MerklePatriciaTree.Trie.t
   @type trie_root :: <<_::256>>
   @type val :: integer()
   @type address :: <<_::160>>

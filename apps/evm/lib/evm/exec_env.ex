@@ -11,7 +11,7 @@ defmodule EVM.ExecEnv do
   defstruct [
     address: nil,                # a
     originator: nil,             # o
-    gas_price: nil,           # p
+    gas_price: nil,              # p
     data: nil,                   # d
     sender: nil,                 # s
     value_in_wei: nil,           # v
@@ -19,7 +19,7 @@ defmodule EVM.ExecEnv do
     block_header: nil,           # h
     stack_depth: nil]            # e
 
-  @type t :: %{
+  @type t :: %__MODULE__{
     address: EVM.address,
     originator: EVM.address,
     gas_price: EVM.Gas.gas_price,
@@ -40,7 +40,7 @@ defmodule EVM.ExecEnv do
 
   # TODO: Examples
   """
-  @spec exec_env_for_message_call(EVM.address, EVM.address, EVM.Gas.gas_price, binary(), EVM.address, EVM.Wei.t, integer(), Blockchain.Block.Header.t, EVM.MachineCode.t) :: t
+  @spec exec_env_for_message_call(EVM.address, EVM.address, EVM.Gas.gas_price, binary(), EVM.address, EVM.Wei.t, integer(), binary(), EVM.MachineCode.t) :: t
   def exec_env_for_message_call(recipient, originator, gas_price, data, sender, value_in_wei, stack_depth, block_header, machine_code) do
     %__MODULE__{
       address: recipient,

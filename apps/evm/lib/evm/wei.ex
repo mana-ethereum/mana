@@ -3,5 +3,5 @@ defmodule EVM.Wei do
   Functions for handling wei and conversions.
   """
 
-  @type t :: EVM.VM.val
+  @type t :: EVM.val
 end

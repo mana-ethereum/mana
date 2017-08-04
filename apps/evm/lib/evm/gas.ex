@@ -104,7 +104,7 @@ defmodule EVM.Gas do
       iex> EVM.Gas.instr_cost(:blockhash, nil, nil, nil)
       20
   """
-  @spec instr_cost(atom(), EVM.state, MachineState.t, ExecEnv.t) :: t
+  @spec instr_cost(atom(), EVM.state, MachineState.t, ExecEnv.t) :: t | nil
   def instr_cost(:sstore, state, machine_state, _exec_env), do: cost_sstore(state, machine_state)
   def instr_cost(:exp, _state, machine_state, _exec_env) do
     case Enum.at(machine_state.stack, 1) do

@@ -4,6 +4,7 @@ defmodule EVM.MachineCode do
   """
   alias EVM.Instruction
   alias EVM.MachineState
+  alias EVM.ExecEnv
 
   @type t :: binary()
 

@@ -10,11 +10,11 @@ defmodule EVM.SubState do
     refund: 0
   ]
 
-  @type suicide_list :: []
+  @type suicide_list :: [EVM.address]
   @type logs :: binary()
   @type refund :: EVM.Wei.t
 
-  @type t :: %{
+  @type t :: %__MODULE__{
     suicide_list: suicide_list,
     logs: logs,
     refund: refund

@@ -51,7 +51,7 @@ defmodule EVM.Stack do
       iex> EVM.Stack.peek([1, 2])
       1
   """
-  @spec peek(t) :: EMV.val | nil
+  @spec peek(t) :: EVM.val | nil
   def peek([]), do: nil
   def peek([h|_]), do: h
 
@@ -67,7 +67,7 @@ defmodule EVM.Stack do
       iex> EVM.Stack.peek_n([1, 2, 3], 4)
       ** (FunctionClauseError) no function clause matching in EVM.Stack.pop_n/2
   """
-  @spec peek_n(t, integer()) :: [EMV.val]
+  @spec peek_n(t, integer()) :: [EVM.val]
   def peek_n(stack, n) do
     {r, _} = pop_n(stack, n)
 

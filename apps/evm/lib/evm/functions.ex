@@ -49,6 +49,7 @@ defmodule EVM.Functions do
   end
 
   # Defined in Appendix H of the Yellow Paper
+  @spec h_return(MachineState.t) :: binary()
   defp h_return(machine_state) do
     {[mem_start, mem_end], _} = EVM.Stack.pop_n(machine_state.stack, 2)
 

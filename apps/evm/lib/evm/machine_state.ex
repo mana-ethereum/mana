@@ -11,6 +11,7 @@ defmodule EVM.MachineState do
   alias EVM.MachineCode
   alias EVM.Stack
   alias EVM.Instruction
+  alias EVM.MachineState
 
   defstruct [
     gas: nil,        # g
@@ -22,7 +23,7 @@ defmodule EVM.MachineState do
 
   @type pc :: integer()
   @type memory :: binary()
-  @type t :: %{
+  @type t :: %__MODULE__{
     gas: Gas.t,
     pc: pc,
     memory: memory,

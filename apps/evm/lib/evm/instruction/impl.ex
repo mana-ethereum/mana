@@ -12,15 +12,17 @@ defmodule EVM.Instruction.Impl do
 
   @type stack_args :: [EVM.val]
   @type vm_map :: %{
-    stack: Stack.t,
-    machine_state: MachineState.t,
-    sub_state: SubState.t,
-    exec_env: ExecEnv.t
+    optional(:state) => Trie.t,
+    optional(:stack) => Stack.t,
+    optional(:machine_state) => MachineState.t,
+    optional(:sub_state) => SubState.t,
+    optional(:exec_env) => ExecEnv.t
   }
   @type op_result ::
     :noop | # no-op
     :unimplemented | # instruction not implemented
-    vm_map # updates to vm state, any nil is no-op
+    vm_map | # updates to vm state, any nil is no-op
+    MachineState.t
 
   @doc """
   Halts execution.
@@ -443,12 +445,12 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.address([], %{stack: [], exec_env: %EVM.ExecEnv{address: 0x100}})
+      iex> EVM.Instruction.Impl.address([], %{stack: [], exec_env: %EVM.ExecEnv{address: <<01, 00>>}})
       %{stack: [0x100]}
   """
   @spec address(stack_args, vm_map) :: op_result
   def address(_args, %{stack: stack, exec_env: exec_env}) do
-    stack |> push(exec_env.address)
+    stack |> push(exec_env.address |> :binary.decode_unsigned)
   end
 
   @doc """
@@ -823,7 +825,8 @@ defmodule EVM.Instruction.Impl do
       }
   """
   @spec sload(stack_args, vm_map) :: op_result
-  def sload([key], %{state: state, stack: stack}) do
+  def sload([key], %{state: state=%Trie{}, stack: stack}) when is_list(stack) do
+    # TODO: Consider key value encodings
     stack_value = case Trie.get(state, <<key::size(256)>>) do
       nil -> 0
       value -> :binary.decode_unsigned(value)
@@ -860,6 +863,7 @@ defmodule EVM.Instruction.Impl do
   """
   @spec sstore(stack_args, vm_map) :: op_result
   def sstore([key, value], %{state: state}) do
+    # TODO: Consider key value encodings
     %{
       state: Trie.update(state, <<key::size(256)>>, <<value::size(256)>>)
     }
@@ -1636,13 +1640,12 @@ defmodule EVM.Instruction.Impl do
   end
 
   # Helper function to push to the stack within machine_state.
-  @spec push(MachineState.t, EVM.val) :: vm_map
+  @spec push(MachineState.t | Stack.t, EVM.val) :: op_result
   defp push(machine_state=%MachineState{}, val) do
-    %{machine_state| stack: machine_state.stack |> Stack.push(val|>mod)}
+    %{machine_state | stack: machine_state.stack |> Stack.push(val|>mod)}
   end
 
   # Helper function to just return an updated stack
-  @spec push(Stack.t, EVM.val) :: vm_map
   defp push(stack, val) when is_list(stack) do
     %{stack: Stack.push(stack, val|>mod)}
   end
@@ -1653,4 +1656,5 @@ defmodule EVM.Instruction.Impl do
   # TODO: signed?
   @spec decode(binary()) :: EVM.val
   defp decode(bin), do: :binary.decode_unsigned(bin) |> mod
+
 end

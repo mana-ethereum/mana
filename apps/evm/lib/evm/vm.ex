@@ -12,7 +12,7 @@ defmodule EVM.VM do
   alias EVM.Gas
   alias EVM.Instruction
 
-  @type output :: <<>>
+  @type output :: binary()
 
   @doc """
   This function computes the Ξ function Eq.(116) of the Section 9.4 of the Yellow Paper. This is the complete
@@ -64,12 +64,13 @@ defmodule EVM.VM do
       iex> EVM.VM.exec(%{}, %EVM.MachineState{pc: 0, gas: 5, stack: []}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:push1, 3, :push1, 5, :add, :push1, 0x00, :mstore, :push1, 0, :push1, 32, :return])})
       {%{}, %EVM.MachineState{active_words: 1, memory: <<0x08::256>>, pc: 13, gas: 5, stack: []}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:push1, 3, :push1, 5, :add, :push1, 0x00, :mstore, :push1, 0, :push1, 32, :return])}, <<0x08::256>>}
   """
-  @spec exec(EVM.state, MachineState.t, SubState.t, ExecEnv.t) :: {EVM.state, MachineState.t, SubState.t, ExecEnv.t, output}
+  @spec exec(EVM.state, MachineState.t, SubState.t, ExecEnv.t) :: {EVM.state | nil, MachineState.t, SubState.t, ExecEnv.t, output}
   def exec(state, machine_state, sub_state, exec_env) do
     do_exec(state, machine_state, sub_state, exec_env, sub_state)
   end
 
-  def do_exec(state, machine_state, sub_state, exec_env, original_sub_state) do
+  @spec do_exec(EVM.state, MachineState.t, SubState.t, ExecEnv.t, SubState.t) :: {EVM.state | nil, MachineState.t, SubState.t, ExecEnv.t, output}
+  defp do_exec(state, machine_state, sub_state, exec_env, original_sub_state) do
     case Functions.is_exception_halt?(state, machine_state, exec_env) do
       {:halt, _reason} ->
         # We're exception halting, undo it all.
