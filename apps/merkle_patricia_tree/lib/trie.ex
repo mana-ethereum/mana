@@ -16,7 +16,7 @@ defmodule MerklePatriciaTree.Trie do
     root_hash: root_hash
   }
 
-  @type key :: <<_::32>>
+  @type key :: binary()
 
   @empty_trie MerklePatriciaTree.Trie.Node.encode_node(:empty, nil)
 
