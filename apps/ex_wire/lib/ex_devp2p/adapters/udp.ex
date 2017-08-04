@@ -12,8 +12,16 @@ defmodule ExDevp2p.Adapters.UDP do
     {:ok, state}
   end
 
-  def handle_info({:udp, _socket, _ip, _port, data}, state = %{network: network}) do
-    network.receive(data, self())
+  def handle_info({:udp, _socket, ip, port, data}, state = %{network: network}) do
+    network.receive(%{
+      data: data,
+      pid: self(),
+      remote_host: %{
+        ip: ip,
+        udp_port: port,
+      },
+    }
+    )
     {:noreply, state}
   end
 

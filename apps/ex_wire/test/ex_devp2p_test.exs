@@ -2,6 +2,8 @@ defmodule ExDevp2pTest do
   alias ExDevp2p.Protocol
   alias ExDevp2p.Messages.Ping
   alias ExDevp2p.Messages.Pong
+  alias ExDevp2p.Messages.Neighbors
+  alias ExDevp2p.Messages.FindNeighbors
   alias ExDevp2p.Utils.Timestamp
   use ExUnit.Case, async: true
   doctest ExDevp2p
@@ -44,6 +46,22 @@ defmodule ExDevp2pTest do
 
   end
 
+  test "`find_neighbours` responds with `neighbors` " do
+    timestamp = Timestamp.now
+
+    find_neighbors = %FindNeighbors{
+      node_id: 1,
+      timestamp: timestamp
+    }
+
+    fake_send(find_neighbors)
+
+    assert_recieve_message(%Neighbors{
+      node_ids: [],
+      timestamp: timestamp
+    })
+  end
+
   def assert_recieve_message(message) do
     message = message |> Protocol.encode
     assert_receive(%{data: ^message, to: @us})
@@ -54,7 +72,10 @@ defmodule ExDevp2pTest do
       :test_network_adapter,
       {
         :fake_recieve,
-        Protocol.encode(message)
+        %{
+          data: Protocol.encode(message),
+          remote_host: @us,
+        }
       }
     )
   end

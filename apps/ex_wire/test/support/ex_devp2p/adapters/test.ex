@@ -20,9 +20,16 @@ defmodule ExDevp2p.Adapters.Test do
     {:noreply, state}
   end
 
-  def handle_cast({:fake_recieve, data},
+  def handle_cast({:fake_recieve, %{
+      data: data,
+      remote_host: remote_host,
+    }},
     state = %{network: network}) do
-    network.receive(data, self())
+      network.receive(%{
+        data: data,
+        pid: self(),
+        remote_host: remote_host,
+      })
 
     {:noreply, state}
   end
