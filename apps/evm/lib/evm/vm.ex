@@ -36,7 +36,7 @@ defmodule EVM.VM do
       iex> EVM.VM.run(%{}, 5, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:add])})
       {nil, 5, %EVM.SubState{}, ""}
   """
-  @spec run(EVM.state, Gas.t, ExecEnv.t) :: {EVM.state, Gas.t, EVM.SubState.t, output}
+  @spec run(EVM.state, Gas.t, ExecEnv.t) :: {EVM.state | nil, Gas.t, EVM.SubState.t, output}
   def run(state, gas, exec_env) do
     machine_state = %EVM.MachineState{gas: gas}
     sub_state = %EVM.SubState{}
