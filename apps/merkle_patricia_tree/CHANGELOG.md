@@ -1,3 +1,5 @@
+# 0.2.2
+* Add typespec for an empty trie.
 # 0.2.1
 * Expand key typespec to allow any size binary keys.
 # 0.2.0

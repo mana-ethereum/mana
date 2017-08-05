@@ -28,6 +28,7 @@ defmodule MerklePatriciaTree.Trie do
       iex> %MerklePatriciaTree.Trie{root_hash: MerklePatriciaTree.Trie.empty_trie} |> MerklePatriciaTree.Trie.Node.decode_trie()
       :empty
   """
+  @spec empty_trie() :: root_hash
   def empty_trie(), do: @empty_trie
 
   @doc """
