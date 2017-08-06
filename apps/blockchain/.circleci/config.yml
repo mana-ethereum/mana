@@ -11,6 +11,8 @@ jobs:
       - run: mix local.hex --force
       - run: mix local.rebar --force
       - run: mix deps.get
+      # TODO: The following step shouldn't be necessary.
+      - run: cd deps/libsecp256k1 && rebar compile
       - run: mix test
       - run: mix dialyzer
       - save_cache:
