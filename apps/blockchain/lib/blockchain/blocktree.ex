@@ -28,9 +28,9 @@ defmodule Blockchain.Blocktree do
     parent_map: %{},
   ]
 
-  @type t :: %{
-    block: Block.t,
-    children: [t],
+  @type t :: %__MODULE__{
+    block: :root | Block.t,
+    children: %{EVM.hash => t},
     total_difficulty: integer(),
     parent_map: %{EVM.hash => EVM.hash},
   }
@@ -158,7 +158,7 @@ defmodule Blockchain.Blocktree do
       iex> Blockchain.Blocktree.verify_and_add_block(tree_1, block_2, db)
       {:invalid, [:invalid_difficulty, :invalid_gas_limit, :child_timestamp_invalid]}
   """
-  @spec verify_and_add_block(t, Block.t, DB.db) :: {:ok, t} | {:invalid, [atom()]}
+  @spec verify_and_add_block(t, Block.t, MerklePatriciaTree.DB.db) :: {:ok, t} | {:invalid, [atom()]}
   def verify_and_add_block(blocktree, block, db) do
     parent = case Blockchain.Block.get_parent_block(block, db) do
       :genesis -> nil
@@ -254,7 +254,7 @@ defmodule Blockchain.Blocktree do
   end
 
   # Gets the maximum difficulty amoungst a set of child nodes
-  @spec max_difficulty([t]) :: integer()
+  @spec max_difficulty(%{EVM.hash => t}) :: integer()
   defp max_difficulty(children) do
     Enum.map(children, fn {_, child} -> child.total_difficulty end) |> Enum.max
   end
@@ -316,7 +316,6 @@ defmodule Blockchain.Blocktree do
       <<>> -> {:ok, []}
       parent_hash -> case do_get_path_to_root(blocktree, parent_hash) do
         :no_path -> :no_path
-        {:ok, <<>>} -> {:ok, [parent_hash]}
         {:ok, path} -> {:ok, [parent_hash | path]}
       end
     end
@@ -333,7 +332,7 @@ defmodule Blockchain.Blocktree do
 
   # TODO: Add examples
   """
-  @spec inspect_tree(t) :: []
+  @spec inspect_tree(t) :: [any()]
   def inspect_tree(blocktree) do
     value = case blocktree.block do
       :root -> :root

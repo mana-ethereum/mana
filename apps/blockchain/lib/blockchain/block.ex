@@ -19,8 +19,8 @@ defmodule Blockchain.Block do
     ommers: [],        # B_U
   ]
 
-  @type t :: %{
-    block_hash: nil | EVM.hash,
+  @type t :: %__MODULE__{
+    block_hash: EVM.hash | nil,
     header: Header.t,
     transactions: [Transaction.t],
     ommers: [Header.t],
@@ -44,7 +44,7 @@ defmodule Blockchain.Block do
     ]
 
     iex> Blockchain.Block.serialize(%Blockchain.Block{})
-    [[<<>>, <<128>>, nil, <<128>>, <<128>>, <<128>>, "", nil, nil, 0, 0, nil, "", nil, nil], [], []]
+    [["", <<128>>, "", <<128>>, <<128>>, <<128>>, "", nil, nil, 0, 0, nil, "", nil, nil], [], []]
   """
   @spec serialize(t) :: ExRLP.t
   def serialize(block) do
@@ -194,7 +194,7 @@ defmodule Blockchain.Block do
       iex> Blockchain.Block.get_transaction_count(%Blockchain.Block{transactions: [%Blockchain.Transaction{}, %Blockchain.Transaction{}]})
       2
   """
-  @spec get_transaction_count(t) :: number()
+  @spec get_transaction_count(t) :: integer()
   def get_transaction_count(block), do: Enum.count(block.transactions)
 
   @doc """
@@ -217,11 +217,11 @@ defmodule Blockchain.Block do
       ...> |> Blockchain.Block.get_receipt(7, db)
       nil
   """
-  @spec get_receipt(t, number(), DB.db) :: Receipt.t
+  @spec get_receipt(t, integer(), DB.db) :: Receipt.t | nil
   def get_receipt(block, i, db) do
     serialized_receipt =
       Trie.new(db, block.header.receipts_root)
-      |> Trie.get(ExRLP.encode(i))
+      |> Trie.get(i |> ExRLP.encode)
 
     case serialized_receipt do
       nil -> nil
@@ -255,11 +255,11 @@ defmodule Blockchain.Block do
       ...> |> Blockchain.Block.get_transaction(7, db)
       nil
   """
-  @spec get_transaction(t, number(), DB.db) :: Transaction.t
+  @spec get_transaction(t, integer(), DB.db) :: Transaction.t | nil
   def get_transaction(block, i, db) do
     serialized_transaction =
       Trie.new(db, block.header.transactions_root)
-      |> Trie.get(ExRLP.encode(i))
+      |> Trie.get(i |> ExRLP.encode)
 
     case serialized_transaction do
       nil -> nil
@@ -340,19 +340,23 @@ defmodule Blockchain.Block do
       ...> |> Blockchain.Block.gen_child_block(state_root: <<2::256>>, timestamp: 5010, extra_data: "hi", beneficiary: <<5::160>>)
       %Blockchain.Block{header: %Blockchain.Block.Header{state_root: <<2::256>>, beneficiary: <<5::160>>, number: 100_001, difficulty: 131136, timestamp: 5010, gas_limit: 500_000, extra_data: "hi"}}
   """
-  @spec gen_child_block(t, integer() | nil) :: t
+  @spec gen_child_block(t, [timestamp: EVM.timestamp, gas_limit: EVM.val, beneficiary: EVM.address, extra_data: binary(), state_root: EVM.hash]) :: t
   def gen_child_block(parent_block, opts \\ []) do
     timestamp = opts[:timestamp] || System.system_time(:second)
     gas_limit = opts[:gas_limit] || parent_block.header.gas_limit
-    beneficiary = opts[:beneficiary] || nil
+    beneficiary = opts[:beneficiary] || <<>>
     extra_data = opts[:extra_data] || <<>>
     state_root = opts[:state_root] || parent_block.header.state_root
 
     %Blockchain.Block{header: %Blockchain.Block.Header{state_root: state_root, timestamp: timestamp, extra_data: extra_data, beneficiary: beneficiary}}
+    |> identity()
     |> set_block_number(parent_block)
     |> set_block_difficulty(parent_block)
     |> set_block_gas_limit(parent_block, gas_limit)
   end
+
+  @spec identity(t) :: t
+  def identity(block), do: block
 
   @doc """
   Calculates the `number` for a new block. This implements Eq.(38) from
@@ -363,8 +367,8 @@ defmodule Blockchain.Block do
       iex> Blockchain.Block.set_block_number(%Blockchain.Block{header: %Blockchain.Block.Header{extra_data: "hello"}}, %Blockchain.Block{header: %Blockchain.Block.Header{number: 32}})
       %Blockchain.Block{header: %Blockchain.Block.Header{number: 33, extra_data: "hello"}}
   """
-  @spec set_block_number(t, t) :: integer()
-  def set_block_number(block=%Blockchain.Block{header: header}, %Blockchain.Block{header: %Blockchain.Block.Header{number: parent_number}}) do
+  @spec set_block_number(t, t) :: t
+  def set_block_number(block=%Blockchain.Block{header: header}, _parent_block=%Blockchain.Block{header: %Blockchain.Block.Header{number: parent_number}}) do
     %{block | header: %{header | number: parent_number + 1}}
   end
 
@@ -460,7 +464,7 @@ defmodule Blockchain.Block do
       ...> |> Blockchain.Block.get_ommer(0, db)
       %Blockchain.Block.Header{parent_hash: <<1::256>>, ommers_hash: <<2::256>>, beneficiary: <<3::160>>, state_root: <<4::256>>, transactions_root: <<5::256>>, receipts_root: <<6::256>>, logs_bloom: <<>>, difficulty: 5, number: 1, gas_limit: 5, gas_used: 3, timestamp: 6, extra_data: "Hi mom", mix_hash: <<7::256>>, nonce: <<8::64>>}
   """
-  @spec get_ommer(t, number(), DB.db) :: Header.t
+  @spec get_ommer(t, integer(), DB.db) :: Header.t
   def get_ommer(block, i, db) do
     serialized_ommer =
       Trie.new(db, block.header.ommers_hash)
@@ -599,7 +603,7 @@ defmodule Blockchain.Block do
     do_add_transactions_to_block(block, transactions, db, trx_count)
   end
 
-  @spec do_add_transactions_to_block(t, [Transaction.t], atom(), number()) :: t
+  @spec do_add_transactions_to_block(t, [Transaction.t], DB.db, integer()) :: t
   defp do_add_transactions_to_block(block, [], _, _), do: block
   defp do_add_transactions_to_block(block=%__MODULE__{header: header}, [trx|transactions], db, trx_count) do
     state = MerklePatriciaTree.Trie.new(db, header.state_root)
@@ -644,7 +648,7 @@ defmodule Blockchain.Block do
       ...> |> MerklePatriciaTree.Trie.Inspector.all_values()
       [{<<5>>, <<208, 131, 1, 2, 3, 10, 131, 2, 3, 4, 134, 104, 105, 32, 109, 111, 109>>}]
   """
-  @spec put_receipt(t, number(), Receipt.t, DB.db) :: t
+  @spec put_receipt(t, integer(), Receipt.t, DB.db) :: t
   def put_receipt(block, i, receipt, db) do
     updated_receipts_root =
       Trie.new(db, block.header.receipts_root)
@@ -668,7 +672,7 @@ defmodule Blockchain.Block do
       ...> |> MerklePatriciaTree.Trie.Inspector.all_values()
       [{<<0x80>>, <<201, 1, 128, 128, 128, 128, 128, 2, 3, 4>>}]
   """
-  @spec put_transaction(t, number(), Transaction.t, atom()) :: t
+  @spec put_transaction(t, integer(), Transaction.t, DB.db) :: t
   def put_transaction(block, i, trx, db) do
     total_transactions =  block.transactions ++ [trx]
     updated_transactions_root =

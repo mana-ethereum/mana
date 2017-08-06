@@ -18,7 +18,7 @@ defmodule Blockchain.Account do
   ]
 
   # Types defined as Eq.(12) of the Yellow Paper
-  @type t :: %{
+  @type t :: %__MODULE__{
     nonce: integer(),
     balance: EVM.Wei.t,
     storage_root: EVM.trie_root,
@@ -371,7 +371,7 @@ defmodule Blockchain.Account do
       iex> {Blockchain.Account.get_account(state, <<0x01::160>>), Blockchain.Account.get_account(state, <<0x02::160>>)}
       {%Blockchain.Account{balance: 7}, %Blockchain.Account{balance: 8}}
   """
-  @spec transfer(EVM.state, EVM.address, EVM.address, EVM.Wei.t) :: EVM.state
+  @spec transfer!(EVM.state, EVM.address, EVM.address, EVM.Wei.t) :: EVM.state
   def transfer!(state, from, to, wei) do
     case transfer(state, from, to, wei) do
       {:ok, state} -> state

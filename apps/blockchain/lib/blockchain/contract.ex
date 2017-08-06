@@ -40,7 +40,7 @@ defmodule Blockchain.Contract do
         <<215, 103, 82, 153, 30, 215, 126, 236, 249, 242, 4, 46, 12, 67, 179, 240, 206, 97, 155, 241>>
       ]
   """
-  @spec create_contract(EVM.state, EVM.address, EVM.address, EVM.Gas.t, EVM.Gas.gas_price, EVM.Wei.t, EVM.MachineCode.t, integer(), Header.t) :: {EVM.state, EVM.Gas.t, SubState.t}
+  @spec create_contract(EVM.state, EVM.address, EVM.address, EVM.Gas.t, EVM.Gas.gas_price, EVM.Wei.t, EVM.MachineCode.t, integer(), Header.t) :: {EVM.state, EVM.Gas.t, EVM.SubState.t}
   def create_contract(state, sender, originator, available_gas, gas_price, endowment, init_code, stack_depth, block_header) do
 
     sender_account = Account.get_account(state, sender)
@@ -112,7 +112,7 @@ defmodule Blockchain.Contract do
         <<247, 60, 39, 205, 253, 89, 146, 143, 219, 173, 26, 213, 173, 221, 39, 44, 111, 59, 34, 217, 228, 91, 21, 167, 59, 107, 79, 33, 90, 183, 135, 213>> # this must be a sub-tree
       ]
   """
-  @spec message_call(EVM.state, EVM.address, EVM.address, EVM.address, EVM.address, EVM.Gas.t, EVM.Gas.gas_price, EVM.Wei.t, EVM.Wei.t, binary(), integer(), Header.t) :: { EVM.state, EVM.Gas.t, SubState.t, EVM.VM.output }
+  @spec message_call(EVM.state, EVM.address, EVM.address, EVM.address, EVM.address, EVM.Gas.t, EVM.Gas.gas_price, EVM.Wei.t, EVM.Wei.t, binary(), integer(), Header.t) :: { EVM.state, EVM.Gas.t, EVM.SubState.t, EVM.VM.output }
   def message_call(state, sender, originator, recipient, contract, available_gas, gas_price, value, apparent_value, data, stack_depth, block_header) do
 
     exec_fun = get_message_call_exec_fun(recipient)
@@ -310,7 +310,7 @@ defmodule Blockchain.Contract do
       iex> Blockchain.Contract.get_message_call_exec_fun(<<6::160>>)
       &EVM.VM.run/3
   """
-  @spec get_message_call_exec_fun(EVM.adddress) :: ( (EVM.state, EVM.Gas.t, EVM.ExecEnv.t) -> {EVM.state, EVM.Gas.t, SubState.t, EVM.VM.output} )
+  @spec get_message_call_exec_fun(EVM.address) :: ( (EVM.state, EVM.Gas.t, EVM.ExecEnv.t) -> {EVM.state, EVM.Gas.t, EVM.SubState.t, EVM.VM.output} )
   def get_message_call_exec_fun(recipient) do
     case :binary.decode_unsigned(recipient) do
       1 -> &EVM.Builtin.run_ecrec/3

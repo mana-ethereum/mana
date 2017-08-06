@@ -18,10 +18,10 @@ defmodule Blockchain.Transaction.Receipt do
   ]
 
   # Types defined in Eq.(20)
-  @type t :: %{
-    state: EVM.state,
+  @type t :: %__MODULE__{
+    state: EVM.trie_root,
     cumulative_gas: EVM.Gas.t, # Defined in Eq.(21)
-    bloom_filter: <<>>, # TODO: Bloom filter
+    bloom_filter: binary(), # TODO: Bloom filter
     logs: EVM.SubState.logs,
   }
 
@@ -69,7 +69,7 @@ defmodule Blockchain.Transaction.Receipt do
       logs
     ] = rlp
 
-    %Blockchain.Transaction.Receipt{
+    %__MODULE__{
       state: state,
       cumulative_gas: :binary.decode_unsigned(cumulative_gas),
       bloom_filter: bloom_filter,

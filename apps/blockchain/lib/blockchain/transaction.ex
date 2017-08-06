@@ -21,15 +21,15 @@ defmodule Blockchain.Transaction do
     data: <<>>,       # Td
   ]
 
-  @type t :: %{
+  @type t :: %__MODULE__{
     nonce: EVM.val,
     gas_price: EVM.val,
     gas_limit: EVM.val,
     to: EVM.address | <<_::0>>,
     value: EVM.val,
-    v: <<_::5>>,
-    r: <<_::256>>,
-    s: <<_::256>>,
+    v: Blockchain.Transaction.Signature.hash_v,
+    r: Blockchain.Transaction.Signature.hash_r,
+    s: Blockchain.Transaction.Signature.hash_s,
     init: EVM.MachineCode.t,
     data: binary(),
   }
@@ -90,7 +90,7 @@ defmodule Blockchain.Transaction do
 
     {init, data} = if to == <<>>, do: {init_or_data, <<>>}, else: {<<>>, init_or_data}
 
-    %Blockchain.Transaction{
+    %__MODULE__{
       nonce: :binary.decode_unsigned(nonce),
       gas_price: :binary.decode_unsigned(gas_price),
       gas_limit: :binary.decode_unsigned(gas_limit),
@@ -260,7 +260,7 @@ defmodule Blockchain.Transaction do
       iex> Blockchain.Account.get_accounts(state, [sender, beneficiary, contract_address])
       [%Blockchain.Account{balance: 334727, nonce: 6}, %Blockchain.Account{balance: 65268}, %Blockchain.Account{balance: 5, code_hash: <<247, 60, 39, 205, 253, 89, 146, 143, 219, 173, 26, 213, 173, 221, 39, 44, 111, 59, 34, 217, 228, 91, 21, 167, 59, 107, 79, 33, 90, 183, 135, 213>>}]
   """
-  @spec execute_transaction(EVM.VM.state, t, Header.t) :: { EVM.VM.state, EVM.Gas.t, EVM.SubState.logs }
+  @spec execute_transaction(EVM.state, t, Header.t) :: { EVM.state, EVM.Gas.t, EVM.SubState.logs }
   def execute_transaction(state, trx, block_header) do
     # TODO: Check transaction validity.
     {:ok, sender} = Blockchain.Transaction.Signature.sender(trx)
@@ -315,7 +315,7 @@ defmodule Blockchain.Transaction do
       iex> Blockchain.Account.get_account(state, <<0x01::160>>)
       %Blockchain.Account{balance: 700, nonce: 8}
   """
-  @spec begin_transaction(EVM.state, EVM.address, t) :: EVM.VM.state
+  @spec begin_transaction(EVM.state, EVM.address, t) :: EVM.state
   def begin_transaction(state, sender, trx) do
     state
       |> Account.dec_wei(sender, trx.gas_limit * trx.gas_price)

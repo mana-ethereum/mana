@@ -10,7 +10,7 @@ defmodule Blockchain.Block.Header do
   defstruct [
     parent_hash: <<>>,               # Hp P(BH)Hr
     ommers_hash: @empty_trie,        # Ho KEC(RLP(L∗H(BU)))
-    beneficiary: nil,                # Hc
+    beneficiary: <<>>,               # Hc
     state_root: @empty_trie,         # Hr TRIE(LS(Π(σ, B)))
     transactions_root: @empty_trie,  # Ht TRIE({∀i < kBTk, i ∈ P : p(i, LT (BT[i]))})
     receipts_root: @empty_trie,      # He TRIE({∀i < kBRk, i ∈ P : p(i, LR(BR[i]))})
@@ -27,21 +27,21 @@ defmodule Blockchain.Block.Header do
 
   # As defined in Eq.(35)
   @type t :: %__MODULE__{
-    parent_hash: EVM.hash,
-    ommers_hash: EVM.hash,
-    beneficiary: EVM.address,
+    parent_hash: EVM.hash | <<>>,
+    ommers_hash: EVM.trie_root,
+    beneficiary: EVM.address | <<>>,
     state_root: EVM.trie_root,
     transactions_root: EVM.trie_root,
     receipts_root: EVM.trie_root,
     logs_bloom: binary(), # TODO
-    difficulty: integer(),
-    number: integer(),
+    difficulty: integer() | nil,
+    number: integer() | nil,
     gas_limit: EVM.val,
     gas_used: EVM.val,
-    timestamp: EVM.timestamp,
+    timestamp: EVM.timestamp | nil,
     extra_data: binary(),
-    mix_hash: EVM.hash,
-    nonce: <<_::64>>, # TODO: 64-bit hash?
+    mix_hash: EVM.hash | nil,
+    nonce: <<_::64>> | nil, # TODO: 64-bit hash?
   }
 
   @d_0 131_072 # Eq.(40)
@@ -204,7 +204,7 @@ defmodule Blockchain.Block.Header do
       iex> Blockchain.Block.Header.is_valid?(%Blockchain.Block.Header{number: 1, difficulty: 131_136, gas_limit: 200_000, timestamp: 65, extra_data: "0123456789012345678901234567890123456789"}, %Blockchain.Block.Header{number: 0, difficulty: 131_072, gas_limit: 200_000, timestamp: 55})
       {:invalid, [:extra_data_too_large]}
   """
-  @spec is_valid?(t, t) :: :valid | {:invalid, [atom()]}
+  @spec is_valid?(t, t | nil) :: :valid | {:invalid, [atom()]}
   def is_valid?(header, parent_header) do
     parent_gas_limit = if parent_header, do: parent_header.gas_limit, else: nil
 
@@ -276,7 +276,7 @@ defmodule Blockchain.Block.Header do
       # ...> )
       # 268_734_142
   """
-  @spec get_difficulty(t, t) :: integer()
+  @spec get_difficulty(t, t | nil) :: integer()
   def get_difficulty(header, parent_header) do
     cond do
       header.number == 0 -> @d_0
