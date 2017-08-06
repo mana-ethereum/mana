@@ -1,12 +1,15 @@
-# Blockchain
+# Exthereum Blockchain [![CircleCI](https://circleci.com/gh/exthereum/blockchain.svg?style=svg)](https://circleci.com/gh/exthereum/blockchain)
 
-**TODO: Add description**
+Elixir implementation of Ethereum's Blockchain. This includes functionality to build and verify a chain of Ethereum blocks that may be advertised from any peer. We complete the resultant state of the blocktree and form a canonical blockchain based on difficulty.
+
+Exthereum's blocks are specified in a variety of sections throughout [the yellow paper](http://yellowpaper.io/), but it's best to start looking under Section 4.4.
 
 ## Installation
 
 ```bash
 export "CFLAGS=-I/usr/local/include -L/usr/local/lib"
 mix deps.compile libsecp256k1
+mix compile
 ```
 
 If [available in Hex](https://hex.pm/docs/publish), the package can be installed
@@ -14,7 +17,7 @@ by adding `blockchain` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
-  [{:blockchain, "~> 0.1.0"}]
+  [{:blockchain, "~> 0.1.2"}]
 end
 ```
 
