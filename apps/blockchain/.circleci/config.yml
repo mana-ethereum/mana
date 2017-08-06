@@ -4,6 +4,7 @@ jobs:
     docker:
       - image: elixir:latest
     steps:
+      - run: apt-get update; apt-get -y install libgmp3-dev
       - checkout
       - restore_cache:
           key: _build
