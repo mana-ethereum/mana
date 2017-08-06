@@ -28,7 +28,7 @@ Use ExRLP.encode/1 method to encode an item to RLP representation. An item can b
 
 ```elixir
   ## Examples
-  
+
       iex(1)> "dog" |> ExRLP.encode(encoding: :hex)
       "83646f67"
 
@@ -52,7 +52,7 @@ Use ExRLP.decode/1 method to decode a rlp encoded data. All items except lists a
 ```elixir
 
   ## Examples
-  
+
       iex(1)> "83646f67" |> ExRLP.decode(:binary, encoding: :hex)
       "dog"
 
@@ -78,12 +78,7 @@ defimpl ExRLP.Encoder, for: Map do
 
   def encode(map, _) do
     map
-    |> Map.keys
-    |> Enum.reduce([], fn(key, acc) ->
-      value = Map.get(map, key)
-
-      acc ++ [value]
-    end)
+    |> Map.values
     |> Encode.encode
   end
 end
@@ -134,4 +129,3 @@ Ayrat Badykov (@ayrat555)
 ## License
 
 ExRLP is released under the MIT License. See the LICENSE file for further details.
-

@@ -122,12 +122,7 @@ defimpl ExRLP.Encoder, for: Map do
   @spec encode(map(), keyword()) :: binary()
   def encode(map, options) do
     map
-    |> Map.keys
-    |> Enum.reduce([], fn(key, acc) ->
-      value = Map.get(map, key)
-
-      acc ++ [value]
-    end)
+    |> Map.values
     |> Encode.encode(Keyword.get(options, :encoding, :binary))
   end
 end
