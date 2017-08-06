@@ -4,7 +4,7 @@ defmodule EVM do
   """
 
   @type state :: MerklePatriciaTree.Trie.t
-  @type trie_root :: <<_::256>>
+  @type trie_root :: MerklePatriciaTree.Trie.root_hash
   @type val :: integer()
   @type address :: <<_::160>>
   @type hash :: <<_::256>>
