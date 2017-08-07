@@ -1,25 +1,61 @@
 defmodule ExDevp2p.Protocol do
-  @private_key 0xd772e3d6a001a38064dd23964dd2836239fa0e6cec8b28972a87460a17210fe9
+  @moduledoc """
+  Functions to handle encoding and decoding messages for
+  over the wire transfer.
+  """
+
   alias ExDevp2p.Crypto
+  alias ExDevp2p.Message
 
-  def encode(message) do
-    hash(message) <>
-      signed_message(message)
+  @doc """
+  Encodes a given message by appending it to a hash of
+  its contents.
+
+  ## Examples
+
+      iex> ExDevp2p.Protocol.encode("hi mom", <<1>>)
+      <<2>>
+  """
+  @spec encode(Message.t, Crypto.private_key) :: binary()
+  def encode(message, private_key) do
+    signed_message = sign_message(message, private_key)
+
+    Crypto.hash(signed_message) <> signed_message
   end
 
-  def hash(message) do
-    Crypto.hash(signed_message(message))
+  @doc """
+  Returns a signed version of a message. This encodes
+  the message type, the encoded message itself, and a signature
+  for the message.
+
+  ## Examples
+
+      iex> ExDevp2p.Protocol.sign_message(%ExDevp2p.Message.Ping{version: 1, from: <<2>>, to: <<3>>, timestamp: 4}, <<1>>)
+      <<>>
+  """
+  @spec sign_message(Message.t, Crypto.private_key) :: binary()
+  def sign_message(message, private_key) do
+    message
+      |> Message.encode()
+      |> sign_binary(private_key)
   end
 
-  def signed_message(message) do
-    <<message.__struct__.id()>> <>
-      message.__struct__.encode(message)
-      |> sign
+  @doc """
+  Given a binary, returns an signed version encoded into a
+  binary with signature, recovery id and the message itself.
+
+  ## Examples
+
+      iex> ExDevp2p.Protocol.sign_binary(<<1>>, <<2>>)
+      <<3>>
+  """
+  @spec sign_binary(binary(), Crypto.private_key) :: binary()
+  def sign_binary(value, private_key) do
+    hashed_value = Crypto.hash(value)
+
+    {:ok, signature, recovery_id} = Crypto.sign(hashed_value, private_key)
+
+    signature <> <<recovery_id>> <> value
   end
 
-  def sign(message) do
-    message_hash = Crypto.hash(message)
-    {:ok, signature, recovery_id} = Crypto.sign(message_hash, @private_key)
-    signature <> <<recovery_id>> <> message
-  end
 end

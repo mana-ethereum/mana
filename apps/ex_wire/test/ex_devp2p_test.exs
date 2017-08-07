@@ -1,12 +1,13 @@
 defmodule ExDevp2pTest do
-  alias ExDevp2p.Protocol
-  alias ExDevp2p.Messages.Ping
-  alias ExDevp2p.Messages.Pong
-  alias ExDevp2p.Messages.Neighbors
-  alias ExDevp2p.Messages.FindNeighbors
-  alias ExDevp2p.Utils.Timestamp
-  use ExUnit.Case, async: true
+  use ExUnit.Case
   doctest ExDevp2p
+
+  alias ExDevp2p.Protocol
+  alias ExDevp2p.Message.Ping
+  alias ExDevp2p.Message.Pong
+  alias ExDevp2p.Message.Neighbors
+  alias ExDevp2p.Message.FindNeighbors
+  alias ExDevp2p.Util.Timestamp
 
   @them %{
     ip: {0, 0, 0, 1},

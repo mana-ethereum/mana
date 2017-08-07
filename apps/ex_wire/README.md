@@ -1,6 +1,6 @@
 # ExDevp2p
 
-**TODO: Add description**
+Elixir Client for DevP2P RLPx Protocol.
 
 ## Installation
 

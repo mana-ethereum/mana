@@ -1,4 +1,4 @@
-defmodule ExDevp2p.Adapters.Test do
+defmodule ExDevp2p.Adapter.Test do
   use GenServer
 
   def start_link(network) do
