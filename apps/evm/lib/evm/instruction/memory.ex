@@ -8,5 +8,5 @@ defmodule EVM.Instruction.Memory do
   """
 
   @spec active_words_after(EVM.Instruction.instruction, EVM.state, EVM.MachineState.t, EVM.ExecEnv.t) :: integer()
-  def active_words_after(instruction, state, machine_state, exec_env), do: machine_state.active_words
+  def active_words_after(_instruction, _state, machine_state, _exec_env), do: machine_state.active_words
 end

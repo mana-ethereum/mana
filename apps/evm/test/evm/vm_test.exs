@@ -27,9 +27,9 @@ defmodule EVM.VMTest do
       :return
     ]
 
-    result = EVM.VM.run(state, 5, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile(instructions)})
+    result = EVM.VM.run(state, 21, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile(instructions)})
 
-    assert result == {state, 5, %EVM.SubState{logs: "", refund: 0, suicide_list: []}, <<0x08::256>>}
+    assert result == {state, 0, %EVM.SubState{logs: "", refund: 0, suicide_list: []}, <<0x08::256>>}
   end
 
   test "simple program with block storage", %{state: state} do
@@ -42,11 +42,11 @@ defmodule EVM.VMTest do
       :stop
     ]
 
-    result = EVM.VM.run(state, 5, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile(instructions)})
+    result = EVM.VM.run(state, 20006, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile(instructions)})
 
     expected_state = %{state|root_hash: <<12, 189, 253, 61, 167, 240, 166, 67, 81, 179, 89, 188, 142, 220, 80, 44, 72, 102, 195, 89, 230, 27, 75, 136, 68, 2, 117, 227, 48, 141, 102, 230>>}
 
-    assert result == {expected_state, 5, %EVM.SubState{logs: "", refund: 0, suicide_list: []}, ""}
+    assert result == {expected_state, 0, %EVM.SubState{logs: "", refund: 0, suicide_list: []}, ""}
 
     {returned_state, _, _, _} = result
 

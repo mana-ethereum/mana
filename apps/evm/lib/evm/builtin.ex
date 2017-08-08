@@ -5,8 +5,8 @@ defmodule EVM.Builtin do
   natively exist in Ethereum.
   """
 
-  def run_ecrec(state, gas, exec_env), do: nil
-  def run_sha256(state, gas, exec_env), do: nil
-  def run_rip160(state, gas, exec_env), do: nil
-  def run_id(state, gas, exec_env), do: nil
+  def run_ecrec(_state, _gas, _exec_env), do: nil
+  def run_sha256(_state, _gas, _exec_env), do: nil
+  def run_rip160(_state, _gas, _exec_env), do: nil
+  def run_id(_state, _gas, _exec_env), do: nil
 end

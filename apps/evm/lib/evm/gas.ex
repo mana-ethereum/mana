@@ -5,7 +5,6 @@ defmodule EVM.Gas do
 
   alias EVM.MachineState
   alias EVM.ExecEnv
-  alias MerklePatriciaTree.Trie
 
   @type t :: EVM.val
   @type gas_price :: EVM.Wei.t
@@ -48,12 +47,13 @@ defmodule EVM.Gas do
 
   @w_zero_instr [:stop, :return]
   @w_base_instr [:address, :origin, :caller, :callvalue, :calldatasize, :codesize, :gasprice, :coinbase, :timestamp, :number, :difficulty, :gaslimit, :pop, :pc, :msize, :gas]
+  @push_instrs Enum.map(0..32, fn n -> :"push#{n}" end)
+  @dup_instrs Enum.map(0..16, fn n -> :"dup#{n}" end)
+  @swap_instrs Enum.map(0..16, fn n -> :"swap#{n}" end)
   @w_very_low_instr [
-    :add, :sub, :not, :lt, :gt, :slt, :sgt, :eq, :iszero, :and, :or, :xor, :byte, :calldataload, :mload, :mstore, :mstore8,
-    :push0, :push1, :push2, :push3, :push4, :push5, :push6, :push7, :push8, :push9, :push10, :push11, :push12, :push13, :push14, :push15, :push16,
-    :dup0, :dup1, :dup2, :dup3, :dup4, :dup5, :dup6, :dup7, :dup8, :dup9, :dup10, :dup11, :dup12, :dup13, :dup14, :dup15, :dup16,
-    :swap0, :swap1, :swap2, :swap3, :swap4, :swap5, :swap6, :swap7, :swap8, :swap9, :swap10, :swap11, :swap12, :swap13, :swap14, :swap15, :swap16,
-  ]
+    :add, :sub, :not, :lt, :gt, :slt, :sgt, :eq, :iszero, :and, :or, :xor,
+    :byte, :calldataload, :mload, :mstore, :mstore8 ] ++
+      @push_instrs ++ @dup_instrs ++ @swap_instrs
   @w_low_instr [:mul, :div, :sdiv, :mod, :smod, :signextend]
   @w_mid_instr [:addmod, :mulmod, :jump]
   @w_high_instr [:jumpi]
@@ -87,9 +87,8 @@ defmodule EVM.Gas do
 
   ## Examples
 
-      # TODO: Verify
-      iex> EVM.Gas.instr_cost(:sstore, nil, nil, nil)
-      0
+      iex> EVM.Gas.instr_cost(:sstore, nil, %EVM.MachineState{stack: [0, 0]}, nil)
+      5000
 
       iex> EVM.Gas.instr_cost(:exp, nil, %EVM.MachineState{stack: [0, 0]}, nil)
       10
@@ -103,6 +102,27 @@ defmodule EVM.Gas do
 
       iex> EVM.Gas.instr_cost(:blockhash, nil, nil, nil)
       20
+
+      iex> EVM.Gas.instr_cost(:stop, nil, nil, nil)
+      0
+
+      iex> EVM.Gas.instr_cost(:address, nil, nil, nil)
+      2
+
+      iex> EVM.Gas.instr_cost(:push0, nil, nil, nil)
+      3
+
+      iex> EVM.Gas.instr_cost(:mul, nil, nil, nil)
+      5
+
+      iex> EVM.Gas.instr_cost(:addmod, nil, nil, nil)
+      8
+
+      iex> EVM.Gas.instr_cost(:jumpi, nil, nil, nil)
+      10
+
+      iex> EVM.Gas.instr_cost(:extcodesize, nil, nil, nil)
+      700
   """
   @spec instr_cost(atom(), EVM.state, MachineState.t, ExecEnv.t) :: t | nil
   def instr_cost(:sstore, state, machine_state, _exec_env), do: cost_sstore(state, machine_state)
@@ -126,32 +146,47 @@ defmodule EVM.Gas do
   def instr_cost(:sha3, _state, _machine_state, _exec_env), do: 0
   def instr_cost(:jumpdest, _state, _machine_state, _exec_env), do: @g_jumpdest
   def instr_cost(:sload, _state, _machine_state, _exec_env), do: 0
-  def instr_cost(w_zero_instr, _state, _machine_state, _exec_env) when w_zero_instr in @w_zero_instr, do: 0
-  def instr_cost(w_base_instr, _state, _machine_state, _exec_env) when w_base_instr in @w_base_instr, do: 0
-  def instr_cost(w_very_low_instr, _state, _machine_state, _exec_env) when w_very_low_instr in @w_very_low_instr, do: 0
-  def instr_cost(w_low_instr, _state, _machine_state, _exec_env) when w_low_instr in @w_low_instr, do: 0
-  def instr_cost(w_mid_instr, _state, _machine_state, _exec_env) when w_mid_instr in @w_mid_instr, do: 0
-  def instr_cost(w_high_instr, _state, _machine_state, _exec_env) when w_high_instr in @w_high_instr, do: 0
-  def instr_cost(w_extcode_instr, _state, _machine_state, _exec_env) when w_extcode_instr in @w_extcode_instr, do: 0
+  def instr_cost(w_zero_instr, _state, _machine_state, _exec_env) when w_zero_instr in @w_zero_instr, do: @g_zero
+  def instr_cost(w_base_instr, _state, _machine_state, _exec_env) when w_base_instr in @w_base_instr, do: @g_base
+  def instr_cost(w_very_low_instr, _state, _machine_state, _exec_env) when w_very_low_instr in @w_very_low_instr, do: @g_verylow
+  def instr_cost(w_low_instr, _state, _machine_state, _exec_env) when w_low_instr in @w_low_instr, do: @g_low
+  def instr_cost(w_mid_instr, _state, _machine_state, _exec_env) when w_mid_instr in @w_mid_instr, do: @g_mid
+  def instr_cost(w_high_instr, _state, _machine_state, _exec_env) when w_high_instr in @w_high_instr, do: @g_high
+  def instr_cost(w_extcode_instr, _state, _machine_state, _exec_env) when w_extcode_instr in @w_extcode_instr, do: @g_extcode
   def instr_cost(:balance, _state, _machine_state, _exec_env), do: 0
   def instr_cost(:blockhash, _state, _machine_state, _exec_env), do: @g_blockhash
   def instr_cost(_unknown_instr, _state, _machine_state, _exec_env), do: nil
 
   # Eq.(222)
-  def cost_mem(active_words), do: 0
+  def cost_mem(_active_words), do: 0
 
   @doc """
   Returns the cost of a call to `sstore`. This is defined
   in Appenfix H.2. of the Yellow Paper under the
   definition of SSTORE, referred to as `C_SSTORE`.
 
-  # TODO: Implement and add examples
+  ## Examples
+
+    iex> state = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db(:evm_vm_test))
+    ...>  |> MerklePatriciaTree.Trie.update(<<0>>, 1)
+    iex> EVM.Gas.cost_sstore(state, %EVM.MachineState{stack: [0, 0]})
+    5000
+    iex> EVM.Gas.cost_sstore(state, %EVM.MachineState{stack: [0, 2]})
+    20000
   """
   @spec cost_sstore(EVM.state, MachineState.t) :: t
-  def cost_sstore(state, machine_state), do: 0
+  def cost_sstore(_state, machine_state) do
+    {:ok, new_value} = Enum.fetch(machine_state.stack, 1)
 
-  def cost_call(state, machine_state), do: 0
-  def cost_suicide(state, machine_state), do: 0
+    if new_value == 0 do
+      @g_sreset
+    else
+      @g_sset
+    end
+  end
+
+  def cost_call(_state, _machine_state), do: 0
+  def cost_suicide(_state, _machine_state), do: 0
 
   @doc """
   Returns the gas cost for G_txdata{zero, nonzero} as defined in
