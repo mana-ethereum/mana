@@ -23,6 +23,22 @@ defmodule MathHelper do
   def floor(x), do: round(:math.floor(x))
 
   @doc """
+  Simple round function
+
+  ## Examples
+
+      iex> MathHelper.round_int(3.5)
+      3
+      iex> MathHelper.round_int(-3.5)
+      -3
+      iex> MathHelper.round_int(-0.5)
+      0
+  """
+  @spec floor(number()) :: integer()
+  def round_int(n) when n < 0, do: round(:math.ceil(n))
+  def round_int(n), do: round(:math.floor(n))
+
+  @doc """
   Simple helper to calculate a log in any
   given base. E.g. the `log_15(30)`, which
   would be expressed at `MathHelper.log(30, 15)`.

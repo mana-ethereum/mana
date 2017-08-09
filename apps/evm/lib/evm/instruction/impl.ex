@@ -9,6 +9,7 @@ defmodule EVM.Instruction.Impl do
   alias EVM.SubState
   alias EVM.ExecEnv
   alias MerklePatriciaTree.Trie
+  use Bitwise
 
   @type stack_args :: [EVM.val]
   @type vm_map :: %{
@@ -21,6 +22,7 @@ defmodule EVM.Instruction.Impl do
   @type op_result ::
     :noop | # no-op
     :unimplemented | # instruction not implemented
+    EVM.val | # if it's a value it'll be pushed onto the stack
     vm_map | # updates to vm state, any nil is no-op
     MachineState.t
 
@@ -50,27 +52,32 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.add([1, 2], %{stack: []})
-      %{stack: [3]}
+      iex> EVM.Instruction.Impl.add([1, 2], %{})
+      3
 
-      iex> EVM.Instruction.Impl.add([-1, -5], %{stack: []})
-      %{stack: [-6]}
+      iex> EVM.Instruction.Impl.add([-1, -5], %{})
+      EVM.Instruction.Impl.encode_signed(-6)
 
-      iex> EVM.Instruction.Impl.add([0, 0], %{stack: []})
-      %{stack: [0]}
+      iex> EVM.Instruction.Impl.add([0, 0], %{})
+      0
 
-      iex> EVM.Instruction.Impl.add([EVM.max_int() - 2, 1], %{stack: []})
-      %{stack: [EVM.max_int() - 1]}
+      iex> EVM.Instruction.Impl.add([EVM.max_int() - 1 - 2, 1], %{})
+      EVM.max_int() - 1 - 1
 
-      iex> EVM.Instruction.Impl.add([EVM.max_int() - 2, 5], %{stack: []})
-      %{stack: [3]}
+      iex> EVM.Instruction.Impl.add([EVM.max_int() - 1 - 2, 5], %{})
+      2
 
-      iex> EVM.Instruction.Impl.add([EVM.max_int() + 2, EVM.max_int() + 2], %{stack: []})
-      %{stack: [4]}
+      iex> EVM.Instruction.Impl.add([EVM.max_int() - 1 + 2, EVM.max_int() - 1 + 2], %{})
+      2
+
+      iex> EVM.Instruction.Impl.add([EVM.max_int() - 1, 1], %{})
+      0
   """
   @spec add(stack_args, vm_map) :: op_result
-  def add([s0, s1], %{stack: stack}) do
-    stack |> push(s0 + s1)
+  def add([s0, s1], _) do
+    s0 + s1
+      |> wrap_int
+      |> encode_signed
   end
 
   @doc """
@@ -78,18 +85,17 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.mul([5, 2], %{stack: []})
-      %{stack: [10]}
+      iex> EVM.Instruction.Impl.mul([5, 2], %{})
+      10
 
-      iex> EVM.Instruction.Impl.mul([-1, 5], %{stack: []})
-      %{stack: [-5]}
-
-      iex> EVM.Instruction.Impl.mul([EVM.max_int() + 1, 5], %{stack: []})
-      %{stack: [5]}
+      iex> EVM.Instruction.Impl.mul([-1, 5], %{})
+      EVM.Instruction.Impl.encode_signed(-5)
   """
   @spec mul(stack_args, vm_map) :: op_result
-  def mul([s0, s1], %{stack: stack}) do
-    stack |> push(s0 * s1)
+  def mul([s0, s1], _) do
+    s0 * s1
+      |> wrap_int
+      |> encode_signed
   end
 
   @doc """
@@ -97,18 +103,17 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.sub([5, 2], %{stack: []})
-      %{stack: [3]}
+      iex> EVM.Instruction.Impl.sub([5, 2], %{})
+      3
 
-      iex> EVM.Instruction.Impl.sub([-1, 5], %{stack: []})
-      %{stack: [-6]}
-
-      iex> EVM.Instruction.Impl.sub([EVM.max_int() + 6, 5], %{stack: []})
-      %{stack: [1]}
+      iex> EVM.Instruction.Impl.sub([-1, 5], %{})
+      EVM.Instruction.Impl.encode_signed(-6)
   """
   @spec sub(stack_args, vm_map) :: op_result
-  def sub([s0, s1], %{stack: stack}) do
-    stack |> push(s0 - s1)
+  def sub([s0, s1], _) do
+    s0 - s1
+      |> wrap_int
+      |> encode_signed
   end
 
   @doc """
@@ -116,136 +121,101 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.div([5, 2], %{stack: []})
-      %{stack: [2]}
+      iex> EVM.Instruction.Impl.div([5, 2], %{})
+      2
 
-      iex> EVM.Instruction.Impl.div([5, -2], %{stack: []})
-      %{stack: [-3]}
+      iex> EVM.Instruction.Impl.div([10, 2], %{})
+      5
 
-      iex> EVM.Instruction.Impl.div([10, 2], %{stack: []})
-      %{stack: [5]}
-
-      iex> EVM.Instruction.Impl.div([10, 0], %{stack: []})
-      %{stack: [0]}
-
-      iex> EVM.Instruction.Impl.div([EVM.max_int() + 6, 1], %{stack: []})
-      %{stack: [6]}
+      iex> EVM.Instruction.Impl.div([10, 0], %{})
+      0
   """
-  def div([_s0, 0], %{stack: stack}), do: push(stack, 0)
-  def div([s0, s1], %{stack: stack}) do
-    stack |> push(Integer.floor_div(s0, s1))
+  def div([_s0, 0], _), do: 0
+  def div([s0, s1], _) do
+    Integer.floor_div(s0, s1)
+      |> wrap_int
+      |> encode_signed
   end
 
   @doc """
   Signed integer division operation (truncated).
-
-  TODO: Implement opcode
-
-  ## Examples
-
-      iex> EVM.Instruction.Impl.sdiv([], %{stack: []})
-      :unimplemented
   """
   @spec sdiv(stack_args, vm_map) :: op_result
-  def sdiv(_args, %{stack: _stack}) do
-    :unimplemented
+  def sdiv([s0, s1], _) do
+    case decode_signed(s1) do
+      0 ->
+          0
+      1 ->
+        s0
+      -1 ->
+        0 - decode_signed(s0)
+      _ ->
+        MathHelper.round_int((decode_signed(s0) / decode_signed(s1)))
+    end
   end
 
   @doc """
   Modulo remainder operation.
-
-  TODO: Implement opcode
-
-  ## Examples
-
-      iex> EVM.Instruction.Impl.mod([], %{stack: []})
-      :unimplemented
   """
   @spec mod(stack_args, vm_map) :: op_result
-  def mod(_args, %{stack: _stack}) do
-    :unimplemented
+  def mod([s0, s1], _) do
+    if (s1 == 0), do: 0, else: rem(s0, s1)
   end
 
   @doc """
   Signed modulo remainder operation.
-
-  TODO: Implement opcode
-
-  ## Examples
-
-      iex> EVM.Instruction.Impl.smod([], %{stack: []})
-      :unimplemented
   """
   @spec smod(stack_args, vm_map) :: op_result
-  def smod(_args, %{stack: _stack}) do
-    :unimplemented
+  def smod([_, s1], _) when s1 == 0, do: 0
+  def smod([s0, s1], _) do
+    rem(decode_signed(s0), decode_signed(s1))
   end
 
   @doc """
   Modulo addition operation.
-
-  TODO: Implement opcode
-
-  ## Examples
-
-      iex> EVM.Instruction.Impl.addmod([], %{stack: []})
-      :unimplemented
   """
   @spec addmod(stack_args, vm_map) :: op_result
-  def addmod(_args, %{stack: _stack}) do
-    :unimplemented
-    # stack |> push( ( s0 + s1 ) mod s2 )
+  def addmod([_, _, s2], _) when s2 == 0, do: 0
+  def addmod([s0, s1, s2], _) do
+    rem(s0 + s1, s2)
   end
 
   @doc """
   Modulo multiplication operation.
-
-  TODO: Implement opcode
-
-  ## Examples
-
-      iex> EVM.Instruction.Impl.mulmod([], %{stack: []})
-      :unimplemented
   """
   @spec mulmod(stack_args, vm_map) :: op_result
-  def mulmod(_args, %{stack: _stack}) do
-    :unimplemented
+  def mulmod([_, _, s2], _) when s2 == 0, do: 0
+  def mulmod([s0, s1, s2], _) do
+    rem(s0 * s1, s2)
   end
 
   @doc """
   Exponential operation
 
-  TODO: Implement opcode
-
   ## Examples
 
-      iex> EVM.Instruction.Impl.exp([2, 3], %{stack: []})
-      %{stack: [8]}
+      iex> EVM.Instruction.Impl.exp([2, 3], %{})
+      8
 
-      iex> EVM.Instruction.Impl.exp([-2, 7], %{stack: []})
-      %{stack: [-128]}
-
-      iex> EVM.Instruction.Impl.exp([2, 257], %{stack: []})
-      %{stack: [0]}
+      iex> EVM.Instruction.Impl.exp([2, 257], %{})
+      0
   """
   @spec exp(stack_args, vm_map) :: op_result
-  def exp([s0, s1], %{stack: stack}) do
-    stack |> push(round(:math.pow(s0, s1)))
+  def exp([s0, s1], _) do
+    :crypto.mod_pow(s0, s1, EVM.max_int()) |> :binary.decode_unsigned
   end
 
   @doc """
   Extend length of two’s complement signed integer.
-
-  TODO: Implement opcode
-
-  ## Examples
-
-      iex> EVM.Instruction.Impl.signextend([], %{stack: []})
-      :unimplemented
   """
   @spec signextend(stack_args, vm_map) :: op_result
-  def signextend(_args, %{stack: _stack}) do
-    :unimplemented
+  def signextend([s0, s1], _) when s0 > 31, do: s1
+  def signextend([s0, s1], _) do
+    if (bit_at(s1, bit_position(s0)) == 1) do
+      bor(s1, EVM.max_int() - (1 <<< bit_position(s0)))
+    else
+      band(s1, ((1 <<< bit_position(s0)) - 1))
+    end
   end
 
   @doc """
@@ -253,18 +223,18 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.lt([55, 66], %{stack: []})
-      %{stack: [1]}
+      iex> EVM.Instruction.Impl.lt([55, 66], %{})
+      1
 
-      iex> EVM.Instruction.Impl.lt([66, 55], %{stack: []})
-      %{stack: [0]}
+      iex> EVM.Instruction.Impl.lt([66, 55], %{})
+      0
 
-      iex> EVM.Instruction.Impl.lt([55, 55], %{stack: []})
-      %{stack: [0]}
+      iex> EVM.Instruction.Impl.lt([55, 55], %{})
+      0
   """
   @spec lt(stack_args, vm_map) :: op_result
-  def lt([s0, s1], %{stack: stack}) do
-    stack |> push(if s0 < s1, do: 1, else: 0)
+  def lt([s0, s1], _) do
+    if s0 < s1, do: 1, else: 0
   end
 
   @doc """
@@ -272,18 +242,18 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.gt([55, 66], %{stack: []})
-      %{stack: [0]}
+      iex> EVM.Instruction.Impl.gt([55, 66], %{})
+      0
 
-      iex> EVM.Instruction.Impl.gt([66, 55], %{stack: []})
-      %{stack: [1]}
+      iex> EVM.Instruction.Impl.gt([66, 55], %{})
+      1
 
-      iex> EVM.Instruction.Impl.gt([55, 55], %{stack: []})
-      %{stack: [0]}
+      iex> EVM.Instruction.Impl.gt([55, 55], %{})
+      0
   """
   @spec gt(stack_args, vm_map) :: op_result
-  def gt([s0, s1], %{stack: stack}) do
-    stack |> push(if s0 > s1, do: 1, else: 0)
+  def gt([s0, s1], _) do
+    if s0 > s1, do: 1, else: 0
   end
 
   @doc """
@@ -402,12 +372,12 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.not_([], %{stack: []})
-      :unimplemented
+      iex> EVM.Instruction.Impl.not_([EVM.Instruction.Impl.encode_signed(-1)], %{stack: []})
+      0
   """
   @spec not_(stack_args, vm_map) :: op_result
-  def not_(_args, %{stack: _stack}) do
-    :unimplemented
+  def not_([s0], _) do
+    encode_signed(bnot(s0))
   end
 
   @doc """
@@ -779,7 +749,7 @@ defmodule EVM.Instruction.Impl do
   """
   @spec mstore(stack_args, vm_map) :: op_result
   def mstore([offset, value], %{machine_state: machine_state}) do
-    data = value |> mod |> :binary.encode_unsigned()
+    data = value |> wrap_int |> :binary.encode_unsigned()
     padding_bits = ( 32 - byte_size(data) ) * 8 # since we ran mod, we can't run over
     padded_data = <<0::size(padding_bits)>> <> data
 
@@ -790,17 +760,16 @@ defmodule EVM.Instruction.Impl do
 
   @doc """
   Save byte to memory.
-
-  TODO: Implement opcode
-
-  ## Examples
-
-      iex> EVM.Instruction.Impl.mstore8([], %{stack: []})
-      :unimplemented
   """
   @spec mstore8(stack_args, vm_map) :: op_result
-  def mstore8(_args, %{stack: _stack}) do
-    :unimplemented
+  def mstore8([offset, value], %{machine_state: machine_state}) do
+    data = value |> wrap_int |> :binary.encode_unsigned()
+    padding_bits = ( 32 - byte_size(data) ) * 8 # since we ran mod, we can't run over
+    padded_data = <<0::size(padding_bits)>> <> data
+
+    machine_state = EVM.Memory.write(machine_state, offset, padded_data)
+
+    %{machine_state: machine_state}
   end
 
   @doc """
@@ -860,13 +829,25 @@ defmodule EVM.Instruction.Impl do
            0, 0, 1, 17, 34, 35, 51, 68, 69, 85>>
         }
       ]
+
+      iex> db = MerklePatriciaTree.Test.random_ets_db()
+      iex> EVM.Instruction.Impl.sstore([0x0, 0x0], %{state: MerklePatriciaTree.Trie.new(db)})[:state] |> MerklePatriciaTree.Trie.Inspector.all_values()
+      [
+      ]
   """
   @spec sstore(stack_args, vm_map) :: op_result
   def sstore([key, value], %{state: state}) do
     # TODO: Consider key value encodings
-    %{
-      state: Trie.update(state, <<key::size(256)>>, <<value::size(256)>>)
-    }
+    if value == 0 do
+      # TODO this should call Trie.delete which doesn't exist yet
+      %{
+        state: state
+      }
+    else
+      %{
+        state: Trie.update(state, <<key::size(256)>>, <<value::size(256)>>)
+      }
+    end
   end
 
   @doc """
@@ -1239,12 +1220,12 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.swap1([], %{stack: []})
-      :unimplemented
+      iex> EVM.Instruction.Impl.swap1([1,2], %{stack: []})
+      %{stack: [2,1]}
   """
   @spec swap1(stack_args, vm_map) :: op_result
-  def swap1(_args, %{stack: _stack}) do
-    :unimplemented
+  def swap1([s0, s1], %{stack: stack}) do
+    stack |> push(s0) |> Map.get(:stack) |> push(s1)
   end
 
   @doc """
@@ -1642,19 +1623,35 @@ defmodule EVM.Instruction.Impl do
   # Helper function to push to the stack within machine_state.
   @spec push(MachineState.t | Stack.t, EVM.val) :: op_result
   defp push(machine_state=%MachineState{}, val) do
-    %{machine_state | stack: machine_state.stack |> Stack.push(val|>mod)}
+    %{
+      machine_state |
+      stack: machine_state.stack
+        |> Stack.push(val |> encode_signed)
+    }
   end
 
   # Helper function to just return an updated stack
   defp push(stack, val) when is_list(stack) do
-    %{stack: Stack.push(stack, val|>mod)}
+    %{stack: Stack.push(stack, val |> encode_signed)}
   end
 
-  @spec mod(integer()) :: EVM.val
-  defp mod(n), do: rem(n, EVM.max_int())
+  @spec wrap_int(integer()) :: EVM.val
+  defp wrap_int(n) when n > 0, do: band(n, EVM.max_int() - 1)
+  defp wrap_int(n), do: n
+
 
   # TODO: signed?
   @spec decode(binary()) :: EVM.val
-  defp decode(bin), do: :binary.decode_unsigned(bin) |> mod
+  defp decode(bin), do: :binary.decode_unsigned(bin) |> wrap_int
+
+  def decode_signed(n) do
+    <<sign :: size(1), _ :: bitstring>> = :binary.encode_unsigned(n)
+    if sign == 0, do: n, else: n - EVM.max_int()
+  end
+
+  def encode_signed(n) when n < 0, do: EVM.max_int() - abs(n)
+  def encode_signed(n), do: n
+  defp bit_at(n, at), do: band((bsr(n, at)), 1)
+  defp bit_position(byte_position), do: byte_position * 8  + 7
 
 end

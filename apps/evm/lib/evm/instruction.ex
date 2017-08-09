@@ -6,7 +6,9 @@ defmodule EVM.Instruction do
 
   alias EVM.ExecEnv
   alias EVM.MachineState
+  alias EVM.Stack
   alias EVM.SubState
+  use Bitwise
 
   require Logger
 
@@ -312,25 +314,42 @@ defmodule EVM.Instruction do
   """
   @spec run_instruction(instruction, EVM.state, MachineState.t, SubState.t, ExecEnv.t) :: {EVM.state, MachineState.t, SubState.t, ExecEnv.t}
   def run_instruction(instruction, state, machine_state, sub_state, exec_env) do
-    # TODO: Make better / break into smaller sections
+    method = instruction_method(instruction)
+    {args, stack} = instruction_args(instruction, state, machine_state, sub_state, exec_env)
+    machine_state = %{machine_state| stack: stack}
+    op_result = apply(EVM.Instruction.Impl, method, args)
+
+    op_result = if is_integer(op_result) do
+      %{stack: Stack.push(stack, op_result)}
+    else
+      op_result
+    end
+
+    op_result |> merge_state(instruction, state, machine_state, sub_state, exec_env)
+  end
+
+  defp instruction_method(instruction) do
+    %EVM.Instruction.Metadata{fun: fun} = metadata(instruction)
+
+    fun || instruction
+  end
+
+  defp instruction_args(instruction, state, machine_state, sub_state, exec_env) do
     instruction_metadata = metadata(instruction)
     dw = instruction_metadata.d
 
-    {args, stack} = EVM.Stack.pop_n(machine_state.stack, dw)
-    updated_machine_state = %{machine_state| stack: stack}
+    {args, updated_stack} = EVM.Stack.pop_n(machine_state.stack, dw)
+    updated_machine_state = %{machine_state| stack: updated_stack}
 
     vm_map = %{
-      stack: stack,
+      stack: updated_stack,
       state: state,
       machine_state: updated_machine_state,
       sub_state: sub_state,
       exec_env: exec_env
     }
-    fun = instruction_metadata.fun || instruction
-    full_args = instruction_metadata.args ++ [args, vm_map]
-    op_result = apply(EVM.Instruction.Impl, fun, full_args)
-
-    op_result |> merge_state(instruction, state, updated_machine_state, sub_state, exec_env)
+    args = instruction_metadata.args ++ [args, vm_map]
+    {args, updated_stack}
   end
 
   @doc """

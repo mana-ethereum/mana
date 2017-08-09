@@ -1,4 +1,5 @@
 defmodule EVM.Helpers do
+  @word_size 32
   @moduledoc """
   Various helper functions with no other home.
   """
@@ -48,6 +49,22 @@ defmodule EVM.Helpers do
   @spec binary_get(binary(), integer()) :: integer()
   def binary_get(binary, pos) do
     binary |> :binary.part(pos, 1) |> :binary.first
+  end
+
+  @doc """
+  Gets the word size of a value or returns 0 if the value is 0
+
+  ## Examples
+
+      iex> EVM.Helpers.word_size(<<7::256>>)
+      1
+
+      iex> EVM.Helpers.word_size(for val <- 1..256, into: <<>>, do: <<val>>)
+      8
+  """
+  @spec word_size(binary()) :: integer()
+  def word_size(n) do
+    round(:math.ceil(byte_size(n) / @word_size))
   end
 
   @doc """

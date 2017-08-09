@@ -27,7 +27,7 @@ defmodule EVM.VMTest do
       :return
     ]
 
-    result = EVM.VM.run(state, 21, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile(instructions)})
+    result = EVM.VM.run(state, 24, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile(instructions)})
 
     assert result == {state, 0, %EVM.SubState{logs: "", refund: 0, suicide_list: []}, <<0x08::256>>}
   end

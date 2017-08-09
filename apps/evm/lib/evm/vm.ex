@@ -21,7 +21,7 @@ defmodule EVM.VM do
   ## Examples
 
       # Full program
-      iex> EVM.VM.run(%{}, 21, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:push1, 3, :push1, 5, :add, :push1, 0x00, :mstore, :push1, 0, :push1, 32, :return])})
+      iex> EVM.VM.run(%{}, 24, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:push1, 3, :push1, 5, :add, :push1, 0x00, :mstore, :push1, 0, :push1, 32, :return])})
       {%{}, 0, %EVM.SubState{}, <<0x08::256>>}
 
       # Program with implicit stop
@@ -61,7 +61,7 @@ defmodule EVM.VM do
       iex> EVM.VM.exec(%{}, %EVM.MachineState{pc: 0, gas: 9, stack: []}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:push1, 3, :push1, 5, :add])})
       {%{}, %EVM.MachineState{pc: 6, gas: 0, stack: [8]}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:push1, 3, :push1, 5, :add])}, ""}
 
-      iex> EVM.VM.exec(%{}, %EVM.MachineState{pc: 0, gas: 21, stack: []}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:push1, 3, :push1, 5, :add, :push1, 0x00, :mstore, :push1, 0, :push1, 32, :return])})
+      iex> EVM.VM.exec(%{}, %EVM.MachineState{pc: 0, gas: 24, stack: []}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:push1, 3, :push1, 5, :add, :push1, 0x00, :mstore, :push1, 0, :push1, 32, :return])})
       {%{}, %EVM.MachineState{active_words: 1, memory: <<0x08::256>>, pc: 13, gas: 0, stack: []}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:push1, 3, :push1, 5, :add, :push1, 0x00, :mstore, :push1, 0, :push1, 32, :return])}, <<0x08::256>>}
   """
   @spec exec(EVM.state, MachineState.t, SubState.t, ExecEnv.t) :: {EVM.state | nil, MachineState.t, SubState.t, ExecEnv.t, output}

@@ -4,6 +4,8 @@ defmodule EVM.Gas do
   """
 
   alias EVM.MachineState
+  alias EVM.Stack
+  alias EVM.Helpers
   alias EVM.ExecEnv
 
   @type t :: EVM.val
@@ -33,6 +35,7 @@ defmodule EVM.Gas do
   @g_exp 10  # Partial payment for an EXP operation.
   @g_expbyte 10  # Partial payment when multiplied by dlog256(exponent)e for the EXP operation.
   @g_memory 3  # Paid for every additional word when expanding memory.
+  @g_quad_coeff_div 512 # The divsor of quadratic costs
   @g_txcreate 32000  # Paid by all contract-creating transactions after the Homestead transition.
   @g_txdatazero 4  # Paid for every zero byte of data or code for a transaction.
   @g_txdatanonzero 68  # Paid for every non-zero byte of data or code for a transaction.
@@ -51,8 +54,8 @@ defmodule EVM.Gas do
   @dup_instrs Enum.map(0..16, fn n -> :"dup#{n}" end)
   @swap_instrs Enum.map(0..16, fn n -> :"swap#{n}" end)
   @w_very_low_instr [
-    :add, :sub, :not, :lt, :gt, :slt, :sgt, :eq, :iszero, :and, :or, :xor,
-    :byte, :calldataload, :mload, :mstore, :mstore8 ] ++
+    :add, :sub, :not_, :lt, :gt, :slt, :sgt, :eq, :iszero, :and, :or, :xor,
+    :byte, :calldataload, :mload, :mstore, :mstore8] ++
       @push_instrs ++ @dup_instrs ++ @swap_instrs
   @w_low_instr [:mul, :div, :sdiv, :mod, :smod, :signextend]
   @w_mid_instr [:addmod, :mulmod, :jump]
@@ -93,7 +96,6 @@ defmodule EVM.Gas do
       iex> EVM.Gas.instr_cost(:exp, nil, %EVM.MachineState{stack: [0, 0]}, nil)
       10
 
-      # TODO: Verify
       iex> EVM.Gas.instr_cost(:exp, nil, %EVM.MachineState{stack: [0, 10241]}, nil)
       30
 
@@ -123,15 +125,45 @@ defmodule EVM.Gas do
 
       iex> EVM.Gas.instr_cost(:extcodesize, nil, nil, nil)
       700
+
+      iex> EVM.Gas.instr_cost(:mstore, nil, %EVM.MachineState{stack: [0, 0]}, nil)
+      6
+
+      iex> EVM.Gas.instr_cost(:mstore, nil, %EVM.MachineState{stack: [0, 0], memory: <<1::256>>, active_words: 0}, nil)
+      3
+
+      iex> EVM.Gas.instr_cost(:mstore, nil, %EVM.MachineState{stack: [0, round(:math.pow(2, 512))], memory: <<1::256>>, active_words: 0}, nil)
+      9
+
   """
   @spec instr_cost(atom(), EVM.state, MachineState.t, ExecEnv.t) :: t | nil
   def instr_cost(:sstore, state, machine_state, _exec_env), do: cost_sstore(state, machine_state)
   def instr_cost(:exp, _state, machine_state, _exec_env) do
     case Enum.at(machine_state.stack, 1) do
       0 -> @g_exp
-      s -> @g_exp + @g_expbyte * ( 1 + MathHelper.floor( MathHelper.log(s, 256) ) )
+      s -> @g_exp + @g_expbyte * byte_size(:binary.encode_unsigned(s))
     end
   end
+
+  def instr_cost(:mstore, _state, machine_state, _exec_env) do
+    [offset, new_value] = Stack.peek_n(machine_state.stack, 2)
+    {old_value, _} = EVM.Memory.read(machine_state, offset, 32)
+
+    @g_verylow + memory_update_cost(old_value, :binary.encode_unsigned(new_value))
+  end
+
+  defp memory_update_cost(old_value, new_value) do
+    max(memory_cost(new_value) - memory_cost(old_value), 0)
+  end
+
+  defp memory_cost(n) when n == <<0::256>>, do: 0
+  defp memory_cost(n) do
+    (Helpers.word_size(n) * @g_memory +
+      round(:math.pow(Helpers.word_size(n), 2) / @g_quad_coeff_div))
+  end
+
+
+  def instr_cost(:mstore8, _state, machine_state, _exec_env), do: @g_memory * 2
 
   def instr_cost(instr, _state, _machine_state, _exec_env) when instr in [:calldatacopy, :codecopy], do: 0
   def instr_cost(:extcodecopy, _state, _machine_state, _exec_env), do: 0
