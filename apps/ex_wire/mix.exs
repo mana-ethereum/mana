@@ -1,15 +1,15 @@
-defmodule ExDevp2p.Mixfile do
+defmodule ExWire.Mixfile do
   use Mix.Project
 
   def project do
-    [app: :ex_devp2p,
+    [app: :ex_wire,
      version: "0.1.0",
      elixir: "~> 1.4",
-     description: "Elixir Client for DevP2P RLPx Protocol",
+     description: "Elixir Client for RLPx Protocol",
       package: [
         maintainers: ["Mason Forest", "Geoffrey Hayes", "Ayrat Badykov"],
         licenses: ["MIT"],
-        links: %{"GitHub" => "https://github.com/exthereum/ex_devp2p"}
+        links: %{"GitHub" => "https://github.com/exthereum/ex_wire"}
       ],
       elixirc_paths: elixirc_paths(Mix.env),
       build_embedded: Mix.env == :prod,
@@ -18,7 +18,7 @@ defmodule ExDevp2p.Mixfile do
   end
 
   def application do
-    [mod: {ExDevp2p, []},
+    [mod: {ExWire, []},
       extra_applications: [:logger]]
   end
 
