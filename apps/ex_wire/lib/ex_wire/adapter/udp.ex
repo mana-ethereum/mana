@@ -5,22 +5,20 @@ defmodule ExWire.Adapter.UDP do
   """
   use GenServer
 
-  @spec port() :: integer()
-  def port, do: Application.get_env(:rlp_ex, :port, 30303)
-
   @doc """
   When starting a UDP server, we'll store a network to use for all
   message handling.
   """
-  def start_link(network) do
-    GenServer.start_link(__MODULE__, %{network: network})
+  def start_link({network, network_args}, port) do
+    GenServer.start_link(__MODULE__, %{network: network, network_args: network_args, port: port})
   end
 
   @doc """
   Initialize by opening up a `gen_udp` server on a given port.
   """
-  def init(state) do
-    {:ok, socket} = :gen_udp.open(port(), [:binary])
+  def init(state=%{port: port}) do
+    {:ok, socket} = :gen_udp.open(port, [:binary])
+
     {:ok, Map.put(state, :socket, socket)}
   end
 
@@ -31,7 +29,7 @@ defmodule ExWire.Adapter.UDP do
 
   Note: all responses will be asynchronous.
   """
-  def handle_info({:udp, _socket, ip, port, data}, state=%{network: network}) do
+  def handle_info({:udp, _socket, ip, port, data}, state=%{network: network, network_args: network_args}) do
     inbound_message = %ExWire.Network.InboundMessage{
       data: data,
       server_pid: self(),
@@ -42,7 +40,7 @@ defmodule ExWire.Adapter.UDP do
       timestamp: ExWire.Util.Timestamp.now(),
     }
 
-    network.receive(inbound_message)
+    apply(network, :receive, [inbound_message|network_args])
 
     {:noreply, state}
   end
@@ -52,7 +50,7 @@ defmodule ExWire.Adapter.UDP do
   all outbound messages we'll ever send.
   """
   def handle_cast({:send, %{to: %{ip: ip, udp_port: udp_port}, data: data}}, state = %{socket: socket}) when not is_nil(udp_port) do
-    :gen_udp.send(socket, ip, udp_port, data)
+    :gen_udp.send(socket, ip |> List.to_tuple(), udp_port, data)
 
     {:noreply, state}
   end
