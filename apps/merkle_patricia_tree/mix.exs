@@ -3,7 +3,7 @@ defmodule MerklePatriciaTree.Mixfile do
 
   def project do
     [app: :merkle_patricia_tree,
-      version: "0.2.2",
+      version: "0.2.3",
       elixir: "~> 1.4",
       description: "Ethereum's Merkle Patricia Trie data structure",
       package: [
@@ -42,7 +42,7 @@ defmodule MerklePatriciaTree.Mixfile do
       {:ex_doc, "~> 0.14", only: :dev, runtime: false},
       {:hex_prefix, "~> 0.1.0"},
       {:ex_rlp, "~> 0.2.0"},
-      {:keccakf1600, "~> 2.0.0"},
+      {:keccakf1600, "~> 2.0.0", hex: :keccakf1600_orig},
       {:exleveldb, "~> 0.11.1"},
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
     ]
