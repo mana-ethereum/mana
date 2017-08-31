@@ -27,7 +27,7 @@ defmodule EVM.MachineCode do
   """
   @spec current_instruction(MachineState.t, ExecEnv.t) :: Operation.opcode
   def current_instruction(machine_state, exec_env) do
-    Operation.get_instruction_at(exec_env.machine_code, machine_state.pc)
+    Operation.get_operation_at(exec_env.machine_code, machine_state.pc)
   end
 
   @doc """
@@ -77,7 +77,7 @@ defmodule EVM.MachineCode do
   # Returns the valid jump destinations by scanning through
   # entire set of machine code
   defp do_valid_jump_destinations(machine_code, pos) do
-    instruction = Operation.get_instruction_at(machine_code, pos) |> Operation.decode
+    instruction = Operation.get_operation_at(machine_code, pos) |> Operation.decode
     next_pos = Operation.next_instr_pos(pos, instruction)
 
     cond do

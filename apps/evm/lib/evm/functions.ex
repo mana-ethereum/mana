@@ -100,8 +100,8 @@ defmodule EVM.Functions do
   def is_exception_halt?(state, machine_state, exec_env) do
     instruction = MachineCode.current_instruction(machine_state, exec_env) |> Operation.decode
     metadata = Operation.metadata(instruction)
-    dw = if metadata, do: Map.get(metadata, :d), else: nil
-    aw = if metadata, do: Map.get(metadata, :a), else: nil
+    dw = if metadata, do: Map.get(metadata, :input_count), else: nil
+    aw = if metadata, do: Map.get(metadata, :output_count), else: nil
     s0 = Stack.peek(machine_state.stack)
 
     cond do

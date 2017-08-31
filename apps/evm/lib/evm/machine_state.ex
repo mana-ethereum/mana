@@ -146,4 +146,19 @@ defmodule EVM.MachineState do
     %{machine_state | active_words: max(machine_state.active_words, last_word)}
   end
 
+  @doc """
+  Pops n values off the stack
+
+  ## Examples
+
+      iex> EVM.MachineState.pop_n(%EVM.MachineState{stack: [1, 2, 3]}, 2)
+      {[1 ,2], %EVM.MachineState{stack: [3]}}
+  """
+  @spec pop_n(MachineState.t, pc) :: {MachineState.t, list(EVM.val)}
+  def pop_n(machine_state, n) do
+    {values, stack} = Stack.pop_n(machine_state.stack, n)
+    machine_state = %{machine_state | stack: stack}
+    {values, machine_state}
+  end
+
 end

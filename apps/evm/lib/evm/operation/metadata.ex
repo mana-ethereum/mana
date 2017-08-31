@@ -8,18 +8,20 @@ defmodule EVM.Operation.Metadata do
     sym: nil,
     fun: nil,
     args: [],
-    d: nil,
-    a: nil,
-    description: nil
+    input_count: nil,
+    output_count: nil,
+    description: nil,
+    group: :other
   ]
 
   @type t :: %__MODULE__{
-    id: integer(),
-    sym: atom(),
-    fun: atom(),
-    args: [],
-    d: integer(),
-    a: integer(),
-    description: String.t
+    :id => integer(),
+    :sym => atom(),
+    :fun => atom(),
+    :args => [],
+    :input_count => integer(), # Denoted as δin the Yellow Paper
+    :output_count => integer(), # Denoted as αin the Yellow Paper
+    :description => String.t,
+    :group => atom()
   }
 end

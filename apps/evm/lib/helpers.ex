@@ -52,6 +52,9 @@ defmodule EVM.Helpers do
     binary |> :binary.part(pos, 1) |> :binary.first
   end
 
+  def bit_at(n, at), do: band((bsr(n, at)), 1)
+  def bit_position(byte_position), do: byte_position * 8  + 7
+
   @doc """
   Gets the word size of a value or returns 0 if the value is 0
 
@@ -97,6 +100,10 @@ defmodule EVM.Helpers do
   @spec wrap_int(integer()) :: EVM.val
   def encode_signed(n) when n < 0, do: EVM.max_int() - abs(n)
   def encode_signed(n), do: n
+  def decode_signed(n) do
+    <<sign :: size(1), _ :: bitstring>> = :binary.encode_unsigned(n)
+    if sign == 0, do: n, else: n - EVM.max_int()
+  end
 
   @doc """
   Helper function to print an instruction message.
