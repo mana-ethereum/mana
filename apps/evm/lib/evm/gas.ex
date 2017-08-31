@@ -20,7 +20,7 @@ defmodule EVM.Gas do
   @g_high 10  # Amount of gas to pay for operations of the set Whigh.
   @g_extcode 700  # Amount of gas to pay for operations of the set Wextcode.
   @g_balance 400  # Amount of gas to pay for a BALANCE operation.
-  @g_sload 200  # Paid for a SLOAD operation.
+  @g_sload 50  # Paid for a SLOAD operation.
   @g_jumpdest 1  # Paid for a JUMPDEST operation.
   @g_sset 20000  # Paid for an SSTORE operation when the storage value is set to non-zero from zero.
   @g_sreset 5000  # Paid for an SSTORE operation when the storage value’s zeroness remains unchanged or is set to zero.
@@ -178,7 +178,7 @@ defmodule EVM.Gas do
   def instr_cost(:create, _state, _machine_state, _exec_env), do: 0
   def instr_cost(:sha3, _state, _machine_state, _exec_env), do: 0
   def instr_cost(:jumpdest, _state, _machine_state, _exec_env), do: @g_jumpdest
-  def instr_cost(:sload, _state, _machine_state, _exec_env), do: 0
+  def instr_cost(:sload, _state, _machine_state, _exec_env), do: @g_sload
   def instr_cost(w_zero_instr, _state, _machine_state, _exec_env) when w_zero_instr in @w_zero_instr, do: @g_zero
   def instr_cost(w_base_instr, _state, _machine_state, _exec_env) when w_base_instr in @w_base_instr, do: @g_base
   def instr_cost(w_very_low_instr, _state, _machine_state, _exec_env) when w_very_low_instr in @w_very_low_instr, do: @g_verylow

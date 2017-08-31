@@ -97,12 +97,23 @@ defmodule EVM.Helpers do
       iex> EVM.Helpers.encode_signed(-1)
       EVM.max_int() - 1
   """
-  @spec wrap_int(integer()) :: EVM.val
+  @spec encode_signed(integer()) :: EVM.val
   def encode_signed(n) when n < 0, do: EVM.max_int() - abs(n)
   def encode_signed(n), do: n
-  def decode_signed(n) do
-    <<sign :: size(1), _ :: bitstring>> = :binary.encode_unsigned(n)
-    if sign == 0, do: n, else: n - EVM.max_int()
+
+  @spec decode_signed(integer()) :: EVM.val
+  def decode_signed(n) when is_integer(n) do
+    decode_signed(:binary.encode_unsigned(n))
+  end
+
+  def decode_signed(n) when is_binary(n) do
+    <<sign :: size(1), _ :: bitstring>> = n
+
+    if sign == 0 do
+        :binary.decode_unsigned(n)
+      else
+        :binary.decode_unsigned(n) - EVM.max_int()
+    end
   end
 
   @doc """

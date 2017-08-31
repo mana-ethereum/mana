@@ -247,16 +247,35 @@ defmodule EVM.Operation do
       Macro.camelize(Atom.to_string(group))
         |> String.to_atom
 
-  @spec group_to_module(EVM.val | Operation.op_result) :: Operation.op_result
-  defp normalize_op_result(op_result, updated_stack) do
-    if is_integer(op_result) do
-      op_result = op_result
-        |> Helpers.wrap_int
-        |> Helpers.encode_signed
 
-      %{stack: Stack.push(updated_stack, op_result)}
-    else
-      op_result
+  @doc """
+  Normalizes op_results. If the result is an integer it encodes it
+  and pushes it onto the stack. If it's a list pushes each element onto
+  the stack. Otherwise it returns what's given to it.
+
+  ## Examples
+  #
+      iex> EVM.Operation.normalize_op_result(1, [])
+      %{stack: [1]}
+      iex> EVM.Operation.normalize_op_result([1,2], [])
+      %{stack: [2, 1]}
+
+  """
+  @spec normalize_op_result(EVM.val | list(EVM.val) | Operation.op_result, EVM.stack) :: Operation.op_result
+  def normalize_op_result(op_result, updated_stack) do
+    cond do
+      is_integer(op_result) ->
+        op_result = op_result
+          |> Helpers.wrap_int
+          |> Helpers.encode_signed
+
+        %{stack: Stack.push(updated_stack, op_result)}
+      is_list(op_result) ->
+        %{
+          stack: Enum.reduce(op_result, updated_stack, &Stack.push(&2, &1))
+        }
+      true ->
+        op_result
     end
   end
 

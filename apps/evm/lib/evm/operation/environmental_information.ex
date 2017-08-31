@@ -1,5 +1,6 @@
 defmodule EVM.Operation.EnvironmentalInformation do
   alias EVM.Operation
+  alias EVM.Helpers
 
   @doc """
   Get address of currently executing account.
@@ -83,12 +84,12 @@ defmodule EVM.Operation.EnvironmentalInformation do
 
   ## Examples
 
-      iex> EVM.Operation.EnvironmentalInformation.calldataload([], %{stack: []})
-      :unimplemented
+      iex> EVM.Operation.EnvironmentalInformation.calldataload([0], %{exec_env: %{data: (for n <- 1..32, into: <<>>, do: <<255>>)}})
+      -1
   """
   @spec calldataload(Operation.stack_args, Operation.vm_map) :: Operation.op_result
-  def calldataload(_args, %{stack: _stack}) do
-    :unimplemented
+  def calldataload([s0], %{exec_env: %{data: data}}) do
+    binary_part(data, s0, 32) |> Helpers.decode_signed
   end
 
   @doc """
