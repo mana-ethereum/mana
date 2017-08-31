@@ -1,4 +1,4 @@
-defmodule EVM.Instruction.Impl do
+defmodule EVM.Operation.Impl do
   @moduledoc """
   Reference implementation for all opcodes in the Ethereum VM.
   """
@@ -9,6 +9,7 @@ defmodule EVM.Instruction.Impl do
   alias EVM.SubState
   alias EVM.ExecEnv
   alias MerklePatriciaTree.Trie
+  use EVM.Operation.Arithmetic
   use Bitwise
 
   @type stack_args :: [EVM.val]
@@ -33,7 +34,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.stop([], %{})
+      iex> EVM.Operation.Impl.stop([], %{})
       :noop
   """
   @spec stop(stack_args, vm_map) :: op_result
@@ -42,54 +43,15 @@ defmodule EVM.Instruction.Impl do
   end
 
   @doc """
-  Addition operation.
-
-  Takes an instruction, stack arguments and the current
-  state, and returns an updated state.
-
-  The function expects the arguments for the instruction have already
-  been popped off the stack.
-
-  ## Examples
-
-      iex> EVM.Instruction.Impl.add([1, 2], %{})
-      3
-
-      iex> EVM.Instruction.Impl.add([-1, -5], %{})
-      EVM.Instruction.Impl.encode_signed(-6)
-
-      iex> EVM.Instruction.Impl.add([0, 0], %{})
-      0
-
-      iex> EVM.Instruction.Impl.add([EVM.max_int() - 1 - 2, 1], %{})
-      EVM.max_int() - 1 - 1
-
-      iex> EVM.Instruction.Impl.add([EVM.max_int() - 1 - 2, 5], %{})
-      2
-
-      iex> EVM.Instruction.Impl.add([EVM.max_int() - 1 + 2, EVM.max_int() - 1 + 2], %{})
-      2
-
-      iex> EVM.Instruction.Impl.add([EVM.max_int() - 1, 1], %{})
-      0
-  """
-  @spec add(stack_args, vm_map) :: op_result
-  def add([s0, s1], _) do
-    s0 + s1
-      |> wrap_int
-      |> encode_signed
-  end
-
-  @doc """
   Multiplication operation.
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.mul([5, 2], %{})
+      iex> EVM.Operation.Impl.mul([5, 2], %{})
       10
 
-      iex> EVM.Instruction.Impl.mul([-1, 5], %{})
-      EVM.Instruction.Impl.encode_signed(-5)
+      iex> EVM.Operation.Impl.mul([-1, 5], %{})
+      EVM.Operation.Impl.encode_signed(-5)
   """
   @spec mul(stack_args, vm_map) :: op_result
   def mul([s0, s1], _) do
@@ -103,11 +65,11 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.sub([5, 2], %{})
+      iex> EVM.Operation.Impl.sub([5, 2], %{})
       3
 
-      iex> EVM.Instruction.Impl.sub([-1, 5], %{})
-      EVM.Instruction.Impl.encode_signed(-6)
+      iex> EVM.Operation.Impl.sub([-1, 5], %{})
+      EVM.Operation.Impl.encode_signed(-6)
   """
   @spec sub(stack_args, vm_map) :: op_result
   def sub([s0, s1], _) do
@@ -121,13 +83,13 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.div([5, 2], %{})
+      iex> EVM.Operation.Impl.div([5, 2], %{})
       2
 
-      iex> EVM.Instruction.Impl.div([10, 2], %{})
+      iex> EVM.Operation.Impl.div([10, 2], %{})
       5
 
-      iex> EVM.Instruction.Impl.div([10, 0], %{})
+      iex> EVM.Operation.Impl.div([10, 0], %{})
       0
   """
   def div([_s0, 0], _), do: 0
@@ -194,10 +156,10 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.exp([2, 3], %{})
+      iex> EVM.Operation.Impl.exp([2, 3], %{})
       8
 
-      iex> EVM.Instruction.Impl.exp([2, 257], %{})
+      iex> EVM.Operation.Impl.exp([2, 257], %{})
       0
   """
   @spec exp(stack_args, vm_map) :: op_result
@@ -223,13 +185,13 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.lt([55, 66], %{})
+      iex> EVM.Operation.Impl.lt([55, 66], %{})
       1
 
-      iex> EVM.Instruction.Impl.lt([66, 55], %{})
+      iex> EVM.Operation.Impl.lt([66, 55], %{})
       0
 
-      iex> EVM.Instruction.Impl.lt([55, 55], %{})
+      iex> EVM.Operation.Impl.lt([55, 55], %{})
       0
   """
   @spec lt(stack_args, vm_map) :: op_result
@@ -242,13 +204,13 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.gt([55, 66], %{})
+      iex> EVM.Operation.Impl.gt([55, 66], %{})
       0
 
-      iex> EVM.Instruction.Impl.gt([66, 55], %{})
+      iex> EVM.Operation.Impl.gt([66, 55], %{})
       1
 
-      iex> EVM.Instruction.Impl.gt([55, 55], %{})
+      iex> EVM.Operation.Impl.gt([55, 55], %{})
       0
   """
   @spec gt(stack_args, vm_map) :: op_result
@@ -263,7 +225,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.slt([], %{stack: []})
+      iex> EVM.Operation.Impl.slt([], %{stack: []})
       :unimplemented
   """
   @spec slt(stack_args, vm_map) :: op_result
@@ -278,7 +240,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.sgt([], %{stack: []})
+      iex> EVM.Operation.Impl.sgt([], %{stack: []})
       :unimplemented
   """
   @spec sgt(stack_args, vm_map) :: op_result
@@ -291,13 +253,13 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.eq([55, 1], %{stack: []})
+      iex> EVM.Operation.Impl.eq([55, 1], %{stack: []})
       %{stack: [0]}
 
-      iex> EVM.Instruction.Impl.eq([55, 55], %{stack: []})
+      iex> EVM.Operation.Impl.eq([55, 55], %{stack: []})
       %{stack: [1]}
 
-      iex> EVM.Instruction.Impl.eq([0, 0], %{stack: []})
+      iex> EVM.Operation.Impl.eq([0, 0], %{stack: []})
       %{stack: [1]}
   """
   @spec eq(stack_args, vm_map) :: op_result
@@ -312,7 +274,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.iszero([], %{stack: []})
+      iex> EVM.Operation.Impl.iszero([], %{stack: []})
       :unimplemented
   """
   @spec iszero(stack_args, vm_map) :: op_result
@@ -327,7 +289,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.and_([], %{stack: []})
+      iex> EVM.Operation.Impl.and_([], %{stack: []})
       :unimplemented
   """
   @spec and_(stack_args, vm_map) :: op_result
@@ -342,7 +304,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.or_([], %{stack: []})
+      iex> EVM.Operation.Impl.or_([], %{stack: []})
       :unimplemented
   """
   @spec or_(stack_args, vm_map) :: op_result
@@ -357,7 +319,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.xor_([], %{stack: []})
+      iex> EVM.Operation.Impl.xor_([], %{stack: []})
       :unimplemented
   """
   @spec xor_(stack_args, vm_map) :: op_result
@@ -372,7 +334,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.not_([EVM.Instruction.Impl.encode_signed(-1)], %{stack: []})
+      iex> EVM.Operation.Impl.not_([EVM.Operation.Impl.encode_signed(-1)], %{stack: []})
       0
   """
   @spec not_(stack_args, vm_map) :: op_result
@@ -387,7 +349,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.byte([], %{stack: []})
+      iex> EVM.Operation.Impl.byte([], %{stack: []})
       :unimplemented
   """
   @spec byte(stack_args, vm_map) :: op_result
@@ -402,7 +364,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.sha3([], %{stack: []})
+      iex> EVM.Operation.Impl.sha3([], %{stack: []})
       :unimplemented
   """
   @spec sha3(stack_args, vm_map) :: op_result
@@ -415,7 +377,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.address([], %{stack: [], exec_env: %EVM.ExecEnv{address: <<01, 00>>}})
+      iex> EVM.Operation.Impl.address([], %{stack: [], exec_env: %EVM.ExecEnv{address: <<01, 00>>}})
       %{stack: [0x100]}
   """
   @spec address(stack_args, vm_map) :: op_result
@@ -430,7 +392,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.balance([], %{stack: []})
+      iex> EVM.Operation.Impl.balance([], %{stack: []})
       :unimplemented
   """
   @spec balance(stack_args, vm_map) :: op_result
@@ -447,7 +409,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.origin([], %{stack: []})
+      iex> EVM.Operation.Impl.origin([], %{stack: []})
       :unimplemented
   """
   @spec origin(stack_args, vm_map) :: op_result
@@ -462,7 +424,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.caller([], %{stack: []})
+      iex> EVM.Operation.Impl.caller([], %{stack: []})
       :unimplemented
   """
   @spec caller(stack_args, vm_map) :: op_result
@@ -477,7 +439,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.callvalue([], %{stack: []})
+      iex> EVM.Operation.Impl.callvalue([], %{stack: []})
       :unimplemented
   """
   @spec callvalue(stack_args, vm_map) :: op_result
@@ -492,7 +454,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.calldataload([], %{stack: []})
+      iex> EVM.Operation.Impl.calldataload([], %{stack: []})
       :unimplemented
   """
   @spec calldataload(stack_args, vm_map) :: op_result
@@ -507,7 +469,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.calldatasize([], %{stack: []})
+      iex> EVM.Operation.Impl.calldatasize([], %{stack: []})
       :unimplemented
   """
   @spec calldatasize(stack_args, vm_map) :: op_result
@@ -522,7 +484,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.calldatacopy([], %{stack: []})
+      iex> EVM.Operation.Impl.calldatacopy([], %{stack: []})
       :unimplemented
   """
   @spec calldatacopy(stack_args, vm_map) :: op_result
@@ -537,7 +499,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.codesize([], %{stack: []})
+      iex> EVM.Operation.Impl.codesize([], %{stack: []})
       :unimplemented
   """
   @spec codesize(stack_args, vm_map) :: op_result
@@ -552,7 +514,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.codecopy([], %{stack: []})
+      iex> EVM.Operation.Impl.codecopy([], %{stack: []})
       :unimplemented
   """
   @spec codecopy(stack_args, vm_map) :: op_result
@@ -567,7 +529,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.gasprice([], %{stack: []})
+      iex> EVM.Operation.Impl.gasprice([], %{stack: []})
       :unimplemented
   """
   @spec gasprice(stack_args, vm_map) :: op_result
@@ -582,7 +544,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.extcodesize([], %{stack: []})
+      iex> EVM.Operation.Impl.extcodesize([], %{stack: []})
       :unimplemented
   """
   @spec extcodesize(stack_args, vm_map) :: op_result
@@ -597,7 +559,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.extcodecopy([], %{stack: []})
+      iex> EVM.Operation.Impl.extcodecopy([], %{stack: []})
       :unimplemented
   """
   @spec extcodecopy(stack_args, vm_map) :: op_result
@@ -612,7 +574,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.blockhash([], %{stack: []})
+      iex> EVM.Operation.Impl.blockhash([], %{stack: []})
       :unimplemented
   """
   @spec blockhash(stack_args, vm_map) :: op_result
@@ -628,7 +590,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.coinbase([], %{stack: []})
+      iex> EVM.Operation.Impl.coinbase([], %{stack: []})
       :unimplemented
   """
   @spec coinbase(stack_args, vm_map) :: op_result
@@ -643,7 +605,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.timestamp([], %{stack: []})
+      iex> EVM.Operation.Impl.timestamp([], %{stack: []})
       :unimplemented
   """
   @spec timestamp(stack_args, vm_map) :: op_result
@@ -658,7 +620,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.number([], %{stack: []})
+      iex> EVM.Operation.Impl.number([], %{stack: []})
       :unimplemented
   """
   @spec number(stack_args, vm_map) :: op_result
@@ -673,7 +635,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.difficulty([], %{stack: []})
+      iex> EVM.Operation.Impl.difficulty([], %{stack: []})
       :unimplemented
   """
   @spec difficulty(stack_args, vm_map) :: op_result
@@ -688,7 +650,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.gaslimit([], %{stack: []})
+      iex> EVM.Operation.Impl.gaslimit([], %{stack: []})
       :unimplemented
   """
   @spec gaslimit(stack_args, vm_map) :: op_result
@@ -703,7 +665,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.pop([55], %{stack: []})
+      iex> EVM.Operation.Impl.pop([55], %{stack: []})
       :noop
   """
   @spec pop(stack_args, vm_map) :: op_result
@@ -717,10 +679,10 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.mload([0], %{machine_state: %EVM.MachineState{stack: [1], memory: <<0x55::256, 0xff>>}})
+      iex> EVM.Operation.Impl.mload([0], %{machine_state: %EVM.MachineState{stack: [1], memory: <<0x55::256, 0xff>>}})
       %{machine_state: %EVM.MachineState{stack: [0x55, 1], memory: <<0x55::256, 0xff>>, active_words: 1}}
 
-      iex> EVM.Instruction.Impl.mload([1], %{machine_state: %EVM.MachineState{stack: [], memory: <<0x55::256, 0xff>>}})
+      iex> EVM.Operation.Impl.mload([1], %{machine_state: %EVM.MachineState{stack: [], memory: <<0x55::256, 0xff>>}})
       %{machine_state: %EVM.MachineState{stack: [22015], memory: <<0x55::256, 0xff>>, active_words: 2}}
 
       # TODO: Add a test for overflow, etc.
@@ -738,10 +700,10 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.mstore([0, 0x55], %{machine_state: %EVM.MachineState{stack: [], memory: <<>>}})
+      iex> EVM.Operation.Impl.mstore([0, 0x55], %{machine_state: %EVM.MachineState{stack: [], memory: <<>>}})
       %{machine_state: %EVM.MachineState{stack: [], memory: <<0x55::256>>, active_words: 1}}
 
-      iex> EVM.Instruction.Impl.mstore([1, 0x55], %{machine_state: %EVM.MachineState{stack: [], memory: <<>>}})
+      iex> EVM.Operation.Impl.mstore([1, 0x55], %{machine_state: %EVM.MachineState{stack: [], memory: <<>>}})
       %{machine_state: %EVM.MachineState{stack: [], memory: <<0, 0x55::256>>, active_words: 2}}
 
       # TODO: Add a test for overflow, etc.
@@ -780,15 +742,15 @@ defmodule EVM.Instruction.Impl do
   ## Examples
 
       iex> db = MerklePatriciaTree.Test.random_ets_db()
-      iex> state = EVM.Instruction.Impl.sstore([0x11223344556677889900, 0x111222333444555], %{state: MerklePatriciaTree.Trie.new(db)})[:state]
-      iex> EVM.Instruction.Impl.sload([0x11223344556677889900], %{state: state, stack: []})
+      iex> state = EVM.Operation.Impl.sstore([0x11223344556677889900, 0x111222333444555], %{state: MerklePatriciaTree.Trie.new(db)})[:state]
+      iex> EVM.Operation.Impl.sload([0x11223344556677889900], %{state: state, stack: []})
       %{
         stack: [0x111222333444555]
       }
 
       iex> db = MerklePatriciaTree.Test.random_ets_db()
-      iex> state = EVM.Instruction.Impl.sstore([0x11223344556677889900, 0x111222333444555], %{state: MerklePatriciaTree.Trie.new(db)})[:state]
-      iex> EVM.Instruction.Impl.sload([0x1234], %{state: state, stack: []})
+      iex> state = EVM.Operation.Impl.sstore([0x11223344556677889900, 0x111222333444555], %{state: MerklePatriciaTree.Trie.new(db)})[:state]
+      iex> EVM.Operation.Impl.sload([0x1234], %{state: state, stack: []})
       %{
         stack: [0x0]
       }
@@ -815,13 +777,13 @@ defmodule EVM.Instruction.Impl do
   ## Examples
 
       iex> db = MerklePatriciaTree.Test.random_ets_db(:store_word_test)
-      iex> EVM.Instruction.Impl.sstore([0x11223344556677889900, 0x111222333444555], %{state: MerklePatriciaTree.Trie.new(db)})
+      iex> EVM.Operation.Impl.sstore([0x11223344556677889900, 0x111222333444555], %{state: MerklePatriciaTree.Trie.new(db)})
       %{
         state: %MerklePatriciaTree.Trie{db: {MerklePatriciaTree.DB.ETS, :store_word_test}, root_hash: <<128, 58, 53, 102, 7, 182, 120, 131, 145, 91, 222, 83, 56, 42, 251, 168, 203, 138, 130, 246, 76, 122, 110, 218, 183, 131, 33, 205, 154, 136, 194, 212>>}
       }
 
       iex> db = MerklePatriciaTree.Test.random_ets_db()
-      iex> EVM.Instruction.Impl.sstore([0x11223344556677889900, 0x111222333444555], %{state: MerklePatriciaTree.Trie.new(db)})[:state] |> MerklePatriciaTree.Trie.Inspector.all_values()
+      iex> EVM.Operation.Impl.sstore([0x11223344556677889900, 0x111222333444555], %{state: MerklePatriciaTree.Trie.new(db)})[:state] |> MerklePatriciaTree.Trie.Inspector.all_values()
       [
         {<<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
            17, 34, 51, 68, 85, 102, 119, 136, 153, 0>>,
@@ -831,7 +793,7 @@ defmodule EVM.Instruction.Impl do
       ]
 
       iex> db = MerklePatriciaTree.Test.random_ets_db()
-      iex> EVM.Instruction.Impl.sstore([0x0, 0x0], %{state: MerklePatriciaTree.Trie.new(db)})[:state] |> MerklePatriciaTree.Trie.Inspector.all_values()
+      iex> EVM.Operation.Impl.sstore([0x0, 0x0], %{state: MerklePatriciaTree.Trie.new(db)})[:state] |> MerklePatriciaTree.Trie.Inspector.all_values()
       [
       ]
   """
@@ -857,7 +819,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.jump([], %{stack: []})
+      iex> EVM.Operation.Impl.jump([], %{stack: []})
       :noop
   """
   @spec jump(stack_args, vm_map) :: op_result
@@ -872,7 +834,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.jumpi([], %{stack: []})
+      iex> EVM.Operation.Impl.jumpi([], %{stack: []})
       :noop
   """
   @spec jumpi(stack_args, vm_map) :: op_result
@@ -887,7 +849,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.pc([], %{stack: []})
+      iex> EVM.Operation.Impl.pc([], %{stack: []})
       :unimplemented
   """
   @spec pc(stack_args, vm_map) :: op_result
@@ -902,7 +864,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.msize([], %{stack: []})
+      iex> EVM.Operation.Impl.msize([], %{stack: []})
       :unimplemented
   """
   @spec msize(stack_args, vm_map) :: op_result
@@ -917,7 +879,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.gas([], %{stack: []})
+      iex> EVM.Operation.Impl.gas([], %{stack: []})
       :unimplemented
   """
   @spec gas(stack_args, vm_map) :: op_result
@@ -932,7 +894,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.jumpdest([], %{stack: []})
+      iex> EVM.Operation.Impl.jumpdest([], %{stack: []})
       :noop
   """
   @spec jumpdest(stack_args, vm_map) :: op_result
@@ -945,25 +907,25 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.push_n(1, [], %{machine_state: %EVM.MachineState{stack: [], pc: 1}, exec_env: %EVM.ExecEnv{machine_code: <<0x10, 0x11, 0x12, 0x13>>}})
+      iex> EVM.Operation.Impl.push_n(1, [], %{machine_state: %EVM.MachineState{stack: [], pc: 1}, exec_env: %EVM.ExecEnv{machine_code: <<0x10, 0x11, 0x12, 0x13>>}})
       %{machine_state: %EVM.MachineState{stack: [0x12], pc: 1}}
 
-      iex> EVM.Instruction.Impl.push_n(1, [], %{machine_state: %EVM.MachineState{stack: [], pc: 2}, exec_env: %EVM.ExecEnv{machine_code: <<0x10, 0x11, 0x12, 0x13>>}})
+      iex> EVM.Operation.Impl.push_n(1, [], %{machine_state: %EVM.MachineState{stack: [], pc: 2}, exec_env: %EVM.ExecEnv{machine_code: <<0x10, 0x11, 0x12, 0x13>>}})
       %{machine_state: %EVM.MachineState{stack: [0x13], pc: 2}}
 
-      iex> EVM.Instruction.Impl.push_n(1, [], %{machine_state: %EVM.MachineState{stack: [], pc: 3}, exec_env: %EVM.ExecEnv{machine_code: <<0x10, 0x11, 0x12, 0x13>>}})
+      iex> EVM.Operation.Impl.push_n(1, [], %{machine_state: %EVM.MachineState{stack: [], pc: 3}, exec_env: %EVM.ExecEnv{machine_code: <<0x10, 0x11, 0x12, 0x13>>}})
       %{machine_state: %EVM.MachineState{stack: [0x00], pc: 3}}
 
-      iex> EVM.Instruction.Impl.push_n(1, [], %{machine_state: %EVM.MachineState{stack: [], pc: 4}, exec_env: %EVM.ExecEnv{machine_code: <<0x10, 0x11, 0x12, 0x13>>}})
+      iex> EVM.Operation.Impl.push_n(1, [], %{machine_state: %EVM.MachineState{stack: [], pc: 4}, exec_env: %EVM.ExecEnv{machine_code: <<0x10, 0x11, 0x12, 0x13>>}})
       %{machine_state: %EVM.MachineState{stack: [0x00], pc: 4}}
 
-      iex> EVM.Instruction.Impl.push_n(1, [], %{machine_state: %EVM.MachineState{stack: [], pc: 100}, exec_env: %EVM.ExecEnv{machine_code: <<0x10, 0x11, 0x12, 0x13>>}})
+      iex> EVM.Operation.Impl.push_n(1, [], %{machine_state: %EVM.MachineState{stack: [], pc: 100}, exec_env: %EVM.ExecEnv{machine_code: <<0x10, 0x11, 0x12, 0x13>>}})
       %{machine_state: %EVM.MachineState{stack: [0x00], pc: 100}}
 
-      iex> EVM.Instruction.Impl.push_n(6, [], %{machine_state: %EVM.MachineState{stack: [], pc: 0}, exec_env: %EVM.ExecEnv{machine_code: <<0xFF, 0x10, 0x11, 0x12, 0x13>>}})
+      iex> EVM.Operation.Impl.push_n(6, [], %{machine_state: %EVM.MachineState{stack: [], pc: 0}, exec_env: %EVM.ExecEnv{machine_code: <<0xFF, 0x10, 0x11, 0x12, 0x13>>}})
       %{machine_state: %EVM.MachineState{stack: [17665503723520], pc: 0}}
 
-      iex> EVM.Instruction.Impl.push_n(16, [], %{machine_state: %EVM.MachineState{stack: [], pc: 100}, exec_env: %EVM.ExecEnv{machine_code: <<0x10, 0x11, 0x12, 0x13>>}})
+      iex> EVM.Operation.Impl.push_n(16, [], %{machine_state: %EVM.MachineState{stack: [], pc: 100}, exec_env: %EVM.ExecEnv{machine_code: <<0x10, 0x11, 0x12, 0x13>>}})
       %{machine_state: %EVM.MachineState{stack: [0x00], pc: 100}}
   """
   @spec push_n(integer(), stack_args, vm_map) :: op_result
@@ -980,7 +942,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.dup1([], %{stack: []})
+      iex> EVM.Operation.Impl.dup1([], %{stack: []})
       :unimplemented
   """
   @spec dup1(stack_args, vm_map) :: op_result
@@ -995,7 +957,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.dup2([], %{stack: []})
+      iex> EVM.Operation.Impl.dup2([], %{stack: []})
       :unimplemented
   """
   @spec dup2(stack_args, vm_map) :: op_result
@@ -1010,7 +972,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.dup3([], %{stack: []})
+      iex> EVM.Operation.Impl.dup3([], %{stack: []})
       :unimplemented
   """
   @spec dup3(stack_args, vm_map) :: op_result
@@ -1025,7 +987,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.dup4([], %{stack: []})
+      iex> EVM.Operation.Impl.dup4([], %{stack: []})
       :unimplemented
   """
   @spec dup4(stack_args, vm_map) :: op_result
@@ -1040,7 +1002,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.dup5([], %{stack: []})
+      iex> EVM.Operation.Impl.dup5([], %{stack: []})
       :unimplemented
   """
   @spec dup5(stack_args, vm_map) :: op_result
@@ -1055,7 +1017,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.dup6([], %{stack: []})
+      iex> EVM.Operation.Impl.dup6([], %{stack: []})
       :unimplemented
   """
   @spec dup6(stack_args, vm_map) :: op_result
@@ -1070,7 +1032,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.dup7([], %{stack: []})
+      iex> EVM.Operation.Impl.dup7([], %{stack: []})
       :unimplemented
   """
   @spec dup7(stack_args, vm_map) :: op_result
@@ -1085,7 +1047,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.dup8([], %{stack: []})
+      iex> EVM.Operation.Impl.dup8([], %{stack: []})
       :unimplemented
   """
   @spec dup8(stack_args, vm_map) :: op_result
@@ -1100,7 +1062,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.dup9([], %{stack: []})
+      iex> EVM.Operation.Impl.dup9([], %{stack: []})
       :unimplemented
   """
   @spec dup9(stack_args, vm_map) :: op_result
@@ -1115,7 +1077,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.dup10([], %{stack: []})
+      iex> EVM.Operation.Impl.dup10([], %{stack: []})
       :unimplemented
   """
   @spec dup10(stack_args, vm_map) :: op_result
@@ -1130,7 +1092,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.dup11([], %{stack: []})
+      iex> EVM.Operation.Impl.dup11([], %{stack: []})
       :unimplemented
   """
   @spec dup11(stack_args, vm_map) :: op_result
@@ -1145,7 +1107,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.dup12([], %{stack: []})
+      iex> EVM.Operation.Impl.dup12([], %{stack: []})
       :unimplemented
   """
   @spec dup12(stack_args, vm_map) :: op_result
@@ -1160,7 +1122,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.dup13([], %{stack: []})
+      iex> EVM.Operation.Impl.dup13([], %{stack: []})
       :unimplemented
   """
   @spec dup13(stack_args, vm_map) :: op_result
@@ -1175,7 +1137,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.dup14([], %{stack: []})
+      iex> EVM.Operation.Impl.dup14([], %{stack: []})
       :unimplemented
   """
   @spec dup14(stack_args, vm_map) :: op_result
@@ -1190,7 +1152,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.dup15([], %{stack: []})
+      iex> EVM.Operation.Impl.dup15([], %{stack: []})
       :unimplemented
   """
   @spec dup15(stack_args, vm_map) :: op_result
@@ -1205,7 +1167,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.dup16([], %{stack: []})
+      iex> EVM.Operation.Impl.dup16([], %{stack: []})
       :unimplemented
   """
   @spec dup16(stack_args, vm_map) :: op_result
@@ -1220,7 +1182,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.swap1([1,2], %{stack: []})
+      iex> EVM.Operation.Impl.swap1([1,2], %{stack: []})
       %{stack: [2,1]}
   """
   @spec swap1(stack_args, vm_map) :: op_result
@@ -1235,7 +1197,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.swap2([], %{stack: []})
+      iex> EVM.Operation.Impl.swap2([], %{stack: []})
       :unimplemented
   """
   @spec swap2(stack_args, vm_map) :: op_result
@@ -1250,7 +1212,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.swap3([], %{stack: []})
+      iex> EVM.Operation.Impl.swap3([], %{stack: []})
       :unimplemented
   """
   @spec swap3(stack_args, vm_map) :: op_result
@@ -1265,7 +1227,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.swap4([], %{stack: []})
+      iex> EVM.Operation.Impl.swap4([], %{stack: []})
       :unimplemented
   """
   @spec swap4(stack_args, vm_map) :: op_result
@@ -1280,7 +1242,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.swap5([], %{stack: []})
+      iex> EVM.Operation.Impl.swap5([], %{stack: []})
       :unimplemented
   """
   @spec swap5(stack_args, vm_map) :: op_result
@@ -1295,7 +1257,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.swap6([], %{stack: []})
+      iex> EVM.Operation.Impl.swap6([], %{stack: []})
       :unimplemented
   """
   @spec swap6(stack_args, vm_map) :: op_result
@@ -1310,7 +1272,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.swap7([], %{stack: []})
+      iex> EVM.Operation.Impl.swap7([], %{stack: []})
       :unimplemented
   """
   @spec swap7(stack_args, vm_map) :: op_result
@@ -1325,7 +1287,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.swap8([], %{stack: []})
+      iex> EVM.Operation.Impl.swap8([], %{stack: []})
       :unimplemented
   """
   @spec swap8(stack_args, vm_map) :: op_result
@@ -1340,7 +1302,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.swap9([], %{stack: []})
+      iex> EVM.Operation.Impl.swap9([], %{stack: []})
       :unimplemented
   """
   @spec swap9(stack_args, vm_map) :: op_result
@@ -1355,7 +1317,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.swap10([], %{stack: []})
+      iex> EVM.Operation.Impl.swap10([], %{stack: []})
       :unimplemented
   """
   @spec swap10(stack_args, vm_map) :: op_result
@@ -1370,7 +1332,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.swap11([], %{stack: []})
+      iex> EVM.Operation.Impl.swap11([], %{stack: []})
       :unimplemented
   """
   @spec swap11(stack_args, vm_map) :: op_result
@@ -1385,7 +1347,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.swap12([], %{stack: []})
+      iex> EVM.Operation.Impl.swap12([], %{stack: []})
       :unimplemented
   """
   @spec swap12(stack_args, vm_map) :: op_result
@@ -1400,7 +1362,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.swap13([], %{stack: []})
+      iex> EVM.Operation.Impl.swap13([], %{stack: []})
       :unimplemented
   """
   @spec swap13(stack_args, vm_map) :: op_result
@@ -1415,7 +1377,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.swap14([], %{stack: []})
+      iex> EVM.Operation.Impl.swap14([], %{stack: []})
       :unimplemented
   """
   @spec swap14(stack_args, vm_map) :: op_result
@@ -1430,7 +1392,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.swap15([], %{stack: []})
+      iex> EVM.Operation.Impl.swap15([], %{stack: []})
       :unimplemented
   """
   @spec swap15(stack_args, vm_map) :: op_result
@@ -1445,7 +1407,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.swap16([], %{stack: []})
+      iex> EVM.Operation.Impl.swap16([], %{stack: []})
       :unimplemented
   """
   @spec swap16(stack_args, vm_map) :: op_result
@@ -1460,7 +1422,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.log0([], %{stack: []})
+      iex> EVM.Operation.Impl.log0([], %{stack: []})
       :unimplemented
   """
   @spec log0(stack_args, vm_map) :: op_result
@@ -1475,7 +1437,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.log1([], %{stack: []})
+      iex> EVM.Operation.Impl.log1([], %{stack: []})
       :unimplemented
   """
   @spec log1(stack_args, vm_map) :: op_result
@@ -1490,7 +1452,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.log2([], %{stack: []})
+      iex> EVM.Operation.Impl.log2([], %{stack: []})
       :unimplemented
   """
   @spec log2(stack_args, vm_map) :: op_result
@@ -1505,7 +1467,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.log3([], %{stack: []})
+      iex> EVM.Operation.Impl.log3([], %{stack: []})
       :unimplemented
   """
   @spec log3(stack_args, vm_map) :: op_result
@@ -1520,7 +1482,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.log4([], %{stack: []})
+      iex> EVM.Operation.Impl.log4([], %{stack: []})
       :unimplemented
   """
   @spec log4(stack_args, vm_map) :: op_result
@@ -1535,7 +1497,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.create([], %{stack: []})
+      iex> EVM.Operation.Impl.create([], %{stack: []})
       :unimplemented
   """
   @spec create(stack_args, vm_map) :: op_result
@@ -1550,7 +1512,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.call([], %{stack: []})
+      iex> EVM.Operation.Impl.call([], %{stack: []})
       :unimplemented
   """
   @spec call(stack_args, vm_map) :: op_result
@@ -1565,7 +1527,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.callcode([], %{stack: []})
+      iex> EVM.Operation.Impl.callcode([], %{stack: []})
       :unimplemented
   """
   @spec callcode(stack_args, vm_map) :: op_result
@@ -1578,10 +1540,10 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.return([5, 33], %{machine_state: %EVM.MachineState{active_words: 0}})
+      iex> EVM.Operation.Impl.return([5, 33], %{machine_state: %EVM.MachineState{active_words: 0}})
       %EVM.MachineState{active_words: 2}
 
-      iex> EVM.Instruction.Impl.return([5, 33], %{machine_state: %EVM.MachineState{active_words: 5}})
+      iex> EVM.Operation.Impl.return([5, 33], %{machine_state: %EVM.MachineState{active_words: 5}})
       %EVM.MachineState{active_words: 5}
   """
   @spec return(stack_args, vm_map) :: op_result
@@ -1597,7 +1559,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.delegatecall([], %{stack: []})
+      iex> EVM.Operation.Impl.delegatecall([], %{stack: []})
       :unimplemented
   """
   @spec delegatecall(stack_args, vm_map) :: op_result
@@ -1612,7 +1574,7 @@ defmodule EVM.Instruction.Impl do
 
   ## Examples
 
-      iex> EVM.Instruction.Impl.suicide([], %{stack: []})
+      iex> EVM.Operation.Impl.suicide([], %{stack: []})
       :unimplemented
   """
   @spec suicide(stack_args, vm_map) :: op_result
@@ -1635,11 +1597,6 @@ defmodule EVM.Instruction.Impl do
     %{stack: Stack.push(stack, val |> encode_signed)}
   end
 
-  @spec wrap_int(integer()) :: EVM.val
-  defp wrap_int(n) when n > 0, do: band(n, EVM.max_int() - 1)
-  defp wrap_int(n), do: n
-
-
   # TODO: signed?
   @spec decode(binary()) :: EVM.val
   defp decode(bin), do: :binary.decode_unsigned(bin) |> wrap_int
@@ -1649,9 +1606,25 @@ defmodule EVM.Instruction.Impl do
     if sign == 0, do: n, else: n - EVM.max_int()
   end
 
-  def encode_signed(n) when n < 0, do: EVM.max_int() - abs(n)
-  def encode_signed(n), do: n
   defp bit_at(n, at), do: band((bsr(n, at)), 1)
   defp bit_position(byte_position), do: byte_position * 8  + 7
+  def wrap_int(n) when n > 0, do: band(n, EVM.max_int() - 1)
+  def wrap_int(n), do: n
+
+  @doc """
+  Encodes signed ints using twos compliment
+
+  ## Examples
+
+      iex> EVM.Helpers.encode_signed(1)
+      1
+
+      iex> EVM.Helpers.encode_signed(-1)
+      EVM.max_int() - 1
+  """
+  @spec wrap_int(integer()) :: EVM.val
+  def encode_signed(n) when n < 0, do: EVM.max_int() - abs(n)
+  def encode_signed(n), do: n
+
 
 end

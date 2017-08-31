@@ -1,4 +1,4 @@
-defmodule EVM.Instruction.Memory do
+defmodule EVM.Operation.Memory do
   @moduledoc """
   When calling instructions, we may adjust the number
   of active words in the machine state. These functions
@@ -7,6 +7,6 @@ defmodule EVM.Instruction.Memory do
   you might see `μ'_i` in the Yellow Paper.
   """
 
-  @spec active_words_after(EVM.Instruction.instruction, EVM.state, EVM.MachineState.t, EVM.ExecEnv.t) :: integer()
+  @spec active_words_after(EVM.Operation.instruction, EVM.state, EVM.MachineState.t, EVM.ExecEnv.t) :: integer()
   def active_words_after(_instruction, _state, machine_state, _exec_env), do: machine_state.active_words
 end

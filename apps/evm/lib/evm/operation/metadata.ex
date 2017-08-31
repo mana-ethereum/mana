@@ -1,4 +1,4 @@
-defmodule EVM.Instruction.Metadata do
+defmodule EVM.Operation.Metadata do
   @moduledoc """
   A simple struct to store metadata about all VM instructions.
   """

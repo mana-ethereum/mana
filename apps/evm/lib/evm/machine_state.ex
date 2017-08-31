@@ -10,7 +10,7 @@ defmodule EVM.MachineState do
   alias EVM.Gas
   alias EVM.MachineCode
   alias EVM.Stack
-  alias EVM.Instruction
+  alias EVM.Operation
   alias EVM.MachineState
 
   defstruct [
@@ -53,15 +53,15 @@ defmodule EVM.MachineState do
       iex> EVM.MachineState.next_pc(%EVM.MachineState{pc: 2, stack: [100, 1]}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:push1, 3, :jumpi, :return])}) |> EVM.MachineState.get_pc() # branching jump instruction (follow)
       100
 
-      iex> EVM.MachineState.next_pc(%EVM.MachineState{pc: 0, stack: []}, %EVM.ExecEnv{machine_code: <<EVM.Instruction.encode(:jumpi)>>}) # branching jump instruction with no stack
+      iex> EVM.MachineState.next_pc(%EVM.MachineState{pc: 0, stack: []}, %EVM.ExecEnv{machine_code: <<EVM.Operation.encode(:jumpi)>>}) # branching jump instruction with no stack
       ** (FunctionClauseError) no function clause matching in EVM.Stack.pop_n/2
   """
   @spec next_pc(MachineState.t, ExecEnv.t) :: MachineState.t
   def next_pc(machine_state, exec_env) do
-    pc = case MachineCode.current_instruction(machine_state, exec_env) |> Instruction.decode do
+    pc = case MachineCode.current_instruction(machine_state, exec_env) |> Operation.decode do
       :jump -> jump_location(machine_state)
       :jumpi -> jump_i_location(machine_state)
-      w -> Instruction.next_instr_pos(machine_state.pc, w)
+      w -> Operation.next_instr_pos(machine_state.pc, w)
     end
 
     set_pc(machine_state, pc)

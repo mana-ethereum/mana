@@ -10,7 +10,7 @@ defmodule EVM.VM do
   alias EVM.ExecEnv
   alias EVM.Functions
   alias EVM.Gas
-  alias EVM.Instruction
+  alias EVM.Operation
 
   @type output :: binary()
 
@@ -99,9 +99,9 @@ defmodule EVM.VM do
   def cycle(state, machine_state, sub_state, exec_env) do
     cost = Gas.cost(state, machine_state, exec_env)
 
-    instruction = MachineCode.current_instruction(machine_state, exec_env) |> Instruction.decode
+    instruction = MachineCode.current_instruction(machine_state, exec_env) |> Operation.decode
 
-    {state, machine_state, sub_state, exec_env} = Instruction.run_instruction(instruction, state, machine_state, sub_state, exec_env)
+    {state, machine_state, sub_state, exec_env} = Operation.run_instruction(instruction, state, machine_state, sub_state, exec_env)
 
     machine_state = machine_state
       |> MachineState.subtract_gas(cost)

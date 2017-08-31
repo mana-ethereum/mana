@@ -2,7 +2,7 @@ defmodule EVM.MachineCode do
   @moduledoc """
   Functions for helping read a contract's machine code.
   """
-  alias EVM.Instruction
+  alias EVM.Operation
   alias EVM.MachineState
   alias EVM.ExecEnv
 
@@ -25,9 +25,9 @@ defmodule EVM.MachineCode do
       iex> EVM.MachineCode.current_instruction(%EVM.MachineState{pc: 2}, %EVM.ExecEnv{machine_code: <<0x15::8, 0x11::8, 0x12::8>>})
       0x12
   """
-  @spec current_instruction(MachineState.t, ExecEnv.t) :: Instruction.opcode
+  @spec current_instruction(MachineState.t, ExecEnv.t) :: Operation.opcode
   def current_instruction(machine_state, exec_env) do
-    Instruction.get_instruction_at(exec_env.machine_code, machine_state.pc)
+    Operation.get_instruction_at(exec_env.machine_code, machine_state.pc)
   end
 
   @doc """
@@ -77,8 +77,8 @@ defmodule EVM.MachineCode do
   # Returns the valid jump destinations by scanning through
   # entire set of machine code
   defp do_valid_jump_destinations(machine_code, pos) do
-    instruction = Instruction.get_instruction_at(machine_code, pos) |> Instruction.decode
-    next_pos = Instruction.next_instr_pos(pos, instruction)
+    instruction = Operation.get_instruction_at(machine_code, pos) |> Operation.decode
+    next_pos = Operation.next_instr_pos(pos, instruction)
 
     cond do
       pos >= byte_size(machine_code) -> []
@@ -102,7 +102,7 @@ defmodule EVM.MachineCode do
   def compile(code) do
     for n <- code do
       case n do
-        x when is_atom(x) -> EVM.Instruction.encode(n)
+        x when is_atom(x) -> EVM.Operation.encode(n)
         x when is_integer(x) -> x
       end
     end |> :binary.list_to_bin()

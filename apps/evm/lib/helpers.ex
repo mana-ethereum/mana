@@ -5,6 +5,7 @@ defmodule EVM.Helpers do
   """
 
   require Logger
+  use Bitwise
 
   @doc """
   Inverts a map so each key becomes a value,
@@ -66,6 +67,36 @@ defmodule EVM.Helpers do
   def word_size(n) do
     round(:math.ceil(byte_size(n) / @word_size))
   end
+
+  @doc """
+  Wrap ints greater than the max int around back to 0
+
+  ## Examples
+
+      iex> EVM.Helpers.wrap_int(1)
+      1
+
+      iex> EVM.Helpers.wrap_int(EVM.max_int() + 1)
+      1
+  """
+  @spec wrap_int(integer()) :: EVM.val
+  def wrap_int(n) when n > 0, do: band(n, EVM.max_int() - 1)
+  def wrap_int(n), do: n
+
+  @doc """
+  Encodes signed ints using twos compliment
+
+  ## Examples
+
+      iex> EVM.Helpers.encode_signed(1)
+      1
+
+      iex> EVM.Helpers.encode_signed(-1)
+      EVM.max_int() - 1
+  """
+  @spec wrap_int(integer()) :: EVM.val
+  def encode_signed(n) when n < 0, do: EVM.max_int() - abs(n)
+  def encode_signed(n), do: n
 
   @doc """
   Helper function to print an instruction message.

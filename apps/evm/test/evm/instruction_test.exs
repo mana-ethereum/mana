@@ -1,5 +1,5 @@
-defmodule EVM.InstructionTest do
+defmodule EVM.OperationTest do
   use ExUnit.Case, async: true
-  doctest EVM.Instruction
+  doctest EVM.Operation
 
 end

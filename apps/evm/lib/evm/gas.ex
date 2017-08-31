@@ -75,8 +75,8 @@ defmodule EVM.Gas do
   """
   @spec cost(EVM.state, MachineState.t, ExecEnv.t) :: t | nil
   def cost(state, machine_state, exec_env) do
-    instruction = EVM.MachineCode.current_instruction(machine_state, exec_env) |> EVM.Instruction.decode()
-    next_active_words = EVM.Instruction.Memory.active_words_after(instruction, state, machine_state, exec_env)
+    instruction = EVM.MachineCode.current_instruction(machine_state, exec_env) |> EVM.Operation.decode()
+    next_active_words = EVM.Operation.Memory.active_words_after(instruction, state, machine_state, exec_env)
 
     case instr_cost(instruction, state, machine_state, exec_env) do
       nil -> nil
