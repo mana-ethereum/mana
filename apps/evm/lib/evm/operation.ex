@@ -84,7 +84,7 @@ defmodule EVM.Operation do
   @spec get_operation_at(EVM.MachineCode.t, MachineState.pc) :: opcode
   def get_operation_at(machine_code, pc) when is_binary(machine_code) and is_integer(pc) do
     if pc < byte_size(machine_code) do
-      EVM.Helpers.binary_get(machine_code, pc)
+      :binary.at(machine_code, pc)
     else
       @stop # Every other position is an implicit STOP code
     end

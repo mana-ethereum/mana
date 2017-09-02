@@ -1,5 +1,6 @@
 defmodule EVM.Operation.ComparisonAndBitwiseLogic do
   alias MathHelper
+  alias EVM.Helpers
   use Bitwise
 
   @doc """
@@ -39,31 +40,47 @@ defmodule EVM.Operation.ComparisonAndBitwiseLogic do
   @doc """
   Signed less-than comparision.
 
-  TODO: Implement opcode
-
   ## Examples
 
-      iex> EVM.Operation.ComparisonAndBitwiseLogic.slt([], %{stack: []})
-      :unimplemented
+      iex> EVM.Operation.ComparisonAndBitwiseLogic.slt([EVM.Helpers.encode_signed(-55), 55], %{})
+      1
+
+      iex> EVM.Operation.ComparisonAndBitwiseLogic.slt([66, EVM.Helpers.encode_signed(-55)], %{})
+      0
+
+      iex> EVM.Operation.ComparisonAndBitwiseLogic.slt([55, 55], %{})
+      0
   """
   @spec slt(Operation.stack_args, Operation.vm_map) :: Operation.Operation.op_result
-  def slt(_args, %{stack: _stack}) do
-    :unimplemented
+  def slt([s0, s1], _) do
+    if Helpers.decode_signed(s0) < Helpers.decode_signed(s1) do
+      1
+    else
+      0
+    end
   end
 
   @doc """
   Signed greater-than comparision
 
-  TODO: Implement opcode
-
   ## Examples
 
-      iex> EVM.Operation.ComparisonAndBitwiseLogic.sgt([], %{stack: []})
-      :unimplemented
+      iex> EVM.Operation.ComparisonAndBitwiseLogic.sgt([EVM.Helpers.encode_signed(-55), 55], %{})
+      0
+
+      iex> EVM.Operation.ComparisonAndBitwiseLogic.sgt([66, EVM.Helpers.encode_signed(-55)], %{})
+      1
+
+      iex> EVM.Operation.ComparisonAndBitwiseLogic.sgt([55, 55], %{})
+      0
   """
   @spec sgt(Operation.stack_args, Operation.vm_map) :: Operation.Operation.op_result
-  def sgt(_args, %{stack: _stack}) do
-    :unimplemented
+  def sgt([s0, s1], _) do
+    if Helpers.decode_signed(s0) > Helpers.decode_signed(s1) do
+      1
+    else
+      0
+    end
   end
 
   @doc """
@@ -71,13 +88,13 @@ defmodule EVM.Operation.ComparisonAndBitwiseLogic do
 
   ## Examples
 
-      iex> EVM.Operation.ComparisonAndBitwiseLogic.eq([55, 1], %{stack: []})
+      iex> EVM.Operation.ComparisonAndBitwiseLogic.eq([55, 1], %{})
       0
 
-      iex> EVM.Operation.ComparisonAndBitwiseLogic.eq([55, 55], %{stack: []})
+      iex> EVM.Operation.ComparisonAndBitwiseLogic.eq([55, 55], %{})
       1
 
-      iex> EVM.Operation.ComparisonAndBitwiseLogic.eq([0, 0], %{stack: []})
+      iex> EVM.Operation.ComparisonAndBitwiseLogic.eq([0, 0], %{})
       1
   """
   @spec eq(Operation.stack_args, Operation.vm_map) :: Operation.Operation.op_result
@@ -86,65 +103,69 @@ defmodule EVM.Operation.ComparisonAndBitwiseLogic do
   @doc """
   Simple not operator.
 
-  TODO: Implement opcode
-
   ## Examples
 
-      iex> EVM.Operation.ComparisonAndBitwiseLogic.iszero([], %{stack: []})
-      :unimplemented
+      iex> EVM.Operation.ComparisonAndBitwiseLogic.iszero([0], %{})
+      1
+
+      iex> EVM.Operation.ComparisonAndBitwiseLogic.iszero([1], %{})
+      0
   """
   @spec iszero(Operation.stack_args, Operation.vm_map) :: Operation.Operation.op_result
-  def iszero(_args, %{stack: _stack}) do
-    :unimplemented
-  end
+  def iszero([s0], _vm_map), do: if s0 == 0, do: 1, else: 0
 
   @doc """
   Bitwise AND operation.
 
-  TODO: Implement opcode
-
   ## Examples
 
-      iex> EVM.Operation.ComparisonAndBitwiseLogic.and_([], %{stack: []})
-      :unimplemented
+      iex> EVM.Operation.ComparisonAndBitwiseLogic.and_([1, 1], %{})
+      1
+
+      iex> EVM.Operation.ComparisonAndBitwiseLogic.and_([1, 0], %{})
+      0
   """
   @spec and_(Operation.stack_args, Operation.vm_map) :: Operation.Operation.op_result
-  def and_(_args, %{stack: _stack}) do
-    :unimplemented
-  end
+  def and_([s0, s1], _vm_map), do: band(s0, s1)
 
   @doc """
   Bitwise OR operation.
 
-  TODO: Implement opcode
-
   ## Examples
 
-      iex> EVM.Operation.ComparisonAndBitwiseLogic.or_([], %{stack: []})
-      :unimplemented
+      iex> EVM.Operation.ComparisonAndBitwiseLogic.or_([1, 1], %{})
+      1
+
+      iex> EVM.Operation.ComparisonAndBitwiseLogic.or_([1, 0], %{})
+      1
+
+      iex> EVM.Operation.ComparisonAndBitwiseLogic.or_([0, 0], %{})
+      0
   """
   @spec or_(Operation.stack_args, Operation.vm_map) :: Operation.Operation.op_result
-  def or_(_args, %{stack: _stack}) do
-    :unimplemented
-  end
+  def or_([s0, s1], _vm_map), do: bor(s0, s1)
 
   @doc """
   Bitwise XOR operation.
 
-  TODO: Implement opcode
-
   ## Examples
 
-      iex> EVM.Operation.ComparisonAndBitwiseLogic.xor_([], %{stack: []})
-      :unimplemented
+      iex> EVM.Operation.ComparisonAndBitwiseLogic.xor_([1, 1], %{})
+      0
+
+      iex> EVM.Operation.ComparisonAndBitwiseLogic.or_([1, 0], %{})
+      1
   """
   @spec xor_(Operation.stack_args, Operation.vm_map) :: Operation.Operation.op_result
-  def xor_(_args, %{stack: _stack}) do
-    :unimplemented
-  end
+  def xor_([s0, s1], _vm_map), do: bxor(s0, s1)
 
   @doc """
   Bitwise NOT operation.
+  ## Examples
+
+      iex> EVM.Operation.ComparisonAndBitwiseLogic.not_([1], %{})
+      -2
+
   """
   @spec not_(Operation.stack_args, Operation.vm_map) :: Operation.Operation.op_result
   def not_([s0], _), do: bnot(s0)
@@ -152,15 +173,17 @@ defmodule EVM.Operation.ComparisonAndBitwiseLogic do
   @doc """
   Retrieve single byte from word.
 
-  TODO: Implement opcode
-
   ## Examples
 
-      iex> EVM.Operation.ComparisonAndBitwiseLogic.byte([], %{stack: []})
-      :unimplemented
+      iex> EVM.Operation.ComparisonAndBitwiseLogic.byte([31, 1], %{})
+      1
   """
   @spec byte(Operation.stack_args, Operation.vm_map) :: Operation.op_result
-  def byte(_args, %{stack: _stack}) do
-    :unimplemented
+  def byte([s0, s1], _vm_map) do
+    if s0 < EVM.word_size_in_bits() do
+      :binary.at(Helpers.left_pad_bytes(s1, 32), s0)
+    else
+      0
+    end
   end
 end

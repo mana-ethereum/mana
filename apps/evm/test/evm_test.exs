@@ -3,9 +3,7 @@ defmodule EvmTest do
 
   @passing_tests_by_group %{
     arithmetic: :all,
-    bitwise_logic_operation: [
-      :not0,
-    ]
+    bitwise_logic_operation: :all,
   }
 
 

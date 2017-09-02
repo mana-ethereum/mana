@@ -55,7 +55,7 @@ defmodule EVM.Gas do
   @dup_instrs Enum.map(0..16, fn n -> :"dup#{n}" end)
   @swap_instrs Enum.map(0..16, fn n -> :"swap#{n}" end)
   @w_very_low_instr [
-    :add, :sub, :not_, :lt, :gt, :slt, :sgt, :eq, :iszero, :and, :or, :xor,
+    :add, :sub, :not_, :lt, :gt, :slt, :sgt, :eq, :iszero, :and_, :or_, :xor_,
     :byte, :calldataload, :mload, :mstore, :mstore8] ++
       @push_instrs ++ @dup_instrs ++ @swap_instrs
   @w_low_instr [:mul, :div, :sdiv, :mod, :smod, :signextend]

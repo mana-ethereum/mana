@@ -36,22 +36,6 @@ defmodule EVM.Helpers do
       |> Enum.into(%{})
   end
 
-  @doc """
-  Gets the byte at position `pos` in binary.
-
-  ## Examples
-
-      iex> EVM.Helpers.binary_get(<<1, 2, 3, 4>>, 2)
-      3
-
-      iex> EVM.Helpers.binary_get(<<1, 2, 3, 4>>, 4)
-      ** (ArgumentError) argument error
-  """
-  @spec binary_get(binary(), integer()) :: integer()
-  def binary_get(binary, pos) do
-    binary |> :binary.part(pos, 1) |> :binary.first
-  end
-
   def bit_at(n, at), do: band((bsr(n, at)), 1)
   def bit_position(byte_position), do: byte_position * 8  + 7
 
@@ -184,6 +168,25 @@ defmodule EVM.Helpers do
       true ->
         binary_part(data, start_pos, read_length)
     end
+  end
+
+  @doc """
+  Left pad binary with bytes
+
+  ## Examples
+
+      iex> EVM.Helpers.left_pad_bytes(1, 3)
+      <<0, 0, 1>>
+      iex> EVM.Helpers.left_pad_bytes(<<1>>, 3)
+      <<0, 0, 1>>
+  """
+  @spec left_pad_bytes(binary() | integer(), integer()) :: integer()
+  def left_pad_bytes(n, size) when is_integer(n), do:
+    left_pad_bytes(n |> :binary.encode_unsigned, size)
+
+  def left_pad_bytes(n, size) do
+    padding_size = (size - byte_size(n)) * 8
+    <<0:: size(padding_size)>> <> n
   end
 
   @doc """
