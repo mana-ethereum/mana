@@ -263,19 +263,10 @@ defmodule EVM.Operation do
   """
   @spec normalize_op_result(EVM.val | list(EVM.val) | Operation.op_result, EVM.stack) :: Operation.op_result
   def normalize_op_result(op_result, updated_stack) do
-    cond do
-      is_integer(op_result) ->
-        op_result = op_result
-          |> Helpers.wrap_int
-          |> Helpers.encode_signed
-
-        %{stack: Stack.push(updated_stack, op_result)}
-      is_list(op_result) ->
-        %{
-          stack: Enum.reduce(op_result, updated_stack, &Stack.push(&2, &1))
-        }
-      true ->
-        op_result
+    if is_integer(op_result) || is_list(op_result) do
+      %{stack: Stack.push(updated_stack, Helpers.encode_val(op_result))}
+    else
+      op_result
     end
   end
 

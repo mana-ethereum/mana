@@ -15,8 +15,12 @@ defmodule EVM.Stack do
 
       iex> EVM.Stack.push([5], 6)
       [6, 5]
+
+      iex> EVM.Stack.push([], [5, 6])
+      [6, 5]
   """
-  @spec push(t, EVM.val) :: t
+  @spec push(t, EVM.val | list(EVM.val)) :: t
+  def push(stack, val) when is_list(val), do: Enum.reverse(val) ++ stack
   def push(stack, val), do: [val | stack]
 
   @doc """

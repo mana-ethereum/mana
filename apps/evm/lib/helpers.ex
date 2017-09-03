@@ -110,10 +110,18 @@ defmodule EVM.Helpers do
     <<sign :: size(1), _ :: bitstring>> = n
 
     if sign == 0 do
-        :binary.decode_unsigned(n)
-      else
-        :binary.decode_unsigned(n) - EVM.max_int()
+      :binary.decode_unsigned(n)
+    else
+      :binary.decode_unsigned(n) - EVM.max_int()
     end
+  end
+
+  @spec encode_val(integer() | list(integer())) :: list(EVM.val)
+  def encode_val(n) when is_list(n), do: Enum.map(n, &encode_val/1)
+  def encode_val(n) do
+    n
+      |> wrap_int
+      |> encode_signed
   end
 
   @doc """
