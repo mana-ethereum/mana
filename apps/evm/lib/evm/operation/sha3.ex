@@ -6,7 +6,7 @@ defmodule EVM.Operation.SHA3 do
 
   ## Examples
 
-      iex> EVM.Operation.Impl.sha3([], %{stack: []})
+      iex> EVM.Operation.SHA3.sha3([], %{stack: []})
       :unimplemented
   """
   @spec sha3(Operation.stack_args, Operation.vm_map) :: Operation.op_result

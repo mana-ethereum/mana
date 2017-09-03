@@ -11,7 +11,7 @@ defmodule EVM.Operation.StopAndArithmetic do
 
   ## Examples
 
-      iex> EVM.Operation.Impl.stop([], %{})
+      iex> EVM.Operation.StopAndArithmetic.stop([], %{})
       :noop
   """
   @spec stop(Operation.stack_args, Operation.vm_map) :: Operation.noop
@@ -26,13 +26,13 @@ defmodule EVM.Operation.StopAndArithmetic do
 
   ## Examples
 
-      iex> EVM.Operation.Impl.add([1, 2], %{})
+      iex> EVM.Operation.StopAndArithmetic.add([1, 2], %{})
       3
 
-      iex> EVM.Operation.Impl.add([-1, -5], %{})
+      iex> EVM.Operation.StopAndArithmetic.add([-1, -5], %{})
       -6
 
-      iex> EVM.Operation.Impl.add([0, 0], %{})
+      iex> EVM.Operation.StopAndArithmetic.add([0, 0], %{})
       0
   """
   @spec add(Operation.stack_args, Operation.vm_map) :: EVM.val
@@ -43,10 +43,10 @@ defmodule EVM.Operation.StopAndArithmetic do
 
   ## Examples
 
-      iex> EVM.Operation.Impl.mul([5, 2], %{})
+      iex> EVM.Operation.StopAndArithmetic.mul([5, 2], %{})
       10
 
-      iex> EVM.Operation.Impl.mul([5, -2], %{})
+      iex> EVM.Operation.StopAndArithmetic.mul([5, -2], %{})
       -10
   """
   @spec mul(Operation.stack_args, Operation.vm_map) :: EVM.val
@@ -57,10 +57,10 @@ defmodule EVM.Operation.StopAndArithmetic do
 
   ## Examples
 
-      iex> EVM.Operation.Impl.sub([5, 2], %{})
+      iex> EVM.Operation.StopAndArithmetic.sub([5, 2], %{})
       3
 
-      iex> EVM.Operation.Impl.sub([-1, 5], %{})
+      iex> EVM.Operation.StopAndArithmetic.sub([-1, 5], %{})
       -6
   """
   @spec sub(Operation.stack_args, Operation.vm_map) :: EVM.val
@@ -71,13 +71,13 @@ defmodule EVM.Operation.StopAndArithmetic do
 
   ## Examples
 
-      iex> EVM.Operation.Impl.div([5, 2], %{})
+      iex> EVM.Operation.StopAndArithmetic.div([5, 2], %{})
       2
 
-      iex> EVM.Operation.Impl.div([10, 2], %{})
+      iex> EVM.Operation.StopAndArithmetic.div([10, 2], %{})
       5
 
-      iex> EVM.Operation.Impl.div([10, 0], %{})
+      iex> EVM.Operation.StopAndArithmetic.div([10, 0], %{})
       0
   """
   def div([_s0, 0], _), do: 0
@@ -134,7 +134,7 @@ defmodule EVM.Operation.StopAndArithmetic do
 
   ## Examples
 
-      iex> EVM.Operation.Impl.exp([2, 3], %{})
+      iex> EVM.Operation.StopAndArithmetic.exp([2, 3], %{})
       8
   """
   @spec exp(Operation.stack_args, Operation.vm_map) :: EVM.val

@@ -9,7 +9,7 @@ defmodule EVM.Operation.Exchange do
 
   ## Examples
 
-      iex> EVM.Operation.Impl.swap1([1,2], %{stack: []})
+      iex> EVM.Operation.Exchange.swap1([1,2], %{stack: []})
       %{stack: [2,1]}
   """
   @spec swap1(Operation.stack_args, Operation.vm_map) :: Operation.op_result
@@ -24,7 +24,7 @@ defmodule EVM.Operation.Exchange do
 
   ## Examples
 
-      iex> EVM.Operation.Impl.swap2([], %{stack: []})
+      iex> EVM.Operation.Exchange.swap2([], %{stack: []})
       :unimplemented
   """
   @spec swap2(Operation.stack_args, Operation.vm_map) :: Operation.op_result
@@ -39,7 +39,7 @@ defmodule EVM.Operation.Exchange do
 
   ## Examples
 
-      iex> EVM.Operation.Impl.swap3([], %{stack: []})
+      iex> EVM.Operation.Exchange.swap3([], %{stack: []})
       :unimplemented
   """
   @spec swap3(Operation.stack_args, Operation.vm_map) :: Operation.op_result
@@ -54,7 +54,7 @@ defmodule EVM.Operation.Exchange do
 
   ## Examples
 
-      iex> EVM.Operation.Impl.swap4([], %{stack: []})
+      iex> EVM.Operation.Exchange.swap4([], %{stack: []})
       :unimplemented
   """
   @spec swap4(Operation.stack_args, Operation.vm_map) :: Operation.op_result
@@ -69,7 +69,7 @@ defmodule EVM.Operation.Exchange do
 
   ## Examples
 
-      iex> EVM.Operation.Impl.swap5([], %{stack: []})
+      iex> EVM.Operation.Exchange.swap5([], %{stack: []})
       :unimplemented
   """
   @spec swap5(Operation.stack_args, Operation.vm_map) :: Operation.op_result
@@ -84,7 +84,7 @@ defmodule EVM.Operation.Exchange do
 
   ## Examples
 
-      iex> EVM.Operation.Impl.swap6([], %{stack: []})
+      iex> EVM.Operation.Exchange.swap6([], %{stack: []})
       :unimplemented
   """
   @spec swap6(Operation.stack_args, Operation.vm_map) :: Operation.op_result
@@ -99,7 +99,7 @@ defmodule EVM.Operation.Exchange do
 
   ## Examples
 
-      iex> EVM.Operation.Impl.swap7([], %{stack: []})
+      iex> EVM.Operation.Exchange.swap7([], %{stack: []})
       :unimplemented
   """
   @spec swap7(Operation.stack_args, Operation.vm_map) :: Operation.op_result
@@ -114,7 +114,7 @@ defmodule EVM.Operation.Exchange do
 
   ## Examples
 
-      iex> EVM.Operation.Impl.swap8([], %{stack: []})
+      iex> EVM.Operation.Exchange.swap8([], %{stack: []})
       :unimplemented
   """
   @spec swap8(Operation.stack_args, Operation.vm_map) :: Operation.op_result
@@ -129,7 +129,7 @@ defmodule EVM.Operation.Exchange do
 
   ## Examples
 
-      iex> EVM.Operation.Impl.swap9([], %{stack: []})
+      iex> EVM.Operation.Exchange.swap9([], %{stack: []})
       :unimplemented
   """
   @spec swap9(Operation.stack_args, Operation.vm_map) :: Operation.op_result
@@ -144,7 +144,7 @@ defmodule EVM.Operation.Exchange do
 
   ## Examples
 
-      iex> EVM.Operation.Impl.swap10([], %{stack: []})
+      iex> EVM.Operation.Exchange.swap10([], %{stack: []})
       :unimplemented
   """
   @spec swap10(Operation.stack_args, Operation.vm_map) :: Operation.op_result
@@ -159,7 +159,7 @@ defmodule EVM.Operation.Exchange do
 
   ## Examples
 
-      iex> EVM.Operation.Impl.swap11([], %{stack: []})
+      iex> EVM.Operation.Exchange.swap11([], %{stack: []})
       :unimplemented
   """
   @spec swap11(Operation.stack_args, Operation.vm_map) :: Operation.op_result
@@ -174,7 +174,7 @@ defmodule EVM.Operation.Exchange do
 
   ## Examples
 
-      iex> EVM.Operation.Impl.swap12([], %{stack: []})
+      iex> EVM.Operation.Exchange.swap12([], %{stack: []})
       :unimplemented
   """
   @spec swap12(Operation.stack_args, Operation.vm_map) :: Operation.op_result
@@ -189,7 +189,7 @@ defmodule EVM.Operation.Exchange do
 
   ## Examples
 
-      iex> EVM.Operation.Impl.swap13([], %{stack: []})
+      iex> EVM.Operation.Exchange.swap13([], %{stack: []})
       :unimplemented
   """
   @spec swap13(Operation.stack_args, Operation.vm_map) :: Operation.op_result
@@ -204,7 +204,7 @@ defmodule EVM.Operation.Exchange do
 
   ## Examples
 
-      iex> EVM.Operation.Impl.swap14([], %{stack: []})
+      iex> EVM.Operation.Exchange.swap14([], %{stack: []})
       :unimplemented
   """
   @spec swap14(Operation.stack_args, Operation.vm_map) :: Operation.op_result
@@ -219,7 +219,7 @@ defmodule EVM.Operation.Exchange do
 
   ## Examples
 
-      iex> EVM.Operation.Impl.swap15([], %{stack: []})
+      iex> EVM.Operation.Exchange.swap15([], %{stack: []})
       :unimplemented
   """
   @spec swap15(Operation.stack_args, Operation.vm_map) :: Operation.op_result
@@ -234,7 +234,7 @@ defmodule EVM.Operation.Exchange do
 
   ## Examples
 
-      iex> EVM.Operation.Impl.swap16([], %{stack: []})
+      iex> EVM.Operation.Exchange.swap16([], %{stack: []})
       :unimplemented
   """
   @spec swap16(Operation.stack_args, Operation.vm_map) :: Operation.op_result

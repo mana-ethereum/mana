@@ -6,7 +6,7 @@ defmodule EVM.Operation.Logging do
 
   ## Examples
 
-      iex> EVM.Operation.Impl.log0([], %{stack: []})
+      iex> EVM.Operation.Logging.log0([], %{stack: []})
       :unimplemented
   """
   @spec log0(Operation.stack_args, Operation.vm_map) :: Operation.op_result
@@ -21,7 +21,7 @@ defmodule EVM.Operation.Logging do
 
   ## Examples
 
-      iex> EVM.Operation.Impl.log1([], %{stack: []})
+      iex> EVM.Operation.Logging.log1([], %{stack: []})
       :unimplemented
   """
   @spec log1(Operation.stack_args, Operation.vm_map) :: Operation.op_result
@@ -36,7 +36,7 @@ defmodule EVM.Operation.Logging do
 
   ## Examples
 
-      iex> EVM.Operation.Impl.log2([], %{stack: []})
+      iex> EVM.Operation.Logging.log2([], %{stack: []})
       :unimplemented
   """
   @spec log2(Operation.stack_args, Operation.vm_map) :: Operation.op_result
@@ -51,7 +51,7 @@ defmodule EVM.Operation.Logging do
 
   ## Examples
 
-      iex> EVM.Operation.Impl.log3([], %{stack: []})
+      iex> EVM.Operation.Logging.log3([], %{stack: []})
       :unimplemented
   """
   @spec log3(Operation.stack_args, Operation.vm_map) :: Operation.op_result
@@ -66,7 +66,7 @@ defmodule EVM.Operation.Logging do
 
   ## Examples
 
-      iex> EVM.Operation.Impl.log4([], %{stack: []})
+      iex> EVM.Operation.Logging.log4([], %{stack: []})
       :unimplemented
   """
   @spec log4(Operation.stack_args, Operation.vm_map) :: Operation.op_result

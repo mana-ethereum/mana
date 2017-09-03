@@ -12,7 +12,7 @@ defmodule EVM.Operation.StackMemoryStorageAndFlow do
 
   ## Examples
 
-      iex> EVM.Operation.Impl.pop([55], %{stack: []})
+      iex> EVM.Operation.StackMemoryStorageAndFlow.pop([55], %{stack: []})
       :noop
   """
   @spec pop(Operation.stack_args, Operation.vm_map) :: Operation.op_result
@@ -26,10 +26,10 @@ defmodule EVM.Operation.StackMemoryStorageAndFlow do
 
   ## Examples
 
-      iex> EVM.Operation.Impl.mload([0], %{machine_state: %EVM.MachineState{stack: [1], memory: <<0x55::256, 0xff>>}})
+      iex> EVM.Operation.StackMemoryStorageAndFlow.mload([0], %{machine_state: %EVM.MachineState{stack: [1], memory: <<0x55::256, 0xff>>}})
       %{machine_state: %EVM.MachineState{stack: [0x55, 1], memory: <<0x55::256, 0xff>>, active_words: 1}}
 
-      iex> EVM.Operation.Impl.mload([1], %{machine_state: %EVM.MachineState{stack: [], memory: <<0x55::256, 0xff>>}})
+      iex> EVM.Operation.StackMemoryStorageAndFlow.mload([1], %{machine_state: %EVM.MachineState{stack: [], memory: <<0x55::256, 0xff>>}})
       %{machine_state: %EVM.MachineState{stack: [22015], memory: <<0x55::256, 0xff>>, active_words: 2}}
 
       # TODO: Add a test for overflow, etc.
@@ -47,10 +47,10 @@ defmodule EVM.Operation.StackMemoryStorageAndFlow do
 
   ## Examples
 
-      iex> EVM.Operation.Impl.mstore([0, 0x55], %{machine_state: %EVM.MachineState{stack: [], memory: <<>>}})
+      iex> EVM.Operation.StackMemoryStorageAndFlow.mstore([0, 0x55], %{machine_state: %EVM.MachineState{stack: [], memory: <<>>}})
       %{machine_state: %EVM.MachineState{stack: [], memory: <<0x55::256>>, active_words: 1}}
 
-      iex> EVM.Operation.Impl.mstore([1, 0x55], %{machine_state: %EVM.MachineState{stack: [], memory: <<>>}})
+      iex> EVM.Operation.StackMemoryStorageAndFlow.mstore([1, 0x55], %{machine_state: %EVM.MachineState{stack: [], memory: <<>>}})
       %{machine_state: %EVM.MachineState{stack: [], memory: <<0, 0x55::256>>, active_words: 2}}
 
       # TODO: Add a test for overflow, etc.
@@ -89,15 +89,15 @@ defmodule EVM.Operation.StackMemoryStorageAndFlow do
   ## Examples
 
       iex> db = MerklePatriciaTree.Test.random_ets_db()
-      iex> state = EVM.Operation.Impl.sstore([0x11223344556677889900, 0x111222333444555], %{state: MerklePatriciaTree.Trie.new(db)})[:state]
-      iex> EVM.Operation.Impl.sload([0x11223344556677889900], %{state: state, stack: []})
+      iex> state = EVM.Operation.StackMemoryStorageAndFlow.sstore([0x11223344556677889900, 0x111222333444555], %{state: MerklePatriciaTree.Trie.new(db)})[:state]
+      iex> EVM.Operation.StackMemoryStorageAndFlow.sload([0x11223344556677889900], %{state: state, stack: []})
       %{
         stack: [0x111222333444555]
       }
 
       iex> db = MerklePatriciaTree.Test.random_ets_db()
-      iex> state = EVM.Operation.Impl.sstore([0x11223344556677889900, 0x111222333444555], %{state: MerklePatriciaTree.Trie.new(db)})[:state]
-      iex> EVM.Operation.Impl.sload([0x1234], %{state: state, stack: []})
+      iex> state = EVM.Operation.StackMemoryStorageAndFlow.sstore([0x11223344556677889900, 0x111222333444555], %{state: MerklePatriciaTree.Trie.new(db)})[:state]
+      iex> EVM.Operation.StackMemoryStorageAndFlow.sload([0x1234], %{state: state, stack: []})
       %{
         stack: [0x0]
       }
@@ -124,13 +124,13 @@ defmodule EVM.Operation.StackMemoryStorageAndFlow do
   ## Examples
 
       iex> db = MerklePatriciaTree.Test.random_ets_db(:store_word_test)
-      iex> EVM.Operation.Impl.sstore([0x11223344556677889900, 0x111222333444555], %{state: MerklePatriciaTree.Trie.new(db)})
+      iex> EVM.Operation.StackMemoryStorageAndFlow.sstore([0x11223344556677889900, 0x111222333444555], %{state: MerklePatriciaTree.Trie.new(db)})
       %{
         state: %MerklePatriciaTree.Trie{db: {MerklePatriciaTree.DB.ETS, :store_word_test}, root_hash: <<128, 58, 53, 102, 7, 182, 120, 131, 145, 91, 222, 83, 56, 42, 251, 168, 203, 138, 130, 246, 76, 122, 110, 218, 183, 131, 33, 205, 154, 136, 194, 212>>}
       }
 
       iex> db = MerklePatriciaTree.Test.random_ets_db()
-      iex> EVM.Operation.Impl.sstore([0x11223344556677889900, 0x111222333444555], %{state: MerklePatriciaTree.Trie.new(db)})[:state] |> MerklePatriciaTree.Trie.Inspector.all_values()
+      iex> EVM.Operation.StackMemoryStorageAndFlow.sstore([0x11223344556677889900, 0x111222333444555], %{state: MerklePatriciaTree.Trie.new(db)})[:state] |> MerklePatriciaTree.Trie.Inspector.all_values()
       [
         {<<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
            17, 34, 51, 68, 85, 102, 119, 136, 153, 0>>,
@@ -140,7 +140,7 @@ defmodule EVM.Operation.StackMemoryStorageAndFlow do
       ]
 
       iex> db = MerklePatriciaTree.Test.random_ets_db()
-      iex> EVM.Operation.Impl.sstore([0x0, 0x0], %{state: MerklePatriciaTree.Trie.new(db)})[:state] |> MerklePatriciaTree.Trie.Inspector.all_values()
+      iex> EVM.Operation.StackMemoryStorageAndFlow.sstore([0x0, 0x0], %{state: MerklePatriciaTree.Trie.new(db)})[:state] |> MerklePatriciaTree.Trie.Inspector.all_values()
       [
       ]
   """
@@ -166,7 +166,7 @@ defmodule EVM.Operation.StackMemoryStorageAndFlow do
 
   ## Examples
 
-      iex> EVM.Operation.Impl.jump([], %{stack: []})
+      iex> EVM.Operation.StackMemoryStorageAndFlow.jump([], %{stack: []})
       :noop
   """
   @spec jump(Operation.stack_args, Operation.vm_map) :: Operation.op_result
@@ -181,7 +181,7 @@ defmodule EVM.Operation.StackMemoryStorageAndFlow do
 
   ## Examples
 
-      iex> EVM.Operation.Impl.jumpi([], %{stack: []})
+      iex> EVM.Operation.StackMemoryStorageAndFlow.jumpi([], %{stack: []})
       :noop
   """
   @spec jumpi(Operation.stack_args, Operation.vm_map) :: Operation.op_result
@@ -196,7 +196,7 @@ defmodule EVM.Operation.StackMemoryStorageAndFlow do
 
   ## Examples
 
-      iex> EVM.Operation.Impl.pc([], %{stack: []})
+      iex> EVM.Operation.StackMemoryStorageAndFlow.pc([], %{stack: []})
       :unimplemented
   """
   @spec pc(Operation.stack_args, Operation.vm_map) :: Operation.op_result
@@ -211,7 +211,7 @@ defmodule EVM.Operation.StackMemoryStorageAndFlow do
 
   ## Examples
 
-      iex> EVM.Operation.Impl.msize([], %{stack: []})
+      iex> EVM.Operation.StackMemoryStorageAndFlow.msize([], %{stack: []})
       :unimplemented
   """
   @spec msize(Operation.stack_args, Operation.vm_map) :: Operation.op_result
@@ -226,7 +226,7 @@ defmodule EVM.Operation.StackMemoryStorageAndFlow do
 
   ## Examples
 
-      iex> EVM.Operation.Impl.gas([], %{stack: []})
+      iex> EVM.Operation.StackMemoryStorageAndFlow.gas([], %{stack: []})
       :unimplemented
   """
   @spec gas(Operation.stack_args, Operation.vm_map) :: Operation.op_result
@@ -241,7 +241,7 @@ defmodule EVM.Operation.StackMemoryStorageAndFlow do
 
   ## Examples
 
-      iex> EVM.Operation.Impl.jumpdest([], %{stack: []})
+      iex> EVM.Operation.StackMemoryStorageAndFlow.jumpdest([], %{stack: []})
       :noop
   """
   @spec jumpdest(Operation.stack_args, Operation.vm_map) :: Operation.op_result

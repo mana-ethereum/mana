@@ -13,6 +13,8 @@ defmodule EVM.Functions do
 
   @max_stack 1024
 
+  def max_stack_depth, do: @max_stack
+
   @doc """
   Returns whether or not the current program is halting due to a `return` or terminal statement.
 

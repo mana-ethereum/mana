@@ -35,7 +35,10 @@ defmodule EVM.Operation do
     optional(:stack) => Stack.t,
     optional(:machine_state) => MachineState.t,
     optional(:sub_state) => SubState.t,
-    optional(:exec_env) => ExecEnv.t
+    optional(:exec_env) => ExecEnv.t,
+    optional(:block_interface) => EVM.BlockInterface.t,
+    optional(:contract_interface) => EVM.ContractInterface.t,
+    optional(:account_interface) => EVM.AccountInterface.t
   }
   @type noop :: :noop
 
