@@ -7,13 +7,13 @@ defmodule EVM.Operation.ComparisonAndBitwiseLogic do
 
   ## Examples
 
-      iex> EVM.Operation.Impl.lt([55, 66], %{})
+      iex> EVM.Operation.ComparisonAndBitwiseLogic.lt([55, 66], %{})
       1
 
-      iex> EVM.Operation.Impl.lt([66, 55], %{})
+      iex> EVM.Operation.ComparisonAndBitwiseLogic.lt([66, 55], %{})
       0
 
-      iex> EVM.Operation.Impl.lt([55, 55], %{})
+      iex> EVM.Operation.ComparisonAndBitwiseLogic.lt([55, 55], %{})
       0
   """
   @spec lt(Operation.stack_args, Operation.vm_map) :: Operation.Operation.op_result
@@ -24,13 +24,13 @@ defmodule EVM.Operation.ComparisonAndBitwiseLogic do
 
   ## Examples
 
-      iex> EVM.Operation.Impl.gt([55, 66], %{})
+      iex> EVM.Operation.ComparisonAndBitwiseLogic.gt([55, 66], %{})
       0
 
-      iex> EVM.Operation.Impl.gt([66, 55], %{})
+      iex> EVM.Operation.ComparisonAndBitwiseLogic.gt([66, 55], %{})
       1
 
-      iex> EVM.Operation.Impl.gt([55, 55], %{})
+      iex> EVM.Operation.ComparisonAndBitwiseLogic.gt([55, 55], %{})
       0
   """
   @spec gt(Operation.stack_args, Operation.vm_map) :: Operation.Operation.op_result
@@ -43,7 +43,7 @@ defmodule EVM.Operation.ComparisonAndBitwiseLogic do
 
   ## Examples
 
-      iex> EVM.Operation.Impl.slt([], %{stack: []})
+      iex> EVM.Operation.ComparisonAndBitwiseLogic.slt([], %{stack: []})
       :unimplemented
   """
   @spec slt(Operation.stack_args, Operation.vm_map) :: Operation.Operation.op_result
@@ -58,7 +58,7 @@ defmodule EVM.Operation.ComparisonAndBitwiseLogic do
 
   ## Examples
 
-      iex> EVM.Operation.Impl.sgt([], %{stack: []})
+      iex> EVM.Operation.ComparisonAndBitwiseLogic.sgt([], %{stack: []})
       :unimplemented
   """
   @spec sgt(Operation.stack_args, Operation.vm_map) :: Operation.Operation.op_result
@@ -71,14 +71,14 @@ defmodule EVM.Operation.ComparisonAndBitwiseLogic do
 
   ## Examples
 
-      iex> EVM.Operation.Impl.eq([55, 1], %{stack: []})
-      %{stack: [0]}
+      iex> EVM.Operation.ComparisonAndBitwiseLogic.eq([55, 1], %{stack: []})
+      0
 
-      iex> EVM.Operation.Impl.eq([55, 55], %{stack: []})
-      %{stack: [1]}
+      iex> EVM.Operation.ComparisonAndBitwiseLogic.eq([55, 55], %{stack: []})
+      1
 
-      iex> EVM.Operation.Impl.eq([0, 0], %{stack: []})
-      %{stack: [1]}
+      iex> EVM.Operation.ComparisonAndBitwiseLogic.eq([0, 0], %{stack: []})
+      1
   """
   @spec eq(Operation.stack_args, Operation.vm_map) :: Operation.Operation.op_result
   def eq([s0, s1], _), do: if s0 == s1, do: 1, else: 0
@@ -90,7 +90,7 @@ defmodule EVM.Operation.ComparisonAndBitwiseLogic do
 
   ## Examples
 
-      iex> EVM.Operation.Impl.iszero([], %{stack: []})
+      iex> EVM.Operation.ComparisonAndBitwiseLogic.iszero([], %{stack: []})
       :unimplemented
   """
   @spec iszero(Operation.stack_args, Operation.vm_map) :: Operation.Operation.op_result
@@ -105,7 +105,7 @@ defmodule EVM.Operation.ComparisonAndBitwiseLogic do
 
   ## Examples
 
-      iex> EVM.Operation.Impl.and_([], %{stack: []})
+      iex> EVM.Operation.ComparisonAndBitwiseLogic.and_([], %{stack: []})
       :unimplemented
   """
   @spec and_(Operation.stack_args, Operation.vm_map) :: Operation.Operation.op_result
@@ -120,7 +120,7 @@ defmodule EVM.Operation.ComparisonAndBitwiseLogic do
 
   ## Examples
 
-      iex> EVM.Operation.Impl.or_([], %{stack: []})
+      iex> EVM.Operation.ComparisonAndBitwiseLogic.or_([], %{stack: []})
       :unimplemented
   """
   @spec or_(Operation.stack_args, Operation.vm_map) :: Operation.Operation.op_result
@@ -135,7 +135,7 @@ defmodule EVM.Operation.ComparisonAndBitwiseLogic do
 
   ## Examples
 
-      iex> EVM.Operation.Impl.xor_([], %{stack: []})
+      iex> EVM.Operation.ComparisonAndBitwiseLogic.xor_([], %{stack: []})
       :unimplemented
   """
   @spec xor_(Operation.stack_args, Operation.vm_map) :: Operation.Operation.op_result
@@ -156,7 +156,7 @@ defmodule EVM.Operation.ComparisonAndBitwiseLogic do
 
   ## Examples
 
-      iex> EVM.Operation.Impl.byte([], %{stack: []})
+      iex> EVM.Operation.ComparisonAndBitwiseLogic.byte([], %{stack: []})
       :unimplemented
   """
   @spec byte(Operation.stack_args, Operation.vm_map) :: Operation.op_result
