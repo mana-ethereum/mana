@@ -44,7 +44,7 @@ defmodule Block.Header do
     nonce: <<_::64>> | nil, # TODO: 64-bit hash?
   }
 
-  @d_0 131_072 # Eq.(40)
+  @initial_difficulty 131_072 # d_0 from Eq.(40)
   @max_extra_data_bytes 32 # Eq.(58)
   @min_gas_limit 125_000 # Eq.(47)
 
@@ -288,9 +288,9 @@ defmodule Block.Header do
   @spec get_difficulty(t, t | nil) :: integer()
   def get_difficulty(header, parent_header) do
     cond do
-      header.number == 0 -> @d_0
-      is_before_homestead?(header) -> max(@d_0, parent_header.difficulty + difficulty_x(parent_header.difficulty) * difficulty_s1(header, parent_header) + difficulty_e(header))
-      true -> max(@d_0, parent_header.difficulty + difficulty_x(parent_header.difficulty) * difficulty_s2(header, parent_header) + difficulty_e(header))
+      header.number == 0 -> @initial_difficulty
+      is_before_homestead?(header) -> max(@initial_difficulty, parent_header.difficulty + difficulty_x(parent_header.difficulty) * difficulty_s1(header, parent_header) + difficulty_e(header))
+      true -> max(@initial_difficulty, parent_header.difficulty + difficulty_x(parent_header.difficulty) * difficulty_s2(header, parent_header) + difficulty_e(header))
     end
   end
 
