@@ -150,10 +150,10 @@ defmodule Blockchain.Transaction.Signature do
   ## Examples
 
       iex> Blockchain.Transaction.Signature.transaction_hash(%Blockchain.Transaction{nonce: 5, gas_price: 6, gas_limit: 7, to: <<>>, value: 5, init: <<1>>})
-      <<187, 197, 72, 40, 247, 126, 117, 11, 218, 201, 187, 47, 109, 167, 131, 80, 40, 46, 5, 168, 185, 183, 20, 24, 165, 38, 170, 148, 7, 7, 97, 138>>
+      <<127, 113, 209, 76, 19, 196, 2, 206, 19, 198, 240, 99, 184, 62, 8, 95, 9, 122, 135, 142, 51, 22, 61, 97, 70, 206, 206, 39, 121, 54, 83, 27>>
 
       iex> Blockchain.Transaction.Signature.transaction_hash(%Blockchain.Transaction{nonce: 5, gas_price: 6, gas_limit: 7, to: <<1>>, value: 5, data: <<1>>})
-      <<190, 212, 214, 101, 94, 148, 22, 238, 110, 177, 41, 32, 137, 25, 21, 242, 180, 17, 162, 187, 227, 164, 95, 46, 83, 245, 198, 0, 1, 73, 82, 180>>
+      <<225, 195, 128, 181, 3, 211, 32, 231, 34, 10, 166, 198, 153, 71, 210, 118, 51, 117, 22, 242, 87, 212, 229, 37, 71, 226, 150, 160, 50, 203, 127, 180>>
   """
   @spec transaction_hash(Blockchain.Transaction.t) :: BitHelper.keccak_hash
   def transaction_hash(trx) do
@@ -171,7 +171,7 @@ defmodule Blockchain.Transaction.Signature do
   ## Examples
 
       iex> Blockchain.Transaction.Signature.sign_transaction(%Blockchain.Transaction{nonce: 5, gas_price: 6, gas_limit: 7, to: <<>>, value: 5, init: <<1>>}, <<1::256>>)
-      %Blockchain.Transaction{data: <<>>, gas_limit: 7, gas_price: 6, init: <<1>>, nonce: 5, r: 38889131630470350300468726261158724183878062819625353581392042110782473464074, s: 56013001490976921811414879795854011730332692343890561111314022658085426919315, to: "", v: 27, value: 5}
+      %Blockchain.Transaction{data: <<>>, gas_limit: 7, gas_price: 6, init: <<1>>, nonce: 5, r: 97037709922803580267279977200525583527127616719646548867384185721164615918250, s: 31446571475787755537574189222065166628755695553801403547291726929250860527755, to: "", v: 27, value: 5}
   """
   @spec sign_transaction(Blockchain.Transaction.t, private_key) :: Blockchain.Transaction.t
   def sign_transaction(trx, private_key) do
@@ -192,7 +192,7 @@ defmodule Blockchain.Transaction.Signature do
   ## Examples
 
       iex> Blockchain.Transaction.Signature.address_from_private(<<1::256>>)
-      <<82, 43, 246, 253, 8, 130, 229, 143, 111, 235, 9, 107, 65, 65, 123, 79, 140, 105, 44, 57>>
+      <<125, 110, 153, 187, 138, 191, 140, 192, 19, 187, 14, 145, 45, 11, 23, 101, 150, 254, 123, 136>>
   """
   @spec address_from_private(private_key) :: EVM.address
   def address_from_private(private_key) do
@@ -210,7 +210,7 @@ defmodule Blockchain.Transaction.Signature do
   ## Examples
 
       iex> Blockchain.Transaction.Signature.address_from_public(<<1::256>>)
-      <<242, 147, 250, 79, 184, 253, 30, 235, 192, 201, 54, 126, 124, 145, 6, 103, 138, 137, 61, 241>>
+      <<113, 126, 106, 50, 12, 244, 75, 74, 250, 194, 176, 115, 45, 159, 203, 226, 183, 250, 12, 246>>
   """
   @spec address_from_public(public_key) :: EVM.address
   def address_from_public(public_key) do
@@ -227,7 +227,7 @@ defmodule Blockchain.Transaction.Signature do
   ## Examples
 
       iex> Blockchain.Transaction.Signature.sender(%Blockchain.Transaction{data: nil, gas_limit: 7, gas_price: 6, init: <<1>>, nonce: 5, r: 38889131630470350300468726261158724183878062819625353581392042110782473464074, s: 56013001490976921811414879795854011730332692343890561111314022658085426919315, to: "", v: 27, value: 5})
-      {:ok, <<82, 43, 246, 253, 8, 130, 229, 143, 111, 235, 9, 107, 65, 65, 123, 79, 140, 105, 44, 57>>}
+      {:ok, <<78, 5, 165, 161, 24, 170, 36, 120, 35, 15, 72, 69, 245, 223, 223, 115, 128, 119, 32, 137>>}
 
       iex> Blockchain.Transaction.Signature.sender(%Blockchain.Transaction{data: nil, gas_limit: 7, gas_price: 6, init: <<1>>, nonce: 5, r: 0, s: 0, to: "", v: 0, value: 5})
       {:error, "Recovery id invalid 0-3"}

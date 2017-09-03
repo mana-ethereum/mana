@@ -7,23 +7,23 @@ defmodule Blockchain.BlocktreeTest do
     block_10 = %Blockchain.Block{
       block_hash: <<10>>,
       header: %Blockchain.Block.Header{
-        number: 5, parent_hash: <<>>, difficulty: 100}}
+        number: 0, parent_hash: <<0::256>>, difficulty: 100}}
     block_20 = %Blockchain.Block{
       block_hash: <<20>>,
       header: %Blockchain.Block.Header{
-        number: 6, parent_hash: <<10>>, difficulty: 110}}
+        number: 1, parent_hash: <<10>>, difficulty: 110}}
     block_21 = %Blockchain.Block{
       block_hash: <<21>>,
       header: %Blockchain.Block.Header{
-        number: 6, parent_hash: <<10>>, difficulty: 120}}
+        number: 1, parent_hash: <<10>>, difficulty: 120}}
     block_30 = %Blockchain.Block{
       block_hash: <<30>>,
       header: %Blockchain.Block.Header{
-        number: 7, parent_hash: <<20>>, difficulty: 120}}
+        number: 2, parent_hash: <<20>>, difficulty: 120}}
     block_40 = %Blockchain.Block{
       block_hash: <<40>>,
       header: %Blockchain.Block.Header{
-        number: 8, parent_hash: <<30>>, difficulty: 120}}
+        number: 3, parent_hash: <<30>>, difficulty: 120}}
 
     tree =
       Blocktree.new_tree()
@@ -35,13 +35,13 @@ defmodule Blockchain.BlocktreeTest do
 
     assert Blocktree.inspect_tree(tree) ==
       [:root, [
-        {5, <<10>>}, [
-          {6, <<20>>}, [
-            {7, <<30>>}, [
-              {8, <<40>>}]
+        {0, <<10>>}, [
+          {1, <<20>>}, [
+            {2, <<30>>}, [
+              {3, <<40>>}]
             ]
           ], [
-          {6, <<21>>}
+          {1, <<21>>}
         ]
       ]
     ]
