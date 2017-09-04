@@ -130,7 +130,7 @@ defmodule Blockchain.Transaction do
 
       # Has sender account, but nonce mismatch
       iex> private_key = <<1::256>>
-      iex> sender = <<82, 43, 246, 253, 8, 130, 229, 143, 111, 235, 9, 107, 65, 65, 123, 79, 140, 105, 44, 57>> # based on simple private key
+      iex> sender = <<125, 110, 153, 187, 138, 191, 140, 192, 19, 187, 14, 145, 45, 11, 23, 101, 150, 254, 123, 136>> # based on simple private key
       iex> trx =
       ...>   %Blockchain.Transaction{data: <<>>, gas_limit: 1_000, gas_price: 1, init: <<1>>, nonce: 4, to: <<>>, value: 5}
       ...>   |> Blockchain.Transaction.Signature.sign_transaction(private_key)
@@ -141,7 +141,7 @@ defmodule Blockchain.Transaction do
 
       # Insufficient starting gas
       iex> private_key = <<1::256>>
-      iex> sender = <<82, 43, 246, 253, 8, 130, 229, 143, 111, 235, 9, 107, 65, 65, 123, 79, 140, 105, 44, 57>> # based on simple private key
+      iex> sender = <<125, 110, 153, 187, 138, 191, 140, 192, 19, 187, 14, 145, 45, 11, 23, 101, 150, 254, 123, 136>> # based on simple private key
       iex> trx =
       ...>   %Blockchain.Transaction{data: <<>>, gas_limit: 1_000, gas_price: 1, init: <<1>>, nonce: 5, to: <<>>, value: 5}
       ...>   |> Blockchain.Transaction.Signature.sign_transaction(private_key)
@@ -152,7 +152,7 @@ defmodule Blockchain.Transaction do
 
       # Insufficient endowment
       iex> private_key = <<1::256>>
-      iex> sender = <<82, 43, 246, 253, 8, 130, 229, 143, 111, 235, 9, 107, 65, 65, 123, 79, 140, 105, 44, 57>> # based on simple private key
+      iex> sender = <<125, 110, 153, 187, 138, 191, 140, 192, 19, 187, 14, 145, 45, 11, 23, 101, 150, 254, 123, 136>> # based on simple private key
       iex> trx =
       ...>   %Blockchain.Transaction{data: <<>>, gas_limit: 100_000, gas_price: 1, init: <<1>>, nonce: 5, to: <<>>, value: 5}
       ...>   |> Blockchain.Transaction.Signature.sign_transaction(private_key)
@@ -162,7 +162,7 @@ defmodule Blockchain.Transaction do
       {:invalid, :insufficient_balance}
 
       iex> private_key = <<1::256>>
-      iex> sender = <<82, 43, 246, 253, 8, 130, 229, 143, 111, 235, 9, 107, 65, 65, 123, 79, 140, 105, 44, 57>> # based on simple private key
+      iex> sender = <<125, 110, 153, 187, 138, 191, 140, 192, 19, 187, 14, 145, 45, 11, 23, 101, 150, 254, 123, 136>> # based on simple private key
       iex> trx =
       ...>   %Blockchain.Transaction{data: <<>>, gas_limit: 100_000, gas_price: 1, init: <<1>>, nonce: 5, to: <<>>, value: 5}
       ...>   |> Blockchain.Transaction.Signature.sign_transaction(private_key)
@@ -172,7 +172,7 @@ defmodule Blockchain.Transaction do
       {:invalid, :insufficient_balance}
 
       iex> private_key = <<1::256>>
-      iex> sender = <<82, 43, 246, 253, 8, 130, 229, 143, 111, 235, 9, 107, 65, 65, 123, 79, 140, 105, 44, 57>> # based on simple private key
+      iex> sender = <<125, 110, 153, 187, 138, 191, 140, 192, 19, 187, 14, 145, 45, 11, 23, 101, 150, 254, 123, 136>> # based on simple private key
       iex> trx =
       ...>   %Blockchain.Transaction{data: <<>>, gas_limit: 100_000, gas_price: 1, init: <<1>>, nonce: 5, to: <<>>, value: 5}
       ...>   |> Blockchain.Transaction.Signature.sign_transaction(private_key)
@@ -182,7 +182,7 @@ defmodule Blockchain.Transaction do
       {:invalid, :over_gas_limit}
 
       iex> private_key = <<1::256>>
-      iex> sender = <<82, 43, 246, 253, 8, 130, 229, 143, 111, 235, 9, 107, 65, 65, 123, 79, 140, 105, 44, 57>> # based on simple private key
+      iex> sender = <<125, 110, 153, 187, 138, 191, 140, 192, 19, 187, 14, 145, 45, 11, 23, 101, 150, 254, 123, 136>> # based on simple private key
       iex> trx =
       ...>   %Blockchain.Transaction{data: <<>>, gas_limit: 100_000, gas_price: 1, init: <<1>>, nonce: 5, to: <<>>, value: 5}
       ...>   |> Blockchain.Transaction.Signature.sign_transaction(private_key)
@@ -230,7 +230,7 @@ defmodule Blockchain.Transaction do
       # Create contract
       iex> beneficiary = <<0x05::160>>
       iex> private_key = <<1::256>>
-      iex> sender = <<82, 43, 246, 253, 8, 130, 229, 143, 111, 235, 9, 107, 65, 65, 123, 79, 140, 105, 44, 57>> # based on simple private key
+      iex> sender = <<125, 110, 153, 187, 138, 191, 140, 192, 19, 187, 14, 145, 45, 11, 23, 101, 150, 254, 123, 136>> # based on simple private key
       iex> contract_address = Blockchain.Contract.new_contract_address(sender, 6)
       iex> machine_code = EVM.MachineCode.compile([:push1, 3, :push1, 5, :add, :push1, 0x00, :mstore, :push1, 0, :push1, 32, :return])
       iex> trx = %Blockchain.Transaction{nonce: 5, gas_price: 3, gas_limit: 100_000, to: <<>>, value: 5, init: machine_code}
@@ -241,12 +241,12 @@ defmodule Blockchain.Transaction do
       iex> {gas, logs}
       {53756, <<>>}
       iex> Blockchain.Account.get_accounts(state, [sender, beneficiary, contract_address])
-      [%Blockchain.Account{balance: 238727, nonce: 6}, %Blockchain.Account{balance: 161268}, %Blockchain.Account{balance: 5, code_hash: <<184, 49, 71, 53, 90, 147, 31, 209, 13, 252, 14, 242, 188, 146, 213, 98, 3, 169, 138, 178, 91, 23, 65, 191, 149, 7, 79, 68, 207, 121, 218, 225>>}]
+      [%Blockchain.Account{balance: 238727, nonce: 6}, %Blockchain.Account{balance: 161268}, %Blockchain.Account{balance: 5, code_hash: <<243, 247, 169, 254, 54, 79, 170, 185, 59, 33, 109, 165, 10, 50, 20, 21, 79, 34, 160, 162, 180, 21, 178, 58, 132, 200, 22, 158, 139, 99, 110, 227>>}]
 
       # Message call
       iex> beneficiary = <<0x05::160>>
       iex> private_key = <<1::256>>
-      iex> sender = <<82, 43, 246, 253, 8, 130, 229, 143, 111, 235, 9, 107, 65, 65, 123, 79, 140, 105, 44, 57>> # based on simple private key
+      iex> sender = <<125, 110, 153, 187, 138, 191, 140, 192, 19, 187, 14, 145, 45, 11, 23, 101, 150, 254, 123, 136>> # based on simple private key
       iex> contract_address = Blockchain.Contract.new_contract_address(sender, 6)
       iex> machine_code = EVM.MachineCode.compile([:push1, 3, :push1, 5, :add, :push1, 0x00, :mstore, :push1, 0, :push1, 32, :return])
       iex> trx = %Blockchain.Transaction{nonce: 5, gas_price: 3, gas_limit: 100_000, to: contract_address, value: 5, init: machine_code}
@@ -258,7 +258,7 @@ defmodule Blockchain.Transaction do
       iex> {gas, logs}
       {21756, <<>>}
       iex> Blockchain.Account.get_accounts(state, [sender, beneficiary, contract_address])
-      [%Blockchain.Account{balance: 334727, nonce: 6}, %Blockchain.Account{balance: 65268}, %Blockchain.Account{balance: 5, code_hash: <<247, 60, 39, 205, 253, 89, 146, 143, 219, 173, 26, 213, 173, 221, 39, 44, 111, 59, 34, 217, 228, 91, 21, 167, 59, 107, 79, 33, 90, 183, 135, 213>>}]
+      [%Blockchain.Account{balance: 334727, nonce: 6}, %Blockchain.Account{balance: 65268}, %Blockchain.Account{balance: 5, code_hash: <<216, 114, 80, 103, 17, 50, 164, 75, 162, 123, 123, 99, 162, 105, 226, 15, 215, 200, 136, 216, 29, 106, 193, 119, 1, 173, 138, 37, 219, 39, 23, 231>>}]
   """
   @spec execute_transaction(EVM.state, t, Header.t) :: { EVM.state, EVM.Gas.t, EVM.SubState.logs }
   def execute_transaction(state, trx, block_header) do

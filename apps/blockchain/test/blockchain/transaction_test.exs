@@ -14,7 +14,7 @@ defmodule Blockchain.TransactionTest do
     test "for a transaction with a stop" do
       beneficiary = <<0x05::160>>
       private_key = <<1::256>>
-      sender = <<82, 43, 246, 253, 8, 130, 229, 143, 111, 235, 9, 107, 65, 65, 123, 79, 140, 105, 44, 57>> # based on simple private key
+      sender = <<125, 110, 153, 187, 138, 191, 140, 192, 19, 187, 14, 145, 45, 11, 23, 101, 150, 254, 123, 136>> # based on simple private key
       contract_address = Blockchain.Contract.new_contract_address(sender, 6)
       machine_code = EVM.MachineCode.compile([:stop])
       trx = %Blockchain.Transaction{nonce: 5, gas_price: 3, gas_limit: 100_000, to: <<>>, value: 5, init: machine_code}

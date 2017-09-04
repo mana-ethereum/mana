@@ -25,19 +25,19 @@ defmodule Blockchain.Contract do
       ...> |> Blockchain.Account.put_account(<<0x10::160>>, %Blockchain.Account{balance: 11, nonce: 5})
       ...> |> Blockchain.Contract.create_contract(<<0x10::160>>, <<0x10::160>>, 1000, 1, 5, EVM.MachineCode.compile([:push1, 3, :push1, 5, :add, :push1, 0x00, :mstore, :push1, 0, :push1, 32, :return]), 5, %Blockchain.Block.Header{nonce: 1})
       {
-        %MerklePatriciaTree.Trie{db: {MerklePatriciaTree.DB.ETS, :contract_create_test}, root_hash: <<147, 69, 180, 75, 134, 172, 4, 139, 196, 40, 253, 92, 248, 87, 51, 88, 182, 152, 139, 13, 235, 25, 34, 156, 93, 145, 30, 170, 172, 24, 93, 4>>},
+        %MerklePatriciaTree.Trie{db: {MerklePatriciaTree.DB.ETS, :contract_create_test}, root_hash: <<51, 108, 25, 209, 241, 95, 9, 165, 51, 115, 44, 245, 217, 223, 195, 136, 228, 130, 203, 27, 58, 205, 190, 115, 135, 234, 156, 138, 70, 254, 70, 251>>},
         1000,
         %EVM.SubState{}
       }
       iex> Blockchain.Account.get_accounts(state, [<<0x10::160>>, Blockchain.Contract.new_contract_address(<<0x10::160>>, 5)])
-      [%Blockchain.Account{balance: 6, nonce: 5}, %Blockchain.Account{balance: 5, code_hash: <<184, 49, 71, 53, 90, 147, 31, 209, 13, 252, 14, 242, 188, 146, 213, 98, 3, 169, 138, 178, 91, 23, 65, 191, 149, 7, 79, 68, 207, 121, 218, 225>>}]
+      [%Blockchain.Account{balance: 6, nonce: 5}, %Blockchain.Account{balance: 5, code_hash: <<243, 247, 169, 254, 54, 79, 170, 185, 59, 33, 109, 165, 10, 50, 20, 21, 79, 34, 160, 162, 180, 21, 178, 58, 132, 200, 22, 158, 139, 99, 110, 227>>}]
       iex> Blockchain.Account.get_machine_code(state, Blockchain.Contract.new_contract_address(<<0x10::160>>, 5))
       {:ok, <<0x08::256>>}
       iex> MerklePatriciaTree.Trie.Inspector.all_keys(state)
       [
         <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 16>>,
-        <<184, 49, 71, 53, 90, 147, 31, 209, 13, 252, 14, 242, 188, 146, 213, 98, 3, 169, 138, 178, 91, 23, 65, 191, 149, 7, 79, 68, 207, 121, 218, 225>>,
-        <<215, 103, 82, 153, 30, 215, 126, 236, 249, 242, 4, 46, 12, 67, 179, 240, 206, 97, 155, 241>>
+        <<98, 119, 103, 88, 60, 91, 239, 149, 126, 178, 156, 37, 168, 191, 50, 135, 185, 229, 85, 116>>,
+        <<243, 247, 169, 254, 54, 79, 170, 185, 59, 33, 109, 165, 10, 50, 20, 21, 79, 34, 160, 162, 180, 21, 178, 58, 132, 200, 22, 158, 139, 99, 110, 227>>
       ]
   """
   @spec create_contract(EVM.state, EVM.address, EVM.address, EVM.Gas.t, EVM.Gas.gas_price, EVM.Wei.t, EVM.MachineCode.t, integer(), Header.t) :: {EVM.state, EVM.Gas.t, EVM.SubState.t}
@@ -98,18 +98,18 @@ defmodule Blockchain.Contract do
       ...> |> Blockchain.Account.put_code(<<0x20::160>>, EVM.MachineCode.compile([:push1, 3, :push1, 5, :add, :push1, 0x00, :mstore, :push1, 0, :push1, 32, :return]))
       ...> |> Blockchain.Contract.message_call(<<0x10::160>>, <<0x10::160>>, <<0x20::160>>, <<0x20::160>>, 1000, 1, 5, 5, <<1, 2, 3>>, 5, %Blockchain.Block.Header{nonce: 1})
       {
-        %MerklePatriciaTree.Trie{db: {MerklePatriciaTree.DB.ETS, :message_call_test}, root_hash: <<167, 171, 171, 106, 158, 187, 23, 240, 91, 213, 210, 27, 151, 116, 57, 79, 97, 110, 201, 73, 204, 180, 114, 123, 138, 253, 156, 185, 239, 181, 117, 194>>},
+        %MerklePatriciaTree.Trie{db: {MerklePatriciaTree.DB.ETS, :message_call_test}, root_hash: <<116, 36, 231, 2, 3, 30, 24, 223, 195, 56, 133, 194, 241, 62, 90, 70, 121, 41, 251, 160, 7, 56, 140, 55, 162, 225, 115, 154, 194, 14, 189, 32>>},
         1000,
         %EVM.SubState{},
         <<0x08::256>>
       }
       iex> Blockchain.Account.get_accounts(state, [<<0x10::160>>, <<0x20::160>>])
-      [%Blockchain.Account{balance: 5}, %Blockchain.Account{balance: 25, code_hash: <<247, 60, 39, 205, 253, 89, 146, 143, 219, 173, 26, 213, 173, 221, 39, 44, 111, 59, 34, 217, 228, 91, 21, 167, 59, 107, 79, 33, 90, 183, 135, 213>>}]
+      [%Blockchain.Account{balance: 5}, %Blockchain.Account{balance: 25, code_hash: <<216, 114, 80, 103, 17, 50, 164, 75, 162, 123, 123, 99, 162, 105, 226, 15, 215, 200, 136, 216, 29, 106, 193, 119, 1, 173, 138, 37, 219, 39, 23, 231>>}]
       iex> MerklePatriciaTree.Trie.Inspector.all_keys(state)
       [
         <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 16>>,
         <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 32>>,
-        <<247, 60, 39, 205, 253, 89, 146, 143, 219, 173, 26, 213, 173, 221, 39, 44, 111, 59, 34, 217, 228, 91, 21, 167, 59, 107, 79, 33, 90, 183, 135, 213>> # this must be a sub-tree
+        <<216, 114, 80, 103, 17, 50, 164, 75, 162, 123, 123, 99, 162, 105, 226, 15, 215, 200, 136, 216, 29, 106, 193, 119, 1, 173, 138, 37, 219, 39, 23, 231>> # this must be a sub-tree
       ]
   """
   @spec message_call(EVM.state, EVM.address, EVM.address, EVM.address, EVM.address, EVM.Gas.t, EVM.Gas.gas_price, EVM.Wei.t, EVM.Wei.t, binary(), integer(), Header.t) :: { EVM.state, EVM.Gas.t, EVM.SubState.t, EVM.VM.output }
@@ -146,15 +146,13 @@ defmodule Blockchain.Contract do
   ## Examples
 
       iex> Blockchain.Contract.new_contract_address(<<0x01::160>>, 1)
-      <<226, 9, 113, 163, 97, 244, 118, 145, 234, 155, 80, 129, 216, 104, 110, 120, 69, 35, 207, 135>>
+      <<82, 43, 50, 148, 230, 208, 106, 162, 90, 208, 241, 184, 137, 18, 66, 227, 53, 211, 180, 89>>
 
       iex> Blockchain.Contract.new_contract_address(<<0x01::160>>, 2)
-      <<119, 28, 153, 224, 10, 74, 14, 123, 121, 42, 82, 110, 145, 237,
-        185, 6, 155, 63, 134, 131>>
+      <<83, 91, 61, 122, 37, 47, 160, 52, 237, 113, 240, 197, 62, 192, 198, 247, 132, 203, 100, 225>>
 
       iex> Blockchain.Contract.new_contract_address(<<0x02::160>>, 3)
-      <<168, 90, 253, 87, 136, 227, 10, 147, 161, 54, 235, 217, 223, 39,
-        93, 173, 120, 143, 109, 210>>
+      <<30, 208, 147, 166, 216, 88, 183, 173, 67, 180, 70, 173, 88, 244, 201, 236, 9, 101, 145, 49>>
   """
   @spec new_contract_address(EVM.address, integer()) :: EVM.address
   def new_contract_address(sender, nonce) do

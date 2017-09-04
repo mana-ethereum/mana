@@ -183,13 +183,16 @@ defmodule Blockchain.Block.Header do
       iex> Blockchain.Block.Header.is_valid?(%Blockchain.Block.Header{number: 0, difficulty: 131_072, gas_limit: 200_000}, nil)
       :valid
 
-      iex> Blockchain.Block.Header.is_valid?(%Blockchain.Block.Header{number: 0, difficulty: 5, gas_limit: 5}, nil)
+      iex> Blockchain.Block.Header.is_valid?(%Blockchain.Block.Header{number: 0, difficulty: 5, gas_limit: 5}, nil, true)
       {:invalid, [:invalid_difficulty, :invalid_gas_limit]}
 
       iex> Blockchain.Block.Header.is_valid?(%Blockchain.Block.Header{number: 1, difficulty: 131_136, gas_limit: 200_000, timestamp: 65}, %Blockchain.Block.Header{number: 0, difficulty: 131_072, gas_limit: 200_000, timestamp: 55})
       :valid
 
       iex> Blockchain.Block.Header.is_valid?(%Blockchain.Block.Header{number: 1, difficulty: 131_000, gas_limit: 200_000, timestamp: 65}, %Blockchain.Block.Header{number: 0, difficulty: 131_072, gas_limit: 200_000, timestamp: 55})
+      :valid
+
+      iex> Blockchain.Block.Header.is_valid?(%Blockchain.Block.Header{number: 1, difficulty: 131_000, gas_limit: 200_000, timestamp: 65}, %Blockchain.Block.Header{number: 0, difficulty: 131_072, gas_limit: 200_000, timestamp: 55}, true)
       {:invalid, [:invalid_difficulty]}
 
       iex> Blockchain.Block.Header.is_valid?(%Blockchain.Block.Header{number: 1, difficulty: 131_136, gas_limit: 200_000, timestamp: 45}, %Blockchain.Block.Header{number: 0, difficulty: 131_072, gas_limit: 200_000, timestamp: 55})
@@ -204,12 +207,12 @@ defmodule Blockchain.Block.Header do
       iex> Blockchain.Block.Header.is_valid?(%Blockchain.Block.Header{number: 1, difficulty: 131_136, gas_limit: 200_000, timestamp: 65, extra_data: "0123456789012345678901234567890123456789"}, %Blockchain.Block.Header{number: 0, difficulty: 131_072, gas_limit: 200_000, timestamp: 55})
       {:invalid, [:extra_data_too_large]}
   """
-  @spec is_valid?(t, t | nil) :: :valid | {:invalid, [atom()]}
-  def is_valid?(header, parent_header) do
+  @spec is_valid?(t, t | nil, boolean()) :: :valid | {:invalid, [atom()]}
+  def is_valid?(header, parent_header, enforce_difficulty \\ false) do
     parent_gas_limit = if parent_header, do: parent_header.gas_limit, else: nil
 
     errors = [] ++
-      (if header.difficulty == get_difficulty(header, parent_header), do: [], else: [:invalid_difficulty]) ++ # Eq.(51)
+      (if not enforce_difficulty or header.difficulty == get_difficulty(header, parent_header), do: [], else: [:invalid_difficulty]) ++ # Eq.(51)
       (if header.gas_used <= header.gas_limit, do: [], else: [:exceeded_gas_limit]) ++ # Eq.(52)
       (if is_gas_limit_valid?(header.gas_limit, parent_gas_limit), do: [], else: [:invalid_gas_limit]) ++ # Eq.(53), Eq.(54) and Eq.(55)
       (if is_nil(parent_header) or header.timestamp > parent_header.timestamp, do: [], else: [:child_timestamp_invalid]) ++ # Eq.(56)
@@ -245,36 +248,42 @@ defmodule Blockchain.Block.Header do
 
   ## Examples
 
-      # iex> Blockchain.Block.Header.get_difficulty(
-      # ...>   %Blockchain.Block.Header{number: 0, timestamp: 55},
-      # ...>   nil
-      # ...> )
-      # 131_072
+      iex> Blockchain.Block.Header.get_difficulty(
+      ...>   %Blockchain.Block.Header{number: 0, timestamp: 55},
+      ...>   nil
+      ...> )
+      131_072
 
-      # iex> Blockchain.Block.Header.get_difficulty(
-      # ...>  %Blockchain.Block.Header{number: 33, timestamp: 66},
-      # ...>  %Blockchain.Block.Header{number: 32, timestamp: 55, difficulty: 300_000}
-      # ...> )
-      # 300_146
+      iex> Blockchain.Block.Header.get_difficulty(
+      ...>   %Blockchain.Block.Header{number: 1, timestamp: 1479642530},
+      ...>   %Blockchain.Block.Header{number: 0, timestamp: 0, difficulty: 1_048_576}
+      ...> )
+      1_048_064
 
-      # iex> Blockchain.Block.Header.get_difficulty(
-      # ...>  %Blockchain.Block.Header{number: 33, timestamp: 88},
-      # ...>  %Blockchain.Block.Header{number: 32, timestamp: 55, difficulty: 300_000}
-      # ...> )
-      # 299_854
+      iex> Blockchain.Block.Header.get_difficulty(
+      ...>  %Blockchain.Block.Header{number: 33, timestamp: 66},
+      ...>  %Blockchain.Block.Header{number: 32, timestamp: 55, difficulty: 300_000}
+      ...> )
+      300_146
 
-      # # TODO: Is this right? These numbers are quite a jump
-      # iex> Blockchain.Block.Header.get_difficulty(
-      # ...>  %Blockchain.Block.Header{number: 3_000_001, timestamp: 66},
-      # ...>  %Blockchain.Block.Header{number: 3_000_000, timestamp: 55, difficulty: 300_000}
-      # ...> )
-      # 268_735_456
+      iex> Blockchain.Block.Header.get_difficulty(
+      ...>  %Blockchain.Block.Header{number: 33, timestamp: 88},
+      ...>  %Blockchain.Block.Header{number: 32, timestamp: 55, difficulty: 300_000}
+      ...> )
+      299_854
 
-      # iex> Blockchain.Block.Header.get_difficulty(
-      # ...>  %Blockchain.Block.Header{number: 3_000_001, timestamp: 155},
-      # ...>  %Blockchain.Block.Header{number: 3_000_000, timestamp: 55, difficulty: 300_000}
-      # ...> )
-      # 268_734_142
+      # TODO: Is this right? These numbers are quite a jump
+      iex> Blockchain.Block.Header.get_difficulty(
+      ...>  %Blockchain.Block.Header{number: 3_000_001, timestamp: 66},
+      ...>  %Blockchain.Block.Header{number: 3_000_000, timestamp: 55, difficulty: 300_000}
+      ...> )
+      268_735_456
+
+      iex> Blockchain.Block.Header.get_difficulty(
+      ...>  %Blockchain.Block.Header{number: 3_000_001, timestamp: 155},
+      ...>  %Blockchain.Block.Header{number: 3_000_000, timestamp: 55, difficulty: 300_000}
+      ...> )
+      268_734_142
   """
   @spec get_difficulty(t, t | nil) :: integer()
   def get_difficulty(header, parent_header) do

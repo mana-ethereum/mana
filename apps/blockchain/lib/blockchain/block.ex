@@ -96,7 +96,7 @@ defmodule Blockchain.Block do
 
       iex> %Blockchain.Block{header: %Blockchain.Block.Header{number: 5, parent_hash: <<1, 2, 3>>, beneficiary: <<2, 3, 4>>, difficulty: 100, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>}}
       ...> |> Blockchain.Block.hash()
-      <<68, 49, 193, 242, 44, 38, 138, 251, 173, 218, 208, 122, 65, 243, 58, 62, 238, 9, 129, 60, 160, 52, 44, 197, 160, 36, 207, 136, 17, 170, 157, 230>>
+      <<202, 152, 99, 191, 141, 40, 215, 68, 194, 178, 174, 74, 204, 72, 225, 237, 129, 158, 212, 244, 39, 240, 51, 137, 141, 68, 220, 206, 23, 64, 113, 149>>
   """
   @spec hash(t) :: EVM.hash
   def hash(block) do
@@ -111,7 +111,7 @@ defmodule Blockchain.Block do
       iex> db = MerklePatriciaTree.Test.random_ets_db()
       iex> block = %Blockchain.Block{header: %Blockchain.Block.Header{number: 5, parent_hash: <<1, 2, 3>>, beneficiary: <<2, 3, 4>>, difficulty: 100, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>}}
       iex> Blockchain.Block.put_block(block, db)
-      {:ok, <<68, 49, 193, 242, 44, 38, 138, 251, 173, 218, 208, 122, 65, 243, 58, 62, 238, 9, 129, 60, 160, 52, 44, 197, 160, 36, 207, 136, 17, 170, 157, 230>>}
+      {:ok, <<202, 152, 99, 191, 141, 40, 215, 68, 194, 178, 174, 74, 204, 72, 225, 237, 129, 158, 212, 244, 39, 240, 51, 137, 141, 68, 220, 206, 23, 64, 113, 149>>}
       iex> MerklePatriciaTree.DB.get(db, block |> Blockchain.Block.hash)
       {:ok, <<220, 217, 131, 1, 2, 3, 129, 128, 131, 2, 3, 4, 129, 128, 129, 128, 129, 128, 128, 100, 5, 128, 128, 11, 128, 1, 2, 192, 192>>}
   """
@@ -162,7 +162,7 @@ defmodule Blockchain.Block do
 
   ## Examples
 
-      iex> Blockchain.Block.get_parent_block(%Blockchain.Block{}, nil)
+      iex> Blockchain.Block.get_parent_block(%Blockchain.Block{header: %Blockchain.Block.Header{number: 0}}, nil)
       :genesis
 
       iex> db = MerklePatriciaTree.Test.random_ets_db()
@@ -178,9 +178,9 @@ defmodule Blockchain.Block do
   """
   @spec get_parent_block(t, DB.db) :: {:ok, t} | :genesis | :not_found
   def get_parent_block(block, db) do
-    case block.header.parent_hash do
-      <<>> -> :genesis
-      block_hash -> get_block(block_hash, db)
+    case block.header.number do
+      0 -> :genesis
+      block_hash -> get_block(block.header.parent_hash, db)
     end
   end
 
@@ -435,7 +435,7 @@ defmodule Blockchain.Block do
 
       iex> db = MerklePatriciaTree.Test.random_ets_db()
       iex> Blockchain.Block.add_ommers_to_block(%Blockchain.Block{}, [%Blockchain.Block.Header{parent_hash: <<1::256>>, ommers_hash: <<2::256>>, beneficiary: <<3::160>>, state_root: <<4::256>>, transactions_root: <<5::256>>, receipts_root: <<6::256>>, logs_bloom: <<>>, difficulty: 5, number: 1, gas_limit: 5, gas_used: 3, timestamp: 6, extra_data: "Hi mom", mix_hash: <<7::256>>, nonce: <<8::64>>}], db)
-      %Blockchain.Block{ommers: [%Blockchain.Block.Header{parent_hash: <<1::256>>, ommers_hash: <<2::256>>, beneficiary: <<3::160>>, state_root: <<4::256>>, transactions_root: <<5::256>>, receipts_root: <<6::256>>, logs_bloom: <<>>, difficulty: 5, number: 1, gas_limit: 5, gas_used: 3, timestamp: 6, extra_data: "Hi mom", mix_hash: <<7::256>>, nonce: <<8::64>>}], header: %Blockchain.Block.Header{ommers_hash: <<190, 9, 197, 156, 71, 81, 153, 34, 225, 51, 54, 6, 58, 77, 126, 175, 115, 90, 67, 152, 206, 76, 29, 150, 88, 205, 30, 201, 161, 111, 252, 103>>}}
+      %Blockchain.Block{ommers: [%Blockchain.Block.Header{parent_hash: <<1::256>>, ommers_hash: <<2::256>>, beneficiary: <<3::160>>, state_root: <<4::256>>, transactions_root: <<5::256>>, receipts_root: <<6::256>>, logs_bloom: <<>>, difficulty: 5, number: 1, gas_limit: 5, gas_used: 3, timestamp: 6, extra_data: "Hi mom", mix_hash: <<7::256>>, nonce: <<8::64>>}], header: %Blockchain.Block.Header{ommers_hash: <<29, 110, 115, 211, 86, 204, 153, 210, 198, 241, 37, 134, 165, 127, 24, 206, 16, 76, 90, 176, 36, 67, 23, 207, 191, 214, 58, 43, 222, 218, 8, 225>>}}
   """
   @spec add_ommers_to_block(t, [Header.t], DB.db) :: t
   def add_ommers_to_block(block, ommers, db) do
@@ -489,7 +489,7 @@ defmodule Blockchain.Block do
       iex> db = MerklePatriciaTree.Test.random_ets_db()
       iex> beneficiary = <<0x05::160>>
       iex> private_key = <<1::256>>
-      iex> sender = <<82, 43, 246, 253, 8, 130, 229, 143, 111, 235, 9, 107, 65, 65, 123, 79, 140, 105, 44, 57>> # based on simple private key
+      iex> sender = <<125, 110, 153, 187, 138, 191, 140, 192, 19, 187, 14, 145, 45, 11, 23, 101, 150, 254, 123, 136>> # based on simple private key
       iex> machine_code = EVM.MachineCode.compile([:push1, 3, :push1, 5, :add, :push1, 0x00, :mstore, :push1, 0, :push1, 32, :return])
       iex> trx = %Blockchain.Transaction{nonce: 5, gas_price: 3, gas_limit: 100_000, to: <<>>, value: 5, init: machine_code}
       ...>       |> Blockchain.Transaction.Signature.sign_transaction(private_key)
@@ -504,7 +504,7 @@ defmodule Blockchain.Block do
       iex> db = MerklePatriciaTree.Test.random_ets_db()
       iex> beneficiary = <<0x05::160>>
       iex> private_key = <<1::256>>
-      iex> sender = <<82, 43, 246, 253, 8, 130, 229, 143, 111, 235, 9, 107, 65, 65, 123, 79, 140, 105, 44, 57>> # based on simple private key
+      iex> sender = <<125, 110, 153, 187, 138, 191, 140, 192, 19, 187, 14, 145, 45, 11, 23, 101, 150, 254, 123, 136>> # based on simple private key
       iex> machine_code = EVM.MachineCode.compile([:push1, 3, :push1, 5, :add, :push1, 0x00, :mstore, :push1, 0, :push1, 32, :return])
       iex> trx = %Blockchain.Transaction{nonce: 5, gas_price: 3, gas_limit: 100_000, to: <<>>, value: 5, init: machine_code}
       ...>       |> Blockchain.Transaction.Signature.sign_transaction(private_key)
@@ -577,7 +577,7 @@ defmodule Blockchain.Block do
       iex> db = MerklePatriciaTree.Test.random_ets_db()
       iex> beneficiary = <<0x05::160>>
       iex> private_key = <<1::256>>
-      iex> sender = <<82, 43, 246, 253, 8, 130, 229, 143, 111, 235, 9, 107, 65, 65, 123, 79, 140, 105, 44, 57>> # based on simple private key
+      iex> sender = <<125, 110, 153, 187, 138, 191, 140, 192, 19, 187, 14, 145, 45, 11, 23, 101, 150, 254, 123, 136>> # based on simple private key
       iex> contract_address = Blockchain.Contract.new_contract_address(sender, 6)
       iex> machine_code = EVM.MachineCode.compile([:push1, 3, :push1, 5, :add, :push1, 0x00, :mstore, :push1, 0, :push1, 32, :return])
       iex> trx = %Blockchain.Transaction{nonce: 5, gas_price: 3, gas_limit: 100_000, to: <<>>, value: 5, init: machine_code}
@@ -591,10 +591,10 @@ defmodule Blockchain.Block do
       iex> Blockchain.Block.get_receipt(block, 0, db)
       %Blockchain.Transaction.Receipt{bloom_filter: "", cumulative_gas: 53756, logs: "", state: block.header.state_root}
       iex> Blockchain.Block.get_transaction(block, 0, db)
-      %Blockchain.Transaction{data: "", gas_limit: 100000, gas_price: 3, init: <<96, 3, 96, 5, 1, 96, 0, 82, 96, 0, 96, 32, 243>>, nonce: 5, r: 110274197540583527170567040609004947678532096020311055824363076718114581104395, s: 15165203061950746568488278734700551064641299899120962819352765267479743108366, to: "", v: 27, value: 5}
+      %Blockchain.Transaction{data: "", gas_limit: 100000, gas_price: 3, init: <<96, 3, 96, 5, 1, 96, 0, 82, 96, 0, 96, 32, 243>>, nonce: 5, r: 14159411915843247798541244544791455673077363609967175479682740936374424047718, s: 54974362865507454783589777536677081181084754879294507743788973783077639473486, to: "", v: 28, value: 5}
       iex> MerklePatriciaTree.Trie.new(db, block.header.state_root)
       ...> |> Blockchain.Account.get_accounts([sender, beneficiary, contract_address])
-      [%Blockchain.Account{balance: 238727, nonce: 6}, %Blockchain.Account{balance: 161268}, %Blockchain.Account{balance: 5, code_hash: <<184, 49, 71, 53, 90, 147, 31, 209, 13, 252, 14, 242, 188, 146, 213, 98, 3, 169, 138, 178, 91, 23, 65, 191, 149, 7, 79, 68, 207, 121, 218, 225>>}]
+      [%Blockchain.Account{balance: 238727, nonce: 6}, %Blockchain.Account{balance: 161268}, %Blockchain.Account{balance: 5, code_hash: <<243, 247, 169, 254, 54, 79, 170, 185, 59, 33, 109, 165, 10, 50, 20, 21, 79, 34, 160, 162, 180, 21, 178, 58, 132, 200, 22, 158, 139, 99, 110, 227>>}]
   """
   @spec add_transactions_to_block(t, [Transaction.t], DB.db) :: t
   def add_transactions_to_block(block, transactions, db) do

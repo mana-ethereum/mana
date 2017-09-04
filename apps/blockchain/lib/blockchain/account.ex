@@ -37,7 +37,7 @@ defmodule Blockchain.Account do
       iex> Blockchain.Account.is_simple_account?(%Blockchain.Account{code_hash: <<0x01, 0x02>>})
       false
 
-      iex> Blockchain.Account.is_simple_account?(%Blockchain.Account{code_hash: <<167, 255, 198, 248, 191, 30, 215, 102, 81, 193, 71, 86, 160, 97, 214, 98, 245, 128, 255, 77, 228, 59, 73, 250, 130, 216, 10, 75, 128, 248, 67, 74>>})
+      iex> Blockchain.Account.is_simple_account?(%Blockchain.Account{code_hash: <<197, 210, 70, 1, 134, 247, 35, 60, 146, 126, 125, 178, 220, 199, 3, 192, 229, 0, 182, 83, 202, 130, 39, 59, 123, 250, 216, 4, 93, 133, 164, 112>>})
       true
   """
   @spec is_simple_account?(t) :: boolean()
@@ -55,9 +55,7 @@ defmodule Blockchain.Account do
       [5, 10, <<0x00, 0x01>>, <<0x01, 0x02>>]
 
       iex> Blockchain.Account.serialize(%Blockchain.Account{})
-      [0, 0, <<>>, <<167, 255, 198, 248, 191, 30, 215, 102, 81, 193, 71, 86, 160, 97,
-                     214, 98, 245, 128, 255, 77, 228, 59, 73, 250, 130, 216, 10, 75,
-                     128, 248, 67, 74>>]
+      [0, 0, <<>>, <<197, 210, 70, 1, 134, 247, 35, 60, 146, 126, 125, 178, 220, 199, 3, 192, 229, 0, 182, 83, 202, 130, 39, 59, 123, 250, 216, 4, 93, 133, 164, 112>>]
   """
   @spec serialize(t) :: ExRLP.t
   def serialize(account) do
@@ -78,7 +76,7 @@ defmodule Blockchain.Account do
       iex> Blockchain.Account.deserialize([<<5>>, <<10>>, <<0x00, 0x01>>, <<0x01, 0x02>>])
       %Blockchain.Account{nonce: 5, balance: 10, storage_root: <<0x00, 0x01>>, code_hash: <<0x01, 0x02>>}
 
-      iex> Blockchain.Account.deserialize([<<0>>, <<0>>, <<>>, <<167, 255, 198, 248, 191, 30, 215, 102, 81, 193, 71, 86, 160, 97, 214, 98, 245, 128, 255, 77, 228, 59, 73, 250, 130, 216, 10, 75, 128, 248, 67, 74>>])
+      iex> Blockchain.Account.deserialize([<<0>>, <<0>>, <<>>, <<197, 210, 70, 1, 134, 247, 35, 60, 146, 126, 125, 178, 220, 199, 3, 192, 229, 0, 182, 83, 202, 130, 39, 59, 123, 250, 216, 4, 93, 133, 164, 112>>])
       %Blockchain.Account{}
   """
   @spec deserialize(ExRLP.t) :: t
@@ -398,9 +396,9 @@ defmodule Blockchain.Account do
       iex> state = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
       ...> |> Blockchain.Account.put_code(<<0x01::160>>, <<1, 2, 3>>)
       iex> Blockchain.Account.get_account(state, <<0x01::160>>)
-      %Blockchain.Account{code_hash: <<253, 23, 128, 166, 252, 158, 224, 218, 178, 108, 235,
-                                       75, 57, 65, 171, 3, 230, 108, 205, 151, 13, 29, 185, 22, 18, 198,
-                                       109, 244, 81, 91, 10, 10>>}
+      %Blockchain.Account{code_hash: <<241, 136, 94, 218, 84, 183, 160, 83, 49, 140, 212, 30,
+                                        32, 147, 34, 13, 171, 21, 214, 83, 129, 177, 21, 122, 54, 51, 168,
+                                        59, 253, 92, 146, 57>>}
       iex> MerklePatriciaTree.Trie.get(state, BitHelper.kec(<<1, 2, 3>>))
       <<1, 2, 3>>
   """
