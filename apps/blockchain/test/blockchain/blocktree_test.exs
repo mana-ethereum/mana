@@ -6,23 +6,23 @@ defmodule Blockchain.BlocktreeTest do
   test "multi-level tree" do
     block_10 = %Blockchain.Block{
       block_hash: <<10>>,
-      header: %Blockchain.Block.Header{
+      header: %Block.Header{
         number: 0, parent_hash: <<0::256>>, difficulty: 100}}
     block_20 = %Blockchain.Block{
       block_hash: <<20>>,
-      header: %Blockchain.Block.Header{
+      header: %Block.Header{
         number: 1, parent_hash: <<10>>, difficulty: 110}}
     block_21 = %Blockchain.Block{
       block_hash: <<21>>,
-      header: %Blockchain.Block.Header{
+      header: %Block.Header{
         number: 1, parent_hash: <<10>>, difficulty: 120}}
     block_30 = %Blockchain.Block{
       block_hash: <<30>>,
-      header: %Blockchain.Block.Header{
+      header: %Block.Header{
         number: 2, parent_hash: <<20>>, difficulty: 120}}
     block_40 = %Blockchain.Block{
       block_hash: <<40>>,
-      header: %Blockchain.Block.Header{
+      header: %Block.Header{
         number: 3, parent_hash: <<30>>, difficulty: 120}}
 
     tree =
