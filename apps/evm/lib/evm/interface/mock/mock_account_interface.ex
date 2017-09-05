@@ -4,7 +4,8 @@ defmodule EVM.Interface.Mock.MockAccountInterface do
   """
 
   defstruct [
-    balance: nil
+    balance: nil,
+    nonce: nil
   ]
 
   def new(opts) do
@@ -18,6 +19,11 @@ defimpl EVM.Interface.AccountInterface, for: EVM.Interface.Mock.MockAccountInter
   @spec get_account_balance(EVM.Interface.AccountInterface.t, EVM.state, EVM.address) :: nil | EVM.Wei.t
   def get_account_balance(mock_account_interface, _state, _address) do
     mock_account_interface.balance
+  end
+
+  @spec increment_account_nonce(EVM.Interface.AccountInterface.t, EVM.state, EVM.address) :: { EVM.state, integer() }
+  def increment_account_nonce(mock_account_interface, state, _address) do
+    { state, mock_account_interface.nonce + 1 }
   end
 
 end

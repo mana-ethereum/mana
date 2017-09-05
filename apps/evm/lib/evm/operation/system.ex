@@ -9,16 +9,79 @@ defmodule EVM.Operation.System do
   @doc """
   Create a new account with associated code.
 
-  TODO: Implement opcode
-
   ## Examples
 
-      iex> EVM.Operation.System.create([], %{stack: []})
-      :unimplemented
+      iex> db = MerklePatriciaTree.Test.random_ets_db()
+      iex> state = MerklePatriciaTree.Trie.new(db)
+      iex> block_interface = EVM.Interface.Mock.MockBlockInterface.new(%Block.Header{})
+      iex> account_interface = EVM.Interface.Mock.MockAccountInterface.new(balance: 5_000, nonce: 5)
+      iex> contract_interface = EVM.Interface.Mock.MockContractInterface.new(state, 500, nil, "output")
+      iex> exec_env = %EVM.ExecEnv{stack_depth: 0, address: <<100::160>>, account_interface: account_interface, contract_interface: contract_interface, block_interface: block_interface}
+      iex> machine_state = %EVM.MachineState{gas: 300, stack: [1], memory: "________" <> "input"}
+      iex> %{machine_state: n_machine_state, state: n_state} =
+      ...>   EVM.Operation.System.create(
+      ...>     [1_000, 5, 5],
+      ...>     %{state: state, exec_env: exec_env, machine_state: machine_state})
+      iex> n_machine_state
+      %EVM.MachineState{gas: 800, stack: [100, 1], active_words: 1, memory: "________input"}
+      iex> n_state == state
+      true
   """
   @spec create(Operation.stack_args, Operation.vm_map) :: Operation.op_result
-  def create(_args, %{stack: _stack}) do
-    :unimplemented
+  def create([value, in_offset, in_size], %{state: state, exec_env: exec_env, machine_state: machine_state}) do
+
+    {data, machine_state} = EVM.Memory.read(machine_state, in_offset, in_size)
+    account_balance = AccountInterface.get_account_balance(exec_env.account_interface, state, exec_env.address)
+    block_header = BlockInterface.get_block_header(exec_env.block_interface)
+
+    is_allowed = value <= account_balance and exec_env.stack_depth < EVM.Functions.max_stack_depth
+
+    { state_with_nonce_updated, original_nonce } = if is_allowed do
+      AccountInterface.increment_account_nonce(
+        exec_env.account_interface,
+        state,
+        exec_env.address
+      )
+    else
+      { nil, nil }
+    end
+
+    { n_state, n_gas, n_sub_state } = if is_allowed do
+
+      available_gas = Helpers.all_but_one_64th(machine_state.gas)
+
+      ContractInterface.create_contract(
+        exec_env.contract_interface,
+        state_with_nonce_updated,      # state
+        exec_env.address,              # sender
+        exec_env.originator,           # originator
+        available_gas,                 # available_gas
+        exec_env.gas_price,            # gas_price
+        value,                         # endowment
+        data,                          # init_code
+        exec_env.stack_depth + 1,      # stack_depth
+        block_header)                  # block_header
+    else
+        { state, machine_state.gas, nil }
+    end
+
+    # Add back extra gas
+    machine_state = %{machine_state | gas: machine_state.gas + n_gas}
+
+    # Note if was exception halt or other failure on stack
+    result = if is_allowed and not is_nil(n_state) do
+      ContractInterface.new_contract_address(exec_env.contract_interface, exec_env.address, original_nonce) |> Helpers.wrap_address |> :binary.decode_unsigned
+    else
+      0
+    end
+
+    machine_state = %{machine_state | stack: Stack.push(machine_state.stack, result)}
+
+    %{
+      state: n_state,
+      machine_state: machine_state
+      # TODO: sub_state
+    }
   end
 
   @doc """
@@ -108,7 +171,7 @@ defmodule EVM.Operation.System do
         exec_env.originator,       # originator
         recipient,                 # recipient
         to_addr,                   # contract
-        call_gas,                  # available_gas
+        call_gas,                  # available_gas # TODO: Call gas?
         exec_env.gas_price,        # gas_price
         value,                     # value
         apparent_value,            # apparent_value

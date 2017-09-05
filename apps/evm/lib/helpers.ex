@@ -185,4 +185,21 @@ defmodule EVM.Helpers do
         binary_part(data, start_pos, read_length)
     end
   end
+
+  @doc """
+  Defined as Eq.(224) in the Yellow Paper, this is "all but one 64th",
+  written as L(x).
+
+  ## Examples
+
+      iex> EVM.Helpers.all_but_one_64th(5)
+      5
+
+      iex> EVM.Helpers.all_but_one_64th(1000)
+      1000
+  """
+  @spec all_but_one_64th(integer()) :: integer()
+  def all_but_one_64th(n) do
+    n - :math.floor(n / 64)
+  end
 end
