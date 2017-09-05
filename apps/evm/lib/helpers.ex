@@ -87,6 +87,23 @@ defmodule EVM.Helpers do
   def wrap_int(n), do: n
 
   @doc """
+  Wrap ints greater than the maximum allowed address size.
+
+  ## Examples
+
+      iex> EVM.Helpers.wrap_address(1)
+      1
+
+      iex> EVM.Helpers.wrap_address(<<1>>)
+      <<1>>
+
+      iex> EVM.Helpers.wrap_address(EVM.max_address() + 1)
+      1
+  """
+  def wrap_address(n) when is_integer(n), do: band(n, EVM.max_address() - 1)
+  def wrap_address(n) when is_binary(n), do: band(n |> :binary.decode_unsigned, EVM.max_address() - 1) |> :binary.encode_unsigned
+
+  @doc """
   Encodes signed ints using twos compliment
 
   ## Examples

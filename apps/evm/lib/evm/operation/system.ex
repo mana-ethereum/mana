@@ -6,10 +6,6 @@ defmodule EVM.Operation.System do
   alias EVM.Helpers
   alias EVM.Stack
 
-  use Bitwise
-
-  @max_address_mask round(:math.pow(2, 160)) - 1
-
   @doc """
   Create a new account with associated code.
 
@@ -94,7 +90,7 @@ defmodule EVM.Operation.System do
 
   def call(type, [call_gas, to, value, in_offset, in_size, out_offset, out_size], %{state: state, exec_env: exec_env, machine_state: machine_state}) when type in [:call, :call_code, :delegate_call] do
 
-    to_addr = (:binary.decode_unsigned(to) &&& @max_address_mask) |> :binary.encode_unsigned
+    to_addr = Helpers.wrap_address(to)
     {data, machine_state} = EVM.Memory.read(machine_state, in_offset, in_size)
     account_balance = AccountInterface.get_account_balance(exec_env.account_interface, state, exec_env.address)
     block_header = BlockInterface.get_block_header(exec_env.block_interface)

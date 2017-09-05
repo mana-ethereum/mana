@@ -1,6 +1,7 @@
 defmodule EVM.Operation.EnvironmentalInformation do
   alias EVM.Operation
   alias EVM.Helpers
+  alias EVM.Interface.AccountInterface
 
   @doc """
   Get address of currently executing account.
@@ -18,18 +19,30 @@ defmodule EVM.Operation.EnvironmentalInformation do
   @doc """
   Get balance of the given account.
 
-  TODO: Implement opcode
-
   ## Examples
 
-      iex> EVM.Operation.EnvironmentalInformation.balance([], %{stack: []})
-      :unimplemented
+      iex> db = MerklePatriciaTree.Test.random_ets_db()
+      iex> state = MerklePatriciaTree.Trie.new(db)
+      iex> account_interface = EVM.Interface.Mock.MockAccountInterface.new(balance: 500)
+      iex> exec_env = %EVM.ExecEnv{account_interface: account_interface}
+      iex> EVM.Operation.EnvironmentalInformation.balance([123], %{state: state, exec_env: exec_env})
+      500
+
+      iex> db = MerklePatriciaTree.Test.random_ets_db()
+      iex> state = MerklePatriciaTree.Trie.new(db)
+      iex> account_interface = EVM.Interface.Mock.MockAccountInterface.new(balance: nil)
+      iex> exec_env = %EVM.ExecEnv{account_interface: account_interface}
+      iex> EVM.Operation.EnvironmentalInformation.balance([123], %{state: state, exec_env: exec_env})
+      0
   """
   @spec balance(Operation.stack_args, Operation.vm_map) :: Operation.op_result
-  def balance(_args, %{stack: _stack}) do
-    #   # stack |> state
-    #   # access state data
-    :unimplemented
+  def balance([address], %{state: state, exec_env: exec_env}) do
+    wrapped_address = Helpers.wrap_address(address)
+
+    case AccountInterface.get_account_balance(exec_env.account_interface, state, wrapped_address) do
+      nil -> 0
+      balance -> balance
+    end
   end
 
   @doc """
