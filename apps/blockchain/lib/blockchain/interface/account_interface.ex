@@ -31,4 +31,12 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
     end
   end
 
+  # TODO: Add test case
+  @spec increment_account_nonce(EVM.Interface.AccountInterface.t, EVM.state, EVM.address) :: { EVM.state, integer() }
+  def increment_account_nonce(_account_interface, state, address) do
+    { state, before_acct, _after_acct } = Blockchain.Account.increment_nonce(state, address, true)
+
+    { state, before_acct.nonce }
+  end
+
 end

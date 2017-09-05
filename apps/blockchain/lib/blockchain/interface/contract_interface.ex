@@ -28,4 +28,16 @@ defimpl EVM.Interface.ContractInterface, for: Blockchain.Interface.ContractInter
     Blockchain.Contract.message_call(state, sender, originator, recipient, contract, available_gas, gas_price, value, apparent_value, data, stack_depth, block_header)
   end
 
+  # TODO: Add test case
+  @spec create_contract(EVM.Interface.ContractInterface.t, EVM.state, EVM.address, EVM.address, EVM.Gas.t, EVM.Gas.gas_price, EVM.Wei.t, EVM.MachineCode.t, integer(), Header.t) :: { EVM.state, EVM.Gas.t, EVM.SubState.t }
+  def create_contract(_contract_interface, state, sender, originator, available_gas, gas_price, endowment, init_code, stack_depth, block_header) do
+    Blockchain.Contract.create_contract(state, sender, originator, available_gas, gas_price, endowment, init_code, stack_depth, block_header)
+  end
+
+  # TODO: Add test case
+  @spec new_contract_address(EVM.Interface.ContractInterface.t, EVM.address, integer()) :: EVM.address
+  def new_contract_address(_contract_interface, address, nonce) do
+    Blockchain.Contract.new_contract_address(address, nonce)
+  end
+
 end

@@ -200,17 +200,31 @@ defmodule Blockchain.Account do
       ...>   |> Blockchain.Account.get_account(<<0x01::160>>)
       %Blockchain.Account{balance: 15}
 
+      iex> {_state, before_acct, after_acct} = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
+      ...>   |> Blockchain.Account.put_account(<<0x01::160>>, %Blockchain.Account{balance: 10})
+      ...>   |> Blockchain.Account.update_account(<<0x01::160>>, fn (acc) -> %{acc | balance: acc.balance + 5} end, true)
+      iex> before_acct.balance
+      10
+      iex> after_acct.balance
+      15
+
       iex> MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
       ...>   |> Blockchain.Account.update_account(<<0x01::160>>, fn (acc) -> %{acc | nonce: acc.nonce + 1} end)
       ...>   |> Blockchain.Account.get_account(<<0x01::160>>)
       %Blockchain.Account{nonce: 1}
   """
-  @spec update_account(EVM.state, EVM.address, (t -> t)) :: EVM.state
-  def update_account(state, address, fun) do
+  @spec update_account(EVM.state, EVM.address, (t -> t), boolean()) :: EVM.state | { EVM.state, t, t }
+  def update_account(state, address, fun, return_accounts \\ false) do
     account = get_account(state, address) || %__MODULE__{}
     updated_account = fun.(account)
 
-    put_account(state, address, updated_account)
+    updated_state = put_account(state, address, updated_account)
+
+    if return_accounts do
+      { updated_state, account, updated_account }
+    else
+      updated_state
+    end
   end
 
   @doc """
@@ -222,12 +236,20 @@ defmodule Blockchain.Account do
       ...> |> Blockchain.Account.increment_nonce(<<0x01::160>>)
       ...> |> Blockchain.Account.get_account(<<0x01::160>>)
       %Blockchain.Account{nonce: 11}
+
+      iex> state = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
+      ...>   |> Blockchain.Account.put_account(<<0x01::160>>, %Blockchain.Account{nonce: 10})
+      iex> { _state, before_acct, after_acct } = Blockchain.Account.increment_nonce(state, <<0x01::160>>, true)
+      iex> before_acct.nonce
+      10
+      iex> after_acct.nonce
+      11
   """
-  @spec increment_nonce(EVM.state, EVM.address) :: EVM.state
-  def increment_nonce(state, address) do
+  @spec increment_nonce(EVM.state, EVM.address, boolean()) :: EVM.state | { EVM.state, t, t }
+  def increment_nonce(state, address, return_accounts \\ false) do
     update_account(state, address, fn (acct) ->
       %{acct | nonce: acct.nonce + 1}
-    end)
+    end, return_accounts)
   end
 
   @doc """
