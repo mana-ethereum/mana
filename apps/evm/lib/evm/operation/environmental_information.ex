@@ -8,11 +8,11 @@ defmodule EVM.Operation.EnvironmentalInformation do
 
   ## Examples
 
-      iex> EVM.Operation.EnvironmentalInformation.address([], %{stack: [], exec_env: %EVM.ExecEnv{address: <<01, 00>>}})
+      iex> EVM.Operation.EnvironmentalInformation.address([], %{exec_env: %EVM.ExecEnv{address: <<01, 00>>}})
       <<1, 0>>
   """
   @spec address(Operation.stack_args, Operation.vm_map) :: Operation.op_result
-  def address(_args, %{exec_env: exec_env}) do
+  def address([], %{exec_env: exec_env}) do
     exec_env.address
   end
 
@@ -48,46 +48,47 @@ defmodule EVM.Operation.EnvironmentalInformation do
   @doc """
   Get execution origination address.
 
-  TODO: Implement opcode
+  This is the sender of original transaction; it is never an account with non-empty associated code.
 
   ## Examples
 
-      iex> EVM.Operation.EnvironmentalInformation.origin([], %{stack: []})
-      :unimplemented
+      iex> exec_env = %EVM.ExecEnv{originator: <<1::160>>, sender: <<2::160>>}
+      iex> EVM.Operation.EnvironmentalInformation.origin([], %{exec_env: exec_env})
+      <<1::160>>
   """
   @spec origin(Operation.stack_args, Operation.vm_map) :: Operation.op_result
-  def origin(_args, %{stack: _stack}) do
-    :unimplemented
+  def origin([], %{exec_env: exec_env}) do
+    exec_env.originator
   end
 
   @doc """
   Get caller address.
 
-  TODO: Implement opcode
+  This is the address of the account that is directly responsible for this execution.
 
   ## Examples
 
-      iex> EVM.Operation.EnvironmentalInformation.caller([], %{stack: []})
-      :unimplemented
+      iex> exec_env = %EVM.ExecEnv{originator: <<1::160>>, sender: <<2::160>>}
+      iex> EVM.Operation.EnvironmentalInformation.caller([], %{exec_env: exec_env})
+      <<2::160>>
   """
   @spec caller(Operation.stack_args, Operation.vm_map) :: Operation.op_result
-  def caller(_args, %{stack: _stack}) do
-    :unimplemented
+  def caller([], %{exec_env: exec_env}) do
+    exec_env.sender
   end
 
   @doc """
-  Get deposited value by the instruction/transaction responsible for this execution.
-
-  TODO: Implement opcode
+  Get deposited value by the instruction / transaction responsible for this execution.
 
   ## Examples
 
-      iex> EVM.Operation.EnvironmentalInformation.callvalue([], %{stack: []})
-      :unimplemented
+      iex> exec_env = %EVM.ExecEnv{value_in_wei: 1_000}
+      iex> EVM.Operation.EnvironmentalInformation.callvalue([], %{exec_env: exec_env})
+      1_000
   """
   @spec callvalue(Operation.stack_args, Operation.vm_map) :: Operation.op_result
-  def callvalue(_args, %{stack: _stack}) do
-    :unimplemented
+  def callvalue([], %{exec_env: exec_env}) do
+    exec_env.value_in_wei
   end
 
   @doc """
@@ -97,27 +98,32 @@ defmodule EVM.Operation.EnvironmentalInformation do
 
   ## Examples
 
-      iex> EVM.Operation.EnvironmentalInformation.calldataload([0], %{exec_env: %{data: (for n <- 1..32, into: <<>>, do: <<255>>)}})
+      iex> EVM.Operation.EnvironmentalInformation.calldataload([0], %{exec_env: %{data: (for n <- 1..50, into: <<>>, do: <<255>>)}})
       -1
+
+      iex> EVM.Operation.EnvironmentalInformation.calldataload([0], %{exec_env: %{data: (for n <- 1..3, into: <<>>, do: <<1>>)}})
+      <<1::8, 1::8, 1::8, 0::232>> |> EVM.Helpers.decode_signed
+
+      iex> EVM.Operation.EnvironmentalInformation.calldataload([100], %{exec_env: %{data: (for n <- 1..3, into: <<>>, do: <<1>>)}})
+      0
   """
   @spec calldataload(Operation.stack_args, Operation.vm_map) :: Operation.op_result
   def calldataload([s0], %{exec_env: %{data: data}}) do
-    binary_part(data, s0, 32) |> Helpers.decode_signed
+    Helpers.read_zero_padded(data, s0, 32) |> Helpers.decode_signed
   end
 
   @doc """
   Get size of input data in current environment.
 
-  TODO: Implement opcode
-
   ## Examples
 
-      iex> EVM.Operation.EnvironmentalInformation.calldatasize([], %{stack: []})
-      :unimplemented
+      iex> exec_env = %EVM.ExecEnv{data: "hello world"}
+      iex> EVM.Operation.EnvironmentalInformation.calldatasize([], %{exec_env: exec_env})
+      11
   """
   @spec calldatasize(Operation.stack_args, Operation.vm_map) :: Operation.op_result
-  def calldatasize(_args, %{stack: _stack}) do
-    :unimplemented
+  def calldatasize([], %{exec_env: exec_env}) do
+    exec_env.data |> byte_size
   end
 
   @doc """
@@ -209,4 +215,5 @@ defmodule EVM.Operation.EnvironmentalInformation do
   def extcodecopy(_args, %{stack: _stack}) do
     :unimplemented
   end
+
 end

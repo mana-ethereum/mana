@@ -20,7 +20,7 @@ defmodule EVM.ExecEnv do
     value_in_wei: nil,           # v
     machine_code: <<>>,          # b
     stack_depth: nil,            # e
-    block_interface: nil,        # h (TODO: Check on this)
+    block_interface: nil,        # h (wrapped in interface)
     account_interface: nil,
     contract_interface: nil,
   ]

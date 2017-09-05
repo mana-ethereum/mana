@@ -149,4 +149,40 @@ defmodule EVM.Helpers do
 
     msg
   end
+
+  @doc """
+  Reads a length of data from a binary, filling in all unknown values as zero.
+
+  ## Examples
+
+      iex> EVM.Helpers.read_zero_padded(<<5, 6, 7>>, 1, 3)
+      <<6, 7, 0>>
+
+      iex> EVM.Helpers.read_zero_padded(<<5, 6, 7>>, 0, 2)
+      <<5, 6>>
+
+      iex> EVM.Helpers.read_zero_padded(<<5, 6, 7>>, 0, 3)
+      <<5, 6, 7>>
+
+      iex> EVM.Helpers.read_zero_padded(<<5, 6, 7>>, 4, 3)
+      <<0, 0, 0>>
+  """
+  @spec read_zero_padded(binary(), integer(), integer()) :: binary()
+  def read_zero_padded(data, start_pos, read_length) do
+    end_pos = start_pos + read_length
+    total_data_length = byte_size(data)
+
+    cond do
+      start_pos > total_data_length ->
+        total_bits = read_length * 8
+
+        <<0::size(total_bits)>>
+      end_pos > total_data_length ->
+        data_read_length = total_data_length - start_pos
+        padding = ( read_length - data_read_length ) * 8
+        binary_part(data, start_pos, data_read_length) <> <<0::size(padding)>>
+      true ->
+        binary_part(data, start_pos, read_length)
+    end
+  end
 end
