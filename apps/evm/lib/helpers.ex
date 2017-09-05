@@ -196,10 +196,10 @@ defmodule EVM.Helpers do
       5
 
       iex> EVM.Helpers.all_but_one_64th(1000)
-      1000
+      985
   """
   @spec all_but_one_64th(integer()) :: integer()
   def all_but_one_64th(n) do
-    n - :math.floor(n / 64)
+    round(n - :math.floor(n / 64))
   end
 end
