@@ -14,23 +14,24 @@ defmodule EVM.Operation.BlockInformation do
       iex> genesis_block = %Block.Header{number: 0, parent_hash: <<0x00::256>>}
       iex> block_map = %{"gen_block" => genesis_block, "block_a" => block_a, "block_b" => block_b}
       iex> block_interface = EVM.Interface.Mock.MockBlockInterface.new(block_b, block_map)
-      iex> EVM.Operation.BlockInformation.blockhash([3], %{block_interface: block_interface})
+      iex> exec_env = %EVM.ExecEnv{block_interface: block_interface}
+      iex> EVM.Operation.BlockInformation.blockhash([3], %{exec_env: exec_env})
       0
-      iex> EVM.Operation.BlockInformation.blockhash([2], %{block_interface: block_interface})
+      iex> EVM.Operation.BlockInformation.blockhash([2], %{exec_env: exec_env})
       0
-      iex> EVM.Operation.BlockInformation.blockhash([1], %{block_interface: block_interface})
+      iex> EVM.Operation.BlockInformation.blockhash([1], %{exec_env: exec_env})
       "block_a"
-      iex> EVM.Operation.BlockInformation.blockhash([0], %{block_interface: block_interface})
+      iex> EVM.Operation.BlockInformation.blockhash([0], %{exec_env: exec_env})
       "gen_block"
-      iex> EVM.Operation.BlockInformation.blockhash([-1], %{block_interface: block_interface})
+      iex> EVM.Operation.BlockInformation.blockhash([-1], %{exec_env: exec_env})
       0
   """
   @spec blockhash(Operation.stack_args, Operation.vm_map) :: Operation.op_result
-  def blockhash([block_number], %{block_interface: block_interface}) do
-    current_block_header = BlockInterface.get_block_header(block_interface)
-    parent_block_header = BlockInterface.get_block_by_hash(block_interface, current_block_header.parent_hash)
+  def blockhash([block_number], %{exec_env: exec_env}) do
+    current_block_header = BlockInterface.get_block_header(exec_env.block_interface)
+    parent_block_header = BlockInterface.get_block_by_hash(exec_env.block_interface, current_block_header.parent_hash)
 
-    get_block_number(block_interface, parent_block_header, current_block_header.parent_hash, block_number, 0)
+    get_block_number(exec_env.block_interface, parent_block_header, current_block_header.parent_hash, block_number, 0)
   end
 
   defp get_block_number(block_interface, block_header, parent_hash, block_number, depth) do
@@ -53,12 +54,13 @@ defmodule EVM.Operation.BlockInformation do
   ## Examples
 
       iex> block_interface = EVM.Interface.Mock.MockBlockInterface.new(%Block.Header{beneficiary: <<0x55::160>>})
-      iex> EVM.Operation.BlockInformation.coinbase([], %{block_interface: block_interface})
+      iex> exec_env = %EVM.ExecEnv{block_interface: block_interface}
+      iex> EVM.Operation.BlockInformation.coinbase([], %{exec_env: exec_env})
       <<0x55::160>>
   """
   @spec coinbase(Operation.stack_args, Operation.vm_map) :: Operation.op_result
-  def coinbase(_args, %{block_interface: block_interface}) do
-    block_header = BlockInterface.get_block_header(block_interface)
+  def coinbase(_args, %{exec_env: exec_env}) do
+    block_header = BlockInterface.get_block_header(exec_env.block_interface)
 
     block_header.beneficiary
   end
@@ -69,12 +71,13 @@ defmodule EVM.Operation.BlockInformation do
   ## Examples
 
       iex> block_interface = EVM.Interface.Mock.MockBlockInterface.new(%Block.Header{timestamp: 1_000_000})
-      iex> EVM.Operation.BlockInformation.timestamp([], %{block_interface: block_interface})
+      iex> exec_env = %EVM.ExecEnv{block_interface: block_interface}
+      iex> EVM.Operation.BlockInformation.timestamp([], %{exec_env: exec_env})
       1_000_000
   """
   @spec timestamp(Operation.stack_args, Operation.vm_map) :: Operation.op_result
-  def timestamp(_args, %{block_interface: block_interface}) do
-    block_header = BlockInterface.get_block_header(block_interface)
+  def timestamp(_args, %{exec_env: exec_env}) do
+    block_header = BlockInterface.get_block_header(exec_env.block_interface)
 
     block_header.timestamp
   end
@@ -85,12 +88,13 @@ defmodule EVM.Operation.BlockInformation do
   ## Examples
 
       iex> block_interface = EVM.Interface.Mock.MockBlockInterface.new(%Block.Header{number: 1_500_000})
-      iex> EVM.Operation.BlockInformation.number([], %{block_interface: block_interface})
+      iex> exec_env = %EVM.ExecEnv{block_interface: block_interface}
+      iex> EVM.Operation.BlockInformation.number([], %{exec_env: exec_env})
       1_500_000
   """
   @spec number(Operation.stack_args, Operation.vm_map) :: Operation.op_result
-  def number(_args, %{block_interface: block_interface}) do
-    block_header = BlockInterface.get_block_header(block_interface)
+  def number(_args, %{exec_env: exec_env}) do
+    block_header = BlockInterface.get_block_header(exec_env.block_interface)
 
     block_header.number
   end
@@ -101,12 +105,13 @@ defmodule EVM.Operation.BlockInformation do
   ## Examples
 
       iex> block_interface = EVM.Interface.Mock.MockBlockInterface.new(%Block.Header{difficulty: 2_000_000})
-      iex> EVM.Operation.BlockInformation.difficulty([], %{block_interface: block_interface})
+      iex> exec_env = %EVM.ExecEnv{block_interface: block_interface}
+      iex> EVM.Operation.BlockInformation.difficulty([], %{exec_env: exec_env})
       2_000_000
   """
   @spec difficulty(Operation.stack_args, Operation.vm_map) :: Operation.op_result
-  def difficulty(_args, %{block_interface: block_interface}) do
-    block_header = BlockInterface.get_block_header(block_interface)
+  def difficulty(_args, %{exec_env: exec_env}) do
+    block_header = BlockInterface.get_block_header(exec_env.block_interface)
 
     block_header.difficulty
   end
@@ -117,12 +122,13 @@ defmodule EVM.Operation.BlockInformation do
   ## Examples
 
       iex> block_interface = EVM.Interface.Mock.MockBlockInterface.new(%Block.Header{gas_limit: 3_000_000})
-      iex> EVM.Operation.BlockInformation.gaslimit([], %{block_interface: block_interface})
+      iex> exec_env = %EVM.ExecEnv{block_interface: block_interface}
+      iex> EVM.Operation.BlockInformation.gaslimit([], %{exec_env: exec_env})
       3_000_000
   """
   @spec gaslimit(Operation.stack_args, Operation.vm_map) :: Operation.op_result
-  def gaslimit(_args, %{block_interface: block_interface}) do
-    block_header = BlockInterface.get_block_header(block_interface)
+  def gaslimit(_args, %{exec_env: exec_env}) do
+    block_header = BlockInterface.get_block_header(exec_env.block_interface)
 
     block_header.gas_limit
   end

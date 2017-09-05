@@ -35,16 +35,16 @@ defmodule EVM.Operation.System do
       # CALL
       iex> db = MerklePatriciaTree.Test.random_ets_db()
       iex> state = MerklePatriciaTree.Trie.new(db)
-      iex> exec_env = %EVM.ExecEnv{stack_depth: 0}
-      iex> machine_state = %EVM.MachineState{gas: 300, stack: [1], memory: "________" <> "input"}
       iex> block_interface = EVM.Interface.Mock.MockBlockInterface.new(%Block.Header{})
       iex> account_interface = EVM.Interface.Mock.MockAccountInterface.new(balance: 5_000)
       iex> contract_interface = EVM.Interface.Mock.MockContractInterface.new(state, 500, nil, "output")
+      iex> exec_env = %EVM.ExecEnv{stack_depth: 0, account_interface: account_interface, contract_interface: contract_interface, block_interface: block_interface}
+      iex> machine_state = %EVM.MachineState{gas: 300, stack: [1], memory: "________" <> "input"}
       iex> %{machine_state: n_machine_state, state: n_state} =
       ...>   EVM.Operation.System.call(
       ...>     :call,
       ...>     [100, <<0x01::160>>, 1_000, 5, 5, 1, 6],
-      ...>     %{state: state, exec_env: exec_env, machine_state: machine_state, account_interface: account_interface, contract_interface: contract_interface, block_interface: block_interface})
+      ...>     %{state: state, exec_env: exec_env, machine_state: machine_state})
       iex> n_machine_state
       %EVM.MachineState{gas: 800, stack: [1, 1], active_words: 1, memory: "_output_input"}
       iex> n_state == state
@@ -53,16 +53,16 @@ defmodule EVM.Operation.System do
       # CALLCODE
       iex> db = MerklePatriciaTree.Test.random_ets_db()
       iex> state = MerklePatriciaTree.Trie.new(db)
-      iex> exec_env = %EVM.ExecEnv{stack_depth: 0}
-      iex> machine_state = %EVM.MachineState{gas: 300, stack: [1], memory: "________" <> "input"}
       iex> block_interface = EVM.Interface.Mock.MockBlockInterface.new(%Block.Header{})
       iex> account_interface = EVM.Interface.Mock.MockAccountInterface.new(balance: 5_000)
       iex> contract_interface = EVM.Interface.Mock.MockContractInterface.new(state, 500, nil, "output")
+      iex> exec_env = %EVM.ExecEnv{stack_depth: 0, account_interface: account_interface, contract_interface: contract_interface, block_interface: block_interface}
+      iex> machine_state = %EVM.MachineState{gas: 300, stack: [1], memory: "________" <> "input"}
       iex> %{machine_state: n_machine_state, state: n_state} =
       ...>   EVM.Operation.System.call(
       ...>     :call_code,
       ...>     [100, <<0x01::160>>, 1_000, 5, 5, 1, 6],
-      ...>     %{state: state, exec_env: exec_env, machine_state: machine_state, account_interface: account_interface, contract_interface: contract_interface, block_interface: block_interface})
+      ...>     %{state: state, exec_env: exec_env, machine_state: machine_state})
       iex> n_machine_state
       %EVM.MachineState{gas: 800, stack: [1, 1], active_words: 1, memory: "_output_input"}
       iex> n_state == state
@@ -71,16 +71,16 @@ defmodule EVM.Operation.System do
       # DELEGATECALL
       iex> db = MerklePatriciaTree.Test.random_ets_db()
       iex> state = MerklePatriciaTree.Trie.new(db)
-      iex> exec_env = %EVM.ExecEnv{stack_depth: 0}
-      iex> machine_state = %EVM.MachineState{gas: 300, stack: [1], memory: "________" <> "input"}
       iex> block_interface = EVM.Interface.Mock.MockBlockInterface.new(%Block.Header{})
       iex> account_interface = EVM.Interface.Mock.MockAccountInterface.new(balance: 5_000)
       iex> contract_interface = EVM.Interface.Mock.MockContractInterface.new(state, 500, nil, "output")
+      iex> exec_env = %EVM.ExecEnv{stack_depth: 0, account_interface: account_interface, contract_interface: contract_interface, block_interface: block_interface}
+      iex> machine_state = %EVM.MachineState{gas: 300, stack: [1], memory: "________" <> "input"}
       iex> %{machine_state: n_machine_state, state: n_state} =
       ...>   EVM.Operation.System.call(
       ...>     :delegate_call,
       ...>     [100, <<0x01::160>>, 5, 5, 1, 6],
-      ...>     %{state: state, exec_env: exec_env, machine_state: machine_state, account_interface: account_interface, contract_interface: contract_interface, block_interface: block_interface})
+      ...>     %{state: state, exec_env: exec_env, machine_state: machine_state})
       iex> n_machine_state
       %EVM.MachineState{gas: 800, stack: [1, 1], active_words: 1, memory: "_output_input"}
       iex> n_state == state
@@ -92,12 +92,12 @@ defmodule EVM.Operation.System do
     call(:delegate_call, [call_gas, to, 0, in_offset, in_size, out_offset, out_size], vm_map)
   end
 
-  def call(type, [call_gas, to, value, in_offset, in_size, out_offset, out_size], %{state: state, exec_env: exec_env, machine_state: machine_state, account_interface: account_interface, contract_interface: contract_interface, block_interface: block_interface}) when type in [:call, :call_code, :delegate_call] do
+  def call(type, [call_gas, to, value, in_offset, in_size, out_offset, out_size], %{state: state, exec_env: exec_env, machine_state: machine_state}) when type in [:call, :call_code, :delegate_call] do
 
     to_addr = (:binary.decode_unsigned(to) &&& @max_address_mask) |> :binary.encode_unsigned
     {data, machine_state} = EVM.Memory.read(machine_state, in_offset, in_size)
-    account_balance = AccountInterface.get_account_balance(account_interface, state, exec_env.address)
-    block_header = BlockInterface.get_block_header(block_interface)
+    account_balance = AccountInterface.get_account_balance(exec_env.account_interface, state, exec_env.address)
+    block_header = BlockInterface.get_block_header(exec_env.block_interface)
 
     is_allowed = value <= account_balance and exec_env.stack_depth < EVM.Functions.max_stack_depth
 
@@ -106,7 +106,7 @@ defmodule EVM.Operation.System do
 
     { n_state, n_gas, n_sub_state, n_output } = if is_allowed do
       ContractInterface.message_call(
-        contract_interface,
+        exec_env.contract_interface,
         state,                     # state
         exec_env.address,          # sender
         exec_env.originator,       # originator

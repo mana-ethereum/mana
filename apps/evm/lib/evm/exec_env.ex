@@ -4,6 +4,9 @@ defmodule EVM.ExecEnv do
   to this EVM being called. This is, for instance, the sender of
   a payment or message to a contract, or a sub-contract call.
 
+  We've added our interfaces for interacting with contracts
+  and accounts to this struct as well.
+
   This generally relates to `I` in the Yellow Paper, defined in
   Section 9.3.
   """
@@ -16,8 +19,11 @@ defmodule EVM.ExecEnv do
     sender: nil,                 # s
     value_in_wei: nil,           # v
     machine_code: <<>>,          # b
-    block_header: nil,           # h
-    stack_depth: nil]            # e
+    stack_depth: nil,            # e
+    block_interface: nil,        # h (TODO: Check on this)
+    account_interface: nil,
+    contract_interface: nil,
+  ]
 
   @type t :: %__MODULE__{
     address: EVM.address,
@@ -27,8 +33,10 @@ defmodule EVM.ExecEnv do
     sender: EVM.address,
     value_in_wei: EVM.Wei.t,
     machine_code: EVM.MachineCode.t,
-    block_header: binary(),
-    stack_depth: integer()
+    stack_depth: integer(),
+    block_interface: EVM.Interface.BlockInterface.t,
+    account_interface: EVM.Interface.AccountInterface.t,
+    contract_interface: EVM.Interface.ContractInterface.t,
   }
 
   @doc """
@@ -40,8 +48,8 @@ defmodule EVM.ExecEnv do
 
   # TODO: Examples
   """
-  @spec exec_env_for_message_call(EVM.address, EVM.address, EVM.Gas.gas_price, binary(), EVM.address, EVM.Wei.t, integer(), binary(), EVM.MachineCode.t) :: t
-  def exec_env_for_message_call(recipient, originator, gas_price, data, sender, value_in_wei, stack_depth, block_header, machine_code) do
+  @spec exec_env_for_message_call(EVM.address, EVM.address, EVM.Gas.gas_price, binary(), EVM.address, EVM.Wei.t, integer(), EVM.MachineCode.t, EVM.Interface.BlockInterface.t, EVM.Interface.AccountInterface.t, EVM.Interface.ContractInterface.t) :: t
+  def exec_env_for_message_call(recipient, originator, gas_price, data, sender, value_in_wei, stack_depth, machine_code, block_interface, account_interface, contract_interface) do
     %__MODULE__{
       address: recipient,
       originator: originator,
@@ -50,8 +58,10 @@ defmodule EVM.ExecEnv do
       sender: sender,
       value_in_wei: value_in_wei,
       stack_depth: stack_depth,
-      block_header: block_header,
       machine_code: machine_code,
+      block_interface: block_interface,
+      account_interface: account_interface,
+      contract_interface: contract_interface,
     }
   end
 
