@@ -589,12 +589,12 @@ defmodule Blockchain.Block do
       iex> Enum.count(block.transactions)
       1
       iex> Blockchain.Block.get_receipt(block, 0, db)
-      %Blockchain.Transaction.Receipt{bloom_filter: "", cumulative_gas: 53756, logs: "", state: block.header.state_root}
+      %Blockchain.Transaction.Receipt{bloom_filter: "", cumulative_gas: 53780, logs: "", state: block.header.state_root}
       iex> Blockchain.Block.get_transaction(block, 0, db)
       %Blockchain.Transaction{data: "", gas_limit: 100000, gas_price: 3, init: <<96, 3, 96, 5, 1, 96, 0, 82, 96, 0, 96, 32, 243>>, nonce: 5, r: 14159411915843247798541244544791455673077363609967175479682740936374424047718, s: 54974362865507454783589777536677081181084754879294507743788973783077639473486, to: "", v: 28, value: 5}
       iex> MerklePatriciaTree.Trie.new(db, block.header.state_root)
       ...> |> Blockchain.Account.get_accounts([sender, beneficiary, contract_address])
-      [%Blockchain.Account{balance: 238727, nonce: 6}, %Blockchain.Account{balance: 161268}, %Blockchain.Account{balance: 5, code_hash: <<243, 247, 169, 254, 54, 79, 170, 185, 59, 33, 109, 165, 10, 50, 20, 21, 79, 34, 160, 162, 180, 21, 178, 58, 132, 200, 22, 158, 139, 99, 110, 227>>}]
+      [%Blockchain.Account{balance: 238655, nonce: 6}, %Blockchain.Account{balance: 161340}, %Blockchain.Account{balance: 5, code_hash: <<243, 247, 169, 254, 54, 79, 170, 185, 59, 33, 109, 165, 10, 50, 20, 21, 79, 34, 160, 162, 180, 21, 178, 58, 132, 200, 22, 158, 139, 99, 110, 227>>}]
   """
   @spec add_transactions_to_block(t, [Transaction.t], DB.db) :: t
   def add_transactions_to_block(block, transactions, db) do
