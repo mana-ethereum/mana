@@ -1,4 +1,4 @@
-defmodule EVM.Operation.SHA3Test do
+defmodule EVM.Operation.Sha3Test do
   use ExUnit.Case, async: true
-  doctest EVM.Operation.SHA3
+  doctest EVM.Operation.Sha3
 end

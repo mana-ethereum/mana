@@ -44,7 +44,7 @@ defmodule EVM.VMTest do
 
     result = EVM.VM.run(state, 20006, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile(instructions)})
 
-    expected_state = %{state|root_hash: <<12, 189, 253, 61, 167, 240, 166, 67, 81, 179, 89, 188, 142, 220, 80, 44, 72, 102, 195, 89, 230, 27, 75, 136, 68, 2, 117, 227, 48, 141, 102, 230>>}
+    expected_state = %{state|root_hash: <<237, 28, 15, 202, 18, 122, 97, 144, 139, 12, 190, 79, 95, 4, 202, 27, 223, 19, 78, 107, 238, 238, 82, 99, 162, 126, 101, 29, 218, 189, 254, 85>>}
 
     assert result == {expected_state, 0, %EVM.SubState{logs: "", refund: 0, suicide_list: []}, ""}
 

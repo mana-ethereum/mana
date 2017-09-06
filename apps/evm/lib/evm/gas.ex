@@ -136,6 +136,11 @@ defmodule EVM.Gas do
       iex> EVM.Gas.instr_cost(:mstore, nil, %EVM.MachineState{stack: [0, round(:math.pow(2, 512))], memory: <<1::256>>, active_words: 0}, nil)
       9
 
+      iex> EVM.Gas.instr_cost(:sha3, nil, %EVM.MachineState{stack: [0, 0]}, nil)
+      30
+      iex> EVM.Gas.instr_cost(:sha3, nil, %EVM.MachineState{stack: [10, 1024]}, nil)
+      323
+
   """
   @spec instr_cost(atom(), EVM.state, MachineState.t, ExecEnv.t) :: t | nil
   def instr_cost(:sstore, state, machine_state, _exec_env), do: cost_sstore(state, machine_state)
@@ -145,6 +150,18 @@ defmodule EVM.Gas do
       s -> @g_exp + @g_expbyte * byte_size(:binary.encode_unsigned(s))
     end
   end
+
+  def instr_cost(:sha3, _state, machine_state, _exec_env) do
+    [length, offset] = Stack.peek_n(machine_state.stack, 2)
+
+    if offset == 0 do
+      @g_sha3
+    else
+      memory_cost = memory_cost(round(:math.ceil((offset + length) / 32)))
+      @g_sha3 + memory_cost + @g_sha3word * round(:math.ceil(offset / 32))
+    end
+  end
+
 
   def instr_cost(:mstore, _state, machine_state, _exec_env) do
     [offset, new_value] = Stack.peek_n(machine_state.stack, 2)
@@ -158,9 +175,13 @@ defmodule EVM.Gas do
   end
 
   defp memory_cost(n) when n == <<0::256>>, do: 0
-  defp memory_cost(n) do
-    (Helpers.word_size(n) * @g_memory +
-      round(:math.pow(Helpers.word_size(n), 2) / @g_quad_coeff_div))
+  defp memory_cost(n) when is_binary(n), do: memory_cost(Helpers.word_size(n))
+
+  defp memory_cost(length) do
+    linear_cost = length * @g_memory
+    quadratic_cost = MathHelper.floor(:math.pow(length, 2) / @g_quad_coeff_div)
+
+    linear_cost + quadratic_cost
   end
 
 
@@ -176,7 +197,6 @@ defmodule EVM.Gas do
   def instr_cost(call_instr, _state, _machine_state, _exec_env) when call_instr in [:call, :callcode, :delegatecall], do: 0
   def instr_cost(:suicide, _state, _machine_state, _exec_env), do: 0
   def instr_cost(:create, _state, _machine_state, _exec_env), do: 0
-  def instr_cost(:sha3, _state, _machine_state, _exec_env), do: 0
   def instr_cost(:jumpdest, _state, _machine_state, _exec_env), do: @g_jumpdest
   def instr_cost(:sload, _state, _machine_state, _exec_env), do: @g_sload
   def instr_cost(w_zero_instr, _state, _machine_state, _exec_env) when w_zero_instr in @w_zero_instr, do: @g_zero

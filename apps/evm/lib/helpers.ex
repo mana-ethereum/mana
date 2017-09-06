@@ -117,7 +117,8 @@ defmodule EVM.Helpers do
     end
   end
 
-  @spec encode_val(integer() | list(integer())) :: list(EVM.val)
+  @spec encode_val(integer() | binary() | list(integer())) :: list(EVM.val)
+  def encode_val(n) when is_binary(n), do: :binary.decode_unsigned(n)
   def encode_val(n) when is_list(n), do: Enum.map(n, &encode_val/1)
   def encode_val(n) do
     n

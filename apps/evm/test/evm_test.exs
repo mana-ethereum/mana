@@ -2,6 +2,7 @@ defmodule EvmTest do
   use ExUnit.Case, async: true
 
   @passing_tests_by_group %{
+    sha3: :all,
     arithmetic: :all,
     bitwise_logic_operation: :all,
   }

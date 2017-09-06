@@ -126,7 +126,7 @@ defmodule EVM.Operation.StackMemoryStorageAndFlow do
       iex> db = MerklePatriciaTree.Test.random_ets_db(:store_word_test)
       iex> EVM.Operation.StackMemoryStorageAndFlow.sstore([0x11223344556677889900, 0x111222333444555], %{state: MerklePatriciaTree.Trie.new(db)})
       %{
-        state: %MerklePatriciaTree.Trie{db: {MerklePatriciaTree.DB.ETS, :store_word_test}, root_hash: <<128, 58, 53, 102, 7, 182, 120, 131, 145, 91, 222, 83, 56, 42, 251, 168, 203, 138, 130, 246, 76, 122, 110, 218, 183, 131, 33, 205, 154, 136, 194, 212>>}
+        state: %MerklePatriciaTree.Trie{db: {MerklePatriciaTree.DB.ETS, :store_word_test}, root_hash: <<77, 102, 57, 173, 238, 57, 137, 237, 16, 96, 205, 248, 1, 201, 72, 65, 51, 86, 115, 120, 46, 253, 163, 44, 146, 241, 46, 237, 87, 11, 122, 100>>}
       }
 
       iex> db = MerklePatriciaTree.Test.random_ets_db()

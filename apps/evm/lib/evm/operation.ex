@@ -266,7 +266,7 @@ defmodule EVM.Operation do
   """
   @spec normalize_op_result(EVM.val | list(EVM.val) | Operation.op_result, EVM.stack) :: Operation.op_result
   def normalize_op_result(op_result, updated_stack) do
-    if is_integer(op_result) || is_list(op_result) do
+    if is_integer(op_result) || is_list(op_result) || is_binary(op_result) do
       %{stack: Stack.push(updated_stack, Helpers.encode_val(op_result))}
     else
       op_result
