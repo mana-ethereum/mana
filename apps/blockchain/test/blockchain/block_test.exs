@@ -1,8 +1,9 @@
 defmodule Blockchain.BlockTest do
   use ExUnit.Case, async: true
   doctest Blockchain.Block
+
+  alias Block.Header
   alias Blockchain.Block
-  alias Blockchain.Block.Header
   alias Blockchain.Transaction
 
   test "serialize and deserialize" do

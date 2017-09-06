@@ -22,7 +22,7 @@ defmodule Blockchain.TransactionTest do
 
       {state, gas_used, logs} = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
         |> Blockchain.Account.put_account(sender, %Blockchain.Account{balance: 400_000, nonce: 5})
-        |> Blockchain.Transaction.execute_transaction(trx, %Blockchain.Block.Header{beneficiary: beneficiary})
+        |> Blockchain.Transaction.execute_transaction(trx, %Block.Header{beneficiary: beneficiary})
 
       assert gas_used == 53004
       assert logs == ""
