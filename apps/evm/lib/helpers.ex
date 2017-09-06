@@ -101,7 +101,7 @@ defmodule EVM.Helpers do
       1
   """
   def wrap_address(n) when is_integer(n), do: band(n, EVM.max_address() - 1)
-  def wrap_address(n) when is_binary(n), do: band(n |> :binary.decode_unsigned, EVM.max_address() - 1) |> :binary.encode_unsigned
+  def wrap_address(n) when is_binary(n), do: n |> :binary.decode_unsigned |> wrap_address |> :binary.encode_unsigned
 
   @doc """
   Encodes signed ints using twos compliment

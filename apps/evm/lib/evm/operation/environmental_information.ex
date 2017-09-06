@@ -98,13 +98,13 @@ defmodule EVM.Operation.EnvironmentalInformation do
 
   ## Examples
 
-      iex> EVM.Operation.EnvironmentalInformation.calldataload([0], %{exec_env: %{data: (for n <- 1..50, into: <<>>, do: <<255>>)}})
+      iex> EVM.Operation.EnvironmentalInformation.calldataload([0], %{exec_env: %{data: (for _ <- 1..50, into: <<>>, do: <<255>>)}})
       -1
 
-      iex> EVM.Operation.EnvironmentalInformation.calldataload([0], %{exec_env: %{data: (for n <- 1..3, into: <<>>, do: <<1>>)}})
+      iex> EVM.Operation.EnvironmentalInformation.calldataload([0], %{exec_env: %{data: (for _ <- 1..3, into: <<>>, do: <<1>>)}})
       <<1::8, 1::8, 1::8, 0::232>> |> EVM.Helpers.decode_signed
 
-      iex> EVM.Operation.EnvironmentalInformation.calldataload([100], %{exec_env: %{data: (for n <- 1..3, into: <<>>, do: <<1>>)}})
+      iex> EVM.Operation.EnvironmentalInformation.calldataload([100], %{exec_env: %{data: (for _ <- 1..3, into: <<>>, do: <<1>>)}})
       0
   """
   @spec calldataload(Operation.stack_args, Operation.vm_map) :: Operation.op_result

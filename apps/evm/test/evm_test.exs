@@ -10,8 +10,8 @@ defmodule EvmTest do
 
 
   test "Ethereum Common Tests" do
-    for {test_group_name, test_group} <- @passing_tests_by_group do
-      for {test_name, test} <- passing_tests(test_group_name) do
+    for {test_group_name, _test_group} <- @passing_tests_by_group do
+      for {_test_name, test} <- passing_tests(test_group_name) do
         db = MerklePatriciaTree.Test.random_ets_db()
         state = EVM.VM.run(
           MerklePatriciaTree.Trie.new(db),
@@ -33,7 +33,7 @@ defmodule EvmTest do
 
   def passing_tests(test_group_name) do
     read_test_file(test_group_name)
-      |> Enum.filter(fn({test_name, test}) ->
+      |> Enum.filter(fn({test_name, _test}) ->
         passing_tests_in_group = Map.get(@passing_tests_by_group, test_group_name)
 
         passing_tests_in_group == :all ||
