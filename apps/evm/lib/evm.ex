@@ -11,10 +11,16 @@ defmodule EVM do
   @type timestamp :: integer()
 
   @max_int round(:math.pow(2, 256))
+  @max_address round(:math.pow(2, 160))
 
   @doc """
   Returns maximum allowed integer size.
   """
   def max_int(), do: @max_int
+
+  @doc """
+  Returns the maximum allowed address size.
+  """
+  def max_address, do: @max_address
 
 end

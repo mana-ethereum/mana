@@ -33,4 +33,18 @@ defimpl EVM.Interface.ContractInterface, for: EVM.Interface.Mock.MockContractInt
     }
   end
 
+  @spec create_contract(EVM.Interface.ContractInterface.t, EVM.state, EVM.address, EVM.address, EVM.Gas.t, EVM.Gas.gas_price, EVM.Wei.t, EVM.MachineCode.t, integer(), Header.t) :: { EVM.state, EVM.Gas.t, EVM.SubState.t }
+  def create_contract(mock_contract_interface, state, sender, originator, available_gas, gas_price, endowment, init_code, stack_depth, block_header) do
+    {
+      mock_contract_interface.state,
+      mock_contract_interface.gas,
+      mock_contract_interface.sub_state
+    }
+  end
+
+  @spec new_contract_address(EVM.Interface.ContractInterface.t, EVM.address, integer()) :: EVM.address
+  def new_contract_address(_mock_contract_interface, address, _nonce) do
+    address
+  end
+
 end

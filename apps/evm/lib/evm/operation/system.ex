@@ -6,23 +6,82 @@ defmodule EVM.Operation.System do
   alias EVM.Helpers
   alias EVM.Stack
 
-  use Bitwise
-
-  @max_address_mask round(:math.pow(2, 160)) - 1
-
   @doc """
   Create a new account with associated code.
 
-  TODO: Implement opcode
-
   ## Examples
 
-      iex> EVM.Operation.System.create([], %{stack: []})
-      :unimplemented
+      iex> db = MerklePatriciaTree.Test.random_ets_db()
+      iex> state = MerklePatriciaTree.Trie.new(db)
+      iex> block_interface = EVM.Interface.Mock.MockBlockInterface.new(%Block.Header{})
+      iex> account_interface = EVM.Interface.Mock.MockAccountInterface.new(balance: 5_000, nonce: 5)
+      iex> contract_interface = EVM.Interface.Mock.MockContractInterface.new(state, 500, nil, "output")
+      iex> exec_env = %EVM.ExecEnv{stack_depth: 0, address: <<100::160>>, account_interface: account_interface, contract_interface: contract_interface, block_interface: block_interface}
+      iex> machine_state = %EVM.MachineState{gas: 300, stack: [1], memory: "________" <> "input"}
+      iex> %{machine_state: n_machine_state, state: n_state} =
+      ...>   EVM.Operation.System.create(
+      ...>     [1_000, 5, 5],
+      ...>     %{state: state, exec_env: exec_env, machine_state: machine_state})
+      iex> n_machine_state
+      %EVM.MachineState{gas: 800, stack: [100, 1], active_words: 1, memory: "________input"}
+      iex> n_state == state
+      true
   """
   @spec create(Operation.stack_args, Operation.vm_map) :: Operation.op_result
-  def create(_args, %{stack: _stack}) do
-    :unimplemented
+  def create([value, in_offset, in_size], %{state: state, exec_env: exec_env, machine_state: machine_state}) do
+
+    {data, machine_state} = EVM.Memory.read(machine_state, in_offset, in_size)
+    account_balance = AccountInterface.get_account_balance(exec_env.account_interface, state, exec_env.address)
+    block_header = BlockInterface.get_block_header(exec_env.block_interface)
+
+    is_allowed = value <= account_balance and exec_env.stack_depth < EVM.Functions.max_stack_depth
+
+    { state_with_nonce_updated, original_nonce } = if is_allowed do
+      AccountInterface.increment_account_nonce(
+        exec_env.account_interface,
+        state,
+        exec_env.address
+      )
+    else
+      { nil, nil }
+    end
+
+    { n_state, n_gas, n_sub_state } = if is_allowed do
+
+      available_gas = Helpers.all_but_one_64th(machine_state.gas)
+
+      ContractInterface.create_contract(
+        exec_env.contract_interface,
+        state_with_nonce_updated,      # state
+        exec_env.address,              # sender
+        exec_env.originator,           # originator
+        available_gas,                 # available_gas
+        exec_env.gas_price,            # gas_price
+        value,                         # endowment
+        data,                          # init_code
+        exec_env.stack_depth + 1,      # stack_depth
+        block_header)                  # block_header
+    else
+        { state, machine_state.gas, nil }
+    end
+
+    # Add back extra gas
+    machine_state = %{machine_state | gas: machine_state.gas + n_gas}
+
+    # Note if was exception halt or other failure on stack
+    result = if is_allowed and not is_nil(n_state) do
+      ContractInterface.new_contract_address(exec_env.contract_interface, exec_env.address, original_nonce) |> Helpers.wrap_address |> :binary.decode_unsigned
+    else
+      0
+    end
+
+    machine_state = %{machine_state | stack: Stack.push(machine_state.stack, result)}
+
+    %{
+      state: n_state,
+      machine_state: machine_state
+      # TODO: sub_state
+    }
   end
 
   @doc """
@@ -35,16 +94,16 @@ defmodule EVM.Operation.System do
       # CALL
       iex> db = MerklePatriciaTree.Test.random_ets_db()
       iex> state = MerklePatriciaTree.Trie.new(db)
-      iex> exec_env = %EVM.ExecEnv{stack_depth: 0}
-      iex> machine_state = %EVM.MachineState{gas: 300, stack: [1], memory: "________" <> "input"}
       iex> block_interface = EVM.Interface.Mock.MockBlockInterface.new(%Block.Header{})
       iex> account_interface = EVM.Interface.Mock.MockAccountInterface.new(balance: 5_000)
       iex> contract_interface = EVM.Interface.Mock.MockContractInterface.new(state, 500, nil, "output")
+      iex> exec_env = %EVM.ExecEnv{stack_depth: 0, account_interface: account_interface, contract_interface: contract_interface, block_interface: block_interface}
+      iex> machine_state = %EVM.MachineState{gas: 300, stack: [1], memory: "________" <> "input"}
       iex> %{machine_state: n_machine_state, state: n_state} =
       ...>   EVM.Operation.System.call(
       ...>     :call,
       ...>     [100, <<0x01::160>>, 1_000, 5, 5, 1, 6],
-      ...>     %{state: state, exec_env: exec_env, machine_state: machine_state, account_interface: account_interface, contract_interface: contract_interface, block_interface: block_interface})
+      ...>     %{state: state, exec_env: exec_env, machine_state: machine_state})
       iex> n_machine_state
       %EVM.MachineState{gas: 800, stack: [1, 1], active_words: 1, memory: "_output_input"}
       iex> n_state == state
@@ -53,16 +112,16 @@ defmodule EVM.Operation.System do
       # CALLCODE
       iex> db = MerklePatriciaTree.Test.random_ets_db()
       iex> state = MerklePatriciaTree.Trie.new(db)
-      iex> exec_env = %EVM.ExecEnv{stack_depth: 0}
-      iex> machine_state = %EVM.MachineState{gas: 300, stack: [1], memory: "________" <> "input"}
       iex> block_interface = EVM.Interface.Mock.MockBlockInterface.new(%Block.Header{})
       iex> account_interface = EVM.Interface.Mock.MockAccountInterface.new(balance: 5_000)
       iex> contract_interface = EVM.Interface.Mock.MockContractInterface.new(state, 500, nil, "output")
+      iex> exec_env = %EVM.ExecEnv{stack_depth: 0, account_interface: account_interface, contract_interface: contract_interface, block_interface: block_interface}
+      iex> machine_state = %EVM.MachineState{gas: 300, stack: [1], memory: "________" <> "input"}
       iex> %{machine_state: n_machine_state, state: n_state} =
       ...>   EVM.Operation.System.call(
       ...>     :call_code,
       ...>     [100, <<0x01::160>>, 1_000, 5, 5, 1, 6],
-      ...>     %{state: state, exec_env: exec_env, machine_state: machine_state, account_interface: account_interface, contract_interface: contract_interface, block_interface: block_interface})
+      ...>     %{state: state, exec_env: exec_env, machine_state: machine_state})
       iex> n_machine_state
       %EVM.MachineState{gas: 800, stack: [1, 1], active_words: 1, memory: "_output_input"}
       iex> n_state == state
@@ -71,16 +130,16 @@ defmodule EVM.Operation.System do
       # DELEGATECALL
       iex> db = MerklePatriciaTree.Test.random_ets_db()
       iex> state = MerklePatriciaTree.Trie.new(db)
-      iex> exec_env = %EVM.ExecEnv{stack_depth: 0}
-      iex> machine_state = %EVM.MachineState{gas: 300, stack: [1], memory: "________" <> "input"}
       iex> block_interface = EVM.Interface.Mock.MockBlockInterface.new(%Block.Header{})
       iex> account_interface = EVM.Interface.Mock.MockAccountInterface.new(balance: 5_000)
       iex> contract_interface = EVM.Interface.Mock.MockContractInterface.new(state, 500, nil, "output")
+      iex> exec_env = %EVM.ExecEnv{stack_depth: 0, account_interface: account_interface, contract_interface: contract_interface, block_interface: block_interface}
+      iex> machine_state = %EVM.MachineState{gas: 300, stack: [1], memory: "________" <> "input"}
       iex> %{machine_state: n_machine_state, state: n_state} =
       ...>   EVM.Operation.System.call(
       ...>     :delegate_call,
       ...>     [100, <<0x01::160>>, 5, 5, 1, 6],
-      ...>     %{state: state, exec_env: exec_env, machine_state: machine_state, account_interface: account_interface, contract_interface: contract_interface, block_interface: block_interface})
+      ...>     %{state: state, exec_env: exec_env, machine_state: machine_state})
       iex> n_machine_state
       %EVM.MachineState{gas: 800, stack: [1, 1], active_words: 1, memory: "_output_input"}
       iex> n_state == state
@@ -92,12 +151,12 @@ defmodule EVM.Operation.System do
     call(:delegate_call, [call_gas, to, 0, in_offset, in_size, out_offset, out_size], vm_map)
   end
 
-  def call(type, [call_gas, to, value, in_offset, in_size, out_offset, out_size], %{state: state, exec_env: exec_env, machine_state: machine_state, account_interface: account_interface, contract_interface: contract_interface, block_interface: block_interface}) when type in [:call, :call_code, :delegate_call] do
+  def call(type, [call_gas, to, value, in_offset, in_size, out_offset, out_size], %{state: state, exec_env: exec_env, machine_state: machine_state}) when type in [:call, :call_code, :delegate_call] do
 
-    to_addr = (:binary.decode_unsigned(to) &&& @max_address_mask) |> :binary.encode_unsigned
+    to_addr = Helpers.wrap_address(to)
     {data, machine_state} = EVM.Memory.read(machine_state, in_offset, in_size)
-    account_balance = AccountInterface.get_account_balance(account_interface, state, exec_env.address)
-    block_header = BlockInterface.get_block_header(block_interface)
+    account_balance = AccountInterface.get_account_balance(exec_env.account_interface, state, exec_env.address)
+    block_header = BlockInterface.get_block_header(exec_env.block_interface)
 
     is_allowed = value <= account_balance and exec_env.stack_depth < EVM.Functions.max_stack_depth
 
@@ -106,13 +165,13 @@ defmodule EVM.Operation.System do
 
     { n_state, n_gas, n_sub_state, n_output } = if is_allowed do
       ContractInterface.message_call(
-        contract_interface,
+        exec_env.contract_interface,
         state,                     # state
         exec_env.address,          # sender
         exec_env.originator,       # originator
         recipient,                 # recipient
         to_addr,                   # contract
-        call_gas,                  # available_gas
+        call_gas,                  # available_gas # TODO: Call gas?
         exec_env.gas_price,        # gas_price
         value,                     # value
         apparent_value,            # apparent_value

@@ -87,6 +87,23 @@ defmodule EVM.Helpers do
   def wrap_int(n), do: n
 
   @doc """
+  Wrap ints greater than the maximum allowed address size.
+
+  ## Examples
+
+      iex> EVM.Helpers.wrap_address(1)
+      1
+
+      iex> EVM.Helpers.wrap_address(<<1>>)
+      <<1>>
+
+      iex> EVM.Helpers.wrap_address(EVM.max_address() + 1)
+      1
+  """
+  def wrap_address(n) when is_integer(n), do: band(n, EVM.max_address() - 1)
+  def wrap_address(n) when is_binary(n), do: n |> :binary.decode_unsigned |> wrap_address |> :binary.encode_unsigned
+
+  @doc """
   Encodes signed ints using twos compliment
 
   ## Examples
@@ -131,5 +148,58 @@ defmodule EVM.Helpers do
     Logger.debug(inspect [prefix, ":", msg])
 
     msg
+  end
+
+  @doc """
+  Reads a length of data from a binary, filling in all unknown values as zero.
+
+  ## Examples
+
+      iex> EVM.Helpers.read_zero_padded(<<5, 6, 7>>, 1, 3)
+      <<6, 7, 0>>
+
+      iex> EVM.Helpers.read_zero_padded(<<5, 6, 7>>, 0, 2)
+      <<5, 6>>
+
+      iex> EVM.Helpers.read_zero_padded(<<5, 6, 7>>, 0, 3)
+      <<5, 6, 7>>
+
+      iex> EVM.Helpers.read_zero_padded(<<5, 6, 7>>, 4, 3)
+      <<0, 0, 0>>
+  """
+  @spec read_zero_padded(binary(), integer(), integer()) :: binary()
+  def read_zero_padded(data, start_pos, read_length) do
+    end_pos = start_pos + read_length
+    total_data_length = byte_size(data)
+
+    cond do
+      start_pos > total_data_length ->
+        total_bits = read_length * 8
+
+        <<0::size(total_bits)>>
+      end_pos > total_data_length ->
+        data_read_length = total_data_length - start_pos
+        padding = ( read_length - data_read_length ) * 8
+        binary_part(data, start_pos, data_read_length) <> <<0::size(padding)>>
+      true ->
+        binary_part(data, start_pos, read_length)
+    end
+  end
+
+  @doc """
+  Defined as Eq.(224) in the Yellow Paper, this is "all but one 64th",
+  written as L(x).
+
+  ## Examples
+
+      iex> EVM.Helpers.all_but_one_64th(5)
+      5
+
+      iex> EVM.Helpers.all_but_one_64th(1000)
+      985
+  """
+  @spec all_but_one_64th(integer()) :: integer()
+  def all_but_one_64th(n) do
+    round(n - :math.floor(n / 64))
   end
 end
