@@ -13,7 +13,7 @@ defmodule MerklePatriciaTree.Trie.Destroyer do
   alias MerklePatriciaTree.Trie
   alias MerklePatriciaTree.Trie.Node
 
-  @empty_branch Node.encode_node(:empty, nil)
+  @empty_branch <<>>
 
   @doc """
   Removes a key from a given trie, if it exists.
@@ -79,7 +79,7 @@ defmodule MerklePatriciaTree.Trie.Destroyer do
       Enum.count(non_blank_branches) == 0 ->
         # We just have a final value, this will need to percolate up
         {:leaf, [] , final_value}
-      Enum.count(non_blank_branches) == 1 and final_value == nil ->
+      Enum.count(non_blank_branches) == 1 and final_value == "" ->
         # We just have a node we need to percolate up
         {branch_node, i} = List.first(non_blank_branches)
 

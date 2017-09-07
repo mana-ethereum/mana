@@ -6,7 +6,10 @@ defmodule MerklePatriciaTreeTest do
   @passing_tests %{
     anyorder: :all,
     test: [
-      :"insert-middle-leaf"
+      :emptyValues,
+      # :branchingTests,
+      # :jeff,
+      :"insert-middle-leaf",
     ]
   }
 
@@ -39,7 +42,7 @@ defmodule MerklePatriciaTreeTest do
   end
 
   def read_test_file(type) do
-    {:ok, body} = File.read(test_file_name(type) |> IO.inspect)
+    {:ok, body} = File.read(test_file_name(type))
     Poison.decode!(body)
   end
 
