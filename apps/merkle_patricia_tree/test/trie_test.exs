@@ -14,7 +14,7 @@ defmodule MerklePatriciaTree.TrieTest do
   end
 
   def leaf_node(key_end, value) do
-    ExRLP.encode([HexPrefix.encode({key_end, true}), value])
+    [HexPrefix.encode({key_end, true}), value]
   end
 
   def store(node_value, db) do
@@ -25,11 +25,11 @@ defmodule MerklePatriciaTree.TrieTest do
   end
 
   def extension_node(shared_nibbles, node_hash) do
-    ExRLP.encode([HexPrefix.encode({shared_nibbles, false}), node_hash])
+    [HexPrefix.encode({shared_nibbles, false}), node_hash]
   end
 
   def branch_node(branches, value) when length(branches) == 16 do
-    ExRLP.encode(branches ++ [value])
+    branches ++ [value]
   end
 
   def blanks(n) do
@@ -72,7 +72,7 @@ defmodule MerklePatriciaTree.TrieTest do
 
     test "for a trie with an extension node followed by a leaf", %{db: db} do
       trie = Trie.new(db)
-      trie = %{trie| root_hash: extension_node([0x01, 0x02], leaf_node([0x03], "cool"))}
+      trie = %{trie| root_hash: extension_node([0x01, 0x02], leaf_node([0x03], "cool")) |> ExRLP.encode |> store(db)}
 
       assert Trie.get(trie, <<0x01::4>>) == nil
       assert Trie.get(trie, <<0x01::4, 0x02::4>>) == nil
@@ -82,7 +82,7 @@ defmodule MerklePatriciaTree.TrieTest do
 
     test "for a trie with an extension node followed by an extension node and then leaf", %{db: db} do
       trie = Trie.new(db)
-      trie = %{trie| root_hash: extension_node([0x01, 0x02], extension_node([0x03], leaf_node([0x04], "cool")))}
+      trie = %{trie| root_hash: extension_node([0x01, 0x02], extension_node([0x03], leaf_node([0x04], "cool"))) |> ExRLP.encode |> store(db)}
 
       assert Trie.get(trie, <<0x01::4>>) == nil
       assert Trie.get(trie, <<0x01::4, 0x02::4>>) == nil
@@ -93,7 +93,7 @@ defmodule MerklePatriciaTree.TrieTest do
 
     test "for a trie with a branch node", %{db: db} do
       trie = Trie.new(db)
-      trie = %{trie| root_hash: extension_node([0x01], branch_node([leaf_node([0x02], "hi")|blanks(15)], "cool"))}
+      trie = %{trie| root_hash: extension_node([0x01], branch_node([leaf_node([0x02], "hi")|blanks(15)], "cool")) |> ExRLP.encode |> store(db)}
 
       assert Trie.get(trie, <<0x01::4>>) == "cool"
       assert Trie.get(trie, <<0x01::4, 0x00::4>>) == nil
@@ -106,7 +106,7 @@ defmodule MerklePatriciaTree.TrieTest do
       long_string = Enum.join(for _ <- 1..60, do: "A")
 
       trie = Trie.new(db)
-      trie = %{trie| root_hash: extension_node([0x01, 0x02], leaf_node([0x03], long_string) |> store(db)) |> store(db)}
+      trie = %{trie| root_hash: extension_node([0x01, 0x02], leaf_node([0x03], long_string) |> ExRLP.encode |> store(db)) |> ExRLP.encode |> store(db)}
 
       assert Trie.get(trie, <<0x01::4>>) == nil
       assert Trie.get(trie, <<0x01::4, 0x02::4>>) == nil
@@ -126,9 +126,14 @@ defmodule MerklePatriciaTree.TrieTest do
       assert Trie.get(trie_2, <<0x01::4, 0x02::4>>) == nil
       assert Trie.get(trie_2, <<0x01::4, 0x02::4, 0x03::4>>) == "cool"
       assert Trie.get(trie_2, <<0x01::4, 0x02::4, 0x03::4, 0x04::4>>) == nil
+    end
 
-      # assert Trie.root(trie) == nil
-      # assert Trie.root(trie_2) == "cool root"
+    test "from blog post", %{db: db} do
+      trie = Trie.new(db)
+
+      trie_2 = Trie.update(trie, <<0x01::4, 0x01::4, 0x02::4>>, "hello")
+
+      assert trie_2.root_hash == <<73, 98, 206, 73, 94, 192, 23, 36, 174, 248, 169, 73, 103, 133, 200, 167, 68, 83, 86, 207, 246, 91, 200, 242, 14, 115, 208, 252, 28, 74, 245, 130>>
     end
 
     test "update a leaf value (when stored directly)", %{db: db} do
@@ -143,7 +148,7 @@ defmodule MerklePatriciaTree.TrieTest do
       long_string = Enum.join(for _ <- 1..60, do: "A")
       long_string_2 = Enum.join(for _ <- 1..60, do: "B")
 
-      trie = Trie.new(db, leaf_node([0x01, 0x02], long_string) |> store(db))
+      trie = Trie.new(db, leaf_node([0x01, 0x02], long_string) |> ExRLP.encode |> store(db))
       trie_2 = Trie.update(trie, <<0x01::4, 0x02::4>>, long_string_2)
 
       assert Trie.get(trie, <<0x01::4, 0x02::4>>) == long_string

@@ -3,6 +3,7 @@ defmodule MerklePatriciaTree.Trie do
 
   alias MerklePatriciaTree.Trie.Helper
   alias MerklePatriciaTree.Trie.Builder
+  alias MerklePatriciaTree.Trie.Destroyer
   alias MerklePatriciaTree.Trie.Node
   alias MerklePatriciaTree.DB
   alias MerklePatriciaTree.ListHelper
@@ -37,21 +38,23 @@ defmodule MerklePatriciaTree.Trie do
   ## Examples
 
     iex> MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db(:trie_test_1))
-    %MerklePatriciaTree.Trie{db: {MerklePatriciaTree.DB.ETS, :trie_test_1}, root_hash: <<128>>}
+    %MerklePatriciaTree.Trie{db: {MerklePatriciaTree.DB.ETS, :trie_test_1}, root_hash: <<197, 210, 70, 1, 134, 247, 35, 60, 146, 126, 125, 178, 220, 199, 3, 192, 229, 0, 182, 83, 202, 130, 39, 59, 123, 250, 216, 4, 93, 133, 164, 112>>}
 
     iex> MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db(:trie_test_2), <<1, 2, 3>>)
-    %MerklePatriciaTree.Trie{db: {MerklePatriciaTree.DB.ETS, :trie_test_2}, root_hash: <<1, 2, 3>>}
+    %MerklePatriciaTree.Trie{db: {MerklePatriciaTree.DB.ETS, :trie_test_2}, root_hash: <<241, 136, 94, 218, 84, 183, 160, 83, 49, 140, 212, 30, 32, 147, 34, 13, 171, 21, 214, 83, 129, 177, 21, 122, 54, 51, 168, 59, 253, 92, 146, 57>>}
 
     iex> trie = MerklePatriciaTree.Trie.new(MerklePatriciaTree.DB.LevelDB.init("/tmp/#{MerklePatriciaTree.Test.random_string(20)}"), <<1, 2, 3>>)
     iex> trie.root_hash
-    <<1, 2, 3>>
+    <<241, 136, 94, 218, 84, 183, 160, 83, 49, 140, 212, 30, 32, 147, 34,
+      13, 171, 21, 214, 83, 129, 177, 21, 122, 54, 51, 168, 59, 253, 92,
+      146, 57>>
     iex> {db, _db_ref} = trie.db
     iex> db
     MerklePatriciaTree.DB.LevelDB
   """
   @spec new(DB.db, root_hash) :: __MODULE__.t
   def new(db={_, _}, root_hash \\ @empty_trie) do
-    %__MODULE__{db: db, root_hash: root_hash}
+    %__MODULE__{db: db, root_hash: root_hash} |> store
   end
 
   @doc """
@@ -109,9 +112,18 @@ defmodule MerklePatriciaTree.Trie do
   end
 
   @doc """
-  Updates a trie by setting key equal to value.
+  Updates a trie by setting key equal to value. If value is nil,
+  we will instead remove `key` from the trie.
   """
-  @spec update(__MODULE__.t, __MODULE__.key, ExRLP.t) :: __MODULE__.t
+  @spec update(__MODULE__.t, __MODULE__.key, ExRLP.t | nil) :: __MODULE__.t
+  def update(trie, key, nil) do
+    Node.decode_trie(trie)
+    |> Destroyer.remove_key(Helper.get_nibbles(key), trie)
+    |> Node.encode_node(trie)
+    |> into(trie)
+    |> store
+  end
+
   def update(trie, key, value) do
     # We're going to recursively walk toward our key,
     # then we'll add our value (either a new leaf or the value
@@ -122,6 +134,17 @@ defmodule MerklePatriciaTree.Trie do
     |> Builder.put_key(Helper.get_nibbles(key), value, trie)
     |> Node.encode_node(trie)
     |> into(trie)
+    |> store
+  end
+
+  def store(trie) do
+    root_hash = if not is_binary(trie.root_hash), do: ExRLP.encode(trie.root_hash), else: trie.root_hash
+
+    if byte_size(root_hash) < MerklePatriciaTree.Trie.Storage.max_rlp_len do
+      %{trie | root_hash: root_hash |> MerklePatriciaTree.Trie.Storage.store(trie.db)}
+    else
+      trie
+    end
   end
 
 end
