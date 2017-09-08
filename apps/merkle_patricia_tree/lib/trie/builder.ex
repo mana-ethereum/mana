@@ -21,6 +21,7 @@ defmodule MerklePatriciaTree.Trie.Builder do
 
   This may radically change the structure of the trie.
   """
+  @spec put_key(Node.trie_node, Trie.key, ExRLP.t, Trie.t) :: Node.trie_node
   def put_key(trie_node, key, value, trie) do
     trie_put_key(trie_node, key, value, trie)
   end

@@ -5,12 +5,7 @@ defmodule MerklePatriciaTreeTest do
 
   @passing_tests %{
     anyorder: :all,
-    test: [
-      :emptyValues,
-      # :branchingTests,
-      # :jeff,
-      :"insert-middle-leaf",
-    ]
+    test: :all
   }
 
   test "Ethereum Common Tests" do

@@ -12,6 +12,7 @@ defmodule MerklePatriciaTree.Trie.Destroyer do
   """
   alias MerklePatriciaTree.Trie
   alias MerklePatriciaTree.Trie.Node
+  alias MerklePatriciaTree.ListHelper
 
   @empty_branch <<>>
 
@@ -20,6 +21,7 @@ defmodule MerklePatriciaTree.Trie.Destroyer do
 
   This may radically change the structure of the trie.
   """
+  @spec remove_key(Node.trie_node, Trie.key, Trie.t) :: Node.trie_node
   def remove_key(trie_node, key, trie) do
     trie_remove_key(trie_node, key, trie)
   end
@@ -30,27 +32,29 @@ defmodule MerklePatriciaTree.Trie.Destroyer do
   end
 
   # This key doesn't exist, do nothing.
-  defp trie_remove_key({:leaf, leaf_prefix, value}, prefix, _trie) do
+  defp trie_remove_key({:leaf, leaf_prefix, value}, _prefix, _trie) do
     {:leaf, leaf_prefix, value}
   end
 
   # Shed shared prefix and continue removal operation
-  defp trie_remove_key({:ext, ext_prefix, node_hash}, [ext_prefix | remaining_prefix], trie) do
-    existing_node = Node.decode_trie(node_hash |> Trie.into(trie))
-    updated_node = trie_remove_key(existing_node, remaining_prefix, trie)
+  defp trie_remove_key({:ext, ext_prefix, node_hash}, key_prefix, trie) do
+    {_matching_prefix, ext_tl, remaining_tl} = ListHelper.overlap(ext_prefix, key_prefix)
 
-    # Handle the potential cases of children
-    case updated_node do
-      :empty -> :empty
-      {:leaf, leaf_prefix, leaf_value} -> {:leaf, ext_prefix ++ leaf_prefix, leaf_value}
-      {:ext, new_ext_prefix, new_ext_node_hash} -> {:ext, ext_prefix ++ new_ext_prefix, new_ext_node_hash}
-      els -> {:ext, ext_prefix, els}
+    unless length(ext_tl) == 0 do
+      # Prefix doesn't match ext, do nothing.
+      {:ext, ext_prefix, node_hash}
+    else
+      existing_node = Node.decode_trie(node_hash |> Trie.into(trie))
+      updated_node = trie_remove_key(existing_node, remaining_tl, trie)
+
+      # Handle the potential cases of children
+      case updated_node do
+        :empty -> :empty
+        {:leaf, leaf_prefix, leaf_value} -> {:leaf, ext_prefix ++ leaf_prefix, leaf_value}
+        {:ext, new_ext_prefix, new_ext_node_hash} -> {:ext, ext_prefix ++ new_ext_prefix, new_ext_node_hash}
+        els -> {:ext, ext_prefix, els |> Node.encode_node(trie)}
+      end
     end
-  end
-
-  # Prefix doesn't match ext, do nothing.
-  defp trie_remove_key({:ext, ext_prefix, node_hash}, _prefix, _trie) do
-    {:ext, ext_prefix, node_hash}
   end
 
   # Remove from a branch when directly on value
@@ -59,12 +63,11 @@ defmodule MerklePatriciaTree.Trie.Destroyer do
   end
 
   # Remove beneath a branch
-  # TODO: Handle removing when only have one branch option left
   defp trie_remove_key({:branch, branches}, [prefix_hd|prefix_tl], trie) when length(branches) == 17 do
     updated_branches = List.update_at(branches, prefix_hd, fn branch ->
       branch_node = branch |> Trie.into(trie) |> Node.decode_trie
 
-      remove_key(branch_node, prefix_tl, trie) |> Node.encode_node(trie)
+      trie_remove_key(branch_node, prefix_tl, trie) |> Node.encode_node(trie)
     end)
 
     non_blank_branches =
@@ -83,14 +86,19 @@ defmodule MerklePatriciaTree.Trie.Destroyer do
         # We just have a node we need to percolate up
         {branch_node, i} = List.first(non_blank_branches)
 
-        # TODO: This is illegal since ext has to have at least two items
-        {:ext, [i], branch_node}
+        decoded_branch_node = Node.decode_trie(branch_node |> Trie.into(trie))
+
+        case decoded_branch_node do
+          {:leaf, leaf_prefix, leaf_value} -> {:leaf, [i | leaf_prefix], leaf_value}
+          {:ext, ext_prefix, ext_node_hash} -> {:ext, [i | ext_prefix], ext_node_hash}
+          {:branch, _branches} -> {:ext, [i], branch_node} # TODO: Is this illegal since ext has to have at least two nibbles?
+        end
       true -> {:branch, updated_branches}
     end
   end
 
   # Merge into empty to create a leaf
-  defp trie_remove_key(:empty, _prefix, _value, _trie) do
+  defp trie_remove_key(:empty, _prefix, _trie) do
     :empty
   end
 

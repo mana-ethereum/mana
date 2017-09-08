@@ -65,7 +65,7 @@ defmodule MerklePatriciaTree.Trie.Storage do
 
     iex> MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db(), <<>>)
     ...> |> MerklePatriciaTree.Trie.Storage.get_node()
-    nil
+    <<>>
 
     iex> MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db(), <<130, 72, 105>>)
     ...> |> MerklePatriciaTree.Trie.Storage.get_node()
