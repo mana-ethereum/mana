@@ -19,18 +19,19 @@ defmodule MerklePatriciaTree.Trie do
 
   @type key :: binary()
 
-  @empty_trie MerklePatriciaTree.Trie.Node.encode_node(:empty, nil)
+  @empty_trie <<>>
 
   @doc """
   Returns the canonical empty trie.
 
   ## Examples
 
-      iex> %MerklePatriciaTree.Trie{root_hash: MerklePatriciaTree.Trie.empty_trie} |> MerklePatriciaTree.Trie.Node.decode_trie()
-      :empty
+      iex> db = MerklePatriciaTree.Test.random_ets_db()
+      iex> MerklePatriciaTree.Trie.empty_trie_root_hash(db)
+      <<86, 232, 31, 23, 27, 204, 85, 166, 255, 131, 69, 230, 146, 192, 248, 110, 91, 72, 224, 27, 153, 108, 173, 192, 1, 98, 47, 181, 227, 99, 180, 33>>
   """
-  @spec empty_trie() :: root_hash
-  def empty_trie(), do: @empty_trie
+  @spec empty_trie_root_hash(DB.db) :: root_hash
+  def empty_trie_root_hash(db), do: new(db).root_hash
 
   @doc """
   Contructs a new unitialized trie.
