@@ -3,7 +3,7 @@ defmodule MerklePatriciaTree.Mixfile do
 
   def project do
     [app: :merkle_patricia_tree,
-      version: "0.2.3",
+      version: "0.2.4",
       elixir: "~> 1.4",
       description: "Ethereum's Merkle Patricia Trie data structure",
       package: [
