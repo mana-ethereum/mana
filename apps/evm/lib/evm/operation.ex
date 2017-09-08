@@ -261,7 +261,7 @@ defmodule EVM.Operation do
       iex> EVM.Operation.normalize_op_result(1, [])
       %{stack: [1]}
       iex> EVM.Operation.normalize_op_result([1,2], [])
-      %{stack: [2, 1]}
+      %{stack: [1, 2]}
 
   """
   @spec normalize_op_result(EVM.val | list(EVM.val) | Operation.op_result, EVM.stack) :: Operation.op_result

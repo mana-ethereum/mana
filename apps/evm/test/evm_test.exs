@@ -5,6 +5,7 @@ defmodule EvmTest do
     sha3: :all,
     arithmetic: :all,
     bitwise_logic_operation: :all,
+    push_dup_swap: :all,
   }
 
 

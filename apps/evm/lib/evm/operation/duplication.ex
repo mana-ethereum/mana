@@ -5,11 +5,11 @@ defmodule EVM.Operation.Duplication do
 
   ## Examples
 
-      iex> EVM.Operation.Duplication.dup_n(2, [5], %{})
-      [5, 5]
+      iex> EVM.Operation.Duplication.dup([1, 2, 3], %{})
+      [3, 2, 1, 1]
   """
-  @spec dup_n(integer(), Operation.stack_args, Operation.vm_map) :: Operation.op_result
-  def dup_n(n, [s0], _) do
-    for _ <- 1..n, do: s0
+  @spec dup(Operation.stack_args, Operation.vm_map) :: Operation.op_result
+  def dup(list = [ head | _ ], _) do
+    :lists.reverse([head | list])
   end
 end

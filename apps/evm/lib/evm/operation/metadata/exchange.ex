@@ -4,7 +4,8 @@ defmodule EVM.Operation.Metadata.Exchange do
       id: n + 0x8f, # 0x90..0x9e
       description: "Exchange #{n}st and #{n+1}nd stack items.",
       sym: :"swap#{n}",
-      input_count: 2,
+      fun: :swap,
+      input_count: n + 1,
       output_count: 2,
       group: :exchange,
     }
