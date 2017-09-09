@@ -7,13 +7,12 @@ defmodule Blockchain.Account do
   alias MerklePatriciaTree.Trie
 
   @empty_keccak BitHelper.kec(<<>>)
-  @empty_trie   <<>> # TODO: Is this the empty trie?
 
   # State defined in Section 4.1 of the Yellow Paper
   defstruct [
     nonce: 0,                  # σn
     balance: 0,                # σb
-    storage_root: @empty_trie, # σs
+    storage_root: nil,         # σs
     code_hash: @empty_keccak,  # σc
   ]
 

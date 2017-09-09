@@ -51,7 +51,7 @@ defmodule Blockchain.Chain do
       author: EVM.address,
       timestamp: integer(),
       parent_hash: EVM.hash,
-      extra_data: :binary,
+      extra_data: binary(),
       gas_limit: EVM.Gas.t
     },
     nodes: [String.t],
@@ -129,7 +129,7 @@ defmodule Blockchain.Chain do
       author: genesis_map["author"] |> load_address,
       timestamp: genesis_map["timestamp"] |> load_hex,
       parent_hash: genesis_map["parentHash"] |> load_raw_hex,
-      extra_data: genesis_map["extraData"] |> load_hex,
+      extra_data: genesis_map["extraData"] |> load_raw_hex,
       gas_limit: genesis_map["gasLimit"] |> load_hex,
     }
   end

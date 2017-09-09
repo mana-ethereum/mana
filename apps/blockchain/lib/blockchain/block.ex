@@ -6,6 +6,7 @@ defmodule Blockchain.Block do
   """
 
   alias Block.Header
+  alias Blockchain.Account
   alias Blockchain.Transaction
   alias Blockchain.Transaction.Receipt
   alias MerklePatriciaTree.Trie
@@ -318,7 +319,65 @@ defmodule Blockchain.Block do
     end
   end
 
-  # TODO: gen_genesis_block
+  @doc """
+  Creates a genesis block for a given chain.
+
+  ## Examples
+
+      iex> db = MerklePatriciaTree.Test.random_ets_db()
+      iex> chain = Blockchain.Chain.load_chain(:ropsten)
+      iex> Blockchain.Block.gen_genesis_block(chain, db)
+      %Blockchain.Block{
+        header: %Block.Header{
+          number: 0,
+          beneficiary: <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0>>,
+          difficulty: 1048576,
+          extra_data: "55555555555555555555555555555555",
+          gas_limit: 16777216,
+          parent_hash: <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0>>,
+          state_root: <<203, 15, 71, 134, 242, 5, 158, 111, 222, 90, 195, 144, 91, 122, 188, 164, 125, 216, 241, 173, 115, 243, 21, 91, 254, 199, 224, 149, 79, 148, 64, 169>>,
+          transactions_root: "a",
+          receipts_root: "b",
+        },
+        ommers: [],
+        transactions: []
+      }
+  """
+  @spec gen_genesis_block(Chain.t, DB.db) :: t
+  def gen_genesis_block(chain, db) do
+    empty_trie_root_hash = Trie.empty_trie_root_hash(db)
+
+    block = %Blockchain.Block{
+      header: %Block.Header{
+        number: 0,
+        parent_hash: chain.genesis[:parent_hash],
+        state_root: empty_trie_root_hash,
+        timestamp: chain.genesis[:timestamp],
+        extra_data: chain.genesis[:extra_data],
+        beneficiary: chain.genesis[:author],
+        difficulty: chain.genesis[:difficulty],
+        gas_limit: chain.genesis[:gas_limit]
+      },
+    }
+
+    trie = Trie.new(db, block.header.state_root)
+
+    final_trie = Enum.reduce(chain.accounts |> Enum.into([]), trie, fn {address, account_map}, trie ->
+        account = %Account{
+          nonce: account_map[:nonce],
+          balance: account_map[:balance],
+          storage_root: empty_trie_root_hash,
+        }
+
+        Account.put_account(
+          trie,
+          address,
+          account
+        )
+    end)
+
+    %{ block | header: %{ block.header | state_root: final_trie.root_hash } }
+  end
 
   @doc """
   Creates a new block from a parent block. This will handle setting
