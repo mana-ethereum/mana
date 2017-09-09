@@ -1,3 +1,9 @@
+# 0.2.5
+* Add back empty trie function :(
+# 0.2.4
+* Remove empty trie function
+# 0.2.3
+* Add key deletion and tie out rest of tests
 # 0.2.2
 * Add typespec for an empty trie.
 # 0.2.1
