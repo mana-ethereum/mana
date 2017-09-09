@@ -48,6 +48,7 @@ defmodule Blockchain.Mixfile do
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
       {:ex_rlp, "~> 0.2.1"},
       {:evm, "~> 0.1.5"},
+      {:poison, "~> 3.1.0"},
     ]
   end
 end
