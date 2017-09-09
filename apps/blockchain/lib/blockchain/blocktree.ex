@@ -124,51 +124,54 @@ defmodule Blockchain.Blocktree do
   ## Examples
 
       # For a genesis block
-      iex> db = MerklePatriciaTree.Test.random_ets_db()
+      iex> trie = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
+      iex> chain = Blockchain.Chain.load_chain(:ropsten)
       iex> gen_block = %Blockchain.Block{header: %Block.Header{number: 0, parent_hash: <<0::256>>, beneficiary: <<2, 3, 4>>, difficulty: 100, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>}}
       iex> tree = Blockchain.Blocktree.new_tree()
-      iex> {:ok, tree_1} = Blockchain.Blocktree.verify_and_add_block(tree, gen_block, db)
+      iex> {:ok, tree_1} = Blockchain.Blocktree.verify_and_add_block(tree, chain, gen_block, trie.db)
       iex> Blockchain.Blocktree.inspect_tree(tree_1)
-      [:root, [{0, <<89, 182, 13, 239, 192, 71, 245, 159, 65, 228, 40, 174, 81, 122,
-                      116, 133, 45, 4, 91, 192, 172, 225, 93, 228, 63, 16, 242, 184,
-                      148, 210, 193, 175>>}]]
+      [:root, [{0, <<1, 129, 136, 153, 153, 40, 248, 52, 128, 9, 107, 22, 235, 114,
+                      139, 207, 233, 135, 83, 220, 96, 251, 4, 114, 94, 198, 64, 249,
+                      206, 247, 148, 14>>}]]
 
       # With a valid block
-      iex> db = MerklePatriciaTree.Test.random_ets_db()
-      iex> block_1 = %Blockchain.Block{header: %Block.Header{number: 0, parent_hash: <<0::256>>, beneficiary: <<2, 3, 4>>, difficulty: 131_072, timestamp: 55, gas_limit: 200_000, mix_hash: <<1>>, nonce: <<2>>}}
-      iex> block_2 = %Blockchain.Block{header: %Block.Header{number: 1, parent_hash: block_1 |> Blockchain.Block.hash, beneficiary: <<2, 3, 4>>, difficulty: 131_136, timestamp: 65, gas_limit: 200_000, mix_hash: <<1>>, nonce: <<2>>}}
+      iex> trie = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
+      iex> chain = Blockchain.Chain.load_chain(:ropsten)
+      iex> block_1 = %Blockchain.Block{header: %Block.Header{number: 0, parent_hash: <<0::256>>, beneficiary: <<2, 3, 4>>, difficulty: 1_048_576, timestamp: 55, gas_limit: 200_000, mix_hash: <<1>>, nonce: <<2>>}}
+      iex> block_2 = %Blockchain.Block{header: %Block.Header{number: 1, parent_hash: block_1 |> Blockchain.Block.hash, beneficiary: <<2, 3, 4>>, difficulty: 1_049_088, timestamp: 65, gas_limit: 200_000, mix_hash: <<1>>, nonce: <<2>>}}
       iex> tree = Blockchain.Blocktree.new_tree()
-      iex> {:ok, tree_1} = Blockchain.Blocktree.verify_and_add_block(tree, block_1, db)
-      iex> {:ok, tree_2} = Blockchain.Blocktree.verify_and_add_block(tree_1, block_2, db)
+      iex> {:ok, tree_1} = Blockchain.Blocktree.verify_and_add_block(tree, chain, block_1, trie.db)
+      iex> {:ok, tree_2} = Blockchain.Blocktree.verify_and_add_block(tree_1, chain, block_2, trie.db)
       iex> Blockchain.Blocktree.inspect_tree(tree_2)
       [:root,
             [{0,
-              <<225, 253, 252, 61, 241, 46, 59, 42, 251, 150, 211, 254, 199, 72,
-                253, 8, 39, 18, 180, 38, 7, 112, 155, 231, 236, 117, 239, 201,
-                146, 55, 178, 122>>},
+              <<53, 53, 25, 227, 95, 226, 64, 31, 15, 114, 205, 158, 21, 254,
+                185, 198, 103, 181, 178, 2, 54, 221, 108, 93, 3, 140, 236, 95,
+                255, 233, 123, 244>>},
              [{1,
-               <<229, 143, 106, 171, 44, 213, 138, 133, 236, 79, 132, 208, 244,
-                 55, 61, 24, 61, 83, 30, 143, 71, 220, 36, 238, 80, 121, 15,
-                 156, 100, 132, 83, 208>>}]]]
+               <<137, 182, 107, 112, 182, 227, 198, 144, 14, 224, 253, 163, 17,
+                 202, 157, 193, 89, 150, 7, 55, 101, 37, 121, 137, 94, 194, 182,
+                 167, 166, 31, 80, 250>>}]]]
 
       # With a invalid block
-      iex> db = MerklePatriciaTree.Test.random_ets_db()
+      iex> trie = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
+      iex> chain = Blockchain.Chain.load_chain(:ropsten)
       iex> block_1 = %Blockchain.Block{header: %Block.Header{number: 0, parent_hash: <<0::256>>, beneficiary: <<2, 3, 4>>, difficulty: 100, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>}}
       iex> block_2 = %Blockchain.Block{header: %Block.Header{number: 1, parent_hash: block_1 |> Blockchain.Block.hash, beneficiary: <<2, 3, 4>>, difficulty: 110, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>}}
       iex> tree = Blockchain.Blocktree.new_tree()
-      iex> {:ok, tree_1} = Blockchain.Blocktree.verify_and_add_block(tree, block_1, db)
-      iex> Blockchain.Blocktree.verify_and_add_block(tree_1, block_2, db)
-      {:invalid, [:invalid_gas_limit, :child_timestamp_invalid]}
+      iex> {:ok, tree_1} = Blockchain.Blocktree.verify_and_add_block(tree, chain, block_1, trie.db)
+      iex> Blockchain.Blocktree.verify_and_add_block(tree_1, chain, block_2, trie.db)
+      {:invalid, [:invalid_difficulty, :invalid_gas_limit, :child_timestamp_invalid]}
   """
-  @spec verify_and_add_block(t, Block.t, MerklePatriciaTree.DB.db) :: {:ok, t} | {:invalid, [atom()]}
-  def verify_and_add_block(blocktree, block, db) do
+  @spec verify_and_add_block(t, Chain.t, Block.t, MerklePatriciaTree.DB.db) :: {:ok, t} | {:invalid, [atom()]}
+  def verify_and_add_block(blocktree, chain, block, db) do
     parent = case Blockchain.Block.get_parent_block(block, db) do
       :genesis -> nil
       {:ok, parent} -> parent
       els -> raise InvalidBlockError, "Failed to find parent block: #{inspect els}"
     end
 
-    with :valid <- Block.is_fully_valid?(block, parent, db) do
+    with :valid <- Block.is_fully_valid?(block, chain, parent, db) do
       {:ok, block_hash} = Block.put_block(block, db)
       block = %{block | block_hash: block_hash} # Cache computed block hash
 

@@ -25,7 +25,7 @@ defmodule Blockchain.Contract do
       ...> |> Blockchain.Account.put_account(<<0x10::160>>, %Blockchain.Account{balance: 11, nonce: 5})
       ...> |> Blockchain.Contract.create_contract(<<0x10::160>>, <<0x10::160>>, 1000, 1, 5, EVM.MachineCode.compile([:push1, 3, :push1, 5, :add, :push1, 0x00, :mstore, :push1, 0, :push1, 32, :return]), 5, %Block.Header{nonce: 1})
       {
-        %MerklePatriciaTree.Trie{db: {MerklePatriciaTree.DB.ETS, :contract_create_test}, root_hash: <<51, 108, 25, 209, 241, 95, 9, 165, 51, 115, 44, 245, 217, 223, 195, 136, 228, 130, 203, 27, 58, 205, 190, 115, 135, 234, 156, 138, 70, 254, 70, 251>>},
+        %MerklePatriciaTree.Trie{db: {MerklePatriciaTree.DB.ETS, :contract_create_test}, root_hash: <<64, 49, 33, 207, 5, 137, 95, 252, 184, 52, 205, 65, 213, 214, 70, 53, 149, 5, 134, 181, 68, 89, 98, 80, 161, 11, 222, 109, 238, 48, 163, 175>>},
         976,
         %EVM.SubState{}
       }
@@ -99,7 +99,7 @@ defmodule Blockchain.Contract do
       ...> |> Blockchain.Account.put_code(<<0x20::160>>, EVM.MachineCode.compile([:push1, 3, :push1, 5, :add, :push1, 0x00, :mstore, :push1, 0, :push1, 32, :return]))
       ...> |> Blockchain.Contract.message_call(<<0x10::160>>, <<0x10::160>>, <<0x20::160>>, <<0x20::160>>, 1000, 1, 5, 5, <<1, 2, 3>>, 5, %Block.Header{nonce: 1})
       {
-        %MerklePatriciaTree.Trie{db: {MerklePatriciaTree.DB.ETS, :message_call_test}, root_hash: <<116, 36, 231, 2, 3, 30, 24, 223, 195, 56, 133, 194, 241, 62, 90, 70, 121, 41, 251, 160, 7, 56, 140, 55, 162, 225, 115, 154, 194, 14, 189, 32>>},
+        %MerklePatriciaTree.Trie{db: {MerklePatriciaTree.DB.ETS, :message_call_test}, root_hash: <<108, 131, 197, 239, 154, 8, 22, 248, 188, 221, 187, 170, 143, 122, 48, 4, 240, 225, 84, 245, 210, 66, 141, 167, 8, 250, 140, 173, 197, 126, 248, 233>>},
         976,
         %EVM.SubState{},
         <<0x08::256>>

@@ -7,12 +7,13 @@ defmodule Blockchain.Account do
   alias MerklePatriciaTree.Trie
 
   @empty_keccak BitHelper.kec(<<>>)
+  @empty_trie MerklePatriciaTree.Trie.empty_trie_root_hash
 
   # State defined in Section 4.1 of the Yellow Paper
   defstruct [
     nonce: 0,                  # σn
     balance: 0,                # σb
-    storage_root: nil,         # σs
+    storage_root: @empty_trie, # σs
     code_hash: @empty_keccak,  # σc
   ]
 
@@ -54,7 +55,12 @@ defmodule Blockchain.Account do
       [5, 10, <<0x00, 0x01>>, <<0x01, 0x02>>]
 
       iex> Blockchain.Account.serialize(%Blockchain.Account{})
-      [0, 0, <<>>, <<197, 210, 70, 1, 134, 247, 35, 60, 146, 126, 125, 178, 220, 199, 3, 192, 229, 0, 182, 83, 202, 130, 39, 59, 123, 250, 216, 4, 93, 133, 164, 112>>]
+      [
+        0,
+        0,
+        <<86, 232, 31, 23, 27, 204, 85, 166, 255, 131, 69, 230, 146, 192, 248, 110, 91, 72, 224, 27, 153, 108, 173, 192, 1, 98, 47, 181, 227, 99, 180, 33>>,
+        <<197, 210, 70, 1, 134, 247, 35, 60, 146, 126, 125, 178, 220, 199, 3, 192, 229, 0, 182, 83, 202, 130, 39, 59, 123, 250, 216, 4, 93, 133, 164, 112>>
+      ]
   """
   @spec serialize(t) :: ExRLP.t
   def serialize(account) do
@@ -75,7 +81,7 @@ defmodule Blockchain.Account do
       iex> Blockchain.Account.deserialize([<<5>>, <<10>>, <<0x00, 0x01>>, <<0x01, 0x02>>])
       %Blockchain.Account{nonce: 5, balance: 10, storage_root: <<0x00, 0x01>>, code_hash: <<0x01, 0x02>>}
 
-      iex> Blockchain.Account.deserialize([<<0>>, <<0>>, <<>>, <<197, 210, 70, 1, 134, 247, 35, 60, 146, 126, 125, 178, 220, 199, 3, 192, 229, 0, 182, 83, 202, 130, 39, 59, 123, 250, 216, 4, 93, 133, 164, 112>>])
+      iex> Blockchain.Account.deserialize([<<0>>, <<0>>, <<86, 232, 31, 23, 27, 204, 85, 166, 255, 131, 69, 230, 146, 192, 248, 110, 91, 72, 224, 27, 153, 108, 173, 192, 1, 98, 47, 181, 227, 99, 180, 33>>, <<197, 210, 70, 1, 134, 247, 35, 60, 146, 126, 125, 178, 220, 199, 3, 192, 229, 0, 182, 83, 202, 130, 39, 59, 123, 250, 216, 4, 93, 133, 164, 112>>])
       %Blockchain.Account{}
   """
   @spec deserialize(ExRLP.t) :: t
