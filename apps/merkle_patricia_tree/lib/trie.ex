@@ -20,18 +20,23 @@ defmodule MerklePatriciaTree.Trie do
   @type key :: binary()
 
   @empty_trie <<>>
+  @empty_trie_root_hash @empty_trie |> ExRLP.encode |> :keccakf1600.sha3_256
 
   @doc """
   Returns the canonical empty trie.
 
+  Note: this root hash will not be accessible unless you have stored
+  the result in a db. If you are initializing a new trie, instead of
+  checking a result is empty, it's strongly recommended you use
+  `Trie.new(db).root_hash`.
+
   ## Examples
 
-      iex> db = MerklePatriciaTree.Test.random_ets_db()
-      iex> MerklePatriciaTree.Trie.empty_trie_root_hash(db)
+      iex> MerklePatriciaTree.Trie.empty_trie_root_hash()
       <<86, 232, 31, 23, 27, 204, 85, 166, 255, 131, 69, 230, 146, 192, 248, 110, 91, 72, 224, 27, 153, 108, 173, 192, 1, 98, 47, 181, 227, 99, 180, 33>>
   """
-  @spec empty_trie_root_hash(DB.db) :: root_hash
-  def empty_trie_root_hash(db), do: new(db).root_hash
+  @spec empty_trie_root_hash() :: root_hash
+  def empty_trie_root_hash(), do: @empty_trie_root_hash
 
   @doc """
   Contructs a new unitialized trie.
