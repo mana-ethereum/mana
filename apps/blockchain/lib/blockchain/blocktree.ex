@@ -137,21 +137,21 @@ defmodule Blockchain.Blocktree do
       # With a valid block
       iex> trie = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
       iex> chain = Blockchain.Chain.load_chain(:ropsten)
-      iex> block_1 = %Blockchain.Block{header: %Block.Header{number: 0, parent_hash: <<0::256>>, beneficiary: <<2, 3, 4>>, difficulty: 1_048_576, timestamp: 55, gas_limit: 200_000, mix_hash: <<1>>, nonce: <<2>>}}
-      iex> block_2 = %Blockchain.Block{header: %Block.Header{number: 1, parent_hash: block_1 |> Blockchain.Block.hash, beneficiary: <<2, 3, 4>>, difficulty: 1_049_088, timestamp: 65, gas_limit: 200_000, mix_hash: <<1>>, nonce: <<2>>}}
+      iex> block_1 = %Blockchain.Block{header: %Block.Header{number: 0, parent_hash: <<0::256>>, beneficiary: <<2, 3, 4>>, difficulty: 1_048_576, timestamp: 0, gas_limit: 200_000, mix_hash: <<1>>, nonce: <<2>>}}
+      iex> block_2 = %Blockchain.Block{header: %Block.Header{number: 1, parent_hash: block_1 |> Blockchain.Block.hash, beneficiary: <<2::160>>, difficulty: 997_888, timestamp: 1_479_642_530, gas_limit: 200_000, mix_hash: <<1>>, nonce: <<2>>}} |> Blockchain.Block.add_rewards_to_block(trie.db)
       iex> tree = Blockchain.Blocktree.new_tree()
       iex> {:ok, tree_1} = Blockchain.Blocktree.verify_and_add_block(tree, chain, block_1, trie.db)
       iex> {:ok, tree_2} = Blockchain.Blocktree.verify_and_add_block(tree_1, chain, block_2, trie.db)
       iex> Blockchain.Blocktree.inspect_tree(tree_2)
       [:root,
             [{0,
-              <<53, 53, 25, 227, 95, 226, 64, 31, 15, 114, 205, 158, 21, 254,
-                185, 198, 103, 181, 178, 2, 54, 221, 108, 93, 3, 140, 236, 95,
-                255, 233, 123, 244>>},
+              <<83, 71, 159, 185, 130, 186, 5, 120, 234, 189, 77, 106, 181, 13,
+                127, 100, 200, 212, 235, 203, 206, 71, 81, 92, 225, 242, 104,
+                166, 124, 207, 199, 169>>},
              [{1,
-               <<137, 182, 107, 112, 182, 227, 198, 144, 14, 224, 253, 163, 17,
-                 202, 157, 193, 89, 150, 7, 55, 101, 37, 121, 137, 94, 194, 182,
-                 167, 166, 31, 80, 250>>}]]]
+               <<29, 1, 14, 142, 25, 146, 134, 163, 212, 244, 40, 157, 142, 67,
+                 58, 160, 68, 48, 107, 213, 136, 161, 200, 89, 25, 28, 127, 251,
+                 149, 232, 16, 114>>}]]]
 
       # With a invalid block
       iex> trie = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
