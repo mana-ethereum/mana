@@ -333,12 +333,28 @@ defmodule Block.Header do
   def get_difficulty(header, parent_header, initial_difficulty \\ @initial_difficulty, minimum_difficulty \\ @minimum_difficulty, difficulty_bound_divisor \\ @difficulty_bound_divisor, homestead_block \\ @homestead_block) do
     cond do
       header.number == 0 -> initial_difficulty
-      is_before_homestead?(header, homestead_block) -> max(minimum_difficulty, parent_header.difficulty + difficulty_x(parent_header.difficulty, difficulty_bound_divisor) * difficulty_s1(header, parent_header) + difficulty_e(header))
-      true -> max(minimum_difficulty, parent_header.difficulty + difficulty_x(parent_header.difficulty, difficulty_bound_divisor) * difficulty_s2(header, parent_header) + difficulty_e(header))
+      is_before_homestead?(header, homestead_block) ->
+        # Find the delta from parent block
+        difficulty_delta = difficulty_x(parent_header.difficulty, difficulty_bound_divisor) * difficulty_s1(header, parent_header) + difficulty_e(header)
+
+        # Add delta to parent block
+        next_difficulty = parent_header.difficulty + difficulty_delta
+
+        # Return next difficulty, capped at minimum
+        max(minimum_difficulty, next_difficulty)
+      true ->
+        # Find the delta from parent block (note: we use difficulty_s2 since we're after Homestead)
+        difficulty_delta = difficulty_x(parent_header.difficulty, difficulty_bound_divisor) * difficulty_s2(header, parent_header) + difficulty_e(header)
+
+        # Add delta to parent's difficulty
+        next_difficulty = parent_header.difficulty + difficulty_delta
+
+        # Return next difficulty, capped at minimum
+        max(minimum_difficulty, next_difficulty)
     end
   end
 
-  # Eq.(42) ς1
+  # Eq.(42) ς1 - Effectively decides if blocks are being mined too quicky or too slower
   @spec difficulty_s1(t, t) :: integer()
   defp difficulty_s1(header, parent_header) do
     if header.timestamp < ( parent_header.timestamp + 13 ), do: 1, else: -1
@@ -351,11 +367,11 @@ defmodule Block.Header do
     max(1 - s, -99)
   end
 
-  # Eq.(41) x
+  # Eq.(41) x - Creates some multiplier for how much we should change difficulty based on previous difficulty
   @spec difficulty_x(integer(), integer()) :: integer()
   defp difficulty_x(parent_difficulty, difficulty_bound_divisor), do: MathHelper.floor(parent_difficulty / difficulty_bound_divisor)
 
-  # Eq.(44) ε
+  # Eq.(44) ε - Adds a delta to ensure we're increasing difficulty over time
   @spec difficulty_e(t) :: integer()
   defp difficulty_e(header) do
     MathHelper.floor(
