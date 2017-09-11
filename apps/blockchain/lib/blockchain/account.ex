@@ -108,12 +108,12 @@ defmodule Blockchain.Account do
   ## Examples
 
       iex> MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
-      ...> |> MerklePatriciaTree.Trie.update(<<0x01::160>>, ExRLP.encode([5, 6, <<1>>, <<2>>]))
+      ...> |> MerklePatriciaTree.Trie.update(<<0x01::160>> |> BitHelper.kec, ExRLP.encode([5, 6, <<1>>, <<2>>]))
       ...> |> Blockchain.Account.get_account(<<0x01::160>>)
       %Blockchain.Account{nonce: 5, balance: 6, storage_root: <<0x01>>, code_hash: <<0x02>>}
 
       iex> MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
-      ...> |> MerklePatriciaTree.Trie.update(<<0x01::160>>, <<>>)
+      ...> |> MerklePatriciaTree.Trie.update(<<0x01::160>> |> BitHelper.kec, <<>>)
       ...> |> Blockchain.Account.get_account(<<0x01::160>>)
       nil
 
@@ -123,7 +123,7 @@ defmodule Blockchain.Account do
   """
   @spec get_account(EVM.state, EVM.address) :: t | nil
   def get_account(state, address) do
-    case Trie.get(state, address) do
+    case Trie.get(state, address |> BitHelper.kec) do
       nil -> nil
       <<>> -> nil # TODO: Is this the same as deleting the account?
       encoded_account ->
@@ -138,7 +138,7 @@ defmodule Blockchain.Account do
 
   ## Examples
 
-      iex> state = MerklePatriciaTree.Trie.update(MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db()), <<0x01::160>>, ExRLP.encode([5, 6, <<1>>, <<2>>]))
+      iex> state = MerklePatriciaTree.Trie.update(MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db()), <<0x01::160>> |> BitHelper.kec, ExRLP.encode([5, 6, <<1>>, <<2>>]))
       iex> Blockchain.Account.get_accounts(state, [<<0x01::160>>, <<0x02::160>>])
       [
         %Blockchain.Account{nonce: 5, balance: 6, storage_root: <<0x01>>, code_hash: <<0x02>>},
@@ -157,7 +157,7 @@ defmodule Blockchain.Account do
   ## Examples
 
       iex> state = Blockchain.Account.put_account(MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db()), <<0x01::160>>, %Blockchain.Account{nonce: 5, balance: 6, storage_root: <<0x01>>, code_hash: <<0x02>>})
-      iex> MerklePatriciaTree.Trie.get(state, <<0x01::160>>) |> ExRLP.decode
+      iex> MerklePatriciaTree.Trie.get(state, <<0x01::160>> |> BitHelper.kec) |> ExRLP.decode
       [<<5>>, <<6>>, <<0x01>>, <<0x02>>]
   """
   @spec put_account(EVM.state, EVM.address, t) :: EVM.state
@@ -166,7 +166,7 @@ defmodule Blockchain.Account do
       |> serialize()
       |> ExRLP.encode()
 
-    Trie.update(state, address, encoded_account)
+    Trie.update(state, address |> BitHelper.kec, encoded_account)
   end
 
   @doc """
@@ -189,7 +189,7 @@ defmodule Blockchain.Account do
   """
   @spec del_account(EVM.state, EVM.address) :: EVM.state
   def del_account(state, address) do
-    Trie.update(state, address, <<>>)
+    Trie.update(state, address |> BitHelper.kec, <<>>)
   end
 
   @doc """
@@ -484,7 +484,71 @@ defmodule Blockchain.Account do
           machine_code when is_binary(machine_code) -> {:ok, machine_code}
         end
     end
+  end
 
+  @doc """
+  Stores a value in the storage root of an account. This
+  is defined in Section 4.1 under **storageRoot** in the
+  Yellow Paper.
+
+  ## Examples
+
+      iex> state = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
+      iex> updated_state = Blockchain.Account.put_storage(state, <<01::160>>, 5, 9)
+      iex> Blockchain.Account.get_storage(updated_state, <<01::160>>, 5)
+      {:ok, 9}
+  """
+  @spec put_storage(EVM.state, EVM.address, integer(), integer()) :: t
+  def put_storage(state, address, key, value) do
+    update_account(state, address, fn (acct) ->
+      updated_storage_trie = storage_put(state.db, acct.storage_root, key, value)
+
+      %{acct | storage_root: updated_storage_trie.root_hash}
+    end)
+  end
+
+  @doc """
+  Gets a value from storage root of an account. See Section
+  4.1 under **storageRoot** from the Yellow Paper.
+
+  ## Examples
+
+      iex> state = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
+      iex> updated_state = Blockchain.Account.put_storage(state, <<01::160>>, 5, 9)
+      iex> Blockchain.Account.get_storage(updated_state, <<01::160>>, 5)
+      {:ok, 9}
+
+      iex> state = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
+      iex> Blockchain.Account.get_storage(state, <<02::160>>, 5)
+      :account_not_found
+
+      iex> state = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
+      iex> updated_state = Blockchain.Account.put_storage(state, <<01::160>>, 5, 9)
+      iex> Blockchain.Account.get_storage(updated_state, <<01::160>>, 55)
+      :key_not_found
+  """
+  @spec get_storage(EVM.state, EVM.address, integer()) :: {:ok, integer()} | :account_not_found | :key_not_found
+  def get_storage(state, address, key) do
+    case get_account(state, address) do
+      nil -> :account_not_found
+      account ->
+        case storage_fetch(state.db, account.storage_root, key) do
+          nil -> :key_not_found
+          value -> {:ok, value |> :binary.decode_unsigned}
+        end
+    end
+  end
+
+  @spec storage_put(DB.db, EVM.EVM.trie_root, integer(), integer()) :: EVM.trie_root
+  defp storage_put(db, storage_root, key, value) do
+    Trie.new(db, storage_root)
+    |> Trie.update(key |> :binary.encode_unsigned |> BitHelper.kec, value |> ExRLP.encode)
+  end
+
+  @spec storage_fetch(DB.db, EVM.EVM.trie_root, integer()) :: integer() | nil
+  defp storage_fetch(db, storage_root, key) do
+    Trie.new(db, storage_root)
+    |> Trie.get(key |> :binary.encode_unsigned |> BitHelper.kec)
   end
 
 end

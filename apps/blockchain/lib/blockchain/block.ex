@@ -50,12 +50,12 @@ defmodule Blockchain.Block do
     [
       [
         nil,
-        <<197, 210, 70, 1, 134, 247, 35, 60, 146, 126, 125, 178, 220, 199, 3, 192, 229, 0, 182, 83, 202, 130, 39, 59, 123, 250, 216, 4, 93, 133, 164, 112>>,
+        <<29, 204, 77, 232, 222, 199, 93, 122, 171, 133, 181, 103, 182, 204, 212, 26, 211, 18, 69, 27, 148, 138, 116, 19, 240, 161, 66, 253, 64, 212, 147, 71>>,
         nil,
         <<86, 232, 31, 23, 27, 204, 85, 166, 255, 131, 69, 230, 146, 192, 248, 110, 91, 72, 224, 27, 153, 108, 173, 192, 1, 98, 47, 181, 227, 99, 180, 33>>,
         <<86, 232, 31, 23, 27, 204, 85, 166, 255, 131, 69, 230, 146, 192, 248, 110, 91, 72, 224, 27, 153, 108, 173, 192, 1, 98, 47, 181, 227, 99, 180, 33>>,
         <<86, 232, 31, 23, 27, 204, 85, 166, 255, 131, 69, 230, 146, 192, 248, 110, 91, 72, 224, 27, 153, 108, 173, 192, 1, 98, 47, 181, 227, 99, 180, 33>>,
-        "",
+        <<0::2048>>,
         nil,
         nil,
         0,
@@ -111,30 +111,42 @@ defmodule Blockchain.Block do
   end
 
   @doc """
-  Computes hash of a block
+  Computes hash of a block, which is simply the hash of the serialized
+  block after apply RLP.
 
-  TODO: Make better, a lot better
+  This is defined in Eq.(37) of the Yellow Paper.
 
   ## Examples
 
       iex> %Blockchain.Block{header: %Block.Header{number: 5, parent_hash: <<1, 2, 3>>, beneficiary: <<2, 3, 4>>, difficulty: 100, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>}}
       ...> |> Blockchain.Block.hash()
-      <<35, 61, 248, 160, 109, 28, 5, 252, 195, 173, 88, 108, 19, 109, 35, 249, 132, 61, 159, 255, 216, 146, 208, 251, 122, 248, 240, 243, 243, 215, 225, 194>>
+      <<78, 28, 127, 10, 192, 253, 127, 239, 254, 179, 39, 34, 245, 44, 152, 98, 128, 71, 238, 155, 100, 161, 199, 71, 243, 223, 172, 191, 74, 99, 128, 63>>
+
+      iex> %Blockchain.Block{header: %Block.Header{number: 0, parent_hash: <<1, 2, 3>>, beneficiary: <<2, 3, 4>>, difficulty: 100, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>}}
+      ...> |> Blockchain.Block.hash()
+      <<218, 225, 46, 241, 196, 160, 136, 96, 109, 216, 73, 167, 92, 174, 91, 228, 85, 112, 234, 129, 99, 200, 158, 61, 223, 166, 165, 132, 187, 24, 142, 193>>
   """
   @spec hash(t) :: EVM.hash
   def hash(block) do
-    block.header |> Header.serialize() |> ExRLP.encode |> :keccakf1600.sha3_256 # sha3
+    block.header |> Header.serialize() |> ExRLP.encode |> BitHelper.kec
   end
 
   @doc """
-  Stores a given block in the database.
+  Stores a given block in the database and returns the block hash.
+
+  This should be used if we ever want to retrieve that block in
+  the future.
+
+  Note: Blocks are identified by a hash of the block header,
+        thus we will only get the same block back if the header
+        matches what we stored.
 
   ## Examples
 
       iex> db = MerklePatriciaTree.Test.random_ets_db()
       iex> block = %Blockchain.Block{header: %Block.Header{number: 5, parent_hash: <<1, 2, 3>>, beneficiary: <<2, 3, 4>>, difficulty: 100, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>}}
       iex> Blockchain.Block.put_block(block, db)
-      {:ok, <<35, 61, 248, 160, 109, 28, 5, 252, 195, 173, 88, 108, 19, 109, 35, 249, 132, 61, 159, 255, 216, 146, 208, 251, 122, 248, 240, 243, 243, 215, 225, 194>>}
+      {:ok, <<78, 28, 127, 10, 192, 253, 127, 239, 254, 179, 39, 34, 245, 44, 152, 98, 128, 71, 238, 155, 100, 161, 199, 71, 243, 223, 172, 191, 74, 99, 128, 63>>}
       iex> {:ok, serialized_block} = MerklePatriciaTree.DB.get(db, block |> Blockchain.Block.hash)
       iex> serialized_block |> ExRLP.decode |> Blockchain.Block.deserialize()
       %Blockchain.Block{header: %Block.Header{number: 5, parent_hash: <<1, 2, 3>>, beneficiary: <<2, 3, 4>>, difficulty: 100, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>}}
@@ -149,8 +161,10 @@ defmodule Blockchain.Block do
   end
 
   @doc """
-  Returns a given block from the database, if
-  the node exists in the database.
+  Returns a given block from the database, if the hash
+  exists in the database.
+
+  See `Blockchain.Block.put_block/2` for details.
 
   ## Examples
 
@@ -345,6 +359,10 @@ defmodule Blockchain.Block do
   @doc """
   Creates a genesis block for a given chain.
 
+  The genesis block is specified by parameters in the
+  chain itself. Thus, this function takes no additional
+  parameters.
+
   ## Examples
 
       iex> db = MerklePatriciaTree.Test.random_ets_db()
@@ -359,49 +377,60 @@ defmodule Blockchain.Block do
           extra_data: "55555555555555555555555555555555",
           gas_limit: 16777216,
           parent_hash: <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0>>,
-          state_root: <<203, 15, 71, 134, 242, 5, 158, 111, 222, 90, 195, 144, 91, 122, 188, 164, 125, 216, 241, 173, 115, 243, 21, 91, 254, 199, 224, 149, 79, 148, 64, 169>>,
+          state_root: <<33, 123, 11, 188, 251, 114, 226, 213, 126, 40, 243, 60, 179, 97, 185, 152, 53, 19, 23, 119, 85, 220, 63, 51, 206, 62, 112, 34, 237, 98, 183, 123>>,
           transactions_root: <<86, 232, 31, 23, 27, 204, 85, 166, 255, 131, 69, 230, 146, 192, 248, 110, 91, 72, 224, 27, 153, 108, 173, 192, 1, 98, 47, 181, 227, 99, 180, 33>>,
           receipts_root: <<86, 232, 31, 23, 27, 204, 85, 166, 255, 131, 69, 230, 146, 192, 248, 110, 91, 72, 224, 27, 153, 108, 173, 192, 1, 98, 47, 181, 227, 99, 180, 33>>,
-          ommers_hash: <<86, 232, 31, 23, 27, 204, 85, 166, 255, 131, 69, 230, 146, 192, 248, 110, 91, 72, 224, 27, 153, 108, 173, 192, 1, 98, 47, 181, 227, 99, 180, 33>>,
+          ommers_hash: <<29, 204, 77, 232, 222, 199, 93, 122, 171, 133, 181, 103, 182, 204, 212, 26, 211, 18, 69, 27, 148, 138, 116, 19, 240, 161, 66, 253, 64, 212, 147, 71>>,
         },
         ommers: [],
         transactions: []
       }
+
+      # TODO: Add test case with initial storage
   """
   @spec gen_genesis_block(Chain.t, DB.db) :: t
   def gen_genesis_block(chain, db) do
-    empty_trie_root_hash = Trie.new(db).root_hash
+    empty_trie = Trie.new(db)
 
     block = %Blockchain.Block{
       header: %Block.Header{
         number: 0,
         parent_hash: chain.genesis[:parent_hash],
-        state_root: empty_trie_root_hash,
         timestamp: chain.genesis[:timestamp],
         extra_data: chain.genesis[:extra_data],
         beneficiary: chain.genesis[:author],
         difficulty: chain.genesis[:difficulty],
         gas_limit: chain.genesis[:gas_limit],
-        transactions_root: empty_trie_root_hash,
-        receipts_root: empty_trie_root_hash,
-        ommers_hash: empty_trie_root_hash,
+        mix_hash: chain.genesis[:mix_hash],
+        nonce: chain.genesis[:nonce],
       },
     }
 
     trie = Trie.new(db, block.header.state_root)
 
     final_trie = Enum.reduce(chain.accounts |> Enum.into([]), trie, fn {address, account_map}, trie ->
-        account = %Account{
-          nonce: account_map[:nonce],
-          balance: account_map[:balance],
-          storage_root: empty_trie_root_hash,
-        }
 
-        Account.put_account(
-          trie,
-          address,
-          account
-        )
+      initial_storage_trie = if account_map[:storage_root], do: Trie.new(db, account_map[:storage_root]), else: empty_trie
+
+      storage_trie = if account_map[:storage] do
+        Enum.reduce(account_map[:storage], initial_storage_trie, fn {key, value}, trie ->
+          Account.put_storage(trie, address, key, value)
+        end)
+      else
+        initial_storage_trie
+      end
+
+      account = %Account{
+        nonce: account_map[:nonce] || 0,
+        balance: account_map[:balance],
+        storage_root: storage_trie.root_hash,
+      }
+
+      Account.put_account(
+        trie,
+        address,
+        account
+      )
     end)
 
     %{ block | header: %{ block.header | state_root: final_trie.root_hash } }
@@ -623,10 +652,17 @@ defmodule Blockchain.Block do
       ...> |> Blockchain.Block.is_holistic_valid?(chain, parent_block, db)
       {:invalid, [:state_root_mismatch, :ommers_hash_mismatch, :transactions_root_mismatch, :receipts_root_mismatch]}
   """
-  @spec is_holistic_valid?(t, Chain.t, t, DB.db) :: :valid | {:invalid, [atom()]}
+  @spec is_holistic_valid?(t, Chain.t, t | nil, DB.db) :: :valid | {:invalid, [atom()]}
   def is_holistic_valid?(block, chain, parent_block, db) do
-    child_block =
+
+    base_block = if parent_block |> is_nil do
+      gen_genesis_block(chain, db)
+    else
       gen_child_block(parent_block, chain, beneficiary: block.header.beneficiary, timestamp: block.header.timestamp, gas_limit: block.header.gas_limit, extra_data: block.header.extra_data)
+    end
+
+    child_block =
+      base_block
       |> add_transactions_to_block(block.transactions, db)
       |> add_ommers_to_block(block.ommers)
       |> add_rewards_to_block(db, chain.params[:block_reward])
@@ -651,6 +687,7 @@ defmodule Blockchain.Block do
       iex> db = MerklePatriciaTree.Test.random_ets_db()
       iex> chain = Blockchain.Test.ropsten_chain()
       iex> Blockchain.Block.gen_genesis_block(chain, db)
+      ...> |> Blockchain.Block.add_rewards_to_block(db)
       ...> |> Blockchain.Block.is_fully_valid?(chain, nil, db)
       :valid
 
@@ -665,33 +702,27 @@ defmodule Blockchain.Block do
       iex> chain = Blockchain.Test.ropsten_chain()
       iex> parent = Blockchain.Block.gen_genesis_block(chain, db)
       iex> child = Blockchain.Block.gen_child_block(parent, chain)
-      ...>         |> Blockchain.Block.set_header(:beneficiary, <<0x05::160>>)
+      ...>         |> Blockchain.Block.put_header(:beneficiary, <<0x05::160>>)
       ...>         |> Blockchain.Block.add_rewards_to_block(db)
       iex> Blockchain.Block.is_fully_valid?(child, chain, parent, db)
       :valid
   """
   @spec is_fully_valid?(t, Chain.t, t, DB.db) :: :valid | {:invalid, [atom()]}
   def is_fully_valid?(block, chain, parent_block, db) do
-    if block.header.number == 0 and parent_block == nil do
-      # We're going to assume genesis blocks are valid.
-      # We just need to verify no one can falsely advertise one.
-      :valid
+    if block.header.number > 0 and parent_block == nil do
+      {:errors, [:non_genesis_block_requires_parent]}
     else
-      if parent_block == nil do
-        {:errors, [:non_genesis_block_requires_parent]}
-      else
-        with :valid <- Block.Header.is_valid?(
-            block.header,
-            parent_block.header,
-            chain.engine["Ethash"][:homestead_transition],
-            chain.genesis[:difficulty],
-            chain.engine["Ethash"][:minimum_difficulty],
-            chain.engine["Ethash"][:difficulty_bound_divisor],
-            chain.params[:gas_limit_bound_divisor],
-            chain.params[:min_gas_limit]) do
-          # Pass to holistic validity check
-          is_holistic_valid?(block, chain, parent_block, db)
-        end
+      with :valid <- Block.Header.is_valid?(
+          block.header,
+          (if parent_block, do: parent_block.header, else: nil),
+          chain.engine["Ethash"][:homestead_transition],
+          chain.genesis[:difficulty],
+          chain.engine["Ethash"][:minimum_difficulty],
+          chain.engine["Ethash"][:difficulty_bound_divisor],
+          chain.params[:gas_limit_bound_divisor],
+          chain.params[:min_gas_limit]) do
+        # Pass to holistic validity check
+        is_holistic_valid?(block, chain, parent_block, db)
       end
     end
   end
@@ -830,6 +861,17 @@ defmodule Blockchain.Block do
       iex> miner = <<0x05::160>>
       iex> state = MerklePatriciaTree.Trie.new(db)
       ...>         |> Blockchain.Account.put_account(miner, %Blockchain.Account{balance: 400_000})
+      iex> block = %Blockchain.Block{header: %Block.Header{number: 0, state_root: state.root_hash, beneficiary: miner}}
+      iex> block
+      ...> |> Blockchain.Block.add_rewards_to_block(db)
+      ...> |> Blockchain.Block.get_state(db)
+      ...> |> Blockchain.Account.get_accounts([miner])
+      [%Blockchain.Account{balance: 400_000}]
+
+      iex> db = MerklePatriciaTree.Test.random_ets_db()
+      iex> miner = <<0x05::160>>
+      iex> state = MerklePatriciaTree.Trie.new(db)
+      ...>         |> Blockchain.Account.put_account(miner, %Blockchain.Account{balance: 400_000})
       iex> block = %Blockchain.Block{header: %Block.Header{state_root: state.root_hash, beneficiary: miner}}
       iex> block
       ...> |> Blockchain.Block.add_rewards_to_block(db)
@@ -852,16 +894,21 @@ defmodule Blockchain.Block do
   def add_rewards_to_block(block, db, reward_wei \\ @reward_wei) do
     # TODO: Add ommer rewards
 
-    if block.header.beneficiary |> is_nil, do: raise "Unable to add block rewards, beneficiary is nil"
+    if is_genesis?(block) do
+      # No rewards for genesis block
+      block
+    else
+      if block.header.beneficiary |> is_nil, do: raise "Unable to add block rewards, beneficiary is nil"
 
-    set_state(
-      block,
-      Account.add_wei(
-        get_state(block, db),
-        block.header.beneficiary,
-        reward_wei
+      set_state(
+        block,
+        Account.add_wei(
+          get_state(block, db),
+          block.header.beneficiary,
+          reward_wei
+        )
       )
-    )
+    end
   end
 
   @doc """
@@ -871,15 +918,15 @@ defmodule Blockchain.Block do
   ## Examples
 
       iex> %Blockchain.Block{}
-      ...> |> Blockchain.Block.set_header(:number, 5)
+      ...> |> Blockchain.Block.put_header(:number, 5)
       %Blockchain.Block{
         header: %Block.Header{
           number: 5
         }
       }
   """
-  @spec set_header(t, any(), any()) :: t
-  def set_header(block, key, value) do
+  @spec put_header(t, any(), any()) :: t
+  def put_header(block, key, value) do
     %{block | header: Map.put(block.header, key, value)}
   end
 
@@ -907,7 +954,20 @@ defmodule Blockchain.Block do
   """
   @spec set_state(t, Trie.t) :: t
   def set_state(block, trie) do
-    set_header(block, :state_root, trie.root_hash)
+    put_header(block, :state_root, trie.root_hash)
   end
 
+  @doc """
+  Returns whether or not a block is a genesis block, based on block number.
+
+  ## Examples
+
+      iex> Blockchain.Block.is_genesis?(%Blockchain.Block{header: %Block.Header{number: 0}})
+      true
+
+      iex> Blockchain.Block.is_genesis?(%Blockchain.Block{header: %Block.Header{number: 1}})
+      false
+  """
+  @spec is_genesis?(t) :: boolean()
+  def is_genesis?(block), do: block.header.number == 0
 end

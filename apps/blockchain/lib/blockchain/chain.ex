@@ -52,13 +52,18 @@ defmodule Blockchain.Chain do
       timestamp: integer(),
       parent_hash: EVM.hash,
       extra_data: binary(),
-      gas_limit: EVM.Gas.t
+      gas_limit: EVM.Gas.t,
+      mix_hash: binary(),
+      nonce: binary(),
     },
     nodes: [String.t],
     accounts: %{
       EVM.address => %{
         balance: EVM.Wei.t,
         nonce: integer(),
+        storage: %{
+          binary() => binary()
+        }
         # TODO: Handle built-in
       }
     }
@@ -137,7 +142,7 @@ defmodule Blockchain.Chain do
   defp get_accounts(account_map) do
     for {address, account_info} <- account_map do
       {load_address(address), %{
-        balance: account_info["balance"] |> load_hex,
+        balance: account_info["balance"] |> load_decimal,
         nonce: ( if account_info["nonce"], do: account_info["nonce"] |> load_hex, else: 0 ),
       }}
     end |> Enum.into(%{})
@@ -165,6 +170,12 @@ defmodule Blockchain.Chain do
     Base.decode16!(hex_data, case: :mixed)
   end
 
+  @spec load_decimal(String.t) :: integer()
+  def load_decimal(dec_data) do
+    {res, ""} = Integer.parse(dec_data)
+
+    res
+  end
 
   @spec load_hex(String.t) :: integer()
   defp load_hex(hex_data), do: hex_data |> load_raw_hex |> :binary.decode_unsigned
