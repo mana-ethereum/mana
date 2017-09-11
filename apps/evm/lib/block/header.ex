@@ -4,7 +4,7 @@ defmodule Block.Header do
   """
 
   @empty_trie MerklePatriciaTree.Trie.empty_trie_root_hash
-  @empty_keccak <<>> |> :keccakf1600.sha3_256
+  @empty_keccak [] |> ExRLP.encode |> :keccakf1600.sha3_256
 
   defstruct [
     parent_hash: nil,                # Hp P(BH)Hr
@@ -13,7 +13,7 @@ defmodule Block.Header do
     state_root: @empty_trie,         # Hr TRIE(LS(Π(σ, B)))
     transactions_root: @empty_trie,  # Ht TRIE({∀i < kBTk, i ∈ P : p(i, LT (BT[i]))})
     receipts_root: @empty_trie,      # He TRIE({∀i < kBRk, i ∈ P : p(i, LR(BR[i]))})
-    logs_bloom: <<>>,                # Hb bloom
+    logs_bloom: <<0::2048>>,         # Hb bloom
     difficulty: nil,                 # Hd
     number: nil,                     # Hi
     gas_limit: 0,                    # Hl
@@ -84,9 +84,9 @@ defmodule Block.Header do
       h.receipts_root,
       h.logs_bloom,
       h.difficulty,
-      h.number,
+      (if h.number == 0, do: <<>>, else: h.number),
       h.gas_limit,
-      h.gas_used,
+      (if h.number == 0, do: <<>>, else: h.gas_used),
       h.timestamp,
       h.extra_data,
       h.mix_hash,
