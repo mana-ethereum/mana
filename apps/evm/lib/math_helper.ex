@@ -59,4 +59,41 @@ defmodule MathHelper do
   """
   @spec log(number(), number()) :: number()
   def log(x, b), do: :math.log(x) / :math.log(b)
+
+  @doc """
+  Returns the byte size of an integer
+
+  ## Examples
+
+      iex> MathHelper.integer_byte_size(0)
+      0
+
+      iex> MathHelper.integer_byte_size(1)
+      1
+
+      iex> MathHelper.integer_byte_size(0xfffffffff)
+      5
+
+  """
+  @spec integer_byte_size(number()) :: number()
+  def integer_byte_size(n) when n == 0, do: 0
+  def integer_byte_size(n), do: byte_size(:binary.encode_unsigned(n))
+
+  @doc """
+  Bits to words
+
+  ## Examples
+
+      iex> MathHelper.bits_to_words(0)
+      0
+
+      iex> MathHelper.bits_to_words(9)
+      1
+
+      iex> MathHelper.bits_to_words(256)
+      8
+
+  """
+  @spec bits_to_words(number()) :: number()
+  def bits_to_words(n), do: round(:math.ceil(n / EVM.word_size()))
 end

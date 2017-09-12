@@ -1,5 +1,4 @@
 defmodule EVM.Helpers do
-  @word_size 32
   @moduledoc """
   Various helper functions with no other home.
   """
@@ -166,10 +165,11 @@ defmodule EVM.Helpers do
       <<0, 0, 1>>
   """
   @spec left_pad_bytes(binary() | integer(), integer()) :: integer()
+  def left_pad_bytes(n, size \\ EVM.word_size())
   def left_pad_bytes(n, size) when is_integer(n), do:
     left_pad_bytes(:binary.encode_unsigned(n), size)
 
-  def left_pad_bytes(n, size \\ EVM.word_size()) do
+  def left_pad_bytes(n, size) do
     padding_size = (size - byte_size(n)) * EVM.byte_size()
     <<0:: size(padding_size)>> <> n
   end

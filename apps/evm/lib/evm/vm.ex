@@ -101,16 +101,16 @@ defmodule EVM.VM do
   @spec cycle(EVM.state, MachineState.t, SubState.t, ExecEnv.t) :: {EVM.state, MachineState.t, SubState.t, ExecEnv.t}
   def cycle(state, machine_state, sub_state, exec_env) do
     operation = MachineCode.current_instruction(machine_state, exec_env) |> Operation.decode
-    {updated_state, updated_machine_state, sub_state, exec_env} = Operation.run_operation(operation, state, machine_state, sub_state, exec_env)
+    {updated_state, updated_machine_state, sub_state, updated_exec_env} = Operation.run_operation(operation, state, machine_state, sub_state, exec_env)
 
-    cost = Gas.cost(operation, state, machine_state, updated_machine_state)
+    cost = Gas.cost(state, machine_state, updated_machine_state, exec_env)
 
     updated_machine_state = updated_machine_state
       |> MachineState.subtract_gas(cost)
-      |> MachineState.next_pc(exec_env)
+      |> MachineState.next_pc(updated_exec_env)
 
 
-    {updated_state, updated_machine_state, sub_state, exec_env}
+    {updated_state, updated_machine_state, sub_state, updated_exec_env}
   end
 
 end

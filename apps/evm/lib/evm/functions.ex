@@ -7,7 +7,6 @@ defmodule EVM.Functions do
   alias EVM.ExecEnv
   alias EVM.MachineCode
   alias EVM.MachineState
-  alias EVM.Gas
   alias EVM.Operation
   alias EVM.Stack
 
@@ -96,7 +95,7 @@ defmodule EVM.Functions do
       {:halt, :stack_overflow}
   """
   @spec is_exception_halt?(EVM.state, MachineState.t, ExecEnv.t) :: :continue | {:halt, String.t}
-  def is_exception_halt?(state, machine_state, exec_env) do
+  def is_exception_halt?(_state, machine_state, exec_env) do
     instruction = MachineCode.current_instruction(machine_state, exec_env) |> Operation.decode
     metadata = Operation.metadata(instruction)
     dw = if metadata, do: Map.get(metadata, :input_count), else: nil

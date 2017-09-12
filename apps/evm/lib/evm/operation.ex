@@ -273,6 +273,24 @@ defmodule EVM.Operation do
     end
   end
 
+  @doc """
+  Returns an operation's inputs
+
+  ## Examples
+  #
+      iex> EVM.Operation.inputs([1, 2, 3], :add)
+      [1, 2]
+
+  """
+  @spec inputs(Stack.t, Operation.t) :: list(EVM.val)
+  def inputs(stack, operation) do
+    %EVM.Operation.Metadata{
+      input_count: input_count,
+    } = metadata(operation)
+
+    Stack.peek_n(stack, input_count)
+  end
+
   defp operation_args(operation, state, machine_state, sub_state, exec_env) do
     %EVM.Operation.Metadata{
       input_count: input_count,

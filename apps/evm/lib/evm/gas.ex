@@ -3,8 +3,10 @@ defmodule EVM.Gas do
   Functions for interacting wth gas and costs of opscodes.
   """
 
+  alias EVM.ExecEnv
   alias EVM.MachineState
-  alias EVM.Stack
+  alias EVM.MachineCode
+  alias EVM.Operation
 
   @type t :: EVM.val
   @type gas_price :: EVM.Wei.t
@@ -46,11 +48,12 @@ defmodule EVM.Gas do
   @g_copy 3  # Partial payment for *COPY operations, multiplied by words copied, rounded up.
   @g_blockhash 20  # Payment for BLOCKHASH operation
 
-  @w_zero_instr [:stop, :return]
+  @w_zero_instr [:stop, :return, :suicide, :create, :balance, :calldatacopy, :codecopy, :extcodecopy, :call, :callcode, :delegatecall]
   @w_base_instr [:address, :origin, :caller, :callvalue, :calldatasize, :codesize, :gasprice, :coinbase, :timestamp, :number, :difficulty, :gaslimit, :pop, :pc, :msize, :gas]
   @push_instrs Enum.map(0..32, fn n -> :"push#{n}" end)
   @dup_instrs Enum.map(0..16, fn n -> :"dup#{n}" end)
   @swap_instrs Enum.map(0..16, fn n -> :"swap#{n}" end)
+  @log_instrs Enum.map(1..4, fn n -> :"log#{n}" end)
   @w_very_low_instr [
     :add, :sub, :not_, :lt, :gt, :slt, :sgt, :eq, :iszero, :and_, :or_, :xor_,
     :byte, :calldataload, :mload, :mstore, :mstore8] ++
@@ -69,13 +72,14 @@ defmodule EVM.Gas do
   ## Examples
 
       # TODO: Figure out how to hand in state
-      iex> EVM.Gas.cost(:push1, %{}, %EVM.MachineState{}, %EVM.MachineState{})
-      3
+      iex> EVM.Gas.cost(%{}, %EVM.MachineState{}, %EVM.MachineState{}, %EVM.ExecEnv{})
+      0
   """
-  @spec cost(EVM.operation, EVM.state, MachineState.t, MachineState.t) :: t | nil
-  def cost(nil, _state, _machine_state, _updated_machine_state), do: 0
-  def cost(operation, state, machine_state, updated_machine_state) do
-    operation_cost = operation_cost(operation, state, machine_state)
+  @spec cost(EVM.state, MachineState.t, MachineState.t, ExecEnv.t) :: t | nil
+  def cost(state, machine_state, updated_machine_state, exec_env) do
+    operation = MachineCode.current_instruction(machine_state, exec_env) |> Operation.decode
+    inputs = Operation.inputs(machine_state.stack, operation)
+    operation_cost = operation_cost(operation, inputs, state, machine_state)
     memory_cost = memory_cost(operation, updated_machine_state)
 
     operation_cost + memory_cost
@@ -111,89 +115,56 @@ defmodule EVM.Gas do
 
   ## Examples
 
-      iex> EVM.Gas.operation_cost(:sstore, nil, %EVM.MachineState{stack: [0, 0]})
+      iex> EVM.Gas.operation_cost(:sstore, [], nil, %EVM.MachineState{stack: [0, 0]})
       5000
 
-      iex> EVM.Gas.operation_cost(:exp, nil, %EVM.MachineState{stack: [0, 0]})
+      iex> EVM.Gas.operation_cost(:exp, [0, 0], nil, %EVM.MachineState{})
       10
 
-      iex> EVM.Gas.operation_cost(:exp, nil, %EVM.MachineState{stack: [0, 10241]})
+      iex> EVM.Gas.operation_cost(:exp, [0, 1024], nil, %EVM.MachineState{})
       30
 
-      iex> EVM.Gas.operation_cost(:jumpdest, nil, nil)
+      iex> EVM.Gas.operation_cost(:jumpdest, [], nil, nil)
       1
 
-      iex> EVM.Gas.operation_cost(:blockhash, nil, nil)
+      iex> EVM.Gas.operation_cost(:blockhash, [], nil, nil)
       20
 
-      iex> EVM.Gas.operation_cost(:stop, nil, nil)
+      iex> EVM.Gas.operation_cost(:stop, [], nil, nil)
       0
 
-      iex> EVM.Gas.operation_cost(:address, nil, nil)
+      iex> EVM.Gas.operation_cost(:address, [], nil, nil)
       2
 
-      iex> EVM.Gas.operation_cost(:push0, nil, nil)
+      iex> EVM.Gas.operation_cost(:push0, [], nil, nil)
       3
 
-      iex> EVM.Gas.operation_cost(:mul, nil, nil)
+      iex> EVM.Gas.operation_cost(:mul, [], nil, nil)
       5
 
-      iex> EVM.Gas.operation_cost(:addmod, nil, nil)
+      iex> EVM.Gas.operation_cost(:addmod, [], nil, nil)
       8
 
-      iex> EVM.Gas.operation_cost(:jumpi, nil, nil)
+      iex> EVM.Gas.operation_cost(:jumpi, [], nil, nil)
       10
 
-      iex> EVM.Gas.operation_cost(:extcodesize, nil, nil)
+      iex> EVM.Gas.operation_cost(:extcodesize, [], nil, nil)
       700
 
-      iex> EVM.Gas.operation_cost(:sha3, nil, %EVM.MachineState{stack: [0, 0]})
+      iex> EVM.Gas.operation_cost(:sha3, [0, 0], nil, %EVM.MachineState{stack: [0, 0]})
       30
-      iex> EVM.Gas.operation_cost(:sha3, nil, %EVM.MachineState{stack: [10, 1024]})
+      iex> EVM.Gas.operation_cost(:sha3, [10, 1024], nil, %EVM.MachineState{stack: [10, 1024]})
       222
 
   """
-  @spec operation_cost(atom(), EVM.state, MachineState.t) :: t | nil
-  def operation_cost(:sstore, state, machine_state), do: cost_sstore(state, machine_state)
-  def operation_cost(:exp, _state, machine_state) do
-    case Enum.at(machine_state.stack, 1) do
-      0 -> @g_exp
-      s -> @g_exp + @g_expbyte * byte_size(:binary.encode_unsigned(s))
-    end
+  @spec operation_cost(atom(), list(EVM.val), EVM.state, MachineState.t) :: t | nil
+  def operation_cost(:exp, [_base, exponent], _state, _machine_state) do
+    @g_exp + @g_expbyte * MathHelper.integer_byte_size(exponent)
   end
 
-  def operation_cost(:sha3, _state, machine_state) do
-    [length, offset] = Stack.peek_n(machine_state.stack, 2)
-
-    if offset == 0 do
-      @g_sha3
-    else
-      @g_sha3 + @g_sha3word * round(:math.ceil(offset / 32))
-    end
+  def operation_cost(:sha3, [length, offset], _state, _machine_state) do
+    @g_sha3 + @g_sha3word * MathHelper.bits_to_words(offset)
   end
-
-  def operation_cost(instr, _state, _machine_state) when instr in [:calldatacopy, :codecopy], do: 0
-  def operation_cost(:extcodecopy, _state, _machine_state), do: 0
-  def operation_cost(:log0, _state, _machine_state), do: 0
-  def operation_cost(:log1, _state, _machine_state), do: 0
-  def operation_cost(:log2, _state, _machine_state), do: 0
-  def operation_cost(:log3, _state, _machine_state), do: 0
-  def operation_cost(:log4, _state, _machine_state), do: 0
-  def operation_cost(call_instr, _state, _machine_state) when call_instr in [:call, :callcode, :delegatecall], do: 0
-  def operation_cost(:suicide, _state, _machine_state), do: 0
-  def operation_cost(:create, _state, _machine_state), do: 0
-  def operation_cost(:jumpdest, _state, _machine_state), do: @g_jumpdest
-  def operation_cost(:sload, _state, _machine_state), do: @g_sload
-  def operation_cost(w_zero_instr, _state, _machine_state) when w_zero_instr in @w_zero_instr, do: @g_zero
-  def operation_cost(w_base_instr, _state, _machine_state) when w_base_instr in @w_base_instr, do: @g_base
-  def operation_cost(w_very_low_instr, _state, _machine_state) when w_very_low_instr in @w_very_low_instr, do: @g_verylow
-  def operation_cost(w_low_instr, _state, _machine_state) when w_low_instr in @w_low_instr, do: @g_low
-  def operation_cost(w_mid_instr, _state, _machine_state) when w_mid_instr in @w_mid_instr, do: @g_mid
-  def operation_cost(w_high_instr, _state, _machine_state) when w_high_instr in @w_high_instr, do: @g_high
-  def operation_cost(w_extcode_instr, _state, _machine_state) when w_extcode_instr in @w_extcode_instr, do: @g_extcode
-  def operation_cost(:balance, _state, _machine_state), do: 0
-  def operation_cost(:blockhash, _state, _machine_state), do: @g_blockhash
-  def operation_cost(_unknown_instr, _state, _machine_state), do: 0
 
   @doc """
   Returns the cost of a call to `sstore`. This is defined
@@ -204,15 +175,12 @@ defmodule EVM.Gas do
 
     iex> state = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db(:evm_vm_test))
     ...>  |> MerklePatriciaTree.Trie.update(<<0>>, 1)
-    iex> EVM.Gas.cost_sstore(state, %EVM.MachineState{stack: [0, 0]})
+    iex> EVM.Gas.operation_cost(:sstore, [0, 0], state, %EVM.MachineState{})
     5000
-    iex> EVM.Gas.cost_sstore(state, %EVM.MachineState{stack: [0, 2]})
+    iex> EVM.Gas.operation_cost(:sstore, [0, 2], state, %EVM.MachineState{})
     20000
   """
-  @spec cost_sstore(EVM.state, MachineState.t) :: t
-  def cost_sstore(_state, machine_state) do
-    {:ok, new_value} = Enum.fetch(machine_state.stack, 1)
-
+  def operation_cost(:sstore, [_offset, new_value], _state, _machine_state) do
     if new_value == 0 do
       @g_sreset
     else
@@ -220,8 +188,24 @@ defmodule EVM.Gas do
     end
   end
 
-  def cost_call(_state, _machine_state), do: 0
-  def cost_suicide(_state, _machine_state), do: 0
+
+  def operation_cost(operation, inputs, _state, _machine_state) do
+    cond do
+      operation in @w_very_low_instr -> @g_verylow
+      operation in @w_zero_instr -> @g_zero
+      operation in @w_base_instr -> @g_base
+      operation in @w_low_instr -> @g_low
+      operation in @w_mid_instr -> @g_mid
+      operation in @w_high_instr -> @g_high
+      operation in @w_extcode_instr -> @g_extcode
+      operation == :blockhash -> @g_blockhash
+      operation == :sload -> @g_sload
+      operation == :jumpdest -> @g_jumpdest
+      operation in @log_instrs -> 0
+      true -> 0
+    end
+  end
+
 
   @doc """
   Returns the gas cost for G_txdata{zero, nonzero} as defined in

@@ -46,7 +46,7 @@ defmodule EVM.Operation.System do
       { nil, nil }
     end
 
-    { n_state, n_gas, n_sub_state } = if is_allowed do
+    { n_state, n_gas, _n_sub_state } = if is_allowed do
 
       available_gas = Helpers.all_but_one_64th(machine_state.gas)
 
@@ -163,7 +163,7 @@ defmodule EVM.Operation.System do
     recipient = if type == :call_code || type == :delegate_call, do: exec_env.address, else: to_addr
     apparent_value = if type == :delegate_call, do: exec_env.value_in_wei, else: value
 
-    { n_state, n_gas, n_sub_state, n_output } = if is_allowed do
+    { n_state, n_gas, _n_sub_state, n_output } = if is_allowed do
       ContractInterface.message_call(
         exec_env.contract_interface,
         state,                     # state
