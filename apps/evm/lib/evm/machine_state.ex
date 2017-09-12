@@ -14,11 +14,12 @@ defmodule EVM.MachineState do
   alias EVM.MachineState
 
   defstruct [
-    gas: nil,        # g
-    pc: 0,           # pc
-    memory: <<>>,    # m
-    active_words: 0, # i
-    stack: []        # s
+    gas: nil,          # g
+    pc: 0,             # pc
+    memory: <<>>,      # m
+    active_words: 0,   # i
+    previously_active_words: 0,
+    stack: []          # s
   ]
 
   @type pc :: integer()
@@ -117,15 +118,10 @@ defmodule EVM.MachineState do
 
       iex> %EVM.MachineState{gas: 5} |> EVM.MachineState.subtract_gas(4)
       %EVM.MachineState{gas: 1}
-
-      iex> %EVM.MachineState{gas: 5} |> EVM.MachineState.subtract_gas(6)
-      ** (MatchError) no match of right hand side value: false
   """
   @spec subtract_gas(t, EVM.Gas.t) :: t
-  def subtract_gas(exec_env, gas) do
-    true = (exec_env.gas >= gas) # assertion
-
-    %{exec_env| gas: exec_env.gas - gas}
+  def subtract_gas(machine_state, gas) do
+    %{machine_state| gas: machine_state.gas - gas}
   end
 
   @doc """
@@ -135,14 +131,19 @@ defmodule EVM.MachineState do
 
   ## Examples
 
-      iex> %EVM.MachineState{active_words: 2} |> EVM.MachineState.maybe_set_active_words(1)
-      %EVM.MachineState{active_words: 2}
+      iex> %EVM.MachineState{active_words: 2, previously_active_words: 1} |> EVM.MachineState.maybe_set_active_words(1)
+      %EVM.MachineState{active_words: 2, previously_active_words: 2}
 
-      iex> %EVM.MachineState{active_words: 2} |> EVM.MachineState.maybe_set_active_words(3)
-      %EVM.MachineState{active_words: 3}
+      iex> %EVM.MachineState{active_words: 2, previously_active_words: 1} |> EVM.MachineState.maybe_set_active_words(3)
+      %EVM.MachineState{active_words: 3, previously_active_words: 2}
+
+      iex> %EVM.MachineState{active_words: 2, previously_active_words: 1} |> EVM.MachineState.maybe_set_active_words(1)
+      %EVM.MachineState{active_words: 2, previously_active_words: 2}
   """
   @spec maybe_set_active_words(t, EVM.val) :: t
   def maybe_set_active_words(machine_state, last_word) do
+    machine_state = %{machine_state | previously_active_words: machine_state.active_words}
+
     %{machine_state | active_words: max(machine_state.active_words, last_word)}
   end
 

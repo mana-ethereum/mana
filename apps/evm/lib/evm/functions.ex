@@ -71,9 +71,6 @@ defmodule EVM.Functions do
 
       # TODO: Once we add gas cost, make this more reasonable
       # TODO: How do we pass in state?
-      iex> EVM.Functions.is_exception_halt?(%{}, %EVM.MachineState{pc: 0, gas: -1}, %EVM.ExecEnv{machine_code: <<EVM.Operation.encode(:add)>>})
-      {:halt, :insufficient_gas}
-
       iex> EVM.Functions.is_exception_halt?(%{}, %EVM.MachineState{pc: 0, gas: 0xffff}, %EVM.ExecEnv{machine_code: <<0xfe>>})
       {:halt, :undefined_instruction}
 
@@ -109,8 +106,6 @@ defmodule EVM.Functions do
     cond do
       metadata == nil || dw == nil ->
         {:halt, :undefined_instruction}
-      machine_state.gas < Gas.cost(state, machine_state, exec_env) ->
-        {:halt, :insufficient_gas}
       length(machine_state.stack) < dw ->
         {:halt, :stack_underflow}
       Enum.member?([:jump, :jumpi], instruction) and

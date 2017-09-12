@@ -180,7 +180,7 @@ defmodule EVM.Operation.ComparisonAndBitwiseLogic do
   """
   @spec byte(Operation.stack_args, Operation.vm_map) :: Operation.op_result
   def byte([s0, s1], _vm_map) do
-    if s0 < EVM.word_size_in_bits() do
+    if s0 < EVM.word_size() do
       :binary.at(Helpers.left_pad_bytes(s1, 32), s0)
     else
       0

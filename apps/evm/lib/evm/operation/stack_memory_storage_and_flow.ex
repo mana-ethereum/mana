@@ -1,6 +1,7 @@
 defmodule EVM.Operation.StackMemoryStorageAndFlow do
+  alias EVM.Helpers
   alias EVM.Stack
-  alias EVM.MachineState
+  alias EVM.Memory
   alias MathHelper
   alias MerklePatriciaTree.Trie
   use Bitwise
@@ -27,19 +28,19 @@ defmodule EVM.Operation.StackMemoryStorageAndFlow do
   ## Examples
 
       iex> EVM.Operation.StackMemoryStorageAndFlow.mload([0], %{machine_state: %EVM.MachineState{stack: [1], memory: <<0x55::256, 0xff>>}})
-      %{machine_state: %EVM.MachineState{stack: [0x55, 1], memory: <<0x55::256, 0xff>>, active_words: 1}}
+      %EVM.MachineState{stack: [0x55, 1], active_words: 1, gas: nil, memory: <<0x55::256, 0xff>>, pc: 0, previously_active_words: 0}
 
       iex> EVM.Operation.StackMemoryStorageAndFlow.mload([1], %{machine_state: %EVM.MachineState{stack: [], memory: <<0x55::256, 0xff>>}})
-      %{machine_state: %EVM.MachineState{stack: [22015], memory: <<0x55::256, 0xff>>, active_words: 2}}
+      %EVM.MachineState{stack: [22015], active_words: 2, gas: nil, memory: <<0x55::256, 0xff>>, pc: 0, previously_active_words: 0}
 
       # TODO: Add a test for overflow, etc.
       # TODO: Handle sign?
   """
   @spec mload(Operation.stack_args, Operation.vm_map) :: Operation.op_result
   def mload([offset], %{machine_state: machine_state}) do
-    {v, machine_state} = EVM.Memory.read(machine_state, offset, 32)
+    {value, machine_state} = EVM.Memory.read(machine_state, offset, 32)
 
-    %{machine_state: machine_state |> push(v |> decode)}
+    %{machine_state | stack: Stack.push(machine_state.stack, :binary.decode_unsigned(value))}
   end
 
   @doc """
@@ -58,11 +59,7 @@ defmodule EVM.Operation.StackMemoryStorageAndFlow do
   """
   @spec mstore(Operation.stack_args, Operation.vm_map) :: Operation.op_result
   def mstore([offset, value], %{machine_state: machine_state}) do
-    data = value |> wrap_int |> :binary.encode_unsigned()
-    padding_bits = ( 32 - byte_size(data) ) * 8 # since we ran mod, we can't run over
-    padded_data = <<0::size(padding_bits)>> <> data
-
-    machine_state = EVM.Memory.write(machine_state, offset, padded_data)
+    machine_state = EVM.Memory.write(machine_state, offset, Helpers.left_pad_bytes(value))
 
     %{machine_state: machine_state}
   end
@@ -72,11 +69,7 @@ defmodule EVM.Operation.StackMemoryStorageAndFlow do
   """
   @spec mstore8(Operation.stack_args, Operation.vm_map) :: Operation.op_result
   def mstore8([offset, value], %{machine_state: machine_state}) do
-    data = value |> wrap_int |> :binary.encode_unsigned()
-    padding_bits = ( 32 - byte_size(data) ) * 8 # since we ran mod, we can't run over
-    padded_data = <<0::size(padding_bits)>> <> data
-
-    machine_state = EVM.Memory.write(machine_state, offset, padded_data)
+    machine_state = Memory.write(machine_state, offset, value, EVM.byte_size())
 
     %{machine_state: machine_state}
   end
@@ -91,26 +84,21 @@ defmodule EVM.Operation.StackMemoryStorageAndFlow do
       iex> db = MerklePatriciaTree.Test.random_ets_db()
       iex> state = EVM.Operation.StackMemoryStorageAndFlow.sstore([0x11223344556677889900, 0x111222333444555], %{state: MerklePatriciaTree.Trie.new(db)})[:state]
       iex> EVM.Operation.StackMemoryStorageAndFlow.sload([0x11223344556677889900], %{state: state, stack: []})
-      %{
-        stack: [0x111222333444555]
-      }
+      0x111222333444555
 
       iex> db = MerklePatriciaTree.Test.random_ets_db()
       iex> state = EVM.Operation.StackMemoryStorageAndFlow.sstore([0x11223344556677889900, 0x111222333444555], %{state: MerklePatriciaTree.Trie.new(db)})[:state]
       iex> EVM.Operation.StackMemoryStorageAndFlow.sload([0x1234], %{state: state, stack: []})
-      %{
-        stack: [0x0]
-      }
+      0x0
   """
   @spec sload(Operation.stack_args, Operation.vm_map) :: Operation.op_result
   def sload([key], %{state: state=%Trie{}, stack: stack}) when is_list(stack) do
     # TODO: Consider key value encodings
-    stack_value = case Trie.get(state, <<key::size(256)>>) do
-      nil -> 0
-      value -> :binary.decode_unsigned(value)
+    if value = Trie.get(state, <<key::size(256)>>) do
+      Helpers.decode_signed(value)
+    else
+      0
     end
-
-    stack |> push(stack_value)
   end
 
   @doc """
@@ -248,46 +236,4 @@ defmodule EVM.Operation.StackMemoryStorageAndFlow do
   def jumpdest(_args, %{}) do
     :noop
   end
-
-  # Helper function to push to the stack within machine_state.
-  @spec push(MachineState.t | Stack.t, EVM.val) :: Operation.op_result
-  defp push(machine_state=%MachineState{}, val) do
-    %{
-      machine_state |
-      stack: machine_state.stack
-        |> Stack.push(val |> encode_signed)
-    }
-  end
-
-  # Helper function to just return an updated stack
-  defp push(stack, val) when is_list(stack) do
-    %{stack: Stack.push(stack, val |> encode_signed)}
-  end
-
-  # TODO: signed?
-  @spec decode(binary()) :: EVM.val
-  defp decode(bin), do: :binary.decode_unsigned(bin) |> wrap_int
-
-  def decode_signed(n) do
-    <<sign :: size(1), _ :: bitstring>> = :binary.encode_unsigned(n)
-    if sign == 0, do: n, else: n - EVM.max_int()
-  end
-
-  def wrap_int(n) when n > 0, do: band(n, EVM.max_int() - 1)
-  def wrap_int(n), do: n
-
-  @doc """
-  Encodes signed ints using twos compliment
-
-  ## Examples
-
-      iex> EVM.Helpers.encode_signed(1)
-      1
-
-      iex> EVM.Helpers.encode_signed(-1)
-      EVM.max_int() - 1
-  """
-  @spec wrap_int(integer()) :: EVM.val
-  def encode_signed(n) when n < 0, do: EVM.max_int() - abs(n)
-  def encode_signed(n), do: n
 end

@@ -30,10 +30,12 @@ defmodule EVM.Memory do
       {<<1::256, 0::24>>, %EVM.MachineState{memory: <<1::256>>, active_words: 2}}
   """
   @spec read(MachineState.t, EVM.val, EVM.val) :: {binary(), MachineState.t}
-  def read(machine_state, offset, bytes) do
+  def read(machine_state, offset, bytes \\ EVM.word_size()) do
     data = read_zeroed_memory(machine_state.memory, offset, bytes)
 
-    {data, machine_state |> MachineState.maybe_set_active_words(get_active_words(offset + bytes))}
+    active_words = if data == <<>>, do: 0, else: get_active_words(offset + bytes)
+
+    {data, machine_state |> MachineState.maybe_set_active_words(active_words)}
   end
 
   @doc """
@@ -65,8 +67,19 @@ defmodule EVM.Memory do
       iex> EVM.Memory.write(%EVM.MachineState{memory: <<1, 1, 1>>, active_words: 0}, 5, <<1::80>>)
       %EVM.MachineState{memory: <<1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1>>, active_words: 1}
   """
-  @spec write(MachineState.t, EVM.val, binary()) :: MachineState.t
-  def write(machine_state=%MachineState{}, offset_bytes, data) do
+  @spec write(MachineState.t, EVM.val, binary(), integer()) :: MachineState.t
+  def write(machine_state, offset_bytes, original_data, size \\ nil)
+  def write(machine_state, offset_bytes, data, size) when is_integer(data), do:
+    write(machine_state, offset_bytes, :binary.encode_unsigned(data), size)
+  def write(machine_state=%MachineState{}, offset_bytes, original_data, size) do
+    data = if size do
+      original_data
+        |> :binary.decode_unsigned
+        |> rem(size * EVM.word_size())
+        |> :binary.encode_unsigned
+    else
+      original_data
+    end
     memory_size = byte_size(machine_state.memory)
     data_size = byte_size(data)
     final_pos = offset_bytes + data_size
@@ -78,12 +91,14 @@ defmodule EVM.Memory do
     updated_memory = :binary.part(memory, 0, offset_bytes) <> data <> :binary.part(memory, final_pos, final_memory_byte)
 
     %{machine_state | memory: updated_memory }
-      |> MachineState.maybe_set_active_words(get_active_words(offset_bytes + data_size))
+      |> MachineState.maybe_set_active_words(get_active_words(offset_bytes + byte_size(original_data)))
   end
 
   @doc """
   Read zeroed memory will read bytes from a certain offset in the memory
   binary. Any bytes extending beyond memory's size will be defauled to zero.
+  Reading more than 256 bytes degrades performance and will cause the stack to
+  overflow. If more than 256 bytes are requested we return an empty byte array.
 
   ## Examples
 
@@ -95,21 +110,26 @@ defmodule EVM.Memory do
 
       iex> EVM.Memory.read_zeroed_memory(<<16, 17, 18, 19>>, 100, 1)
       <<0>>
+      iex> EVM.Memory.read_zeroed_memory(<<16, 17, 18, 19>>, 1, 257)
+      <<>>
   """
   @spec read_zeroed_memory(binary(), EVM.val, EVM.val) :: binary()
   def read_zeroed_memory(memory, offset, bytes) do
     memory_size = byte_size(memory)
 
-    if offset > memory_size do
-      # We're totally out of memory, let's just drop zeros
-      bytes_in_bits = bytes * 8
-      <<0::size(bytes_in_bits)>>
-    else
-      final_pos = offset + bytes
-      memory_bytes_final_pos = min(final_pos, memory_size)
-      padding = ( final_pos - memory_bytes_final_pos ) * 8
+    cond do
+      bytes > EVM.int_size() ->
+        <<>>
+      offset > memory_size ->
+        # We're totally out of memory, let's just drop zeros
+        bytes_in_bits = bytes * 8
+        <<0::size(bytes_in_bits)>>
+      true ->
+        final_pos = offset + bytes
+        memory_bytes_final_pos = min(final_pos, memory_size)
+        padding = ( final_pos - memory_bytes_final_pos ) * 8
 
-      :binary.part(memory, offset, memory_bytes_final_pos - offset) <> <<0::size(padding)>>
+        :binary.part(memory, offset, memory_bytes_final_pos - offset) <> <<0::size(padding)>>
     end
   end
 

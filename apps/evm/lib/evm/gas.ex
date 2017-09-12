@@ -4,10 +4,7 @@ defmodule EVM.Gas do
   """
 
   alias EVM.MachineState
-  alias EVM.Memory
   alias EVM.Stack
-  alias EVM.Helpers
-  alias EVM.ExecEnv
 
   @type t :: EVM.val
   @type gas_price :: EVM.Wei.t
@@ -62,6 +59,7 @@ defmodule EVM.Gas do
   @w_mid_instr [:addmod, :mulmod, :jump]
   @w_high_instr [:jumpi]
   @w_extcode_instr [:extcodesize]
+  @memory_operations [:mstore, :mstore8, :sha3, :mload]
 
 
   @doc """
@@ -71,147 +69,131 @@ defmodule EVM.Gas do
   ## Examples
 
       # TODO: Figure out how to hand in state
-      iex> EVM.Gas.cost(%{}, %EVM.MachineState{}, %EVM.ExecEnv{})
-      0
+      iex> EVM.Gas.cost(:push1, %{}, %EVM.MachineState{}, %EVM.MachineState{})
+      3
   """
-  @spec cost(EVM.state, MachineState.t, ExecEnv.t) :: t | nil
-  def cost(state, machine_state, exec_env) do
-    instruction = EVM.MachineCode.current_instruction(machine_state, exec_env) |> EVM.Operation.decode()
-    next_active_words = Memory.active_words_after(instruction, state, machine_state, exec_env)
+  @spec cost(EVM.operation, EVM.state, MachineState.t, MachineState.t) :: t | nil
+  def cost(nil, _state, _machine_state, _updated_machine_state), do: 0
+  def cost(operation, state, machine_state, updated_machine_state) do
+    operation_cost = operation_cost(operation, state, machine_state)
+    memory_cost = memory_cost(operation, updated_machine_state)
 
-    case instr_cost(instruction, state, machine_state, exec_env) do
-      nil -> nil
-      cost when is_integer(cost) -> cost + cost_mem(next_active_words) - cost_mem(machine_state.active_words)
+    operation_cost + memory_cost
+  end
+
+
+
+  defp memory_cost(operation, updated_machine_state)
+  when operation in @memory_operations do
+    if updated_machine_state.active_words > updated_machine_state.previously_active_words do
+     quadratic_memory_cost(updated_machine_state.active_words) -
+        quadratic_memory_cost(updated_machine_state.previously_active_words)
+    else
+      0
     end
   end
 
+  defp memory_cost(_operation, updated_machine_state), do: 0
+
+  # Eq 222
+  def quadratic_memory_cost(a) do
+    linear_cost = a * @g_memory
+    quadratic_cost = MathHelper.floor(:math.pow(a, 2) / @g_quad_coeff_div)
+
+    @g_memory + linear_cost + quadratic_cost
+  end
+
+
+
   @doc """
-  Returns the instruction cost for every possible instruction. This is defined
+  Returns the operation cost for every possible operation. This is defined
   in Appendix H of the Yellow Paper.
 
   ## Examples
 
-      iex> EVM.Gas.instr_cost(:sstore, nil, %EVM.MachineState{stack: [0, 0]}, nil)
+      iex> EVM.Gas.operation_cost(:sstore, nil, %EVM.MachineState{stack: [0, 0]})
       5000
 
-      iex> EVM.Gas.instr_cost(:exp, nil, %EVM.MachineState{stack: [0, 0]}, nil)
+      iex> EVM.Gas.operation_cost(:exp, nil, %EVM.MachineState{stack: [0, 0]})
       10
 
-      iex> EVM.Gas.instr_cost(:exp, nil, %EVM.MachineState{stack: [0, 10241]}, nil)
+      iex> EVM.Gas.operation_cost(:exp, nil, %EVM.MachineState{stack: [0, 10241]})
       30
 
-      iex> EVM.Gas.instr_cost(:jumpdest, nil, nil, nil)
+      iex> EVM.Gas.operation_cost(:jumpdest, nil, nil)
       1
 
-      iex> EVM.Gas.instr_cost(:blockhash, nil, nil, nil)
+      iex> EVM.Gas.operation_cost(:blockhash, nil, nil)
       20
 
-      iex> EVM.Gas.instr_cost(:stop, nil, nil, nil)
+      iex> EVM.Gas.operation_cost(:stop, nil, nil)
       0
 
-      iex> EVM.Gas.instr_cost(:address, nil, nil, nil)
+      iex> EVM.Gas.operation_cost(:address, nil, nil)
       2
 
-      iex> EVM.Gas.instr_cost(:push0, nil, nil, nil)
+      iex> EVM.Gas.operation_cost(:push0, nil, nil)
       3
 
-      iex> EVM.Gas.instr_cost(:mul, nil, nil, nil)
+      iex> EVM.Gas.operation_cost(:mul, nil, nil)
       5
 
-      iex> EVM.Gas.instr_cost(:addmod, nil, nil, nil)
+      iex> EVM.Gas.operation_cost(:addmod, nil, nil)
       8
 
-      iex> EVM.Gas.instr_cost(:jumpi, nil, nil, nil)
+      iex> EVM.Gas.operation_cost(:jumpi, nil, nil)
       10
 
-      iex> EVM.Gas.instr_cost(:extcodesize, nil, nil, nil)
+      iex> EVM.Gas.operation_cost(:extcodesize, nil, nil)
       700
 
-      iex> EVM.Gas.instr_cost(:mstore, nil, %EVM.MachineState{stack: [0, 0]}, nil)
-      6
-
-      iex> EVM.Gas.instr_cost(:mstore, nil, %EVM.MachineState{stack: [0, 0], memory: <<1::256>>, active_words: 0}, nil)
-      3
-
-      iex> EVM.Gas.instr_cost(:mstore, nil, %EVM.MachineState{stack: [0, round(:math.pow(2, 512))], memory: <<1::256>>, active_words: 0}, nil)
-      9
-
-      iex> EVM.Gas.instr_cost(:sha3, nil, %EVM.MachineState{stack: [0, 0]}, nil)
+      iex> EVM.Gas.operation_cost(:sha3, nil, %EVM.MachineState{stack: [0, 0]})
       30
-      iex> EVM.Gas.instr_cost(:sha3, nil, %EVM.MachineState{stack: [10, 1024]}, nil)
-      323
+      iex> EVM.Gas.operation_cost(:sha3, nil, %EVM.MachineState{stack: [10, 1024]})
+      222
 
   """
-  @spec instr_cost(atom(), EVM.state, MachineState.t, ExecEnv.t) :: t | nil
-  def instr_cost(:sstore, state, machine_state, _exec_env), do: cost_sstore(state, machine_state)
-  def instr_cost(:exp, _state, machine_state, _exec_env) do
+  @spec operation_cost(atom(), EVM.state, MachineState.t) :: t | nil
+  def operation_cost(:sstore, state, machine_state), do: cost_sstore(state, machine_state)
+  def operation_cost(:exp, _state, machine_state) do
     case Enum.at(machine_state.stack, 1) do
       0 -> @g_exp
       s -> @g_exp + @g_expbyte * byte_size(:binary.encode_unsigned(s))
     end
   end
 
-  def instr_cost(:sha3, _state, machine_state, _exec_env) do
+  def operation_cost(:sha3, _state, machine_state) do
     [length, offset] = Stack.peek_n(machine_state.stack, 2)
 
     if offset == 0 do
       @g_sha3
     else
-      memory_cost = memory_cost(round(:math.ceil((offset + length) / 32)))
-      @g_sha3 + memory_cost + @g_sha3word * round(:math.ceil(offset / 32))
+      @g_sha3 + @g_sha3word * round(:math.ceil(offset / 32))
     end
   end
 
-
-  def instr_cost(:mstore, _state, machine_state, _exec_env) do
-    [offset, new_value] = Stack.peek_n(machine_state.stack, 2)
-    {old_value, _} = EVM.Memory.read(machine_state, offset, 32)
-
-    @g_verylow + memory_update_cost(old_value, :binary.encode_unsigned(new_value))
-  end
-
-  defp memory_update_cost(old_value, new_value) do
-    max(memory_cost(new_value) - memory_cost(old_value), 0)
-  end
-
-  defp memory_cost(n) when n == <<0::256>>, do: 0
-  defp memory_cost(n) when is_binary(n), do: memory_cost(Helpers.word_size(n))
-
-  defp memory_cost(length) do
-    linear_cost = length * @g_memory
-    quadratic_cost = MathHelper.floor(:math.pow(length, 2) / @g_quad_coeff_div)
-
-    linear_cost + quadratic_cost
-  end
-
-
-  def instr_cost(:mstore8, _state, machine_state, _exec_env), do: @g_memory * 2
-
-  def instr_cost(instr, _state, _machine_state, _exec_env) when instr in [:calldatacopy, :codecopy], do: 0
-  def instr_cost(:extcodecopy, _state, _machine_state, _exec_env), do: 0
-  def instr_cost(:log0, _state, _machine_state, _exec_env), do: 0
-  def instr_cost(:log1, _state, _machine_state, _exec_env), do: 0
-  def instr_cost(:log2, _state, _machine_state, _exec_env), do: 0
-  def instr_cost(:log3, _state, _machine_state, _exec_env), do: 0
-  def instr_cost(:log4, _state, _machine_state, _exec_env), do: 0
-  def instr_cost(call_instr, _state, _machine_state, _exec_env) when call_instr in [:call, :callcode, :delegatecall], do: 0
-  def instr_cost(:suicide, _state, _machine_state, _exec_env), do: 0
-  def instr_cost(:create, _state, _machine_state, _exec_env), do: 0
-  def instr_cost(:jumpdest, _state, _machine_state, _exec_env), do: @g_jumpdest
-  def instr_cost(:sload, _state, _machine_state, _exec_env), do: @g_sload
-  def instr_cost(w_zero_instr, _state, _machine_state, _exec_env) when w_zero_instr in @w_zero_instr, do: @g_zero
-  def instr_cost(w_base_instr, _state, _machine_state, _exec_env) when w_base_instr in @w_base_instr, do: @g_base
-  def instr_cost(w_very_low_instr, _state, _machine_state, _exec_env) when w_very_low_instr in @w_very_low_instr, do: @g_verylow
-  def instr_cost(w_low_instr, _state, _machine_state, _exec_env) when w_low_instr in @w_low_instr, do: @g_low
-  def instr_cost(w_mid_instr, _state, _machine_state, _exec_env) when w_mid_instr in @w_mid_instr, do: @g_mid
-  def instr_cost(w_high_instr, _state, _machine_state, _exec_env) when w_high_instr in @w_high_instr, do: @g_high
-  def instr_cost(w_extcode_instr, _state, _machine_state, _exec_env) when w_extcode_instr in @w_extcode_instr, do: @g_extcode
-  def instr_cost(:balance, _state, _machine_state, _exec_env), do: 0
-  def instr_cost(:blockhash, _state, _machine_state, _exec_env), do: @g_blockhash
-  def instr_cost(_unknown_instr, _state, _machine_state, _exec_env), do: nil
-
-  # Eq.(222)
-  def cost_mem(_active_words), do: 0
+  def operation_cost(instr, _state, _machine_state) when instr in [:calldatacopy, :codecopy], do: 0
+  def operation_cost(:extcodecopy, _state, _machine_state), do: 0
+  def operation_cost(:log0, _state, _machine_state), do: 0
+  def operation_cost(:log1, _state, _machine_state), do: 0
+  def operation_cost(:log2, _state, _machine_state), do: 0
+  def operation_cost(:log3, _state, _machine_state), do: 0
+  def operation_cost(:log4, _state, _machine_state), do: 0
+  def operation_cost(call_instr, _state, _machine_state) when call_instr in [:call, :callcode, :delegatecall], do: 0
+  def operation_cost(:suicide, _state, _machine_state), do: 0
+  def operation_cost(:create, _state, _machine_state), do: 0
+  def operation_cost(:jumpdest, _state, _machine_state), do: @g_jumpdest
+  def operation_cost(:sload, _state, _machine_state), do: @g_sload
+  def operation_cost(w_zero_instr, _state, _machine_state) when w_zero_instr in @w_zero_instr, do: @g_zero
+  def operation_cost(w_base_instr, _state, _machine_state) when w_base_instr in @w_base_instr, do: @g_base
+  def operation_cost(w_very_low_instr, _state, _machine_state) when w_very_low_instr in @w_very_low_instr, do: @g_verylow
+  def operation_cost(w_low_instr, _state, _machine_state) when w_low_instr in @w_low_instr, do: @g_low
+  def operation_cost(w_mid_instr, _state, _machine_state) when w_mid_instr in @w_mid_instr, do: @g_mid
+  def operation_cost(w_high_instr, _state, _machine_state) when w_high_instr in @w_high_instr, do: @g_high
+  def operation_cost(w_extcode_instr, _state, _machine_state) when w_extcode_instr in @w_extcode_instr, do: @g_extcode
+  def operation_cost(:balance, _state, _machine_state), do: 0
+  def operation_cost(:blockhash, _state, _machine_state), do: @g_blockhash
+  def operation_cost(_unknown_instr, _state, _machine_state), do: 0
 
   @doc """
   Returns the cost of a call to `sstore`. This is defined

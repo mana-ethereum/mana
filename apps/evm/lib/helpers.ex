@@ -40,22 +40,6 @@ defmodule EVM.Helpers do
   def bit_position(byte_position), do: byte_position * 8  + 7
 
   @doc """
-  Gets the word size of a value or returns 0 if the value is 0
-
-  ## Examples
-
-      iex> EVM.Helpers.word_size(<<7::256>>)
-      1
-
-      iex> EVM.Helpers.word_size(for val <- 1..256, into: <<>>, do: <<val>>)
-      8
-  """
-  @spec word_size(binary()) :: integer()
-  def word_size(n) do
-    round(:math.ceil(byte_size(n) / @word_size))
-  end
-
-  @doc """
   Wrap ints greater than the max int around back to 0
 
   ## Examples
@@ -183,10 +167,10 @@ defmodule EVM.Helpers do
   """
   @spec left_pad_bytes(binary() | integer(), integer()) :: integer()
   def left_pad_bytes(n, size) when is_integer(n), do:
-    left_pad_bytes(n |> :binary.encode_unsigned, size)
+    left_pad_bytes(:binary.encode_unsigned(n), size)
 
-  def left_pad_bytes(n, size) do
-    padding_size = (size - byte_size(n)) * 8
+  def left_pad_bytes(n, size \\ EVM.word_size()) do
+    padding_size = (size - byte_size(n)) * EVM.byte_size()
     <<0:: size(padding_size)>> <> n
   end
 
