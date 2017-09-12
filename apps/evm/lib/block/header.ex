@@ -3,18 +3,17 @@ defmodule Block.Header do
   This structure codifies the header of a block in the blockchain.
   """
 
-  # The start of the Homestead block, as defined in Eq.(13) of the Yellow Paper (N_H)
-  @homestead 1_150_000
-  @empty_trie MerklePatriciaTree.Trie.empty_trie()
+  @empty_trie MerklePatriciaTree.Trie.empty_trie_root_hash
+  @empty_keccak [] |> ExRLP.encode |> :keccakf1600.sha3_256
 
   defstruct [
-    parent_hash: <<>>,               # Hp P(BH)Hr
-    ommers_hash: @empty_trie,        # Ho KEC(RLP(L∗H(BU)))
-    beneficiary: <<>>,               # Hc
+    parent_hash: nil,                # Hp P(BH)Hr
+    ommers_hash: @empty_keccak,      # Ho KEC(RLP(L∗H(BU)))
+    beneficiary: nil,                # Hc
     state_root: @empty_trie,         # Hr TRIE(LS(Π(σ, B)))
     transactions_root: @empty_trie,  # Ht TRIE({∀i < kBTk, i ∈ P : p(i, LT (BT[i]))})
     receipts_root: @empty_trie,      # He TRIE({∀i < kBRk, i ∈ P : p(i, LR(BR[i]))})
-    logs_bloom: <<>>,                # Hb bloom
+    logs_bloom: <<0::2048>>,         # Hb bloom
     difficulty: nil,                 # Hd
     number: nil,                     # Hi
     gas_limit: 0,                    # Hl
@@ -27,9 +26,9 @@ defmodule Block.Header do
 
   # As defined in Eq.(35)
   @type t :: %__MODULE__{
-    parent_hash: EVM.hash | <<>>,
+    parent_hash: EVM.hash,
     ommers_hash: EVM.trie_root,
-    beneficiary: EVM.address | <<>>,
+    beneficiary: EVM.address,
     state_root: EVM.trie_root,
     transactions_root: EVM.trie_root,
     receipts_root: EVM.trie_root,
@@ -44,13 +43,26 @@ defmodule Block.Header do
     nonce: <<_::64>> | nil, # TODO: 64-bit hash?
   }
 
+  # The start of the Homestead block, as defined in Eq.(13) of the Yellow Paper (N_H)
+  @homestead_block 1_150_000
+
   @initial_difficulty 131_072 # d_0 from Eq.(40)
+  @minimum_difficulty @initial_difficulty # Mimics d_0 in Eq.(39), but variable on different chains
+  @difficulty_bound_divisor 2048
   @max_extra_data_bytes 32 # Eq.(58)
+
+  @gas_limit_bound_divisor 1024 # Constant from Eq.(45) and Eq.(46)
   @min_gas_limit 125_000 # Eq.(47)
 
-  @doc "Returns the block that defines the start of Homestead"
-  @spec homestead() :: integer()
-  def homestead, do: @homestead
+  @doc """
+  Returns the block that defines the start of Homestead.
+
+  This should be a constant, but it's configurable on different
+  chains, and as such, as allow you to pass that configuration
+  variable (which ends up making this the identity function, if so).
+  """
+  @spec homestead(integer()) :: integer()
+  def homestead(homestead_block \\ @homestead_block), do: homestead_block
 
   @doc """
   This functions encode a header into a value that can
@@ -72,9 +84,9 @@ defmodule Block.Header do
       h.receipts_root,
       h.logs_bloom,
       h.difficulty,
-      h.number,
+      (if h.number == 0, do: <<>>, else: h.number),
       h.gas_limit,
-      h.gas_used,
+      (if h.number == 0, do: <<>>, else: h.gas_used),
       h.timestamp,
       h.extra_data,
       h.mix_hash,
@@ -145,10 +157,16 @@ defmodule Block.Header do
 
       iex> Block.Header.is_before_homestead?(%Block.Header{number: 1_150_000})
       false
+
+      iex> Block.Header.is_before_homestead?(%Block.Header{number: 5}, 6)
+      true
+
+      iex> Block.Header.is_before_homestead?(%Block.Header{number: 5}, 4)
+      false
   """
-  @spec is_before_homestead?(t) :: boolean()
-  def is_before_homestead?(h) do
-    h.number < @homestead
+  @spec is_before_homestead?(t, integer()) :: boolean()
+  def is_before_homestead?(h, homestead_block \\ @homestead_block) do
+    h.number < homestead_block
   end
 
   @doc """
@@ -165,9 +183,12 @@ defmodule Block.Header do
 
       iex> Block.Header.is_after_homestead?(%Block.Header{number: 1_150_000})
       true
+
+      iex> Block.Header.is_after_homestead?(%Block.Header{number: 5}, 6)
+      false
   """
-  @spec is_after_homestead?(t) :: boolean()
-  def is_after_homestead?(h), do: not is_before_homestead?(h)
+  @spec is_after_homestead?(t, integer()) :: boolean()
+  def is_after_homestead?(h, homestead_block \\ @homestead_block), do: not is_before_homestead?(h, homestead_block)
 
   @doc """
   Returns true if the block header is valid. This defines
@@ -175,7 +196,6 @@ defmodule Block.Header do
   Eq.(56), Eq.(57) and Eq.(58) of the Yellow Paper, commonly
   referred to as V(H).
 
-  # TODO: Implement and add examples
   # TODO: Add proof of work check
 
   ## Examples
@@ -187,9 +207,6 @@ defmodule Block.Header do
       {:invalid, [:invalid_difficulty, :invalid_gas_limit]}
 
       iex> Block.Header.is_valid?(%Block.Header{number: 1, difficulty: 131_136, gas_limit: 200_000, timestamp: 65}, %Block.Header{number: 0, difficulty: 131_072, gas_limit: 200_000, timestamp: 55})
-      :valid
-
-      iex> Block.Header.is_valid?(%Block.Header{number: 1, difficulty: 131_000, gas_limit: 200_000, timestamp: 65}, %Block.Header{number: 0, difficulty: 131_072, gas_limit: 200_000, timestamp: 55})
       :valid
 
       iex> Block.Header.is_valid?(%Block.Header{number: 1, difficulty: 131_000, gas_limit: 200_000, timestamp: 65}, %Block.Header{number: 0, difficulty: 131_072, gas_limit: 200_000, timestamp: 55}, true)
@@ -206,15 +223,22 @@ defmodule Block.Header do
 
       iex> Block.Header.is_valid?(%Block.Header{number: 1, difficulty: 131_136, gas_limit: 200_000, timestamp: 65, extra_data: "0123456789012345678901234567890123456789"}, %Block.Header{number: 0, difficulty: 131_072, gas_limit: 200_000, timestamp: 55})
       {:invalid, [:extra_data_too_large]}
+
+      # TODO: Add tests for setting homestead_block
+      # TODO: Add tests for setting initial_difficulty
+      # TODO: Add tests for setting minimum_difficulty
+      # TODO: Add tests for setting difficulty_bound_divisor
+      # TODO: Add tests for setting gas_limit_bound_divisor
+      # TODO: Add tests for setting min_gas_limit
   """
-  @spec is_valid?(t, t | nil, boolean()) :: :valid | {:invalid, [atom()]}
-  def is_valid?(header, parent_header, enforce_difficulty \\ false) do
+  @spec is_valid?(t, t | nil, integer(), integer(), integer(), integer(), integer(), integer()) :: :valid | {:invalid, [atom()]}
+  def is_valid?(header, parent_header, homestead_block \\ @homestead_block, initial_difficulty \\ @initial_difficulty, minimum_difficulty \\ @minimum_difficulty, difficulty_bound_divisor \\ @difficulty_bound_divisor, gas_limit_bound_divisor \\ @gas_limit_bound_divisor, min_gas_limit \\ @min_gas_limit) do
     parent_gas_limit = if parent_header, do: parent_header.gas_limit, else: nil
 
     errors = [] ++
-      (if not enforce_difficulty or header.difficulty == get_difficulty(header, parent_header), do: [], else: [:invalid_difficulty]) ++ # Eq.(51)
+      (if header.difficulty == get_difficulty(header, parent_header, initial_difficulty, minimum_difficulty, difficulty_bound_divisor, homestead_block), do: [], else: [:invalid_difficulty]) ++ # Eq.(51)
       (if header.gas_used <= header.gas_limit, do: [], else: [:exceeded_gas_limit]) ++ # Eq.(52)
-      (if is_gas_limit_valid?(header.gas_limit, parent_gas_limit), do: [], else: [:invalid_gas_limit]) ++ # Eq.(53), Eq.(54) and Eq.(55)
+      (if is_gas_limit_valid?(header.gas_limit, parent_gas_limit, gas_limit_bound_divisor, min_gas_limit), do: [], else: [:invalid_gas_limit]) ++ # Eq.(53), Eq.(54) and Eq.(55)
       (if is_nil(parent_header) or header.timestamp > parent_header.timestamp, do: [], else: [:child_timestamp_invalid]) ++ # Eq.(56)
       (if header.number == 0 or header.number == parent_header.number + 1, do: [], else: [:child_number_invalid]) ++ # Eq.(57)
       (if byte_size(header.extra_data) <= @max_extra_data_bytes, do: [], else: [:extra_data_too_large])
@@ -243,8 +267,6 @@ defmodule Block.Header do
   @doc """
   Calculates the difficulty of a new block header. This implements Eq.(39),
   Eq.(40), Eq.(41), Eq.(42), Eq.(43) and Eq.(44) of the Yellow Paper.
-
-  # TODO: Validate these results
 
   ## Examples
 
@@ -284,17 +306,55 @@ defmodule Block.Header do
       ...>  %Block.Header{number: 3_000_000, timestamp: 55, difficulty: 300_000}
       ...> )
       268_734_142
+
+      Test actual Ropsten genesis block
+      iex> Block.Header.get_difficulty(
+      ...>   %Block.Header{number: 0, timestamp: 0},
+      ...>   nil,
+      ...>   0x100000,
+      ...>   0x020000,
+      ...>   0x0800,
+      ...>   0
+      ...> )
+      1_048_576
+
+      # Test actual Ropsten first block
+      iex> Block.Header.get_difficulty(
+      ...>   %Block.Header{number: 1, timestamp: 1_479_642_530},
+      ...>   %Block.Header{number: 0, timestamp: 0, difficulty: 1_048_576},
+      ...>   0x100000,
+      ...>   0x020000,
+      ...>   0x0800,
+      ...>   0
+      ...> )
+      997_888
   """
-  @spec get_difficulty(t, t | nil) :: integer()
-  def get_difficulty(header, parent_header) do
+  @spec get_difficulty(t, t | nil, integer()) :: integer()
+  def get_difficulty(header, parent_header, initial_difficulty \\ @initial_difficulty, minimum_difficulty \\ @minimum_difficulty, difficulty_bound_divisor \\ @difficulty_bound_divisor, homestead_block \\ @homestead_block) do
     cond do
-      header.number == 0 -> @initial_difficulty
-      is_before_homestead?(header) -> max(@initial_difficulty, parent_header.difficulty + difficulty_x(parent_header.difficulty) * difficulty_s1(header, parent_header) + difficulty_e(header))
-      true -> max(@initial_difficulty, parent_header.difficulty + difficulty_x(parent_header.difficulty) * difficulty_s2(header, parent_header) + difficulty_e(header))
+      header.number == 0 -> initial_difficulty
+      is_before_homestead?(header, homestead_block) ->
+        # Find the delta from parent block
+        difficulty_delta = difficulty_x(parent_header.difficulty, difficulty_bound_divisor) * difficulty_s1(header, parent_header) + difficulty_e(header)
+
+        # Add delta to parent block
+        next_difficulty = parent_header.difficulty + difficulty_delta
+
+        # Return next difficulty, capped at minimum
+        max(minimum_difficulty, next_difficulty)
+      true ->
+        # Find the delta from parent block (note: we use difficulty_s2 since we're after Homestead)
+        difficulty_delta = difficulty_x(parent_header.difficulty, difficulty_bound_divisor) * difficulty_s2(header, parent_header) + difficulty_e(header)
+
+        # Add delta to parent's difficulty
+        next_difficulty = parent_header.difficulty + difficulty_delta
+
+        # Return next difficulty, capped at minimum
+        max(minimum_difficulty, next_difficulty)
     end
   end
 
-  # Eq.(42) ς1
+  # Eq.(42) ς1 - Effectively decides if blocks are being mined too quicky or too slower
   @spec difficulty_s1(t, t) :: integer()
   defp difficulty_s1(header, parent_header) do
     if header.timestamp < ( parent_header.timestamp + 13 ), do: 1, else: -1
@@ -307,11 +367,11 @@ defmodule Block.Header do
     max(1 - s, -99)
   end
 
-  # Eq.(41) x
-  @spec difficulty_x(integer()) :: integer()
-  defp difficulty_x(parent_difficulty), do: MathHelper.floor(parent_difficulty / 2048)
+  # Eq.(41) x - Creates some multiplier for how much we should change difficulty based on previous difficulty
+  @spec difficulty_x(integer(), integer()) :: integer()
+  defp difficulty_x(parent_difficulty, difficulty_bound_divisor), do: MathHelper.floor(parent_difficulty / difficulty_bound_divisor)
 
-  # Eq.(44) ε
+  # Eq.(44) ε - Adds a delta to ensure we're increasing difficulty over time
   @spec difficulty_e(t) :: integer()
   defp difficulty_e(header) do
     MathHelper.floor(
@@ -351,20 +411,26 @@ defmodule Block.Header do
 
       iex> Block.Header.is_gas_limit_valid?(1_000_000, 999_000)
       false
+
+      iex> Block.Header.is_gas_limit_valid?(1_000_000, 2_000_000, 1)
+      true
+
+      iex> Block.Header.is_gas_limit_valid?(1_000, nil, 1024, 500)
+      true
   """
   @spec is_gas_limit_valid?(EVM.Gas.t, EVM.Gas.t | nil) :: boolean()
-  def is_gas_limit_valid?(gas_limit, parent_gas_limit) do
+  def is_gas_limit_valid?(gas_limit, parent_gas_limit, gas_limit_bound_divisor \\ @gas_limit_bound_divisor, min_gas_limit \\ @min_gas_limit) do
     if parent_gas_limit == nil do
       # It's not entirely clear from the Yellow Paper
       # whether a genesis block should have any limits
       # on gas limit, other than min gas limit.
-      gas_limit > @min_gas_limit
+      gas_limit > min_gas_limit
     else
-      max_delta = MathHelper.floor(parent_gas_limit / 1024)
+      max_delta = MathHelper.floor(parent_gas_limit / gas_limit_bound_divisor)
 
       ( gas_limit < parent_gas_limit + max_delta ) and
       ( gas_limit > parent_gas_limit - max_delta ) and
-      gas_limit > @min_gas_limit
+      gas_limit > min_gas_limit
     end
   end
 end

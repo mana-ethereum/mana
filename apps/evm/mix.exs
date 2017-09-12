@@ -3,7 +3,7 @@ defmodule EVM.Mixfile do
 
   def project do
     [app: :evm,
-     version: "0.1.5",
+     version: "0.1.6",
      elixir: "~> 1.4",
      description: "Ethereum's Virtual Machine, in all its glory.",
       package: [
@@ -43,7 +43,7 @@ defmodule EVM.Mixfile do
       {:credo, "~> 0.8", only: [:dev, :test], runtime: false},
       {:poison, "~> 3.1.0", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.14", only: :dev, runtime: false},
-      {:merkle_patricia_tree, "~> 0.2.3"},
+      {:merkle_patricia_tree, "~> 0.2.5"},
       {:keccakf1600, "~> 2.0.0", hex: :keccakf1600_orig},
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
     ]

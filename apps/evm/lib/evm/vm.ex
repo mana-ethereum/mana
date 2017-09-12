@@ -93,7 +93,7 @@ defmodule EVM.VM do
 
       iex> state = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db(:evm_vm_test_2))
       iex> EVM.VM.cycle(state, %EVM.MachineState{pc: 0, gas: 5, stack: [1, 2]}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:add])})
-      {%MerklePatriciaTree.Trie{db: {MerklePatriciaTree.DB.ETS, :evm_vm_test_2}, root_hash: <<128>>}, %EVM.MachineState{pc: 1, gas: 2, stack: [3]}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:add])}}
+      {%MerklePatriciaTree.Trie{db: {MerklePatriciaTree.DB.ETS, :evm_vm_test_2}, root_hash: MerklePatriciaTree.Trie.empty_trie_root_hash}, %EVM.MachineState{pc: 1, gas: 2, stack: [3]}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:add])}}
   """
   @spec cycle(EVM.state, MachineState.t, SubState.t, ExecEnv.t) :: {EVM.state, MachineState.t, SubState.t, ExecEnv.t}
   def cycle(state, machine_state, sub_state, exec_env) do
