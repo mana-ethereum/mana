@@ -3,7 +3,7 @@ defmodule Blockchain.Mixfile do
 
   def project do
     [app: :blockchain,
-     version: "0.1.2",
+     version: "0.1.3",
       elixir: "~> 1.4",
       description: "Ethereum's Blockchain Manager",
       package: [
@@ -44,10 +44,11 @@ defmodule Blockchain.Mixfile do
       {:keccakf1600, "~> 2.0.0", hex: :keccakf1600_orig},
       {:credo, "~> 0.8", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.14", only: :dev, runtime: false},
-      {:merkle_patricia_tree, "~> 0.2.3"},
+      {:merkle_patricia_tree, "~> 0.2.5"},
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
       {:ex_rlp, "~> 0.2.1"},
-      {:evm, "~> 0.1.5"},
+      {:evm, "~> 0.1.6"},
+      {:poison, "~> 3.1.0"},
     ]
   end
 end

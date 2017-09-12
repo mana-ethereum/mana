@@ -25,7 +25,7 @@ defmodule Blockchain.Contract do
       ...> |> Blockchain.Account.put_account(<<0x10::160>>, %Blockchain.Account{balance: 11, nonce: 5})
       ...> |> Blockchain.Contract.create_contract(<<0x10::160>>, <<0x10::160>>, 1000, 1, 5, EVM.MachineCode.compile([:push1, 3, :push1, 5, :add, :push1, 0x00, :mstore, :push1, 0, :push1, 32, :return]), 5, %Block.Header{nonce: 1})
       {
-        %MerklePatriciaTree.Trie{db: {MerklePatriciaTree.DB.ETS, :contract_create_test}, root_hash: <<51, 108, 25, 209, 241, 95, 9, 165, 51, 115, 44, 245, 217, 223, 195, 136, 228, 130, 203, 27, 58, 205, 190, 115, 135, 234, 156, 138, 70, 254, 70, 251>>},
+        %MerklePatriciaTree.Trie{db: {MerklePatriciaTree.DB.ETS, :contract_create_test}, root_hash: <<98, 127, 176, 34, 60, 87, 113, 153, 133, 112, 237, 229, 251, 94, 163, 145, 234, 68, 26, 244, 25, 19, 211, 192, 172, 75, 106, 198, 229, 248, 105, 39>>},
         976,
         %EVM.SubState{}
       }
@@ -33,12 +33,8 @@ defmodule Blockchain.Contract do
       [%Blockchain.Account{balance: 6, nonce: 5}, %Blockchain.Account{balance: 5, code_hash: <<243, 247, 169, 254, 54, 79, 170, 185, 59, 33, 109, 165, 10, 50, 20, 21, 79, 34, 160, 162, 180, 21, 178, 58, 132, 200, 22, 158, 139, 99, 110, 227>>}]
       iex> Blockchain.Account.get_machine_code(state, Blockchain.Contract.new_contract_address(<<0x10::160>>, 5))
       {:ok, <<0x08::256>>}
-      iex> MerklePatriciaTree.Trie.Inspector.all_keys(state)
-      [
-        <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 16>>,
-        <<98, 119, 103, 88, 60, 91, 239, 149, 126, 178, 156, 37, 168, 191, 50, 135, 185, 229, 85, 116>>,
-        <<243, 247, 169, 254, 54, 79, 170, 185, 59, 33, 109, 165, 10, 50, 20, 21, 79, 34, 160, 162, 180, 21, 178, 58, 132, 200, 22, 158, 139, 99, 110, 227>>
-      ]
+      iex> MerklePatriciaTree.Trie.Inspector.all_keys(state) |> Enum.count
+      3
   """
   @spec create_contract(EVM.state, EVM.address, EVM.address, EVM.Gas.t, EVM.Gas.gas_price, EVM.Wei.t, EVM.MachineCode.t, integer(), Header.t) :: {EVM.state, EVM.Gas.t, EVM.SubState.t}
   def create_contract(state, sender, originator, available_gas, gas_price, endowment, init_code, stack_depth, block_header) do
@@ -99,19 +95,15 @@ defmodule Blockchain.Contract do
       ...> |> Blockchain.Account.put_code(<<0x20::160>>, EVM.MachineCode.compile([:push1, 3, :push1, 5, :add, :push1, 0x00, :mstore, :push1, 0, :push1, 32, :return]))
       ...> |> Blockchain.Contract.message_call(<<0x10::160>>, <<0x10::160>>, <<0x20::160>>, <<0x20::160>>, 1000, 1, 5, 5, <<1, 2, 3>>, 5, %Block.Header{nonce: 1})
       {
-        %MerklePatriciaTree.Trie{db: {MerklePatriciaTree.DB.ETS, :message_call_test}, root_hash: <<116, 36, 231, 2, 3, 30, 24, 223, 195, 56, 133, 194, 241, 62, 90, 70, 121, 41, 251, 160, 7, 56, 140, 55, 162, 225, 115, 154, 194, 14, 189, 32>>},
+        %MerklePatriciaTree.Trie{db: {MerklePatriciaTree.DB.ETS, :message_call_test}, root_hash: <<154, 49, 65, 245, 127, 76, 136, 164, 2, 21, 225, 99, 104, 24, 242, 82, 93, 141, 83, 170, 2, 85, 161, 83, 159, 239, 133, 253, 135, 151, 187, 1>>},
         976,
         %EVM.SubState{},
         <<0x08::256>>
       }
       iex> Blockchain.Account.get_accounts(state, [<<0x10::160>>, <<0x20::160>>])
       [%Blockchain.Account{balance: 5}, %Blockchain.Account{balance: 25, code_hash: <<216, 114, 80, 103, 17, 50, 164, 75, 162, 123, 123, 99, 162, 105, 226, 15, 215, 200, 136, 216, 29, 106, 193, 119, 1, 173, 138, 37, 219, 39, 23, 231>>}]
-      iex> MerklePatriciaTree.Trie.Inspector.all_keys(state)
-      [
-        <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 16>>,
-        <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 32>>,
-        <<216, 114, 80, 103, 17, 50, 164, 75, 162, 123, 123, 99, 162, 105, 226, 15, 215, 200, 136, 216, 29, 106, 193, 119, 1, 173, 138, 37, 219, 39, 23, 231>> # this must be a sub-tree
-      ]
+      iex> MerklePatriciaTree.Trie.Inspector.all_keys(state) |> Enum.count
+      3
   """
   @spec message_call(EVM.state, EVM.address, EVM.address, EVM.address, EVM.address, EVM.Gas.t, EVM.Gas.gas_price, EVM.Wei.t, EVM.Wei.t, binary(), integer(), Header.t) :: { EVM.state, EVM.Gas.t, EVM.SubState.t, EVM.VM.output }
   def message_call(state, sender, originator, recipient, contract, available_gas, gas_price, value, apparent_value, data, stack_depth, block_header) do
