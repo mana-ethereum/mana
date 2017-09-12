@@ -1,44 +1,33 @@
 defmodule Blockchain.BlockTest do
   use ExUnit.Case, async: true
+  use EthCommonTest.Harness
   doctest Blockchain.Block
 
   alias Block.Header
   alias Blockchain.Block
   alias Blockchain.Transaction
 
-  require Integer
+  eth_test "GenesisTests", :basic_genesis_tests, [:test2, :test3], fn test, _test_name ->
+    db = MerklePatriciaTree.Test.random_ets_db()
 
-  @passing_tests %{
-    basic_genesis_tests: [:test2, :test3]
-  }
+    chain = %Blockchain.Chain{
+      genesis: %{
+        timestamp: test["timestamp"] |> maybe_hex,
+        parent_hash: test["parentHash"] |> maybe_hex,
+        extra_data: test["extraData"] |> maybe_hex,
+        gas_limit: test["gasLimit"] |> maybe_hex,
+        difficulty: test["difficulty"] |> maybe_hex,
+        author: test["coinbase"] |> maybe_hex,
+        mix_hash: test["mixhash"] |> maybe_hex,
+        nonce: test["nonce"] |> maybe_hex,
+      },
+      accounts: get_test_accounts(test["alloc"])
+    }
 
-  test "Ethereum Common Tests" do
-    for {test_type, test_group} <- @passing_tests do
-      for {test_name, test} <- read_test_file(test_type),
-        ( test_group == :all or Enum.member?(test_group, String.to_atom(test_name)) ) do
+    block = Block.gen_genesis_block(chain, db)
 
-        db = MerklePatriciaTree.Test.random_ets_db()
-
-        chain = %Blockchain.Chain{
-          genesis: %{
-            timestamp: test["timestamp"] |> maybe_hex,
-            parent_hash: test["parentHash"] |> maybe_hex,
-            extra_data: test["extraData"] |> maybe_hex,
-            gas_limit: test["gasLimit"] |> maybe_hex,
-            difficulty: test["difficulty"] |> maybe_hex,
-            author: test["coinbase"] |> maybe_hex,
-            mix_hash: test["mixhash"] |> maybe_hex,
-            nonce: test["nonce"] |> maybe_hex,
-          },
-          accounts: get_test_accounts(test["alloc"])
-        }
-
-        block = Block.gen_genesis_block(chain, db)
-
-        # Check that our block matches the serialization from common tests
-        assert Block.serialize(block) == test["result"] |> maybe_hex |> ExRLP.decode
-      end
-    end
+    # Check that our block matches the serialization from common tests
+    assert Block.serialize(block) == test["result"] |> maybe_hex |> ExRLP.decode
   end
 
   defp get_test_accounts(alloc) do
@@ -111,38 +100,5 @@ defmodule Blockchain.BlockTest do
       |> Blockchain.Block.add_rewards_to_block(db)
       |> Blockchain.Block.is_fully_valid?(chain, nil, db)
   end
-
-  # TODO: Do we want to standardize this test harness?
-  defp read_test_file(type) do
-    {:ok, body} = File.read(test_file_name(type))
-    Poison.decode!(body)
-  end
-
-  defp test_file_name(type) do
-    "test/support/ethereum_common_tests/GenesisTests/#{Atom.to_string(type)}.json"
-  end
-
-  # TODO: Do we want to standardize these de-serializers?
-  @spec maybe_hex(String.t | nil) :: binary() | nil
-  def maybe_hex(hex_data, type \\ :raw)
-  def maybe_hex(nil, _), do: nil
-  def maybe_hex(hex_data, :raw), do: load_raw_hex(hex_data)
-  def maybe_hex(hex_data, :integer), do: load_hex(hex_data)
-
-  def load_decimal(dec_data) do
-    {res, ""} = Integer.parse(dec_data)
-
-    res
-  end
-
-  @spec load_raw_hex(String.t) :: binary()
-  defp load_raw_hex("0x" <> hex_data), do: load_raw_hex(hex_data)
-  defp load_raw_hex(hex_data) when Integer.is_odd(byte_size(hex_data)), do: load_raw_hex("0" <> hex_data)
-  defp load_raw_hex(hex_data) do
-    Base.decode16!(hex_data, case: :mixed)
-  end
-
-  @spec load_hex(String.t) :: integer()
-  defp load_hex(hex_data), do: hex_data |> load_raw_hex |> :binary.decode_unsigned
 
 end
