@@ -17,7 +17,7 @@ by adding `blockchain` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
-  [{:blockchain, "~> 0.1.3"}]
+  [{:blockchain, "~> 0.1.4"}]
 end
 ```
 
@@ -37,7 +37,8 @@ be found at [https://hexdocs.pm/blockchain](https://hexdocs.pm/blockchain).
 
 Geoffrey Hayes (@hayesgm)
 Ayrat Badykov (@ayrat555)
+Mason Fischer (@masonforest)
 
 ## License
 
-Blockchain is released under the MIT License. See the LICENSE file for further details.
+Exthereum's Blockchain is released under the MIT License. See the LICENSE file for further details.

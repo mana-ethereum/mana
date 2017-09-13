@@ -1,3 +1,5 @@
+# 0.1.4
+* Pass common tests for block state and transactions.
 # 0.1.3
 * Add basic support for chains, such as Ropsten versus Homestead.
 * Upgrade EVM to and move `Block.Header` to the EVM project.

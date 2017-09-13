@@ -2,6 +2,12 @@ defmodule Blockchain.Transaction.Signature do
   @moduledoc """
   Defines helper functions for signing and getting the signature
   of a transaction, as defined in Appendix F of the Yellow Paper.
+
+  For any of the following functions, if chain_id is specified,
+  it's assumed that we're post-fork and we should follow the
+  specification EIP-155 from:
+
+  https://github.com/ethereum/EIPs/blob/master/EIPS/eip-155.md
   """
 
   @type public_key :: <<_::512>>
@@ -12,9 +18,10 @@ defmodule Blockchain.Transaction.Signature do
   @type hash_s :: integer()
 
   # The follow are the maximum value for x in the signature, as defined in Eq.(212)
-  @secp256k1n         115792089237316195423570985008687907852837564279074904382605163141518161494337
-  @secp256k1n_2       round(:math.floor(@secp256k1n / 2))
-  @base_recovery_id   27
+  @secp256k1n               115792089237316195423570985008687907852837564279074904382605163141518161494337
+  @secp256k1n_2             round(:math.floor(@secp256k1n / 2))
+  @base_recovery_id         27
+  @base_recovery_id_eip_155 35
 
   @doc """
   Given a private key, returns a public key.
@@ -57,14 +64,26 @@ defmodule Blockchain.Transaction.Signature do
     {27,
      74927840775756275467012999236208995857356645681540064312847180029125478834483,
      56037731387691402801139111075060162264934372456622294904359821823785637523849}
+
+    iex> data = "ec098504a817c800825208943535353535353535353535353535353535353535880de0b6b3a764000080018080" |> BitHelper.from_hex
+    iex> hash = data |> BitHelper.kec
+    iex> private_key = "4646464646464646464646464646464646464646464646464646464646464646" |> BitHelper.from_hex
+    iex> Blockchain.Transaction.Signature.sign_hash(hash, private_key, 1)
+    { 37, 18515461264373351373200002665853028612451056578545711640558177340181847433846, 46948507304638947509940763649030358759909902576025900602547168820602576006531 }
   """
-  @spec sign_hash(BitHelper.keccak_hash, private_key) :: {hash_v, hash_r, hash_s}
-  def sign_hash(hash, private_key) do
-    public_key = get_public_key(private_key)
+  @spec sign_hash(BitHelper.keccak_hash, private_key, integer() | nil) :: {hash_v, hash_r, hash_s}
+  def sign_hash(hash, private_key, chain_id \\ nil) do
 
     {:ok, <<r::size(256), s::size(256)>>, recovery_id} = :libsecp256k1.ecdsa_sign_compact(hash, private_key, :default, <<>>)
 
-    {@base_recovery_id + recovery_id, r, s}
+    # Fork Ψ EIP-155
+    recovery_id = if chain_id do
+      chain_id * 2 + @base_recovery_id_eip_155 + recovery_id
+    else
+      @base_recovery_id + recovery_id
+    end
+
+    {recovery_id, r, s}
   end
 
   @doc """
@@ -75,22 +94,48 @@ defmodule Blockchain.Transaction.Signature do
   ## Examples
 
     iex> Blockchain.Transaction.Signature.recover_public(<<2::256>>, 28, 38938543279057362855969661240129897219713373336787331739561340553100525404231, 23772455091703794797226342343520955590158385983376086035257995824653222457926)
-    {:ok, <<4, 121, 190, 102, 126, 249, 220, 187, 172, 85, 160, 98, 149,
-            206, 135, 11, 7, 2, 155, 252, 219, 45, 206, 40, 217, 89, 242,
-            129, 91, 22, 248, 23, 152, 72, 58, 218, 119, 38, 163, 196, 101,
-            93, 164, 251, 252, 14, 17, 8, 168, 253, 23, 180, 72, 166, 133,
-            84, 25, 156, 71, 208, 143, 251, 16, 212, 184>>}
+    {:ok, <<121, 190, 102, 126, 249, 220, 187, 172, 85, 160, 98, 149, 206, 135, 11, 7, 2,
+            155, 252, 219, 45, 206, 40, 217, 89, 242, 129, 91, 22, 248, 23, 152, 72, 58,
+            218, 119, 38, 163, 196, 101, 93, 164, 251, 252, 14, 17, 8, 168, 253, 23, 180,
+            72, 166, 133, 84, 25, 156, 71, 208, 143, 251, 16, 212, 184>>}
 
     iex> Blockchain.Transaction.Signature.recover_public(<<2::256>>, 55, 38938543279057362855969661240129897219713373336787331739561340553100525404231, 23772455091703794797226342343520955590158385983376086035257995824653222457926)
     {:error, "Recovery id invalid 0-3"}
+
+    iex> data = "ec098504a817c800825208943535353535353535353535353535353535353535880de0b6b3a764000080018080" |> BitHelper.from_hex
+    iex> hash = data |> BitHelper.kec
+    iex> v = 27
+    iex> r = 18515461264373351373200002665853028612451056578545711640558177340181847433846
+    iex> s = 46948507304638947509940763649030358759909902576025900602547168820602576006531
+    iex> Blockchain.Transaction.Signature.recover_public(hash, v, r, s)
+    {:ok,
+      <<75, 194, 163, 18, 101, 21, 63, 7, 231, 14, 11, 171, 8, 114, 78, 107, 133,
+        226, 23, 248, 205, 98, 140, 235, 98, 151, 66, 71, 187, 73, 51, 130, 206, 40,
+        202, 183, 154, 215, 17, 158, 225, 173, 62, 188, 219, 152, 161, 104, 5, 33,
+        21, 48, 236, 198, 207, 239, 161, 184, 142, 109, 255, 153, 35, 42>>}
+
+    iex> { v, r, s } = { 37, 18515461264373351373200002665853028612451056578545711640558177340181847433846, 46948507304638947509940763649030358759909902576025900602547168820602576006531 }
+    iex> data = "ec098504a817c800825208943535353535353535353535353535353535353535880de0b6b3a764000080018080" |> BitHelper.from_hex
+    iex> hash = data |> BitHelper.kec
+    iex> Blockchain.Transaction.Signature.recover_public(hash, v, r, s, 1)
+    {:ok, <<75, 194, 163, 18, 101, 21, 63, 7, 231, 14, 11, 171, 8, 114, 78, 107, 133,
+            226, 23, 248, 205, 98, 140, 235, 98, 151, 66, 71, 187, 73, 51, 130, 206, 40,
+            202, 183, 154, 215, 17, 158, 225, 173, 62, 188, 219, 152, 161, 104, 5, 33,
+            21, 48, 236, 198, 207, 239, 161, 184, 142, 109, 255, 153, 35, 42>>}
   """
-  @spec recover_public(BitHelper.keccak_hash, hash_v, hash_r, hash_s) :: {:ok, public_key} | {:error, String.t}
-  def recover_public(hash, v, r, s) do
-    signature = :binary.encode_unsigned(r) <> :binary.encode_unsigned(s)
-    recovery_id = v - @base_recovery_id
+  @spec recover_public(BitHelper.keccak_hash, hash_v, hash_r, hash_s, integer() | nil) :: {:ok, public_key} | {:error, String.t}
+  def recover_public(hash, v, r, s, chain_id \\ nil) do
+    signature = BitHelper.pad(:binary.encode_unsigned(r), 32) <> BitHelper.pad(:binary.encode_unsigned(s), 32)
+
+    # Fork Ψ EIP-155
+    recovery_id = if not is_nil(chain_id) and uses_chain_id?(v) do
+      v - chain_id * 2 - @base_recovery_id_eip_155
+    else
+      v - @base_recovery_id
+    end
 
     case :libsecp256k1.ecdsa_recover_compact(hash, signature, :uncompressed, recovery_id) do
-      {:ok, public_key} -> {:ok, public_key}
+      {:ok, <<_byte::8, public_key::binary()>>} -> {:ok, public_key}
       {:error, reason} -> {:error, to_string(reason)}
     end
   end
@@ -144,8 +189,8 @@ defmodule Blockchain.Transaction.Signature do
   Returns a hash of a given transaction according to the
   formula defined in Eq.(214) and Eq.(215) of the Yellow Paper.
 
-  TODO: Are we supposed to RLP encode Ls before hashing, or maybe
-        just concatencate the fields? Confused about Eq 214/5.
+  Note: As per EIP-155 (https://github.com/ethereum/EIPs/blob/master/EIPS/eip-155.md),
+        we will append the chain-id and nil elements to the serialized transaction.
 
   ## Examples
 
@@ -154,12 +199,15 @@ defmodule Blockchain.Transaction.Signature do
 
       iex> Blockchain.Transaction.Signature.transaction_hash(%Blockchain.Transaction{nonce: 5, gas_price: 6, gas_limit: 7, to: <<1>>, value: 5, data: <<1>>})
       <<225, 195, 128, 181, 3, 211, 32, 231, 34, 10, 166, 198, 153, 71, 210, 118, 51, 117, 22, 242, 87, 212, 229, 37, 71, 226, 150, 160, 50, 203, 127, 180>>
+
+      iex> Blockchain.Transaction.Signature.transaction_hash(%Blockchain.Transaction{nonce: 5, gas_price: 6, gas_limit: 7, to: <<1>>, value: 5, data: <<1>>}, 1)
+      <<132, 79, 28, 4, 212, 58, 235, 38, 66, 211, 167, 102, 36, 58, 229, 88, 238, 251, 153, 23, 121, 163, 212, 64, 83, 111, 200, 206, 54, 43, 112, 53>>
   """
-  @spec transaction_hash(Blockchain.Transaction.t) :: BitHelper.keccak_hash
-  def transaction_hash(trx) do
-    Blockchain.Transaction.serialize(trx)
-      |> Enum.take(6)
-      |> ExRLP.encode()
+  @spec transaction_hash(Blockchain.Transaction.t, integer() | nil) :: BitHelper.keccak_hash
+  def transaction_hash(trx, chain_id \\ nil) do
+    Blockchain.Transaction.serialize(trx, false)
+      |> Kernel.++(if chain_id, do: [chain_id |> :binary.encode_unsigned, <<>>, <<>>], else: []) # See EIP-155
+      |> ExRLP.encode
       |> BitHelper.kec()
   end
 
@@ -172,13 +220,16 @@ defmodule Blockchain.Transaction.Signature do
 
       iex> Blockchain.Transaction.Signature.sign_transaction(%Blockchain.Transaction{nonce: 5, gas_price: 6, gas_limit: 7, to: <<>>, value: 5, init: <<1>>}, <<1::256>>)
       %Blockchain.Transaction{data: <<>>, gas_limit: 7, gas_price: 6, init: <<1>>, nonce: 5, r: 97037709922803580267279977200525583527127616719646548867384185721164615918250, s: 31446571475787755537574189222065166628755695553801403547291726929250860527755, to: "", v: 27, value: 5}
+
+      iex> Blockchain.Transaction.Signature.sign_transaction(%Blockchain.Transaction{nonce: 5, gas_price: 6, gas_limit: 7, to: <<>>, value: 5, init: <<1>>}, <<1::256>>, 1)
+      %Blockchain.Transaction{data: <<>>, gas_limit: 7, gas_price: 6, init: <<1>>, nonce: 5, r: 25739987953128435966549144317523422635562973654702886626580606913510283002553, s: 41423569377768420285000144846773344478964141018753766296386430811329935846420, to: "", v: 38, value: 5}
   """
-  @spec sign_transaction(Blockchain.Transaction.t, private_key) :: Blockchain.Transaction.t
-  def sign_transaction(trx, private_key) do
+  @spec sign_transaction(Blockchain.Transaction.t, private_key, integer() | nil) :: Blockchain.Transaction.t
+  def sign_transaction(trx, private_key, chain_id \\ nil) do
 
     {v, r, s} = trx
-      |> transaction_hash()
-      |> sign_hash(private_key)
+      |> transaction_hash(chain_id)
+      |> sign_hash(private_key, chain_id)
 
     %{trx | v: v, r: r, s: s}
   end
@@ -227,16 +278,27 @@ defmodule Blockchain.Transaction.Signature do
   ## Examples
 
       iex> Blockchain.Transaction.Signature.sender(%Blockchain.Transaction{data: nil, gas_limit: 7, gas_price: 6, init: <<1>>, nonce: 5, r: 38889131630470350300468726261158724183878062819625353581392042110782473464074, s: 56013001490976921811414879795854011730332692343890561111314022658085426919315, to: "", v: 27, value: 5})
-      {:ok, <<78, 5, 165, 161, 24, 170, 36, 120, 35, 15, 72, 69, 245, 223, 223, 115, 128, 119, 32, 137>>}
+      {:ok, <<97, 159, 86, 232, 190, 208, 127, 225, 150, 192, 219, 196, 27, 82, 226, 188, 100, 129, 123, 58>>}
+
+      iex> Blockchain.Transaction.Signature.sender(%Blockchain.Transaction{data: nil, gas_limit: 7, gas_price: 6, init: <<1>>, nonce: 5, r: 38889131630470350300468726261158724183878062819625353581392042110782473464074, s: 56013001490976921811414879795854011730332692343890561111314022658085426919315, to: "", v: 37, value: 5}, 1)
+      {:ok, <<193, 199, 91, 238, 113, 76, 188, 186, 97, 187, 114, 56, 173, 211, 129, 121, 109, 144, 30, 253>>}
 
       iex> Blockchain.Transaction.Signature.sender(%Blockchain.Transaction{data: nil, gas_limit: 7, gas_price: 6, init: <<1>>, nonce: 5, r: 0, s: 0, to: "", v: 0, value: 5})
       {:error, "Recovery id invalid 0-3"}
   """
-  @spec sender(Blockchain.Transaction.t) :: {:ok, EVM.address} | {:error, String.t}
-  def sender(trx) do
-    with {:ok, public_key} <- recover_public(transaction_hash(trx), trx.v, trx.r, trx.s) do
-       {:ok, address_from_public(public_key)}
+  @spec sender(Blockchain.Transaction.t, integer() | nil) :: {:ok, EVM.address} | {:error, String.t}
+  def sender(trx, chain_id \\ nil) do
+    # Ignore chain_id if transaction has a `v` value before EIP-155 minimum
+    chain_id = if not uses_chain_id?(trx.v), do: nil, else: chain_id
+
+    with {:ok, public_key} <- recover_public(transaction_hash(trx, chain_id), trx.v, trx.r, trx.s, chain_id) do
+      {:ok, address_from_public(public_key)}
     end
+  end
+
+  @spec uses_chain_id?(hash_v) :: boolean()
+  defp uses_chain_id?(v) do
+    v >= @base_recovery_id_eip_155
   end
 
   # Enforces a low-s vaue or something

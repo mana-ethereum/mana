@@ -125,4 +125,66 @@ defmodule BitHelper do
     end
   end
 
+  @doc """
+  Similar to `:binary.encode_unsigned/1`, except we encode `0` as
+  `<<>>`, the empty string. This is because the specification says that
+  we cannot have any leading zeros, and so having <<0>> by itself is
+  leading with a zero and prohibited.
+
+  ## Examples
+
+      iex> BitHelper.encode_unsigned(0)
+      <<>>
+
+      iex> BitHelper.encode_unsigned(5)
+      <<5>>
+
+      iex> BitHelper.encode_unsigned(5_000_000)
+      <<76, 75, 64>>
+  """
+  @spec encode_unsigned(number()) :: binary()
+  def encode_unsigned(0), do: <<>>
+  def encode_unsigned(n), do: :binary.encode_unsigned(n)
+
+  @doc """
+  Similar to `:binary.decode_unsigned/1`, except we decode `<<>>` back to `0`,
+  which is a common practice in Ethereum, since we cannot have **any** leading
+  zeros.
+
+  ## Examples
+
+      iex> BitHelper.decode_unsigned(<<>>)
+      0
+
+      iex> BitHelper.decode_unsigned(<<5>>)
+      5
+
+      iex> BitHelper.decode_unsigned(<<76, 75, 64>>)
+      5_000_000
+  """
+  @spec decode_unsigned(binary()) :: number()
+  def decode_unsigned(<<>>), do: 0
+  def decode_unsigned(bin), do: :binary.decode_unsigned(bin)
+
+  @doc """
+  Simple wrapper for decoding hex data.
+
+  ## Examples
+
+      iex> BitHelper.from_hex("aabbcc")
+      <<0xaa, 0xbb, 0xcc>>
+  """
+  @spec from_hex(String.t) :: binary()
+  def from_hex(hex_data), do: Base.decode16!(hex_data, case: :lower)
+
+  @doc """
+  Simple wrapper to generate hex.
+
+  ## Examples
+
+      iex> BitHelper.to_hex(<<0xaa, 0xbb, 0xcc>>)
+      "aabbcc"
+  """
+  @spec to_hex(binary()) :: String.t
+  def to_hex(bin), do: Base.encode16(bin, case: :lower)
 end
