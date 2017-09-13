@@ -11,7 +11,8 @@ defmodule EVM.Operation.Metadata do
     input_count: nil,
     output_count: nil,
     description: nil,
-    group: :other
+    group: :other,
+    machine_code_offset: nil
   ]
 
   @type t :: %__MODULE__{
@@ -22,6 +23,7 @@ defmodule EVM.Operation.Metadata do
     :input_count => integer(), # Denoted as δin the Yellow Paper
     :output_count => integer(), # Denoted as αin the Yellow Paper
     :description => String.t,
-    :group => atom()
+    :group => atom(),
+    :machine_code_offset => integer() | nil
   }
 end
