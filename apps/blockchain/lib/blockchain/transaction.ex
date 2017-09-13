@@ -41,24 +41,37 @@ defmodule Blockchain.Transaction do
   ## Examples
 
       iex> Blockchain.Transaction.serialize(%Blockchain.Transaction{nonce: 5, gas_price: 6, gas_limit: 7, to: <<1::160>>, value: 8, v: 27, r: 9, s: 10, data: "hi"})
-      [5, 6, 7, <<1::160>>, 8, "hi", 27, 9, 10]
+      [<<5>>, <<6>>, <<7>>, <<1::160>>, <<8>>, "hi", <<27>>, <<9>>, <<10>>]
 
       iex> Blockchain.Transaction.serialize(%Blockchain.Transaction{nonce: 5, gas_price: 6, gas_limit: 7, to: <<>>, value: 8, v: 27, r: 9, s: 10, init: <<1, 2, 3>>})
-      [5, 6, 7, <<>>, 8, <<1, 2, 3>>, 27, 9, 10]
+      [<<5>>, <<6>>, <<7>>, <<>>, <<8>>, <<1, 2, 3>>, <<27>>, <<9>>, <<10>>]
+
+      iex> Blockchain.Transaction.serialize(%Blockchain.Transaction{nonce: 5, gas_price: 6, gas_limit: 7, to: <<>>, value: 8, v: 27, r: 9, s: 10, init: <<1, 2, 3>>}, false)
+      [<<5>>, <<6>>, <<7>>, <<>>, <<8>>, <<1, 2, 3>>]
+
+      iex> Blockchain.Transaction.serialize(%Blockchain.Transaction{ data: "", gas_limit: 21000, gas_price: 20000000000, init: "", nonce: 9, r: 0, s: 0, to: "55555555555555555555", v: 1, value: 1000000000000000000 })
+      ["\t", <<4, 168, 23, 200, 0>>, "R\b", "55555555555555555555", <<13, 224, 182, 179, 167, 100, 0, 0>>, "", <<1>>, "", ""]
   """
   @spec serialize(t) :: ExRLP.t
-  def serialize(trx) do
-    [
-      trx.nonce,
-      trx.gas_price,
-      trx.gas_limit,
+  def serialize(trx, include_vrs \\ true) do
+    base = [
+      trx.nonce |> BitHelper.encode_unsigned,
+      trx.gas_price |> BitHelper.encode_unsigned,
+      trx.gas_limit |> BitHelper.encode_unsigned,
       trx.to,
-      trx.value,
+      trx.value |> BitHelper.encode_unsigned,
       (if trx.to == <<>>, do: trx.init, else: trx.data),
-      trx.v,
-      trx.r,
-      trx.s
     ]
+
+    if include_vrs do
+      base ++ [
+        trx.v |> BitHelper.encode_unsigned,
+        trx.r |> BitHelper.encode_unsigned,
+        trx.s |> BitHelper.encode_unsigned
+      ]
+    else
+      base
+    end
   end
 
   @doc """
@@ -73,6 +86,20 @@ defmodule Blockchain.Transaction do
 
       iex> Blockchain.Transaction.deserialize([<<5>>, <<6>>, <<7>>, <<>>, <<8>>, <<1, 2, 3>>, <<27>>, <<9>>, <<10>>])
       %Blockchain.Transaction{nonce: 5, gas_price: 6, gas_limit: 7, to: <<>>, value: 8, v: 27, r: 9, s: 10, init: <<1, 2, 3>>}
+
+      iex> Blockchain.Transaction.deserialize(["\t", <<4, 168, 23, 200, 0>>, "R\b", "55555555555555555555", <<13, 224, 182, 179, 167, 100, 0, 0>>, "", <<1>>, "", ""])
+      %Blockchain.Transaction{
+        data: "",
+        gas_limit: 21000,
+        gas_price: 20000000000,
+        init: "",
+        nonce: 9,
+        r: 0,
+        s: 0,
+        to: "55555555555555555555",
+        v: 1,
+        value: 1000000000000000000
+      }
   """
   @spec deserialize(ExRLP.t) :: t
   def deserialize(rlp) do
@@ -130,7 +157,7 @@ defmodule Blockchain.Transaction do
 
       # Has sender account, but nonce mismatch
       iex> private_key = <<1::256>>
-      iex> sender = <<125, 110, 153, 187, 138, 191, 140, 192, 19, 187, 14, 145, 45, 11, 23, 101, 150, 254, 123, 136>> # based on simple private key
+      iex> sender = <<126, 95, 69, 82, 9, 26, 105, 18, 93, 93, 252, 183, 184, 194, 101, 144, 41, 57, 91, 223>> # based on simple private key
       iex> trx =
       ...>   %Blockchain.Transaction{data: <<>>, gas_limit: 1_000, gas_price: 1, init: <<1>>, nonce: 4, to: <<>>, value: 5}
       ...>   |> Blockchain.Transaction.Signature.sign_transaction(private_key)
@@ -141,7 +168,7 @@ defmodule Blockchain.Transaction do
 
       # Insufficient starting gas
       iex> private_key = <<1::256>>
-      iex> sender = <<125, 110, 153, 187, 138, 191, 140, 192, 19, 187, 14, 145, 45, 11, 23, 101, 150, 254, 123, 136>> # based on simple private key
+      iex> sender = <<126, 95, 69, 82, 9, 26, 105, 18, 93, 93, 252, 183, 184, 194, 101, 144, 41, 57, 91, 223>> # based on simple private key
       iex> trx =
       ...>   %Blockchain.Transaction{data: <<>>, gas_limit: 1_000, gas_price: 1, init: <<1>>, nonce: 5, to: <<>>, value: 5}
       ...>   |> Blockchain.Transaction.Signature.sign_transaction(private_key)
@@ -152,7 +179,7 @@ defmodule Blockchain.Transaction do
 
       # Insufficient endowment
       iex> private_key = <<1::256>>
-      iex> sender = <<125, 110, 153, 187, 138, 191, 140, 192, 19, 187, 14, 145, 45, 11, 23, 101, 150, 254, 123, 136>> # based on simple private key
+      iex> sender = <<126, 95, 69, 82, 9, 26, 105, 18, 93, 93, 252, 183, 184, 194, 101, 144, 41, 57, 91, 223>> # based on simple private key
       iex> trx =
       ...>   %Blockchain.Transaction{data: <<>>, gas_limit: 100_000, gas_price: 1, init: <<1>>, nonce: 5, to: <<>>, value: 5}
       ...>   |> Blockchain.Transaction.Signature.sign_transaction(private_key)
@@ -162,7 +189,7 @@ defmodule Blockchain.Transaction do
       {:invalid, :insufficient_balance}
 
       iex> private_key = <<1::256>>
-      iex> sender = <<125, 110, 153, 187, 138, 191, 140, 192, 19, 187, 14, 145, 45, 11, 23, 101, 150, 254, 123, 136>> # based on simple private key
+      iex> sender = <<126, 95, 69, 82, 9, 26, 105, 18, 93, 93, 252, 183, 184, 194, 101, 144, 41, 57, 91, 223>> # based on simple private key
       iex> trx =
       ...>   %Blockchain.Transaction{data: <<>>, gas_limit: 100_000, gas_price: 1, init: <<1>>, nonce: 5, to: <<>>, value: 5}
       ...>   |> Blockchain.Transaction.Signature.sign_transaction(private_key)
@@ -172,7 +199,7 @@ defmodule Blockchain.Transaction do
       {:invalid, :insufficient_balance}
 
       iex> private_key = <<1::256>>
-      iex> sender = <<125, 110, 153, 187, 138, 191, 140, 192, 19, 187, 14, 145, 45, 11, 23, 101, 150, 254, 123, 136>> # based on simple private key
+      iex> sender = <<126, 95, 69, 82, 9, 26, 105, 18, 93, 93, 252, 183, 184, 194, 101, 144, 41, 57, 91, 223>> # based on simple private key
       iex> trx =
       ...>   %Blockchain.Transaction{data: <<>>, gas_limit: 100_000, gas_price: 1, init: <<1>>, nonce: 5, to: <<>>, value: 5}
       ...>   |> Blockchain.Transaction.Signature.sign_transaction(private_key)
@@ -182,7 +209,7 @@ defmodule Blockchain.Transaction do
       {:invalid, :over_gas_limit}
 
       iex> private_key = <<1::256>>
-      iex> sender = <<125, 110, 153, 187, 138, 191, 140, 192, 19, 187, 14, 145, 45, 11, 23, 101, 150, 254, 123, 136>> # based on simple private key
+      iex> sender = <<126, 95, 69, 82, 9, 26, 105, 18, 93, 93, 252, 183, 184, 194, 101, 144, 41, 57, 91, 223>> # based on simple private key
       iex> trx =
       ...>   %Blockchain.Transaction{data: <<>>, gas_limit: 100_000, gas_price: 1, init: <<1>>, nonce: 5, to: <<>>, value: 5}
       ...>   |> Blockchain.Transaction.Signature.sign_transaction(private_key)
@@ -230,7 +257,7 @@ defmodule Blockchain.Transaction do
       # Create contract
       iex> beneficiary = <<0x05::160>>
       iex> private_key = <<1::256>>
-      iex> sender = <<125, 110, 153, 187, 138, 191, 140, 192, 19, 187, 14, 145, 45, 11, 23, 101, 150, 254, 123, 136>> # based on simple private key
+      iex> sender = <<126, 95, 69, 82, 9, 26, 105, 18, 93, 93, 252, 183, 184, 194, 101, 144, 41, 57, 91, 223>> # based on simple private key
       iex> contract_address = Blockchain.Contract.new_contract_address(sender, 6)
       iex> machine_code = EVM.MachineCode.compile([:push1, 3, :push1, 5, :add, :push1, 0x00, :mstore, :push1, 0, :push1, 32, :return])
       iex> trx = %Blockchain.Transaction{nonce: 5, gas_price: 3, gas_limit: 100_000, to: <<>>, value: 5, init: machine_code}
@@ -246,7 +273,7 @@ defmodule Blockchain.Transaction do
       # Message call
       iex> beneficiary = <<0x05::160>>
       iex> private_key = <<1::256>>
-      iex> sender = <<125, 110, 153, 187, 138, 191, 140, 192, 19, 187, 14, 145, 45, 11, 23, 101, 150, 254, 123, 136>> # based on simple private key
+      iex> sender = <<126, 95, 69, 82, 9, 26, 105, 18, 93, 93, 252, 183, 184, 194, 101, 144, 41, 57, 91, 223>> # based on simple private key
       iex> contract_address = Blockchain.Contract.new_contract_address(sender, 6)
       iex> machine_code = EVM.MachineCode.compile([:push1, 3, :push1, 5, :add, :push1, 0x00, :mstore, :push1, 0, :push1, 32, :return])
       iex> trx = %Blockchain.Transaction{nonce: 5, gas_price: 3, gas_limit: 100_000, to: contract_address, value: 5, init: machine_code}

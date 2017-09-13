@@ -7,7 +7,7 @@ defmodule Blockchain.BlockTest do
   alias Blockchain.Block
   alias Blockchain.Transaction
 
-  eth_test "GenesisTests", :basic_genesis_tests, [:test2, :test3], fn test, _test_name ->
+  eth_test "GenesisTests", :basic_genesis_tests, [:test2, :test3], fn test, _test_subset, _test_name, _ ->
     db = MerklePatriciaTree.Test.random_ets_db()
 
     chain = %Blockchain.Chain{
