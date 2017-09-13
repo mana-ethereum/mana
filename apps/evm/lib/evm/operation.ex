@@ -178,7 +178,7 @@ defmodule EVM.Operation do
       %EVM.Operation.Metadata{id: 0x01, sym: :add, input_count: 2, output_count: 1, description: "Addition operation", group: :stop_and_arithmetic}
 
       iex> EVM.Operation.metadata(:push1)
-      %EVM.Operation.Metadata{id: 0x60, sym: :push1, fun: :push_n, args: [1], input_count: 0, output_count: 1, description: "Place 1-byte item on stack", group: :push}
+      %EVM.Operation.Metadata{id: 0x60, sym: :push1, fun: :push_n, args: [1], input_count: 0, output_count: 1, description: "Place 1-byte item on stack", group: :push, machine_code_offset: 1}
 
       iex> EVM.Operation.metadata(0xfe)
       nil

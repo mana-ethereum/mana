@@ -99,6 +99,7 @@ defmodule EVM.MachineCode do
       iex> EVM.MachineCode.compile([])
       <<>>
   """
+  @spec compile([atom() | integer()]) :: binary()
   def compile(code) do
     for n <- code do
       case n do
@@ -106,6 +107,34 @@ defmodule EVM.MachineCode do
         x when is_integer(x) -> x
       end
     end |> :binary.list_to_bin()
+  end
+
+  @doc """
+  Decompiles machine code.
+
+  ## Examples
+
+      iex> EVM.MachineCode.decompile(<<0x60, 0x03, 0x60, 0x05, 0x01, 0xf3>>)
+      [:push1, 3, :push1, 5, :add, :return]
+
+      iex> EVM.MachineCode.decompile(<<97, 0, 4, 128, 97, 0, 14, 96, 0, 57, 97, 0, 18, 86, 96, 0, 53, 255, 91, 96, 0, 243>>)
+      [:push2, 0, 4, :dup1, :push2, 0, 14, :push1, 0, :codecopy, :push2, 0, 18, :jump, :push1, 0, :calldataload, :suicide, :jumpdest, :push1, 0, :return]
+
+      iex> EVM.MachineCode.decompile(<<>>)
+      []
+  """
+  @spec decompile(binary()) :: [atom() | integer()]
+  def decompile(<<>>), do: []
+  def decompile(<<opcode::8, rest::binary()>>) do
+    metadata = EVM.Operation.metadata(opcode)
+
+    case metadata.machine_code_offset do
+      nil ->
+        [metadata.sym | decompile(rest)]
+      n ->
+        <<data::binary - size(n), non_data_rest::binary()>> = rest
+        [metadata.sym | :binary.bin_to_list(data)] ++ decompile(non_data_rest)
+    end
   end
 
 end

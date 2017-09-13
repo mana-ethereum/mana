@@ -8,7 +8,8 @@ defmodule EVM.Operation.Metadata.Push do
       args: [n],
       input_count: 0,
       output_count: 1,
-      group: :push
+      group: :push,
+      machine_code_offset: n
     }
   def operations, do: @operations
 end
