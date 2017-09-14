@@ -62,7 +62,11 @@ defmodule EVM.Operation do
   @operations_to_opcodes EVM.Helpers.invert(@opcodes_to_operations)
   @push1  Map.get(@operations_to_opcodes, :push1)
   @push32 Map.get(@operations_to_opcodes, :push32)
+  @push_operations @push1..@push32
+  @jump_operations [:jump, :jumpi]
   @stop Map.get(@operations_to_opcodes, :stop)
+
+  def jump_operations(), do: @jump_operations
 
   @doc """
   Returns the current operation at a given program counter address.
@@ -112,12 +116,12 @@ defmodule EVM.Operation do
   def next_instr_pos(pos, instr) do
     encoded_operation = instr |> encode
 
-    pos + case encoded_operation do
-      i when i in @push1..@push32 ->
-        2 + encoded_operation - @push1
-      _ -> 1
-    end
+    pos + push_length(encoded_operation) + 1
   end
+
+  defp push_length(operation) when operation in @push_operations, do:
+    operation - (@push1 - 1)
+  defp push_length(_operation), do: 0
 
   @doc """
   Returns the given operation for a given opcode.
@@ -211,7 +215,7 @@ defmodule EVM.Operation do
 
       # Push
       iex> EVM.Operation.run_operation(:push1, %{}, %EVM.MachineState{stack: [1, 2]}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: <<00, 01>>})
-      {%{}, %EVM.MachineState{stack: [1, 1, 2]}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: <<00, 01>>}}
+      {%{}, %EVM.MachineState{pc: 1, stack: [1, 1, 2]}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: <<0, 1>>}}
 
       # nil
       iex> EVM.Operation.run_operation(:stop, %{}, %EVM.MachineState{stack: [1, 2]}, %EVM.SubState{}, %EVM.ExecEnv{})
@@ -283,6 +287,7 @@ defmodule EVM.Operation do
 
   """
   @spec inputs(Stack.t, Operation.t) :: list(EVM.val)
+  def inputs(_stack, nil), do: []
   def inputs(stack, operation) do
     %EVM.Operation.Metadata{
       input_count: input_count,

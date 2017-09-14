@@ -100,15 +100,18 @@ defmodule EVM.Functions do
     metadata = Operation.metadata(instruction)
     dw = if metadata, do: Map.get(metadata, :input_count), else: nil
     aw = if metadata, do: Map.get(metadata, :output_count), else: nil
-    s0 = Stack.peek(machine_state.stack)
+    inputs = Operation.inputs(machine_state.stack, instruction)
 
     cond do
       metadata == nil || dw == nil ->
         {:halt, :undefined_instruction}
       length(machine_state.stack) < dw ->
         {:halt, :stack_underflow}
-      Enum.member?([:jump, :jumpi], instruction) and
-        not MachineCode.valid_jump_dest?(s0, exec_env.machine_code) ->
+      instruction == :jump and
+        not MachineCode.valid_jump_dest?(Enum.at(inputs, 0), exec_env.machine_code) ->
+          {:halt, :invalid_jump_destination}
+      instruction  == :jumpi and
+        Enum.at(inputs, 1) != 0 && not MachineCode.valid_jump_dest?(Enum.at(inputs, 0), exec_env.machine_code) ->
           {:halt, :invalid_jump_destination}
       Stack.length(machine_state.stack) - dw + aw > @max_stack ->
         {:halt, :stack_overflow}

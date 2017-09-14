@@ -33,84 +33,6 @@ defmodule EVM.MachineState do
   }
 
   @doc """
-  Returns the next instruction to execute based on the current
-  instruction. This may include a condition check (based on stack)
-  to determine branching jump instruction.
-
-  ## Examples
-
-      iex> EVM.MachineState.next_pc(%EVM.MachineState{pc: 4, stack: [100]}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:push1, 3, :push1, 5, :add, :return])}) |> EVM.MachineState.get_pc() # standard add instruction
-      5
-
-      iex> EVM.MachineState.next_pc(%EVM.MachineState{pc: 0, stack: [100]}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:push1, 3, :push1, 5, :add, :return])}) |> EVM.MachineState.get_pc() # standard push1 instruction
-      2
-
-      iex> EVM.MachineState.next_pc(%EVM.MachineState{pc: 2, stack: [100]}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:push1, 3, :jump, :jumpdest, :return])}) |> EVM.MachineState.get_pc() # direct jump instruction
-      100
-
-      iex> EVM.MachineState.next_pc(%EVM.MachineState{pc: 1, stack: [100, 0]}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:push1, 3, :jumpi, :return])}) |> EVM.MachineState.get_pc() # branching jump instruction (fall-through)
-      2
-
-      iex> EVM.MachineState.next_pc(%EVM.MachineState{pc: 2, stack: [100, 1]}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:push1, 3, :jumpi, :return])}) |> EVM.MachineState.get_pc() # branching jump instruction (follow)
-      100
-
-      iex> EVM.MachineState.next_pc(%EVM.MachineState{pc: 0, stack: []}, %EVM.ExecEnv{machine_code: <<EVM.Operation.encode(:jumpi)>>}) # branching jump instruction with no stack
-      ** (FunctionClauseError) no function clause matching in EVM.Stack.pop_n/2
-  """
-  @spec next_pc(MachineState.t, ExecEnv.t) :: MachineState.t
-  def next_pc(machine_state, exec_env) do
-    pc = case MachineCode.current_instruction(machine_state, exec_env) |> Operation.decode do
-      :jump -> jump_location(machine_state)
-      :jumpi -> jump_i_location(machine_state)
-      w -> Operation.next_instr_pos(machine_state.pc, w)
-    end
-
-    set_pc(machine_state, pc)
-  end
-
-  # Location of pc after unconditional jump
-  defp jump_location(machine_state) do
-    Stack.peek(machine_state.stack)
-  end
-
-  # Location of pc after branching jump (jump if not zero)
-  defp jump_i_location(machine_state) do
-    [jump_location, conditional] = Stack.peek_n(machine_state.stack, 2)
-
-    if conditional != 0 do
-      jump_location
-    else
-      machine_state.pc + 1
-    end
-  end
-
-  @doc """
-  Sets the program counter for a given machine state.
-
-  ## Examples
-
-      iex> EVM.MachineState.set_pc(%EVM.MachineState{pc: 5}, 10)
-      %EVM.MachineState{pc: 10}
-  """
-  @spec set_pc(MachineState.t, pc) :: MachineState.t
-  def set_pc(machine_state, pc) do
-    %{machine_state | pc: pc}
-  end
-
-  @doc """
-  Gets the program counter from a given machine state.
-
-  ## Examples
-
-      iex> EVM.MachineState.get_pc(%EVM.MachineState{pc: 5})
-      5
-  """
-  @spec get_pc(MachineState.t) :: pc
-  def get_pc(machine_state) do
-    machine_state.pc
-  end
-
-  @doc """
   Returns a new execution environment less the amount
   of gas specified.
 
@@ -160,6 +82,36 @@ defmodule EVM.MachineState do
     {values, stack} = Stack.pop_n(machine_state.stack, n)
     machine_state = %{machine_state | stack: stack}
     {values, machine_state}
+  end
+
+  @doc """
+  Push a values onto the stack
+
+  ## Examples
+
+      iex> EVM.MachineState.push(%EVM.MachineState{stack: [2, 3]}, 1)
+      %EVM.MachineState{stack: [1, 2, 3]}
+  """
+  @spec push(MachineState.t, EVM.val) :: MachineState.t
+  def push(machine_state, value) do
+    %{machine_state | stack: Stack.push(machine_state.stack, value)}
+  end
+
+  @doc """
+  Increments the program counter
+
+  ## Examples
+
+      iex> EVM.MachineState.next_pc(%EVM.MachineState{pc: 9}, :add)
+      %EVM.MachineState{pc: 10}
+  """
+  @spec next_pc(MachineState.t, atom()) :: MachineState.t
+  def next_pc(machine_state, operation) do
+    if operation in Operation.jump_operations() do
+      machine_state
+    else
+      %{machine_state | pc: machine_state.pc + 1}
+    end
   end
 
 end

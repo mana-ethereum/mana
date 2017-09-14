@@ -119,7 +119,7 @@ defmodule EVM.VM do
 
     updated_machine_state = updated_machine_state
       |> MachineState.subtract_gas(cost)
-      |> MachineState.next_pc(updated_exec_env)
+      |> MachineState.next_pc(operation)
 
 
     {updated_state, updated_machine_state, sub_state, updated_exec_env}

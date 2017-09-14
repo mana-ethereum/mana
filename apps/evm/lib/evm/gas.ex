@@ -7,6 +7,7 @@ defmodule EVM.Gas do
   alias EVM.MachineState
   alias EVM.MachineCode
   alias EVM.Operation
+  alias MerklePatriciaTree.Trie
 
   @type t :: EVM.val
   @type gas_price :: EVM.Wei.t
@@ -180,8 +181,10 @@ defmodule EVM.Gas do
     iex> EVM.Gas.operation_cost(:sstore, [0, 2], state, %EVM.MachineState{})
     20000
   """
-  def operation_cost(:sstore, [_offset, new_value], _state, _machine_state) do
-    if new_value == 0 do
+  def operation_cost(:sstore, [key, new_value], state, _machine_state) do
+    old_value = Trie.get(state, <<key::size(256)>>)
+
+    if old_value || new_value == 0 do
       @g_sreset
     else
       @g_sset

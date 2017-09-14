@@ -69,7 +69,7 @@ defmodule EVM.Stack do
       [1, 2]
 
       iex> EVM.Stack.peek_n([1, 2, 3], 4)
-      ** (FunctionClauseError) no function clause matching in EVM.Stack.pop_n/2
+      [1, 2, 3]
   """
   @spec peek_n(t, integer()) :: [EVM.val]
   def peek_n(stack, n) do
@@ -96,8 +96,8 @@ defmodule EVM.Stack do
       {[1, 2], [3]}
 
       iex> EVM.Stack.pop_n([1, 2, 3], 4)
-      ** (FunctionClauseError) no function clause matching in EVM.Stack.pop_n/2
-  """
+      {[1, 2, 3], []}
+"""
   @spec pop_n(t, integer()) :: { [EVM.val], t }
   def pop_n(stack, 0), do: {[], stack}
   def pop_n([h|t], n) do
@@ -105,6 +105,7 @@ defmodule EVM.Stack do
 
     {[h|a], b}
   end
+  def pop_n([], stack), do: {[], []}
 
   @doc """
   Returns the length of the stack.

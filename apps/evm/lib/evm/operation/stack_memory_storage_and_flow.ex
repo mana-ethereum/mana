@@ -94,7 +94,9 @@ defmodule EVM.Operation.StackMemoryStorageAndFlow do
   @spec sload(Operation.stack_args, Operation.vm_map) :: Operation.op_result
   def sload([key], %{state: state=%Trie{}, stack: stack}) when is_list(stack) do
     # TODO: Consider key value encodings
-    if value = Trie.get(state, <<key::size(256)>>) do
+    value = Trie.get(state, <<key::size(256)>>)
+
+    if value do
       Helpers.decode_signed(value)
     else
       0
@@ -150,61 +152,59 @@ defmodule EVM.Operation.StackMemoryStorageAndFlow do
   @doc """
   Alter the program counter.
 
-  This is a no-op as it's handled elsewhere in the VM.
-
   ## Examples
 
-      iex> EVM.Operation.StackMemoryStorageAndFlow.jump([], %{stack: []})
-      :noop
+  iex> EVM.Operation.StackMemoryStorageAndFlow.jump([99], %{machine_state: %EVM.MachineState{}})
+  %EVM.MachineState{pc: 99}
   """
   @spec jump(Operation.stack_args, Operation.vm_map) :: Operation.op_result
-  def jump(_args, %{}) do
-    :noop
+  def jump([s0], %{machine_state: machine_state}) do
+    %{machine_state| pc: s0}
   end
 
   @doc """
   Conditionally alter the program counter.
-
-  This is a no-op as it's handled elsewhere in the VM.
-
   ## Examples
 
-      iex> EVM.Operation.StackMemoryStorageAndFlow.jumpi([], %{stack: []})
-      :noop
+  iex> EVM.Operation.StackMemoryStorageAndFlow.jumpi([99, 1], %{machine_state: %EVM.MachineState{}})
+  %EVM.MachineState{pc: 99}
+  iex> EVM.Operation.StackMemoryStorageAndFlow.jumpi([99, 0], %{machine_state: %EVM.MachineState{pc: 2}})
+  %EVM.MachineState{pc: 3}
   """
   @spec jumpi(Operation.stack_args, Operation.vm_map) :: Operation.op_result
-  def jumpi(_args, %{}) do
-    :noop
+  def jumpi([s0, s1], %{machine_state: machine_state}) do
+    if s1 == 0 do
+      %{machine_state| pc: machine_state.pc + 1}
+    else
+      %{machine_state| pc: s0}
+    end
   end
 
   @doc """
   Get the value of the program counter prior to the increment corresponding to this instruction.
 
-  TODO: Implement opcode
 
   ## Examples
 
-      iex> EVM.Operation.StackMemoryStorageAndFlow.pc([], %{stack: []})
-      :unimplemented
+      iex> EVM.Operation.StackMemoryStorageAndFlow.pc([], %{machine_state: %EVM.MachineState{pc: 99}})
+      99
   """
-  @spec pc(Operation.stack_args, Operation.vm_map) :: Operation.op_result
-  def pc(_args, %{stack: _stack}) do
-    :unimplemented
+  def pc(_args, %{machine_state: %{pc: pc}}) do
+    pc
   end
 
   @doc """
   Get the size of active memory in bytes
 
-  TODO: Implement opcode
 
   ## Examples
 
-      iex> EVM.Operation.StackMemoryStorageAndFlow.msize([], %{stack: []})
-      :unimplemented
+      iex> EVM.Operation.StackMemoryStorageAndFlow.msize([], %{machine_state: %EVM.MachineState{active_words: 1}})
+      32
   """
   @spec msize(Operation.stack_args, Operation.vm_map) :: Operation.op_result
-  def msize(_args, %{stack: _stack}) do
-    :unimplemented
+  def msize(_args, %{machine_state: %{active_words: active_words}}) do
+    active_words * EVM.word_size()
   end
 
   @doc """
