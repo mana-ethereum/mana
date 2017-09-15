@@ -1,3 +1,5 @@
+# 0.1.5
+* Integrate with EVM debugger
 # 0.1.4
 * Pass common tests for block state and transactions.
 # 0.1.3
