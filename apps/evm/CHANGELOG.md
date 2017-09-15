@@ -1,3 +1,5 @@
+# 0.1.7
+* Add in a full debugger
 # 0.1.6
 * Add in parameters that could be tweaked by different chains (e.g. `min_gas_limit` in Ropsten)
 * Add Bitwise logic opcodes and SHA3
