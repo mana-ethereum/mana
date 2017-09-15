@@ -37,7 +37,7 @@ defmodule ExWire.Adapter.UDP do
         ip: ip,
         udp_port: port,
       },
-      timestamp: ExWire.Util.Timestamp.now(),
+      timestamp: ExWire.Util.Timestamp.soon(),
     }
 
     apply(network, :receive, [inbound_message|network_args])

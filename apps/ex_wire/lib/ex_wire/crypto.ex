@@ -14,6 +14,29 @@ defmodule ExWire.Crypto do
   end
 
   @doc """
+  Returns a node_id based on a given private key.
+
+  ## Examples
+
+      iex> ExWire.Crypto.node_id(<<1::256>>)
+      {:ok, <<121, 190, 102, 126, 249, 220, 187, 172, 85, 160, 98, 149,
+              206, 135, 11, 7, 2, 155, 252, 219, 45, 206, 40, 217, 89,
+              242, 129, 91, 22, 248, 23, 152, 72, 58, 218, 119, 38, 163,
+              196, 101, 93, 164, 251, 252, 14, 17, 8, 168, 253, 23, 180,
+              72, 166, 133, 84, 25, 156, 71, 208, 143, 251, 16, 212, 184>>}
+
+      iex> ExWire.Crypto.node_id(<<1>>)
+      {:error, "Private key size not 32 bytes"}
+  """
+  @spec node_id(private_key) :: {:ok, ExWire.node_id} | {:error, String.t}
+  def node_id(private_key) do
+    case :libsecp256k1.ec_pubkey_create(private_key, :uncompressed) do
+      {:ok, <<_byte::8, public_key::binary()>>} -> {:ok, public_key}
+      {:error, reason} -> {:error, to_string(reason)}
+    end
+  end
+
+  @doc """
   Validates whether a hash matches a given set of data
   via a SHA3 function, or returns `:invalid`.
 

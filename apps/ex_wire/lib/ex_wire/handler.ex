@@ -13,7 +13,9 @@ defmodule ExWire.Handler do
 
   @handlers %{
     0x01 => ExWire.Handler.Ping,
+    0x02 => ExWire.Handler.Pong,
     0x03 => ExWire.Handler.FindNeighbours,
+    0x04 => ExWire.Handler.Neighbours,
   }
 
   defmodule Params do
