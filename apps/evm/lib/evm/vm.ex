@@ -71,6 +71,18 @@ defmodule EVM.VM do
 
   @spec do_exec(EVM.state, MachineState.t, SubState.t, ExecEnv.t, SubState.t) :: {EVM.state | nil, MachineState.t, SubState.t, ExecEnv.t, output}
   defp do_exec(state, machine_state, sub_state, exec_env, original_sub_state) do
+
+    # Debugger generally runs here.
+    {state, machine_state, sub_state, exec_env} = if EVM.Debugger.is_enabled? do
+      case EVM.Debugger.is_breakpoint?(state, machine_state, sub_state, exec_env) do
+        :continue -> {state, machine_state, sub_state, exec_env}
+        breakpoint ->
+          EVM.Debugger.break(breakpoint, state, machine_state, sub_state, exec_env)
+      end
+    else
+      {state, machine_state, sub_state, exec_env}
+    end
+
     case Functions.is_exception_halt?(state, machine_state, exec_env) do
       {:halt, _reason} ->
         # We're exception halting, undo it all.
