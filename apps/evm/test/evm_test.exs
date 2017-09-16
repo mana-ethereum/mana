@@ -1,4 +1,5 @@
 defmodule EvmTest do
+  alias MerklePatriciaTree.Trie
   use ExUnit.Case, async: true
 
   @passing_tests_by_group %{
@@ -115,45 +116,44 @@ defmodule EvmTest do
       :sstore_load_1,
       :sstore_load_2,
       :stackjump1,
+      :DynamicJump_value1,
+      :DynamicJump_value2,
+      :DynamicJump_value3,
+      :DynamicJump_valueUnderflow,
+      :DynamicJumpi0,
+      :DynamicJumpi1,
+      :DynamicJumpi1_jumpdest,
+      :DynamicJumpiAfterStop,
+      :DynamicJumpiOutsideBoundary,
+      :DynamicJumpifInsidePushWithJumpDest,
+      :DynamicJumpifInsidePushWithoutJumpDest,
+      :JDfromStorageDynamicJump0_foreverOutOfGas,
+      :JDfromStorageDynamicJump0_jumpdest0,
+      :JDfromStorageDynamicJump0_jumpdest2,
+      :JDfromStorageDynamicJump0_withoutJumpdest,
+      :JDfromStorageDynamicJump1,
+      :JDfromStorageDynamicJumpi1,
+      :JDfromStorageDynamicJumpi1_jumpdest,
+      :JDfromStorageDynamicJumpiAfterStop,
+      :JDfromStorageDynamicJumpiOutsideBoundary,
+      :JDfromStorageDynamicJumpifInsidePushWithJumpDest,
+      :JDfromStorageDynamicJumpifInsidePushWithoutJumpDest,
+      :gas0,
+      :gas1,
+      :gasOverFlow,
+      :jump0_foreverOutOfGas,
+      :jumpOntoJump,
+      :pop1,
+      :return2,
+      :sstore_underflow,
+      :stack_loop,
+      :swapAt52becameMstore,
+      :when
 
-
-      # :DynamicJump_value1,
-      # :DynamicJump_value2,
-      # :DynamicJump_value3,
-      # :DynamicJump_valueUnderflow,
-      # :DynamicJumpi0,
-      # :DynamicJumpi1,
-      # :DynamicJumpi1_jumpdest,
-      # :DynamicJumpiAfterStop,
-      # :DynamicJumpiOutsideBoundary,
-      # :DynamicJumpifInsidePushWithJumpDest,
-      # :DynamicJumpifInsidePushWithoutJumpDest,
-      # :JDfromStorageDynamicJump0_foreverOutOfGas,
-      # :JDfromStorageDynamicJump0_jumpdest0,
-      # :JDfromStorageDynamicJump0_jumpdest2,
-      # :JDfromStorageDynamicJump0_withoutJumpdest,
-      # :JDfromStorageDynamicJump1,
-      # :JDfromStorageDynamicJumpi1,
-      # :JDfromStorageDynamicJumpi1_jumpdest,
-      # :JDfromStorageDynamicJumpiAfterStop,
-      # :JDfromStorageDynamicJumpiOutsideBoundary,
-      # :JDfromStorageDynamicJumpifInsidePushWithJumpDest,
-      # :JDfromStorageDynamicJumpifInsidePushWithoutJumpDest,
-      # :gas0,
-      # :gas1,
-      # :gasOverFlow,
-      # :jump0_foreverOutOfGas,
-      # :jumpOntoJump,
       # :kv1,
       # :loop_stacklimit_1020,
       # :loop_stacklimit_1021,
-      # :pop1,
       # :return1,
-      # :return2,
-      # :sstore_underflow,
-      # :stack_loop,
-      # :swapAt52becameMstore,
-      # :when
   ]
   }
 
@@ -161,25 +161,18 @@ defmodule EvmTest do
   test "Ethereum Common Tests" do
     for {test_group_name, _test_group} <- @passing_tests_by_group do
       for {_test_name, test} <- passing_tests(test_group_name) do
-        db = MerklePatriciaTree.Test.random_ets_db()
-        block_interface = EVM.Interface.Mock.MockBlockInterface.new(
-          %Block.Header{
-            number: hex_to_int(test["env"]["currentNumber"]),
-            timestamp: hex_to_int(test["env"]["currentTimestamp"]),
-            gas_limit: hex_to_int(test["env"]["currentGasLimit"]),
-            difficulty: hex_to_int(test["env"]["currentDifficulty"]),
-          }
-        )
-
         state = EVM.VM.run(
-          MerklePatriciaTree.Trie.new(db),
+          state(test),
           hex_to_int(test["exec"]["gas"]),
           %EVM.ExecEnv{
             machine_code: hex_to_binary(test["exec"]["code"]),
-            block_interface: block_interface,
+            sender: hex_to_binary(test["exec"]["caller"]),
+            block_interface: block_interface(test),
             data: hex_to_binary(test["exec"]["data"]),
+            value_in_wei: hex_to_binary(test["exec"]["value"]),
           }
         )
+
 
         assert_state(test, state)
 
@@ -188,6 +181,30 @@ defmodule EvmTest do
         end
       end
     end
+  end
+
+  def state(test) do
+    db = MerklePatriciaTree.Test.random_ets_db()
+    state = MerklePatriciaTree.Trie.new(db)
+    state = test["pre"]
+      |> Enum.reduce(%{}, fn({key, value}, storage) ->
+        Map.merge(storage, value["storage"])
+      end
+      )
+      |> Enum.reduce(state, fn({key, value}, state) ->
+        Trie.update(state, <<hex_to_int(key)::size(256)>>, <<hex_to_int(value)::size(256)>>)
+      end)
+  end
+
+  def block_interface(test) do
+    block_interface = EVM.Interface.Mock.MockBlockInterface.new(
+      %Block.Header{
+        number: hex_to_int(test["env"]["currentNumber"]),
+        timestamp: hex_to_int(test["env"]["currentTimestamp"]),
+        gas_limit: hex_to_int(test["env"]["currentGasLimit"]),
+        difficulty: hex_to_int(test["env"]["currentDifficulty"]),
+      }
+    )
   end
 
   def passing_tests(test_group_name) do

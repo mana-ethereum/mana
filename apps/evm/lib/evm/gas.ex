@@ -49,21 +49,22 @@ defmodule EVM.Gas do
   @g_copy 3  # Partial payment for *COPY operations, multiplied by words copied, rounded up.
   @g_blockhash 20  # Payment for BLOCKHASH operation
 
-  @w_zero_instr [:stop, :return, :suicide, :create, :balance, :calldatacopy, :codecopy, :extcodecopy, :call, :callcode, :delegatecall]
+  @w_zero_instr [:stop, :return, :suicide, :create]
   @w_base_instr [:address, :origin, :caller, :callvalue, :calldatasize, :codesize, :gasprice, :coinbase, :timestamp, :number, :difficulty, :gaslimit, :pop, :pc, :msize, :gas]
   @push_instrs Enum.map(0..32, fn n -> :"push#{n}" end)
   @dup_instrs Enum.map(0..16, fn n -> :"dup#{n}" end)
   @swap_instrs Enum.map(0..16, fn n -> :"swap#{n}" end)
   @log_instrs Enum.map(1..4, fn n -> :"log#{n}" end)
   @w_very_low_instr [
-    :add, :sub, :not_, :lt, :gt, :slt, :sgt, :eq, :iszero, :and_, :or_, :xor_,
+    :add, :sub, :calldatacopy, :codecopy, :not_, :lt, :gt, :slt, :sgt, :eq, :iszero, :and_, :or_, :xor_,
     :byte, :calldataload, :mload, :mstore, :mstore8] ++
       @push_instrs ++ @dup_instrs ++ @swap_instrs
   @w_low_instr [:mul, :div, :sdiv, :mod, :smod, :signextend]
   @w_mid_instr [:addmod, :mulmod, :jump]
   @w_high_instr [:jumpi]
   @w_extcode_instr [:extcodesize]
-  @memory_operations [:mstore, :mstore8, :sha3, :mload]
+  @call_operations [:callcode, :delegatecall, :extcodecopy]
+  @memory_operations [:mstore, :mstore8, :sha3, :codecopy, :mload]
 
 
   @doc """
@@ -107,8 +108,6 @@ defmodule EVM.Gas do
 
     @g_memory + linear_cost + quadratic_cost
   end
-
-
 
   @doc """
   Returns the operation cost for every possible operation. This is defined
@@ -162,6 +161,9 @@ defmodule EVM.Gas do
   def operation_cost(:exp, [_base, exponent], _state, _machine_state) do
     @g_exp + @g_expbyte * MathHelper.integer_byte_size(exponent)
   end
+  def operation_cost(:codecopy, [_memory_offset, _code_offset, length], _state, _machine_state) do
+    @g_verylow + @g_copy * MathHelper.bits_to_words(length)
+  end
 
   def operation_cost(:sha3, [length, offset], _state, _machine_state) do
     @g_sha3 + @g_sha3word * MathHelper.bits_to_words(offset)
@@ -201,7 +203,9 @@ defmodule EVM.Gas do
       operation in @w_mid_instr -> @g_mid
       operation in @w_high_instr -> @g_high
       operation in @w_extcode_instr -> @g_extcode
+      operation in @call_operations -> @g_call
       operation == :blockhash -> @g_blockhash
+      operation == :balance -> @g_balance
       operation == :sload -> @g_sload
       operation == :jumpdest -> @g_jumpdest
       operation in @log_instrs -> 0

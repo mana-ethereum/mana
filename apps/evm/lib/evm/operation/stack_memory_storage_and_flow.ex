@@ -210,16 +210,16 @@ defmodule EVM.Operation.StackMemoryStorageAndFlow do
   @doc """
   Get the amount of available gas, including the corresponding reduction for the cost of this instruction.
 
-  TODO: Implement opcode
+  TODO: Subtract gas before running operations so we don't have to subtract 2 here (the price of the gas call itself)
 
   ## Examples
 
-      iex> EVM.Operation.StackMemoryStorageAndFlow.gas([], %{stack: []})
-      :unimplemented
+      iex> EVM.Operation.StackMemoryStorageAndFlow.gas([], %{machine_state: %{gas: 99}})
+      97
   """
   @spec gas(Operation.stack_args, Operation.vm_map) :: Operation.op_result
-  def gas(_args, %{stack: _stack}) do
-    :unimplemented
+  def gas(_args, %{machine_state: %{gas: gas}}) do
+    gas - 2
   end
 
   @doc """
