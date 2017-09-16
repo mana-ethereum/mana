@@ -25,6 +25,8 @@ defmodule ExWire.Handler.Pong do
   def handle(params) do
     _pong = Pong.decode(params.data)
 
+    # TODO: Add to K-Bucket
+
     :no_response
   end
 
