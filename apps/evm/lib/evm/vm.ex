@@ -21,7 +21,7 @@ defmodule EVM.VM do
   ## Examples
 
       # Full program
-      iex> EVM.VM.run(%{}, 24, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:push1, 3, :push1, 5, :add, :push1, 0x00, :mstore, :push1, 0, :push1, 32, :return])})
+      iex> EVM.VM.run(%{}, 24, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:push1, 3, :push1, 5, :add, :push1, 0x00, :mstore, :push1, 32, :push1, 0, :return])})
       {%{}, 0, %EVM.SubState{}, <<0x08::256>>}
 
       # Program with implicit stop
@@ -61,8 +61,8 @@ defmodule EVM.VM do
       iex> EVM.VM.exec(%{}, %EVM.MachineState{pc: 0, gas: 9, stack: []}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:push1, 3, :push1, 5, :add])})
       {%{}, %EVM.MachineState{pc: 6, gas: 0, stack: [8]}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:push1, 3, :push1, 5, :add])}, ""}
 
-      iex> EVM.VM.exec(%{}, %EVM.MachineState{pc: 0, gas: 24, stack: []}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:push1, 3, :push1, 5, :add, :push1, 0x00, :mstore, :push1, 0, :push1, 32, :return])})
-      {%{},%EVM.MachineState{active_words: 1, memory: <<0x08::256>>, gas: 0, pc: 13, previously_active_words: 1, stack: []}, %EVM.SubState{logs: "", refund: 0, suicide_list: []}, %EVM.ExecEnv{account_interface: nil, address: nil, block_interface: nil, contract_interface: nil, data: nil, gas_price: nil, machine_code: <<96, 3, 96, 5, 1, 96, 0, 82, 96, 0, 96, 32, 243>>, originator: nil, sender: nil, stack_depth: nil, value_in_wei: nil}, <<0x08::256>>}
+      iex> EVM.VM.exec(%{}, %EVM.MachineState{pc: 0, gas: 24, stack: []}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:push1, 3, :push1, 5, :add, :push1, 0x00, :mstore, :push1, 32, :push1, 0, :return])})
+      {%{}, %EVM.MachineState{active_words: 1, memory: <<0x08::256>>, gas: 0, pc: 13, previously_active_words: 1, stack: []}, %EVM.SubState{logs: "", refund: 0, suicide_list: []}, %EVM.ExecEnv{machine_code: <<96, 3, 96, 5, 1, 96, 0, 82, 96, 32, 96, 0, 243>>}, <<8::256>>}
   """
   @spec exec(EVM.state, MachineState.t, SubState.t, ExecEnv.t) :: {EVM.state | nil, MachineState.t, SubState.t, ExecEnv.t, output}
   def exec(state, machine_state, sub_state, exec_env) do

@@ -159,16 +159,18 @@ defmodule EVM.Operation.EnvironmentalInformation do
   @doc """
   Copy code running in current environment to memory.
 
-  TODO: Implement opcode
-
   ## Examples
 
-      iex> EVM.Operation.EnvironmentalInformation.codecopy([], %{stack: []})
-      :unimplemented
+      iex> code = <<54>>
+      iex> EVM.Operation.EnvironmentalInformation.codecopy([0, 0, 1], %{exec_env: %EVM.ExecEnv{machine_code: code}, machine_state: %EVM.MachineState{}})
+      %{machine_state: %EVM.MachineState{active_words: 1, gas: nil, memory: <<54::256>>, pc: 0, previously_active_words: 0, stack: []}}
   """
   @spec codecopy(Operation.stack_args, Operation.vm_map) :: Operation.op_result
-  def codecopy(_args, %{stack: _stack}) do
-    :unimplemented
+  def codecopy([s0, s1, s2], %{exec_env: exec_env, machine_state: machine_state}) do
+    data = EVM.Memory.read_zeroed_memory(exec_env.machine_code, s0, s2)
+    machine_state = EVM.Memory.write(machine_state, s1, Helpers.left_pad_bytes(data))
+
+    %{machine_state: machine_state}
   end
 
   @doc """

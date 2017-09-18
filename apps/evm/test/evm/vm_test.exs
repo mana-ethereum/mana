@@ -21,9 +21,9 @@ defmodule EVM.VMTest do
       0x00,
       :mstore,
       :push1,
-      0,
-      :push1,
       32,
+      :push1,
+      0,
       :return
     ]
 

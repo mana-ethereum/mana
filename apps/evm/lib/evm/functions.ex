@@ -37,7 +37,7 @@ defmodule EVM.Functions do
       iex> EVM.Functions.is_normal_halting?(%EVM.MachineState{stack: [0, 2], memory: <<0xabcd::16>>}, %EVM.ExecEnv{machine_code: <<EVM.Operation.encode(:return)>>})
       <<0xab, 0xcd>>
 
-      iex> EVM.Functions.is_normal_halting?(%EVM.MachineState{stack: [1, 2], memory: <<0xabcd::16>>}, %EVM.ExecEnv{machine_code: <<EVM.Operation.encode(:return)>>})
+      iex> EVM.Functions.is_normal_halting?(%EVM.MachineState{stack: [1, 1], memory: <<0xabcd::16>>}, %EVM.ExecEnv{machine_code: <<EVM.Operation.encode(:return)>>})
       <<0xcd>>
   """
   @spec is_normal_halting?(MachineState.t, ExecEnv.t) :: nil | binary()
@@ -52,9 +52,9 @@ defmodule EVM.Functions do
   # Defined in Appendix H of the Yellow Paper
   @spec h_return(MachineState.t) :: binary()
   defp h_return(machine_state) do
-    {[mem_start, mem_end], _} = EVM.Stack.pop_n(machine_state.stack, 2)
+    {[offset, length], _} = EVM.Stack.pop_n(machine_state.stack, 2)
 
-    {result, _} = EVM.Memory.read(machine_state, mem_start, mem_end - mem_start)
+    {result, _} = EVM.Memory.read(machine_state, offset, length)
 
     result
   end
