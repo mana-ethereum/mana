@@ -1,3 +1,7 @@
+# 0.1.8
+* Update gas cost calculations
+* Move process counter manipulation into the opcode implementations
+* Fixed `BLOCKHASH` opcode
 # 0.1.7
 * Add in a full debugger
 # 0.1.6

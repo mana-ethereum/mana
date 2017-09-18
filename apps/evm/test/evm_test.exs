@@ -6,6 +6,7 @@ defmodule EvmTest do
     sha3: :all,
     arithmetic: :all,
     bitwise_logic_operation: :all,
+    block_info: :all,
     push_dup_swap: :all,
     i_oand_flow_operations: :all,
   }
@@ -50,13 +51,47 @@ defmodule EvmTest do
   end
 
   def block_interface(test) do
+    genisis_block_header = %Block.Header{
+      number: 0,
+      mix_hash: 0,
+    }
+
+    first_block_header = %Block.Header{
+      number: 1,
+      mix_hash: 0xc89efdaa54c0f20c7adf612882df0950f5a951637e0307cdcb4c672f298b8bc6
+    }
+
+    second_block_header = %Block.Header{
+      number: 2,
+      mix_hash: 0xad7c5bef027816a800da1736444fb58a807ef4c9603b7848673f7e3a68eb14a5,
+    }
+
+    parent_block_header = %Block.Header{
+      number: hex_to_int(test["env"]["currentNumber"]) - 1,
+      mix_hash: 0x6ca54da2c4784ea43fd88b3402de07ae4bced597cbb19f323b7595857a6720ae,
+    }
+
+
+    last_block_header = %Block.Header{
+      number: hex_to_int(test["env"]["currentNumber"]),
+      timestamp: hex_to_int(test["env"]["currentTimestamp"]),
+      beneficiary: hex_to_int(test["env"]["currentCoinbase"]),
+      mix_hash: 0,
+      parent_hash: hex_to_int(test["env"]["currentNumber"]) - 1,
+      gas_limit: hex_to_int(test["env"]["currentGasLimit"]),
+      difficulty: hex_to_int(test["env"]["currentDifficulty"]),
+    }
+
+    block_map = %{
+      genisis_block_header.mix_hash => genisis_block_header,
+      first_block_header.mix_hash => first_block_header,
+      second_block_header.mix_hash => second_block_header,
+      parent_block_header.mix_hash => parent_block_header,
+      last_block_header.mix_hash => last_block_header,
+    }
     block_interface = EVM.Interface.Mock.MockBlockInterface.new(
-      %Block.Header{
-        number: hex_to_int(test["env"]["currentNumber"]),
-        timestamp: hex_to_int(test["env"]["currentTimestamp"]),
-        gas_limit: hex_to_int(test["env"]["currentGasLimit"]),
-        difficulty: hex_to_int(test["env"]["currentDifficulty"]),
-      }
+      last_block_header,
+      block_map
     )
   end
 

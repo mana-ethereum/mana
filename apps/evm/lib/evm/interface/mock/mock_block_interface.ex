@@ -30,4 +30,14 @@ defimpl EVM.Interface.BlockInterface, for: EVM.Interface.Mock.MockBlockInterface
     mock_block_interface.block_map[block_hash]
   end
 
+  @spec get_block_by_number(EVM.Interface.BlockInterface.t, integer()) :: Block.Header.t
+  def get_block_by_number(mock_block_interface, number) do
+    block = Map.values(mock_block_interface.block_map)
+      |> Enum.find(fn block -> block.number == number end)
+
+    if block do
+      mock_block_interface.block_map[block.mix_hash]
+    end
+  end
+
 end

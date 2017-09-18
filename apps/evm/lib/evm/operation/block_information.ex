@@ -9,42 +9,31 @@ defmodule EVM.Operation.BlockInformation do
 
   ## Examples
 
-      iex> block_b = %Block.Header{number: 2, parent_hash: "block_a"}
-      iex> block_a = %Block.Header{number: 1, parent_hash: "gen_block"}
-      iex> genesis_block = %Block.Header{number: 0, parent_hash: <<0x00::256>>}
-      iex> block_map = %{"gen_block" => genesis_block, "block_a" => block_a, "block_b" => block_b}
+      iex> block_b = %Block.Header{number: 2, mix_hash: "block_b"}
+      iex> block_a = %Block.Header{number: 1, mix_hash: "block_a"}
+      iex> genesis_block = %Block.Header{number: 0, mix_hash: <<0x00::256>>}
+      iex> block_map = %{<<0x00::256>> => genesis_block, "block_a" => block_a, "block_b" => block_b}
       iex> block_interface = EVM.Interface.Mock.MockBlockInterface.new(block_b, block_map)
       iex> exec_env = %EVM.ExecEnv{block_interface: block_interface}
       iex> EVM.Operation.BlockInformation.blockhash([3], %{exec_env: exec_env})
       0
       iex> EVM.Operation.BlockInformation.blockhash([2], %{exec_env: exec_env})
-      0
+      "block_b"
       iex> EVM.Operation.BlockInformation.blockhash([1], %{exec_env: exec_env})
       "block_a"
       iex> EVM.Operation.BlockInformation.blockhash([0], %{exec_env: exec_env})
-      "gen_block"
+      <<0::256>>
       iex> EVM.Operation.BlockInformation.blockhash([-1], %{exec_env: exec_env})
       0
   """
   @spec blockhash(Operation.stack_args, Operation.vm_map) :: Operation.op_result
   def blockhash([block_number], %{exec_env: exec_env}) do
-    current_block_header = BlockInterface.get_block_header(exec_env.block_interface)
-    parent_block_header = BlockInterface.get_block_by_hash(exec_env.block_interface, current_block_header.parent_hash)
-
-    get_block_number(exec_env.block_interface, parent_block_header, current_block_header.parent_hash, block_number, 0)
-  end
-
-  defp get_block_number(block_interface, block_header, parent_hash, block_number, depth) do
-    cond do
-      block_number > block_header.number or depth == 256 or parent_hash == <<0::256>> -> 0
-      block_number == block_header.number -> parent_hash
-      true ->
-        parent_block_header = BlockInterface.get_block_by_hash(block_interface, block_header.parent_hash)
-
-        case parent_block_header do
-          nil -> 0 # block not found
-          _ -> get_block_number(block_interface, parent_block_header, block_header.parent_hash, block_number, depth + 1)
-        end
+    block_difference = exec_env.block_interface.block_header.number - block_number
+    if block_difference > 256 || block_difference < 0 do
+      0
+    else
+      block_header = BlockInterface.get_block_by_number(exec_env.block_interface, block_number)
+      if block_header, do: block_header.mix_hash, else: 0
     end
   end
 
@@ -132,5 +121,4 @@ defmodule EVM.Operation.BlockInformation do
 
     block_header.gas_limit
   end
-
 end
