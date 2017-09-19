@@ -102,6 +102,9 @@ defmodule EVM.Memory do
 
   ## Examples
 
+      iex> EVM.Memory.read_zeroed_memory(nil, 1, 4)
+      <<0, 0, 0, 0>>
+
       iex> EVM.Memory.read_zeroed_memory(<<1, 2, 3>>, 1, 4)
       <<2, 3, 0, 0>>
 
@@ -115,16 +118,15 @@ defmodule EVM.Memory do
   """
   @spec read_zeroed_memory(binary(), EVM.val, EVM.val) :: binary()
   def read_zeroed_memory(memory, offset, bytes) do
-    memory_size = byte_size(memory)
-
     cond do
       bytes > EVM.int_size() ->
         <<>>
-      offset > memory_size ->
+      memory == nil || offset > byte_size(memory) ->
         # We're totally out of memory, let's just drop zeros
         bytes_in_bits = bytes * 8
         <<0::size(bytes_in_bits)>>
       true ->
+        memory_size = byte_size(memory)
         final_pos = offset + bytes
         memory_bytes_final_pos = min(final_pos, memory_size)
         padding = ( final_pos - memory_bytes_final_pos ) * 8

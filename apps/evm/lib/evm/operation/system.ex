@@ -14,7 +14,8 @@ defmodule EVM.Operation.System do
       iex> db = MerklePatriciaTree.Test.random_ets_db()
       iex> state = MerklePatriciaTree.Trie.new(db)
       iex> block_interface = EVM.Interface.Mock.MockBlockInterface.new(%Block.Header{})
-      iex> account_interface = EVM.Interface.Mock.MockAccountInterface.new(balance: 5_000, nonce: 5)
+      iex> account_map = %{<<100::160>> => %{balance: 5_000, nonce: 5}}
+      iex> account_interface = EVM.Interface.Mock.MockAccountInterface.new(%{account_map: account_map})
       iex> contract_interface = EVM.Interface.Mock.MockContractInterface.new(state, 500, nil, "output")
       iex> exec_env = %EVM.ExecEnv{stack_depth: 0, address: <<100::160>>, account_interface: account_interface, contract_interface: contract_interface, block_interface: block_interface}
       iex> machine_state = %EVM.MachineState{gas: 300, stack: [1], memory: "________" <> "input"}
@@ -95,9 +96,10 @@ defmodule EVM.Operation.System do
       iex> db = MerklePatriciaTree.Test.random_ets_db()
       iex> state = MerklePatriciaTree.Trie.new(db)
       iex> block_interface = EVM.Interface.Mock.MockBlockInterface.new(%Block.Header{})
-      iex> account_interface = EVM.Interface.Mock.MockAccountInterface.new(balance: 5_000)
+      iex> account_map = %{<<0::160>> => %{balance: 5_000, nonce: 5}}
+      iex> account_interface = EVM.Interface.Mock.MockAccountInterface.new(%{account_map: account_map})
       iex> contract_interface = EVM.Interface.Mock.MockContractInterface.new(state, 500, nil, "output")
-      iex> exec_env = %EVM.ExecEnv{stack_depth: 0, account_interface: account_interface, contract_interface: contract_interface, block_interface: block_interface}
+      iex> exec_env = %EVM.ExecEnv{stack_depth: 0, address: <<0::160>>, account_interface: account_interface, contract_interface: contract_interface, block_interface: block_interface}
       iex> machine_state = %EVM.MachineState{gas: 300, stack: [1], memory: "________" <> "input"}
       iex> %{machine_state: n_machine_state, state: n_state} =
       ...>   EVM.Operation.System.call(
@@ -113,9 +115,10 @@ defmodule EVM.Operation.System do
       iex> db = MerklePatriciaTree.Test.random_ets_db()
       iex> state = MerklePatriciaTree.Trie.new(db)
       iex> block_interface = EVM.Interface.Mock.MockBlockInterface.new(%Block.Header{})
-      iex> account_interface = EVM.Interface.Mock.MockAccountInterface.new(balance: 5_000)
+      iex> account_map = %{<<0::160>> => %{balance: 5_000}}
+      iex> account_interface = EVM.Interface.Mock.MockAccountInterface.new(%{account_map: account_map})
       iex> contract_interface = EVM.Interface.Mock.MockContractInterface.new(state, 500, nil, "output")
-      iex> exec_env = %EVM.ExecEnv{stack_depth: 0, account_interface: account_interface, contract_interface: contract_interface, block_interface: block_interface}
+      iex> exec_env = %EVM.ExecEnv{stack_depth: 0, address: <<0::160>>, account_interface: account_interface, contract_interface: contract_interface, block_interface: block_interface}
       iex> machine_state = %EVM.MachineState{gas: 300, stack: [1], memory: "________" <> "input"}
       iex> %{machine_state: n_machine_state, state: n_state} =
       ...>   EVM.Operation.System.call(
@@ -131,9 +134,10 @@ defmodule EVM.Operation.System do
       iex> db = MerklePatriciaTree.Test.random_ets_db()
       iex> state = MerklePatriciaTree.Trie.new(db)
       iex> block_interface = EVM.Interface.Mock.MockBlockInterface.new(%Block.Header{})
-      iex> account_interface = EVM.Interface.Mock.MockAccountInterface.new(balance: 5_000)
+      iex> account_map = %{<<0::160>> => %{balance: 5_000}}
+      iex> account_interface = EVM.Interface.Mock.MockAccountInterface.new(%{account_map: account_map})
       iex> contract_interface = EVM.Interface.Mock.MockContractInterface.new(state, 500, nil, "output")
-      iex> exec_env = %EVM.ExecEnv{stack_depth: 0, account_interface: account_interface, contract_interface: contract_interface, block_interface: block_interface}
+      iex> exec_env = %EVM.ExecEnv{stack_depth: 0, address: <<0::160>>, account_interface: account_interface, contract_interface: contract_interface, block_interface: block_interface}
       iex> machine_state = %EVM.MachineState{gas: 300, stack: [1], memory: "________" <> "input"}
       iex> %{machine_state: n_machine_state, state: n_state} =
       ...>   EVM.Operation.System.call(

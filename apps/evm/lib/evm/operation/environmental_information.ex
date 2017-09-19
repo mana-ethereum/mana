@@ -23,14 +23,16 @@ defmodule EVM.Operation.EnvironmentalInformation do
 
       iex> db = MerklePatriciaTree.Test.random_ets_db()
       iex> state = MerklePatriciaTree.Trie.new(db)
-      iex> account_interface = EVM.Interface.Mock.MockAccountInterface.new(balance: 500)
+      iex> account_map = %{123 => %{balance: 500}}
+      iex> account_interface = EVM.Interface.Mock.MockAccountInterface.new(%{account_map: account_map})
       iex> exec_env = %EVM.ExecEnv{account_interface: account_interface}
       iex> EVM.Operation.EnvironmentalInformation.balance([123], %{state: state, exec_env: exec_env})
       500
 
       iex> db = MerklePatriciaTree.Test.random_ets_db()
       iex> state = MerklePatriciaTree.Trie.new(db)
-      iex> account_interface = EVM.Interface.Mock.MockAccountInterface.new(balance: nil)
+      iex> account_map = %{123 => %{balance: nil}}
+      iex> account_interface = EVM.Interface.Mock.MockAccountInterface.new(%{account_map: account_map})
       iex> exec_env = %EVM.ExecEnv{account_interface: account_interface}
       iex> EVM.Operation.EnvironmentalInformation.balance([123], %{state: state, exec_env: exec_env})
       0
@@ -144,16 +146,14 @@ defmodule EVM.Operation.EnvironmentalInformation do
   @doc """
   Get size of code running in current environment.
 
-  TODO: Implement opcode
-
   ## Examples
 
-      iex> EVM.Operation.EnvironmentalInformation.codesize([], %{stack: []})
-      :unimplemented
+      iex> EVM.Operation.EnvironmentalInformation.codesize([], %{exec_env: %{machine_code: <<0::256>>}})
+      32
   """
   @spec codesize(Operation.stack_args, Operation.vm_map) :: Operation.op_result
-  def codesize(_args, %{stack: _stack}) do
-    :unimplemented
+  def codesize(_args, %{exec_env: exec_env}) do
+    byte_size(exec_env.machine_code)
   end
 
   @doc """
@@ -176,31 +176,37 @@ defmodule EVM.Operation.EnvironmentalInformation do
   @doc """
   Get price of gas in current environment.
 
-  TODO: Implement opcode
-
   ## Examples
 
-      iex> EVM.Operation.EnvironmentalInformation.gasprice([], %{stack: []})
-      :unimplemented
+      iex> EVM.Operation.EnvironmentalInformation.gasprice([], %{exec_env: %{gas_price: 98}})
+      98
   """
   @spec gasprice(Operation.stack_args, Operation.vm_map) :: Operation.op_result
-  def gasprice(_args, %{stack: _stack}) do
-    :unimplemented
+  def gasprice(_args, %{exec_env: exec_env}) do
+    exec_env.gas_price
   end
 
   @doc """
   Get size of an account’s code.
 
-  TODO: Implement opcode
-
   ## Examples
 
-      iex> EVM.Operation.EnvironmentalInformation.extcodesize([], %{stack: []})
-      :unimplemented
+      iex> account_interface = EVM.Interface.Mock.MockAccountInterface.new(%{account_map: %{0x01 => %{code: 0x11223344}}})
+      iex> db = MerklePatriciaTree.Test.random_ets_db()
+      iex> state = MerklePatriciaTree.Trie.new(db)
+      iex> exec_env = %EVM.ExecEnv{account_interface: account_interface}
+      iex> EVM.Operation.EnvironmentalInformation.extcodesize([0x01], %{exec_env: exec_env, state: state})
+      4
   """
   @spec extcodesize(Operation.stack_args, Operation.vm_map) :: Operation.op_result
-  def extcodesize(_args, %{stack: _stack}) do
-    :unimplemented
+  def extcodesize([address], %{exec_env: exec_env, state: state}) do
+    account_code = AccountInterface.get_account_code(exec_env.account_interface, state, address)
+
+    if account_code do
+      byte_size(:binary.encode_unsigned(account_code))
+    else
+      0
+    end
   end
 
   @doc """
@@ -210,12 +216,21 @@ defmodule EVM.Operation.EnvironmentalInformation do
 
   ## Examples
 
-      iex> EVM.Operation.EnvironmentalInformation.extcodecopy([], %{stack: []})
-      :unimplemented
+      iex> db = MerklePatriciaTree.Test.random_ets_db()
+      iex> state = MerklePatriciaTree.Trie.new(db)
+      iex> code = <<54>>
+      iex> account_map = %{<<0::160>> => %{code: <<54>>}}
+      iex> account_interface = EVM.Interface.Mock.MockAccountInterface.new(%{account_map: account_map})
+      iex> EVM.Operation.EnvironmentalInformation.extcodecopy([<<0::160>>, 0, 0, 1], %{exec_env: %EVM.ExecEnv{account_interface: account_interface}, machine_state: %EVM.MachineState{}, state: state})
+      %{machine_state: %EVM.MachineState{active_words: 1, gas: nil, memory: <<54::256>>, pc: 0, previously_active_words: 0, stack: []}}
   """
   @spec extcodecopy(Operation.stack_args, Operation.vm_map) :: Operation.op_result
-  def extcodecopy(_args, %{stack: _stack}) do
-    :unimplemented
+  def extcodecopy([address, code_offset, mem_offset, length], %{machine_state: machine_state, exec_env: exec_env, state: state}) do
+    account_code = AccountInterface.get_account_code(exec_env.account_interface, state, address)
+    data = EVM.Memory.read_zeroed_memory(account_code, code_offset, length)
+    machine_state = EVM.Memory.write(machine_state, mem_offset, Helpers.left_pad_bytes(data))
+
+    %{machine_state: machine_state}
   end
 
 end

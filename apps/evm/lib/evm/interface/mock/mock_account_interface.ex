@@ -4,8 +4,7 @@ defmodule EVM.Interface.Mock.MockAccountInterface do
   """
 
   defstruct [
-    balance: nil,
-    nonce: nil
+    account_map: nil,
   ]
 
   def new(opts) do
@@ -17,13 +16,25 @@ end
 defimpl EVM.Interface.AccountInterface, for: EVM.Interface.Mock.MockAccountInterface do
 
   @spec get_account_balance(EVM.Interface.AccountInterface.t, EVM.state, EVM.address) :: nil | EVM.Wei.t
-  def get_account_balance(mock_account_interface, _state, _address) do
-    mock_account_interface.balance
+  def get_account_balance(mock_account_interface, _state, address) do
+    Map.get(mock_account_interface.account_map, address).balance
+  end
+
+  @spec get_account_code(EVM.Interface.AccountInterface.t, EVM.state, EVM.address) :: nil | integer()
+  def get_account_code(mock_account_interface, _state, address) do
+    account = get_account(mock_account_interface, address)
+
+    if account do
+      account.code
+    end
   end
 
   @spec increment_account_nonce(EVM.Interface.AccountInterface.t, EVM.state, EVM.address) :: { EVM.state, integer() }
-  def increment_account_nonce(mock_account_interface, state, _address) do
-    { state, mock_account_interface.nonce + 1 }
+  def increment_account_nonce(mock_account_interface, state, address) do
+    {state, Map.get(mock_account_interface.account_map, address).nonce + 1}
   end
+
+  defp get_account(mock_account_interface, address), do:
+    Map.get(mock_account_interface.account_map, address)
 
 end

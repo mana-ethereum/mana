@@ -7,6 +7,62 @@ defmodule EvmTest do
     arithmetic: :all,
     bitwise_logic_operation: :all,
     block_info: :all,
+    environmental_info: [
+      :address0,
+      :address1,
+      :balance0,
+      :balance1,
+      :balanceAddress2,
+      :balanceCaller3,
+      :caller,
+      :extcodesize0,
+      :extcodesize1,
+      :extcodesizeUnderFlow,
+      :codesize,
+      :gasprice,
+
+      # :ExtCodeSizeAddressInputTooBigLeftMyAddress,
+      # :ExtCodeSizeAddressInputTooBigRightMyAddress,
+      # :balance01,
+      # :balanceAddressInputTooBig,
+      # :balanceAddressInputTooBigLeftMyAddress,
+      # :balanceAddressInputTooBigRightMyAddress,
+      # :calldatacopy0,
+      # :calldatacopy0_return,
+      # :calldatacopy1,
+      # :calldatacopy1_return,
+      # :calldatacopy2,
+      # :calldatacopy2_return,
+      # :calldatacopyUnderFlow,
+      # :calldatacopyZeroMemExpansion,
+      # :calldatacopyZeroMemExpansion_return,
+      # :calldatacopy_DataIndexTooHigh,
+      # :calldatacopy_DataIndexTooHigh2,
+      # :calldatacopy_DataIndexTooHigh2_return,
+      # :calldatacopy_DataIndexTooHigh_return,
+      # :calldatacopy_sec,
+      # :calldataload0,
+      # :calldataload1,
+      # :calldataload2,
+      # :calldataloadSizeTooHigh,
+      # :calldataloadSizeTooHighPartial,
+      # :calldataload_BigOffset,
+      # :calldatasize0,
+      # :calldatasize1,
+      # :calldatasize2,
+      # :callvalue,
+      # :codecopy0,
+      # :codecopyZeroMemExpansion,
+      # :codecopy_DataIndexTooHigh,
+      # :env1,
+      # :extcodecopy0,
+      # :extcodecopy0AddressTooBigLeft,
+      # :extcodecopy0AddressTooBigRight,
+      # :extcodecopyZeroMemExpansion,
+      # :extcodecopyZeroMemExpansion,
+      # :extcodecopy_DataIndexTooHigh,
+      # :origin,
+    ],
     push_dup_swap: :all,
     i_oand_flow_operations: :all,
   }
@@ -21,12 +77,14 @@ defmodule EvmTest do
           %EVM.ExecEnv{
             machine_code: hex_to_binary(test["exec"]["code"]),
             sender: hex_to_binary(test["exec"]["caller"]),
+            gas_price: hex_to_binary(test["exec"]["gasPrice"]),
+            address: hex_to_binary(test["exec"]["address"]),
             block_interface: block_interface(test),
+            account_interface: account_interface(test),
             data: hex_to_binary(test["exec"]["data"]),
             value_in_wei: hex_to_binary(test["exec"]["value"]),
           }
         )
-
 
         assert_state(test, state)
 
@@ -48,6 +106,28 @@ defmodule EvmTest do
       |> Enum.reduce(state, fn({key, value}, state) ->
         Trie.update(state, <<hex_to_int(key)::size(256)>>, <<hex_to_int(value)::size(256)>>)
       end)
+  end
+
+  def account_interface(test) do
+    account_map = %{
+      hex_to_int(test["exec"]["caller"]) => %{
+        balance: 0,
+        code: hex_to_int(test["exec"]["code"]),
+        nonce: 0,
+    }}
+    account_map = Enum.reduce(test["pre"], account_map, fn({address, account}, address_map) ->
+      Map.merge(address_map, %{
+          hex_to_int(address) => %{
+            balance: hex_to_int(account["balance"]),
+            code: hex_to_int(account["code"]),
+            nonce: hex_to_int(account["nonce"]),
+          }
+        })
+    end)
+
+    EVM.Interface.Mock.MockAccountInterface.new(%{
+      account_map: account_map
+    })
   end
 
   def block_interface(test) do

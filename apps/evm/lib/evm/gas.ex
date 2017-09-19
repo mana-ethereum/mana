@@ -18,8 +18,8 @@ defmodule EVM.Gas do
   @g_low 5  # Amount of gas to pay for operations of the set Wlow.
   @g_mid 8  # Amount of gas to pay for operations of the set Wmid.
   @g_high 10  # Amount of gas to pay for operations of the set Whigh.
-  @g_extcode 700  # Amount of gas to pay for operations of the set Wextcode.
-  @g_balance 400  # Amount of gas to pay for a BALANCE operation.
+  @g_extcode 20  # Amount of gas to pay for operations of the set Wextcode.
+  @g_balance 20  # Amount of gas to pay for a BALANCE operation.
   @g_sload 50  # Paid for a SLOAD operation.
   @g_jumpdest 1  # Paid for a JUMPDEST operation.
   @g_sset 20000  # Paid for an SSTORE operation when the storage value is set to non-zero from zero.
@@ -64,7 +64,7 @@ defmodule EVM.Gas do
   @w_high_instr [:jumpi]
   @w_extcode_instr [:extcodesize]
   @call_operations [:callcode, :delegatecall, :extcodecopy]
-  @memory_operations [:mstore, :mstore8, :sha3, :codecopy, :mload]
+  @memory_operations [:mstore, :mstore8, :sha3, :codecopy, :extcodecopy, :mload]
 
 
   @doc """
@@ -86,8 +86,6 @@ defmodule EVM.Gas do
 
     operation_cost + memory_cost
   end
-
-
 
   defp memory_cost(operation, updated_machine_state)
   when operation in @memory_operations do
@@ -161,8 +159,13 @@ defmodule EVM.Gas do
   def operation_cost(:exp, [_base, exponent], _state, _machine_state) do
     @g_exp + @g_expbyte * MathHelper.integer_byte_size(exponent)
   end
+
   def operation_cost(:codecopy, [_memory_offset, _code_offset, length], _state, _machine_state) do
     @g_verylow + @g_copy * MathHelper.bits_to_words(length)
+  end
+
+  def operation_cost(:extcodecopy, [address, code_offset, mem_offset, length], _state, _machine_state) do
+    @g_extcode + @g_copy * MathHelper.bits_to_words(length)
   end
 
   def operation_cost(:sha3, [length, offset], _state, _machine_state) do
@@ -192,7 +195,6 @@ defmodule EVM.Gas do
       @g_sset
     end
   end
-
 
   def operation_cost(operation, inputs, _state, _machine_state) do
     cond do
