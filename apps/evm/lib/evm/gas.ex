@@ -64,7 +64,7 @@ defmodule EVM.Gas do
   @w_high_instr [:jumpi]
   @w_extcode_instr [:extcodesize]
   @call_operations [:callcode, :delegatecall, :extcodecopy]
-  @memory_operations [:mstore, :mstore8, :sha3, :codecopy, :extcodecopy, :mload]
+  @memory_operations [:mstore, :mstore8, :sha3, :codecopy, :extcodecopy, :calldatacopy, :mload]
 
 
   @doc """
@@ -161,6 +161,10 @@ defmodule EVM.Gas do
   end
 
   def operation_cost(:codecopy, [_memory_offset, _code_offset, length], _state, _machine_state) do
+    @g_verylow + @g_copy * MathHelper.bits_to_words(length)
+  end
+
+  def operation_cost(:calldatacopy, [_memory_offset, _code_offset, length], _state, _machine_state) do
     @g_verylow + @g_copy * MathHelper.bits_to_words(length)
   end
 

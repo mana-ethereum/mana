@@ -17,7 +17,11 @@ defimpl EVM.Interface.AccountInterface, for: EVM.Interface.Mock.MockAccountInter
 
   @spec get_account_balance(EVM.Interface.AccountInterface.t, EVM.state, EVM.address) :: nil | EVM.Wei.t
   def get_account_balance(mock_account_interface, _state, address) do
-    Map.get(mock_account_interface.account_map, address).balance
+    account = get_account(mock_account_interface, address)
+
+    if account do
+      account.balance
+    end
   end
 
   @spec get_account_code(EVM.Interface.AccountInterface.t, EVM.state, EVM.address) :: nil | integer()

@@ -117,6 +117,8 @@ defmodule EVM.Memory do
       <<>>
   """
   @spec read_zeroed_memory(binary(), EVM.val, EVM.val) :: binary()
+  def read_zeroed_memory(memory, offset, bytes) when is_integer(memory), do:
+    read_zeroed_memory(:binary.encode_unsigned(memory), offset, bytes)
   def read_zeroed_memory(memory, offset, bytes) do
     cond do
       bytes > EVM.int_size() ->

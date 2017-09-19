@@ -68,7 +68,13 @@ defmodule EVM.Helpers do
       1
   """
   def wrap_address(n) when is_integer(n), do: band(n, EVM.max_address() - 1)
-  def wrap_address(n) when is_binary(n), do: n |> :binary.decode_unsigned |> wrap_address |> :binary.encode_unsigned
+  def wrap_address(n) when is_binary(n) do
+    if byte_size(n) > EVM.address_size() do
+      :binary.part(n, 0, EVM.address_size())
+    else
+      n
+    end
+  end
 
   @doc """
   Encodes signed ints using twos compliment
@@ -175,6 +181,29 @@ defmodule EVM.Helpers do
   def left_pad_bytes(n, size) do
     padding_size = (size - byte_size(n)) * EVM.byte_size()
     <<0:: size(padding_size)>> <> n
+  end
+
+  @doc """
+  Right pad binary with bytes
+
+  ## Examples
+
+      iex> EVM.Helpers.right_pad_bytes(1, 3)
+      <<1, 0, 0>>
+      iex> EVM.Helpers.right_pad_bytes(<<1>>, 3)
+      <<1, 0, 0>>
+      iex> EVM.Helpers.right_pad_bytes(<<1, 2, 3>>, 2)
+      <<1, 2, 3>>
+  """
+  @spec right_pad_bytes(binary() | integer(), integer()) :: integer()
+  def right_pad_bytes(n, size \\ EVM.word_size())
+  def right_pad_bytes(n, size) when is_integer(n), do:
+    right_pad_bytes(:binary.encode_unsigned(n), size)
+
+  def right_pad_bytes(n, size) when size < byte_size(n), do: n
+  def right_pad_bytes(n, size) do
+    padding_size = (size - byte_size(n)) * EVM.byte_size()
+    n <> <<0:: size(padding_size)>>
   end
 
   @doc """
