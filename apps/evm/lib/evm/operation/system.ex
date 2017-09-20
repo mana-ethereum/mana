@@ -24,7 +24,7 @@ defmodule EVM.Operation.System do
       ...>     [1_000, 5, 5],
       ...>     %{state: state, exec_env: exec_env, machine_state: machine_state})
       iex> n_machine_state
-      %EVM.MachineState{gas: 800, stack: [100, 1], active_words: 1, memory: "________input"}
+      %EVM.MachineState{gas: 800, stack: [EVM.Helpers.left_pad_bytes(100, 20), 1], active_words: 1, memory: "________input"}
       iex> n_state == state
       true
   """
@@ -71,7 +71,7 @@ defmodule EVM.Operation.System do
 
     # Note if was exception halt or other failure on stack
     result = if is_allowed and not is_nil(n_state) do
-      ContractInterface.new_contract_address(exec_env.contract_interface, exec_env.address, original_nonce) |> Helpers.wrap_address |> :binary.decode_unsigned
+      ContractInterface.new_contract_address(exec_env.contract_interface, exec_env.address, original_nonce) |> Helpers.wrap_address
     else
       0
     end
@@ -208,6 +208,58 @@ defmodule EVM.Operation.System do
       machine_state: machine_state
       # TODO: sub_state
     }
+  end
+
+  @spec call(Operation.stack_args, Operation.vm_map) :: Operation.op_result
+
+  def call([call_gas, to, value, in_offset, in_size, out_offset, out_size], %{state: state, exec_env: exec_env, machine_state: machine_state}) do
+
+    {contract_code, machine_state} = EVM.Memory.read(machine_state, in_offset, in_size)
+    account_balance = AccountInterface.get_account_balance(exec_env.account_interface, state, exec_env.address)
+
+    if call_gas <= account_balance && exec_env.stack_depth < EVM.Functions.max_stack_depth do
+
+      { n_state, n_gas, _n_sub_state, n_output } = message_call(
+        exec_env.contract_interface,
+        state,                     # state
+        exec_env.address,          # sender
+        exec_env.originator,       # originator
+        exec_env.address,          # recipient
+        to,                        # contract
+        call_gas,                  # available_gas # TODO: Call gas?
+        exec_env.gas_price,        # gas_price
+        value,                     # value
+        exec_env.value_in_wei,     # apparent_value
+        contract_code,             # data
+        exec_env.stack_depth)      # stack_depth
+
+
+      machine_state = EVM.Memory.write(machine_state, out_offset, n_output)
+      machine_state = %{machine_state | gas: machine_state.gas + n_gas}
+      # Return 1: 1 = success, 0 = failure
+      # TODO Check if the call was actually successful
+      machine_state = %{machine_state | stack: Stack.push(machine_state.stack, 1)}
+
+      %{
+        state: n_state,
+        machine_state: machine_state
+        # TODO: sub_state
+      }
+    else
+      %{machine_state | stack: Stack.push(machine_state.stack, 0)}
+    end
+  end
+
+  @spec message_call(EVM.Interface.ContractInterface.t, EVM.state, EVM.address, EVM.address, EVM.address, EVM.address, EVM.Gas.t, EVM.Gas.gas_price, EVM.Wei.t, EVM.Wei.t, binary(), integer()) :: { EVM.state, EVM.Gas.t, EVM.SubState.t, EVM.VM.output }
+  defp message_call(mock_contract_interface, state, _sender, _originator, _recipient, contract, available_gas, _gas_price, _value, _apparent_value, data, stack_depth) do
+    EVM.VM.run(
+      state,
+      available_gas,
+      %EVM.ExecEnv{
+        machine_code: data,
+        stack_depth: stack_depth + 1,
+      }
+    )
   end
 
   @doc """

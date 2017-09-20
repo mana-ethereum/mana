@@ -1,3 +1,5 @@
+# 0.1.11
+* Add basic implementation of the CALL opcode
 # 0.1.10
 * Update interfaces to match `Blockchain` downstream
 * Add `Block.Header.hash/1` function

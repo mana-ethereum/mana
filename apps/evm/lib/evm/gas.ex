@@ -26,7 +26,7 @@ defmodule EVM.Gas do
   @g_suicide 5000  # Amount of gas to pay for a SUICIDE operation.
   @g_create 32000  # Paid for a CREATE operation.
   @g_codedeposit 200  # Paid per byte for a CREATE operation to succeed in placing code into state.
-  @g_call 700  # Paid for a CALL operation.
+  @g_call 40  # Paid for a CALL operation.
   @g_callvalue 9000  # Paid for a non-zero value transfer as part of the CALL operation.
   @g_callstipend 2300  # A stipend for the called contract subtracted from Gcallvalue for a non-zero value transfer.
   @g_newaccount 25000  # Paid for a CALL or SUICIDE operation which creates an account.
@@ -46,7 +46,7 @@ defmodule EVM.Gas do
   @g_copy 3  # Partial payment for *COPY operations, multiplied by words copied, rounded up.
   @g_blockhash 20  # Payment for BLOCKHASH operation
 
-  @w_zero_instr [:stop, :return, :suicide, :create]
+  @w_zero_instr [:stop, :return, :suicide]
   @w_base_instr [:address, :origin, :caller, :callvalue, :calldatasize, :codesize, :gasprice, :coinbase, :timestamp, :number, :difficulty, :gaslimit, :pop, :pc, :msize, :gas]
   @push_instrs Enum.map(0..32, fn n -> :"push#{n}" end)
   @dup_instrs Enum.map(0..16, fn n -> :"dup#{n}" end)
@@ -60,7 +60,7 @@ defmodule EVM.Gas do
   @w_mid_instr [:addmod, :mulmod, :jump]
   @w_high_instr [:jumpi]
   @w_extcode_instr [:extcodesize]
-  @call_operations [:callcode, :delegatecall, :extcodecopy]
+  @call_operations [:call, :callcode, :delegatecall]
   @memory_operations [:mstore, :mstore8, :sha3, :codecopy, :extcodecopy, :calldatacopy, :mload]
 
 
@@ -113,6 +113,14 @@ defmodule EVM.Gas do
 
   def memory_cost(:mstore, [memory_offset, value], machine_state) do
     memory_expansion_cost(machine_state, memory_offset, 32)
+  end
+
+  def memory_cost(:call, [gas_limit, to_address, value, in_offset, in_length, out_offset, out_length], machine_state) do
+    memory_expansion_cost(machine_state, out_offset, out_length)
+  end
+
+  def memory_cost(:create, [value, in_offset, in_length], machine_state) do
+    memory_expansion_cost(machine_state, in_offset, in_length)
   end
 
   # From Eq 220: Cmem(μ′i)−Cmem(μi)
@@ -242,7 +250,19 @@ defmodule EVM.Gas do
     end
   end
 
-  def operation_cost(operation, _inputs, _state, _machine_state) do
+  def operation_cost(:call, [gas_limit, to_address, value, in_offset, in_length, out_offset, out_length], state, _machine_state) do
+    @g_call + call_value_cost(value) + gas_limit
+  end
+
+  defp call_value_cost(value) do
+    if value == 0 do
+      0
+    else
+      @g_callvalue - @g_callstipend
+    end
+  end
+
+  def operation_cost(operation, inputs, _state, _machine_state) do
     cond do
       operation in @w_very_low_instr -> @g_verylow
       operation in @w_zero_instr -> @g_zero
@@ -252,6 +272,7 @@ defmodule EVM.Gas do
       operation in @w_high_instr -> @g_high
       operation in @w_extcode_instr -> @g_extcode
       operation in @call_operations -> @g_call
+      operation == :create -> @g_create
       operation == :blockhash -> @g_blockhash
       operation == :balance -> @g_balance
       operation == :sload -> @g_sload
