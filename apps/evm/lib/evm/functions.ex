@@ -9,6 +9,7 @@ defmodule EVM.Functions do
   alias EVM.MachineState
   alias EVM.Operation
   alias EVM.Stack
+  alias EVM.Gas
 
   @max_stack 1024
 
@@ -19,16 +20,16 @@ defmodule EVM.Functions do
 
   # Examples
 
-      iex> EVM.Functions.is_normal_halting?(%EVM.MachineState{pc: 0}, %EVM.ExecEnv{machine_code: <<EVM.Operation.encode(:add)>>})
+      iex> EVM.Functions.is_normal_halting?(%EVM.MachineState{program_counter: 0}, %EVM.ExecEnv{machine_code: <<EVM.Operation.encode(:add)>>})
       nil
 
-      iex> EVM.Functions.is_normal_halting?(%EVM.MachineState{pc: 0}, %EVM.ExecEnv{machine_code: <<EVM.Operation.encode(:mul)>>})
+      iex> EVM.Functions.is_normal_halting?(%EVM.MachineState{program_counter: 0}, %EVM.ExecEnv{machine_code: <<EVM.Operation.encode(:mul)>>})
       nil
 
-      iex> EVM.Functions.is_normal_halting?(%EVM.MachineState{pc: 0}, %EVM.ExecEnv{machine_code: <<EVM.Operation.encode(:stop)>>})
+      iex> EVM.Functions.is_normal_halting?(%EVM.MachineState{program_counter: 0}, %EVM.ExecEnv{machine_code: <<EVM.Operation.encode(:stop)>>})
       <<>>
 
-      iex> EVM.Functions.is_normal_halting?(%EVM.MachineState{pc: 0}, %EVM.ExecEnv{machine_code: <<EVM.Operation.encode(:suicide)>>})
+      iex> EVM.Functions.is_normal_halting?(%EVM.MachineState{program_counter: 0}, %EVM.ExecEnv{machine_code: <<EVM.Operation.encode(:suicide)>>})
       <<>>
 
       iex> EVM.Functions.is_normal_halting?(%EVM.MachineState{stack: [0, 1], memory: <<0xabcd::16>>}, %EVM.ExecEnv{machine_code: <<EVM.Operation.encode(:return)>>})
@@ -42,7 +43,7 @@ defmodule EVM.Functions do
   """
   @spec is_normal_halting?(MachineState.t, ExecEnv.t) :: nil | binary()
   def is_normal_halting?(machine_state, exec_env) do
-    case MachineCode.current_instruction(machine_state, exec_env) |> Operation.decode do
+    case MachineCode.current_operation(machine_state, exec_env).sym do
       :return -> h_return(machine_state)
       x when x == :stop or x == :suicide -> <<>>
       _ -> nil
@@ -70,54 +71,65 @@ defmodule EVM.Functions do
 
       # TODO: Once we add gas cost, make this more reasonable
       # TODO: How do we pass in state?
-      iex> EVM.Functions.is_exception_halt?(%{}, %EVM.MachineState{pc: 0, gas: 0xffff}, %EVM.ExecEnv{machine_code: <<0xfe>>})
+      iex> EVM.Functions.is_exception_halt?(%{}, %EVM.MachineState{program_counter: 0, gas: 0xffff}, %EVM.ExecEnv{machine_code: <<0xfe>>})
       {:halt, :undefined_instruction}
 
-      iex> EVM.Functions.is_exception_halt?(%{}, %EVM.MachineState{pc: 0, gas: 0xffff, stack: []}, %EVM.ExecEnv{machine_code: <<EVM.Operation.encode(:add)>>})
+      iex> EVM.Functions.is_exception_halt?(%{}, %EVM.MachineState{program_counter: 0, gas: 0xffff, stack: []}, %EVM.ExecEnv{machine_code: <<EVM.Operation.encode(:add)>>})
       {:halt, :stack_underflow}
 
-      iex> EVM.Functions.is_exception_halt?(%{}, %EVM.MachineState{pc: 0, gas: 0xffff, stack: [5]}, %EVM.ExecEnv{machine_code: <<EVM.Operation.encode(:jump)>>})
+      iex> EVM.Functions.is_exception_halt?(%{}, %EVM.MachineState{program_counter: 0, gas: 0xffff, stack: [5]}, %EVM.ExecEnv{machine_code: <<EVM.Operation.encode(:jump)>>})
       {:halt, :invalid_jump_destination}
 
-      iex> EVM.Functions.is_exception_halt?(%{}, %EVM.MachineState{pc: 0, gas: 0xffff, stack: [1]}, %EVM.ExecEnv{machine_code: <<EVM.Operation.encode(:jump), EVM.Operation.encode(:jumpdest)>>})
+      iex> EVM.Functions.is_exception_halt?(%{}, %EVM.MachineState{program_counter: 0, gas: 0xffff, stack: [1]}, %EVM.ExecEnv{machine_code: <<EVM.Operation.encode(:jump), EVM.Operation.encode(:jumpdest)>>})
       :continue
 
-      iex> EVM.Functions.is_exception_halt?(%{}, %EVM.MachineState{pc: 0, gas: 0xffff, stack: [1, 5]}, %EVM.ExecEnv{machine_code: <<EVM.Operation.encode(:jumpi)>>})
+      iex> EVM.Functions.is_exception_halt?(%{}, %EVM.MachineState{program_counter: 0, gas: 0xffff, stack: [1, 5]}, %EVM.ExecEnv{machine_code: <<EVM.Operation.encode(:jumpi)>>})
       {:halt, :invalid_jump_destination}
 
-      iex> EVM.Functions.is_exception_halt?(%{}, %EVM.MachineState{pc: 0, gas: 0xffff, stack: [1, 5]}, %EVM.ExecEnv{machine_code: <<EVM.Operation.encode(:jumpi), EVM.Operation.encode(:jumpdest)>>})
+      iex> EVM.Functions.is_exception_halt?(%{}, %EVM.MachineState{program_counter: 0, gas: 0xffff, stack: [1, 5]}, %EVM.ExecEnv{machine_code: <<EVM.Operation.encode(:jumpi), EVM.Operation.encode(:jumpdest)>>})
       :continue
 
-      iex> EVM.Functions.is_exception_halt?(%{}, %EVM.MachineState{pc: 0, gas: 0xffff, stack: (for _ <- 1..1024, do: 0x0)}, %EVM.ExecEnv{machine_code: <<EVM.Operation.encode(:stop)>>})
+      iex> EVM.Functions.is_exception_halt?(%{}, %EVM.MachineState{program_counter: 0, gas: 0xffff, stack: (for _ <- 1..1024, do: 0x0)}, %EVM.ExecEnv{machine_code: <<EVM.Operation.encode(:stop)>>})
       :continue
 
-      iex> EVM.Functions.is_exception_halt?(%{}, %EVM.MachineState{pc: 0, gas: 0xffff, stack: (for _ <- 1..1024, do: 0x0)}, %EVM.ExecEnv{machine_code: <<EVM.Operation.encode(:push1)>>})
+      iex> EVM.Functions.is_exception_halt?(%{}, %EVM.MachineState{program_counter: 0, gas: 0xffff, stack: (for _ <- 1..1024, do: 0x0)}, %EVM.ExecEnv{machine_code: <<EVM.Operation.encode(:push1)>>})
       {:halt, :stack_overflow}
   """
   @spec is_exception_halt?(EVM.state, MachineState.t, ExecEnv.t) :: :continue | {:halt, String.t}
-  def is_exception_halt?(_state, machine_state, exec_env) do
-    instruction = MachineCode.current_instruction(machine_state, exec_env) |> Operation.decode
-    metadata = Operation.metadata(instruction)
-    dw = if metadata, do: Map.get(metadata, :input_count), else: nil
-    aw = if metadata, do: Map.get(metadata, :output_count), else: nil
-    inputs = Operation.inputs(machine_state.stack, instruction)
+  def is_exception_halt?(state, machine_state, exec_env) do
+    operation = Operation.get_operation_at(exec_env.machine_code, machine_state.program_counter)
+    operation_metadata = Operation.metadata(operation)
+    input_count = Map.get(operation_metadata || %{}, :input_count)   #dw
+    output_count = Map.get(operation_metadata || %{}, :output_count) #aw
+    inputs = if operation_metadata do
+      Operation.inputs(operation_metadata, machine_state)
+    end
 
     cond do
-      metadata == nil || dw == nil ->
+      operation == nil || input_count == nil ->
         {:halt, :undefined_instruction}
-      length(machine_state.stack) < dw ->
+      length(machine_state.stack) < input_count ->
         {:halt, :stack_underflow}
-      instruction == :jump and
-        not MachineCode.valid_jump_dest?(Enum.at(inputs, 0), exec_env.machine_code) ->
-          {:halt, :invalid_jump_destination}
-      instruction  == :jumpi and
-        Enum.at(inputs, 1) != 0 && not MachineCode.valid_jump_dest?(Enum.at(inputs, 0), exec_env.machine_code) ->
-          {:halt, :invalid_jump_destination}
-      Stack.length(machine_state.stack) - dw + aw > @max_stack ->
+      Gas.cost(state, machine_state, operation_metadata, inputs) > machine_state.gas ->
+        {:halt, :out_of_gas}
+      Stack.length(machine_state.stack) - input_count + output_count > @max_stack  ->
         {:halt, :stack_overflow}
+      is_invalid_jump_destination?(operation_metadata, inputs, exec_env.machine_code) ->
+        {:halt, :invalid_jump_destination}
       true ->
         :continue
     end
   end
+
+  defp is_invalid_jump_destination?(%{sym: :jump}, [position], machine_code) do
+    not MachineCode.valid_jump_dest?(position, machine_code)
+  end
+
+  defp is_invalid_jump_destination?(%{sym: :jumpi}, [position, condition], machine_code) do
+    condition != 0  && not MachineCode.valid_jump_dest?(position, machine_code)
+  end
+
+  defp is_invalid_jump_destination?(_operation, _inputs, _machine_code),
+    do: false
 
 end

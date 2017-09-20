@@ -28,10 +28,10 @@ defmodule EVM.Operation.StackMemoryStorageAndFlow do
   ## Examples
 
       iex> EVM.Operation.StackMemoryStorageAndFlow.mload([0], %{machine_state: %EVM.MachineState{stack: [1], memory: <<0x55::256, 0xff>>}})
-      %EVM.MachineState{stack: [0x55, 1], active_words: 1, gas: nil, memory: <<0x55::256, 0xff>>, pc: 0, previously_active_words: 0}
+      %EVM.MachineState{stack: [0x55, 1], active_words: 1, gas: nil, memory: <<0x55::256, 0xff>>, program_counter: 0, previously_active_words: 0}
 
       iex> EVM.Operation.StackMemoryStorageAndFlow.mload([1], %{machine_state: %EVM.MachineState{stack: [], memory: <<0x55::256, 0xff>>}})
-      %EVM.MachineState{stack: [22015], active_words: 2, gas: nil, memory: <<0x55::256, 0xff>>, pc: 0, previously_active_words: 0}
+      %EVM.MachineState{stack: [22015], active_words: 2, gas: nil, memory: <<0x55::256, 0xff>>, program_counter: 0, previously_active_words: 0}
 
       # TODO: Add a test for overflow, etc.
       # TODO: Handle sign?
@@ -150,34 +150,21 @@ defmodule EVM.Operation.StackMemoryStorageAndFlow do
   end
 
   @doc """
-  Alter the program counter.
+  Jumps are handled by `EVM.ProgramCounter.next`. This is a noop.
 
-  ## Examples
-
-  iex> EVM.Operation.StackMemoryStorageAndFlow.jump([99], %{machine_state: %EVM.MachineState{}})
-  %EVM.MachineState{pc: 99}
   """
   @spec jump(Operation.stack_args, Operation.vm_map) :: Operation.op_result
-  def jump([s0], %{machine_state: machine_state}) do
-    %{machine_state| pc: s0}
+  def jump(_args, _vm_map) do
+    :noop
   end
 
   @doc """
-  Conditionally alter the program counter.
-  ## Examples
+  Jumps are handled by `EVM.ProgramCounter.next`. This is a noop.
 
-  iex> EVM.Operation.StackMemoryStorageAndFlow.jumpi([99, 1], %{machine_state: %EVM.MachineState{}})
-  %EVM.MachineState{pc: 99}
-  iex> EVM.Operation.StackMemoryStorageAndFlow.jumpi([99, 0], %{machine_state: %EVM.MachineState{pc: 2}})
-  %EVM.MachineState{pc: 3}
   """
   @spec jumpi(Operation.stack_args, Operation.vm_map) :: Operation.op_result
-  def jumpi([s0, s1], %{machine_state: machine_state}) do
-    if s1 == 0 do
-      %{machine_state| pc: machine_state.pc + 1}
-    else
-      %{machine_state| pc: s0}
-    end
+  def jumpi(_args, _vm_map) do
+    :noop
   end
 
   @doc """
@@ -186,11 +173,11 @@ defmodule EVM.Operation.StackMemoryStorageAndFlow do
 
   ## Examples
 
-      iex> EVM.Operation.StackMemoryStorageAndFlow.pc([], %{machine_state: %EVM.MachineState{pc: 99}})
+      iex> EVM.Operation.StackMemoryStorageAndFlow.pc([], %{machine_state: %EVM.MachineState{program_counter: 99}})
       99
   """
-  def pc(_args, %{machine_state: %{pc: pc}}) do
-    pc
+  def pc(_args, %{machine_state: %{program_counter: program_counter}}) do
+    program_counter
   end
 
   @doc """
@@ -210,16 +197,14 @@ defmodule EVM.Operation.StackMemoryStorageAndFlow do
   @doc """
   Get the amount of available gas, including the corresponding reduction for the cost of this instruction.
 
-  TODO: Subtract gas before running operations so we don't have to subtract 2 here (the price of the gas call itself)
-
   ## Examples
 
       iex> EVM.Operation.StackMemoryStorageAndFlow.gas([], %{machine_state: %{gas: 99}})
-      97
+      99
   """
   @spec gas(Operation.stack_args, Operation.vm_map) :: Operation.op_result
-  def gas(_args, %{machine_state: %{gas: gas}}) do
-    gas - 2
+  def gas(_args, %{machine_state: machine_state}) do
+    machine_state.gas
   end
 
   @doc """

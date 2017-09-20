@@ -16,22 +16,23 @@ defmodule EVM.MachineCode do
 
   ## Examples
 
-      iex> EVM.MachineCode.current_instruction(%EVM.MachineState{pc: 0}, %EVM.ExecEnv{machine_code: <<0x15::8, 0x11::8, 0x12::8>>})
-      0x15
+      iex> EVM.MachineCode.current_operation(%EVM.MachineState{program_counter: 0}, %EVM.ExecEnv{machine_code: <<0x15::8, 0x11::8, 0x12::8>>})
+      %EVM.Operation.Metadata{args: [], description: "Simple not operator.", fun: nil, group: :comparison_and_bitwise_logic, id: 21, input_count: 1, machine_code_offset: 0, output_count: 1, sym: :iszero}
 
-      iex> EVM.MachineCode.current_instruction(%EVM.MachineState{pc: 1}, %EVM.ExecEnv{machine_code: <<0x15::8, 0x11::8, 0x12::8>>})
-      0x11
+      iex> EVM.MachineCode.current_operation(%EVM.MachineState{program_counter: 1}, %EVM.ExecEnv{machine_code: <<0x15::8, 0x11::8, 0x12::8>>})
+      %EVM.Operation.Metadata{args: [], description: "Greater-than comparision.", fun: nil, group: :comparison_and_bitwise_logic, id: 17, input_count: 2, machine_code_offset: 0, output_count: 1, sym: :gt}
 
-      iex> EVM.MachineCode.current_instruction(%EVM.MachineState{pc: 2}, %EVM.ExecEnv{machine_code: <<0x15::8, 0x11::8, 0x12::8>>})
-      0x12
+      iex> EVM.MachineCode.current_operation(%EVM.MachineState{program_counter: 2}, %EVM.ExecEnv{machine_code: <<0x15::8, 0x11::8, 0x12::8>>})
+      %EVM.Operation.Metadata{args: [], description: "Signed less-than comparision.", fun: nil, group: :comparison_and_bitwise_logic, id: 18, input_count: 2, machine_code_offset: 0, output_count: 1, sym: :slt}
   """
-  @spec current_instruction(MachineState.t, ExecEnv.t) :: Operation.opcode
-  def current_instruction(machine_state, exec_env) do
-    Operation.get_operation_at(exec_env.machine_code, machine_state.pc)
+  @spec current_operation(MachineState.t, ExecEnv.t) :: Operation.Metadata.t
+  def current_operation(machine_state, exec_env) do
+    Operation.get_operation_at(exec_env.machine_code, machine_state.program_counter)
+      |> Operation.metadata
   end
 
   @doc """
-  Returns true if the given new pc is a valid jump
+  Returns true if the given new program_counter is a valid jump
   destination for the machine code, false otherwise.
 
   TODO: Memoize
@@ -53,10 +54,10 @@ defmodule EVM.MachineCode do
       iex> EVM.MachineCode.valid_jump_dest?(100, EVM.MachineCode.compile([:push1, 3, :push1, 5, :jumpdest, :add, :return, :jumpdest, :stop]))
       false
   """
-  @spec valid_jump_dest?(MachineState.pc, t) :: boolean()
-  def valid_jump_dest?(pc, machine_code) do
+  @spec valid_jump_dest?(MachineState.program_counter, t) :: boolean()
+  def valid_jump_dest?(program_counter, machine_code) do
     # TODO: This should be sorted for quick lookup
-    Enum.member?(machine_code |> valid_jump_destinations, pc)
+    Enum.member?(machine_code |> valid_jump_destinations, program_counter)
   end
 
   @doc """
@@ -69,7 +70,7 @@ defmodule EVM.MachineCode do
       iex> EVM.MachineCode.valid_jump_destinations(EVM.MachineCode.compile([:push1, 3, :push1, 5, :jumpdest, :add, :return, :jumpdest, :stop]))
       [4, 7]
   """
-  @spec valid_jump_destinations(t) :: [MachineState.pc]
+  @spec valid_jump_destinations(t) :: [MachineState.program_counter]
   def valid_jump_destinations(machine_code) do
     do_valid_jump_destinations(machine_code, 0)
   end
@@ -77,12 +78,13 @@ defmodule EVM.MachineCode do
   # Returns the valid jump destinations by scanning through
   # entire set of machine code
   defp do_valid_jump_destinations(machine_code, pos) do
-    instruction = Operation.get_operation_at(machine_code, pos) |> Operation.decode
-    next_pos = Operation.next_instr_pos(pos, instruction)
+    operation = Operation.get_operation_at(machine_code, pos)
+      |> Operation.decode
+    next_pos = Operation.next_instr_pos(pos, operation)
 
     cond do
       pos >= byte_size(machine_code) -> []
-      instruction == :jumpdest ->
+      operation == :jumpdest ->
         [pos | do_valid_jump_destinations(machine_code, next_pos)]
       true -> do_valid_jump_destinations(machine_code, next_pos)
     end

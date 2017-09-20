@@ -104,7 +104,7 @@ defmodule EVM.Debugger.Breakpoint do
 
       iex> breakpoint = %EVM.Debugger.Breakpoint{conditions: [address: <<20::160>>], pc: 999}
       iex> state = <<>>
-      iex> machine_state = %EVM.MachineState{pc: 999}
+      iex> machine_state = %EVM.MachineState{program_counter: 999}
       iex> sub_state = %EVM.SubState{}
       iex> exec_env = %EVM.ExecEnv{address: <<20::160>>}
       iex> EVM.Debugger.Breakpoint.matches?(breakpoint, state, machine_state, sub_state, exec_env)
@@ -112,7 +112,7 @@ defmodule EVM.Debugger.Breakpoint do
 
       iex> breakpoint = %EVM.Debugger.Breakpoint{conditions: [address: <<20::160>>], pc: nil}
       iex> state = <<>>
-      iex> machine_state = %EVM.MachineState{pc: 999}
+      iex> machine_state = %EVM.MachineState{program_counter: 999}
       iex> sub_state = %EVM.SubState{}
       iex> exec_env = %EVM.ExecEnv{address: <<20::160>>}
       iex> EVM.Debugger.Breakpoint.matches?(breakpoint, state, machine_state, sub_state, exec_env)
@@ -136,7 +136,7 @@ defmodule EVM.Debugger.Breakpoint do
   """
   @spec matches?(t, EVM.state, EVM.MachineState.t, EVM.SubState.t, EVM.ExecEnv.t) :: boolean()
   def matches?(breakpoint, state, machine_state, sub_state, exec_env) do
-    breakpoint.enabled and break_on_next_pc?(breakpoint, machine_state.pc) and Enum.all?(breakpoint.conditions, fn {condition, condition_val} ->
+    breakpoint.enabled and break_on_next_pc?(breakpoint, machine_state.program_counter) and Enum.all?(breakpoint.conditions, fn {condition, condition_val} ->
       case condition do
         :address -> exec_env.address == condition_val
       end
@@ -298,7 +298,7 @@ defmodule EVM.Debugger.Breakpoint do
 
   # This is will be true if we're instructed to break on :next or :start, or
   # when the machine's breakpoint's pc matches the machine's pc.
-  @spec break_on_next_pc?(t, EVM.MachineState.pc) :: boolean()
+  @spec break_on_next_pc?(t, EVM.MachineState.program_counter) :: boolean()
   def break_on_next_pc?(breakpoint, pc) do
     case breakpoint.pc do
       nil -> false

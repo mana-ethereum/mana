@@ -137,14 +137,18 @@ defmodule EVM.Operation.EnvironmentalInformation do
 
       iex> code = <<54>>
       iex> EVM.Operation.EnvironmentalInformation.calldatacopy([0, 0, 1], %{exec_env: %EVM.ExecEnv{data: code}, machine_state: %EVM.MachineState{}})
-      %{machine_state: %EVM.MachineState{active_words: 1, gas: nil, memory: <<54>> <> <<0::248>>, pc: 0, previously_active_words: 0, stack: []}}
+      %{machine_state: %EVM.MachineState{active_words: 1, gas: nil, memory: <<54>> <> <<0::248>>, program_counter: 0, previously_active_words: 0, stack: []}}
   """
   @spec calldatacopy(Operation.stack_args, Operation.vm_map) :: Operation.op_result
   def calldatacopy([memory_start, call_data_start, length], %{exec_env: exec_env, machine_state: machine_state}) do
-    data = EVM.Memory.read_zeroed_memory(exec_env.data, call_data_start, length)
-    machine_state = EVM.Memory.write(machine_state, memory_start, Helpers.right_pad_bytes(data))
+    if length == 0 do
+      0
+    else
+      data = EVM.Memory.read_zeroed_memory(exec_env.data, call_data_start, length)
+      machine_state = EVM.Memory.write(machine_state, memory_start, Helpers.right_pad_bytes(data))
 
-    %{machine_state: machine_state}
+      %{machine_state: machine_state}
+    end
   end
 
   @doc """
@@ -167,14 +171,18 @@ defmodule EVM.Operation.EnvironmentalInformation do
 
       iex> code = <<54>>
       iex> EVM.Operation.EnvironmentalInformation.codecopy([0, 0, 1], %{exec_env: %EVM.ExecEnv{machine_code: code}, machine_state: %EVM.MachineState{}})
-      %{machine_state: %EVM.MachineState{active_words: 1, gas: nil, memory: <<54>> <> <<0::248>>, pc: 0, previously_active_words: 0, stack: []}}
+      %{machine_state: %EVM.MachineState{active_words: 1, gas: nil, memory: <<54>> <> <<0::248>>, program_counter: 0, previously_active_words: 0, stack: []}}
   """
   @spec codecopy(Operation.stack_args, Operation.vm_map) :: Operation.op_result
   def codecopy([mem_offset, code_offset, length], %{exec_env: exec_env, machine_state: machine_state}) do
-    data = EVM.Memory.read_zeroed_memory(exec_env.machine_code, code_offset, length)
-    machine_state = EVM.Memory.write(machine_state, mem_offset, Helpers.right_pad_bytes(data))
+    if length == 0 do
+      0
+    else
+      data = EVM.Memory.read_zeroed_memory(exec_env.machine_code, code_offset, length)
+      machine_state = EVM.Memory.write(machine_state, mem_offset, Helpers.right_pad_bytes(data))
 
-    %{machine_state: machine_state}
+      %{machine_state: machine_state}
+    end
   end
 
   @doc """
@@ -223,21 +231,25 @@ defmodule EVM.Operation.EnvironmentalInformation do
       iex> db = MerklePatriciaTree.Test.random_ets_db()
       iex> state = MerklePatriciaTree.Trie.new(db)
       iex> code = <<54>>
-      iex> account_map = %{<<0::160>> => %{code: <<54>>}}
+      iex> account_map = %{<<0::160>> => %{code: code}}
       iex> account_interface = EVM.Interface.Mock.MockAccountInterface.new(%{account_map: account_map})
       iex> EVM.Operation.EnvironmentalInformation.extcodecopy([<<0::160>>, 0, 0, 1], %{exec_env: %EVM.ExecEnv{account_interface: account_interface}, machine_state: %EVM.MachineState{}, state: state})
-      %{machine_state: %EVM.MachineState{active_words: 1, gas: nil, memory: <<54>> <> <<0::248>>, pc: 0, previously_active_words: 0, stack: []}}
+      %{machine_state: %EVM.MachineState{active_words: 1, gas: nil, memory: <<54>> <> <<0::248>>, program_counter: 0, previously_active_words: 0, stack: []}}
   """
   @spec extcodecopy(Operation.stack_args, Operation.vm_map) :: Operation.op_result
   def extcodecopy([address, code_offset, mem_offset, length], %{machine_state: machine_state, exec_env: exec_env, state: state}) do
-    wrapped_address = Helpers.wrap_address(address)
+    if length == 0 || (length + mem_offset > EVM.max_int()) do
+      0
+    else
+      wrapped_address = Helpers.wrap_address(address)
 
-    account_code = AccountInterface.get_account_code(exec_env.account_interface, state, wrapped_address)
+      account_code = AccountInterface.get_account_code(exec_env.account_interface, state, wrapped_address)
 
-    data = EVM.Memory.read_zeroed_memory(account_code, code_offset, length)
-    machine_state = EVM.Memory.write(machine_state, mem_offset, Helpers.right_pad_bytes(data))
+      data = EVM.Memory.read_zeroed_memory(account_code, code_offset, length)
+      machine_state = EVM.Memory.write(machine_state, mem_offset, Helpers.right_pad_bytes(data))
 
-    %{machine_state: machine_state}
+      %{machine_state: machine_state}
+    end
   end
 
 end

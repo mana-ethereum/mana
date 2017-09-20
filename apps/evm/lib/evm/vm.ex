@@ -55,14 +55,14 @@ defmodule EVM.VM do
 
   ## Examples
 
-      iex> EVM.VM.exec(%{}, %EVM.MachineState{pc: 0, gas: 5, stack: [1, 2]}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:add])})
-      {%{}, %EVM.MachineState{pc: 2, gas: 2, stack: [3]}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:add])}, <<>>}
+      iex> EVM.VM.exec(%{}, %EVM.MachineState{program_counter: 0, gas: 5, stack: [1, 2]}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:add])})
+      {%{}, %EVM.MachineState{program_counter: 2, gas: 2, stack: [3]}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:add])}, <<>>}
 
-      iex> EVM.VM.exec(%{}, %EVM.MachineState{pc: 0, gas: 9, stack: []}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:push1, 3, :push1, 5, :add])})
-      {%{}, %EVM.MachineState{pc: 6, gas: 0, stack: [8]}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:push1, 3, :push1, 5, :add])}, ""}
+      iex> EVM.VM.exec(%{}, %EVM.MachineState{program_counter: 0, gas: 9, stack: []}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:push1, 3, :push1, 5, :add])})
+      {%{}, %EVM.MachineState{program_counter: 6, gas: 0, stack: [8]}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:push1, 3, :push1, 5, :add])}, ""}
 
-      iex> EVM.VM.exec(%{}, %EVM.MachineState{pc: 0, gas: 24, stack: []}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:push1, 3, :push1, 5, :add, :push1, 0x00, :mstore, :push1, 32, :push1, 0, :return])})
-      {%{}, %EVM.MachineState{active_words: 1, memory: <<0x08::256>>, gas: 0, pc: 13, previously_active_words: 1, stack: []}, %EVM.SubState{logs: "", refund: 0, suicide_list: []}, %EVM.ExecEnv{machine_code: <<96, 3, 96, 5, 1, 96, 0, 82, 96, 32, 96, 0, 243>>}, <<8::256>>}
+      iex> EVM.VM.exec(%{}, %EVM.MachineState{program_counter: 0, gas: 24, stack: []}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:push1, 3, :push1, 5, :add, :push1, 0x00, :mstore, :push1, 32, :push1, 0, :return])})
+      {%{}, %EVM.MachineState{active_words: 1, memory: <<0x08::256>>, gas: 0, program_counter: 13, stack: []}, %EVM.SubState{logs: "", refund: 0, suicide_list: []}, %EVM.ExecEnv{machine_code: <<96, 3, 96, 5, 1, 96, 0, 82, 96, 32, 96, 0, 243>>}, <<8::256>>}
   """
   @spec exec(EVM.state, MachineState.t, SubState.t, ExecEnv.t) :: {EVM.state | nil, MachineState.t, SubState.t, ExecEnv.t, output}
   def exec(state, machine_state, sub_state, exec_env) do
@@ -89,13 +89,9 @@ defmodule EVM.VM do
         {nil, machine_state, original_sub_state, exec_env, <<>>} # Question: should we return the original sub-state?
       :continue ->
         {n_state, n_machine_state, n_sub_state, n_exec_env} = cycle(state, machine_state, sub_state, exec_env)
-        if machine_state.gas < 0 do
-          {nil, machine_state, original_sub_state, exec_env, <<>>}
-        else
-          case Functions.is_normal_halting?(machine_state, exec_env) do
-            nil -> do_exec(n_state, n_machine_state, n_sub_state, n_exec_env, original_sub_state) # continue execution
-            output -> {n_state, n_machine_state, n_sub_state, n_exec_env, output} # break execution and return
-          end
+        case Functions.is_normal_halting?(machine_state, exec_env) do
+          nil -> do_exec(n_state, n_machine_state, n_sub_state, n_exec_env, original_sub_state) # continue execution
+          output -> {n_state, n_machine_state, n_sub_state, n_exec_env, output} # break execution and return
         end
     end
   end
@@ -107,21 +103,20 @@ defmodule EVM.VM do
   ## Examples
 
       iex> state = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db(:evm_vm_test_2))
-      iex> EVM.VM.cycle(state, %EVM.MachineState{pc: 0, gas: 5, stack: [1, 2]}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:add])})
-      {%MerklePatriciaTree.Trie{db: {MerklePatriciaTree.DB.ETS, :evm_vm_test_2}, root_hash: MerklePatriciaTree.Trie.empty_trie_root_hash}, %EVM.MachineState{pc: 1, gas: 2, stack: [3]}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:add])}}
+      iex> EVM.VM.cycle(state, %EVM.MachineState{program_counter: 0, gas: 5, stack: [1, 2]}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:add])})
+      {%MerklePatriciaTree.Trie{db: {MerklePatriciaTree.DB.ETS, :evm_vm_test_2}, root_hash: MerklePatriciaTree.Trie.empty_trie_root_hash}, %EVM.MachineState{program_counter: 1, gas: 2, stack: [3]}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:add])}}
   """
   @spec cycle(EVM.state, MachineState.t, SubState.t, ExecEnv.t) :: {EVM.state, MachineState.t, SubState.t, ExecEnv.t}
   def cycle(state, machine_state, sub_state, exec_env) do
-    operation = MachineCode.current_instruction(machine_state, exec_env) |> Operation.decode
-    {updated_state, updated_machine_state, sub_state, updated_exec_env} = Operation.run_operation(operation, state, machine_state, sub_state, exec_env)
+    operation = MachineCode.current_operation(machine_state, exec_env)
+    inputs = Operation.inputs(operation, machine_state)
+    machine_state = machine_state
+      |> MachineState.subtract_gas(state, operation, inputs)
+    {state, machine_state, sub_state, exec_env} = Operation.run_operation(operation, state, machine_state, sub_state, exec_env)
+    machine_state = machine_state
+      |> MachineState.move_program_counter(operation, inputs)
 
-    cost = Gas.cost(state, machine_state, updated_machine_state, exec_env)
-
-    updated_machine_state = updated_machine_state
-      |> MachineState.subtract_gas(cost)
-      |> MachineState.next_pc(operation)
-
-    {updated_state, updated_machine_state, sub_state, updated_exec_env}
+    {state, machine_state, sub_state, exec_env}
   end
 
 end

@@ -74,37 +74,82 @@ defmodule EVM.Gas do
   ## Examples
 
       # TODO: Figure out how to hand in state
-      iex> EVM.Gas.cost(%{}, %EVM.MachineState{}, %EVM.MachineState{}, %EVM.ExecEnv{})
+      iex> EVM.Gas.cost(%{}, %EVM.MachineState{}, EVM.Operation.metadata(:stop), %EVM.ExecEnv{})
       0
   """
-  @spec cost(EVM.state, MachineState.t, MachineState.t, ExecEnv.t) :: t | nil
-  def cost(state, machine_state, updated_machine_state, exec_env) do
-    operation = MachineCode.current_instruction(machine_state, exec_env) |> Operation.decode
-    inputs = Operation.inputs(machine_state.stack, operation)
-    operation_cost = operation_cost(operation, inputs, state, machine_state)
-    memory_cost = memory_cost(operation, updated_machine_state)
+  @spec cost(EVM.state, MachineState.t, Operation.Metadata.t, list(EVM.val)) :: t | nil
+  def cost(state, machine_state, operation, inputs) do
+    operation_cost = operation_cost(operation.sym, inputs, state, machine_state)
+    memory_cost = memory_cost(operation.sym, inputs, machine_state)
 
-    operation_cost + memory_cost
+    memory_cost + operation_cost
   end
 
-  defp memory_cost(operation, updated_machine_state)
-  when operation in @memory_operations do
-    if updated_machine_state.active_words > updated_machine_state.previously_active_words do
-     quadratic_memory_cost(updated_machine_state.active_words) -
-        quadratic_memory_cost(updated_machine_state.previously_active_words)
+  def memory_cost(:calldatacopy, [memory_offset, _call_data_start, length], machine_state) do
+    memory_expansion_cost(machine_state, memory_offset, length)
+  end
+
+  def memory_cost(:extcodecopy, [address, code_offset, memory_offset, length], machine_state) do
+    if (memory_offset + length > EVM.max_int()) do
+      0
+    else
+      memory_expansion_cost(machine_state, memory_offset, length)
+    end
+  end
+
+  def memory_cost(:codecopy, [memory_offset, _code_offset, length], machine_state) do
+    memory_expansion_cost(machine_state, memory_offset, length)
+  end
+
+  def memory_cost(:mload, [memory_offset], machine_state) do
+    memory_expansion_cost(machine_state, memory_offset, 32)
+  end
+
+
+  def memory_cost(:mstore8, [memory_offset, value], machine_state) do
+    memory_expansion_cost(machine_state, memory_offset, 1)
+  end
+
+  def memory_cost(:sha3, [memory_offset, length], machine_state) do
+    memory_expansion_cost(machine_state, memory_offset, length)
+  end
+
+  def memory_cost(:mstore, [memory_offset, value], machine_state) do
+    memory_expansion_cost(machine_state, memory_offset, 32)
+  end
+
+  # From Eq 220: Cmem(μ′i)−Cmem(μi)
+  def memory_expansion_cost(machine_state, offset, length) do
+    memory_expansion_value = memory_expansion_value(machine_state.active_words, offset, length)
+
+    if memory_expansion_value > machine_state.active_words do
+      quadratic_memory_cost(memory_expansion_value) - quadratic_memory_cost(machine_state.active_words)
     else
       0
     end
   end
 
-  defp memory_cost(_operation, updated_machine_state), do: 0
+  def memory_cost(_operation, _inputs, _machine_state), do: 0
 
-  # Eq 222
+  # Eq 223
+  def memory_expansion_value(
+    active_words, # s
+    offset,       # f
+    length        # l
+  ) do
+    if length == 0 do
+      active_words
+    else
+      max(active_words, round(:math.ceil((offset + length) / 32)))
+    end
+  end
+
+  # Eq 222 - Cmem
   def quadratic_memory_cost(a) do
     linear_cost = a * @g_memory
     quadratic_cost = MathHelper.floor(:math.pow(a, 2) / @g_quad_coeff_div)
 
-    @g_memory + linear_cost + quadratic_cost
+    linear_cost + quadratic_cost
   end
 
   @doc """
@@ -168,11 +213,11 @@ defmodule EVM.Gas do
     @g_verylow + @g_copy * MathHelper.bits_to_words(length)
   end
 
-  def operation_cost(:extcodecopy, [address, code_offset, mem_offset, length], _state, _machine_state) do
+  def operation_cost(:extcodecopy, [_address, _code_offset, _mem_offset, length], _state, _machine_state) do
     @g_extcode + @g_copy * MathHelper.bits_to_words(length)
   end
 
-  def operation_cost(:sha3, [length, offset], _state, _machine_state) do
+  def operation_cost(:sha3, [_length, offset], _state, _machine_state) do
     @g_sha3 + @g_sha3word * MathHelper.bits_to_words(offset)
   end
 
@@ -200,7 +245,7 @@ defmodule EVM.Gas do
     end
   end
 
-  def operation_cost(operation, inputs, _state, _machine_state) do
+  def operation_cost(operation, _inputs, _state, _machine_state) do
     cond do
       operation in @w_very_low_instr -> @g_verylow
       operation in @w_zero_instr -> @g_zero

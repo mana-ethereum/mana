@@ -183,12 +183,12 @@ defmodule EVM.Debugger do
 
   @spec print_machine_state(MachineState.t) :: any()
   def print_machine_state(machine_state) do
-    IO.puts "gas: #{machine_state.gas} | pc: #{machine_state.pc} | memory: #{machine_state.memory |> byte_size} | words: #{machine_state.active_words} | # stack: #{machine_state.stack |> Enum.count}"
+    IO.puts "gas: #{machine_state.gas} | pc: #{machine_state.program_counter} | memory: #{machine_state.memory |> byte_size} | words: #{machine_state.active_words} | # stack: #{machine_state.stack |> Enum.count}"
   end
 
   @spec print_current_instruction(MachineState.t, ExecEnv.t, integer(), integer()) :: any()
   defp print_current_instruction(exec_env, machine_state, start \\ @current_instruction_start, len \\ @current_instruction_length) do
-    if is_nil(machine_state.pc) do
+    if is_nil(machine_state.program_counter) do
       IO.puts("??? invalid pc ???")
       IO.puts("")
     else
@@ -197,9 +197,9 @@ defmodule EVM.Debugger do
 
       machine_code
       |> Enum.with_index
-      |> Enum.slice(max(machine_state.pc - start, 0), len)
+      |> Enum.slice(max(machine_state.program_counter - start, 0), len)
       |> Enum.each(fn {instruction, index} ->
-        pointer = if machine_state.pc == index, do: "----> ", else: "      "
+        pointer = if machine_state.program_counter == index, do: "----> ", else: "      "
         instruction_str = instruction |> to_string
         index_str = "[#{index |> to_string |> String.pad_leading(index_width)}] "
 
@@ -336,7 +336,7 @@ defmodule EVM.Debugger do
   end
 
   defp handle_prompt(:pc, _args, breakpoint, state, machine_state, sub_state, exec_env, input_sequence) do
-    IO.puts("The current program count is: #{machine_state.pc}")
+    IO.puts("The current program count is: #{machine_state.program_counter}")
 
     prompt(breakpoint, state, machine_state, sub_state, exec_env, input_sequence)
   end

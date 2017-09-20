@@ -6,27 +6,27 @@ defmodule EVM.MachineState do
   This is most often seen as µ in the Yellow Paper.
   """
 
-  alias EVM.ExecEnv
   alias EVM.Gas
-  alias EVM.MachineCode
   alias EVM.Stack
   alias EVM.Operation
   alias EVM.MachineState
+  alias EVM.ProgramCounter
+
 
   defstruct [
     gas: nil,          # g
-    pc: 0,             # pc
+    program_counter: 0,             # pc
     memory: <<>>,      # m
     active_words: 0,   # i
     previously_active_words: 0,
     stack: []          # s
   ]
 
-  @type pc :: integer()
+  @type program_counter :: integer()
   @type memory :: binary()
   @type t :: %__MODULE__{
     gas: Gas.t,
-    pc: pc,
+    program_counter: program_counter,
     memory: memory,
     active_words: integer(),
     stack: Stack.t,
@@ -38,12 +38,17 @@ defmodule EVM.MachineState do
 
   ## Examples
 
-      iex> %EVM.MachineState{gas: 5} |> EVM.MachineState.subtract_gas(4)
-      %EVM.MachineState{gas: 1}
+      iex> db = MerklePatriciaTree.Test.random_ets_db()
+      iex> state = MerklePatriciaTree.Trie.new(db)
+      iex> machine_state = %EVM.MachineState{gas: 10, stack: [1, 1]}
+      iex> EVM.MachineState.subtract_gas(machine_state, state, EVM.Operation.metadata(:add), %EVM.ExecEnv{})
+      %EVM.MachineState{gas: 7, stack: [1, 1]}
   """
-  @spec subtract_gas(t, EVM.Gas.t) :: t
-  def subtract_gas(machine_state, gas) do
-    %{machine_state| gas: machine_state.gas - gas}
+  @spec subtract_gas(MachineState.t, EVM.state, Operation.Metadata.t, list(EVM.val)) :: MachineState.t
+  def subtract_gas(machine_state, state, operation, inputs) do
+    cost = Gas.cost(state, machine_state, operation, inputs)
+
+    %{machine_state| gas: machine_state.gas - cost}
   end
 
   @doc """
@@ -53,19 +58,17 @@ defmodule EVM.MachineState do
 
   ## Examples
 
-      iex> %EVM.MachineState{active_words: 2, previously_active_words: 1} |> EVM.MachineState.maybe_set_active_words(1)
-      %EVM.MachineState{active_words: 2, previously_active_words: 2}
+      iex> %EVM.MachineState{active_words: 2} |> EVM.MachineState.maybe_set_active_words(1)
+      %EVM.MachineState{active_words: 2}
 
-      iex> %EVM.MachineState{active_words: 2, previously_active_words: 1} |> EVM.MachineState.maybe_set_active_words(3)
-      %EVM.MachineState{active_words: 3, previously_active_words: 2}
+      iex> %EVM.MachineState{active_words: 2} |> EVM.MachineState.maybe_set_active_words(3)
+      %EVM.MachineState{active_words: 3}
 
-      iex> %EVM.MachineState{active_words: 2, previously_active_words: 1} |> EVM.MachineState.maybe_set_active_words(1)
-      %EVM.MachineState{active_words: 2, previously_active_words: 2}
+      iex> %EVM.MachineState{active_words: 2} |> EVM.MachineState.maybe_set_active_words(1)
+      %EVM.MachineState{active_words: 2}
   """
   @spec maybe_set_active_words(t, EVM.val) :: t
   def maybe_set_active_words(machine_state, last_word) do
-    machine_state = %{machine_state | previously_active_words: machine_state.active_words}
-
     %{machine_state | active_words: max(machine_state.active_words, last_word)}
   end
 
@@ -77,7 +80,7 @@ defmodule EVM.MachineState do
       iex> EVM.MachineState.pop_n(%EVM.MachineState{stack: [1, 2, 3]}, 2)
       {[1 ,2], %EVM.MachineState{stack: [3]}}
   """
-  @spec pop_n(MachineState.t, pc) :: {MachineState.t, list(EVM.val)}
+  @spec pop_n(MachineState.t, integer()) :: {MachineState.t, list(EVM.val)}
   def pop_n(machine_state, n) do
     {values, stack} = Stack.pop_n(machine_state.stack, n)
     machine_state = %{machine_state | stack: stack}
@@ -102,16 +105,14 @@ defmodule EVM.MachineState do
 
   ## Examples
 
-      iex> EVM.MachineState.next_pc(%EVM.MachineState{pc: 9}, :add)
-      %EVM.MachineState{pc: 10}
+      iex> EVM.MachineState.move_program_counter(%EVM.MachineState{program_counter: 9}, EVM.Operation.metadata(:add), [1, 1])
+      %EVM.MachineState{program_counter: 10}
   """
-  @spec next_pc(MachineState.t, atom()) :: MachineState.t
-  def next_pc(machine_state, operation) do
-    if operation in Operation.jump_operations() do
-      machine_state
-    else
-      %{machine_state | pc: machine_state.pc + 1}
-    end
+  @spec move_program_counter(MachineState.t, Operation.Metadata.t, list(EVM.val)) :: MachineState.t
+  def move_program_counter(machine_state, operation_metadata, inputs) do
+    next_postion = ProgramCounter.next(machine_state.program_counter, operation_metadata, inputs)
+
+    %{machine_state | program_counter: next_postion}
   end
 
 end

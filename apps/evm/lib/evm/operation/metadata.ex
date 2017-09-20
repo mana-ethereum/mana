@@ -12,7 +12,7 @@ defmodule EVM.Operation.Metadata do
     output_count: nil,
     description: nil,
     group: :other,
-    machine_code_offset: nil
+    machine_code_offset: 0,
   ]
 
   @type t :: %__MODULE__{

@@ -1,3 +1,7 @@
+# 0.1.9
+* Subtract gas before running operations
+* Move program counter logic to its own module
+* Refactor memory gas cost calculations
 # 0.1.8
 * Update gas cost calculations
 * Move process counter manipulation into the opcode implementations

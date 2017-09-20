@@ -91,14 +91,12 @@ defmodule EVM.Memory do
     updated_memory = :binary.part(memory, 0, offset_bytes) <> data <> :binary.part(memory, final_pos, final_memory_byte)
 
     %{machine_state | memory: updated_memory }
-      |> MachineState.maybe_set_active_words(get_active_words(offset_bytes + byte_size(original_data)))
+      |> MachineState.maybe_set_active_words(get_active_words(offset_bytes + byte_size(data)))
   end
 
   @doc """
   Read zeroed memory will read bytes from a certain offset in the memory
   binary. Any bytes extending beyond memory's size will be defauled to zero.
-  Reading more than 256 bytes degrades performance and will cause the stack to
-  overflow. If more than 256 bytes are requested we return an empty byte array.
 
   ## Examples
 
@@ -113,16 +111,12 @@ defmodule EVM.Memory do
 
       iex> EVM.Memory.read_zeroed_memory(<<16, 17, 18, 19>>, 100, 1)
       <<0>>
-      iex> EVM.Memory.read_zeroed_memory(<<16, 17, 18, 19>>, 1, 257)
-      <<>>
   """
   @spec read_zeroed_memory(binary(), EVM.val, EVM.val) :: binary()
   def read_zeroed_memory(memory, offset, bytes) when is_integer(memory), do:
     read_zeroed_memory(:binary.encode_unsigned(memory), offset, bytes)
   def read_zeroed_memory(memory, offset, bytes) do
     cond do
-      bytes > EVM.int_size() ->
-        <<>>
       memory == nil || offset > byte_size(memory) ->
         # We're totally out of memory, let's just drop zeros
         bytes_in_bits = bytes * 8

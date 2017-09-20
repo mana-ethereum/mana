@@ -107,7 +107,7 @@ defmodule EVM.Operation.System do
       ...>     [100, <<0x01::160>>, 1_000, 5, 5, 1, 6],
       ...>     %{state: state, exec_env: exec_env, machine_state: machine_state})
       iex> n_machine_state
-      %EVM.MachineState{gas: 800, stack: [1, 1], active_words: 1, memory: "_output_input", pc: 0, previously_active_words: 1}
+      %EVM.MachineState{gas: 800, stack: [1, 1], active_words: 1, memory: "_output_input", program_counter: 0}
       iex> n_state == state
       true
 
@@ -126,7 +126,7 @@ defmodule EVM.Operation.System do
       ...>     [100, <<0x01::160>>, 1_000, 5, 5, 1, 6],
       ...>     %{state: state, exec_env: exec_env, machine_state: machine_state})
       iex> n_machine_state
-      %EVM.MachineState{gas: 800, stack: [1, 1], active_words: 1, memory: "_output_input", previously_active_words: 1}
+      %EVM.MachineState{gas: 800, stack: [1, 1], active_words: 1, memory: "_output_input"}
       iex> n_state == state
       true
 
@@ -145,7 +145,7 @@ defmodule EVM.Operation.System do
       ...>     [100, <<0x01::160>>, 5, 5, 1, 6],
       ...>     %{state: state, exec_env: exec_env, machine_state: machine_state})
       iex> n_machine_state
-      %EVM.MachineState{gas: 800, stack: [1, 1], active_words: 1, memory: "_output_input", previously_active_words: 1}
+      %EVM.MachineState{gas: 800, stack: [1, 1], active_words: 1, memory: "_output_input"}
       iex> n_state == state
       true
   """
@@ -219,7 +219,7 @@ defmodule EVM.Operation.System do
       %EVM.MachineState{active_words: 2}
 
       iex> EVM.Operation.System.return([5, 33], %{machine_state: %EVM.MachineState{active_words: 5}})
-      %EVM.MachineState{active_words: 5, previously_active_words: 5}
+      %EVM.MachineState{active_words: 5}
   """
   @spec return(Operation.stack_args, Operation.vm_map) :: Operation.op_result
   def return([_mem_start, mem_end], %{machine_state: machine_state}) do
