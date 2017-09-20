@@ -259,7 +259,7 @@ defmodule Blockchain.Transaction do
       iex> private_key = <<1::256>>
       iex> sender = <<126, 95, 69, 82, 9, 26, 105, 18, 93, 93, 252, 183, 184, 194, 101, 144, 41, 57, 91, 223>> # based on simple private key
       iex> contract_address = Blockchain.Contract.new_contract_address(sender, 6)
-      iex> machine_code = EVM.MachineCode.compile([:push1, 3, :push1, 5, :add, :push1, 0x00, :mstore, :push1, 0, :push1, 32, :return])
+      iex> machine_code = EVM.MachineCode.compile([:push1, 3, :push1, 5, :add, :push1, 0x00, :mstore, :push1, 32, :push1, 0, :return])
       iex> trx = %Blockchain.Transaction{nonce: 5, gas_price: 3, gas_limit: 100_000, to: <<>>, value: 5, init: machine_code}
       ...>       |> Blockchain.Transaction.Signature.sign_transaction(private_key)
       iex> {state, gas, logs} = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())

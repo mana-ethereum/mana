@@ -23,7 +23,7 @@ defmodule Blockchain.Contract do
       iex> db = MerklePatriciaTree.Test.random_ets_db(:contract_create_test)
       iex> {state, _gas, _sub_state} = MerklePatriciaTree.Trie.new(db)
       ...> |> Blockchain.Account.put_account(<<0x10::160>>, %Blockchain.Account{balance: 11, nonce: 5})
-      ...> |> Blockchain.Contract.create_contract(<<0x10::160>>, <<0x10::160>>, 1000, 1, 5, EVM.MachineCode.compile([:push1, 3, :push1, 5, :add, :push1, 0x00, :mstore, :push1, 0, :push1, 32, :return]), 5, %Block.Header{nonce: 1})
+      ...> |> Blockchain.Contract.create_contract(<<0x10::160>>, <<0x10::160>>, 1000, 1, 5, EVM.MachineCode.compile([:push1, 3, :push1, 5, :add, :push1, 0x00, :mstore, :push1, 32, :push1, 0, :return]), 5, %Block.Header{nonce: 1})
       {
         %MerklePatriciaTree.Trie{db: {MerklePatriciaTree.DB.ETS, :contract_create_test}, root_hash: <<98, 127, 176, 34, 60, 87, 113, 153, 133, 112, 237, 229, 251, 94, 163, 145, 234, 68, 26, 244, 25, 19, 211, 192, 172, 75, 106, 198, 229, 248, 105, 39>>},
         976,
@@ -92,16 +92,16 @@ defmodule Blockchain.Contract do
       iex> {state, _gas, _sub_state, _output} = MerklePatriciaTree.Trie.new(db)
       ...> |> Blockchain.Account.put_account(<<0x10::160>>, %Blockchain.Account{balance: 10})
       ...> |> Blockchain.Account.put_account(<<0x20::160>>, %Blockchain.Account{balance: 20})
-      ...> |> Blockchain.Account.put_code(<<0x20::160>>, EVM.MachineCode.compile([:push1, 3, :push1, 5, :add, :push1, 0x00, :mstore, :push1, 0, :push1, 32, :return]))
+      ...> |> Blockchain.Account.put_code(<<0x20::160>>, EVM.MachineCode.compile([:push1, 3, :push1, 5, :add, :push1, 0x00, :mstore, :push1, 32, :push1, 0, :return]))
       ...> |> Blockchain.Contract.message_call(<<0x10::160>>, <<0x10::160>>, <<0x20::160>>, <<0x20::160>>, 1000, 1, 5, 5, <<1, 2, 3>>, 5, %Block.Header{nonce: 1})
       {
-        %MerklePatriciaTree.Trie{db: {MerklePatriciaTree.DB.ETS, :message_call_test}, root_hash: <<154, 49, 65, 245, 127, 76, 136, 164, 2, 21, 225, 99, 104, 24, 242, 82, 93, 141, 83, 170, 2, 85, 161, 83, 159, 239, 133, 253, 135, 151, 187, 1>>},
+        %MerklePatriciaTree.Trie{db: {MerklePatriciaTree.DB.ETS, :message_call_test}, root_hash: <<10, 196, 161, 81, 223, 4, 171, 127, 206, 82, 83, 156, 61, 5, 44, 225, 206, 88, 22, 193, 27, 83, 226, 3, 15, 254, 193, 75, 188, 50, 125, 104>>},
         976,
         %EVM.SubState{},
         <<0x08::256>>
       }
       iex> Blockchain.Account.get_accounts(state, [<<0x10::160>>, <<0x20::160>>])
-      [%Blockchain.Account{balance: 5}, %Blockchain.Account{balance: 25, code_hash: <<216, 114, 80, 103, 17, 50, 164, 75, 162, 123, 123, 99, 162, 105, 226, 15, 215, 200, 136, 216, 29, 106, 193, 119, 1, 173, 138, 37, 219, 39, 23, 231>>}]
+      [%Blockchain.Account{balance: 5}, %Blockchain.Account{balance: 25, code_hash: <<135, 110, 129, 59, 111, 55, 97, 45, 238, 64, 115, 133, 37, 188, 196, 107, 160, 151, 31, 167, 249, 187, 243, 251, 173, 170, 244, 204, 78, 134, 208, 239>>}]
       iex> MerklePatriciaTree.Trie.Inspector.all_keys(state) |> Enum.count
       3
   """
