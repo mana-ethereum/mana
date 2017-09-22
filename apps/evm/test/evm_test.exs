@@ -112,14 +112,14 @@ defmodule EvmTest do
     account_map = %{
       hex_to_int(test["exec"]["caller"]) => %{
         balance: 0,
-        code: hex_to_int(test["exec"]["code"]),
+        code: hex_to_binary(test["exec"]["code"]),
         nonce: 0,
     }}
     account_map = Enum.reduce(test["pre"], account_map, fn({address, account}, address_map) ->
       Map.merge(address_map, %{
           hex_to_int(address) => %{
             balance: hex_to_int(account["balance"]),
-            code: hex_to_int(account["code"]),
+            code: hex_to_binary(account["code"]),
             nonce: hex_to_int(account["nonce"]),
           }
         })
