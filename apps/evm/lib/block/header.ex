@@ -144,6 +144,26 @@ defmodule Block.Header do
   end
 
   @doc """
+  Computes hash of a block header, which is simply the hash of the serialized block header.
+
+  This is defined in Eq.(37) of the Yellow Paper.
+
+  ## Examples
+
+      iex> %Block.Header{number: 5, parent_hash: <<1, 2, 3>>, beneficiary: <<2, 3, 4>>, difficulty: 100, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>}
+      ...> |> Block.Header.hash()
+      <<78, 28, 127, 10, 192, 253, 127, 239, 254, 179, 39, 34, 245, 44, 152, 98, 128, 71, 238, 155, 100, 161, 199, 71, 243, 223, 172, 191, 74, 99, 128, 63>>
+
+      iex> %Block.Header{number: 0, parent_hash: <<1, 2, 3>>, beneficiary: <<2, 3, 4>>, difficulty: 100, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>}
+      ...> |> Block.Header.hash()
+      <<218, 225, 46, 241, 196, 160, 136, 96, 109, 216, 73, 167, 92, 174, 91, 228, 85, 112, 234, 129, 99, 200, 158, 61, 223, 166, 165, 132, 187, 24, 142, 193>>
+  """
+  @spec hash(t) :: EVM.hash
+  def hash(header) do
+    header |> serialize() |> ExRLP.encode |> :keccakf1600.sha3_256()
+  end
+
+  @doc """
   Returns true if a given block is before the
   Homestead block.
 
