@@ -1,3 +1,6 @@
+# 0.1.10
+* Update interfaces to match `Blockchain` downstream
+* Add `Block.Header.hash/1` function
 # 0.1.9
 * Subtract gas before running operations
 * Move program counter logic to its own module
