@@ -203,7 +203,7 @@ defmodule EVM.Operation.EnvironmentalInformation do
 
   ## Examples
 
-      iex> account_interface = EVM.Interface.Mock.MockAccountInterface.new(%{account_map: %{0x01 => %{code: 0x11223344}}})
+      iex> account_interface = EVM.Interface.Mock.MockAccountInterface.new(%{account_map: %{0x01 => %{code: <<0x11, 0x22, 0x33, 0x44>>}}})
       iex> db = MerklePatriciaTree.Test.random_ets_db()
       iex> state = MerklePatriciaTree.Trie.new(db)
       iex> exec_env = %EVM.ExecEnv{account_interface: account_interface}
@@ -217,7 +217,7 @@ defmodule EVM.Operation.EnvironmentalInformation do
     account_code = AccountInterface.get_account_code(exec_env.account_interface, state, wrapped_address)
 
     if account_code do
-      byte_size(:binary.encode_unsigned(account_code))
+      byte_size(account_code)
     else
       0
     end

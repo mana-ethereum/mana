@@ -24,7 +24,7 @@ defimpl EVM.Interface.AccountInterface, for: EVM.Interface.Mock.MockAccountInter
     end
   end
 
-  @spec get_account_code(EVM.Interface.AccountInterface.t, EVM.state, EVM.address) :: nil | integer()
+  @spec get_account_code(EVM.Interface.AccountInterface.t, EVM.state, EVM.address) :: nil | binary()
   def get_account_code(mock_account_interface, _state, address) do
     account = get_account(mock_account_interface, address)
 
