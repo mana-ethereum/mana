@@ -32,6 +32,15 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
   end
 
   # TODO: Add test case
+  @spec get_account_code(EVM.Interface.AccountInterface.t, EVM.state, EVM.address) :: nil | binary()
+  def get_account_code(_account_interface, state, address) do
+    case Blockchain.Account.get_machine_code(state, address) do
+      {:ok, machine_code} -> machine_code
+      :not_found -> nil
+    end
+  end
+
+  # TODO: Add test case
   @spec increment_account_nonce(EVM.Interface.AccountInterface.t, EVM.state, EVM.address) :: { EVM.state, integer() }
   def increment_account_nonce(_account_interface, state, address) do
     { state, before_acct, _after_acct } = Blockchain.Account.increment_nonce(state, address, true)

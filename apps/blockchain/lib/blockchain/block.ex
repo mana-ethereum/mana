@@ -112,7 +112,7 @@ defmodule Blockchain.Block do
 
   @doc """
   Computes hash of a block, which is simply the hash of the serialized
-  block after apply RLP.
+  block after applying RLP encoding.
 
   This is defined in Eq.(37) of the Yellow Paper.
 
@@ -128,7 +128,7 @@ defmodule Blockchain.Block do
   """
   @spec hash(t) :: EVM.hash
   def hash(block) do
-    block.header |> Header.serialize() |> ExRLP.encode |> BitHelper.kec
+    block.header |> Header.hash
   end
 
   @doc """
@@ -188,6 +188,84 @@ defmodule Blockchain.Block do
   def get_block(block_hash, db) do
     with {:ok, rlp} <- MerklePatriciaTree.DB.get(db, block_hash) do
       {:ok, rlp |> ExRLP.decode |> deserialize()}
+    end
+  end
+
+  @doc """
+  Returns a given block from the database, if the hash
+  exists in the database.
+
+  See `Blockchain.Block.put_block/2` for details.
+
+  ## Examples
+
+      # Legit, current block
+      iex> db = MerklePatriciaTree.Test.random_ets_db()
+      iex> block = %Blockchain.Block{
+      ...>   transactions: [%Blockchain.Transaction{nonce: 5, gas_price: 6, gas_limit: 7, to: <<1::160>>, value: 8, v: 27, r: 9, s: 10, data: "hi"}],
+      ...>   header: %Block.Header{number: 5, parent_hash: <<1, 2, 3>>, beneficiary: <<2, 3, 4>>, difficulty: 100, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>}
+      ...> }
+      iex> Blockchain.Block.put_block(block, db)
+      iex> Blockchain.Block.get_block_hash_by_steps(block |> Blockchain.Block.hash, 0, db)
+      {:ok, <<78, 28, 127, 10, 192, 253, 127, 239, 254, 179, 39, 34, 245, 44,
+             152, 98, 128, 71, 238, 155, 100, 161, 199, 71, 243, 223, 172, 191,
+             74, 99, 128, 63>>}
+
+      # Bad, in the future
+      iex> db = MerklePatriciaTree.Test.random_ets_db()
+      iex> block = %Blockchain.Block{
+      ...>   transactions: [%Blockchain.Transaction{nonce: 5, gas_price: 6, gas_limit: 7, to: <<1::160>>, value: 8, v: 27, r: 9, s: 10, data: "hi"}],
+      ...>   header: %Block.Header{number: 5, parent_hash: <<1, 2, 3>>, beneficiary: <<2, 3, 4>>, difficulty: 100, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>}
+      ...> }
+      iex> Blockchain.Block.put_block(block, db)
+      iex> Blockchain.Block.get_block_hash_by_steps(block |> Blockchain.Block.hash, -1, db)
+      :not_found
+
+      # Bad, before the dawn of time
+      iex> db = MerklePatriciaTree.Test.random_ets_db()
+      iex> block = %Blockchain.Block{
+      ...>   transactions: [%Blockchain.Transaction{nonce: 5, gas_price: 6, gas_limit: 7, to: <<1::160>>, value: 8, v: 27, r: 9, s: 10, data: "hi"}],
+      ...>   header: %Block.Header{number: 5, parent_hash: <<1, 2, 3>>, beneficiary: <<2, 3, 4>>, difficulty: 100, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>}
+      ...> }
+      iex> Blockchain.Block.put_block(block, db)
+      iex> Blockchain.Block.get_block_hash_by_steps(block |> Blockchain.Block.hash, 6, db)
+      :not_found
+
+      iex> Blockchain.Block.get_block_hash_by_steps(<<1, 2, 3>>, 0, nil)
+      {:ok, <<1, 2, 3>>}
+
+      # Legit, back zero and one
+      iex> db = MerklePatriciaTree.Test.random_ets_db()
+      iex> block_1 = %Blockchain.Block{
+      ...>   transactions: [%Blockchain.Transaction{nonce: 5, gas_price: 6, gas_limit: 7, to: <<1::160>>, value: 8, v: 27, r: 9, s: 10, data: "hi"}],
+      ...>   header: %Block.Header{number: 5, parent_hash: <<1, 2, 3>>, beneficiary: <<2, 3, 4>>, difficulty: 100, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>}
+      ...> }
+      iex> {:ok, block_1_hash} = Blockchain.Block.put_block(block_1, db)
+      iex> block_2 = %Blockchain.Block{
+      ...>   transactions: [%Blockchain.Transaction{nonce: 5, gas_price: 6, gas_limit: 7, to: <<1::160>>, value: 8, v: 27, r: 9, s: 10, data: "hi"}],
+      ...>   header: %Block.Header{number: 6, parent_hash: block_1_hash, beneficiary: <<2, 3, 4>>, difficulty: 100, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>}
+      ...> }
+      iex> Blockchain.Block.put_block(block_2, db)
+      iex> Blockchain.Block.get_block_hash_by_steps(block_2 |> Blockchain.Block.hash, 0, db)
+      {:ok, <<203, 210, 109, 46, 207, 246, 94, 33, 247, 97, 60, 56, 65, 134,
+              203, 120, 62, 64, 59, 64, 101, 190, 181, 7, 242, 215, 247, 212,
+              107, 12, 92, 9>>}
+      iex> Blockchain.Block.get_block_hash_by_steps(block_2 |> Blockchain.Block.hash, 1, db)
+      {:ok, <<78, 28, 127, 10, 192, 253, 127, 239, 254, 179, 39, 34, 245, 44,
+              152, 98, 128, 71, 238, 155, 100, 161, 199, 71, 243, 223, 172, 191,
+              74, 99, 128, 63>>}
+  """
+  @spec get_block_hash_by_steps(EVM.hash, non_neg_integer(), DB.db) :: {:ok, EVM.hash} | :not_found
+  def get_block_hash_by_steps(curr_block_hash, steps, db) do
+    do_get_block_hash_by_steps(curr_block_hash, steps, db)
+  end
+
+  @spec get_block_hash_by_steps(EVM.hash, non_neg_integer(), DB.db) :: {:ok, EVM.hash} | :not_found
+  defp do_get_block_hash_by_steps(block_hash, 0, _db), do: {:ok, block_hash}
+  defp do_get_block_hash_by_steps(_block_hash, steps, _db) when steps < 0 or steps > 256, do: :not_found
+  defp do_get_block_hash_by_steps(block_hash, steps, db) do
+    with {:ok, block} <- get_block(block_hash, db) do
+      do_get_block_hash_by_steps(block.header.parent_hash, steps - 1, db)
     end
   end
 
