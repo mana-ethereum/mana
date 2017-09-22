@@ -8,7 +8,7 @@ defprotocol EVM.Interface.AccountInterface do
   @spec get_account_balance(t, EVM.state, EVM.address) :: nil | EVM.Wei.t
   def get_account_balance(t, state, address)
 
-  @spec get_account_code(t, EVM.state, EVM.address) :: nil | integer()
+  @spec get_account_code(t, EVM.state, EVM.address) :: nil | binary()
   def get_account_code(t, state, address)
 
   @spec increment_account_nonce(t, EVM.state, EVM.address) :: { EVM.state, integer() }
