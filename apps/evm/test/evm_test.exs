@@ -98,8 +98,8 @@ defmodule EvmTest do
   def state(test) do
     db = MerklePatriciaTree.Test.random_ets_db()
     state = MerklePatriciaTree.Trie.new(db)
-    state = test["pre"]
-      |> Enum.reduce(%{}, fn({key, value}, storage) ->
+    test["pre"]
+      |> Enum.reduce(%{}, fn({_key, value}, storage) ->
         Map.merge(storage, value["storage"])
       end
       )
@@ -169,7 +169,8 @@ defmodule EvmTest do
       parent_block_header.mix_hash => parent_block_header,
       last_block_header.mix_hash => last_block_header,
     }
-    block_interface = EVM.Interface.Mock.MockBlockInterface.new(
+
+    EVM.Interface.Mock.MockBlockInterface.new(
       last_block_header,
       block_map
     )

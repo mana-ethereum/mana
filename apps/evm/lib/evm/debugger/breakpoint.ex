@@ -135,7 +135,7 @@ defmodule EVM.Debugger.Breakpoint do
       false
   """
   @spec matches?(t, EVM.state, EVM.MachineState.t, EVM.SubState.t, EVM.ExecEnv.t) :: boolean()
-  def matches?(breakpoint, state, machine_state, sub_state, exec_env) do
+  def matches?(breakpoint, _state, machine_state, _sub_state, exec_env) do
     breakpoint.enabled and break_on_next_pc?(breakpoint, machine_state.program_counter) and Enum.all?(breakpoint.conditions, fn {condition, condition_val} ->
       case condition do
         :address -> exec_env.address == condition_val
@@ -192,7 +192,7 @@ defmodule EVM.Debugger.Breakpoint do
   """
   @spec get_breakpoints() :: [Breakpoint.t]
   def get_breakpoints() do
-    :ets.foldl(fn {id, breakpoint}, acc ->
+    :ets.foldl(fn {_id, breakpoint}, acc ->
       [breakpoint | acc]
     end, [], @table)
   end

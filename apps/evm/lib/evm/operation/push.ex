@@ -1,6 +1,4 @@
 defmodule EVM.Operation.Push do
-  alias EVM.MachineState
-
   @doc """
   Place n-byte item on stack
 

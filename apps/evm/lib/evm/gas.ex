@@ -3,10 +3,7 @@ defmodule EVM.Gas do
   Functions for interacting wth gas and costs of opscodes.
   """
 
-  alias EVM.ExecEnv
   alias EVM.MachineState
-  alias EVM.MachineCode
-  alias EVM.Operation
   alias MerklePatriciaTree.Trie
 
   @type t :: EVM.val

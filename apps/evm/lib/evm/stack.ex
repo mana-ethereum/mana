@@ -105,7 +105,7 @@ defmodule EVM.Stack do
 
     {[h|a], b}
   end
-  def pop_n([], stack), do: {[], []}
+  def pop_n([], _stack), do: {[], []}
 
   @doc """
   Returns the length of the stack.
