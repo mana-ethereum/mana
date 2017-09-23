@@ -10,7 +10,7 @@ defmodule ExCrypto.ECIES.ECDH do
 
   ## Examples
 
-      iex> ExCrypto.ECIES.new_ecdh_keypair(:secp256k1)
+      iex> ExCrypto.ECIES.ECDH.new_ecdh_keypair(:secp256k1)
       {<<>>, <<>>}
   """
   @spec new_ecdh_keypair(ExCrypto.named_curve) :: {ExCrypto.public_key, ExCrpyto.private_key}
@@ -24,9 +24,9 @@ defmodule ExCrypto.ECIES.ECDH do
 
   ## Examples
 
-      iex> {_, my_private_key} = ExCrypto.ECIES.new_ecdh_keypair(:secp256k1)
-      iex> {her_public_key, _} = ExCrypto.ECIES.new_ecdh_keypair(:secp256k1)
-      iex> ExCrypto.ECIES.generate_shared_secret(my_private_key, her_public_key, :secp256k1)
+      iex> {_, my_private_key} = ExCrypto.ECIES.ECDH.new_ecdh_keypair(:secp256k1)
+      iex> {her_public_key, _} = ExCrypto.ECIES.ECDH.new_ecdh_keypair(:secp256k1)
+      iex> ExCrypto.ECIES.ECDH.generate_shared_secret(my_private_key, her_public_key, :secp256k1)
       <<>>
   """
   @spec generate_shared_secret(ExCrypto.private_key, ExCrypto.public_key, ExCrypto.named_curve) :: binary()

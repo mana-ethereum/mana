@@ -18,10 +18,10 @@ defmodule ExCrypto.KDF.NistSp80056 do
 
   ## Examples
 
-      iex> ExCrypto.KDF.NistSp80056("secret", 5, {ExCrypto.SHA.sha1, nil, 20}, "extra")
+      iex> ExCrypto.KDF.NistSp80056.single_step_kdf("secret", 5, ExCrypto.Hash.sha1(), "extra")
       <<>>
   """
-  @spec single_step_kdf(binary(), integer(), ExCrypto.hash_type, binary()) :: {:ok, binary()} | {:error, String.t}
+  @spec single_step_kdf(binary(), integer(), ExCrypto.Hash.hash_type, binary()) :: {:ok, binary()} | {:error, String.t}
   def single_step_kdf(shared_secret, key_data_len, {hasher, hash_in_max_len, hash_out_len}, extra_data \\ <<>>) do
     reps = round(:math.ceil(key_data_len / hash_out_len))
     key_data_len_bits = key_data_len * 8
@@ -31,12 +31,12 @@ defmodule ExCrypto.KDF.NistSp80056 do
       reps > @max_32_int -> {:error, "Too many reps required"}
       hash_in_max_len and byte_size(shared_secret <> extra_data) + 4 > hash_in_max_len -> {:error, "Concatenation of counter, shared_secret and extra_data too large"}
       true ->
-        {derived_keying_material_padded, _} = Enum.reduce(1..reps, {<<>>, 1}, fn el, {results, counter} do
+        {derived_keying_material_padded, _} = Enum.reduce(1..reps, <<>>, fn counter, results ->
           counter_enc = :binary.encode_unsigned(counter |> mod(@two_power_32), :big)
 
           result = hasher.(counter_enc <> shared_secret <> extra_data)
 
-          { results <> result, counter + 1 }
+          results <> result
         end)
 
         <<derived_keying_material::size(key_data_len_bits), _::binary()>> = derived_keying_material_padded
