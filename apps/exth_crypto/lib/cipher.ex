@@ -1,37 +1,29 @@
 defmodule ExCrypto.Cipher do
+  @moduledoc """
+  Module for symmetric encryption.
+  """
 
   @type cipher :: {atom(), integer()}
   @type plaintext :: iodata()
   @type ciphertext :: binary()
-  @type iv :: binary()
+  @type init_vector :: binary()
 
   @doc """
   Encrypts the given plaintext for the given block cipher.
 
   ## Examples
 
-      iex> ExCrypto.Cipher.encrypt("hi", <<1>>, "init", {ExCrypto.AES, ExCrypto.AES.block_size})
+      iex> ExCrypto.Cipher.encrypt("hi", ExCrypto.Test.public_key, ExCrypto.Test.init_vector, {ExCrypto.AES, ExCrypto.AES.block_size})
       <<>>
   """
-  @spec encrypt(plaintext, ExCrypto.public_key, iv, cipher) :: ciphertext
-  def encrypt(plaintext, public_key, iv, {mod, _block_size} = _cipher) do
-    mod.encrypt(plaintext, public_key, iv)
-  end
+  @spec encrypt(plaintext, ExCrypto.public_key, init_vector, cipher) :: ciphertext
+  def encrypt(plaintext, public_key, init_vector \\ nil, {mod, block_size} = _cipher) do
+    cipher_iv = case init_vector do
+      nil -> generate_init_vector(block_size)
+      init_vector -> init_vector
+    end
 
-  @doc """
-  Encrypts the given plaintext for the given block cipher, returning both the cipher
-  text and the init vector used.
-
-  ## Examples
-
-      iex> ExCrypto.Cipher.encrypt("hi", <<1>>, "init", {ExCrypto.AES, ExCrypto.AES.block_size})
-      {<<>>, <<1>>}
-  """
-  @spec encrypt(plaintext, ExCrypto.public_key, cipher) :: {ciphertext, iv}
-  def encrypt(plaintext, public_key, {mod, block_size} = _cipher) do
-    iv = :crypto.strong_rand_bytes(block_size)
-
-    {mod.encrypt(plaintext, public_key, iv), iv}
+    mod.encrypt(plaintext, public_key, cipher_iv)
   end
 
   @doc """
@@ -39,11 +31,27 @@ defmodule ExCrypto.Cipher do
 
   ## Examples
 
-      iex> ExCrypto.Cipher.decrypt("hi", <<1>>, "init", {ExCrypto.AES, ExCrypto.AES.block_size})
+      iex> ExCrypto.Cipher.decrypt("hi", ExCrypto.Test.public_key, ExCrypto.Test.init_vector, {ExCrypto.AES, ExCrypto.AES.block_size})
       <<>>
   """
-  @spec decrypt(ciphertext, ExCrypto.private_key, iv, cipher) :: plaintext
-  def decrypt(ciphertext, private_key, iv, {mod, _block_size} = _cipher) do
-    mod.decrypt(ciphertext, private_key, iv)
+  @spec decrypt(ciphertext, ExCrypto.private_key, init_vector, cipher) :: plaintext
+  def decrypt(ciphertext, private_key, init_vector, {mod, _block_size} = _cipher) do
+    mod.decrypt(ciphertext, private_key, init_vector)
+  end
+
+  @doc """
+  Generate a random initialization vector for the given type of cipher.
+
+  ## Examples
+
+      iex> ExCrypto.Cipher.generate_init_vector(32) |> byte_size
+      32
+
+      iex> ExCrypto.Cipher.generate_init_vector(32) == ExCrypto.Cipher.generate_iv(32)
+      false
+  """
+  @spec generate_init_vector(integer()) :: init_vector
+  def generate_init_vector(block_size) do
+    :crypto.strong_rand_bytes(block_size)
   end
 end
