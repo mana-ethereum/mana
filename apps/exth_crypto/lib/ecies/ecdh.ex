@@ -3,6 +3,8 @@ defmodule ExCrypto.ECIES.ECDH do
   Implements Elliptic Curve Diffie-Hellman, as it pertains to Exthereum.
   """
 
+  @default_curve :secp256k1
+
   @doc """
   Generates a new keypair for elliptic curve diffie-hellman.
 
@@ -10,11 +12,11 @@ defmodule ExCrypto.ECIES.ECDH do
 
   ## Examples
 
-      iex> ExCrypto.ECIES.ECDH.new_ecdh_keypair(:secp256k1)
+      iex> ExCrypto.ECIES.ECDH.new_ecdh_keypair()
       {<<>>, <<>>}
   """
   @spec new_ecdh_keypair(ExCrypto.named_curve) :: {ExCrypto.public_key, ExCrpyto.private_key}
-  def new_ecdh_keypair(curve) when is_atom(curve) do
+  def new_ecdh_keypair(curve \\ @default_curve) when is_atom(curve) do
     :crypto.generate_key(:ecdh, curve)
   end
 
@@ -30,7 +32,7 @@ defmodule ExCrypto.ECIES.ECDH do
       <<>>
   """
   @spec generate_shared_secret(ExCrypto.private_key, ExCrypto.public_key, ExCrypto.named_curve) :: binary()
-  def generate_shared_secret(local_private_key, remote_public_key, curve) when is_atom(curve) do
+  def generate_shared_secret(local_private_key, remote_public_key, curve \\ @default_curve) when is_atom(curve) do
     :crypto.compute_key(:ecdh, remote_public_key, local_private_key, curve)
   end
 end
