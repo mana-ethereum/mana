@@ -13,8 +13,8 @@ defmodule ExCrypto.Cipher do
 
   ## Examples
 
-      iex> ExCrypto.Cipher.encrypt("hi", ExCrypto.Test.public_key, ExCrypto.Test.init_vector, {ExCrypto.AES, ExCrypto.AES.block_size})
-      <<>>
+      iex> ExCrypto.Cipher.encrypt("execute order 66", ExCrypto.Test.symmetric_key, ExCrypto.Test.init_vector, {ExCrypto.AES, ExCrypto.AES.block_size}) |> ExCrypto.Math.bin_to_hex
+      "4f0150273733727f994754fee054df7e18ec169892db5ba973cf8580b898651b"
   """
   @spec encrypt(plaintext, ExCrypto.public_key, init_vector, cipher) :: ciphertext
   def encrypt(plaintext, public_key, init_vector \\ nil, {mod, block_size} = _cipher) do
@@ -31,8 +31,10 @@ defmodule ExCrypto.Cipher do
 
   ## Examples
 
-      iex> ExCrypto.Cipher.decrypt("hi", ExCrypto.Test.public_key, ExCrypto.Test.init_vector, {ExCrypto.AES, ExCrypto.AES.block_size})
-      <<>>
+      iex> "4f0150273733727f994754fee054df7e18ec169892db5ba973cf8580b898651b"
+      ...> |> ExCrypto.Math.hex_to_bin
+      ...> |> ExCrypto.Cipher.decrypt(ExCrypto.Test.symmetric_key, ExCrypto.Test.init_vector, {ExCrypto.AES, ExCrypto.AES.block_size})
+      <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0>> <> "execute order 66"
   """
   @spec decrypt(ciphertext, ExCrypto.private_key, init_vector, cipher) :: plaintext
   def decrypt(ciphertext, private_key, init_vector, {mod, _block_size} = _cipher) do
@@ -47,7 +49,7 @@ defmodule ExCrypto.Cipher do
       iex> ExCrypto.Cipher.generate_init_vector(32) |> byte_size
       32
 
-      iex> ExCrypto.Cipher.generate_init_vector(32) == ExCrypto.Cipher.generate_iv(32)
+      iex> ExCrypto.Cipher.generate_init_vector(32) == ExCrypto.Cipher.generate_init_vector(32)
       false
   """
   @spec generate_init_vector(integer()) :: init_vector
