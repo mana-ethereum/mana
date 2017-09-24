@@ -12,8 +12,13 @@ defmodule ExCrypto.ECIES.ECDH do
 
   ## Examples
 
-      iex> ExCrypto.ECIES.ECDH.new_ecdh_keypair()
-      {<<>>, <<>>}
+      iex> {public_key, private_key} = ExCrypto.ECIES.ECDH.new_ecdh_keypair()
+      iex> byte_size(public_key)
+      65
+      iex> byte_size(private_key)
+      32
+      iex> {public_key, private_key} == :crypto.generate_key(:ecdh, :secp256k1, private_key)
+      true
   """
   @spec new_ecdh_keypair(ExCrypto.named_curve) :: {ExCrypto.public_key, ExCrpyto.private_key}
   def new_ecdh_keypair(curve \\ @default_curve) when is_atom(curve) do
@@ -26,10 +31,11 @@ defmodule ExCrypto.ECIES.ECDH do
 
   ## Examples
 
-      iex> {_, my_private_key} = ExCrypto.ECIES.ECDH.new_ecdh_keypair(:secp256k1)
-      iex> {her_public_key, _} = ExCrypto.ECIES.ECDH.new_ecdh_keypair(:secp256k1)
-      iex> ExCrypto.ECIES.ECDH.generate_shared_secret(my_private_key, her_public_key, :secp256k1)
-      <<>>
+      iex> ExCrypto.ECIES.ECDH.generate_shared_secret(ExCrypto.Test.private_key(:key_b), ExCrypto.Test.public_key(:key_a), :secp256k1)
+      <<68, 139, 102, 172, 32, 159, 198, 236, 33, 216, 132, 22, 62, 46, 163, 215, 53, 40, 177, 14, 51, 94, 155, 151, 21, 226, 9, 254, 153, 48, 112, 226>>
+
+      iex> ExCrypto.ECIES.ECDH.generate_shared_secret(ExCrypto.Test.private_key(:key_a), ExCrypto.Test.public_key(:key_b), :secp256k1)
+      <<68, 139, 102, 172, 32, 159, 198, 236, 33, 216, 132, 22, 62, 46, 163, 215, 53, 40, 177, 14, 51, 94, 155, 151, 21, 226, 9, 254, 153, 48, 112, 226>>
   """
   @spec generate_shared_secret(ExCrypto.private_key, ExCrypto.public_key, ExCrypto.named_curve) :: binary()
   def generate_shared_secret(local_private_key, remote_public_key, curve \\ @default_curve) when is_atom(curve) do

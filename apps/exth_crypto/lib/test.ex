@@ -44,6 +44,13 @@ defmodule ExCrypto.Test do
     @private_keys[key]
   end
 
+  @doc """
+  Returns a generic elliptic curve key pair.
+  """
+  def key_pair(key \\ :key_a) do
+    {@public_keys[key], @private_keys[key]}
+  end
+
   def symmetric_key(key \\ :key_a) do
     @symmetric_keys[key]
   end

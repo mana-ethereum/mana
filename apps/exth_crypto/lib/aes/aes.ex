@@ -37,11 +37,11 @@ defmodule ExCrypto.AES do
       iex> ExCrypto.AES.encrypt("Did you ever hear the story of Darth Plagueis The Wise? I thought not.", ExCrypto.Test.symmetric_key, ExCrypto.Test.init_vector) |> ExCrypto.Math.bin_to_hex
       "3ee326e03303a303df6eac828b0bdc8ed67254b44a6a79cd0082bc245977b0e7d4283d63a346744d2f1ecaafca8be906d9f3d27db914d80b601d7e0c598418380e5fe2b48c0e0b8454c6d251f577f28f"
   """
-  @spec encrypt(ExCrypto.Cipher.plaintext, ExCrypto.public_key, ExCrypto.Cipher.init_vector) :: ExCrypto.Cipher.ciphertext
-  def encrypt(plaintext, public_key, init_vector) do
+  @spec encrypt(ExCrypto.Cipher.plaintext, ExCrypto.symmetric_key, ExCrypto.Cipher.init_vector) :: ExCrypto.Cipher.ciphertext
+  def encrypt(plaintext, symmetric_key, init_vector) do
     padding_bits = ( 16 - rem(byte_size(plaintext), 16) ) * 8
 
-    :crypto.block_encrypt(@cipher_type, public_key, init_vector, <<0::size(padding_bits)>> <> plaintext)
+    :crypto.block_encrypt(@cipher_type, symmetric_key, init_vector, <<0::size(padding_bits)>> <> plaintext)
   end
 
   @doc """
@@ -70,8 +70,8 @@ defmodule ExCrypto.AES do
       ...> |> ExCrypto.AES.decrypt(ExCrypto.Test.symmetric_key, ExCrypto.Test.init_vector)
       <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0>> <> "Did you ever hear the story of Darth Plagueis The Wise? I thought not."
   """
-  @spec decrypt(ExCrypto.Cipher.ciphertext, ExCrypto.private_key, ExCrypto.Cipher.init_vector) :: ExCrypto.Cipher.plaintext
-  def decrypt(ciphertext, private_key, init_vector) do
-    :crypto.block_decrypt(@cipher_type, private_key, init_vector, ciphertext)
+  @spec decrypt(ExCrypto.Cipher.ciphertext, ExCrypto.symmetric_key, ExCrypto.Cipher.init_vector) :: ExCrypto.Cipher.plaintext
+  def decrypt(ciphertext, symmetric_key, init_vector) do
+    :crypto.block_decrypt(@cipher_type, symmetric_key, init_vector, ciphertext)
   end
 end
