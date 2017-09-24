@@ -33,11 +33,11 @@ defmodule ExCrypto.Hash do
 
   ## Examples
 
-      iex> ExCrypto.Hash.hash("hi", ExCrypto.Hash.kec)
-      <<>>
+      iex> ExCrypto.Hash.hash("hello world", ExCrypto.Hash.kec) |> ExCrypto.Math.bin_to_hex
+      "47173285a8d7341e5e972fc677286384f802f8ef42a5ec5f03bbfa254cb01fad"
 
-      iex> ExCrypto.Hash.hash("hi", ExCrypto.Hash.sha1)
-      <<>>
+      iex> ExCrypto.Hash.hash("hello world", ExCrypto.Hash.sha1) |> ExCrypto.Math.bin_to_hex
+      "2aae6c35c94fcfb415dbe95f408b9ce91ee846ed"
   """
   @spec hash(iodata(), hash_type) :: hash
   def hash(data, {hash_fun, _, _}=_hasher) do

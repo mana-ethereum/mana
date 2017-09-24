@@ -33,14 +33,18 @@ defmodule ExCrypto.Math do
       <<0x01, 0x02, 0x0a, 0x0d>>
   """
   @spec hex_to_bin(String.t) :: binary()
-  def hex_to_bin(hex), do: Base.decode16(hex, case: :lower)
+  def hex_to_bin(hex) do
+    {:ok, bin} = Base.decode16(hex, case: :lower)
+
+    bin
+  end
 
   @doc """
   Simple wrapper function to convert a binary to a hex string.
 
   ## Examples
 
-      iex> ExCrypto.Math.hex_to_bin(<<0x01, 0x02, 0x0a, 0x0d>>)
+      iex> ExCrypto.Math.bin_to_hex(<<0x01, 0x02, 0x0a, 0x0d>>)
       "01020a0d"
   """
   @spec bin_to_hex(binary()) :: String.t
