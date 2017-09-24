@@ -1,6 +1,6 @@
 # ExCrypto
 
-**TODO: Add description**
+ExCrypto handles the majority of core cryptographic operations for Exthereum. The goal of this project is to give each Exthereum project a common set of cryptographic functions where the backends can be swapped out as need be. Additionally, more complicated protocols (such as ECIES) can be implemented here.
 
 ## Installation
 
