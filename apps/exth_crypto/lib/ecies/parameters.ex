@@ -31,7 +31,7 @@ defmodule ExCrypto.ECIES.Parameters do
     %__MODULE__{
       mac: :sha256,
       hasher: {&ExCrypto.Hash.SHA.sha256/1, nil, 32},
-      cipher: {ExCrypto.AES, ExCrypto.AES.block_size},
+      cipher: {ExCrypto.AES, ExCrypto.AES.block_size, :ctr},
       key_len: 16,
     }
   end
@@ -45,7 +45,7 @@ defmodule ExCrypto.ECIES.Parameters do
     %__MODULE__{
       mac: :sha256,
       hasher: {&ExCrypto.Hash.SHA.sha256/1, nil, 32},
-      cipher: {ExCrypto.AES, ExCrypto.AES.block_size},
+      cipher: {ExCrypto.AES, ExCrypto.AES.block_size, :ctr},
       key_len: 32,
     }
   end
@@ -59,7 +59,7 @@ defmodule ExCrypto.ECIES.Parameters do
     %__MODULE__{
       mac: :sha256,
       hasher: {&ExCrypto.Hash.SHA.sha384/1, nil, 48},
-      cipher: {ExCrypto.AES, ExCrypto.AES.block_size},
+      cipher: {ExCrypto.AES, ExCrypto.AES.block_size, :ctr},
       key_len: 32,
     }
   end
@@ -73,7 +73,7 @@ defmodule ExCrypto.ECIES.Parameters do
     %__MODULE__{
       mac: :sha256,
       hasher: {&ExCrypto.Hash.SHA.sha512/1, nil, 64},
-      cipher: {ExCrypto.AES, ExCrypto.AES.block_size},
+      cipher: {ExCrypto.AES, ExCrypto.AES.block_size, :ctr},
       key_len: 32,
     }
   end
@@ -88,7 +88,7 @@ defmodule ExCrypto.ECIES.Parameters do
   """
   @spec block_size(t) :: integer()
   def block_size(params) do
-    {_, block_size} = params.cipher
+    {_, block_size, _args} = params.cipher
 
     block_size
   end
