@@ -5,7 +5,7 @@ defmodule ExWire do
   """
 
   @network_adapter Application.get_env(:ex_wire, :network_adapter)
-  @port Application.get_env(:ex_wire, :port, 30303)
+  @port Application.get_env(:ex_wire, :port, 30333)
   @private_key Application.get_env(:ex_wire, :private_key)
 
   @type node_id :: binary()
@@ -16,7 +16,7 @@ defmodule ExWire do
   Returns a private key that is generated when a new session is created. It is
   intended that this key is semi-persisted.
   """
-  @spec private_key() :: binary()
+  @spec private_key() :: ExCrypto.private_key()
   def private_key, do: @private_key
 
   def start(_type, args) do

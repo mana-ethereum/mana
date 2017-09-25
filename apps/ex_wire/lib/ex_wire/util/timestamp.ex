@@ -18,7 +18,7 @@ defmodule ExWire.Util.Timestamp do
   """
   @spec soon() :: integer()
   def soon do
-    now + @expiration
+    now() + @expiration
   end
 
 end

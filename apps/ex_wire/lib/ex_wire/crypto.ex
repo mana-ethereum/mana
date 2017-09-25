@@ -132,12 +132,15 @@ defmodule ExWire.Crypto do
 
   ## Examples
 
-      iex> ExWire.Crypto.sign("hi mom", <<1::256>>)
-      {:ok,
-         <<217, 43, 47, 28, 240, 89, 69, 96, 153, 221, 201, 45, 240, 179, 235, 85, 204,
-           182, 185, 202, 244, 96, 155, 47, 8, 82, 124, 227, 207, 205, 17, 85, 53, 234,
-           95, 213, 247, 52, 39, 43, 91, 26, 142, 140, 160, 148, 137, 179, 86, 68, 117,
-           197, 103, 221, 48, 188, 177, 20, 57, 105, 91, 46, 198, 21>>, 0}
+      iex> private_key = <<1::256>>
+      iex> {:ok, <<_byte::8, public_key::binary()>>} = :libsecp256k1.ec_pubkey_create(private_key, :uncompressed)
+      iex> {:ok, signature, _recovery_id} = ExWire.Crypto.sign(msg="hi mom", private_key) |> IO.inspect(limit: :infinity)
+      iex> :libsecp256k1.ecdsa_verify(msg, signature |> IO.inspect, public_key |> IO.inspect)
+      :ok
+
+      iex> {:ok, signature, _recovery_id} = ExWire.Crypto.sign("hi mom", <<1::256>>)
+      iex> :libsecp256k1.ecdsa_verify("hi mom", signature, <<2::256>>)
+      {:error, 'ecdsa signature der parse error'}
   """
   @spec sign(binary(), private_key) :: {:ok, signature, recovery_id} | {:error, String.t}
   def sign(message, private_key) do
