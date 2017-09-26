@@ -5,6 +5,12 @@ defmodule ExCrypto.Mixfile do
     [app: :ex_crypto,
      version: "0.1.1",
      elixir: "~> 1.4",
+     description: "Ethereum's Crypto Suite.",
+      package: [
+        maintainers: ["Geoffrey Hayes", "Mason Fischer"],
+        licenses: ["MIT"],
+        links: %{"GitHub" => "https://github.com/exthereum/ex_crypto"}
+      ],
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
      deps: deps()]
