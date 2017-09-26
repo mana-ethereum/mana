@@ -3,7 +3,7 @@ defmodule ExCrypto.Mixfile do
 
   def project do
     [app: :ex_crypto,
-     version: "0.1.1",
+     version: "0.1.0",
      elixir: "~> 1.4",
      description: "Ethereum's Crypto Suite.",
       package: [
