@@ -38,7 +38,7 @@ defmodule ExthCrypto.ECIES do
 
       # TODO: More tests
   """
-  @spec encrypt(ExthCrypto.public_key, Cipher.plaintext, binary(), binary(), {ExthCrypto.public_key, ExthCrypto.private_key} | nil, Cipher.init_vector | nil) :: {:ok, binary()} | {:error, String.t}
+  @spec encrypt(ExthCrypto.Key.public_key, Cipher.plaintext, binary(), binary(), {ExthCrypto.Key.public_key, ExthCrypto.Key.private_key} | nil, Cipher.init_vector | nil) :: {:ok, binary()} | {:error, String.t}
   def encrypt(her_static_public_key, message, shared_info_1 \\ <<>>, shared_info_2 \\ <<>>, my_ephemeral_key_pair \\ nil, init_vector \\ nil) do
     params = Parameters.ecies_aes128_sha256() # TODO: Why?
     key_len = params.key_len
@@ -78,7 +78,7 @@ defmodule ExthCrypto.ECIES do
       message_tag = MAC.mac(init_vector <> encoded_message <> shared_info_2, key_mac_hashed, params.mac)
 
       # Remove DER encoding byte
-      my_ephemeral_public_key_raw = ExthCrypto.der_to_raw(my_ephemeral_public_key)
+      my_ephemeral_public_key_raw = ExthCrypto.Key.der_to_raw(my_ephemeral_public_key)
 
       # return 0x04 || R || AsymmetricEncrypt(shared-secret, plaintext) || tag
       {:ok, <<0x04>> <> my_ephemeral_public_key_raw <> init_vector <> encoded_message <> message_tag}
@@ -104,7 +104,7 @@ defmodule ExthCrypto.ECIES do
       iex> ExthCrypto.ECIES.decrypt(ExthCrypto.Test.private_key(:key_a), ecies_encoded_msg, "shared_info_1", "shared_info_2")
       {:ok, "hello"}
   """
-  @spec decrypt(ExthCrypto.private_key, binary(), binary(), binary()) :: {:ok, Cipher.plaintext} | {:error, String.t}
+  @spec decrypt(ExthCrypto.Key.private_key, binary(), binary(), binary()) :: {:ok, Cipher.plaintext} | {:error, String.t}
   def decrypt(my_static_private_key, ecies_encoded_msg, shared_info_1 \\ <<>>, shared_info_2 \\ <<>>) do
     params = Parameters.ecies_aes128_sha256() # TODO: Why?
 
@@ -132,7 +132,7 @@ defmodule ExthCrypto.ECIES do
 
         # SEC1 - §5.1.4 - Steps 4, 5
         # Generate a shared secret based on our ephemeral private key and the ephemeral public key from the message
-        her_ephemeral_public_key = ExthCrypto.raw_to_der(her_ephemeral_public_key_raw)
+        her_ephemeral_public_key = ExthCrypto.Key.raw_to_der(her_ephemeral_public_key_raw)
 
         shared_secret = ECDH.generate_shared_secret(my_static_private_key, her_ephemeral_public_key, @curve_name)
 
