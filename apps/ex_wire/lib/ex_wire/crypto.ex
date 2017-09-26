@@ -5,8 +5,6 @@ defmodule ExWire.Crypto do
 
   @type hash :: binary()
   @type signature :: binary()
-  @type private_key :: binary()
-  @type public_key :: binary()
   @type recovery_id :: integer()
 
   defmodule HashMismatch do
@@ -28,10 +26,10 @@ defmodule ExWire.Crypto do
       iex> ExWire.Crypto.node_id(<<1>>)
       {:error, "Private key size not 32 bytes"}
   """
-  @spec node_id(private_key) :: {:ok, ExWire.node_id} | {:error, String.t}
+  @spec node_id(ExthCrypto.Key.private_key) :: {:ok, ExWire.node_id} | {:error, String.t}
   def node_id(private_key) do
-    case :libsecp256k1.ec_pubkey_create(private_key, :uncompressed) do
-      {:ok, <<_byte::8, public_key::binary()>>} -> {:ok, public_key}
+    case ExthCrypto.Signature.get_public_key(private_key) do
+      {:ok, <<public_key::binary()>>} -> {:ok, public_key |> ExthCrypto.Key.der_to_raw}
       {:error, reason} -> {:error, to_string(reason)}
     end
   end
@@ -99,55 +97,7 @@ defmodule ExWire.Crypto do
   """
   @spec hash(binary()) :: hash
   def hash(data) do
-    :keccakf1600.sha3_256(data)
-  end
-
-  @doc """
-  Given a `message`, `signature` and `recovery_id`, returns
-  the public key used to generate the signature.
-
-  ## Examples
-
-      iex> signature = <<99, 250, 55, 205, 19, 130, 162, 13, 36, 5, 43, 56, 228, 33, 106, 40, 191, 186, 82, 110, 80, 114, 235, 3, 47, 23, 113, 82, 97, 233, 154, 66, 124, 14, 92, 230, 187, 138, 47, 232, 236, 204, 103, 181, 60, 13, 22, 104, 69, 242, 94, 93, 227, 91, 182, 102, 145, 242, 186, 58, 190, 37, 39, 213>>
-      iex> ExWire.Crypto.recover_public_key("hi mom", signature, 1)
-      <<4, 14, 171, 190, 251, 105, 241, 143, 202, 92, 170, 215, 184, 77, 2, 207, 17,
-        8, 109, 230, 202, 206, 155, 170, 48, 182, 75, 0, 152, 82, 131, 31, 167, 42,
-        61, 89, 82, 107, 179, 233, 35, 170, 76, 27, 55, 82, 67, 224, 80, 90, 135, 141,
-        113, 73, 167, 0, 244, 141, 71, 113, 56, 108, 190, 103, 115>>
-  """
-  @spec recover_public_key(binary(), signature, recovery_id) :: public_key
-  def recover_public_key(message, signature, recovery_id) do
-    {:ok, <<_byte::8, public_key::binary()>>} = :libsecp256k1.ecdsa_recover_compact(
-      hash(message),
-      signature,
-      :uncompressed,
-      recovery_id
-    )
-
-    public_key
-  end
-
-  @doc """
-  Signs a given message with a private key.
-
-  ## Examples
-
-      iex> private_key = <<1::256>>
-      iex> {:ok, <<_byte::8, public_key::binary()>>} = :libsecp256k1.ec_pubkey_create(private_key, :uncompressed)
-      iex> {:ok, signature, _recovery_id} = ExWire.Crypto.sign(msg="hi mom", private_key) |> IO.inspect(limit: :infinity)
-      iex> :libsecp256k1.ecdsa_verify(msg, signature |> IO.inspect, public_key |> IO.inspect)
-      :ok
-
-      iex> {:ok, signature, _recovery_id} = ExWire.Crypto.sign("hi mom", <<1::256>>)
-      iex> :libsecp256k1.ecdsa_verify("hi mom", signature, <<2::256>>)
-      {:error, 'ecdsa signature der parse error'}
-  """
-  @spec sign(binary(), private_key) :: {:ok, signature, recovery_id} | {:error, String.t}
-  def sign(message, private_key) do
-    case :libsecp256k1.ecdsa_sign_compact(message, private_key, :default, <<>>) do
-      {:ok, signature, recovery_id} -> {:ok, signature, recovery_id}
-      {:error, reason} -> {:error, to_string(reason)}
-    end
+    ExthCrypto.Hash.Keccak.kec(data)
   end
 
 end

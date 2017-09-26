@@ -7,6 +7,9 @@ defmodule ExWire.Handshake do
 
   require Logger
 
+  alias ExthCrypto.ECIES.ECDH
+  alias ExWire.Handshake.EIP8
+
   @type token :: binary()
 
   defmodule Handshake do
@@ -55,160 +58,221 @@ defmodule ExWire.Handshake do
   # const V4_ACK_PACKET_SIZE: usize = 210;
   # const HANDSHAKE_TIMEOUT: u64 = 5000;
 
-  # Amount of bytes added when encrypting with encryptECIES.
-  # EIP Question: This is magic, isn't it?
-  @ecies_overhead 113
   @protocol_version 4
 
   # RLPx v4 handshake auth (defined in EIP-8).
   defmodule AuthMsgV4 do
-    defstruct [:signature, :initator_public_key, :nonce, :version, :tail]
+    @moduledoc """
+    Simple struct to wrap an auth msg.
+    """
+
+    defstruct [:signature, :remote_public_key, :remote_nonce, :remote_version, :remote_ephemeral_public_key]
 
     @type t :: %__MODULE__{
-      signature: ExCrypto.signature,
-      initator_public_key: ExCrypto.public_key,
-      nonce: binary(),
-      version: integer(),
-      tail: binary()
+      signature: ExthCrypto.signature,
+      remote_public_key: ExthCrypto.Key.public_key,
+      remote_nonce: binary(),
+      remote_version: integer(),
+      remote_ephemeral_public_key: ExthCrypto.Key.public_key,
     }
 
     @spec serialize(t) :: ExRLP.t
     def serialize(auth_msg) do
       [
-
+        auth_msg.signature,
+        auth_msg.remote_public_key,
+        auth_msg.remote_nonce,
+        auth_msg.remote_version
       ]
     end
 
     @spec deserialize(ExRLP.t) :: t
     def deserialize(rlp) do
       [
+        signature |
+        [remote_public_key |
+        [remote_nonce |
+        [remote_version |
+        _tl
+      ]]]] = rlp
 
-      ]
+      %__MODULE__{
+        signature: signature,
+        remote_public_key: remote_public_key |> ExthCrypto.Key.raw_to_der,
+        remote_nonce: remote_nonce,
+        remote_version: remote_version |> :binary.decode_unsigned,
+      }
+    end
+
+    @doc """
+    Sets the remote ephemeral public key for a given auth msg, based on our secret
+    and the keys passed from remote.
+
+    # TODO: Test
+    # TODO: Multiple possible values and no recovery key?
+    """
+    @spec set_remote_ephemeral_public_key(t, ExthCrypto.Key.public_key) :: t
+    def set_remote_ephemeral_public_key(auth_msg, host_secret) do
+      shared_secret = ECDH.generate_shared_secret(host_secret, auth_msg.remote_public_key)
+      shared_secret_xor_nonce = :crypto.exor(shared_secret, auth_msg.remote_nonce)
+
+      {:ok, remote_ephemeral_public_key} = ExthCrypto.Signature.recover(shared_secret_xor_nonce, auth_msg.signature, 0)
+
+      %{auth_msg | remote_ephemeral_public_key: remote_ephemeral_public_key}
     end
   end
 
-  defmodule AuthRespV4 do
-    # got plain?
-    defstruct [:random_public_key, :nonce, :version, :tail]
+  defmodule AckRespV4 do
+    @moduledoc """
+    Simple struct to wrap an auth response.
+    """
+
+    defstruct [:remote_ephemeral_public_key, :remote_nonce, :remote_version]
 
     @type t :: %__MODULE__{
-      random_public_key: ExCrypto.public_key,
-      nonce: binary(),
-      version: integer(),
-      tail: binary()
+      remote_ephemeral_public_key: ExthCrypto.Key.public_key,
+      remote_nonce: binary(),
+      remote_version: integer(),
     }
 
     @spec serialize(t) :: ExRLP.t
     def serialize(auth_resp) do
       [
-
+        auth_resp.remote_ephemeral_public_key,
+        auth_resp.remote_nonce,
+        auth_resp.remote_version,
       ]
     end
 
     @spec deserialize(ExRLP.t) :: t
     def deserialize(rlp) do
       [
+        remote_ephemeral_public_key |
+        [remote_nonce |
+        [remote_version |
+        _tl
+      ]]] = rlp
 
-      ]
+      %__MODULE__{
+        remote_ephemeral_public_key: remote_ephemeral_public_key,
+        remote_nonce: remote_nonce,
+        remote_version: remote_version |> :binary.decode_unsigned,
+      }
     end
   end
 
   @doc """
-  Wraps a message in EIP-8 encoding, according to
-  [Ethereum EIP-8](https://github.com/ethereum/EIPs/blob/master/EIPS/eip-8.md).
+  Reads a given auth message, transported during the key initialization phase
+  of the RLPx protocol. This will generally be handled by the listener of the connection.
 
-  ## Examples
-
-      iex> ExWire.Handshake.wrap_eip_8(["jedi", "knight"], ExCrypto.Test.public_key, "1.2.3.4", ExCrypto.Test.key_pair(:key_b), ExCrypto.Test.init_vector, ExCrypto.Test.init_vector(1, 100)) |> ExCrypto.Math.bin_to_hex
-      "00e6049871eb081567823267592abac8ec9e9fddfdece7901a15f233b53f304d7860686c21601ba1a7f56680e22d0ac03eccd08e496469514c25ae1d5e55f391c1956f0102030405060708090a0b0c0d0e0f10cb55410f8de25edda8138b141c18b4eef4cc55f66f09a84c33df952cd0ea636820f9d42e60dd10e26d224cfe704a481cdd72982073477bee9f10eb04b5fe6ab863e4873dbb61cd3215d3dc32b2dff59105f248ce6ba768341c5bfcbb62a8729dc8d3e6cf8dd91599125760c74014c8bb9397d93b5e90c578baeea47f969cbcd6a836030d2835826110fc037e6cc5a3553894fb3e2e"
+  Note: this will handle pre or post-EIP 8 messages. We take a different approach to other
+        implementations and try EIP-8 first, and if that fails, plain.
   """
-  @spec wrap_eip_8(ExRLP.t, ExCrypto.public_key, binary(), {ExCrypto.public_key, ExCrypto.private_key} | nil, Cipher.init_vector | nil, binary() | nil) :: {:ok, binary()} | {:error, String.t}
-  def wrap_eip_8(rlp, her_static_public_key, remote_addr, my_ephemeral_key_pair \\ nil, init_vector \\ nil, padding \\ nil) do
-    Logger.debug("[Network] Sending EIP8 Handshake to #{remote_addr}")
+  @spec read_auth_msg(binary(), ExthCrypto.Key.private_key, String.t) :: {:ok, AuthMsgV4.t} | {:error, String.t}
+  def read_auth_msg(encoded_auth, my_private_key, remote_addr) do
+    case EIP8.unwrap_eip_8(encoded_auth, my_private_key, "1.2.3.4") do
+      {:ok, rlp} ->
+        # unwrap eip-8
+        auth_msg =
+          rlp
+          |> ExWire.Handshake.AuthMsgV4.deserialize()
+          |> ExWire.Handshake.AuthMsgV4.set_remote_ephemeral_public_key(my_private_key)
 
-    padding = case padding do
-      nil ->
-        # Generate a random length of padding (this does not need to be secure)
-        # EIP Question: is there a security flaw if this is not random?
-        padding_length = Enum.random(100..300)
+        {:ok, auth_msg}
+      {:error, "Invalid auth size"} ->
+        # unwrap plain
+        with {:ok, plaintext} <- ExthCrypto.ECIES.decrypt(my_private_key, encoded_auth, <<>>, <<>>) do
+          <<
+            signature::binary-size(65),
+            _::binary-size(32),
+            remote_public_key::binary-size(64),
+            remote_nonce::binary-size(32),
+            _rest::bitstring()
+          >> = plaintext
 
-        # Generate a random padding (nonce), this probably doesn't need to be secure
-        # EIP Question: why is this not just padded with zeros?
-        ExCrypto.Math.nonce(padding_length)
-      padding -> padding
-    end
+          auth_msg =
+            [
+              signature,
+              remote_public_key,
+              remote_nonce,
+              :binary.encode_unsigned(@protocol_version)
+            ]
+            |> ExWire.Handshake.AuthMsgV4.deserialize()
+            |> ExWire.Handshake.AuthMsgV4.set_remote_ephemeral_public_key(my_private_key)
 
-    # rlp.list(sig, initiator-pubk, initiator-nonce, auth-vsn)
-    # EIP Question: Why is random appended at the end? Is this going to make it hard to upgrade the protocol?
-    auth_body = ExRLP.encode(rlp ++ [@protocol_version, padding])
-
-    # size of enc-auth-body, encoded as a big-endian 16-bit integer
-    # EIP Question: It's insane we expect the protocol to know the size of the packet prior to encoding.
-    auth_size_int = byte_size(auth_body) + @ecies_overhead
-    auth_size = <<auth_size_int::integer-big-size(16)>>
-
-    # ecies.encrypt(recipient-pubk, auth-body, auth-size)
-    with {:ok, enc_auth_body} <- ExCrypto.ECIES.encrypt(her_static_public_key, auth_body, <<>>, auth_size, my_ephemeral_key_pair, init_vector) do
-      # size of enc-auth-body, encoded as a big-endian 16-bit integer
-      enc_auth_body_size = byte_size(enc_auth_body)
-
-      if enc_auth_body_size != auth_size_int do
-        # The auth-size is hard coded, so the least we can do is verify
-        {:error, "Invalid encoded body size"}
-      else
-        # auth-packet      = auth-size || enc-auth-body
-        # EIP Question: Doesn't RLP already handle size definitions?
-        auth_size <> enc_auth_body
-      end
-    end
-  end
-
-  @doc """
-  Unwraps a message in EIP-8 encoding, according to
-  [Ethereum EIP-8](https://github.com/ethereum/EIPs/blob/master/EIPS/eip-8.md).
-
-  ## Examples
-
-      iex> "00e6049871eb081567823267592abac8ec9e9fddfdece7901a15f233b53f304d7860686c21601ba1a7f56680e22d0ac03eccd08e496469514c25ae1d5e55f391c1956f0102030405060708090a0b0c0d0e0f10cb55410f8de25edda8138b141c18b4eef4cc55f66f09a84c33df952cd0ea636820f9d42e60dd10e26d224cfe704a481cdd72982073477bee9f10eb04b5fe6ab863e4873dbb61cd3215d3dc32b2dff59105f248ce6ba768341c5bfcbb62a8729dc8d3e6cf8dd91599125760c74014c8bb9397d93b5e90c578baeea47f969cbcd6a836030d2835826110fc037e6cc5a3553894fb3e2e" |> ExCrypto.Math.hex_to_bin
-      ...> |> ExWire.Handshake.read_eip_8(ExCrypto.Test.private_key(:key_a), "1.2.3.4")
-      {:ok, ["jedi", "knight"]}
-  """
-  @spec read_eip_8(binary(), ExCrypto.private_key, binary()) :: {:ok, RLP.t} | {:error, String.t}
-  def read_eip_8(encoded_packet, my_static_private_key, remote_addr) do
-    Logger.debug("[Network] Received EIP8 Handshake from #{remote_addr}")
-
-    case encoded_packet do
-      <<auth_size::binary-size(2), ecies_encoded_message::binary()>> ->
-        if :binary.decode_unsigned(auth_size) != byte_size(ecies_encoded_message) do
-          {:error, "Invalid auth size"}
-        else
-          with {:ok, rlp_bin} <- ExCrypto.ECIES.decrypt(my_static_private_key, ecies_encoded_message, <<>>, auth_size) do
-            rlp = ExRLP.decode(rlp_bin)
-
-            # Drop nonce and version
-            {_nonce, rlp} = List.pop_at(rlp, -1)
-            {<<0x04>>, rlp} = List.pop_at(rlp, -1)
-
-            {:ok, rlp}
-          end
+          {:ok, auth_msg}
         end
-      _ ->
-        {:error, "Invalid encoded packet"}
     end
-
-    # TODO: Write ack
-
-    # self.auth_cipher.extend_from_slice(data);
-    # let auth = ecies::decrypt(secret, &self.auth_cipher[0..2], &self.auth_cipher[2..])?;
-    # let rlp = UntrustedRlp::new(&auth);
-    # let signature: H520 = rlp.val_at(0)?;
-    # let remote_public: Public = rlp.val_at(1)?;
-    # let remote_nonce: H256 = rlp.val_at(2)?;
-    # let remote_version: u64 = rlp.val_at(3)?;
-    # self.set_auth(secret, &signature, &remote_public, &remote_nonce, remote_version)?;
-    # self.write_ack_eip8(io)?;
-    # Ok(())
   end
+
+  @doc """
+  Reads a given ack message, transported during the key initialization phase
+  of the RLPx protocol. This will generally be handled by the dialer of the connection.
+
+  Note: this will handle pre or post-EIP 8 messages. We take a different approach to other
+        implementations and try EIP-8 first, and if that fails, plain.
+  """
+  @spec read_ack_resp(binary(), ExthCrypto.Key.private_key, String.t) :: {:ok, AckRespV4.t} | {:error, String.t}
+  def read_ack_resp(encoded_ack, my_private_key, remote_addr) do
+    case EIP8.unwrap_eip_8(encoded_ack, my_private_key, "1.2.3.4") do
+      {:ok, rlp} ->
+        # unwrap eip-8
+        ack_resp =
+          rlp
+          |> ExWire.Handshake.AckRespV4.deserialize()
+
+        {:ok, ack_resp}
+      {:error, "Invalid auth size"} ->
+        # unwrap plain
+        with {:ok, plaintext} <- ExthCrypto.ECIES.decrypt(my_private_key, encoded_ack, <<>>, <<>>) do
+          <<
+            remote_ephemeral_public_key::binary-size(64),
+            remote_nonce::binary-size(32),
+            _rest::bitstring()
+          >> = plaintext
+
+          ack_resp =
+            [
+              remote_ephemeral_public_key,
+              remote_nonce,
+              :binary.encode_unsigned(@protocol_version)
+            ]
+            |> ExWire.Handshake.AckRespV4.deserialize()
+
+          {:ok, ack_resp}
+        end
+    end
+  end
+
+  @doc """
+  Generates an auth header
+
+  ## Examples
+
+      iex> ExWire.Handshake.gen_auth(public_key, remote_addr, my_ephemeral_key_pair, init_vector, padding)
+  """
+  # def gen_auth(ExthCrypto.Handshake.AuthMsgV4.t, ExthCrypto.Key.public_key, Stringt.t, {ExthCrypto.Key.public_key, ExthCrypto.Key.private_key} | nil, Cipher.init_vector | nil, binary() | nil) :: {:ok, binary()} | {:error, String.t}
+  # def gen_auth(msg_auth, her_static_public_key, remote_addr, my_ephemeral_key_pair \\ nil, init_vector \\ nil, padding \\ nil) do
+  #   her_static_public_key = ..
+  #   remote_addr = ..
+  #   MsgAuthV4.serialize(msg_auth)
+  #   |> wrap_eip_8(her_static_public_key, remote_addr, my_ephemeral_key_pair, init_vector, padding)
+  # end
+
+  @doc """
+  Generates an ack header
+
+  ## Examples
+
+      iex> ExWire.Handshake.gen_ack(public_key, remote_addr, my_ephemeral_key_pair, init_vector, padding)
+  """
+  # def gen_ack(ExthCrypto.Handshake.AuthMsgV4.t, ExthCrypto.Key.public_key, Stringt.t, {ExthCrypto.Key.public_key, ExthCrypto.Key.private_key} | nil, Cipher.init_vector | nil, binary() | nil) :: {:ok, binary()} | {:error, String.t}
+  # def gen_ack(msg_auth, her_static_public_key, remote_addr, my_ephemeral_key_pair \\ nil, init_vector \\ nil, padding \\ nil) do
+  #   her_static_public_key = ..
+  #   remote_addr = ..
+  #   MsgAuthV4.serialize(msg_auth)
+  #   |> wrap_eip_8(her_static_public_key, remote_addr, my_ephemeral_key_pair, init_vector, padding)
+  # end
 
   @doc """
   From the (updated) docs here: https://github.com/ethereum/devp2p/pull/34/files
@@ -233,7 +297,7 @@ defmodule ExWire.Handshake do
       enc-auth-msg-initiator = ecies.encrypt(recipient-pubk, auth-msg-initiator)
   ```
   """
-  # @spec make_auth_msg(ExCrypto.private_key, token) :: {:ok, AuthMsgV4.t} | {:error, String.t}
+  # @spec make_auth_msg(ExthCrypto.Key.private_key, token) :: {:ok, AuthMsgV4.t} | {:error, String.t}
   # def make_auth_msg(node_id, token) do
   #   my_ephemeral_private_key = .. #
 
@@ -241,10 +305,10 @@ defmodule ExWire.Handshake do
   #     version = <<0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05>>
   #     token_flag = <<0x00>>
 
-  #     initiator_nonce = ExCrypto.Math.nonce(24) # TODO: Shalen
+  #     initiator_nonce = ExthCrypto.Math.nonce(24) # TODO: Shalen
   #     initiator_nonce_data = nonce <> version
-  #     static_shared_secret = ExCrypto.ECDH(my_static_private_key, her_static_public_key)
-  #     initator_sig = ExCrypto.Signature.sign(static_shared_secret ^ initiator_nonce_data, my_ephemeral_private_key)
+  #     static_shared_secret = ExthCrypto.ECDH(my_static_private_key, her_static_public_key)
+  #     initator_sig = ExthCrypto.Signature.sign(static_shared_secret ^ initiator_nonce_data, my_ephemeral_private_key)
   #     auth_msg_initiator =
   #       initator_sig <>
   #       sha3(my_ephemeral_public_key) <>
@@ -254,7 +318,7 @@ defmodule ExWire.Handshake do
   #       token_flag
 
   #     # TODO: Add optional params such as my_ephemeral_key_pair or init_vector?
-  #     enc_auth_msg_initiator = ExCrypto.ECIES.encrypt(her_static_public_key, auth_msg_initiator, <<>>, <<>>)
+  #     enc_auth_msg_initiator = ExthCrypto.ECIES.encrypt(her_static_public_key, auth_msg_initiator, <<>>, <<>>)
 
   #   end
   # end
@@ -267,7 +331,7 @@ defmodule ExWire.Handshake do
   # TODO: Token?
 
   """
-  # @spec initiate_connection(conn, ExCrypto.private_key, ExCrypto.public_key, ExWire.node_id, token) :: {:ok, Secrets.t} | {:error, String.t}
+  # @spec initiate_connection(conn, ExthCrypto.Key.private_key, ExthCrypto.Key.public_key, ExWire.node_id, token) :: {:ok, Secrets.t} | {:error, String.t}
   # def initiate_connection(conn, my_static_private_key, her_static_public_key, node_id, token) do
   #   handshake = %Handshake{
   #     initiator: true,

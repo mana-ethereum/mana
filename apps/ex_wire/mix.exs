@@ -29,11 +29,11 @@ defmodule ExWire.Mixfile do
     [
       {:credo, "~> 0.8", only: [:dev, :test], runtime: false},
       {:keccakf1600, "~> 2.0.0", hex: :keccakf1600_orig},
-      {:libsecp256k1, "~> 0.1.2"},
+      {:libsecp256k1, "~> 0.1.3"},
       {:ex_rlp, "~> 0.2.1"},
       {:blockchain, "~> 0.1.4"},
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
-      {:ex_crypto, path: "../ex_crypto"}
+      {:exth_crypto, "~> 0.1.2"}
     ]
   end
 end

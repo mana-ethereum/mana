@@ -16,7 +16,7 @@ defmodule ExWire do
   Returns a private key that is generated when a new session is created. It is
   intended that this key is semi-persisted.
   """
-  @spec private_key() :: ExCrypto.private_key()
+  @spec private_key() :: ExthCrypto.Key.private_key()
   def private_key, do: @private_key
 
   def start(_type, args) do

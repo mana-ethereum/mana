@@ -69,17 +69,15 @@ defmodule ExWire.Protocol do
 
   ## Examples
 
-      iex> ExWire.Protocol.sign_binary(<<1>>, <<2>>)
-      <<188, 63, 180, 118, 177, 27, 247, 180, 122, 195, 131, 139, 0, 109, 59, 101, 15,
-        146, 86, 1, 173, 199, 202, 115, 102, 207, 188, 53, 193, 131, 98, 70, 85, 59,
-        169, 36, 18, 140, 125, 33, 217, 187, 216, 117, 254, 79, 253, 133, 9, 247, 96,
-        90, 203, 194, 200, 194, 34, 104, 98, 123, 148, 30, 116, 233, 0, 1>>
+      iex> signature = ExWire.Protocol.sign_binary("mace windu", ExthCrypto.Test.private_key())
+      iex> ExthCrypto.Signature.verify(ExWire.Crypto.hash("mace windu"), signature, ExthCrypto.Test.public_key())
+      true
   """
   @spec sign_binary(binary(), Crypto.private_key) :: binary()
   def sign_binary(value, private_key) do
     hashed_value = Crypto.hash(value)
 
-    {:ok, signature, recovery_id} = Crypto.sign(hashed_value, private_key)
+    {signature, _r, _s, recovery_id} = ExthCrypto.Signature.sign_digest(hashed_value, private_key)
 
     signature <> <<recovery_id>> <> value
   end

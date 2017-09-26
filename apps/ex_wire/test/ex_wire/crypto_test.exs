@@ -3,10 +3,10 @@ defmodule ExWire.CryptoTest do
   doctest ExWire.Crypto
 
   test "recover public key from signature" do
-    {:ok, signature, recovery_id} = ExWire.Crypto.sign("hi mom", <<1::256>>)
-    public_key = ExWire.Crypto.recover_public_key("hi mom", signature, recovery_id)
+    {signature, _r, _s, recovery_id} = ExthCrypto.Signature.sign_digest("hi mom", ExthCrypto.Test.private_key(:key_a))
+    {:ok, public_key} = ExthCrypto.Signature.recover("hi mom", signature, recovery_id)
 
-    assert {:ok, public_key} == :libsecp256k1.ec_pubkey_create(<<1::256>>, :uncompressed)
+    assert public_key == ExthCrypto.Test.public_key(:key_a)
   end
 
 end
