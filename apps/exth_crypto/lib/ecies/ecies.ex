@@ -1,6 +1,8 @@
 defmodule ExCrypto.ECIES do
   @moduledoc """
   Defines ECIES, as it pertains to Ethereum.
+
+  This is derived primarily from [SEC 1: Elliptic Curve Cryptography](http://www.secg.org/sec1-v1.99.dif.pdf)
   """
 
   alias ExCrypto.ECIES.Parameters
@@ -26,16 +28,21 @@ defmodule ExCrypto.ECIES do
 
       iex> {:ok, enc} = ExCrypto.ECIES.encrypt(ExCrypto.Test.public_key(:key_a), "hello", "shared_info_1", "shared_info_2", ExCrypto.Test.key_pair(:key_b), ExCrypto.Test.init_vector)
       iex> enc |> ExCrypto.Math.bin_to_hex
-      "04049871eb081567823267592abac8ec9e9fddfdece7901a15f233b53f304d7860686c21601ba1a7f56680e22d0ac03eccd08e496469514c25ae1d5e55f391c1956f0102030405060708090a0b0c0d0e0f10c2cabca3626e6bde90ada8207750d42a1bcb2da86ba4e3b633284fe32e2ccdcd90ec51141e9a8c946a20b6e00b35ef35"
+      "049871eb081567823267592abac8ec9e9fddfdece7901a15f233b53f304d7860686c21601ba1a7f56680e22d0ac03eccd08e496469514c25ae1d5e55f391c1956f0102030405060708090a0b0c0d0e0f101fefb4ac96a13d9528319f48fb280b64588ce2b8bb3e589d1dafe137fb965a79248ee15739"
+
+      # Test overhead is exactly 113 bytes
+      iex> msg = "The quick brown fox jumped over the lazy dog."
+      iex> {:ok, enc} = ExCrypto.ECIES.encrypt(ExCrypto.Test.public_key(:key_a), msg, "shared_info_1", "shared_info_2", ExCrypto.Test.key_pair(:key_b), ExCrypto.Test.init_vector)
+      iex> byte_size(enc) - byte_size(msg)
+      113
 
       # TODO: More tests
       # TODO: Correct AES cipher?
   """
   @spec encrypt(ExCrypto.public_key, Cipher.plaintext, binary(), binary(), {ExCrypto.public_key, ExCrypto.private_key} | nil, Cipher.init_vector | nil) :: {:ok, binary()} | {:error, String.t}
-  def encrypt(her_static_public_key, message, shared_info_1, shared_info_2, my_ephemeral_key_pair \\ nil, init_vector \\ nil) do
+  def encrypt(her_static_public_key, message, shared_info_1 \\ <<>>, shared_info_2 \\ <<>>, my_ephemeral_key_pair \\ nil, init_vector \\ nil) do
     params = Parameters.ecies_aes128_sha256() # TODO: Why?
     key_len = params.key_len
-    block_size = Parameters.block_size(params)
 
     # First, create a new ephemeral key pair (SEC1 - §5.1.3 - Step 1)
     {my_ephemeral_public_key, my_ephemeral_private_key} = case my_ephemeral_key_pair do
@@ -65,19 +72,17 @@ defmodule ExCrypto.ECIES do
       # SEC1 - §5.1.3 - Step 7
       encoded_message = Cipher.encrypt(message, key_enc, init_vector, params.cipher)
 
-      # Assert encoded message is the right length
-      if byte_size(encoded_message) != key_len do
-        {:error, "encoded message incorrect size (#{byte_size(encoded_message)} versus #{block_size})"}
-      else
-        # Hash the key mac
-        key_mac_hashed = Hash.hash(key_mac, params.hasher)
+      # Hash the key mac
+      key_mac_hashed = Hash.hash(key_mac, params.hasher)
 
-        # Tag the messsage and shared_info_2 data
-        message_tag = MAC.mac(encoded_message <> shared_info_2, key_mac_hashed, params.mac)
+      # Tag the messsage and shared_info_2 data
+      message_tag = MAC.mac(encoded_message <> shared_info_2, key_mac_hashed, params.mac)
 
-        # return 0x04 || R || AsymmetricEncrypt(shared-secret, plaintext) || tag
-        {:ok, <<0x04>> <> my_ephemeral_public_key <> init_vector <> encoded_message <> message_tag}
-      end
+      # Remove DER encoding byte
+      <<0x04::size(8), my_ephemeral_public_key_raw::binary()>> = my_ephemeral_public_key
+
+      # return 0x04 || R || AsymmetricEncrypt(shared-secret, plaintext) || tag
+      {:ok, <<0x04>> <> my_ephemeral_public_key_raw <> init_vector <> encoded_message <> message_tag}
     end
   end
 
@@ -96,12 +101,12 @@ defmodule ExCrypto.ECIES do
 
   ## Examples
 
-      iex> ecies_encoded_msg = "04049871eb081567823267592abac8ec9e9fddfdece7901a15f233b53f304d7860686c21601ba1a7f56680e22d0ac03eccd08e496469514c25ae1d5e55f391c1956f0102030405060708090a0b0c0d0e0f10c2cabca3626e6bde90ada8207750d42a1bcb2da86ba4e3b633284fe32e2ccdcd90ec51141e9a8c946a20b6e00b35ef35" |> ExCrypto.Math.hex_to_bin
+      iex> ecies_encoded_msg = "049871eb081567823267592abac8ec9e9fddfdece7901a15f233b53f304d7860686c21601ba1a7f56680e22d0ac03eccd08e496469514c25ae1d5e55f391c1956f0102030405060708090a0b0c0d0e0f101fefb4ac96a13d9528319f48fb280b64588ce2b8bb3e589d1dafe137fb965a79248ee15739" |> ExCrypto.Math.hex_to_bin
       iex> ExCrypto.ECIES.decrypt(ExCrypto.Test.private_key(:key_a), ecies_encoded_msg, "shared_info_1", "shared_info_2")
-      {:ok, <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0>> <> "hello"}
+      {:ok, "hello"}
   """
   @spec decrypt(ExCrypto.private_key, binary(), binary(), binary()) :: {:ok, Cipher.plaintext} | {:error, String.t}
-  def decrypt(my_static_private_key, ecies_encoded_msg, shared_info_1, shared_info_2) do
+  def decrypt(my_static_private_key, ecies_encoded_msg, shared_info_1 \\ <<>>, shared_info_2 \\ <<>>) do
     params = Parameters.ecies_aes128_sha256() # TODO: Why?
 
     # Get size of key len, block size and hash len, all in bits
@@ -109,7 +114,7 @@ defmodule ExCrypto.ECIES do
     header_size_bits = header_size * 8
     key_len = params.key_len
     private_key_len = byte_size(my_static_private_key)
-    public_key_len = 1 + private_key_len * 2 # based on DER encoding
+    public_key_len = private_key_len * 2
     hash_len = Parameters.hash_len(params)
     encoded_message_len = byte_size(ecies_encoded_msg) - header_size - public_key_len - key_len - hash_len
 
@@ -118,16 +123,17 @@ defmodule ExCrypto.ECIES do
       # SEC1 - §5.1.4 - Step 1
       # Note, we only allow 0x04 as the header byte
       <<
-          0x04::size(header_size_bits),                          # header
-          her_ephemeral_public_key::binary-size(public_key_len), # public key
-          cipher_iv::binary-size(key_len),                       # cipher iv
-          encoded_message::binary-size(encoded_message_len),     # encoded_message
-          message_tag::binary-size(hash_len)>> ->                # message tag
+          0x04::size(header_size_bits),                              # header
+          her_ephemeral_public_key_raw::binary-size(public_key_len), # public key
+          cipher_iv::binary-size(key_len),                           # cipher iv
+          encoded_message::binary-size(encoded_message_len),         # encoded_message
+          message_tag::binary-size(hash_len)>> ->                    # message tag
 
         # TODO: SEC1 - §5.1.4 - Steps 2, 3 - Verify curve
 
         # SEC1 - §5.1.4 - Steps 4, 5
         # Generate a shared secret based on our ephemeral private key and the ephemeral public key from the message
+        her_ephemeral_public_key = <<0x04::size(8)>> <> her_ephemeral_public_key_raw
         shared_secret = ECDH.generate_shared_secret(my_static_private_key, her_ephemeral_public_key, @curve_name)
 
         # SEC1 - §5.1.4 - Step 6

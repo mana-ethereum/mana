@@ -50,4 +50,20 @@ defmodule ExCrypto.Math do
   @spec bin_to_hex(binary()) :: String.t
   def bin_to_hex(bin), do: Base.encode16(bin, case: :lower)
 
+  @doc """
+  Generate a random nonce value of specified length.
+
+  ## Examples
+
+      iex> ExCrypto.Math.nonce(32) |> byte_size
+      32
+
+      iex> ExCrypto.Math.nonce(32) == ExCrypto.Math.nonce(32)
+      false
+  """
+  @spec nonce(integer()) :: binary()
+  def nonce(nonce_size) do
+    :crypto.strong_rand_bytes(nonce_size)
+  end
+
 end
