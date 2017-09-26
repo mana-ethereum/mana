@@ -3,7 +3,7 @@ defmodule ExCrypto.Mixfile do
 
   def project do
     [app: :ex_crypto,
-     version: "0.1.0",
+     version: "0.1.1",
      elixir: "~> 1.4",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
@@ -29,11 +29,12 @@ defmodule ExCrypto.Mixfile do
   # Type "mix help deps" for more examples and options
   defp deps do
     [
-      {:libsecp256k1, "~> 0.1.2"},
+      {:libsecp256k1, "~> 0.1.3"},
       {:keccakf1600, "~> 2.0.0", hex: :keccakf1600_orig},
       {:credo, "~> 0.8", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.14", only: :dev, runtime: false},
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
+      {:binary, "~> 0.0.4"},
     ]
   end
 end
