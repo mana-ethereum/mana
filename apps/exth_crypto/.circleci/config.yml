@@ -1,6 +1,6 @@
 jobs:
   build:
-    working_directory: ~/ex_crypto
+    working_directory: ~/exth_crypto
     docker:
       - image: elixir:latest
     steps:

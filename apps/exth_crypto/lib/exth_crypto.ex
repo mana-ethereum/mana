@@ -25,5 +25,5 @@ defmodule ExthCrypto do
   def raw_to_der(public_key) do
     <<0x04>> <> public_key
   end
-  
+
 end
