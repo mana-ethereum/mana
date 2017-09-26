@@ -10,11 +10,11 @@ use Mix.Config
 
 # You can configure for your application as:
 #
-#     config :ex_crypto, key: :value
+#     config :exth_crypto, key: :value
 #
 # And access this configuration in your application as:
 #
-#     Application.get_env(:ex_crypto, :key)
+#     Application.get_env(:exth_crypto, :key)
 #
 # Or configure a 3rd-party app:
 #

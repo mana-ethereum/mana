@@ -1,4 +1,4 @@
-defmodule ExCrypto.Test do
+defmodule ExthCrypto.Test do
   @moduledoc """
   A variety of helper functions to make the tests consistent
   in their usage of keys, etc.

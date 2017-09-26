@@ -1,5 +1,5 @@
-defmodule ExCrypto.ECIES.ParametersTest do
+defmodule ExthCrypto.ECIES.ParametersTest do
   use ExUnit.Case
-  doctest ExCrypto.ECIES.Parameters
+  doctest ExthCrypto.ECIES.Parameters
 
 end

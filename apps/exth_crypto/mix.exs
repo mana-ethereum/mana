@@ -1,15 +1,15 @@
-defmodule ExCrypto.Mixfile do
+defmodule ExthCrypto.Mixfile do
   use Mix.Project
 
   def project do
-    [app: :ex_crypto,
+    [app: :exth_crypto,
      version: "0.1.0",
      elixir: "~> 1.4",
-     description: "Ethereum's Crypto Suite.",
+     description: "Exthereum's Crypto Suite.",
       package: [
         maintainers: ["Geoffrey Hayes", "Mason Fischer"],
         licenses: ["MIT"],
-        links: %{"GitHub" => "https://github.com/exthereum/ex_crypto"}
+        links: %{"GitHub" => "https://github.com/exthereum/exth_crypto"}
       ],
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,

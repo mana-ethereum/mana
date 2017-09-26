@@ -1,5 +1,5 @@
-defmodule ExCrypto.MACTest do
+defmodule ExthCrypto.MACTest do
   use ExUnit.Case
-  doctest ExCrypto.MAC
+  doctest ExthCrypto.MAC
 
 end

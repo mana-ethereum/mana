@@ -1,5 +1,5 @@
-defmodule ExCrypto.KDF.NistSp80056Test do
+defmodule ExthCrypto.KDF.NistSp80056Test do
   use ExUnit.Case
-  doctest ExCrypto.KDF.NistSp80056
+  doctest ExthCrypto.KDF.NistSp80056
 
 end

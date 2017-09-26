@@ -1,4 +1,4 @@
-defmodule ExCrypto do
+defmodule ExthCrypto do
   @moduledoc """
   Handles the general crypto stuff.
   """

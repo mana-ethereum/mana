@@ -1,5 +1,5 @@
-defmodule ExCrypto.Hash.KeccakTest do
+defmodule ExthCrypto.Hash.KeccakTest do
   use ExUnit.Case
-  doctest ExCrypto.Hash.Keccak
+  doctest ExthCrypto.Hash.Keccak
 
 end

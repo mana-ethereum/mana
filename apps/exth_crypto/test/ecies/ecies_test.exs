@@ -1,5 +1,5 @@
-defmodule ExCrypto.ECIESTest do
+defmodule ExthCrypto.ECIESTest do
   use ExUnit.Case
-  doctest ExCrypto.ECIES
+  doctest ExthCrypto.ECIES
 
 end

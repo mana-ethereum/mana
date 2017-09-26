@@ -1,4 +1,4 @@
-defmodule ExCrypto.Math do
+defmodule ExthCrypto.Math do
   @moduledoc """
   Helpers for basic math functions.
   """
@@ -8,16 +8,16 @@ defmodule ExCrypto.Math do
 
   ## Examples
 
-      iex> ExCrypto.Math.mod(5, 2)
+      iex> ExthCrypto.Math.mod(5, 2)
       1
 
-      iex> ExCrypto.Math.mod(-5, 1337)
+      iex> ExthCrypto.Math.mod(-5, 1337)
       1332
 
-      iex> ExCrypto.Math.mod(1337 + 5, 1337)
+      iex> ExthCrypto.Math.mod(1337 + 5, 1337)
       5
 
-      iex> ExCrypto.Math.mod(0, 1337)
+      iex> ExthCrypto.Math.mod(0, 1337)
       0
   """
   def mod(x, n) when x > 0, do: rem x, n
@@ -29,7 +29,7 @@ defmodule ExCrypto.Math do
 
   ## Examples
 
-      iex> ExCrypto.Math.hex_to_bin("01020a0d")
+      iex> ExthCrypto.Math.hex_to_bin("01020a0d")
       <<0x01, 0x02, 0x0a, 0x0d>>
   """
   @spec hex_to_bin(String.t) :: binary()
@@ -46,19 +46,19 @@ defmodule ExCrypto.Math do
 
   ## Examples
 
-      iex> ExCrypto.Math.pad(<<1, 2, 3>>, 6)
+      iex> ExthCrypto.Math.pad(<<1, 2, 3>>, 6)
       <<0x00, 0x00, 0x00, 0x01, 0x02, 0x03>>
 
-      iex> ExCrypto.Math.pad(<<1, 2, 3>>, 4)
+      iex> ExthCrypto.Math.pad(<<1, 2, 3>>, 4)
       <<0x00, 0x01, 0x02, 0x03>>
 
-      iex> ExCrypto.Math.pad(<<1, 2, 3>>, 3)
+      iex> ExthCrypto.Math.pad(<<1, 2, 3>>, 3)
       <<0x01, 0x02, 0x03>>
 
-      iex> ExCrypto.Math.pad(<<1, 2, 3>>, 0)
+      iex> ExthCrypto.Math.pad(<<1, 2, 3>>, 0)
       ** (ArgumentError) argument error
 
-      iex> ExCrypto.Math.pad(<<>>, 0)
+      iex> ExthCrypto.Math.pad(<<>>, 0)
       <<>>
   """
   @spec pad(binary(), integer()) :: binary()
@@ -73,7 +73,7 @@ defmodule ExCrypto.Math do
 
   ## Examples
 
-      iex> ExCrypto.Math.bin_to_hex(<<0x01, 0x02, 0x0a, 0x0d>>)
+      iex> ExthCrypto.Math.bin_to_hex(<<0x01, 0x02, 0x0a, 0x0d>>)
       "01020a0d"
   """
   @spec bin_to_hex(binary()) :: String.t
@@ -84,10 +84,10 @@ defmodule ExCrypto.Math do
 
   ## Examples
 
-      iex> ExCrypto.Math.nonce(32) |> byte_size
+      iex> ExthCrypto.Math.nonce(32) |> byte_size
       32
 
-      iex> ExCrypto.Math.nonce(32) == ExCrypto.Math.nonce(32)
+      iex> ExthCrypto.Math.nonce(32) == ExthCrypto.Math.nonce(32)
       false
   """
   @spec nonce(integer()) :: binary()

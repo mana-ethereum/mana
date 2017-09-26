@@ -1,4 +1,4 @@
-defmodule ExCrypto.ECIES.Parameters do
+defmodule ExthCrypto.ECIES.Parameters do
   @moduledoc """
   Returns one set of the Standard ECIES parameters:
 
@@ -17,8 +17,8 @@ defmodule ExCrypto.ECIES.Parameters do
 
   @type t :: %__MODULE__{
     mac: :crypto.hash_algorithms,
-    hasher: ExCrypto.hash_type,
-    cipher: ExCrypto.cipher,
+    hasher: ExthCrypto.hash_type,
+    cipher: ExthCrypto.cipher,
     key_len: integer()
   }
 
@@ -30,8 +30,8 @@ defmodule ExCrypto.ECIES.Parameters do
   def ecies_aes128_sha256 do
     %__MODULE__{
       mac: :sha256,
-      hasher: {&ExCrypto.Hash.SHA.sha256/1, nil, 32},
-      cipher: {ExCrypto.AES, ExCrypto.AES.block_size, :ctr},
+      hasher: {&ExthCrypto.Hash.SHA.sha256/1, nil, 32},
+      cipher: {ExthCrypto.AES, ExthCrypto.AES.block_size, :ctr},
       key_len: 16,
     }
   end
@@ -44,8 +44,8 @@ defmodule ExCrypto.ECIES.Parameters do
   def ecies_aes256_sha256 do
     %__MODULE__{
       mac: :sha256,
-      hasher: {&ExCrypto.Hash.SHA.sha256/1, nil, 32},
-      cipher: {ExCrypto.AES, ExCrypto.AES.block_size, :ctr},
+      hasher: {&ExthCrypto.Hash.SHA.sha256/1, nil, 32},
+      cipher: {ExthCrypto.AES, ExthCrypto.AES.block_size, :ctr},
       key_len: 32,
     }
   end
@@ -58,8 +58,8 @@ defmodule ExCrypto.ECIES.Parameters do
   def ecies_aes256_sha384 do
     %__MODULE__{
       mac: :sha256,
-      hasher: {&ExCrypto.Hash.SHA.sha384/1, nil, 48},
-      cipher: {ExCrypto.AES, ExCrypto.AES.block_size, :ctr},
+      hasher: {&ExthCrypto.Hash.SHA.sha384/1, nil, 48},
+      cipher: {ExthCrypto.AES, ExthCrypto.AES.block_size, :ctr},
       key_len: 32,
     }
   end
@@ -72,8 +72,8 @@ defmodule ExCrypto.ECIES.Parameters do
   def ecies_aes256_sha512 do
     %__MODULE__{
       mac: :sha256,
-      hasher: {&ExCrypto.Hash.SHA.sha512/1, nil, 64},
-      cipher: {ExCrypto.AES, ExCrypto.AES.block_size, :ctr},
+      hasher: {&ExthCrypto.Hash.SHA.sha512/1, nil, 64},
+      cipher: {ExthCrypto.AES, ExthCrypto.AES.block_size, :ctr},
       key_len: 32,
     }
   end
@@ -83,7 +83,7 @@ defmodule ExCrypto.ECIES.Parameters do
 
   ## Examples
 
-      iex> ExCrypto.ECIES.Parameters.block_size(ExCrypto.ECIES.Parameters.ecies_aes256_sha512)
+      iex> ExthCrypto.ECIES.Parameters.block_size(ExthCrypto.ECIES.Parameters.ecies_aes256_sha512)
       32
   """
   @spec block_size(t) :: integer()
@@ -98,10 +98,10 @@ defmodule ExCrypto.ECIES.Parameters do
 
   ## Examples
 
-      iex> ExCrypto.ECIES.Parameters.hash_len(ExCrypto.ECIES.Parameters.ecies_aes256_sha256)
+      iex> ExthCrypto.ECIES.Parameters.hash_len(ExthCrypto.ECIES.Parameters.ecies_aes256_sha256)
       32
 
-      iex> ExCrypto.ECIES.Parameters.hash_len(ExCrypto.ECIES.Parameters.ecies_aes256_sha512)
+      iex> ExthCrypto.ECIES.Parameters.hash_len(ExthCrypto.ECIES.Parameters.ecies_aes256_sha512)
       64
   """
   @spec hash_len(t) :: integer()

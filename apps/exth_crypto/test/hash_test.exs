@@ -1,5 +1,5 @@
-defmodule ExCrypto.HashTest do
+defmodule ExthCrypto.HashTest do
   use ExUnit.Case
-  doctest ExCrypto.Hash
+  doctest ExthCrypto.Hash
 
 end

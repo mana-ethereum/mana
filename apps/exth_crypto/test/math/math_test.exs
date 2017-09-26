@@ -1,5 +1,5 @@
-defmodule ExCrypto.MathTest do
+defmodule ExthCrypto.MathTest do
   use ExUnit.Case
-  doctest ExCrypto.Math
+  doctest ExthCrypto.Math
 
 end

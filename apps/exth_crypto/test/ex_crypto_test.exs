@@ -1,6 +1,6 @@
-defmodule ExCryptoTest do
+defmodule ExthCryptoTest do
   use ExUnit.Case
-  doctest ExCrypto
+  doctest ExthCrypto
 
   test "the truth" do
     assert 1 + 1 == 2

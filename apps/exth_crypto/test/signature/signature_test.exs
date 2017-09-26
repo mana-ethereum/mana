@@ -1,5 +1,5 @@
-defmodule ExCrypto.SignatureTest do
+defmodule ExthCrypto.SignatureTest do
   use ExUnit.Case
-  doctest ExCrypto.Signature
+  doctest ExthCrypto.Signature
 
 end

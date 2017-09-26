@@ -1,15 +1,15 @@
-defmodule ExCrypto.ECIES do
+defmodule ExthCrypto.ECIES do
   @moduledoc """
   Defines ECIES, as it pertains to Ethereum.
 
   This is derived primarily from [SEC 1: Elliptic Curve Cryptography](http://www.secg.org/sec1-v1.99.dif.pdf)
   """
 
-  alias ExCrypto.ECIES.Parameters
-  alias ExCrypto.ECIES.ECDH
-  alias ExCrypto.MAC
-  alias ExCrypto.Hash
-  alias ExCrypto.Cipher
+  alias ExthCrypto.ECIES.Parameters
+  alias ExthCrypto.ECIES.ECDH
+  alias ExthCrypto.MAC
+  alias ExthCrypto.Hash
+  alias ExthCrypto.Cipher
 
   @curve_name :secp256k1
 
@@ -26,19 +26,19 @@ defmodule ExCrypto.ECIES do
 
   ## Examples
 
-      iex> {:ok, enc} = ExCrypto.ECIES.encrypt(ExCrypto.Test.public_key(:key_a), "hello", "shared_info_1", "shared_info_2", ExCrypto.Test.key_pair(:key_b), ExCrypto.Test.init_vector)
-      iex> enc |> ExCrypto.Math.bin_to_hex
+      iex> {:ok, enc} = ExthCrypto.ECIES.encrypt(ExthCrypto.Test.public_key(:key_a), "hello", "shared_info_1", "shared_info_2", ExthCrypto.Test.key_pair(:key_b), ExthCrypto.Test.init_vector)
+      iex> enc |> ExthCrypto.Math.bin_to_hex
       "049871eb081567823267592abac8ec9e9fddfdece7901a15f233b53f304d7860686c21601ba1a7f56680e22d0ac03eccd08e496469514c25ae1d5e55f391c1956f0102030405060708090a0b0c0d0e0f10a6c88ba08a258e9e5b5124997ee1b502570f933d4fc0b48cef5a504749e4eac1a56f3211de"
 
       # Test overhead is exactly 113 bytes
       iex> msg = "The quick brown fox jumped over the lazy dog."
-      iex> {:ok, enc} = ExCrypto.ECIES.encrypt(ExCrypto.Test.public_key(:key_a), msg, "shared_info_1", "shared_info_2", ExCrypto.Test.key_pair(:key_b), ExCrypto.Test.init_vector)
+      iex> {:ok, enc} = ExthCrypto.ECIES.encrypt(ExthCrypto.Test.public_key(:key_a), msg, "shared_info_1", "shared_info_2", ExthCrypto.Test.key_pair(:key_b), ExthCrypto.Test.init_vector)
       iex> byte_size(enc) - byte_size(msg)
       113
 
       # TODO: More tests
   """
-  @spec encrypt(ExCrypto.public_key, Cipher.plaintext, binary(), binary(), {ExCrypto.public_key, ExCrypto.private_key} | nil, Cipher.init_vector | nil) :: {:ok, binary()} | {:error, String.t}
+  @spec encrypt(ExthCrypto.public_key, Cipher.plaintext, binary(), binary(), {ExthCrypto.public_key, ExthCrypto.private_key} | nil, Cipher.init_vector | nil) :: {:ok, binary()} | {:error, String.t}
   def encrypt(her_static_public_key, message, shared_info_1 \\ <<>>, shared_info_2 \\ <<>>, my_ephemeral_key_pair \\ nil, init_vector \\ nil) do
     params = Parameters.ecies_aes128_sha256() # TODO: Why?
     key_len = params.key_len
@@ -60,7 +60,7 @@ defmodule ExCrypto.ECIES do
 
     # Next, derive a KDF twice the length as needed, with shared_info_1 as the extra_data
     # SEC1 - §5.1.3 - Step 5
-    kdf = ExCrypto.KDF.NistSp80056.single_step_kdf(shared_secret, 2 * params.key_len, params.hasher, shared_info_1)
+    kdf = ExthCrypto.KDF.NistSp80056.single_step_kdf(shared_secret, 2 * params.key_len, params.hasher, shared_info_1)
 
     # The first half becomes the encoded key, the second half becomes a mac
     with {:ok, derived_keys} <- kdf do
@@ -78,7 +78,7 @@ defmodule ExCrypto.ECIES do
       message_tag = MAC.mac(init_vector <> encoded_message <> shared_info_2, key_mac_hashed, params.mac)
 
       # Remove DER encoding byte
-      my_ephemeral_public_key_raw = ExCrypto.der_to_raw(my_ephemeral_public_key)
+      my_ephemeral_public_key_raw = ExthCrypto.der_to_raw(my_ephemeral_public_key)
 
       # return 0x04 || R || AsymmetricEncrypt(shared-secret, plaintext) || tag
       {:ok, <<0x04>> <> my_ephemeral_public_key_raw <> init_vector <> encoded_message <> message_tag}
@@ -100,11 +100,11 @@ defmodule ExCrypto.ECIES do
 
   ## Examples
 
-      iex> ecies_encoded_msg = "049871eb081567823267592abac8ec9e9fddfdece7901a15f233b53f304d7860686c21601ba1a7f56680e22d0ac03eccd08e496469514c25ae1d5e55f391c1956f0102030405060708090a0b0c0d0e0f10a6c88ba08a258e9e5b5124997ee1b502570f933d4fc0b48cef5a504749e4eac1a56f3211de" |> ExCrypto.Math.hex_to_bin
-      iex> ExCrypto.ECIES.decrypt(ExCrypto.Test.private_key(:key_a), ecies_encoded_msg, "shared_info_1", "shared_info_2")
+      iex> ecies_encoded_msg = "049871eb081567823267592abac8ec9e9fddfdece7901a15f233b53f304d7860686c21601ba1a7f56680e22d0ac03eccd08e496469514c25ae1d5e55f391c1956f0102030405060708090a0b0c0d0e0f10a6c88ba08a258e9e5b5124997ee1b502570f933d4fc0b48cef5a504749e4eac1a56f3211de" |> ExthCrypto.Math.hex_to_bin
+      iex> ExthCrypto.ECIES.decrypt(ExthCrypto.Test.private_key(:key_a), ecies_encoded_msg, "shared_info_1", "shared_info_2")
       {:ok, "hello"}
   """
-  @spec decrypt(ExCrypto.private_key, binary(), binary(), binary()) :: {:ok, Cipher.plaintext} | {:error, String.t}
+  @spec decrypt(ExthCrypto.private_key, binary(), binary(), binary()) :: {:ok, Cipher.plaintext} | {:error, String.t}
   def decrypt(my_static_private_key, ecies_encoded_msg, shared_info_1 \\ <<>>, shared_info_2 \\ <<>>) do
     params = Parameters.ecies_aes128_sha256() # TODO: Why?
 
@@ -132,13 +132,13 @@ defmodule ExCrypto.ECIES do
 
         # SEC1 - §5.1.4 - Steps 4, 5
         # Generate a shared secret based on our ephemeral private key and the ephemeral public key from the message
-        her_ephemeral_public_key = ExCrypto.raw_to_der(her_ephemeral_public_key_raw)
+        her_ephemeral_public_key = ExthCrypto.raw_to_der(her_ephemeral_public_key_raw)
 
         shared_secret = ECDH.generate_shared_secret(my_static_private_key, her_ephemeral_public_key, @curve_name)
 
         # SEC1 - §5.1.4 - Step 6
         # Geneate our KDF as before
-        kdf = ExCrypto.KDF.NistSp80056.single_step_kdf(shared_secret, 2 * params.key_len, params.hasher, shared_info_1)
+        kdf = ExthCrypto.KDF.NistSp80056.single_step_kdf(shared_secret, 2 * params.key_len, params.hasher, shared_info_1)
 
         # The first half becomes the encoded key, the second half becomes a mac
         with {:ok, derived_keys} <- kdf do
