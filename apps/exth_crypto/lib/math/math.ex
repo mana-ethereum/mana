@@ -40,6 +40,35 @@ defmodule ExCrypto.Math do
   end
 
   @doc """
+  Left pads a given binary to specified length in bytes.
+
+  This function raises if binary longer than given length already.
+
+  ## Examples
+
+      iex> ExCrypto.Math.pad(<<1, 2, 3>>, 6)
+      <<0x00, 0x00, 0x00, 0x01, 0x02, 0x03>>
+
+      iex> ExCrypto.Math.pad(<<1, 2, 3>>, 4)
+      <<0x00, 0x01, 0x02, 0x03>>
+
+      iex> ExCrypto.Math.pad(<<1, 2, 3>>, 3)
+      <<0x01, 0x02, 0x03>>
+
+      iex> ExCrypto.Math.pad(<<1, 2, 3>>, 0)
+      ** (ArgumentError) argument error
+
+      iex> ExCrypto.Math.pad(<<>>, 0)
+      <<>>
+  """
+  @spec pad(binary(), integer()) :: binary()
+  def pad(bin, length) do
+    padding_bits = ( length - byte_size(bin) ) * 8
+
+    <<0x00::size(padding_bits)>> <> bin
+  end
+
+  @doc """
   Simple wrapper function to convert a binary to a hex string.
 
   ## Examples

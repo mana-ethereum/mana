@@ -1,7 +1,8 @@
-%{"bunt": {:hex, :bunt, "0.2.0", "951c6e801e8b1d2cbe58ebbd3e616a869061ddadcc4863d0a2182541acae9a38", [], [], "hexpm"},
+%{"binary": {:hex, :binary, "0.0.4", "dd077db70c0ded3e85c132b802338e14b80694684a7e2277666bfa4004b7fa66", [], [], "hexpm"},
+  "bunt": {:hex, :bunt, "0.2.0", "951c6e801e8b1d2cbe58ebbd3e616a869061ddadcc4863d0a2182541acae9a38", [], [], "hexpm"},
   "credo": {:hex, :credo, "0.8.6", "335f723772d35da499b5ebfdaf6b426bfb73590b6fcbc8908d476b75f8cbca3f", [], [{:bunt, "~> 0.2.0", [hex: :bunt, repo: "hexpm", optional: false]}], "hexpm"},
   "dialyxir": {:hex, :dialyxir, "0.5.1", "b331b091720fd93e878137add264bac4f644e1ddae07a70bf7062c7862c4b952", [], [], "hexpm"},
   "earmark": {:hex, :earmark, "1.2.3", "206eb2e2ac1a794aa5256f3982de7a76bf4579ff91cb28d0e17ea2c9491e46a4", [], [], "hexpm"},
   "ex_doc": {:hex, :ex_doc, "0.16.4", "4bf6b82d4f0a643b500366ed7134896e8cccdbab4d1a7a35524951b25b1ec9f0", [], [{:earmark, "~> 1.1", [hex: :earmark, repo: "hexpm", optional: false]}], "hexpm"},
   "keccakf1600": {:hex, :keccakf1600_orig, "2.0.0", "0a7217ddb3ee8220d449bbf7575ec39d4e967099f220a91e3dfca4dbaef91963", [], [], "hexpm"},
-  "libsecp256k1": {:hex, :libsecp256k1, "0.1.2", "56afd5b2b406f11dbc2f478498632928b3fcc4892506b8114e7474988d612385", [], [], "hexpm"}}
+  "libsecp256k1": {:hex, :libsecp256k1, "0.1.3", "57468b986af7c9633527875f71c7ca08bf4150b07b38a60d5bd48fba299ff6c1", [:rebar3], [], "hexpm"}}
