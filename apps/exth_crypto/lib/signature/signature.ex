@@ -51,7 +51,7 @@ defmodule ExCrypto.Signature do
   def sign_digest(digest, private_key) do
     {:ok, <<r::size(256), s::size(256)>>=signature, recovery_id} = :libsecp256k1.ecdsa_sign_compact(digest, private_key, :default, <<>>)
 
-    sign_digest(digest, private_key)
+    {signature, r, s, recovery_id}
   end
 
   @doc """
