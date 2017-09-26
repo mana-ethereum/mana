@@ -54,10 +54,7 @@ defmodule ExWire.Handshake do
     }
   end
 
-  # const V4_AUTH_PACKET_SIZE: usize = 307;
-  # const V4_ACK_PACKET_SIZE: usize = 210;
-  # const HANDSHAKE_TIMEOUT: u64 = 5000;
-
+  # @handshake_timeout 5000
   @protocol_version 4
 
   # RLPx v4 handshake auth (defined in EIP-8).
@@ -275,56 +272,6 @@ defmodule ExWire.Handshake do
   # end
 
   @doc """
-  From the (updated) docs here: https://github.com/ethereum/devp2p/pull/34/files
-
-  ```
-  The initiator generates a random key pair, nonce and constructs `enc-auth-msg-initiator`, which it then sends to the recipient.
- 
-      version = 0x0000000000000005
-      token-flag = 0x00
-      initiator-nonce = <24 random bytes>
-      initiator-nonce-data = nonce || version
-      static-shared-secret = ecdh.agree(initiator-privk, recipient-pubk)
-      initiator-sig =
-          sign(initiator-ephemeral-privk, static-shared-secret ^ initiator-nonce-data)
-      auth-msg-initiator =
-          initiator-sig ||
-          sha3(initiator-ephemeral-pubk) ||
-          initiator-pubk ||
-          nonce ||
-          version ||
-          token-flag
-      enc-auth-msg-initiator = ecies.encrypt(recipient-pubk, auth-msg-initiator)
-  ```
-  """
-  # @spec make_auth_msg(ExthCrypto.Key.private_key, token) :: {:ok, AuthMsgV4.t} | {:error, String.t}
-  # def make_auth_msg(node_id, token) do
-  #   my_ephemeral_private_key = .. #
-
-  #   with {:ok, public_key} <- Crypto.node_id(private_key) do
-  #     version = <<0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05>>
-  #     token_flag = <<0x00>>
-
-  #     initiator_nonce = ExthCrypto.Math.nonce(24) # TODO: Shalen
-  #     initiator_nonce_data = nonce <> version
-  #     static_shared_secret = ExthCrypto.ECDH(my_static_private_key, her_static_public_key)
-  #     initator_sig = ExthCrypto.Signature.sign(static_shared_secret ^ initiator_nonce_data, my_ephemeral_private_key)
-  #     auth_msg_initiator =
-  #       initator_sig <>
-  #       sha3(my_ephemeral_public_key) <>
-  #       my_static_public_key <>
-  #       nonce <>
-  #       version <>
-  #       token_flag
-
-  #     # TODO: Add optional params such as my_ephemeral_key_pair or init_vector?
-  #     enc_auth_msg_initiator = ExthCrypto.ECIES.encrypt(her_static_public_key, auth_msg_initiator, <<>>, <<>>)
-
-  #   end
-  # end
-
-
-  @doc """
   After dailing a connection, perform handshake to generate secure connection.
 
   # TODO: Conn?
@@ -337,12 +284,5 @@ defmodule ExWire.Handshake do
   #     initiator: true,
   #     remote_id: node_id,
   #   }
-    
-
-
-
-
-
   # end
-
 end

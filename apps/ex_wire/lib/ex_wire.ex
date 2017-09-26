@@ -5,7 +5,7 @@ defmodule ExWire do
   """
 
   @network_adapter Application.get_env(:ex_wire, :network_adapter)
-  @port Application.get_env(:ex_wire, :port, 30333)
+  @port Application.get_env(:ex_wire, :port, 30303)
   @private_key Application.get_env(:ex_wire, :private_key)
 
   @type node_id :: binary()
