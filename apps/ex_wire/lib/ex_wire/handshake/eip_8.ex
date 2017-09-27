@@ -17,7 +17,8 @@ defmodule ExWire.Handshake.EIP8 do
 
   ## Examples
 
-      iex> ExWire.Handshake.EIP8.wrap_eip_8(["jedi", "knight"], ExthCrypto.Test.public_key, "1.2.3.4", ExthCrypto.Test.key_pair(:key_b), ExthCrypto.Test.init_vector, ExthCrypto.Test.init_vector(1, 100)) |> ExthCrypto.Math.bin_to_hex
+      iex> {:ok, bin} = ExWire.Handshake.EIP8.wrap_eip_8(["jedi", "knight"], ExthCrypto.Test.public_key, "1.2.3.4", ExthCrypto.Test.key_pair(:key_b), ExthCrypto.Test.init_vector, ExthCrypto.Test.init_vector(1, 100))
+      iex> bin |> ExthCrypto.Math.bin_to_hex
       "00e6049871eb081567823267592abac8ec9e9fddfdece7901a15f233b53f304d7860686c21601ba1a7f56680e22d0ac03eccd08e496469514c25ae1d5e55f391c1956f0102030405060708090a0b0c0d0e0f102cb1de6abaaa6f731dbe4cd77135af3c6c48aaa361de5610e901a4b761b588aee253fa658c3a7f8f467b5b36381c197a0d6b5ac6f3c6beba5cd455bc9fe98d621707dcb9a51a4895040a1dcbd1a6a32af7d8d407f2a54c0346a28806e597f52b42a59404697f4e913fd38cd2bfecdac553b1987f1b61049f516053a5a1f8cdc9efae57748d98355864f59037e326e7ec9b2d947580"
   """
   @spec wrap_eip_8(ExRLP.t, ExthCrypto.Key.public_key, binary(), {ExthCrypto.Key.public_key, ExthCrypto.Key.private_key} | nil, Cipher.init_vector | nil, binary() | nil) :: {:ok, binary()} | {:error, String.t}
@@ -56,7 +57,7 @@ defmodule ExWire.Handshake.EIP8 do
       else
         # auth-packet      = auth-size || enc-auth-body
         # EIP Question: Doesn't RLP already handle size definitions?
-        auth_size <> enc_auth_body
+        {:ok, auth_size <> enc_auth_body}
       end
     end
   end
