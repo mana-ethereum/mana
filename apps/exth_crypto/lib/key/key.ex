@@ -8,6 +8,7 @@ defmodule ExthCrypto.Key do
   @type public_key :: binary()
   @type private_key_der :: binary()
   @type private_key :: binary()
+  @type key_pair :: {public_key, private_key}
 
   @doc """
   Converts a key from der to raw format.

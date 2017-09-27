@@ -20,7 +20,7 @@ defmodule ExthCrypto.ECIES.ECDH do
       iex> {public_key, private_key} == :crypto.generate_key(:ecdh, :secp256k1, private_key)
       true
   """
-  @spec new_ecdh_keypair(ExthCrypto.named_curve) :: {ExthCrypto.Key.public_key, ExthCrypto.Key.private_key}
+  @spec new_ecdh_keypair(ExthCrypto.named_curve) :: ExthCrypto.Key.keypair
   def new_ecdh_keypair(curve \\ @default_curve) when is_atom(curve) do
     :crypto.generate_key(:ecdh, curve)
   end
