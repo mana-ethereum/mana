@@ -267,7 +267,7 @@ defmodule ExWire.Handshake do
         }
       }
   """
-  @spec build_auth_msg(ExthCrypto.Key.public_key, ExthCrypto.Key.private_key, ExthCrypto.Key.public_key, binary() | nil, ExthCrypto.Key.key_pair | nil) :: {AuthMsgV4.t, ExthCrypto.Key.key_pair}
+  @spec build_auth_msg(ExthCrypto.Key.public_key, ExthCrypto.Key.private_key, ExthCrypto.Key.public_key, binary() | nil, ExthCrypto.Key.key_pair | nil) :: {AuthMsgV4.t, ExthCrypto.Key.key_pair, binary()}
   def build_auth_msg(my_static_public_key, my_static_private_key, her_static_public_key, nonce \\ nil, my_ephemeral_keypair \\ nil) do
 
     # Geneate a random ephemeral keypair
@@ -285,18 +285,18 @@ defmodule ExWire.Handshake do
     shared_secret_xor_nonce = :crypto.exor(shared_secret, nonce)
 
     # Sign xor'd secret
-    {signature, _, _, _} = ExthCrypto.Signature.sign_digest(shared_secret_xor_nonce, my_ephemeral_public_key)
+    {signature, _, _, recovery_id} = ExthCrypto.Signature.sign_digest(shared_secret_xor_nonce, my_ephemeral_public_key)
 
     # Build an auth message to send over the wire
     auth_msg = %AuthMsgV4{
-      signature: signature,
+      signature: signature <> :binary.encode_unsigned(recovery_id),
       remote_public_key: my_static_public_key,
       remote_nonce: nonce,
       remote_version: @protocol_version
     }
 
     # Return auth_msg and my new key pair
-    {auth_msg, my_ephemeral_keypair}
+    {auth_msg, my_ephemeral_keypair, nonce}
   end
 
   @doc """

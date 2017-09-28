@@ -35,7 +35,8 @@ defmodule ExWire.Handshake.EIP8 do
         # EIP Question: why is this not just padded with zeros?
         ExthCrypto.Math.nonce(padding_length)
       padding -> padding
-    end
+    end |> :binary.bin_to_list
+    padding = ExthCrypto.Math.pad(<<>>, 100)
 
     # rlp.list(sig, initiator-pubk, initiator-nonce, auth-vsn)
     # EIP Question: Why is random appended at the end? Is this going to make it hard to upgrade the protocol?

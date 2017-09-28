@@ -140,17 +140,16 @@ defmodule ExWire.Struct.Endpoint do
       <<1, 0>>
 
       iex> ExWire.Struct.Endpoint.encode_port(nil)
-      <<>>
+      <<0, 0>>
 
       iex> ExWire.Struct.Endpoint.encode_port(0)
-      <<>>
+      <<0, 0>>
   """
   @spec encode_port(ip_port | nil) :: binary()
   def encode_port(port) do
     case port do
       nil -> <<>>
-      0 -> <<>>
-      _ -> :binary.encode_unsigned(port)
+      _ -> port |> :binary.encode_unsigned |> ExthCrypto.Math.pad(2)
     end
   end
 end

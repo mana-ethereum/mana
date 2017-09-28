@@ -18,6 +18,11 @@ defmodule ExWire do
   """
   @spec private_key() :: ExthCrypto.Key.private_key()
   def private_key, do: @private_key
+  def public_key do
+    {:ok, public_key} = ExthCrypto.Signature.get_public_key(private_key())
+
+    public_key
+  end
 
   def start(_type, args) do
     import Supervisor.Spec

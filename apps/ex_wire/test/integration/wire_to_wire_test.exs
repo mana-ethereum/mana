@@ -1,4 +1,9 @@
 defmodule WireToWireTest do
+  @moduledoc """
+  This test starts a server and connects a peer to it. It
+  checks that a PING / PONG can be successfully communicated.
+  """
+
   use ExUnit.Case, async: true
 
   @moduletag integration: true
