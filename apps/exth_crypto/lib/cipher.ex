@@ -7,6 +7,7 @@ defmodule ExthCrypto.Cipher do
   @type plaintext :: iodata()
   @type ciphertext :: binary()
   @type init_vector :: binary()
+  @opaque stream :: :crypto.ctr_state
 
   @doc """
   Encrypts the given plaintext for the given block cipher.

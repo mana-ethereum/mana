@@ -8,6 +8,7 @@ defmodule ExthCrypto.Hash.Keccak do
   """
 
   @type keccak_hash :: ExthCrypto.hash
+  @type keccak_mac :: {atom(), binary()}
 
   @doc """
   Returns the keccak sha256 of a given input.
@@ -28,4 +29,52 @@ defmodule ExthCrypto.Hash.Keccak do
   def kec(data) do
     :keccakf1600.sha3_256(data)
   end
+
+  @doc """
+  Initializes a new Keccak mac stream.
+
+  ## Examples
+
+      iex> keccak_mac = ExthCrypto.Hash.Keccak.init_mac()
+      iex> is_nil(keccak_mac)
+      false
+  """
+  @spec init_mac() :: keccak_mac
+  def init_mac() do
+    :keccakf1600.init(:sha3_256)
+  end
+
+  @doc """
+  Updates a given Keccak mac stream with the given
+  secret and data, returning a new mac stream.
+
+  ## Examples
+
+      iex> keccak_mac = ExthCrypto.Hash.Keccak.init_mac()
+      ...> |> ExthCrypto.Hash.Keccak.update_mac("data")
+      iex> is_nil(keccak_mac)
+      false
+  """
+  @spec update_mac(keccak_mac, binary()) :: keccak_mac
+  def update_mac(mac, data) do
+    :keccakf1600.update(mac, data)
+  end
+
+  @doc """
+  Finalizes a given Keccak mac stream to produce the current
+  hash.
+
+  ## Examples
+
+      iex> ExthCrypto.Hash.Keccak.init_mac()
+      ...> |> ExthCrypto.Hash.Keccak.update_mac("data")
+      ...> |> ExthCrypto.Hash.Keccak.final_mac()
+      ...> |> ExthCrypto.Math.bin_to_hex
+      "8f54f1c2d0eb5771cd5bf67a6689fcd6eed9444d91a39e5ef32a9b4ae5ca14ff"
+  """
+  @spec final_mac(keccak_mac) :: keccak_hash
+  def final_mac(mac) do
+    :keccakf1600.final(mac)
+  end
+
 end

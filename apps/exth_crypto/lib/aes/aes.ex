@@ -131,4 +131,53 @@ defmodule ExthCrypto.AES do
 
     plaintext
   end
+
+  @doc """
+  Initializes an AES stream in the given mode with a given
+  key and init vector.
+
+  ## Examples
+
+      iex> stream = ExthCrypto.AES.stream_init(:ctr, ExthCrypto.Test.symmetric_key(), ExthCrypto.Test.init_vector)
+      iex> is_nil(stream)
+      false
+  """
+  @spec stream_init(mode, ExthCrypto.symmetric_key, ExthCrypto.Cipher.init_vector) :: ExthCrypto.Cipher.stream
+  def stream_init(:ctr, symmetric_key, init_vector) do
+    :crypto.stream_init(:aes_ctr, symmetric_key, init_vector)
+  end
+
+  @doc """
+  Encrypts data with an already initialized AES stream, returning a
+  stream with updated state, as well as the ciphertext.
+
+  ## Examples
+
+      iex> stream = ExthCrypto.AES.stream_init(:ctr, ExthCrypto.Test.symmetric_key(), ExthCrypto.Test.init_vector)
+      iex> {_stream_2, ciphertext} = ExthCrypto.AES.stream_encrypt("hello", stream)
+      iex> ciphertext
+      "'d<KX"
+  """
+  @spec stream_encrypt(ExthCrypto.Cipher.plaintext, ExthCrypto.Cipher.stream) :: { ExthCrypto.Cipher.stream, ExthCrypto.Cipher.ciphertext }
+  def stream_encrypt(plaintext, stream) do
+    :crypto.stream_encrypt(stream, plaintext)
+  end
+
+  @doc """
+  Decrypts data from an already initialized AES stream, returning a
+  stream with updated state, as well as the plaintext.
+
+  ## Examples
+
+      iex> stream = ExthCrypto.AES.stream_init(:ctr, ExthCrypto.Test.symmetric_key(), ExthCrypto.Test.init_vector)
+      iex> {_stream_2, ciphertext} = ExthCrypto.AES.stream_encrypt("hello", stream)
+      iex> {_stream_3, plaintext} = ExthCrypto.AES.stream_decrypt(ciphertext, stream)
+      iex> plaintext
+      "hello"
+  """
+  @spec stream_decrypt(ExthCrypto.Cipher.ciphertext, ExthCrypto.Cipher.stream) :: { ExthCrypto.Cipher.stream, ExthCrypto.Cipher.plaintrxt }
+  def stream_decrypt(plaintext, stream) do
+    :crypto.stream_decrypt(stream, plaintext)
+  end
+
 end

@@ -40,7 +40,7 @@ defmodule ExthCrypto.ECIES do
   """
   @spec encrypt(ExthCrypto.Key.public_key, Cipher.plaintext, binary(), binary(), {ExthCrypto.Key.public_key, ExthCrypto.Key.private_key} | nil, Cipher.init_vector | nil) :: {:ok, binary()} | {:error, String.t}
   def encrypt(her_static_public_key, message, shared_info_1 \\ <<>>, shared_info_2 \\ <<>>, my_ephemeral_key_pair \\ nil, init_vector \\ nil) do
-    params = Parameters.ecies_aes128_sha256() # TODO: Why?
+    params = Parameters.ecies_aes128_sha256() # Question, is this always the parameters? If not, how do we choose?
     key_len = params.key_len
 
     # First, create a new ephemeral key pair (SEC1 - §5.1.3 - Step 1)
@@ -106,7 +106,7 @@ defmodule ExthCrypto.ECIES do
   """
   @spec decrypt(ExthCrypto.Key.private_key, binary(), binary(), binary()) :: {:ok, Cipher.plaintext} | {:error, String.t}
   def decrypt(my_static_private_key, ecies_encoded_msg, shared_info_1 \\ <<>>, shared_info_2 \\ <<>>) do
-    params = Parameters.ecies_aes128_sha256() # TODO: Why?
+    params = Parameters.ecies_aes128_sha256() # Question, is this always the parameters? If not, how do we choose?
 
     # Get size of key len, block size and hash len, all in bits
     header_size = 1
