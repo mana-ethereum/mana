@@ -3,8 +3,6 @@ defmodule ExthCrypto.AES do
   Defines standard functions for use with AES symmetric cryptography in block mode.
   """
 
-  @type mode :: :cbc | :ctr | :ecb
-
   @block_size 32
 
   @doc """
@@ -60,7 +58,7 @@ defmodule ExthCrypto.AES do
       iex> ExthCrypto.AES.encrypt("jedi knight", :ecb, ExthCrypto.Test.symmetric_key)
       <<98, 60, 215, 107, 189, 132, 176, 63, 62, 225, 92, 13, 70, 53, 187, 240>>
   """
-  @spec encrypt(ExthCrypto.Cipher.plaintext, mode, ExthCrypto.symmetric_key, ExthCrypto.Cipher.init_vector) :: ExthCrypto.Cipher.ciphertext
+  @spec encrypt(ExthCrypto.Cipher.plaintext, ExthCrypto.Cipher.mode, ExthCrypto.symmetric_key, ExthCrypto.Cipher.init_vector) :: ExthCrypto.Cipher.ciphertext
   def encrypt(plaintext, :cbc, symmetric_key, init_vector) do
     padding_bits = ( 16 - rem(byte_size(plaintext), 16) ) * 8
 
@@ -75,7 +73,7 @@ defmodule ExthCrypto.AES do
     ciphertext
   end
 
-  @spec encrypt(ExthCrypto.Cipher.plaintext, mode, ExthCrypto.symmetric_key) :: ExthCrypto.Cipher.ciphertext
+  @spec encrypt(ExthCrypto.Cipher.plaintext, ExthCrypto.Cipher.mode, ExthCrypto.symmetric_key) :: ExthCrypto.Cipher.ciphertext
   def encrypt(plaintext, :ecb, symmetric_key) do
     padding_bits = ( 16 - rem(byte_size(plaintext), 16) ) * 8
 
@@ -132,7 +130,7 @@ defmodule ExthCrypto.AES do
       iex> ExthCrypto.AES.decrypt(<<98, 60, 215, 107, 189, 132, 176, 63, 62, 225, 92, 13, 70, 53, 187, 240>>, :ecb, ExthCrypto.Test.symmetric_key)
       <<0, 0, 0, 0, 0>> <> "jedi knight"
   """
-  @spec decrypt(ExthCrypto.Cipher.ciphertext, mode, ExthCrypto.symmetric_key, ExthCrypto.Cipher.init_vector) :: ExthCrypto.Cipher.plaintext
+  @spec decrypt(ExthCrypto.Cipher.ciphertext, ExthCrypto.Cipher.mode, ExthCrypto.symmetric_key, ExthCrypto.Cipher.init_vector) :: ExthCrypto.Cipher.plaintext
   def decrypt(ciphertext, :cbc, symmetric_key, init_vector) do
     :crypto.block_decrypt(:aes_cbc, symmetric_key, init_vector, ciphertext)
   end
@@ -145,7 +143,7 @@ defmodule ExthCrypto.AES do
     plaintext
   end
 
-  @spec decrypt(ExthCrypto.Cipher.ciphertext, mode, ExthCrypto.symmetric_key) :: ExthCrypto.Cipher.plaintext
+  @spec decrypt(ExthCrypto.Cipher.ciphertext, ExthCrypto.Cipher.mode, ExthCrypto.symmetric_key) :: ExthCrypto.Cipher.plaintext
   def decrypt(ciphertext, :ecb, symmetric_key) do
     :crypto.block_decrypt(:aes_ecb, symmetric_key, ciphertext)
   end
@@ -160,7 +158,7 @@ defmodule ExthCrypto.AES do
       iex> is_nil(stream)
       false
   """
-  @spec stream_init(mode, ExthCrypto.symmetric_key, ExthCrypto.Cipher.init_vector) :: ExthCrypto.Cipher.stream
+  @spec stream_init(ExthCrypto.Cipher.mode, ExthCrypto.Key.symmetric_key, ExthCrypto.Cipher.init_vector) :: ExthCrypto.Cipher.stream
   def stream_init(:ctr, symmetric_key, init_vector) do
     :crypto.stream_init(:aes_ctr, symmetric_key, init_vector)
   end
