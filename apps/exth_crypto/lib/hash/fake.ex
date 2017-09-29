@@ -22,18 +22,18 @@ defmodule ExthCrypto.Hash.Fake do
   end
 
   @doc """
-  Updates a given Fake mac stream.
+  Updates a given Fake mac stream, which is, do nothing.
 
   ## Examples
 
-      iex> fake_mac = ExthCrypto.Hash.Fake.init_mac()
+      iex> fake_mac = ExthCrypto.Hash.Fake.init_mac("init")
       ...> |> ExthCrypto.Hash.Fake.update_mac("data")
       iex> is_nil(fake_mac)
       false
   """
   @spec update_mac(fake_mac, binary()) :: fake_mac
-  def update_mac({:fake_mac, mac}, data) do
-    {:fake_mac, mac <> data}
+  def update_mac({:fake_mac, mac}, _data) do
+    {:fake_mac, mac}
   end
 
   @doc """
@@ -45,8 +45,7 @@ defmodule ExthCrypto.Hash.Fake do
       iex> ExthCrypto.Hash.Fake.init_mac("abc")
       ...> |> ExthCrypto.Hash.Fake.update_mac("def")
       ...> |> ExthCrypto.Hash.Fake.final_mac()
-      ...> |> ExthCrypto.Math.bin_to_hex
-      "abcdef"
+      "abc"
   """
   @spec final_mac(fake_mac) :: binary()
   def final_mac({:fake_mac, mac}) do
