@@ -95,4 +95,17 @@ defmodule ExthCrypto.Math do
     :crypto.strong_rand_bytes(nonce_size)
   end
 
+  @doc """
+  Computes the xor between two equal length binaries.
+
+  ## Examples
+
+      iex> ExthCrypto.Math.xor(<<0b10101010>>, <<0b11110000>>)
+      <<0b01011010>>
+  """
+  @spec xor(binary(), binary()) :: binary()
+  def xor(a, b) when byte_size(a) == byte_size(b) do
+    :crypto.exor(a, b)
+  end
+
 end
