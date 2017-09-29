@@ -19,10 +19,18 @@ defmodule ExthCrypto.Cipher do
 
       iex> ExthCrypto.Cipher.encrypt("execute order 66", ExthCrypto.Test.symmetric_key, ExthCrypto.Test.init_vector, {ExthCrypto.AES, ExthCrypto.AES.block_size, :ctr}) |> ExthCrypto.Math.bin_to_hex
       "2a7935444247175ff635309b9274e948"
+
+      iex> ExthCrypto.Cipher.encrypt("execute order 66", ExthCrypto.Test.symmetric_key, {ExthCrypto.AES, ExthCrypto.AES.block_size, :ecb}) |> ExthCrypto.Math.bin_to_hex
+      "a73c5576667b7b43a23a9fd930b5465d637a44d08bf702881a8d4e6a5d4944b5"
   """
   @spec encrypt(plaintext, ExthCrypto.symmetric_key, init_vector, cipher) :: ciphertext
   def encrypt(plaintext, symmetric_key, init_vector, {mod, _block_size, mode} = _cipher) do
     mod.encrypt(plaintext, mode, symmetric_key, init_vector)
+  end
+
+  @spec encrypt(plaintext, ExthCrypto.symmetric_key, cipher) :: ciphertext
+  def encrypt(plaintext, symmetric_key, {mod, _block_size, mode} = _cipher) do
+    mod.encrypt(plaintext, mode, symmetric_key)
   end
 
   @doc """
@@ -39,10 +47,20 @@ defmodule ExthCrypto.Cipher do
       ...> |> ExthCrypto.Math.hex_to_bin
       ...> |> ExthCrypto.Cipher.decrypt(ExthCrypto.Test.symmetric_key, ExthCrypto.Test.init_vector, {ExthCrypto.AES, ExthCrypto.AES.block_size, :ctr})
       "execute order 66"
+
+      iex> "a73c5576667b7b43a23a9fd930b5465d637a44d08bf702881a8d4e6a5d4944b5"
+      ...> |> ExthCrypto.Math.hex_to_bin
+      ...> |> ExthCrypto.Cipher.decrypt(ExthCrypto.Test.symmetric_key, {ExthCrypto.AES, ExthCrypto.AES.block_size, :ecb})
+      <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0>> <> "execute order 66"
   """
   @spec decrypt(ciphertext, ExthCrypto.symmetric_key, init_vector, cipher) :: plaintext
   def decrypt(ciphertext, symmetric_key, init_vector, {mod, _block_size, mode} = _cipher) do
     mod.decrypt(ciphertext, mode, symmetric_key, init_vector)
+  end
+
+  @spec decrypt(ciphertext, ExthCrypto.symmetric_key, cipher) :: plaintext
+  def decrypt(ciphertext, symmetric_key, {mod, _block_size, mode} = _cipher) do
+    mod.decrypt(ciphertext, mode, symmetric_key)
   end
 
   @doc """
