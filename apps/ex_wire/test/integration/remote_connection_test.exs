@@ -6,6 +6,7 @@ defmodule ExWire.RemoteConnectionTest do
   Before starting, you'll run to run a Parity or Geth node.
 
   E.g. `cargo run -- --chain=ropsten --bootnodes=`
+  E.g. `cargo run -- --chain=ropsten --bootnodes= --logging network,discovery=trace`
   """
   use ExUnit.Case, async: true
 
@@ -16,7 +17,7 @@ defmodule ExWire.RemoteConnectionTest do
   @local_peer_port 35353
   @local_tcp_port 36363
 
-  @public_node_url "enode://4581188ce6e4af8f6c755481994d7df1532e3a427ee1e48811559f3f778f9727662cbbd7ce0213ebfb246629148958492995ae80bad44b017bd8d160f5789f1d@192.168.1.2:30303"
+  @public_node_url "enode://4581188ce6e4af8f6c755481994d7df1532e3a427ee1e48811559f3f778f9727662cbbd7ce0213ebfb246629148958492995ae80bad44b017bd8d160f5789f1d@127.0.0.1:30303"
 
   def receive(inbound_message, pid) do
     send(pid, {:inbound_message, inbound_message})
@@ -115,22 +116,8 @@ defmodule ExWire.RemoteConnectionTest do
 
     remote_id = remote_id |> ExthCrypto.Math.hex_to_bin |> ExthCrypto.Key.raw_to_der
 
-    {my_auth_msg, my_ephemeral_key_pair, my_nonce} = ExWire.Handshake.build_auth_msg(
-      ExWire.public_key,
-      ExWire.private_key,
-      remote_id
-    )
+    {:ok, client_pid} = ExWire.Adapter.TCP.start_link(:outbound, remote_host, remote_peer_port, my_ephemeral_key_pair, my_nonce, remote_id)
 
-    {:ok, encoded_auth_msg} = my_auth_msg
-      |> ExWire.Handshake.AuthMsgV4.serialize()
-      |> ExWire.Handshake.EIP8.wrap_eip_8(remote_id, "1.2.3.4", my_ephemeral_key_pair)
-
-    {:ok, client_pid} = ExWire.Adapter.TCP.start_link(:outbound, remote_host, remote_peer_port, my_ephemeral_key_pair, my_nonce, encoded_auth_msg)
-
-    # Send auth message
-    GenServer.cast(client_pid, {:send, %{data: encoded_auth_msg}})
-
-    :timer.sleep(2000)
-
+    :timer.sleep(15_000)
   end
 end

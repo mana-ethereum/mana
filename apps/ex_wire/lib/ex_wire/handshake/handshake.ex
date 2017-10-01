@@ -1,14 +1,25 @@
 defmodule ExWire.Handshake do
   @moduledoc """
-  Defines the protocols to complete an ECEIS handshake with a remote peer.
+  Implements the RLPx ECIES handshake protocol.
 
-  Note: we've foll
+  This handshake is the first thing that happens after establishing a connection.
+  Afterwards, we will do a HELLO and protocol handshake.
+
+  Note: this protocol is not extremely well defined, but you can read up on it here:
+  1. https://github.com/ethereum/devp2p/blob/master/rlpx.md
+  2. https://github.com/ethereum/EIPs/blob/master/EIPS/eip-8.md
+  3. https://github.com/ethereum/go-ethereum/wiki/RLPx-Encryption
+  4. https://github.com/ethereum/wiki/wiki/%C3%90%CE%9EVp2p-Wire-Protocol
+  5. https://github.com/ethereum/wiki/wiki/Ethereum-Wire-Protocol
   """
 
   require Logger
 
   alias ExthCrypto.ECIES.ECDH
   alias ExWire.Handshake.EIP8
+  alias ExWire.Handshake.Struct.AuthMsgV4
+  alias ExWire.Handshake.Struct.AckRespV4
+  alias ExWire.Framing.Secrets
 
   @type token :: binary()
 
@@ -34,130 +45,9 @@ defmodule ExWire.Handshake do
     }
   end
 
-  defmodule Secrets do
-    defstruct [
-      :remote_id,
-      :aes,
-      :mac,
-      :egress_mac,
-      :ingress_mac,
-      :token,
-    ]
-
-    @type t :: %__MODULE__{
-      remote_id: ExWire.node_id,
-      aes: binary(),
-      mac: binary(),
-      egress_mac: binary(),
-      ingress_mac: binary(),
-      token: binary(),
-    }
-  end
-
   # @handshake_timeout 5000
   @protocol_version 4
   @nonce_len 32
-
-  # RLPx v4 handshake auth (defined in EIP-8).
-  defmodule AuthMsgV4 do
-    @moduledoc """
-    Simple struct to wrap an auth msg.
-    """
-
-    defstruct [:signature, :remote_public_key, :remote_nonce, :remote_version, :remote_ephemeral_public_key]
-
-    @type t :: %__MODULE__{
-      signature: ExthCrypto.signature,
-      remote_public_key: ExthCrypto.Key.public_key,
-      remote_nonce: binary(),
-      remote_version: integer(),
-      remote_ephemeral_public_key: ExthCrypto.Key.public_key,
-    }
-
-    @spec serialize(t) :: ExRLP.t
-    def serialize(auth_msg) do
-      [
-        auth_msg.signature,
-        auth_msg.remote_public_key |> ExthCrypto.Key.der_to_raw,
-        auth_msg.remote_nonce,
-        auth_msg.remote_version |> :binary.encode_unsigned
-      ]
-    end
-
-    @spec deserialize(ExRLP.t) :: t
-    def deserialize(rlp) do
-      [
-        signature |
-        [remote_public_key |
-        [remote_nonce |
-        [remote_version |
-        _tl
-      ]]]] = rlp
-
-      %__MODULE__{
-        signature: signature,
-        remote_public_key: remote_public_key |> ExthCrypto.Key.raw_to_der,
-        remote_nonce: remote_nonce,
-        remote_version: (if is_binary(remote_version), do: :binary.decode_unsigned(remote_version), else: remote_version),
-      }
-    end
-
-    @doc """
-    Sets the remote ephemeral public key for a given auth msg, based on our secret
-    and the keys passed from remote.
-
-    # TODO: Test
-    # TODO: Multiple possible values and no recovery key?
-    """
-    @spec set_remote_ephemeral_public_key(t, ExthCrypto.Key.private_key) :: t
-    def set_remote_ephemeral_public_key(auth_msg, my_static_private_key) do
-      shared_secret = ECDH.generate_shared_secret(my_static_private_key, auth_msg.remote_public_key)
-      shared_secret_xor_nonce = :crypto.exor(shared_secret, auth_msg.remote_nonce)
-
-      {:ok, remote_ephemeral_public_key} = ExthCrypto.Signature.recover(shared_secret_xor_nonce, auth_msg.signature, 0)
-
-      %{auth_msg | remote_ephemeral_public_key: remote_ephemeral_public_key}
-    end
-  end
-
-  defmodule AckRespV4 do
-    @moduledoc """
-    Simple struct to wrap an auth response.
-    """
-
-    defstruct [:remote_ephemeral_public_key, :remote_nonce, :remote_version]
-
-    @type t :: %__MODULE__{
-      remote_ephemeral_public_key: ExthCrypto.Key.public_key,
-      remote_nonce: binary(),
-      remote_version: integer(),
-    }
-
-    @spec serialize(t) :: ExRLP.t
-    def serialize(auth_resp) do
-      [
-        auth_resp.remote_ephemeral_public_key,
-        auth_resp.remote_nonce,
-        auth_resp.remote_version |> :binary.encode_unsigned,
-      ]
-    end
-
-    @spec deserialize(ExRLP.t) :: t
-    def deserialize(rlp) do
-      [
-        remote_ephemeral_public_key |
-        [remote_nonce |
-        [remote_version |
-        _tl
-      ]]] = rlp
-
-      %__MODULE__{
-        remote_ephemeral_public_key: remote_ephemeral_public_key,
-        remote_nonce: remote_nonce,
-        remote_version: (if is_binary(remote_version), do: :binary.decode_unsigned(remote_version), else: remote_version),
-      }
-    end
-  end
 
   @doc """
   Reads a given auth message, transported during the key initialization phase
@@ -168,13 +58,13 @@ defmodule ExWire.Handshake do
   """
   @spec read_auth_msg(binary(), ExthCrypto.Key.private_key, String.t) :: {:ok, AuthMsgV4.t} | {:error, String.t}
   def read_auth_msg(encoded_auth, my_static_private_key, remote_addr) do
-    case EIP8.unwrap_eip_8(encoded_auth, my_static_private_key, "1.2.3.4") do
+    case EIP8.unwrap_eip_8(encoded_auth, my_static_private_key, remote_addr) do
       {:ok, rlp} ->
         # unwrap eip-8
         auth_msg =
           rlp
-          |> ExWire.Handshake.AuthMsgV4.deserialize()
-          |> ExWire.Handshake.AuthMsgV4.set_remote_ephemeral_public_key(my_static_private_key)
+          |> AuthMsgV4.deserialize()
+          |> AuthMsgV4.set_remote_ephemeral_public_key(my_static_private_key)
 
         {:ok, auth_msg}
       {:error, "Invalid auth size"} ->
@@ -195,8 +85,8 @@ defmodule ExWire.Handshake do
               remote_nonce,
               @protocol_version
             ]
-            |> ExWire.Handshake.AuthMsgV4.deserialize()
-            |> ExWire.Handshake.AuthMsgV4.set_remote_ephemeral_public_key(my_static_private_key)
+            |> AuthMsgV4.deserialize()
+            |> AuthMsgV4.set_remote_ephemeral_public_key(my_static_private_key)
 
           {:ok, auth_msg}
         end
@@ -212,12 +102,12 @@ defmodule ExWire.Handshake do
   """
   @spec read_ack_resp(binary(), ExthCrypto.Key.private_key, String.t) :: {:ok, AckRespV4.t} | {:error, String.t}
   def read_ack_resp(encoded_ack, my_static_private_key, remote_addr) do
-    case EIP8.unwrap_eip_8(encoded_ack, my_static_private_key, "1.2.3.4") do
+    case EIP8.unwrap_eip_8(encoded_ack, my_static_private_key, remote_addr) do
       {:ok, rlp} ->
         # unwrap eip-8
         ack_resp =
           rlp
-          |> ExWire.Handshake.AckRespV4.deserialize()
+          |> AckRespV4.deserialize()
 
         {:ok, ack_resp}
       {:error, "Invalid auth size"} ->
@@ -235,7 +125,7 @@ defmodule ExWire.Handshake do
               remote_nonce,
               @protocol_version
             ]
-            |> ExWire.Handshake.AckRespV4.deserialize()
+            |> AckRespV4.deserialize() |> Exth.inspect("ack_resp")
 
           {:ok, ack_resp}
         end
@@ -250,7 +140,7 @@ defmodule ExWire.Handshake do
 
       iex> ExWire.Handshake.build_auth_msg(ExthCrypto.Test.public_key(:key_a), ExthCrypto.Test.private_key(:key_a), ExthCrypto.Test.public_key(:key_b), ExthCrypto.Test.init_vector(1, 32), ExthCrypto.Test.key_pair(:key_c))
       {
-        %ExWire.Handshake.AuthMsgV4{
+        %ExWire.Handshake.Struct.AuthMsgV4{
           remote_ephemeral_public_key: nil,
           remote_nonce: <<1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32>>,
           remote_public_key: <<4, 54, 241, 224, 126, 85, 135, 69, 213, 129, 115, 3, 41, 161, 217, 87, 215, 159, 64, 17, 167, 128, 113, 172, 232, 46, 34, 145, 136, 72, 160, 207, 161, 171, 255, 26, 163, 160, 158, 227, 196, 92, 62, 119, 84, 156, 99, 224, 155, 120, 250, 153, 134, 180, 218, 177, 186, 200, 199, 106, 97, 103, 50, 215, 114>>,
@@ -264,7 +154,8 @@ defmodule ExWire.Handshake do
             201, 248, 156, 236, 34, 203, 156, 75, 18, 121, 162, 104, 3, 164, 156, 46, 186>>,
           <<178, 68, 134, 194, 0, 187, 118, 35, 33, 220, 4, 3, 50, 96, 97, 91, 96, 14,
             71, 239, 7, 102, 33, 187, 194, 221, 152, 36, 95, 22, 121, 48>>
-        }
+        },
+        <<1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32>>
       }
   """
   @spec build_auth_msg(ExthCrypto.Key.public_key, ExthCrypto.Key.private_key, ExthCrypto.Key.public_key, binary() | nil, ExthCrypto.Key.key_pair | nil) :: {AuthMsgV4.t, ExthCrypto.Key.key_pair, binary()}
@@ -273,19 +164,19 @@ defmodule ExWire.Handshake do
     # Geneate a random ephemeral keypair
     my_ephemeral_keypair = if my_ephemeral_keypair, do: my_ephemeral_keypair, else: ECDH.new_ecdh_keypair()
 
-    {my_ephemeral_public_key, _my_ephemeral_private_key} = my_ephemeral_keypair
+    {my_ephemeral_public_key, my_ephemeral_private_key} = my_ephemeral_keypair |> Exth.inspect("my_ephemeral_key_pair")
 
     # Determine DH shared secret
-    shared_secret = ECDH.generate_shared_secret(my_static_private_key, her_static_public_key)
+    shared_secret = ECDH.generate_shared_secret(my_static_private_key, her_static_public_key) |> Exth.inspect("shared_secret")
 
     # Build a nonce unless given
-    nonce = if nonce, do: nonce, else: ExthCrypto.Math.nonce(@nonce_len)
+    nonce = ( if nonce, do: nonce, else: ExthCrypto.Math.nonce(@nonce_len) ) |> Exth.inspect("nonce")
 
     # XOR shared-secret and nonce
-    shared_secret_xor_nonce = :crypto.exor(shared_secret, nonce)
+    shared_secret_xor_nonce = ExthCrypto.Math.xor(shared_secret, nonce) |> Exth.inspect("shared_secret xor nonce")
 
     # Sign xor'd secret
-    {signature, _, _, recovery_id} = ExthCrypto.Signature.sign_digest(shared_secret_xor_nonce, my_ephemeral_public_key)
+    {signature, _, _, recovery_id} = ExthCrypto.Signature.sign_digest(shared_secret_xor_nonce, my_ephemeral_private_key)
 
     # Build an auth message to send over the wire
     auth_msg = %AuthMsgV4{
@@ -305,7 +196,7 @@ defmodule ExWire.Handshake do
   ## Examples
 
       iex> ExWire.Handshake.build_ack_resp(ExthCrypto.Test.public_key(:key_c), ExthCrypto.Test.init_vector())
-      %ExWire.Handshake.AckRespV4{
+      %ExWire.Handshake.Struct.AckRespV4{
         remote_ephemeral_public_key: <<4, 146, 201, 161, 205, 19, 177, 147, 33, 107, 190, 144, 81, 145, 173, 83, 20, 105, 150, 114, 196, 249, 143, 167, 152, 63, 225, 96, 184, 86, 203, 38, 134, 241, 40, 152, 74, 34, 68, 233, 204, 91, 240, 208, 254, 62, 169, 53, 201, 248, 156, 236, 34, 203, 156, 75, 18, 121, 162, 104, 3, 164, 156, 46, 186>>,
         remote_nonce: <<1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16>>,
         remote_version: 4
@@ -324,17 +215,72 @@ defmodule ExWire.Handshake do
   end
 
   @doc """
-  After dailing a connection, perform handshake to generate secure connection.
+  Given an incoming message, let's try to accept it as an ack resp. If that works,
+  we'll derive our secrets from it.
 
-  # TODO: Conn?
-  # TODO: Token?
-
+  # TODO: Add examples
   """
-  # @spec initiate_connection(conn, ExthCrypto.Key.private_key, ExthCrypto.Key.public_key, ExWire.node_id, token) :: {:ok, Secrets.t} | {:error, String.t}
-  # def initiate_connection(conn, my_static_private_key, her_static_public_key, node_id, token) do
-  #   handshake = %Handshake{
-  #     initiator: true,
-  #     remote_id: node_id,
-  #   }
-  # end
+  @spec try_handle_ack(binary(), binary(), ExthCrypto.Key.private_key, binary(), String.t) :: {:ok, Secrets.t} | :invalid
+  def try_handle_ack(ack_data, auth_data, my_ephemeral_private_key, my_nonce, host) do
+    case ExWire.Handshake.read_ack_resp(ack_data, ExWire.private_key, host) do
+      {:ok, %ExWire.Handshake.Struct.AckRespV4{
+        remote_ephemeral_public_key: remote_ephemeral_public_key,
+        remote_nonce: remote_nonce
+      }} ->
+        # We're the initiator, by definition since we got an ack resp.
+        secrets = ExWire.Framing.Secrets.derive_secrets(
+          my_ephemeral_private_key,
+          remote_ephemeral_public_key,
+          remote_nonce,
+          my_nonce,
+          auth_data,
+          ack_data
+        )
+
+        {:ok, secrets}
+      _ ->
+        :invalid
+    end
+  end
+
+  @doc """
+  Give an incoming msg, let's try to accept it as an auth msg. If that works,
+  we'll prepare an ack response to send back and derive our secrets.
+
+  TODO: Add examples
+  """
+  @spec try_handle_auth(binary(), ExthCrypto.Key.key_pair, binary(), binary(), String.t) :: {:ok, binary(), Secrets.t} | :invalid
+  def try_handle_auth(auth_data, {my_ephemeral_public_key, my_ephemeral_private_key}=my_ephemeral_key_pair, my_nonce, remote_id, host) do
+    case ExWire.Handshake.read_auth_msg(auth_data, ExWire.private_key, host) do
+      {:ok, %ExWire.Handshake.Struct.AuthMsgV4{
+        signature: signature,
+        remote_public_key: remote_public_key,
+        remote_nonce: remote_nonce,
+        remote_version: remote_version,
+        remote_ephemeral_public_key: remote_ephemeral_public_key,
+      }} ->
+        # First, we'll build an ack, which we'll respond with to the remote peer
+        ack_resp = ExWire.Handshake.build_ack_resp(remote_ephemeral_public_key: my_ephemeral_public_key, remote_version: remote_version)
+
+        # TODO: Make this accurate
+        {:ok, encoded_ack_resp} = ack_resp
+          |> ExWire.Handshake.Struct.AckRespV4.serialize()
+          |> ExWire.Handshake.EIP8.wrap_eip_8(remote_id, host, my_ephemeral_key_pair)
+
+        # We have the auth, we can derive secrets already
+        secrets = ExWire.Framing.Secrets.derive_secrets(
+          my_ephemeral_private_key,
+          remote_ephemeral_public_key,
+          remote_nonce,
+          my_nonce,
+          auth_data,
+          encoded_ack_resp
+        )
+
+        {:ok, ack_resp, secrets}
+      _ ->
+        :invalid
+    end
+  end
+
 end

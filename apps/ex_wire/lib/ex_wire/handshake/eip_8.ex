@@ -2,6 +2,8 @@ defmodule ExWire.Handshake.EIP8 do
   @moduledoc """
   Handles wrapping and unwrapping messages according to the specification in
   [Ethereum EIP-8](https://github.com/ethereum/EIPs/blob/master/EIPS/eip-8.md).
+
+  TODO: How do we handle random padding?
   """
 
   require Logger
@@ -25,17 +27,18 @@ defmodule ExWire.Handshake.EIP8 do
   def wrap_eip_8(rlp, her_static_public_key, remote_addr, my_ephemeral_key_pair \\ nil, init_vector \\ nil, padding \\ nil) do
     Logger.debug("[Network] Sending EIP8 Handshake to #{remote_addr}")
 
-    padding = case padding do
-      nil ->
-        # Generate a random length of padding (this does not need to be secure)
-        # EIP Question: is there a security flaw if this is not random?
-        padding_length = Enum.random(100..300)
+    # padding = case padding do
+    #   nil ->
+    #     # Generate a random length of padding (this does not need to be secure)
+    #     # EIP Question: is there a security flaw if this is not random?
+    #     padding_length = Enum.random(100..300)
 
-        # Generate a random padding (nonce), this probably doesn't need to be secure
-        # EIP Question: why is this not just padded with zeros?
-        ExthCrypto.Math.nonce(padding_length)
-      padding -> padding
-    end |> :binary.bin_to_list
+    #     # Generate a random padding (nonce), this probably doesn't need to be secure
+    #     # EIP Question: why is this not just padded with zeros?
+    #     ExthCrypto.Math.nonce(padding_length)
+    #   padding -> padding
+    # end |> :binary.bin_to_list
+
     padding = ExthCrypto.Math.pad(<<>>, 100)
 
     # rlp.list(sig, initiator-pubk, initiator-nonce, auth-vsn)

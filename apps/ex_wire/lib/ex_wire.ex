@@ -5,8 +5,9 @@ defmodule ExWire do
   """
 
   @network_adapter Application.get_env(:ex_wire, :network_adapter)
-  @port Application.get_env(:ex_wire, :port, 30303)
-  @private_key Application.get_env(:ex_wire, :private_key)
+  @port Application.get_env(:ex_wire, :port, 30304)
+  @private_key ExthCrypto.ECIES.ECDH.new_ecdh_keypair() |> Tuple.to_list() |> List.last # Application.get_env(:ex_wire, :private_key)
+  @protocol_version Application.get_env(:ex_wire, :protocol_version)
 
   @type node_id :: binary()
 
@@ -23,6 +24,9 @@ defmodule ExWire do
 
     public_key
   end
+
+  @spec protocol_version() :: integer()
+  def protocol_version, do: @protocol_version
 
   def start(_type, args) do
     import Supervisor.Spec

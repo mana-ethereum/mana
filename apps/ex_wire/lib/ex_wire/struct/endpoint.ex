@@ -110,7 +110,7 @@ defmodule ExWire.Struct.Endpoint do
       encode_ip(ip),
       encode_port(udp_port),
       encode_port(tcp_port),
-    ]
+    ] |> IO.inspect
   end
 
   @doc """
