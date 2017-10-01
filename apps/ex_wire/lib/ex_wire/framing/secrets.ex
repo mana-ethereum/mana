@@ -6,6 +6,7 @@ defmodule ExWire.Framing.Secrets do
 
   alias ExthCrypto.AES
   alias ExthCrypto.MAC
+  alias ExthCrypto.Hash.Keccak
 
   @type t :: %__MODULE__{
     egress_mac: MAC.mac_inst,
@@ -81,7 +82,7 @@ defmodule ExWire.Framing.Secrets do
     egress_mac = mac_1
     ingress_mac = mac_2
 
-    Frame.Secrets.new(
+    __MODULE__.new(
       egress_mac,
       ingress_mac,
       mac_secret,

@@ -76,7 +76,10 @@ defmodule ExWire.Packet do
   """
   @spec get_packet_type(struct()) :: {:ok, integer()} | :unknown_packet
   def get_packet_type(_packet=%{__struct__: packet_struct}) do
-    Map.get(@packet_types_inverted, packet_struct, :unknown_packet)
+    case @packet_types_inverted[packet_struct] do
+      nil -> :unknown_packet
+      packet_type -> {:ok, packet_type}
+    end
   end
 
 end

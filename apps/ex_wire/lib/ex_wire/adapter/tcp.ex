@@ -14,8 +14,8 @@ defmodule ExWire.Adapter.TCP do
   @doc """
   Starts an outbound peer to peer connection.
   """
-  def start_link(:outbound, host, port, my_ephemeral_key_pair, my_nonce, remote_id) do
-    GenServer.start_link(__MODULE__, %{is_outbound: true, host: host, port: port, my_ephemeral_key_pair: my_ephemeral_key_pair, my_nonce: my_nonce, remote_id: remote_id})
+  def start_link(:outbound, host, port, remote_id) do
+    GenServer.start_link(__MODULE__, %{is_outbound: true, host: host, port: port, remote_id: remote_id})
   end
 
   @doc """
@@ -44,7 +44,9 @@ defmodule ExWire.Adapter.TCP do
 
     {:ok, Map.merge(state, %{
       socket: socket,
-      auth_data: encoded_auth_msg})}
+      auth_data: encoded_auth_msg,
+      my_ephemeral_key_pair: my_ephemeral_key_pair,
+      my_nonce: my_nonce})}
   end
 
   @doc """
