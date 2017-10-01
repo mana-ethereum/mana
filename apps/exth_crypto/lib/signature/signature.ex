@@ -59,12 +59,19 @@ defmodule ExthCrypto.Signature do
 
   ## Examples
 
-      iex> {signature, _r, _s, _recovery_id} = ExthCrypto.Signature.sign_digest("12345", ExthCrypto.Test.private_key(:key_a))
-      iex> ExthCrypto.Signature.verify("12345", signature, ExthCrypto.Test.public_key(:key_a))
+      iex> msg = ExthCrypto.Math.nonce(32)
+      iex> {signature, _r, _s, _recovery_id} = ExthCrypto.Signature.sign_digest(msg, ExthCrypto.Test.private_key(:key_a))
+      iex> ExthCrypto.Signature.verify(msg, signature, ExthCrypto.Test.public_key(:key_a))
       true
 
-      iex> {signature, _r, _s, _recovery_id} = ExthCrypto.Signature.sign_digest("12345", ExthCrypto.Test.private_key(:key_a))
-      iex> ExthCrypto.Signature.verify("12345", signature, ExthCrypto.Test.public_key(:key_b))
+      iex> msg = ExthCrypto.Math.nonce(32)
+      iex> {signature, _r, _s, _recovery_id} = ExthCrypto.Signature.sign_digest(msg, ExthCrypto.Test.private_key(:key_a))
+      iex> ExthCrypto.Signature.verify(msg, signature, ExthCrypto.Test.public_key(:key_b))
+      false
+
+      iex> msg = ExthCrypto.Math.nonce(32)
+      iex> {signature, _r, _s, _recovery_id} = ExthCrypto.Signature.sign_digest(msg, ExthCrypto.Test.private_key(:key_a))
+      iex> ExthCrypto.Signature.verify(msg |> Binary.drop(1), signature, ExthCrypto.Test.public_key(:key_a))
       false
   """
   @spec verify(binary(), signature, ExthCrypto.Key.public_key) :: boolean()
@@ -83,8 +90,16 @@ defmodule ExthCrypto.Signature do
 
   ## Examples
 
-      iex> {signature, _r, _s, _recovery_id} = ExthCrypto.Signature.sign_digest("12345", ExthCrypto.Test.private_key(:key_a))
-      iex> ExthCrypto.Signature.recover("12345", signature, 0)
+      iex> msg = ExthCrypto.Math.nonce(32)
+      iex> {signature, _r, _s, recovery_id} = ExthCrypto.Signature.sign_digest(msg, ExthCrypto.Test.private_key(:key_a))
+      iex> ExthCrypto.Signature.recover(msg, signature, recovery_id)
+      {:ok, <<4, 54, 241, 224, 126, 85, 135, 69, 213, 129, 115, 3, 41, 161, 217, 87, 215,
+              159, 64, 17, 167, 128, 113, 172, 232, 46, 34, 145, 136, 72, 160, 207, 161,
+              171, 255, 26, 163, 160, 158, 227, 196, 92, 62, 119, 84, 156, 99, 224, 155,
+              120, 250, 153, 134, 180, 218, 177, 186, 200, 199, 106, 97, 103, 50, 215, 114>>}
+
+      iex> {signature, _r, _s, recovery_id} = ExthCrypto.Signature.sign_digest(msg = ExthCrypto.Math.nonce(32), ExthCrypto.Test.private_key(:key_a))
+      iex> ExthCrypto.Signature.recover(msg, signature, recovery_id)
       {:ok, <<4, 54, 241, 224, 126, 85, 135, 69, 213, 129, 115, 3, 41, 161, 217, 87, 215,
               159, 64, 17, 167, 128, 113, 172, 232, 46, 34, 145, 136, 72, 160, 207, 161,
               171, 255, 26, 163, 160, 158, 227, 196, 92, 62, 119, 84, 156, 99, 224, 155,

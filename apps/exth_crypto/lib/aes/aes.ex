@@ -160,6 +160,7 @@ defmodule ExthCrypto.AES do
   """
   @spec stream_init(ExthCrypto.Cipher.mode, ExthCrypto.Key.symmetric_key, ExthCrypto.Cipher.init_vector) :: ExthCrypto.Cipher.stream
   def stream_init(:ctr, symmetric_key, init_vector) do
+    # IO.inspect(["Have symm key: ", symmetric_key])
     :crypto.stream_init(:aes_ctr, symmetric_key, init_vector)
   end
 
