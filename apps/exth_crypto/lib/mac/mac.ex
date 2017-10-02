@@ -74,7 +74,7 @@ defmodule ExthCrypto.MAC do
       ...> |> ExthCrypto.MAC.update(" ")
       ...> |> ExthCrypto.MAC.update("knight")
       ...> |> ExthCrypto.MAC.final()
-      "jedi knight"
+      "jedi"
   """
   @spec final(mac_inst) :: binary()
   def final({mac_type, mac}) do

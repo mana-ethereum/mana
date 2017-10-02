@@ -1,3 +1,7 @@
+* 0.1.4
+* Add MAC stream.
+* Improve signature recovery algorithms
+* Add ECB mode for AES
 # 0.1.3
 * Adds additional test keys pairs and `key_pair` as a type.
 # 0.1.2
