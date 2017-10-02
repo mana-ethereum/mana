@@ -49,6 +49,15 @@ defmodule ExWire.Adapter.TCP do
   end
 
   @doc """
+  Allows a client to new incoming packets.
+  """
+  def handle_call({:subscribe, {module, function, args}=mfa}, _from, state) do
+    updated_state = Map.update(state, :subscribers, [mfa], fn subscribers -> [mfa | subscribers] end)
+
+    {:reply, :ok, updated_state}
+  end
+
+  @doc """
   Handle info will handle when we have inbound communucation from a peer node.
 
   If we haven't yet completed our handshake, we'll await an auth or ack message
@@ -58,7 +67,7 @@ defmodule ExWire.Adapter.TCP do
 
   TODO: clients may send an auth before (or as) we do, and we should handle this case without error.
   """
-  def handle_info(_info={:tcp, _socket, data}, state=%{is_outbound: true, host: host, auth_data: auth_data, my_ephemeral_key_pair: {_my_ephemeral_public_key, my_ephemeral_private_key}, my_nonce: my_nonce}) do
+  def handle_info(_info={:tcp, _socket, data}, state=%{is_outbound: true, remote_id: remote_id, host: host, auth_data: auth_data, my_ephemeral_key_pair: {_my_ephemeral_public_key, my_ephemeral_private_key}=my_ephemeral_key_pair, my_nonce: my_nonce}) do
     case Handshake.try_handle_ack(data, auth_data, my_ephemeral_private_key, my_nonce, host) do
       {:ok, secrets} ->
 
@@ -74,6 +83,8 @@ defmodule ExWire.Adapter.TCP do
           })}
       :invalid ->
         Logger.warn("[Network] Received unknown handshake message when expecting ack")
+        Logger.debug("[Network] Message was: #{inspect data}")
+
         {:noreply, state}
     end
   end
@@ -106,21 +117,21 @@ defmodule ExWire.Adapter.TCP do
   def handle_info(_info={:tcp, socket, data}, state=%{host: host, secrets: secrets}) do
     case Frame.unframe(data, secrets) do
       {:ok, packet_type, packet_data, frame_rest, updated_secrets} ->
-
         # TODO: Ignore non-HELLO messages unless state is active.
 
         # TODO: Maybe move into smaller functions for testing
-        handle_result = case Packet.get_packet_mod(packet_type) do
+        {packet, handle_result} = case Packet.get_packet_mod(packet_type) do
           {:ok, packet_mod} ->
             Logger.debug("[Network] Got packet #{Atom.to_string(packet_mod)} from #{host}")
 
-            packet_data
+            packet = packet_data
               |> packet_mod.deserialize()
-              |> packet_mod.handle()
+
+            {packet, packet_mod.handle(packet)}
           :unknown_packet_type ->
             Logger.warn("[Network] Received unknown or unhandled packet type `#{packet_type}` from #{host}")
 
-            :ok
+            {nil, :ok}
         end
 
         # Updates our given state and does any actions necessary
@@ -141,6 +152,13 @@ defmodule ExWire.Adapter.TCP do
             send_packet(self(), packet)
 
             state
+        end
+
+        # Let's inform any subscribers
+        if not is_nil(packet) do
+          for {module, function, args} <- Map.get(state, :subscribers, []) do
+            apply(module, function, [packet | args])
+          end
         end
 
         updated_state = Map.merge(handled_state, %{secrets: updated_secrets})
@@ -226,6 +244,13 @@ defmodule ExWire.Adapter.TCP do
       listen_port: 30304,
       node_id: ExWire.public_key |> ExthCrypto.Key.der_to_raw
     })
+  end
+
+  @doc """
+  Client function to subscribe to incoming packets.
+  """
+  def subscribe(pid, module, function, args) do
+    :ok = GenServer.call(pid, {:subscribe, {module, function, args}})
   end
 
 end

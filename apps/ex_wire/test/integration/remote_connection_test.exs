@@ -10,6 +10,10 @@ defmodule ExWire.RemoteConnectionTest do
   """
   use ExUnit.Case, async: true
 
+  require Logger
+
+  alias ExWire.Packet
+
   @moduletag integration: true
   @moduletag network: true
 
@@ -21,6 +25,10 @@ defmodule ExWire.RemoteConnectionTest do
 
   def receive(inbound_message, pid) do
     send(pid, {:inbound_message, inbound_message})
+  end
+
+  def receive_packet(inbound_packet, pid) do
+    send(pid, {:incoming_packet, inbound_packet})
   end
 
   test "connect to remote peer for discovery" do
@@ -118,9 +126,39 @@ defmodule ExWire.RemoteConnectionTest do
 
     {:ok, client_pid} = ExWire.Adapter.TCP.start_link(:outbound, remote_host, remote_peer_port, remote_id)
 
-    # TODO: This works, but how can we get the responses back, for instance?
+    ExWire.Adapter.TCP.subscribe(client_pid, __MODULE__, :receive_packet, [self()])
     ExWire.Adapter.TCP.send_packet(client_pid, %ExWire.Packet.GetBlockHeaders{block_identifier: 0, max_headers: 1, skip: 0, reverse: false})
 
-    :timer.sleep(15_000)
+    receive_block_headers(client_pid)
+  end
+
+  def receive_block_headers(client_pid) do
+    receive do
+      {:incoming_packet, _packet=%Packet.BlockHeaders{headers: [header]}} ->
+        ExWire.Adapter.TCP.send_packet(client_pid, %ExWire.Packet.GetBlockBodies{hashes: [header |> Block.Header.hash]})
+
+        receive_block_bodies(client_pid)
+      {:incoming_packet, packet} ->
+        # Logger.debug("Expecting block headers packet, got: #{inspect packet}")
+
+        receive_block_headers(client_pid)
+      after 2_000 ->
+        raise "Expected block headers, but did not receive before timeout."
+    end
+  end
+
+  def receive_block_bodies(client_pid) do
+    receive do
+      {:incoming_packet, _packet=%Packet.BlockBodies{blocks: [block]}} ->
+        # This is a genesis block
+        assert block.transaction_list == []
+        assert block.uncle_list == []
+      {:incoming_packet, packet} ->
+        # Logger.debug("Expecting block bodies packet, got: #{inspect packet}")
+
+        receive_block_bodies(client_pid)
+      after 2_000 ->
+        raise "Expected block headers, but did not receive before timeout."
+    end
   end
 end

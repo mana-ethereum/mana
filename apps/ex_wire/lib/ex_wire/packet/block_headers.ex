@@ -17,7 +17,7 @@ defmodule ExWire.Packet.BlockHeaders do
   @behaviour ExWire.Packet
 
   @type t :: %__MODULE__{
-    headers: [any()]
+    headers: [Block.Header.t]
   }
 
   defstruct [
@@ -40,7 +40,7 @@ defmodule ExWire.Packet.BlockHeaders do
   """
   @spec serialize(t) :: ExRLP.t
   def serialize(packet=%__MODULE__{}) do
-    packet.headers # TODO: Serialize accurately
+    for header <- packet.headers, do: Block.Header.serialize(header)
   end
 
   @doc """
@@ -59,10 +59,10 @@ defmodule ExWire.Packet.BlockHeaders do
   """
   @spec deserialize(ExRLP.t) :: t
   def deserialize(rlp) do
-    # TODO: Deserialize from proper struct
+    headers = for header <- rlp, do: Block.Header.deserialize(header)
 
     %__MODULE__{
-      headers: rlp
+      headers: headers
     }
   end
 
@@ -81,7 +81,7 @@ defmodule ExWire.Packet.BlockHeaders do
     # TODO: Do.
     Logger.debug("[Packet] Peer sent #{Enum.count(packet.headers)} header(s)")
 
-    packet.headers |> Exth.inspect("Got headers, requesting more?")
+    # packet.headers |> Exth.inspect("Got headers, requesting more?")
 
     :ok
   end

@@ -33,7 +33,8 @@ defmodule ExWire.Mixfile do
       {:ex_rlp, "~> 0.2.1"},
       {:blockchain, "~> 0.1.4"},
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
-      {:exth_crypto, path: "../exth_crypto"}
+      {:exth_crypto, "~> 0.1.4"},
+      {:evm, "~> 0.1.10", override: true}
     ]
   end
 end
