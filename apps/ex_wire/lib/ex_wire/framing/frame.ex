@@ -43,7 +43,7 @@ defmodule ExWire.Framing.Frame do
     # protocol_type = <<>>
     # context_id = <<>>
     # header_data = [protocol_type, context_id] |> ExRLP.encode()
-    header_data = <<0xc2, 0x80, 0x80>> # what Geth and Parity use as a header data
+    header_data = <<0xc2, 0x80, 0x80>> # Honestly, this is what Geth and Parity use as a header data.
     header_padding = padding_for(byte_size(frame_size <> header_data), 16)
 
     # header: frame-size || header-data || padding
@@ -64,10 +64,6 @@ defmodule ExWire.Framing.Frame do
     end
 
     frame_enc = frame_unpadded_enc <> frame_padding_enc
-
-    # update egress_mac with frame_enc??
-    # self.egress_mac.update(&packet[32..(32 + len + padding)]);
-    # egress_mac = :keccakf1600.update(egress_mac, mac_secret, header_enc))
 
     # frame-mac: right128 of egress-mac.update(aes(mac-secret,egress-mac) ^ right128(egress-mac.update(frame-ciphertext).digest))
     # from EncryptedConnection::update_mac(&mut self.egress_mac, &mut self.mac_encoder, &[0u8; 0]);
@@ -108,8 +104,9 @@ defmodule ExWire.Framing.Frame do
         _header_data_and_padding::binary()
       >> = header
 
+      # TODO: We should read the header? But, it's unused by all clients.
       # header_rlp = header_data_and_padding |> ExRLP.decode
-      # protocol_id = Enum.at(header_rlp, 0) |> ExRLP.decode # TODO: Why is this nil or <<>>?
+      # protocol_id = Enum.at(header_rlp, 0) |> ExRLP.decode
 
       frame_padding_bytes = padding_size(frame_size, 16)
 
@@ -157,9 +154,6 @@ defmodule ExWire.Framing.Frame do
   # it returns the first 16 bytes of the hash sum after seeding.
   @spec update_mac(MAC.mac_inst, ExthCrypto.Cipher.cipher, ExthCrypto.Key.symmetric_key, binary()) :: MAC.mac_inst
   defp update_mac(mac, mac_encoder, mac_secret, seed) do
-    #   let mut prev = H128::new();
-
-    #   mac.clone().finalize(&mut prev);
     final = MAC.final(mac) |> Binary.take(16)
 
     enc = ExthCrypto.Cipher.encrypt(final, mac_secret, mac_encoder) |> Binary.take(-16)
