@@ -1,5 +1,5 @@
 defmodule Exth do
-	@moduledoc """
+  @moduledoc """
   General helper functions, like for inspection.
   """
 
