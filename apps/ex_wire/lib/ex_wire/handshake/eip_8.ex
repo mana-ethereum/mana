@@ -19,26 +19,15 @@ defmodule ExWire.Handshake.EIP8 do
 
   ## Examples
 
-      iex> {:ok, bin} = ExWire.Handshake.EIP8.wrap_eip_8(["jedi", "knight"], ExthCrypto.Test.public_key, "1.2.3.4", ExthCrypto.Test.key_pair(:key_b), ExthCrypto.Test.init_vector, ExthCrypto.Test.init_vector(1, 100))
+      iex> {:ok, bin} = ExWire.Handshake.EIP8.wrap_eip_8(["jedi", "knight"], ExthCrypto.Test.public_key, "1.2.3.4", ExthCrypto.Test.key_pair(:key_b), ExthCrypto.Test.init_vector)
       iex> bin |> ExthCrypto.Math.bin_to_hex
       "00e6049871eb081567823267592abac8ec9e9fddfdece7901a15f233b53f304d7860686c21601ba1a7f56680e22d0ac03eccd08e496469514c25ae1d5e55f391c1956f0102030405060708090a0b0c0d0e0f102cb1de6abaaa6f731dbe4cd77135af3c6c48aaa361de5610e901a4b761b588aee253fa658c3a7f8f467b5b36381c197a0d6b5ac6f3c6beba5cd455bc9fe98d621707dcb9a51a4895040a1dcbd1a6a32af7d8d407f2a54c0346a28806e597f52b42a59404697f4e913fd38cd2bfecdac553b1987f1b61049f516053a5a1f8cdc9efae57748d98355864f59037e326e7ec9b2d947580"
   """
-  @spec wrap_eip_8(ExRLP.t, ExthCrypto.Key.public_key, binary(), {ExthCrypto.Key.public_key, ExthCrypto.Key.private_key} | nil, Cipher.init_vector | nil, binary() | nil) :: {:ok, binary()} | {:error, String.t}
-  def wrap_eip_8(rlp, her_static_public_key, remote_addr, my_ephemeral_key_pair \\ nil, init_vector \\ nil, padding \\ nil) do
+  @spec wrap_eip_8(ExRLP.t, ExthCrypto.Key.public_key, binary(), {ExthCrypto.Key.public_key, ExthCrypto.Key.private_key} | nil, Cipher.init_vector | nil) :: {:ok, binary()} | {:error, String.t}
+  def wrap_eip_8(rlp, her_static_public_key, remote_addr, my_ephemeral_key_pair \\ nil, init_vector \\ nil) do
     Logger.debug("[Network] Sending EIP8 Handshake to #{remote_addr}")
 
-    # padding = case padding do
-    #   nil ->
-    #     # Generate a random length of padding (this does not need to be secure)
-    #     # EIP Question: is there a security flaw if this is not random?
-    #     padding_length = Enum.random(100..300)
-
-    #     # Generate a random padding (nonce), this probably doesn't need to be secure
-    #     # EIP Question: why is this not just padded with zeros?
-    #     ExthCrypto.Math.nonce(padding_length)
-    #   padding -> padding
-    # end |> :binary.bin_to_list
-
+    # Padding is used to modify packet length-- it dos not have to be random.
     padding = ExthCrypto.Math.pad(<<>>, 100)
 
     # rlp.list(sig, initiator-pubk, initiator-nonce, auth-vsn)

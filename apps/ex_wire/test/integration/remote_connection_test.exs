@@ -116,7 +116,7 @@ defmodule ExWire.RemoteConnectionTest do
 
     remote_id = remote_id |> ExthCrypto.Math.hex_to_bin |> ExthCrypto.Key.raw_to_der
 
-    {:ok, client_pid} = ExWire.Adapter.TCP.start_link(:outbound, remote_host, remote_peer_port, remote_id)
+    {:ok, _client_pid} = ExWire.Adapter.TCP.start_link(:outbound, remote_host, remote_peer_port, remote_id)
 
     :timer.sleep(15_000)
   end

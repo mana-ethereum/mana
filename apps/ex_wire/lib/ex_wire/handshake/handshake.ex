@@ -164,7 +164,7 @@ defmodule ExWire.Handshake do
     # Geneate a random ephemeral keypair
     my_ephemeral_keypair = if my_ephemeral_keypair, do: my_ephemeral_keypair, else: ECDH.new_ecdh_keypair()
 
-    {my_ephemeral_public_key, my_ephemeral_private_key} = my_ephemeral_keypair |> Exth.inspect("my_ephemeral_key_pair")
+    {_my_ephemeral_public_key, my_ephemeral_private_key} = my_ephemeral_keypair |> Exth.inspect("my_ephemeral_key_pair")
 
     # Determine DH shared secret
     shared_secret = ECDH.generate_shared_secret(my_static_private_key, her_static_public_key) |> Exth.inspect("shared_secret")
@@ -253,8 +253,8 @@ defmodule ExWire.Handshake do
   def try_handle_auth(auth_data, {my_ephemeral_public_key, my_ephemeral_private_key}=my_ephemeral_key_pair, my_nonce, remote_id, host) do
     case ExWire.Handshake.read_auth_msg(auth_data, ExWire.private_key, host) do
       {:ok, %ExWire.Handshake.Struct.AuthMsgV4{
-        signature: signature,
-        remote_public_key: remote_public_key,
+        signature: _signature,
+        remote_public_key: _remote_public_key,
         remote_nonce: remote_nonce,
         remote_version: remote_version,
         remote_ephemeral_public_key: remote_ephemeral_public_key,

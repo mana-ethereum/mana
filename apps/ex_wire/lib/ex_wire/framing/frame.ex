@@ -49,19 +49,16 @@ defmodule ExWire.Framing.Frame do
     # header: frame-size || header-data || padding
     header = frame_size <> header_data <> header_padding
 
-    # :crypto.exor(ExthCrypto.AES.encrypt(egress_mac, :ctr, mac_secret)
-    {encoder_stream, header_enc} = ExthCrypto.AES.stream_encrypt(header, encoder_stream)
+    {encoder_stream, header_enc} = AES.stream_encrypt(header, encoder_stream)
 
     # header-mac: right128 of egress-mac.update(aes(mac-secret,egress-mac) ^ header-ciphertext).digest
-    # from EncryptedConnection::update_mac(&mut self.egress_mac, &mut self.mac_encoder,  &packet[0..16]);
     egress_mac = update_mac(egress_mac, mac_encoder, mac_secret, header_enc)
     header_mac = MAC.final(egress_mac) |> Binary.take(16)
 
-    # :crypto.exor(ExthCrypto.AES.encrypt(egress_mac, :ctr, mac_secret), header_ciphertext)
-    {encoder_stream, frame_unpadded_enc} = ExthCrypto.AES.stream_encrypt(frame_unpadded, encoder_stream)
+    {encoder_stream, frame_unpadded_enc} = AES.stream_encrypt(frame_unpadded, encoder_stream)
 
     {encoder_stream, frame_padding_enc} = if byte_size(frame_padding) > 0 do
-      ExthCrypto.AES.stream_encrypt(frame_padding, encoder_stream)
+      AES.stream_encrypt(frame_padding, encoder_stream)
     else
       {encoder_stream, <<>>}
     end
@@ -104,12 +101,7 @@ defmodule ExWire.Framing.Frame do
     if expected_header_mac != header_mac do
       {:error, "Failed to match header ingress mac"}
     else
-      {decoder_stream, header} = ExthCrypto.AES.stream_decrypt(header_enc, decoder_stream)
-
-      # IO.inspect(["Header", header, byte_size(frame_rest)], limit: :infinity)
-      # IO.inspect(["Frame Rest", frame_rest], limit: :infinity)
-      # {_decoder_stream, frame_rest_dec} = ExthCrypto.AES.stream_decrypt(frame_rest, decoder_stream)
-      # IO.inspect(["Frame Rest Dec", frame_rest_dec], limit: :infinity)
+      {decoder_stream, header} = AES.stream_decrypt(header_enc, decoder_stream)
 
       <<
         frame_size::integer-size(24),
@@ -146,7 +138,7 @@ defmodule ExWire.Framing.Frame do
       if expected_frame_mac != frame_mac do
         {:error, "Failed to match frame ingress mac"}
       else
-        {decoder_stream, frame_with_padding} = ExthCrypto.AES.stream_decrypt(frame_enc_with_padding, decoder_stream)
+        {decoder_stream, frame_with_padding} = AES.stream_decrypt(frame_enc_with_padding, decoder_stream)
 
         <<
           frame::binary-size(frame_size),

@@ -6,7 +6,6 @@ defmodule ExWire.Adapter.TCP do
 
   require Logger
 
-  alias ExthCrypto.Hash.Keccak
   alias ExWire.Framing.Frame
   alias ExWire.Handshake
   alias ExWire.Packet
@@ -59,7 +58,7 @@ defmodule ExWire.Adapter.TCP do
 
   TODO: clients may send an auth before (or as) we do, and we should handle this case without error.
   """
-  def handle_info(info={:tcp, _socket, data}, state=%{is_outbound: true, host: host, port: port, auth_data: auth_data, my_ephemeral_key_pair: {my_ephemeral_public_key, my_ephemeral_private_key}, my_nonce: my_nonce}) do
+  def handle_info(_info={:tcp, _socket, data}, state=%{is_outbound: true, host: host, auth_data: auth_data, my_ephemeral_key_pair: {my_ephemeral_public_key, _my_ephemeral_private_key}, my_nonce: my_nonce}) do
     case Handshake.try_handle_ack(data, auth_data, my_ephemeral_public_key, my_nonce, host) do
       {:ok, secrets} ->
 
@@ -80,7 +79,7 @@ defmodule ExWire.Adapter.TCP do
   end
 
   # TODO: How do we set remote id?
-  def handle_info(info={:tcp, _socket, data}, state=%{is_outbound: false, remote_id: remote_id, host: host, port: port, my_ephemeral_key_pair: {my_ephemeral_public_key, my_ephemeral_private_key}=my_ephemeral_key_pair, my_nonce: my_nonce}) do
+  def handle_info({:tcp, _socket, data}, state=%{is_outbound: false, remote_id: remote_id, host: host, my_ephemeral_key_pair: my_ephemeral_key_pair, my_nonce: my_nonce}) do
     case Handshake.try_handle_auth(data, my_ephemeral_key_pair, my_nonce, remote_id, host) do
       {:ok, ack_data, secrets} ->
 
@@ -104,7 +103,7 @@ defmodule ExWire.Adapter.TCP do
     end
   end
 
-  def handle_info(info={:tcp, socket, data}, state=%{is_outbound: is_outbound, host: host, port: port, secrets: secrets}) do
+  def handle_info(_info={:tcp, socket, data}, state=%{host: host, secrets: secrets}) do
     case Frame.unframe(data, secrets) do
       {:ok, packet_type, packet_data, frame_rest, updated_secrets} ->
 
@@ -152,62 +151,17 @@ defmodule ExWire.Adapter.TCP do
           handle_info({:tcp, socket, frame_rest}, updated_state)
         end
       {:erorr, reason} ->
-        Logger.error("Failed to read incoming packet from #{host}")
+        Logger.error("Failed to read incoming packet from #{host} `#{reason}`)")
 
         {:noreply, state}
     end
-
-    # case packet_type do
-    #   0x00 ->
-    #     IO.inspect(["Got HELLO", packet_data], limit: :infinity)
-    #   0x01 ->
-    #     IO.inspect(["Got DISCONNECT", packet_data])
-    #   0x02 ->
-    #     IO.inspect(["Got PING, not responding PONG"])
-
-    #     send_packet(self(), 0x03, [])
-    #   0x03 ->
-    #     IO.inspect(["Got PONG"])
-    #   user_packet when user_packet >= 0x10 ->
-    #     status_eth_id = ExWire.Packet.Status.eth_id
-    #     blocks_eth_id = ExWire.Packet.Blocks.eth_id
-
-    #     case user_packet - 0x10 do
-    #       ^status_eth_id ->
-    #         her_status = ExWire.Packet.Status.deserialize(packet_data)
-    #         IO.inspect(["Got STATUS", her_status], limit: :infinity)
-
-    #         my_status = %ExWire.Packet.Status{
-    #           protocol_version: 63,
-    #           network_id: 3,
-    #           total_difficulty: 0,
-    #           best_hash: <<>>,
-    #           genesis_hash: <<>>
-    #         }
-
-    #         send_packet(self(), 0x10 + ExWire.Packet.Status.eth_id, my_status |> ExWire.Packet.Status.serialize)
-
-    #         get_blocks = %ExWire.Packet.GetBlocks{
-    #           hashes: [her_status.genesis_hash]
-    #         } |> IO.inspect
-
-    #         send_packet(self(), 0x10 + ExWire.Packet.GetBlocks.eth_id, get_blocks |> ExWire.Packet.GetBlocks.serialize)
-    #       ^blocks_eth_id ->
-    #         IO.inspect(["Got packet data", packet_data], limit: :infinity)
-    #         blocks = ExWire.Packet.Blocks.deserialize(packet_data)
-
-    #         IO.inspect(["Got blocks", blocks], limit: :infinity)
-    #       eth_id ->
-    #         IO.inspect(["Unknown user packet", eth_id])
-    #     end
-    # end
   end
 
   @doc """
   If we receive a `send` before secrets are set, we'll send the data directly over the wire.
   """
-  def handle_cast({:send, %{data: data}}=info, state = %{socket: socket, host: host}) do
-    Logger.debug("Sending raw data message of length #{byte_size(data)} byte(s) to #{host}")
+  def handle_cast({:send, %{data: data}}, state = %{socket: socket, host: host}) do
+    Logger.debug("[Network] Sending raw data message of length #{byte_size(data)} byte(s) to #{host}")
 
     :ok = :gen_tcp.send(socket, data)
 
@@ -217,8 +171,8 @@ defmodule ExWire.Adapter.TCP do
   @doc """
   If we receive a `send` and we have secrets set, we'll send the message as a framed Eth packet.
   """
-  def handle_cast({:send, %{packet: {packet_mod, packet_type, packet_data}}}=info, state = %{socket: socket, secrets: secrets, host: host}) do
-    Logger.info("Sending packet #{Atom.to_string(packet_mod)} to #{host}")
+  def handle_cast({:send, %{packet: {packet_mod, packet_type, packet_data}}}, state = %{socket: socket, secrets: secrets, host: host}) do
+    Logger.info("[Network] Sending packet #{Atom.to_string(packet_mod)} to #{host}")
 
     {frame, updated_secrets} = Frame.frame(packet_type, packet_data, secrets)
 
@@ -236,7 +190,7 @@ defmodule ExWire.Adapter.TCP do
     packet_mod = Packet.get_packet_mod(packet_type)
     packet_data = packet_mod.serialize(packet)
 
-    GenServer.cast(self(), {:send, %{packet: {packet_mod, packet_type, packet_data}}})
+    GenServer.cast(pid, {:send, %{packet: {packet_mod, packet_type, packet_data}}})
 
     :ok
   end

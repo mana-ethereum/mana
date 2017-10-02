@@ -63,7 +63,7 @@ defmodule ExWire.Packet.GetBlockBodies do
       :ok
   """
   @spec handle(ExWire.Packet.packet) :: ExWire.Packet.handle_response
-  def handle(packet=%__MODULE__{}) do
+  def handle(_packet=%__MODULE__{}) do
     :ok
   end
 

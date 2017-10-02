@@ -139,7 +139,7 @@ defmodule ExWire.Packet.Disconnect do
   """
   @spec get_reason_msg(integer()) :: String.t
   def get_reason_msg(reason) do
-    @reasons[reason]
+    @reason_msgs[reason]
   end
 
   @doc """
