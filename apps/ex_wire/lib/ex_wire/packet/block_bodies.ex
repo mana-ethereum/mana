@@ -84,7 +84,7 @@ defmodule ExWire.Packet.BlockBodies do
   @spec handle(ExWire.Packet.packet) :: ExWire.Packet.handle_response
   def handle(packet=%__MODULE__{}) do
     # TODO: Do.
-    Logger.debug("Peer sent #{Enum.count(packet.blocks)} block(s).")
+    Logger.debug("[Packet] Peer sent #{Enum.count(packet.blocks)} block(s).")
 
     packet.blocks |> Exth.inspect("Got blocks, adding to chain")
 

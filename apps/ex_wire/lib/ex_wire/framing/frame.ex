@@ -121,19 +121,11 @@ defmodule ExWire.Framing.Frame do
         frame_rest::binary()
       >> = frame_rest
 
-      # IO.inspect(["Got rest", frame_rest], limit: :infinity)
-
       frame_enc_with_padding = frame_enc <> frame_padding
-
-      # egress_mac = MAC.update(egress_mac, frame_enc)
-      # egress_mac = update_mac(egress_mac, mac_encoder, mac_secret, nil)
-      # frame_mac = MAC.final(egress_mac) |> Binary.take(16)
 
       ingress_mac = MAC.update(ingress_mac, frame_enc_with_padding)
       ingress_mac = update_mac(ingress_mac, mac_encoder, mac_secret, nil)
       expected_frame_mac = MAC.final(ingress_mac) |> Binary.take(16)
-
-      # IO.inspect(["Frame MAC", MAC.final(ingress_mac), frame_mac], limit: :infinity)
 
       if expected_frame_mac != frame_mac do
         {:error, "Failed to match frame ingress mac"}
@@ -153,7 +145,7 @@ defmodule ExWire.Framing.Frame do
         {
           :ok,
           packet_type_rlp |> ExRLP.decode |> :binary.decode_unsigned,
-          packet_data_rlp |> Exth.inspect("Packet data") |> ExRLP.decode,
+          packet_data_rlp |> ExRLP.decode,
           frame_rest,
           %{frame_secrets | ingress_mac: ingress_mac, decoder_stream: decoder_stream}
         }

@@ -97,7 +97,7 @@ defmodule ExWire.Handshake do
   Reads a given ack message, transported during the key initialization phase
   of the RLPx protocol. This will generally be handled by the dialer of the connection.
 
-  Note: this will handle pre or post-EIP 8 messages. We take a different approach to other
+  Note: this will handle pre- or post-EIP 8 messages. We take a different approach to other
         implementations and try EIP-8 first, and if that fails, plain.
   """
   @spec read_ack_resp(binary(), ExthCrypto.Key.private_key, String.t) :: {:ok, AckRespV4.t} | {:error, String.t}
@@ -164,16 +164,16 @@ defmodule ExWire.Handshake do
     # Geneate a random ephemeral keypair
     my_ephemeral_keypair = if my_ephemeral_keypair, do: my_ephemeral_keypair, else: ECDH.new_ecdh_keypair()
 
-    {_my_ephemeral_public_key, my_ephemeral_private_key} = my_ephemeral_keypair |> Exth.inspect("my_ephemeral_key_pair")
+    {_my_ephemeral_public_key, my_ephemeral_private_key} = my_ephemeral_keypair
 
     # Determine DH shared secret
-    shared_secret = ECDH.generate_shared_secret(my_static_private_key, her_static_public_key) |> Exth.inspect("shared_secret")
+    shared_secret = ECDH.generate_shared_secret(my_static_private_key, her_static_public_key)
 
     # Build a nonce unless given
-    nonce = ( if nonce, do: nonce, else: ExthCrypto.Math.nonce(@nonce_len) ) |> Exth.inspect("nonce")
+    nonce = ( if nonce, do: nonce, else: ExthCrypto.Math.nonce(@nonce_len) )
 
     # XOR shared-secret and nonce
-    shared_secret_xor_nonce = ExthCrypto.Math.xor(shared_secret, nonce) |> Exth.inspect("shared_secret xor nonce")
+    shared_secret_xor_nonce = ExthCrypto.Math.xor(shared_secret, nonce)
 
     # Sign xor'd secret
     {signature, _, _, recovery_id} = ExthCrypto.Signature.sign_digest(shared_secret_xor_nonce, my_ephemeral_private_key)
@@ -229,6 +229,7 @@ defmodule ExWire.Handshake do
       }} ->
         # We're the initiator, by definition since we got an ack resp.
         secrets = ExWire.Framing.Secrets.derive_secrets(
+          true,
           my_ephemeral_private_key,
           remote_ephemeral_public_key,
           remote_nonce,
@@ -269,6 +270,7 @@ defmodule ExWire.Handshake do
 
         # We have the auth, we can derive secrets already
         secrets = ExWire.Framing.Secrets.derive_secrets(
+          false,
           my_ephemeral_private_key,
           remote_ephemeral_public_key,
           remote_nonce,

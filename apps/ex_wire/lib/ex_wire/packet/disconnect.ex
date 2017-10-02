@@ -40,19 +40,19 @@ defmodule ExWire.Packet.Disconnect do
   ]
 
   @reason_msgs %{
-    disconnect_request: "Disconnect requested",
+    disconnect_request: "disconnect requested",
     tcp_sub_system_error: "TCP sub-system error",
-    break_of_protocol: "Breach of protocol",
-    useless_peer: "Useless peer",
-    too_many_peers: "Too many peers",
-    already_connected: "Already connected",
-    incompatible_p2p_protcol_version: "Incompatible P2P protocol version",
-    null_node_identity_received: "Null node identity received",
-    client_quitting: "Client quitting",
-    unexpected_identity: "Unexpected identity",
-    identity_is_same_as_self: "Identity is the same as this node",
-    timeout_on_receiving_message: "Timeout on receiving a message",
-    other_reason: "Some other reason specific to a subprotocol"
+    break_of_protocol: "breach of protocol",
+    useless_peer: "useless peer",
+    too_many_peers: "too many peers",
+    already_connected: "already connected",
+    incompatible_p2p_protcol_version: "incompatible P2P protocol version",
+    null_node_identity_received: "null node identity received",
+    client_quitting: "client quitting",
+    unexpected_identity: "unexpected identity",
+    identity_is_same_as_self: "identity is the same as this node",
+    timeout_on_receiving_message: "timeout on receiving a message",
+    other_reason: "some other reason specific to a subprotocol"
   }
 
   @reasons %{
@@ -105,7 +105,7 @@ defmodule ExWire.Packet.Disconnect do
     ] = rlp
 
     %__MODULE__{
-      reason: Map.get(@reasons_inverted, reason)
+      reason: @reasons_inverted[reason |> :binary.decode_unsigned]
     }
   end
 
@@ -154,7 +154,7 @@ defmodule ExWire.Packet.Disconnect do
   """
   @spec handle(ExWire.Packet.packet) :: ExWire.Packet.handle_response
   def handle(packet=%__MODULE__{}) do
-    Logger.info("Peer asked to disconnect for #{get_reason_msg(packet.reason)}.")
+    Logger.info("[Packet] Peer asked to disconnect for #{get_reason_msg(packet.reason) || packet.reason}.")
 
     :peer_disconnect
   end

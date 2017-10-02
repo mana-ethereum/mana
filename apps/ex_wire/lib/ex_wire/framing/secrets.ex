@@ -51,11 +51,11 @@ defmodule ExWire.Framing.Secrets do
   we're ready to derive the secrets to be used to encrypt frames. This function
   performs the required computation.
 
-  # TODO: Add examplex
+  # TODO: Add examples
   # TODO: Clean up API interface
   """
-  @spec derive_secrets(ExthCrypto.Key.private_key, ExthCrypto.Key.public_key, binary(), binary(), binary(), binary()) :: t
-  def derive_secrets(my_ephemeral_private_key, remote_ephemeral_public_key, remote_nonce, my_nonce, auth_data, ack_data) do
+  @spec derive_secrets(boolean(), ExthCrypto.Key.private_key, ExthCrypto.Key.public_key, binary(), binary(), binary(), binary()) :: t
+  def derive_secrets(is_initiator, my_ephemeral_private_key, remote_ephemeral_public_key, remote_nonce, my_nonce, auth_data, ack_data) do
     remote_ephemeral_public_key_raw = remote_ephemeral_public_key |> ExthCrypto.Key.raw_to_der
 
     ephemeral_shared_secret = ExthCrypto.ECIES.ECDH.generate_shared_secret(my_ephemeral_private_key, remote_ephemeral_public_key_raw)
@@ -78,9 +78,11 @@ defmodule ExWire.Framing.Secrets do
       |> MAC.update(ExthCrypto.Math.xor(mac_secret, my_nonce))
       |> MAC.update(ack_data)
 
-    # TODO: Reverse this based on if we're sender or receiver
-    egress_mac = mac_1
-    ingress_mac = mac_2
+    {egress_mac, ingress_mac} = if is_initiator do
+      {mac_1, mac_2}
+    else
+      {mac_2, mac_1}
+    end
 
     __MODULE__.new(
       egress_mac,

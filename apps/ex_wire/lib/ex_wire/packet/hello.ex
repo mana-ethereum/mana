@@ -19,6 +19,8 @@ defmodule ExWire.Packet.Hello do
   ```
   """
 
+  require Logger
+
   @behaviour ExWire.Packet
 
   @type cap :: {String.t, integer()}
@@ -105,6 +107,7 @@ defmodule ExWire.Packet.Hello do
   @spec handle(ExWire.Packet.packet) :: ExWire.Packet.handle_response
   def handle(packet=%__MODULE__{}) do
     if packet.caps == [] do
+      Logger.debug("[Packet] Disconnecting due to no matching peer caps (#{inspect packet.caps})")
       {:disconnect, :useless_peer}
     else
 

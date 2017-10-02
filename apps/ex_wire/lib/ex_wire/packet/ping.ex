@@ -57,7 +57,7 @@ defmodule ExWire.Packet.Ping do
   """
   @spec handle(ExWire.Packet.packet) :: ExWire.Packet.handle_response
   def handle(_packet=%__MODULE__{}) do
-    Logger.debug("Received ping, responding pong.")
+    Logger.debug("[Packet] Received ping, responding pong.")
 
     {:send, %ExWire.Packet.Pong{}}
   end

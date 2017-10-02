@@ -57,7 +57,10 @@ defmodule ExWire.Packet do
   """
   @spec get_packet_mod(integer()) :: {:ok, module()} | :unknown_packet_type
   def get_packet_mod(packet_type) do
-    Map.get(@packet_types, packet_type, :unknown_packet_type)
+    case @packet_types[packet_type] do
+      nil -> :unknown_packet_type
+      packet_type -> {:ok, packet_type}
+    end
   end
 
   @doc """

@@ -116,7 +116,10 @@ defmodule ExWire.RemoteConnectionTest do
 
     remote_id = remote_id |> ExthCrypto.Math.hex_to_bin |> ExthCrypto.Key.raw_to_der
 
-    {:ok, _client_pid} = ExWire.Adapter.TCP.start_link(:outbound, remote_host, remote_peer_port, remote_id)
+    {:ok, client_pid} = ExWire.Adapter.TCP.start_link(:outbound, remote_host, remote_peer_port, remote_id)
+
+    # TODO: This works, but how can we get the responses back, for instance?
+    ExWire.Adapter.TCP.send_packet(client_pid, %ExWire.Packet.GetBlockHeaders{block_identifier: 0, max_headers: 1, skip: 0, reverse: false})
 
     :timer.sleep(15_000)
   end

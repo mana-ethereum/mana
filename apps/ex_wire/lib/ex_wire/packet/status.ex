@@ -25,6 +25,8 @@ defmodule ExWire.Packet.Status do
   ```
   """
 
+  require Logger
+
   @behaviour ExWire.Packet
 
   @type t :: %__MODULE__{
@@ -128,6 +130,7 @@ defmodule ExWire.Packet.Status do
   def handle(packet=%__MODULE__{}) do
     unless packet.protocol_version == ExWire.protocol_version do
       # TODO: We need to follow up on disconnection packets with disconnection ourselves
+      Logger.debug("[Packet] Disconnecting to due incompatible protocol version (them #{packet.protocol_version}, us: #{ExWire.protocol_version})")
       {:disconnect, :useless_peer}
     else
       :ok
