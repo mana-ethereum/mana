@@ -27,7 +27,8 @@ defmodule ExWire.Handshake.EIP8 do
   def wrap_eip_8(rlp, her_static_public_key, remote_addr, my_ephemeral_key_pair \\ nil, init_vector \\ nil) do
     Logger.debug("[Network] Sending EIP8 Handshake to #{remote_addr}")
 
-    # Padding is used to modify packet length-- it dos not have to be random.
+    # According to EIP-8, we add padding to prevent length detection attacks. Thus, it should be
+    # acceptable to pad with zero instead of random data. We opt for padding with zeros.
     padding = ExthCrypto.Math.pad(<<>>, 100)
 
     # rlp.list(sig, initiator-pubk, initiator-nonce, auth-vsn)
