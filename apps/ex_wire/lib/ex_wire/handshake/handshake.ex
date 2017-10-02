@@ -45,8 +45,6 @@ defmodule ExWire.Handshake do
     }
   end
 
-  # @handshake_timeout 5000
-  @protocol_version 4
   @nonce_len 32
 
   @doc """
@@ -83,7 +81,7 @@ defmodule ExWire.Handshake do
               signature,
               remote_public_key,
               remote_nonce,
-              @protocol_version
+              ExWire.protocol_version
             ]
             |> AuthMsgV4.deserialize()
             |> AuthMsgV4.set_remote_ephemeral_public_key(my_static_private_key)
@@ -123,9 +121,9 @@ defmodule ExWire.Handshake do
             [
               remote_ephemeral_public_key,
               remote_nonce,
-              @protocol_version
+              ExWire.protocol_version
             ]
-            |> AckRespV4.deserialize() |> Exth.inspect("ack_resp")
+            |> AckRespV4.deserialize()
 
           {:ok, ack_resp}
         end
@@ -183,7 +181,7 @@ defmodule ExWire.Handshake do
       signature: signature <> :binary.encode_unsigned(recovery_id),
       remote_public_key: my_static_public_key,
       remote_nonce: nonce,
-      remote_version: @protocol_version
+      remote_version: ExWire.protocol_version
     }
 
     # Return auth_msg and my new key pair
@@ -210,7 +208,7 @@ defmodule ExWire.Handshake do
     %AckRespV4{
       remote_nonce: nonce,
       remote_ephemeral_public_key: remote_ephemeral_public_key,
-      remote_version: @protocol_version
+      remote_version: ExWire.protocol_version
     }
   end
 
