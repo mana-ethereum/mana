@@ -92,7 +92,7 @@ defmodule ExWire.Packet.GetBlockHeaders do
       :ok
   """
   @spec handle(ExWire.Packet.packet) :: ExWire.Packet.handle_response
-  def handle(_packet=%__MODULE__{}) do
+  def handle(packet=%__MODULE__{}) do
     :ok
   end
 

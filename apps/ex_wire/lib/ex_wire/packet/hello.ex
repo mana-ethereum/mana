@@ -83,7 +83,7 @@ defmodule ExWire.Packet.Hello do
     %__MODULE__{
       p2p_version: p2p_version |> :binary.decode_unsigned,
       client_id: client_id,
-      caps: (for [cap, ver] <- caps, do: {cap, ver}),
+      caps: (for [cap, ver] <- caps, do: {cap, ver |> :binary.decode_unsigned}),
       listen_port: listen_port |> :binary.decode_unsigned,
       node_id: node_id
     }

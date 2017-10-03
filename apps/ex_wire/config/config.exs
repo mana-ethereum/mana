@@ -2,7 +2,9 @@
 # and its dependencies with the aid of the Mix.Config module.
 use Mix.Config
 
-config :ex_wire, :protocol_version, 63
+config :ex_wire,
+  protocol_version: 63,
+  network_id: 3 # ropsten
 
 # This configuration is loaded before any dependency and is restricted
 # to this project. If another project depends on this project, this

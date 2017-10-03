@@ -13,6 +13,7 @@ defmodule ExWire.RemoteConnectionTest do
   require Logger
 
   alias ExWire.Packet
+  alias ExWire.Adapter.TCP
 
   @moduletag integration: true
   @moduletag network: true
@@ -21,7 +22,13 @@ defmodule ExWire.RemoteConnectionTest do
   @local_peer_port 35353
   @local_tcp_port 36363
 
+  # Local Parity
   # @public_node_url "enode://4581188ce6e4af8f6c755481994d7df1532e3a427ee1e48811559f3f778f9727662cbbd7ce0213ebfb246629148958492995ae80bad44b017bd8d160f5789f1d@127.0.0.1:30303"
+
+  # Local Geth
+  # @public_node_url "enode://78251af55c063e9971705721a67ce1a1c538b560fa6fc7ad64680c86cbaa79cacd893d4b29b7ac2a2298e9725b1db429b892387013f01b44f535fc72f30b0945@127.0.0.1:31313"
+
+  # Remote Geth
   @public_node_url "enode://20c9ad97c081d63397d7b685a412227a40e23c8bdc6688c6f37e97cfbc22d2b4d1db1510d8f61e6a8866ad7f0e17c02b14182d37ea7c3c8b9c2683aeb6b733a1@52.169.14.227:30303"
 
   def receive(inbound_message, pid) do
@@ -125,19 +132,31 @@ defmodule ExWire.RemoteConnectionTest do
 
     remote_id = remote_id |> ExthCrypto.Math.hex_to_bin |> ExthCrypto.Key.raw_to_der
 
-    {:ok, client_pid} = ExWire.Adapter.TCP.start_link(:outbound, remote_host, remote_peer_port, remote_id)
+    {:ok, client_pid} = TCP.start_link(:outbound, remote_host, remote_peer_port, remote_id)
 
-    ExWire.Adapter.TCP.subscribe(client_pid, __MODULE__, :receive_packet, [self()])
-
-    # ExWire.Adapter.TCP.send_packet(client_pid, %ExWire.Packet.GetBlockHeaders{block_identifier: 0, max_headers: 1, skip: 0, reverse: false})
+    TCP.subscribe(client_pid, __MODULE__, :receive_packet, [self()])
 
     receive_status(client_pid)
   end
 
   def receive_status(client_pid) do
     receive do
-      {:incoming_packet, _packet=%Packet.Status{best_hash: hash}} ->
-        ExWire.Adapter.TCP.send_packet(client_pid, %ExWire.Packet.GetBlockHeaders{block_identifier: hash, max_headers: 1, skip: 0, reverse: false})
+      {:incoming_packet, _packet=%Packet.Status{best_hash: hash, total_difficulty: total_difficulty, genesis_hash: genesis_hash}} ->
+        # Send a simple status message
+        TCP.send_packet(client_pid, %Packet.Status{
+          protocol_version: ExWire.protocol_version,
+          network_id: ExWire.network_id,
+          total_difficulty: total_difficulty,
+          best_hash: genesis_hash,
+          genesis_hash: genesis_hash
+        })
+
+        ExWire.Adapter.TCP.send_packet(client_pid, %ExWire.Packet.GetBlockHeaders{
+          block_identifier: genesis_hash,
+          max_headers: 1,
+          skip: 0,
+          reverse: false
+        })
 
         receive_block_headers(client_pid)
       {:incoming_packet, packet} ->
@@ -170,6 +189,8 @@ defmodule ExWire.RemoteConnectionTest do
         # This is a genesis block
         assert block.transaction_list == []
         assert block.uncle_list == []
+
+        Logger.warn("Successfully received genesis block from peer.")
       {:incoming_packet, packet} ->
         if System.get_env("TRACE"), do: Logger.debug("Expecting block bodies packet, got: #{inspect packet}")
 
