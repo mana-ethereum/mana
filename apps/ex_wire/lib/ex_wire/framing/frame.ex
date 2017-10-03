@@ -110,42 +110,47 @@ defmodule ExWire.Framing.Frame do
 
       frame_padding_bytes = padding_size(frame_size, 16)
 
-      # let's go and ignore the entire header data....
-      <<
-        frame_enc::binary-size(frame_size),
-        frame_padding::binary-size(frame_padding_bytes),
-        frame_mac::binary-size(16),
-        frame_rest::binary()
-      >> = frame_rest
-
-      frame_enc_with_padding = frame_enc <> frame_padding
-
-      ingress_mac = MAC.update(ingress_mac, frame_enc_with_padding)
-      ingress_mac = update_mac(ingress_mac, mac_encoder, mac_secret, nil)
-      expected_frame_mac = MAC.final(ingress_mac) |> Binary.take(16)
-
-      if expected_frame_mac != frame_mac do
-        {:error, "Failed to match frame ingress mac"}
+      if byte_size(frame_rest) < frame_size + frame_padding_bytes + 16 do
+        {:error, "Insufficent data"}
       else
-        {decoder_stream, frame_with_padding} = AES.stream_decrypt(frame_enc_with_padding, decoder_stream)
 
+        # let's go and ignore the entire header data....
         <<
-          frame::binary-size(frame_size),
-          _frame_padding::binary()
-        >> = frame_with_padding
+          frame_enc::binary-size(frame_size),
+          frame_padding::binary-size(frame_padding_bytes),
+          frame_mac::binary-size(16),
+          frame_rest::binary()
+        >> = frame_rest
 
-        <<
-          packet_type_rlp::binary-size(1),
-          packet_data_rlp::binary()
-        >> = frame
+        frame_enc_with_padding = frame_enc <> frame_padding
 
-        {
-          :ok,
-          packet_type_rlp |> ExRLP.decode |> :binary.decode_unsigned,
-          packet_data_rlp |> ExRLP.decode,
-          frame_rest,
-          %{frame_secrets | ingress_mac: ingress_mac, decoder_stream: decoder_stream}
-        }
+        ingress_mac = MAC.update(ingress_mac, frame_enc_with_padding)
+        ingress_mac = update_mac(ingress_mac, mac_encoder, mac_secret, nil)
+        expected_frame_mac = MAC.final(ingress_mac) |> Binary.take(16)
+
+        if expected_frame_mac != frame_mac do
+          {:error, "Failed to match frame ingress mac"}
+        else
+          {decoder_stream, frame_with_padding} = AES.stream_decrypt(frame_enc_with_padding, decoder_stream)
+
+          <<
+            frame::binary-size(frame_size),
+            _frame_padding::binary()
+          >> = frame_with_padding
+
+          <<
+            packet_type_rlp::binary-size(1),
+            packet_data_rlp::binary()
+          >> = frame
+
+          {
+            :ok,
+            packet_type_rlp |> ExRLP.decode |> :binary.decode_unsigned,
+            packet_data_rlp |> ExRLP.decode,
+            frame_rest,
+            %{frame_secrets | ingress_mac: ingress_mac, decoder_stream: decoder_stream}
+          }
+        end
       end
     end
   end

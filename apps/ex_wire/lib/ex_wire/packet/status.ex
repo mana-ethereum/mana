@@ -128,6 +128,8 @@ defmodule ExWire.Packet.Status do
   """
   @spec handle(ExWire.Packet.packet) :: ExWire.Packet.handle_response
   def handle(packet=%__MODULE__{}) do
+    if System.get_env("TRACE"), do: Logger.debug("[Packet] Got Status: #{inspect packet}")
+
     unless packet.protocol_version == ExWire.protocol_version do
       # TODO: We need to follow up on disconnection packets with disconnection ourselves
       Logger.debug("[Packet] Disconnecting to due incompatible protocol version (them #{packet.protocol_version}, us: #{ExWire.protocol_version})")

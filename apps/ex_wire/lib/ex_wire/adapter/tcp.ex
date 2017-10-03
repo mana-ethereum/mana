@@ -67,23 +67,28 @@ defmodule ExWire.Adapter.TCP do
 
   TODO: clients may send an auth before (or as) we do, and we should handle this case without error.
   """
-  def handle_info(_info={:tcp, _socket, data}, state=%{is_outbound: true, remote_id: remote_id, host: host, auth_data: auth_data, my_ephemeral_key_pair: {_my_ephemeral_public_key, my_ephemeral_private_key}=my_ephemeral_key_pair, my_nonce: my_nonce}) do
+  def handle_info(info={:tcp, socket, data}, state=%{is_outbound: true, remote_id: remote_id, host: host, auth_data: auth_data, my_ephemeral_key_pair: {_my_ephemeral_public_key, my_ephemeral_private_key}=my_ephemeral_key_pair, my_nonce: my_nonce}) do
     case Handshake.try_handle_ack(data, auth_data, my_ephemeral_private_key, my_nonce, host) do
-      {:ok, secrets} ->
+      {:ok, secrets, frame_rest} ->
 
         Logger.debug("[Network] Got ack from #{host}, deriving secrets and sending HELLO")
 
         send_hello(self())
 
-        {:noreply, Map.merge(state, %{
+        updated_state = Map.merge(state, %{
           secrets: secrets,
           auth_data: nil,
           my_ephemeral_key_pair: nil,
-          my_nonce: nil,
-          })}
-      :invalid ->
-        Logger.warn("[Network] Received unknown handshake message when expecting ack")
-        Logger.debug("[Network] Message was: #{inspect data}")
+          my_nonce: nil
+        })
+
+        if byte_size(frame_rest) == 0 do
+          {:noreply, updated_state}
+        else
+          handle_info({:tcp, socket, frame_rest}, updated_state)
+        end
+      {:invalid, reason} ->
+        Logger.warn("[Network] Failed to get handshake message when expecting ack - #{reason}")
 
         {:noreply, state}
     end
@@ -106,16 +111,18 @@ defmodule ExWire.Adapter.TCP do
           secrets: secrets,
           auth_data: nil,
           my_ephemeral_key_pair: nil,
-          my_nonce: nil,
+          my_nonce: nil
           })}
-      :invalid ->
-        Logger.warn("[Network] Received unknown handshake message when expecting auth")
+      {:invalid, reason} ->
+        Logger.warn("[Network] Received unknown handshake message when expecting auth - #{reason}")
         {:noreply, state}
     end
   end
 
   def handle_info(_info={:tcp, socket, data}, state=%{host: host, secrets: secrets}) do
-    case Frame.unframe(data, secrets) do
+    total_data = Map.get(state, :queued_data, <<>>) <> data
+
+    case Frame.unframe(total_data, secrets) do
       {:ok, packet_type, packet_data, frame_rest, updated_secrets} ->
         # TODO: Ignore non-HELLO messages unless state is active.
 
@@ -139,7 +146,8 @@ defmodule ExWire.Adapter.TCP do
           :ok -> state
           :activate -> Map.merge(state, %{active: true})
           :peer_disconnect ->
-            :ok = :gen_tcp.shutdown(socket, :read_write)
+            # Doesn't matter if this succeeds or not
+            :gen_tcp.shutdown(socket, :read_write)
 
             Map.merge(state, %{active: false})
           {:disconnect, reason} ->
@@ -161,7 +169,7 @@ defmodule ExWire.Adapter.TCP do
           end
         end
 
-        updated_state = Map.merge(handled_state, %{secrets: updated_secrets})
+        updated_state = Map.merge(handled_state, %{secrets: updated_secrets, queued_data: <<>>})
 
         # If we have more packet data, we need to continue processing.
         if byte_size(frame_rest) == 0 do
@@ -169,7 +177,9 @@ defmodule ExWire.Adapter.TCP do
         else
           handle_info({:tcp, socket, frame_rest}, updated_state)
         end
-      {:erorr, reason} ->
+      {:error, "Insufficent data"} ->
+        {:noreply, Map.put(state, :queued_data, total_data)}
+      {:error, reason} ->
         Logger.error("[Network] Failed to read incoming packet from #{host} `#{reason}`)")
 
         {:noreply, state}
@@ -196,7 +206,7 @@ defmodule ExWire.Adapter.TCP do
   @doc """
   If we receive a `send` and we have secrets set, we'll send the message as a framed Eth packet.
   """
-  def handle_cast({:send, %{packet: {packet_mod, packet_type, packet_data}}}=data, state = %{host: host, active: false}) do
+  def handle_cast({:send, %{packet: {packet_mod, packet_type, packet_data}}}=data, state = %{host: host, active: false}) when packet_mod != ExWire.Packet.Hello do
     Logger.info("[Network] Queueing packet #{Atom.to_string(packet_mod)} to #{host}")
 
     # TODO: Should we monitor this process, etc?
@@ -209,7 +219,7 @@ defmodule ExWire.Adapter.TCP do
     {:noreply, state}
   end
 
-  def handle_cast({:send, %{packet: {packet_mod, packet_type, packet_data}}}, state = %{socket: socket, secrets: secrets, host: host, active: true}) do
+  def handle_cast({:send, %{packet: {packet_mod, packet_type, packet_data}}}, state = %{socket: socket, secrets: secrets, host: host}) do
     Logger.info("[Network] Sending packet #{Atom.to_string(packet_mod)} to #{host}")
 
     {frame, updated_secrets} = Frame.frame(packet_type, packet_data, secrets)
@@ -240,7 +250,7 @@ defmodule ExWire.Adapter.TCP do
     send_packet(pid, %Packet.Hello{
       p2p_version: 0x04,
       client_id: "Exthereum/0.1",
-      caps: [{"eth", 63}],
+      caps: [{"eth", 62}, {"eth", 63}],
       listen_port: 30304,
       node_id: ExWire.public_key |> ExthCrypto.Key.der_to_raw
     })

@@ -81,10 +81,10 @@ defmodule ExWire.Packet.Hello do
     ] = rlp
 
     %__MODULE__{
-      p2p_version: p2p_version,
+      p2p_version: p2p_version |> :binary.decode_unsigned,
       client_id: client_id,
       caps: (for [cap, ver] <- caps, do: {cap, ver}),
-      listen_port: listen_port,
+      listen_port: listen_port |> :binary.decode_unsigned,
       node_id: node_id
     }
   end
@@ -106,6 +106,8 @@ defmodule ExWire.Packet.Hello do
   """
   @spec handle(ExWire.Packet.packet) :: ExWire.Packet.handle_response
   def handle(packet=%__MODULE__{}) do
+    if System.get_env("TRACE"), do: Logger.debug("[Packet] Got Hello: #{inspect packet}")
+
     if packet.caps == [] do
       Logger.debug("[Packet] Disconnecting due to no matching peer caps (#{inspect packet.caps})")
       {:disconnect, :useless_peer}

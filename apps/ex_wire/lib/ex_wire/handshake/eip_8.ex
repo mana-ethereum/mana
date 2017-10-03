@@ -73,20 +73,18 @@ defmodule ExWire.Handshake.EIP8 do
           79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97,
           98, 99, 100>>]}
   """
-  @spec unwrap_eip_8(binary(), ExthCrypto.Key.private_key, binary()) :: {:ok, RLP.t} | {:error, String.t}
+  @spec unwrap_eip_8(binary(), ExthCrypto.Key.private_key, binary()) :: {:ok, RLP.t, binary()} | {:error, String.t}
   def unwrap_eip_8(encoded_packet, my_static_private_key, remote_addr) do
     Logger.debug("[Network] Received EIP8 Handshake from #{remote_addr}")
+    <<auth_size_int::size(16), _::binary()>> = encoded_packet
 
     case encoded_packet do
-      <<auth_size::binary-size(2), ecies_encoded_message::binary()>> ->
-        if :binary.decode_unsigned(auth_size) != byte_size(ecies_encoded_message) do
-          {:error, "Invalid auth size"}
-        else
-          with {:ok, rlp_bin} <- ExthCrypto.ECIES.decrypt(my_static_private_key, ecies_encoded_message, <<>>, auth_size) do
-            rlp = ExRLP.decode(rlp_bin)
+      <<auth_size::binary-size(2), ecies_encoded_message::binary-size(auth_size_int), frame_rest::binary()>> ->
+        with {:ok, rlp_bin} <- ExthCrypto.ECIES.decrypt(my_static_private_key, ecies_encoded_message, <<>>, auth_size) do
+          rlp = ExRLP.decode(rlp_bin)
 
-            {:ok, rlp}
-          end
+
+          {:ok, rlp, auth_size <> ecies_encoded_message, frame_rest}
         end
       _ ->
         {:error, "Invalid encoded packet"}

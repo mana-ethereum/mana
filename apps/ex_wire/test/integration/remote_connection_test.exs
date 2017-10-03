@@ -21,7 +21,8 @@ defmodule ExWire.RemoteConnectionTest do
   @local_peer_port 35353
   @local_tcp_port 36363
 
-  @public_node_url "enode://4581188ce6e4af8f6c755481994d7df1532e3a427ee1e48811559f3f778f9727662cbbd7ce0213ebfb246629148958492995ae80bad44b017bd8d160f5789f1d@127.0.0.1:30303"
+  # @public_node_url "enode://4581188ce6e4af8f6c755481994d7df1532e3a427ee1e48811559f3f778f9727662cbbd7ce0213ebfb246629148958492995ae80bad44b017bd8d160f5789f1d@127.0.0.1:30303"
+  @public_node_url "enode://20c9ad97c081d63397d7b685a412227a40e23c8bdc6688c6f37e97cfbc22d2b4d1db1510d8f61e6a8866ad7f0e17c02b14182d37ea7c3c8b9c2683aeb6b733a1@52.169.14.227:30303"
 
   def receive(inbound_message, pid) do
     send(pid, {:inbound_message, inbound_message})
@@ -127,9 +128,25 @@ defmodule ExWire.RemoteConnectionTest do
     {:ok, client_pid} = ExWire.Adapter.TCP.start_link(:outbound, remote_host, remote_peer_port, remote_id)
 
     ExWire.Adapter.TCP.subscribe(client_pid, __MODULE__, :receive_packet, [self()])
-    ExWire.Adapter.TCP.send_packet(client_pid, %ExWire.Packet.GetBlockHeaders{block_identifier: 0, max_headers: 1, skip: 0, reverse: false})
 
-    receive_block_headers(client_pid)
+    # ExWire.Adapter.TCP.send_packet(client_pid, %ExWire.Packet.GetBlockHeaders{block_identifier: 0, max_headers: 1, skip: 0, reverse: false})
+
+    receive_status(client_pid)
+  end
+
+  def receive_status(client_pid) do
+    receive do
+      {:incoming_packet, _packet=%Packet.Status{best_hash: hash}} ->
+        ExWire.Adapter.TCP.send_packet(client_pid, %ExWire.Packet.GetBlockHeaders{block_identifier: hash, max_headers: 1, skip: 0, reverse: false})
+
+        receive_block_headers(client_pid)
+      {:incoming_packet, packet} ->
+        if System.get_env("TRACE"), do: Logger.debug("Expecting status packet, got: #{inspect packet}")
+
+        receive_status(client_pid)
+      after 3_000 ->
+        raise "Expected status, but did not receive before timeout."
+    end
   end
 
   def receive_block_headers(client_pid) do
@@ -139,10 +156,10 @@ defmodule ExWire.RemoteConnectionTest do
 
         receive_block_bodies(client_pid)
       {:incoming_packet, packet} ->
-        # Logger.debug("Expecting block headers packet, got: #{inspect packet}")
+        if System.get_env("TRACE"), do: Logger.debug("Expecting block headers packet, got: #{inspect packet}")
 
         receive_block_headers(client_pid)
-      after 2_000 ->
+      after 3_000 ->
         raise "Expected block headers, but did not receive before timeout."
     end
   end
@@ -154,11 +171,11 @@ defmodule ExWire.RemoteConnectionTest do
         assert block.transaction_list == []
         assert block.uncle_list == []
       {:incoming_packet, packet} ->
-        # Logger.debug("Expecting block bodies packet, got: #{inspect packet}")
+        if System.get_env("TRACE"), do: Logger.debug("Expecting block bodies packet, got: #{inspect packet}")
 
         receive_block_bodies(client_pid)
-      after 2_000 ->
-        raise "Expected block headers, but did not receive before timeout."
+      after 3_000 ->
+        raise "Expected block bodies, but did not receive before timeout."
     end
   end
 end
