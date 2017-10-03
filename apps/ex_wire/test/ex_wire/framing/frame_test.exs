@@ -23,12 +23,13 @@ defmodule ExWire.Framing.FrameTest do
     ingress_mac = ExthCrypto.MAC.init(:fake, [hash])
     egress_mac = ExthCrypto.MAC.init(:fake, [hash])
 
-    secrets = %ExWire.Framing.Frame.Secrets{
+    secrets = %ExWire.Framing.Secrets{
       egress_mac: ingress_mac,
       ingress_mac: egress_mac,
       mac_encoder: {AES, AES.block_size, :ecb},
       mac_secret: mac_secret,
-      symmetric_stream: AES.stream_init(:ctr, symmetric_key, <<0::size(128)>>)
+      encoder_stream: AES.stream_init(:ctr, symmetric_key, <<0::size(128)>>),
+      decoder_stream: AES.stream_init(:ctr, symmetric_key, <<0::size(128)>>)
     }
 
     {frame, _updated_secrets} = Frame.frame(8, [1, 2, 3, 4], secrets)

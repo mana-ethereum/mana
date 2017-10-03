@@ -31,12 +31,11 @@ defmodule ExWire.Packet.BlockHeaders do
 
       iex> %ExWire.Packet.BlockHeaders{
       ...>   headers: [
-      ...>     [1, 2, 3]
-      ...>     [4, 5, 6]
+      ...>     %Block.Header{parent_hash: <<1::256>>, ommers_hash: <<2::256>>, beneficiary: <<3::160>>, state_root: <<4::256>>, transactions_root: <<5::256>>, receipts_root: <<6::256>>, logs_bloom: <<>>, difficulty: 5, number: 1, gas_limit: 5, gas_used: 3, timestamp: 6, extra_data: "Hi mom", mix_hash: <<7::256>>, nonce: <<8::64>>}
       ...>   ]
       ...> }
       ...> |> ExWire.Packet.BlockHeaders.serialize
-      [ [1, 2, 3], [4, 5, 6] ]
+      [ [<<1::256>>, <<2::256>>, <<3::160>>, <<4::256>>, <<5::256>>, <<6::256>>, <<>>, 5, 1, 5, 3, 6, "Hi mom", <<7::256>>, <<8::64>>] ]
   """
   @spec serialize(t) :: ExRLP.t
   def serialize(packet=%__MODULE__{}) do
@@ -49,11 +48,10 @@ defmodule ExWire.Packet.BlockHeaders do
 
   ## Examples
 
-      iex> ExWire.Packet.BlockHeaders.deserialize([ [1, 2, 3], [4, 5, 6] ])
+      iex> ExWire.Packet.BlockHeaders.deserialize([ [<<1::256>>, <<2::256>>, <<3::160>>, <<4::256>>, <<5::256>>, <<6::256>>, <<>>, 5, 1, 5, 3, 6, "Hi mom", <<7::256>>, <<8::64>>] ])
       %ExWire.Packet.BlockHeaders{
         headers: [
-          [1, 2, 3],
-          [4, 5, 6]
+          %Block.Header{parent_hash: <<1::256>>, ommers_hash: <<2::256>>, beneficiary: <<3::160>>, state_root: <<4::256>>, transactions_root: <<5::256>>, receipts_root: <<6::256>>, logs_bloom: <<>>, difficulty: 5, number: 1, gas_limit: 5, gas_used: 3, timestamp: 6, extra_data: "Hi mom", mix_hash: <<7::256>>, nonce: <<8::64>>},
         ]
       }
   """
@@ -72,8 +70,8 @@ defmodule ExWire.Packet.BlockHeaders do
 
   ## Examples
 
-      iex> %ExWire.Packet.GetBlockHeaders{headers: [ [1, 2, 3], [4, 5, 6] ]}
-      ...> |> ExWire.Packet.GetBlockHeaders.handle()
+      iex> %ExWire.Packet.BlockHeaders{headers: [ %Block.Header{parent_hash: <<1::256>>, ommers_hash: <<2::256>>, beneficiary: <<3::160>>, state_root: <<4::256>>, transactions_root: <<5::256>>, receipts_root: <<6::256>>, logs_bloom: <<>>, difficulty: 5, number: 1, gas_limit: 5, gas_used: 3, timestamp: 6, extra_data: "Hi mom", mix_hash: <<7::256>>, nonce: <<8::64>>} ]}
+      ...> |> ExWire.Packet.BlockHeaders.handle()
       :ok
   """
   @spec handle(ExWire.Packet.packet) :: ExWire.Packet.handle_response

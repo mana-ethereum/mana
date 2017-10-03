@@ -78,7 +78,7 @@ defmodule ExWire.Packet.Disconnect do
 
   ## Examples
 
-      iex> %ExWire.Packet.Disconnect{reason: timeout_on_receiving_message}
+      iex> %ExWire.Packet.Disconnect{reason: :timeout_on_receiving_message}
       ...> ExWire.Packet.Disconnect.serialize
       [0x0b]
   """

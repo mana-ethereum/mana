@@ -33,7 +33,7 @@ defmodule ExWire.Packet.BlockBodies do
   ## Examples
 
       iex> %ExWire.Packet.BlockBodies{
-      ...>   bodies: [
+      ...>   blocks: [
       ...>     %ExWire.Struct.Block{transaction_list: [], uncle_list: []},
       ...>     %ExWire.Struct.Block{transaction_list: [], uncle_list: []}
       ...>   ]
@@ -56,7 +56,7 @@ defmodule ExWire.Packet.BlockBodies do
 
       iex> ExWire.Packet.BlockBodies.deserialize([[[], []], [[], []]])
       %ExWire.Packet.BlockBodies{
-        bodies: [
+        blocks: [
           %ExWire.Struct.Block{transaction_list: [], uncle_list: []},
           %ExWire.Struct.Block{transaction_list: [], uncle_list: []}
         ]
