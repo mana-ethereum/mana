@@ -38,14 +38,12 @@ defmodule ExWire.Packet.BlockBodies do
       ...>     %ExWire.Struct.Block{transaction_list: [], uncle_list: []}
       ...>   ]
       ...> }
-      ...> |> ExWire.Packet.BlockBodies.serialize
+      ...> |> ExWire.Packet.BlockBodies.serialize()
       [[[], []], [[], []]]
   """
   @spec serialize(t) :: ExRLP.t
   def serialize(packet=%__MODULE__{}) do
-    blocks = [_h|_t] = packet
-
-    for block <- blocks, do: Block.serialize(block)
+    for block <- packet.blocks, do: Block.serialize(block)
   end
 
   @doc """

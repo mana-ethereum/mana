@@ -85,7 +85,7 @@ defmodule ExWire.Message.Neighbours do
       ...>   %ExWire.Struct.Neighbour{endpoint: %ExWire.Struct.Endpoint{ip: [5, 6, 7, 8], tcp_port: nil, udp_port: 6}, node: <<8, 8>>}],
       ...>   timestamp: 1})
       ...> |> ExRLP.decode()
-      [[[<<1,2,3,4>>, <<>>, <<5>>, <<7, 7>>], [<<5,6,7,8>>, <<6>>, <<>>, <<8, 8>>]], <<1>>]
+      [[[<<1,2,3,4>>, <<>>, <<0, 5>>, <<7, 7>>], [<<5,6,7,8>>, <<0, 6>>, <<>>, <<8, 8>>]], <<1>>]
   """
   @spec encode(t) :: binary()
   def encode(%__MODULE__{nodes: nodes, timestamp: timestamp}) do

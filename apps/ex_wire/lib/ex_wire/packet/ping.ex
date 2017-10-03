@@ -22,8 +22,8 @@ defmodule ExWire.Packet.Ping do
 
   ## Examples
 
-      iex> ExWire.Packet.Ping{}
-      ...> ExWire.Packet.Ping.serialize
+      iex> %ExWire.Packet.Ping{}
+      ...> |> ExWire.Packet.Ping.serialize
       []
   """
   @spec serialize(t) :: ExRLP.t
@@ -38,7 +38,7 @@ defmodule ExWire.Packet.Ping do
   ## Examples
 
       iex> ExWire.Packet.Ping.deserialize([])
-      ExWire.Packet.Ping{}
+      %ExWire.Packet.Ping{}
   """
   @spec deserialize(ExRLP.t) :: t
   def deserialize(rlp) do

@@ -28,7 +28,7 @@ defmodule ExWire.Message.Pong do
 
   ## Examples
 
-      iex> ExWire.Message.Pong.decode([[<<1,2,3,4>>, <<>>, <<5>>], <<2>>, 3] |> ExRLP.encode)
+      iex> ExWire.Message.Pong.decode([[<<1,2,3,4>>, <<>>, <<0, 5>>], <<2>>, 3] |> ExRLP.encode)
       %ExWire.Message.Pong{
         to: %ExWire.Struct.Endpoint{ip: [1, 2, 3, 4], tcp_port: 5, udp_port: nil},
         hash: <<2>>,
@@ -59,7 +59,7 @@ defmodule ExWire.Message.Pong do
       ...>   hash: <<2>>,
       ...>   timestamp: 3}
       ...> ) |> ExRLP.decode()
-      [[<<1, 2, 3, 4>>, "", <<5>>], <<2>>, <<3>>]
+      [[<<1, 2, 3, 4>>, "", <<0, 5>>], <<2>>, <<3>>]
   """
   @spec encode(t) :: binary()
   def encode(%__MODULE__{to: to, hash: hash, timestamp: timestamp}) do

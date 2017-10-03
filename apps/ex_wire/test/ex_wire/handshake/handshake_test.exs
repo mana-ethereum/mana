@@ -1,35 +1,36 @@
-defmodule ExWire.HandshakeTest do
+defmodule HandshakeTest do
   use ExUnit.Case, async: true
   doctest ExWire.Handshake
+  alias ExWire.Handshake
 
   test "handshake build and handle auth msg / ack resp via eip-8" do
     my_static_public_key = ExthCrypto.Test.public_key(:key_a)
     my_static_private_key = ExthCrypto.Test.private_key(:key_a)
     her_static_public_key = ExthCrypto.Test.public_key(:key_b)
 
-    {my_auth_msg, my_ephemeral_key_pair, nonce} = ExWire.Handshake.build_auth_msg(
+    {my_auth_msg, my_ephemeral_key_pair, nonce} = Handshake.build_auth_msg(
       my_static_public_key,
       my_static_private_key,
       her_static_public_key
     )
 
     {:ok, encoded_auth_msg} = my_auth_msg
-      |> ExWire.Handshake.AuthMsgV4.serialize()
-      |> ExWire.Handshake.EIP8.wrap_eip_8(her_static_public_key, "1.2.3.4", my_ephemeral_key_pair)
+      |> Handshake.Struct.AuthMsgV4.serialize()
+      |> Handshake.EIP8.wrap_eip_8(her_static_public_key, "1.2.3.4", my_ephemeral_key_pair)
 
-    {:ok, her_auth_msg} = ExWire.Handshake.read_auth_msg(encoded_auth_msg, ExthCrypto.Test.private_key(:key_b), "1.2.3.4")
+    {:ok, her_auth_msg, <<>>} = Handshake.read_auth_msg(encoded_auth_msg, ExthCrypto.Test.private_key(:key_b), "1.2.3.4")
 
     # Same auth message, except we've added the remote ephemeral public key
     assert her_auth_msg.remote_ephemeral_public_key != nil
     assert my_auth_msg == %{her_auth_msg | remote_ephemeral_public_key: nil}
 
-    my_ack_resp = ExWire.Handshake.build_ack_resp(her_auth_msg.remote_ephemeral_public_key)
+    my_ack_resp = Handshake.build_ack_resp(her_auth_msg.remote_ephemeral_public_key)
 
     {:ok, encoded_ack_msg} = my_ack_resp
-      |> ExWire.Handshake.AckRespV4.serialize()
-      |> ExWire.Handshake.EIP8.wrap_eip_8(her_static_public_key, "1.2.3.4", my_ephemeral_key_pair)
+      |> Handshake.Struct.AckRespV4.serialize()
+      |> Handshake.EIP8.wrap_eip_8(her_static_public_key, "1.2.3.4", my_ephemeral_key_pair)
 
-    {:ok, her_ack_resp} = ExWire.Handshake.read_ack_resp(encoded_ack_msg, ExthCrypto.Test.private_key(:key_b), "1.2.3.4")
+    {:ok, her_ack_resp, _ack_bin, <<>>} = Handshake.read_ack_resp(encoded_ack_msg, ExthCrypto.Test.private_key(:key_b), "1.2.3.4")
 
     assert my_ack_resp == her_ack_resp
   end
@@ -47,12 +48,12 @@ defmodule ExWire.HandshakeTest do
       a4592ee77e2bd94d0be3691f3b406f9bba9b591fc63facc016bfa8
       """ |> String.replace("\n", "") |> ExthCrypto.Math.hex_to_bin
 
-    {:ok, auth_msg} = ExWire.Handshake.read_auth_msg(auth, secret, "1.2.3.4")
+    {:ok, auth_msg, <<>>} = Handshake.read_auth_msg(auth, secret, "1.2.3.4")
 
     assert auth_msg.remote_public_key == "fda1cff674c90c9a197539fe3dfb53086ace64f83ed7c6eabec741f7f381cc803e52ab2cd55d5569bce4347107a310dfd5f88a010cd2ffd1005ca406f1842877" |> ExthCrypto.Math.hex_to_bin |> ExthCrypto.Key.raw_to_der
     assert auth_msg.remote_nonce == "7e968bba13b6c50e2c4cd7f241cc0d64d1ac25c7f5952df231ac6a2bda8ee5d6" |> ExthCrypto.Math.hex_to_bin
     assert auth_msg.remote_ephemeral_public_key == "654d1044b69c577a44e5f01a1209523adb4026e70c62d1c13a067acabc09d2667a49821a0ad4b634554d330a15a58fe61f8a8e0544b310c6de7b0c8da7528a8d" |> ExthCrypto.Math.hex_to_bin |> ExthCrypto.Key.raw_to_der
-    assert auth_msg.remote_version == 4
+    assert auth_msg.remote_version == 63
   end
 
   test "handshake auth eip 8" do
@@ -71,7 +72,7 @@ defmodule ExWire.HandshakeTest do
     3bf7678318e2d5b5340c9e488eefea198576344afbdf66db5f51204a6961a63ce072c8926c
     """ |> String.replace("\n", "") |> ExthCrypto.Math.hex_to_bin
 
-    {:ok, auth_msg} = ExWire.Handshake.read_auth_msg(auth, secret, "1.2.3.4")
+    {:ok, auth_msg, <<>>} = Handshake.read_auth_msg(auth, secret, "1.2.3.4")
 
     assert auth_msg.remote_public_key == "fda1cff674c90c9a197539fe3dfb53086ace64f83ed7c6eabec741f7f381cc803e52ab2cd55d5569bce4347107a310dfd5f88a010cd2ffd1005ca406f1842877" |> ExthCrypto.Math.hex_to_bin |> ExthCrypto.Key.raw_to_der
     assert auth_msg.remote_nonce == "7e968bba13b6c50e2c4cd7f241cc0d64d1ac25c7f5952df231ac6a2bda8ee5d6" |> ExthCrypto.Math.hex_to_bin
@@ -96,7 +97,7 @@ defmodule ExWire.HandshakeTest do
     d490
     """ |> String.replace("\n", "") |> ExthCrypto.Math.hex_to_bin
 
-    {:ok, auth_msg} = ExWire.Handshake.read_auth_msg(auth, secret, "1.2.3.4")
+    {:ok, auth_msg, <<>>} = Handshake.read_auth_msg(auth, secret, "1.2.3.4")
 
     assert auth_msg.remote_public_key == "fda1cff674c90c9a197539fe3dfb53086ace64f83ed7c6eabec741f7f381cc803e52ab2cd55d5569bce4347107a310dfd5f88a010cd2ffd1005ca406f1842877" |> ExthCrypto.Math.hex_to_bin |> ExthCrypto.Key.raw_to_der
     assert auth_msg.remote_nonce == "7e968bba13b6c50e2c4cd7f241cc0d64d1ac25c7f5952df231ac6a2bda8ee5d6" |> ExthCrypto.Math.hex_to_bin
@@ -116,11 +117,11 @@ defmodule ExWire.HandshakeTest do
     d1497113d5c755e942d1
     """ |> String.replace("\n", "") |> ExthCrypto.Math.hex_to_bin
 
-    {:ok, ack_resp} = ExWire.Handshake.read_ack_resp(ack, secret, "1.2.3.4")
+    {:ok, ack_resp, _ack_resp_bin, <<>>} = Handshake.read_ack_resp(ack, secret, "1.2.3.4")
 
     assert ack_resp.remote_nonce == "559aead08264d5795d3909718cdd05abd49572e84fe55590eef31a88a08fdffd" |> ExthCrypto.Math.hex_to_bin
     assert ack_resp.remote_ephemeral_public_key == "b6d82fa3409da933dbf9cb0140c5dde89f4e64aec88d476af648880f4a10e1e49fe35ef3e69e93dd300b4797765a747c6384a6ecf5db9c2690398607a86181e4" |> ExthCrypto.Math.hex_to_bin
-    assert ack_resp.remote_version == 4
+    assert ack_resp.remote_version == 63
   end
 
   test "handshake ack eip 8" do
@@ -142,7 +143,7 @@ defmodule ExWire.HandshakeTest do
     5833c2464c805246155289f4
     """ |> String.replace("\n", "") |> ExthCrypto.Math.hex_to_bin
 
-    {:ok, ack_resp} = ExWire.Handshake.read_ack_resp(ack, secret, "1.2.3.4")
+    {:ok, ack_resp, _ack_resp_bin, <<>>} = Handshake.read_ack_resp(ack, secret, "1.2.3.4")
 
     assert ack_resp.remote_nonce == "559aead08264d5795d3909718cdd05abd49572e84fe55590eef31a88a08fdffd" |> ExthCrypto.Math.hex_to_bin
     assert ack_resp.remote_ephemeral_public_key == "b6d82fa3409da933dbf9cb0140c5dde89f4e64aec88d476af648880f4a10e1e49fe35ef3e69e93dd300b4797765a747c6384a6ecf5db9c2690398607a86181e4" |> ExthCrypto.Math.hex_to_bin
@@ -168,7 +169,7 @@ defmodule ExWire.HandshakeTest do
     35b9593b48b9d3ca4c13d245d5f04169b0b1
     """ |> String.replace("\n", "") |> ExthCrypto.Math.hex_to_bin
 
-    {:ok, ack_resp} = ExWire.Handshake.read_ack_resp(ack, secret, "1.2.3.4")
+    {:ok, ack_resp, _ack_resp_bin, <<>>} = Handshake.read_ack_resp(ack, secret, "1.2.3.4")
 
     assert ack_resp.remote_nonce == "559aead08264d5795d3909718cdd05abd49572e84fe55590eef31a88a08fdffd" |> ExthCrypto.Math.hex_to_bin
     assert ack_resp.remote_ephemeral_public_key == "b6d82fa3409da933dbf9cb0140c5dde89f4e64aec88d476af648880f4a10e1e49fe35ef3e69e93dd300b4797765a747c6384a6ecf5db9c2690398607a86181e4" |> ExthCrypto.Math.hex_to_bin

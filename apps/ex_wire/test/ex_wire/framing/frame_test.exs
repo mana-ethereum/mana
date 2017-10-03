@@ -36,8 +36,9 @@ defmodule ExWire.Framing.FrameTest do
 
     assert frame |> ExthCrypto.Math.bin_to_hex == "00828ddae471818bb0bfa6b551d1cb4201010101010101010101010101010101ba628a4ba590cb43f7848f41c438288501010101010101010101010101010101"
 
-    {:ok, packet_type, packet_data, _secrets} = Frame.unframe(frame, secrets)
+    {:ok, packet_type, packet_data, frame_rest, _secrets} = Frame.unframe(frame <> "hello", secrets)
 
+    assert frame_rest == "hello"
     assert packet_type == 8
     assert packet_data == [<<1>>, <<2>>, <<3>>, <<4>>]
   end

@@ -21,7 +21,7 @@ defmodule ExWire.Packet.Pong do
   ## Examples
 
       iex> %ExWire.Packet.Pong{}
-      ...> ExWire.Packet.Pong.serialize
+      ...> |> ExWire.Packet.Pong.serialize
       []
   """
   @spec serialize(t) :: ExRLP.t

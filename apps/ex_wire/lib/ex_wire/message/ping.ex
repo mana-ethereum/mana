@@ -65,7 +65,7 @@ defmodule ExWire.Message.Ping do
       ...>   to: %ExWire.Struct.Endpoint{ip: [5, 6, 7, 8], tcp_port: nil, udp_port: 6},
       ...>   timestamp: 4}
       ...> ) |> ExRLP.decode()
-      [<<1>>, [<<1, 2, 3, 4>>, "", <<5>>], [<<5, 6, 7, 8>>, <<6>>, ""], <<4>>]
+      [<<1>>, [<<1, 2, 3, 4>>, "", <<0, 5>>], [<<5, 6, 7, 8>>, <<0, 6>>, ""], <<4>>]
   """
   @spec encode(t) :: binary()
   def encode(%__MODULE__{version: version, from: from, to: to, timestamp: timestamp}) do

@@ -57,7 +57,7 @@ defmodule ExWire.Handshake do
   @spec read_auth_msg(binary(), ExthCrypto.Key.private_key, String.t) :: {:ok, AuthMsgV4.t, binary()} | {:error, String.t}
   def read_auth_msg(encoded_auth, my_static_private_key, remote_addr) do
     case EIP8.unwrap_eip_8(encoded_auth, my_static_private_key, remote_addr) do
-      {:ok, rlp, frame_rest} ->
+      {:ok, rlp, _bin, frame_rest} ->
         # unwrap eip-8
         auth_msg =
           rlp
@@ -138,25 +138,26 @@ defmodule ExWire.Handshake do
 
   ## Examples
 
-      iex> ExWire.Handshake.build_auth_msg(ExthCrypto.Test.public_key(:key_a), ExthCrypto.Test.private_key(:key_a), ExthCrypto.Test.public_key(:key_b), ExthCrypto.Test.init_vector(1, 32), ExthCrypto.Test.key_pair(:key_c))
-      {
-        %ExWire.Handshake.Struct.AuthMsgV4{
-          remote_ephemeral_public_key: nil,
-          remote_nonce: <<1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32>>,
-          remote_public_key: <<4, 54, 241, 224, 126, 85, 135, 69, 213, 129, 115, 3, 41, 161, 217, 87, 215, 159, 64, 17, 167, 128, 113, 172, 232, 46, 34, 145, 136, 72, 160, 207, 161, 171, 255, 26, 163, 160, 158, 227, 196, 92, 62, 119, 84, 156, 99, 224, 155, 120, 250, 153, 134, 180, 218, 177, 186, 200, 199, 106, 97, 103, 50, 215, 114>>,
-          remote_version: 4,
-          signature: <<127, 216, 231, 36, 238, 232, 137, 16, 83, 221, 94, 111, 232, 164, 133, 148, 56, 55, 207, 103, 124, 143, 158, 123, 191, 142, 235, 11, 171, 21, 214, 228, 124, 34, 84, 243, 6, 156, 191, 33, 63, 64, 87, 47, 10, 216, 238, 251, 252, 29, 10, 135, 142, 164, 122, 70, 138, 193, 40, 188, 36, 84, 144, 17>>
-        },
-        {
-          <<4, 146, 201, 161, 205, 19, 177, 147, 33, 107, 190, 144, 81, 145, 173, 83,
-            20, 105, 150, 114, 196, 249, 143, 167, 152, 63, 225, 96, 184, 86, 203, 38,
-            134, 241, 40, 152, 74, 34, 68, 233, 204, 91, 240, 208, 254, 62, 169, 53,
-            201, 248, 156, 236, 34, 203, 156, 75, 18, 121, 162, 104, 3, 164, 156, 46, 186>>,
-          <<178, 68, 134, 194, 0, 187, 118, 35, 33, 220, 4, 3, 50, 96, 97, 91, 96, 14,
-            71, 239, 7, 102, 33, 187, 194, 221, 152, 36, 95, 22, 121, 48>>
-        },
-        <<1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32>>
+      iex> {auth_msg_v4, ephemeral_keypair, nonce} = ExWire.Handshake.build_auth_msg(ExthCrypto.Test.public_key(:key_a), ExthCrypto.Test.private_key(:key_a), ExthCrypto.Test.public_key(:key_b), ExthCrypto.Test.init_vector(1, 32), ExthCrypto.Test.key_pair(:key_c))
+      iex> %{auth_msg_v4 | signature: nil} # signature will be unique each time
+      %ExWire.Handshake.Struct.AuthMsgV4{
+        remote_ephemeral_public_key: nil,
+        remote_nonce: <<1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32>>,
+        remote_public_key: <<4, 54, 241, 224, 126, 85, 135, 69, 213, 129, 115, 3, 41, 161, 217, 87, 215, 159, 64, 17, 167, 128, 113, 172, 232, 46, 34, 145, 136, 72, 160, 207, 161, 171, 255, 26, 163, 160, 158, 227, 196, 92, 62, 119, 84, 156, 99, 224, 155, 120, 250, 153, 134, 180, 218, 177, 186, 200, 199, 106, 97, 103, 50, 215, 114>>,
+        remote_version: 63,
+        signature: nil
       }
+      iex> ephemeral_keypair
+      {
+        <<4, 146, 201, 161, 205, 19, 177, 147, 33, 107, 190, 144, 81, 145, 173, 83,
+          20, 105, 150, 114, 196, 249, 143, 167, 152, 63, 225, 96, 184, 86, 203, 38,
+          134, 241, 40, 152, 74, 34, 68, 233, 204, 91, 240, 208, 254, 62, 169, 53,
+          201, 248, 156, 236, 34, 203, 156, 75, 18, 121, 162, 104, 3, 164, 156, 46, 186>>,
+        <<178, 68, 134, 194, 0, 187, 118, 35, 33, 220, 4, 3, 50, 96, 97, 91, 96, 14,
+          71, 239, 7, 102, 33, 187, 194, 221, 152, 36, 95, 22, 121, 48>>
+      }
+      iex> nonce
+      <<1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32>>
   """
   @spec build_auth_msg(ExthCrypto.Key.public_key, ExthCrypto.Key.private_key, ExthCrypto.Key.public_key, binary() | nil, ExthCrypto.Key.key_pair | nil) :: {AuthMsgV4.t, ExthCrypto.Key.key_pair, binary()}
   def build_auth_msg(my_static_public_key, my_static_private_key, her_static_public_key, nonce \\ nil, my_ephemeral_keypair \\ nil) do
@@ -199,7 +200,7 @@ defmodule ExWire.Handshake do
       %ExWire.Handshake.Struct.AckRespV4{
         remote_ephemeral_public_key: <<4, 146, 201, 161, 205, 19, 177, 147, 33, 107, 190, 144, 81, 145, 173, 83, 20, 105, 150, 114, 196, 249, 143, 167, 152, 63, 225, 96, 184, 86, 203, 38, 134, 241, 40, 152, 74, 34, 68, 233, 204, 91, 240, 208, 254, 62, 169, 53, 201, 248, 156, 236, 34, 203, 156, 75, 18, 121, 162, 104, 3, 164, 156, 46, 186>>,
         remote_nonce: <<1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16>>,
-        remote_version: 4
+        remote_version: 63
       }
   """
   @spec build_ack_resp(ExthCrypto.Key.public_key, binary() | nil) :: AckRespV4.t

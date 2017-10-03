@@ -66,10 +66,10 @@ defmodule ExWire.Message do
       ...>     timestamp: 4
       ...>   }
       ...> )
-      <<1, 210, 1, 199, 132, 1, 2, 3, 4, 128, 5, 199, 132, 5, 6, 7, 8, 6, 128, 4>>
+      <<1, 214, 1, 201, 132, 1, 2, 3, 4, 128, 130, 0, 5, 201, 132, 5, 6, 7, 8, 130, 0, 6, 128, 4>>
 
       iex> ExWire.Message.encode(%ExWire.Message.Pong{to: %ExWire.Struct.Endpoint{ip: [5, 6, 7, 8], tcp_port: nil, udp_port: 6}, hash: <<2>>, timestamp: 3})
-      <<2, 202, 199, 132, 5, 6, 7, 8, 6, 128, 2, 3>>
+      <<2, 204, 201, 132, 5, 6, 7, 8, 130, 0, 6, 128, 2, 3>>
   """
   @spec encode(t) :: binary()
   def encode(message) do
