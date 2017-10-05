@@ -3,8 +3,10 @@
 use Mix.Config
 
 config :ex_wire,
+  p2p_version: 0x04,
   protocol_version: 63,
-  network_id: 3 # ropsten
+  network_id: 3, # ropsten
+  caps: [{"eth", 62}, {"eth", 63}]
 
 # This configuration is loaded before any dependency and is restricted
 # to this project. If another project depends on this project, this

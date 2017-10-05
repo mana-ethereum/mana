@@ -29,8 +29,8 @@ defmodule ExWire.Adapter.TCP do
 
     # TODO: Move into simpler function
     {my_auth_msg, my_ephemeral_key_pair, my_nonce} = ExWire.Handshake.build_auth_msg(
-      ExWire.public_key,
-      ExWire.private_key,
+      ExWire.Config.public_key(),
+      ExWire.Config.private_key(),
       remote_id
     )
 
@@ -250,11 +250,11 @@ defmodule ExWire.Adapter.TCP do
   """
   def send_hello(pid) do
     send_packet(pid, %Packet.Hello{
-      p2p_version: 0x04,
-      client_id: "Exthereum/0.1",
-      caps: [{"eth", 62}, {"eth", 63}],
-      listen_port: 30304,
-      node_id: ExWire.public_key |> ExthCrypto.Key.der_to_raw
+      p2p_version: ExWire.Config.p2p_version(),
+      client_id: ExWire.Config.client_id(),
+      caps: ExWire.Config.caps(),
+      listen_port: ExWire.Config.listen_port(),
+      node_id: ExWire.Config.node_id()
     })
   end
 

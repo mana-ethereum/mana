@@ -160,7 +160,7 @@ defmodule ExWire.Network do
       {:"$gen_cast",
         {:send,
           %{
-            data: ExWire.Protocol.encode(message, ExWire.private_key()),
+            data: ExWire.Protocol.encode(message, ExWire.Config.private_key()),
             to: %ExWire.Struct.Endpoint{
               ip: <<1, 2, 3, 4>>,
               tcp_port: nil,
@@ -177,7 +177,7 @@ defmodule ExWire.Network do
         :send,
         %{
           to: to,
-          data: Protocol.encode(message, ExWire.private_key()),
+          data: Protocol.encode(message, ExWire.Config.private_key()),
         }
       }
     )

@@ -144,8 +144,8 @@ defmodule ExWire.RemoteConnectionTest do
       {:incoming_packet, _packet=%Packet.Status{best_hash: _best_hash, total_difficulty: total_difficulty, genesis_hash: genesis_hash}} ->
         # Send a simple status message
         TCP.send_packet(client_pid, %Packet.Status{
-          protocol_version: ExWire.protocol_version,
-          network_id: ExWire.network_id,
+          protocol_version: ExWire.Config.protocol_version(),
+          network_id: ExWire.Config.network_id(),
           total_difficulty: total_difficulty,
           best_hash: genesis_hash,
           genesis_hash: genesis_hash

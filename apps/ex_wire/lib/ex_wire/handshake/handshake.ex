@@ -37,11 +37,11 @@ defmodule ExWire.Handshake do
     @type t :: %__MODULE__{
       initiator: boolean(),
       remote_id: ExWire.node_id,
-      remote_pub: ExWire.private_key(),
+      remote_pub: ExWire.Config.private_key,
       init_nonce: binary(),
       resp_nonce: binary(),
-      random_priv_key: ExWire.private_key,
-      remote_random_pub: ExWire.pubic_key,
+      random_priv_key: ExWire.Config.private_key,
+      remote_random_pub: ExWire.Config.pubic_key,
     }
   end
 
@@ -81,7 +81,7 @@ defmodule ExWire.Handshake do
               signature,
               remote_public_key,
               remote_nonce,
-              ExWire.protocol_version
+              ExWire.Config.protocol_version()
             ]
             |> AuthMsgV4.deserialize()
             |> AuthMsgV4.set_remote_ephemeral_public_key(my_static_private_key)
@@ -123,7 +123,7 @@ defmodule ExWire.Handshake do
             [
               remote_ephemeral_public_key,
               remote_nonce,
-              ExWire.protocol_version
+              ExWire.Config.protocol_version()
             ]
             |> AckRespV4.deserialize()
 
@@ -184,7 +184,7 @@ defmodule ExWire.Handshake do
       signature: signature <> :binary.encode_unsigned(recovery_id),
       remote_public_key: my_static_public_key,
       remote_nonce: nonce,
-      remote_version: ExWire.protocol_version
+      remote_version: ExWire.Config.protocol_version()
     }
 
     # Return auth_msg and my new key pair
@@ -211,7 +211,7 @@ defmodule ExWire.Handshake do
     %AckRespV4{
       remote_nonce: nonce,
       remote_ephemeral_public_key: remote_ephemeral_public_key,
-      remote_version: ExWire.protocol_version
+      remote_version: ExWire.Config.protocol_version()
     }
   end
 
@@ -223,7 +223,7 @@ defmodule ExWire.Handshake do
   """
   @spec try_handle_ack(binary(), binary(), ExthCrypto.Key.private_key, binary(), String.t) :: {:ok, Secrets.t, binary()} | {:invalid, String.t}
   def try_handle_ack(ack_data, auth_data, my_ephemeral_private_key, my_nonce, host) do
-    case ExWire.Handshake.read_ack_resp(ack_data, ExWire.private_key, host) do
+    case ExWire.Handshake.read_ack_resp(ack_data, ExWire.Config.private_key(), host) do
       {:ok, %ExWire.Handshake.Struct.AckRespV4{
         remote_ephemeral_public_key: remote_ephemeral_public_key,
         remote_nonce: remote_nonce
@@ -253,7 +253,7 @@ defmodule ExWire.Handshake do
   """
   @spec try_handle_auth(binary(), ExthCrypto.Key.key_pair, binary(), binary(), String.t) :: {:ok, binary(), Secrets.t} | {:invalid, String.t}
   def try_handle_auth(auth_data, {my_ephemeral_public_key, my_ephemeral_private_key}=my_ephemeral_key_pair, my_nonce, remote_id, host) do
-    case ExWire.Handshake.read_auth_msg(auth_data, ExWire.private_key, host) do
+    case ExWire.Handshake.read_auth_msg(auth_data, ExWire.Config.private_key(), host) do
       {:ok, %ExWire.Handshake.Struct.AuthMsgV4{
         signature: _signature,
         remote_public_key: _remote_public_key,
