@@ -36,7 +36,7 @@ defmodule EVM.VM do
       iex> EVM.VM.run(%{}, 5, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:add])})
       {nil, 5, %EVM.SubState{}, ""}
   """
-  @spec run(EVM.state, Gas.t, ExecEnv.t) :: {EVM.state | nil, Gas.t, EVM.SubState.t, output}
+  @spec run(EVM.world_state, Gas.t, ExecEnv.t) :: {EVM.world_state | nil, Gas.t, EVM.SubState.t, output}
   def run(state, gas, exec_env) do
     machine_state = %EVM.MachineState{gas: gas}
     sub_state = %EVM.SubState{}
@@ -64,12 +64,12 @@ defmodule EVM.VM do
       iex> EVM.VM.exec(%{}, %EVM.MachineState{program_counter: 0, gas: 24, stack: []}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:push1, 3, :push1, 5, :add, :push1, 0x00, :mstore, :push1, 32, :push1, 0, :return])})
       {%{}, %EVM.MachineState{active_words: 1, memory: <<0x08::256>>, gas: 0, program_counter: 13, stack: []}, %EVM.SubState{logs: "", refund: 0, suicide_list: []}, %EVM.ExecEnv{machine_code: <<96, 3, 96, 5, 1, 96, 0, 82, 96, 32, 96, 0, 243>>}, <<8::256>>}
   """
-  @spec exec(EVM.state, MachineState.t, SubState.t, ExecEnv.t) :: {EVM.state | nil, MachineState.t, SubState.t, ExecEnv.t, output}
+  @spec exec(EVM.world_state, MachineState.t, SubState.t, ExecEnv.t) :: {EVM.world_state | nil, MachineState.t, SubState.t, ExecEnv.t, output}
   def exec(state, machine_state, sub_state, exec_env) do
     do_exec(state, machine_state, sub_state, exec_env, sub_state)
   end
 
-  @spec do_exec(EVM.state, MachineState.t, SubState.t, ExecEnv.t, SubState.t) :: {EVM.state | nil, MachineState.t, SubState.t, ExecEnv.t, output}
+  @spec do_exec(EVM.world_state, MachineState.t, SubState.t, ExecEnv.t, SubState.t) :: {EVM.world_state | nil, MachineState.t, SubState.t, ExecEnv.t, output}
   defp do_exec(state, machine_state, sub_state, exec_env, original_sub_state) do
 
     # Debugger generally runs here.
@@ -106,12 +106,12 @@ defmodule EVM.VM do
       iex> EVM.VM.cycle(state, %EVM.MachineState{program_counter: 0, gas: 5, stack: [1, 2]}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:add])})
       {%MerklePatriciaTree.Trie{db: {MerklePatriciaTree.DB.ETS, :evm_vm_test_2}, root_hash: MerklePatriciaTree.Trie.empty_trie_root_hash}, %EVM.MachineState{program_counter: 1, gas: 2, stack: [3]}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:add])}}
   """
-  @spec cycle(EVM.state, MachineState.t, SubState.t, ExecEnv.t) :: {EVM.state, MachineState.t, SubState.t, ExecEnv.t}
+  @spec cycle(EVM.world_state, MachineState.t, SubState.t, ExecEnv.t) :: {EVM.world_state, MachineState.t, SubState.t, ExecEnv.t}
   def cycle(state, machine_state, sub_state, exec_env) do
     operation = MachineCode.current_operation(machine_state, exec_env)
     inputs = Operation.inputs(operation, machine_state)
     machine_state = machine_state
-      |> MachineState.subtract_gas(state, operation, inputs)
+      |> MachineState.subtract_gas(state, exec_env)
     {state, machine_state, sub_state, exec_env} = Operation.run_operation(operation, state, machine_state, sub_state, exec_env)
     machine_state = machine_state
       |> MachineState.move_program_counter(operation, inputs)

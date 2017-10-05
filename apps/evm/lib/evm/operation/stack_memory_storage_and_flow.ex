@@ -81,26 +81,23 @@ defmodule EVM.Operation.StackMemoryStorageAndFlow do
 
   ## Examples
 
+      iex> address = 0x0000000000000000000000000000000000000001
       iex> db = MerklePatriciaTree.Test.random_ets_db()
-      iex> state = EVM.Operation.StackMemoryStorageAndFlow.sstore([0x11223344556677889900, 0x111222333444555], %{state: MerklePatriciaTree.Trie.new(db)})[:state]
-      iex> EVM.Operation.StackMemoryStorageAndFlow.sload([0x11223344556677889900], %{state: state, stack: []})
+      iex> state = EVM.Operation.StackMemoryStorageAndFlow.sstore([0x11223344556677889900, 0x111222333444555], %{state: %{address => %{storage: MerklePatriciaTree.Trie.new(db)}}, exec_env: %EVM.ExecEnv{address: address}})[:state]
+      iex> EVM.Operation.StackMemoryStorageAndFlow.sload([0x11223344556677889900], %{state: state, stack: [], exec_env: %EVM.ExecEnv{address: address}})
       0x111222333444555
 
+      iex> address = 0x0000000000000000000000000000000000000001
       iex> db = MerklePatriciaTree.Test.random_ets_db()
-      iex> state = EVM.Operation.StackMemoryStorageAndFlow.sstore([0x11223344556677889900, 0x111222333444555], %{state: MerklePatriciaTree.Trie.new(db)})[:state]
-      iex> EVM.Operation.StackMemoryStorageAndFlow.sload([0x1234], %{state: state, stack: []})
+      iex> state = EVM.Operation.StackMemoryStorageAndFlow.sstore([0x11223344556677889900, 0x111222333444555], %{state: %{address => %{storage: MerklePatriciaTree.Trie.new(db)}}, exec_env: %EVM.ExecEnv{address: address}})[:state][address][:storage]
+      iex> EVM.Operation.StackMemoryStorageAndFlow.sload([0x1234], %{state: %{address => %{storage: state}}, stack: [], exec_env: %EVM.ExecEnv{address: address}})
       0x0
   """
   @spec sload(Operation.stack_args, Operation.vm_map) :: Operation.op_result
-  def sload([key], %{state: state=%Trie{}, stack: stack}) when is_list(stack) do
-    # TODO: Consider key value encodings
-    value = Trie.get(state, <<key::size(256)>>)
-
-    if value do
-      Helpers.decode_signed(value)
-    else
-      0
-    end
+  def sload([key], %{state: state, stack: stack, exec_env: %{address: address}}) do
+    (get_in(state, [address, :storage]) || %Trie{})
+      |> Trie.get(<<key::size(256)>>)
+      |> Helpers.decode_signed
   end
 
   @doc """
@@ -113,14 +110,14 @@ defmodule EVM.Operation.StackMemoryStorageAndFlow do
 
   ## Examples
 
+      iex> address = 0x0000000000000000000000000000000000000001
       iex> db = MerklePatriciaTree.Test.random_ets_db(:store_word_test)
-      iex> EVM.Operation.StackMemoryStorageAndFlow.sstore([0x11223344556677889900, 0x111222333444555], %{state: MerklePatriciaTree.Trie.new(db)})
-      %{
-        state: %MerklePatriciaTree.Trie{db: {MerklePatriciaTree.DB.ETS, :store_word_test}, root_hash: <<77, 102, 57, 173, 238, 57, 137, 237, 16, 96, 205, 248, 1, 201, 72, 65, 51, 86, 115, 120, 46, 253, 163, 44, 146, 241, 46, 237, 87, 11, 122, 100>>}
-      }
+      iex> EVM.Operation.StackMemoryStorageAndFlow.sstore([0x11223344556677889900, 0x111222333444555], %{state: %{address => %{storage: MerklePatriciaTree.Trie.new(db)}}, exec_env: %EVM.ExecEnv{address: address}})[:state][address][:storage]
+      %MerklePatriciaTree.Trie{db: {MerklePatriciaTree.DB.ETS, :store_word_test}, root_hash: <<77, 102, 57, 173, 238, 57, 137, 237, 16, 96, 205, 248, 1, 201, 72, 65, 51, 86, 115, 120, 46, 253, 163, 44, 146, 241, 46, 237, 87, 11, 122, 100>>}
 
+      iex> address = 0x0000000000000000000000000000000000000001
       iex> db = MerklePatriciaTree.Test.random_ets_db()
-      iex> EVM.Operation.StackMemoryStorageAndFlow.sstore([0x11223344556677889900, 0x111222333444555], %{state: MerklePatriciaTree.Trie.new(db)})[:state] |> MerklePatriciaTree.Trie.Inspector.all_values()
+      iex> EVM.Operation.StackMemoryStorageAndFlow.sstore([0x11223344556677889900, 0x111222333444555], %{state: %{address => %{storage: MerklePatriciaTree.Trie.new(db)}}, exec_env: %EVM.ExecEnv{address: address}})[:state][address][:storage] |> MerklePatriciaTree.Trie.Inspector.all_values()
       [
         {<<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
            17, 34, 51, 68, 85, 102, 119, 136, 153, 0>>,
@@ -129,24 +126,19 @@ defmodule EVM.Operation.StackMemoryStorageAndFlow do
         }
       ]
 
+      iex> address = 0x0000000000000000000000000000000000000001
       iex> db = MerklePatriciaTree.Test.random_ets_db()
-      iex> EVM.Operation.StackMemoryStorageAndFlow.sstore([0x0, 0x0], %{state: MerklePatriciaTree.Trie.new(db)})[:state] |> MerklePatriciaTree.Trie.Inspector.all_values()
+      iex> EVM.Operation.StackMemoryStorageAndFlow.sstore([0x0, 0x0], %{state: %{address => %{storage: MerklePatriciaTree.Trie.new(db)}}, exec_env: %EVM.ExecEnv{address: address}})[:state][address][:storage] |> MerklePatriciaTree.Trie.Inspector.all_values()
       [
       ]
   """
   @spec sstore(Operation.stack_args, Operation.vm_map) :: Operation.op_result
-  def sstore([key, value], %{state: state}) do
-    # TODO: Consider key value encodings
-    if value == 0 do
-      # TODO this should call Trie.delete which doesn't exist yet
-      %{
-        state: state
-      }
-    else
-      %{
-        state: Trie.update(state, <<key::size(256)>>, <<value::size(256)>>)
-      }
-    end
+  def sstore([key, value], %{state: state, exec_env: %{address: address}}) do
+    value = if value == 0, do: nil, else: <<value::size(256)>>
+    trie = (get_in(state, [address, :storage]) || %Trie{})
+      |> Trie.update(<<key::size(256)>>, value)
+
+    %{state: put_in(state, [address, :storage], trie)}
   end
 
   @doc """

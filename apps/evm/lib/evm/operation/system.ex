@@ -5,6 +5,7 @@ defmodule EVM.Operation.System do
   alias EVM.Interface.ContractInterface
   alias EVM.Helpers
   alias EVM.Stack
+  alias MerklePatriciaTree.Trie
 
   @doc """
   Create a new account with associated code.
@@ -282,15 +283,21 @@ defmodule EVM.Operation.System do
   @doc """
   Halt execution and register account for later deletion.
 
-  TODO: Implement opcode
-
   ## Examples
 
-      iex> EVM.Operation.System.suicide([], %{stack: []})
-      :unimplemented
+      iex> address = 0x0000000000000000000000000000000000000001
+      iex> suicide_address = 0x0000000000000000000000000000000000000001
+      iex> db = MerklePatriciaTree.Test.random_ets_db()
+      iex> state = %{address => %{storage: MerklePatriciaTree.Trie.new(db)}}
+      iex> EVM.Operation.System.suicide([suicide_address], %{stack: [], state: state, exec_env: %EVM.ExecEnv{address: address} })[:state][address]
+      nil
   """
   @spec suicide(Operation.stack_args, Operation.vm_map) :: Operation.op_result
-  def suicide(_args, %{stack: _stack}) do
-    :unimplemented
+  def suicide([suicide_address], %{state: state, exec_env: %{address: address}}) do
+    wrapped_suicide_address = Helpers.wrap_address(suicide_address)
+    state = Map.merge(state, %{wrapped_suicide_address => %{storage: %Trie{}}})
+
+    {_value, state} = Map.pop(state, address)
+    %{state: state}
   end
 end

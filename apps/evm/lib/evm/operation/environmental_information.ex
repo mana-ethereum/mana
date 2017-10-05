@@ -1,7 +1,9 @@
 defmodule EVM.Operation.EnvironmentalInformation do
   alias EVM.Operation
+  alias EVM.Stack
   alias EVM.Helpers
   alias EVM.Interface.AccountInterface
+  alias MerklePatriciaTree.Trie
 
   @doc """
   Get address of currently executing account.
@@ -26,25 +28,37 @@ defmodule EVM.Operation.EnvironmentalInformation do
       iex> account_map = %{123 => %{balance: 500}}
       iex> account_interface = EVM.Interface.Mock.MockAccountInterface.new(%{account_map: account_map})
       iex> exec_env = %EVM.ExecEnv{account_interface: account_interface}
-      iex> EVM.Operation.EnvironmentalInformation.balance([123], %{state: state, exec_env: exec_env})
-      500
+      iex> EVM.Operation.EnvironmentalInformation.balance([123], %{state: state, exec_env: exec_env, machine_state: %EVM.MachineState{}}).machine_state.stack
+      [500]
 
       iex> db = MerklePatriciaTree.Test.random_ets_db()
       iex> state = MerklePatriciaTree.Trie.new(db)
       iex> account_map = %{123 => %{balance: nil}}
       iex> account_interface = EVM.Interface.Mock.MockAccountInterface.new(%{account_map: account_map})
       iex> exec_env = %EVM.ExecEnv{account_interface: account_interface}
-      iex> EVM.Operation.EnvironmentalInformation.balance([123], %{state: state, exec_env: exec_env})
-      0
+      iex> EVM.Operation.EnvironmentalInformation.balance([123], %{state: state, exec_env: exec_env, machine_state: %EVM.MachineState{}}).machine_state.stack
+      [0]
   """
   @spec balance(Operation.stack_args, Operation.vm_map) :: Operation.op_result
-  def balance([address], %{state: state, exec_env: exec_env}) do
+  def balance([address], %{state: state, exec_env: exec_env, machine_state: machine_state}) do
     wrapped_address = Helpers.wrap_address(address)
 
-    case AccountInterface.get_account_balance(exec_env.account_interface, state, wrapped_address) do
+    state = if Map.get(state, wrapped_address) do
+      state
+    else
+      Map.merge(state, %{wrapped_address => %{storage: %Trie{}}})
+    end
+
+    balance = case AccountInterface.get_account_balance(exec_env.account_interface, state, wrapped_address) do
       nil -> 0
       balance -> balance
     end
+    machine_state = %{machine_state | stack: Stack.push(machine_state.stack, balance)}
+
+    %{
+      machine_state: machine_state,
+      state: state,
+    }
   end
 
   @doc """
@@ -71,7 +85,7 @@ defmodule EVM.Operation.EnvironmentalInformation do
   ## Examples
 
       iex> exec_env = %EVM.ExecEnv{originator: <<1::160>>, sender: <<2::160>>}
-      iex> EVM.Operation.EnvironmentalInformation.caller([], %{exec_env: exec_env})
+      iex> EVM.Operation.EnvironmentalInformation.caller([], %{exec_env: exec_env, machine_state: %EVM.MachineState{}})
       <<2::160>>
   """
   @spec caller(Operation.stack_args, Operation.vm_map) :: Operation.op_result
@@ -207,20 +221,33 @@ defmodule EVM.Operation.EnvironmentalInformation do
       iex> db = MerklePatriciaTree.Test.random_ets_db()
       iex> state = MerklePatriciaTree.Trie.new(db)
       iex> exec_env = %EVM.ExecEnv{account_interface: account_interface}
-      iex> EVM.Operation.EnvironmentalInformation.extcodesize([0x01], %{exec_env: exec_env, state: state})
-      4
+      iex> EVM.Operation.EnvironmentalInformation.extcodesize([0x01], %{exec_env: exec_env, state: state, machine_state: %EVM.MachineState{}}).machine_state.stack
+      [4]
   """
   @spec extcodesize(Operation.stack_args, Operation.vm_map) :: Operation.op_result
-  def extcodesize([address], %{exec_env: exec_env, state: state}) do
+  def extcodesize([address], %{exec_env: exec_env, state: state, machine_state: machine_state}) do
     wrapped_address = Helpers.wrap_address(address)
+
+    state = if Map.get(state, wrapped_address) do
+      state
+    else
+      Map.merge(state, %{wrapped_address => %{storage: %Trie{}}})
+    end
 
     account_code = AccountInterface.get_account_code(exec_env.account_interface, state, wrapped_address)
 
-    if account_code do
+    extcodesize = if account_code do
       byte_size(account_code)
     else
       0
     end
+    machine_state = %{machine_state | stack: Stack.push(machine_state.stack, extcodesize)}
+
+    %{
+      machine_state: machine_state,
+      state: state,
+    }
+
   end
 
   @doc """
@@ -233,8 +260,8 @@ defmodule EVM.Operation.EnvironmentalInformation do
       iex> code = <<54>>
       iex> account_map = %{<<0::160>> => %{code: code}}
       iex> account_interface = EVM.Interface.Mock.MockAccountInterface.new(%{account_map: account_map})
-      iex> EVM.Operation.EnvironmentalInformation.extcodecopy([<<0::160>>, 0, 0, 1], %{exec_env: %EVM.ExecEnv{account_interface: account_interface}, machine_state: %EVM.MachineState{}, state: state})
-      %{machine_state: %EVM.MachineState{active_words: 1, gas: nil, memory: <<54>> <> <<0::248>>, program_counter: 0, previously_active_words: 0, stack: []}}
+      iex> EVM.Operation.EnvironmentalInformation.extcodecopy([<<0::160>>, 0, 0, 1], %{exec_env: %EVM.ExecEnv{account_interface: account_interface}, machine_state: %EVM.MachineState{}, state: state})[:machine_state]
+      %EVM.MachineState{active_words: 1, gas: nil, memory: <<54>> <> <<0::248>>, program_counter: 0, previously_active_words: 0, stack: []}
   """
   @spec extcodecopy(Operation.stack_args, Operation.vm_map) :: Operation.op_result
   def extcodecopy([address, code_offset, mem_offset, length], %{machine_state: machine_state, exec_env: exec_env, state: state}) do
@@ -242,13 +269,18 @@ defmodule EVM.Operation.EnvironmentalInformation do
       0
     else
       wrapped_address = Helpers.wrap_address(address)
+      state = if Map.get(state, wrapped_address) do
+        state
+      else
+        Map.merge(state, %{wrapped_address => %{storage: %Trie{}}})
+      end
 
       account_code = AccountInterface.get_account_code(exec_env.account_interface, state, wrapped_address)
 
       data = EVM.Memory.read_zeroed_memory(account_code, code_offset, length)
       machine_state = EVM.Memory.write(machine_state, mem_offset, Helpers.right_pad_bytes(data))
 
-      %{machine_state: machine_state}
+      %{machine_state: machine_state, state: state}
     end
   end
 

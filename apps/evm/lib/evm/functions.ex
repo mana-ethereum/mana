@@ -110,7 +110,7 @@ defmodule EVM.Functions do
         {:halt, :undefined_instruction}
       length(machine_state.stack) < input_count ->
         {:halt, :stack_underflow}
-      Gas.cost(state, machine_state, operation_metadata, inputs) > machine_state.gas ->
+      Gas.cost(state, machine_state, exec_env) > machine_state.gas ->
         {:halt, :out_of_gas}
       Stack.length(machine_state.stack) - input_count + output_count > @max_stack  ->
         {:halt, :stack_overflow}

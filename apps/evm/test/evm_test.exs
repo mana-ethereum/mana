@@ -15,6 +15,8 @@ defmodule EvmTest do
       :ABAcalls1,
       :ABAcalls2,
       :ABAcalls3,
+      :ABAcallsSuicide0,
+      :ABAcallsSuicide1,
       :CallRecursiveBomb0,
       :CallRecursiveBomb1,
       :CallRecursiveBomb2,
@@ -40,8 +42,6 @@ defmodule EvmTest do
       :suicideNotExistingAccount,
       :suicideSendEtherToMe,
 
-      # :ABAcallsSuicide0,
-      # :ABAcallsSuicide1,
       # :CallToPrecompiledContract,
       # :callcodeToNameRegistrator0,
       # :callcodeToReturn1,
@@ -54,8 +54,8 @@ defmodule EvmTest do
 
   test "Ethereum Common Tests" do
     for {test_group_name, _test_group} <- @passing_tests_by_group do
-      for {_test_name, test} <- passing_tests(test_group_name) do
-        state = EVM.VM.run(
+      for {test_name, test} <- passing_tests(test_group_name) do
+        {state, gas, _, _} = EVM.VM.run(
           state(test),
           hex_to_int(test["exec"]["gas"]),
           %EVM.ExecEnv{
@@ -67,7 +67,7 @@ defmodule EvmTest do
             gas_price: hex_to_binary(test["exec"]["gasPrice"]),
             machine_code: hex_to_binary(test["exec"]["code"]),
             originator: hex_to_binary(test["exec"]["origin"]),
-            sender: hex_to_binary(test["exec"]["caller"]),
+            sender: hex_to_int(test["exec"]["caller"]),
             value_in_wei: hex_to_binary(test["exec"]["value"]),
           }
         )
@@ -75,7 +75,7 @@ defmodule EvmTest do
         assert_state(test, state)
 
         if test["gas"] do
-          assert hex_to_int(test["gas"]) == elem(state, 1) 
+          assert hex_to_int(test["gas"]) == gas
         end
       end
     end
@@ -83,15 +83,22 @@ defmodule EvmTest do
 
   def state(test) do
     db = MerklePatriciaTree.Test.random_ets_db()
-    state = MerklePatriciaTree.Trie.new(db)
-    test["pre"]
-      |> Enum.reduce(%{}, fn({_key, value}, storage) ->
-        Map.merge(storage, value["storage"])
-      end
-      )
-      |> Enum.reduce(state, fn({key, value}, state) ->
-        Trie.update(state, <<hex_to_int(key)::size(256)>>, <<hex_to_int(value)::size(256)>>)
-      end)
+    for {address, value} <- test["pre"], into: %{} do
+      {hex_to_int(address), account_state(value, db)}
+    end
+  end
+
+  def account_state(account, db) do
+    for {key, value} <- account, into: %{} do
+      value = if key == "storage", do: account_storage(value, db), else: value
+      {String.to_atom(key), value}
+    end
+  end
+
+  def account_storage(storage, db) do
+    Enum.reduce(storage, Trie.new(db), fn({key, value}, trie) ->
+      Trie.update(trie, <<hex_to_int(key)::size(256)>>, <<hex_to_int(value)::size(256)>>)
+    end)
   end
 
   def contract_interface(test) do
@@ -202,30 +209,33 @@ defmodule EvmTest do
   end
 
   def assert_state(test, state) do
-    assert expected_state(test) == actual_state(state)
+    if Map.get(test, "post") do
+      assert expected_state(test) == actual_state(state)
+    end
   end
 
   def expected_state(test) do
-    contract_address = Map.get(Map.get(test, "exec"), "address")
-    test
-      |> Map.get("post", %{})
-      |> Map.get(contract_address, %{})
-      |> Map.get("storage", %{})
-      |> Enum.map(fn {k, v} ->
-        {hex_to_binary(k), hex_to_binary(v)}
-      end)
+    post = Map.get(test, "post", %{})
+
+    for {address, account_state} <- post, into: %{} do
+      storage = Map.get(account_state, "storage")
+      storage = for {key, value} <- storage, into: %{} do
+        {hex_to_binary(key), hex_to_binary(value)}
+      end
+
+      {hex_to_int(address), storage}
+    end
   end
 
   def actual_state(state) do
-    state = state
-      |> elem(0)
+    for {address, account_state} <- state, into: %{} do
+      storage = Map.get(account_state, :storage)
+        |> MerklePatriciaTree.Trie.Inspector.all_values()
+        |> Enum.reduce(%{}, fn ({key, value}, state) ->
+          Map.put(state, r_trim(key), r_trim(value))
+        end)
 
-    if state do
-      state
-      |> MerklePatriciaTree.Trie.Inspector.all_values()
-      |> Enum.map(fn {k, v} -> {r_trim(k), r_trim(v)} end)
-    else
-      []
+      {address, storage}
     end
   end
 

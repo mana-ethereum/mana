@@ -31,7 +31,7 @@ defmodule EVM.Operation do
   @type opcode :: byte()
   @type stack_args :: [EVM.val]
   @type vm_map :: %{
-    optional(:state) => Trie.t,
+    optional(:state) => EVM.world_state,
     optional(:stack) => Stack.t,
     optional(:machine_state) => MachineState.t,
     optional(:sub_state) => SubState.t,
@@ -225,7 +225,7 @@ defmodule EVM.Operation do
       iex> EVM.Operation.run_operation(EVM.Operation.metadata(:log0), %{}, %EVM.MachineState{stack: [1, 2]}, %EVM.SubState{}, %EVM.ExecEnv{})
       {%{}, %EVM.MachineState{stack: []}, %EVM.SubState{}, %EVM.ExecEnv{}}
   """
-  @spec run_operation(EVM.Operation.Metadata.t, EVM.state, MachineState.t, SubState.t, ExecEnv.t) :: {EVM.state, MachineState.t, SubState.t, ExecEnv.t}
+  @spec run_operation(EVM.Operation.Metadata.t, EVM.world_state, MachineState.t, SubState.t, ExecEnv.t) :: {EVM.world_state, MachineState.t, SubState.t, ExecEnv.t}
   def run_operation(operation, state, machine_state, sub_state, exec_env) do
     {args, updated_machine_state} = operation_args(operation, state, machine_state, sub_state, exec_env)
 
@@ -335,7 +335,7 @@ defmodule EVM.Operation do
       iex> EVM.Operation.merge_state(%EVM.MachineState{program_counter: 5, stack: [4, 5]}, :add, %{}, %EVM.MachineState{}, %EVM.SubState{}, %EVM.ExecEnv{})
       {%{}, %EVM.MachineState{program_counter: 5, stack: [4, 5]}, %EVM.SubState{}, %EVM.ExecEnv{}}
   """
-  @spec merge_state(EVM.Operation.Impl.op_result, operation, EVM.state, MachineState.t, SubState.t, ExecEnv.t) :: {EVM.state, MachineState.t, SubState.t, ExecEnv.t}
+  @spec merge_state(EVM.Operation.Impl.op_result, operation, EVM.world_state, MachineState.t, SubState.t, ExecEnv.t) :: {EVM.world_state, MachineState.t, SubState.t, ExecEnv.t}
   def merge_state(:noop, _operation, state, machine_state, sub_state, exec_env) do
     {state, machine_state, sub_state, exec_env}
   end

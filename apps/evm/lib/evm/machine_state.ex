@@ -40,13 +40,14 @@ defmodule EVM.MachineState do
 
       iex> db = MerklePatriciaTree.Test.random_ets_db()
       iex> state = MerklePatriciaTree.Trie.new(db)
-      iex> machine_state = %EVM.MachineState{gas: 10, stack: [1, 1]}
-      iex> EVM.MachineState.subtract_gas(machine_state, state, EVM.Operation.metadata(:add), %EVM.ExecEnv{})
+      iex> machine_state = %EVM.MachineState{gas: 10, stack: [1, 1], program_counter: 0}
+      iex> exec_env = %EVM.ExecEnv{machine_code: <<EVM.Operation.metadata(:add).id>>}
+      iex> EVM.MachineState.subtract_gas(machine_state, state, exec_env)
       %EVM.MachineState{gas: 7, stack: [1, 1]}
   """
-  @spec subtract_gas(MachineState.t, EVM.state, Operation.Metadata.t, list(EVM.val)) :: MachineState.t
-  def subtract_gas(machine_state, state, operation, inputs) do
-    cost = Gas.cost(state, machine_state, operation, inputs)
+  @spec subtract_gas(MachineState.t, EVM.state, ExecEnv.t) :: MachineState.t
+  def subtract_gas(machine_state, state, exec_env) do
+    cost = Gas.cost(state, machine_state, exec_env)
 
     %{machine_state| gas: machine_state.gas - cost}
   end

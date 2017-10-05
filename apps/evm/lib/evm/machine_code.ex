@@ -103,12 +103,12 @@ defmodule EVM.MachineCode do
   """
   @spec compile([atom() | integer()]) :: binary()
   def compile(code) do
-    for n <- code do
+    for n <- code, into: <<>> do
       case n do
         x when is_atom(x) -> EVM.Operation.encode(n)
         x when is_integer(x) -> x
-      end
-    end |> :binary.list_to_bin()
+      end |> :binary.encode_unsigned
+    end
   end
 
   @doc """

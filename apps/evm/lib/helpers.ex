@@ -91,7 +91,8 @@ defmodule EVM.Helpers do
   def encode_signed(n) when n < 0, do: EVM.max_int() - abs(n)
   def encode_signed(n), do: n
 
-  @spec decode_signed(integer()) :: EVM.val
+  @spec decode_signed(integer() | nil) :: EVM.val
+  def decode_signed(n) when is_nil(n), do: 0
   def decode_signed(n) when is_integer(n) do
     decode_signed(:binary.encode_unsigned(n))
   end
