@@ -32,12 +32,12 @@ defmodule ExWire.Packet.NewBlockHashes do
 
   ## Examples
 
-      iex> %ExWire.Packet.NewBlockHashes{hashes: [{<<5>, 1}, {<<6>, 2}]}
-      ...> ExWire.Packet.NewBlockHashes.serialize()
-      [[<<5>, 1], [<<6>, 2]]
+      iex> %ExWire.Packet.NewBlockHashes{hashes: [{<<5>>, 1}, {<<6>>, 2}]}
+      ...> |> ExWire.Packet.NewBlockHashes.serialize()
+      [[<<5>>, 1], [<<6>>, 2]]
 
       iex> %ExWire.Packet.NewBlockHashes{hashes: []}
-      ...> ExWire.Packet.NewBlockHashes.serialize()
+      ...> |> ExWire.Packet.NewBlockHashes.serialize()
       []
   """
   @spec serialize(t) :: ExRLP.t
@@ -51,11 +51,11 @@ defmodule ExWire.Packet.NewBlockHashes do
 
   ## Examples
 
-      iex> ExWire.Packet.NewBlockHashes.deserialize([[<<5>, 1], [<<6>, 2]])
-      %ExWire.Packet.NewBlockHashes{hashes: [{<<5>, 1}, {<<6>, 2}]}
+      iex> ExWire.Packet.NewBlockHashes.deserialize([[<<5>>, 1], [<<6>>, 2]])
+      %ExWire.Packet.NewBlockHashes{hashes: [{<<5>>, 1}, {<<6>>, 2}]}
 
       iex> ExWire.Packet.NewBlockHashes.deserialize([])
-      ** (RuntimeError) hi
+      ** (MatchError) no match of right hand side value: []
   """
   @spec deserialize(ExRLP.t) :: t
   def deserialize(rlp) do
@@ -75,8 +75,8 @@ defmodule ExWire.Packet.NewBlockHashes do
 
   ## Examples
 
-      iex> %ExWire.Packet.NewBlockHashes{hashes: [{<<5>, 1}, {<<6>, 2}]}
-      ...> ExWire.Packet.NewBlockHashes.handle()
+      iex> %ExWire.Packet.NewBlockHashes{hashes: [{<<5>>, 1}, {<<6>>, 2}]}
+      ...> |> ExWire.Packet.NewBlockHashes.handle()
       :ok
   """
   @spec handle(ExWire.Packet.packet) :: ExWire.Packet.handle_response

@@ -35,11 +35,11 @@ defmodule ExWire.Packet.GetBlockHeaders do
   ## Examples
 
       iex> %ExWire.Packet.GetBlockHeaders{block_identifier: 5, max_headers: 10, skip: 2, reverse: true}
-      ...> ExWire.Packet.GetBlockHeaders.serialize
+      ...> |> ExWire.Packet.GetBlockHeaders.serialize
       [5, 10, 2, 1]
 
       iex> %ExWire.Packet.GetBlockHeaders{block_identifier: <<5>>, max_headers: 10, skip: 2, reverse: false}
-      ...> ExWire.Packet.GetBlockHeaders.serialize
+      ...> |> ExWire.Packet.GetBlockHeaders.serialize
       [<<5>>, 10, 2, 0]
   """
   @spec serialize(t) :: ExRLP.t
@@ -92,7 +92,7 @@ defmodule ExWire.Packet.GetBlockHeaders do
       :ok
   """
   @spec handle(ExWire.Packet.packet) :: ExWire.Packet.handle_response
-  def handle(packet=%__MODULE__{}) do
+  def handle(_packet=%__MODULE__{}) do
     :ok
   end
 

@@ -46,7 +46,7 @@ defmodule ExWire.Packet.Hello do
 
   ## Examples
 
-      iex> %ExWire.Packet.Hello{p2p_version: 10, client_id: "Exthereum/Test", caps: [["eth", 1], ["par", 2]], listen_port: 5555, node_id: <<5>>}
+      iex> %ExWire.Packet.Hello{p2p_version: 10, client_id: "Exthereum/Test", caps: [{"eth", 1}, {"par", 2}], listen_port: 5555, node_id: <<5>>}
       ...> |> ExWire.Packet.Hello.serialize
       [10, "Exthereum/Test", [["eth", 1], ["par", 2]], 5555, <<5>>]
   """
@@ -67,8 +67,8 @@ defmodule ExWire.Packet.Hello do
 
   ## Examples
 
-      iex> ExWire.Packet.Hello.deserialize([10, "Exthereum/Test", [["eth", 1], ["par", 2]], 5555, <<5>>])
-      %ExWire.Packet.Hello{p2p_version: 10, client_id: "Exthereum/Test", caps: [["eth", 1], ["par", 2]], listen_port: 5555, node_id: <<5>>}
+      iex> ExWire.Packet.Hello.deserialize([<<10>>, "Exthereum/Test", [["eth", <<1>>], ["par", <<2>>]], <<55>>, <<5>>])
+      %ExWire.Packet.Hello{p2p_version: 10, client_id: "Exthereum/Test", caps: [{"eth", 1}, {"par", 2}], listen_port: 55, node_id: <<5>>}
   """
   @spec deserialize(ExRLP.t) :: t
   def deserialize(rlp) do
@@ -102,7 +102,7 @@ defmodule ExWire.Packet.Hello do
       # When no caps
       iex> %ExWire.Packet.Hello{p2p_version: 10, client_id: "Exthereum/Test", caps: [], listen_port: 5555, node_id: <<5>>}
       ...> |> ExWire.Packet.Hello.handle()
-      {:disconnect, 0x03}
+      {:disconnect, :useless_peer}
   """
   @spec handle(ExWire.Packet.packet) :: ExWire.Packet.handle_response
   def handle(packet=%__MODULE__{}) do

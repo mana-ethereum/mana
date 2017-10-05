@@ -56,7 +56,7 @@ defmodule ExWire.Struct.Neighbour do
       ...>     node: <<7, 8>>,
       ...>   }
       ...> )
-      [<<1, 2, 3, 4>>, <<>>, <<5>>, <<7, 8>>]
+      [<<1, 2, 3, 4>>, <<>>, <<0, 5>>, <<7, 8>>]
   """
   @spec encode(t) :: ExRLP.t
   def encode(%__MODULE__{endpoint: endpoint, node: node_id}) do

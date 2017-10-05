@@ -55,7 +55,7 @@ defmodule ExWire.Packet.Status do
   ## Examples
 
       iex> %ExWire.Packet.Status{protocol_version: 0x63, network_id: 3, total_difficulty: 10, best_hash: <<5>>, genesis_hash: <<4>>}
-      ...> ExWire.Packet.Status.serialize
+      ...> |> ExWire.Packet.Status.serialize
       [0x63, 3, 10, <<5>>, <<4>>]
   """
   @spec serialize(t) :: ExRLP.t
@@ -76,10 +76,10 @@ defmodule ExWire.Packet.Status do
 
   ## Examples
 
-      iex> ExWire.Packet.Status.deserialize([0x63, 3, 10, <<5>>, <<4>>])
+      iex> ExWire.Packet.Status.deserialize([<<0x63>>, <<3>>, <<10>>, <<5>>, <<4>>])
       %ExWire.Packet.Status{protocol_version: 0x63, network_id: 3, total_difficulty: 10, best_hash: <<5>>, genesis_hash: <<4>>}
 
-      iex> ExWire.Packet.Status.deserialize([0x63, 3, 10, <<5>>, <<4>>, <<11>>, 11])
+      iex> ExWire.Packet.Status.deserialize([<<0x63>>, <<3>>, <<10>>, <<5>>, <<4>>, <<11>>, <<11>>])
       %ExWire.Packet.Status{protocol_version: 0x63, network_id: 3, total_difficulty: 10, best_hash: <<5>>, genesis_hash: <<4>>, manifest_hash: <<11>>, block_number: 11}
   """
   @spec deserialize(ExRLP.t) :: t
@@ -117,14 +117,14 @@ defmodule ExWire.Packet.Status do
 
   ## Examples
 
-      iex> %ExWire.Packet.Status{protocol_version: 0x63, network_id: 3, total_difficulty: 10, best_hash: <<5>>, genesis_hash: <<4>>}
-      ...> ExWire.Packet.Status.handle()
+      iex> %ExWire.Packet.Status{protocol_version: 63, network_id: 3, total_difficulty: 10, best_hash: <<5>>, genesis_hash: <<4>>}
+      ...> |> ExWire.Packet.Status.handle()
       :ok
 
       # Test a peer with an incompatible version
-      iex> %ExWire.Packet.Status{protocol_version: 0x63, network_id: 3, total_difficulty: 10, best_hash: <<5>>, genesis_hash: <<4>>}
-      ...> ExWire.Packet.Status.handle()
-      {:send, ExWire.Packet.Disconnect{reason: 0x03}}
+      iex> %ExWire.Packet.Status{protocol_version: 555, network_id: 3, total_difficulty: 10, best_hash: <<5>>, genesis_hash: <<4>>}
+      ...> |> ExWire.Packet.Status.handle()
+      {:disconnect, :useless_peer}
   """
   @spec handle(ExWire.Packet.packet) :: ExWire.Packet.handle_response
   def handle(packet=%__MODULE__{}) do

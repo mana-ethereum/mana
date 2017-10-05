@@ -20,13 +20,13 @@ defmodule ExWire.Protocol do
       ...>   timestamp: 4
       ...> }
       iex> ExWire.Protocol.encode(message, <<1::256>>)
-      <<223, 203, 87, 224, 25, 113, 71, 207, 167, 101, 163, 159, 125, 164, 242, 106,
-        174, 114, 27, 244, 166, 149, 199, 235, 168, 37, 200, 85, 99, 36, 153, 207,
-        179, 125, 146, 57, 164, 144, 42, 228, 93, 201, 118, 55, 180, 101, 253, 149,
-        73, 105, 124, 110, 246, 224, 89, 76, 95, 1, 176, 14, 177, 158, 226, 102, 27,
-        113, 112, 22, 21, 187, 138, 86, 7, 24, 86, 30, 104, 67, 6, 173, 90, 230, 249,
-        157, 209, 74, 16, 166, 93, 187, 65, 176, 225, 90, 150, 8, 1, 1, 210, 1, 199,
-        132, 1, 2, 3, 4, 128, 5, 199, 132, 5, 6, 7, 8, 6, 128, 4>>
+      <<104, 61, 189, 241, 64, 191, 8, 245, 109, 115, 6, 97, 59, 110, 31, 152, 252,
+        162, 30, 138, 113, 255, 207, 36, 58, 151, 75, 222, 78, 137, 173, 70, 175,
+        219, 61, 45, 146, 70, 181, 105, 123, 166, 37, 216, 218, 140, 54, 18, 169, 21,
+        90, 15, 243, 105, 2, 101, 154, 148, 117, 74, 182, 40, 112, 46, 84, 245, 102,
+        67, 159, 38, 71, 218, 230, 40, 55, 83, 200, 180, 236, 192, 53, 50, 235, 198,
+        152, 152, 127, 241, 82, 7, 92, 202, 59, 197, 237, 102, 1, 1, 214, 1, 201,
+        132, 1, 2, 3, 4, 128, 130, 0, 5, 201, 132, 5, 6, 7, 8, 130, 0, 6, 128, 4>>
   """
   @spec encode(Message.t, Crypto.private_key) :: binary()
   def encode(message, private_key) do
@@ -42,19 +42,15 @@ defmodule ExWire.Protocol do
 
   ## Examples
 
-      iex> ExWire.Protocol.sign_message(
-      ...>   %ExWire.Message.Ping{
-      ...>     version: 1,
-      ...>     from: %ExWire.Struct.Endpoint{ip: [1, 2, 3, 4], tcp_port: 5, udp_port: nil},
-      ...>     to: %ExWire.Struct.Endpoint{ip: [5, 6, 7, 8], tcp_port: nil, udp_port: 6},
-      ...>     timestamp: 4
-      ...>   },
-      ...>   <<1::256>>)
-      <<179, 125, 146, 57, 164, 144, 42, 228, 93, 201, 118, 55, 180, 101, 253, 149,
-        73, 105, 124, 110, 246, 224, 89, 76, 95, 1, 176, 14, 177, 158, 226, 102, 27,
-        113, 112, 22, 21, 187, 138, 86, 7, 24, 86, 30, 104, 67, 6, 173, 90, 230, 249,
-        157, 209, 74, 16, 166, 93, 187, 65, 176, 225, 90, 150, 8, 1, 1, 210, 1, 199,
-        132, 1, 2, 3, 4, 128, 5, 199, 132, 5, 6, 7, 8, 6, 128, 4>>
+      iex> message = %ExWire.Message.Ping{
+      ...>   version: 1,
+      ...>   from: %ExWire.Struct.Endpoint{ip: [1, 2, 3, 4], tcp_port: 5, udp_port: nil},
+      ...>   to: %ExWire.Struct.Endpoint{ip: [5, 6, 7, 8], tcp_port: nil, udp_port: 6},
+      ...>   timestamp: 4
+      ...> }
+      iex> signature = ExWire.Protocol.sign_message(message, ExthCrypto.Test.private_key())
+      iex> ExthCrypto.Signature.verify(message |> ExWire.Message.encode |> ExWire.Crypto.hash, signature, ExthCrypto.Test.public_key())
+      true
   """
   @spec sign_message(Message.t, Crypto.private_key) :: binary()
   def sign_message(message, private_key) do

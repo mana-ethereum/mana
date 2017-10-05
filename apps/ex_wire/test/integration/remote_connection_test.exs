@@ -141,7 +141,7 @@ defmodule ExWire.RemoteConnectionTest do
 
   def receive_status(client_pid) do
     receive do
-      {:incoming_packet, _packet=%Packet.Status{best_hash: hash, total_difficulty: total_difficulty, genesis_hash: genesis_hash}} ->
+      {:incoming_packet, _packet=%Packet.Status{best_hash: _best_hash, total_difficulty: total_difficulty, genesis_hash: genesis_hash}} ->
         # Send a simple status message
         TCP.send_packet(client_pid, %Packet.Status{
           protocol_version: ExWire.protocol_version,

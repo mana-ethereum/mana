@@ -19,7 +19,7 @@ defmodule ExWire.Struct.Block do
   ## Examples
 
       iex> %ExWire.Struct.Block{transaction_list: [], uncle_list: []}
-      ...> ExWire.Struct.Block.serialize
+      ...> |> ExWire.Struct.Block.serialize
       [[], []]
   """
   @spec serialize(t) :: ExRLP.t

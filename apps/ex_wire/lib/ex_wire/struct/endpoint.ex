@@ -102,7 +102,7 @@ defmodule ExWire.Struct.Endpoint do
   ## Examples
 
       iex> ExWire.Struct.Endpoint.encode(%ExWire.Struct.Endpoint{ip: [1, 2, 3, 4], udp_port: nil, tcp_port: 5})
-      [<<1, 2, 3, 4>>, <<>>, <<5>>]
+      [<<1, 2, 3, 4>>, <<>>, <<0, 5>>]
   """
   @spec encode(t) :: ExRLP.t
   def encode(%__MODULE__{ip: ip, tcp_port: tcp_port, udp_port: udp_port}) do
@@ -140,7 +140,7 @@ defmodule ExWire.Struct.Endpoint do
       <<1, 0>>
 
       iex> ExWire.Struct.Endpoint.encode_port(nil)
-      <<0, 0>>
+      <<>>
 
       iex> ExWire.Struct.Endpoint.encode_port(0)
       <<0, 0>>

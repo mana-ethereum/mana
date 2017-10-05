@@ -6,6 +6,8 @@ defmodule ExWire.Handler.Neighbours do
   Jim Nabors is way cool.
   """
 
+  require Logger
+
   alias ExWire.Handler
   alias ExWire.Message.Neighbours
 
@@ -35,7 +37,7 @@ defmodule ExWire.Handler.Neighbours do
     neighbours = Neighbours.decode(params.data)
 
     # TODO: Add to buckets
-    IO.inspect(["Got neighbours: ", neighbours.nodes], limit: :infinity)
+    Logger.warn("Got neighbours: #{inspect neighbours.nodes}")
 
     :no_response
   end

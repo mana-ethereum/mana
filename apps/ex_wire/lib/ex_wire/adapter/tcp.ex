@@ -51,7 +51,7 @@ defmodule ExWire.Adapter.TCP do
   @doc """
   Allows a client to new incoming packets.
   """
-  def handle_call({:subscribe, {module, function, args}=mfa}, _from, state) do
+  def handle_call({:subscribe, {_module, _function, _args}=mfa}, _from, state) do
     updated_state = Map.update(state, :subscribers, [mfa], fn subscribers -> [mfa | subscribers] end)
 
     {:reply, :ok, updated_state}
@@ -67,7 +67,7 @@ defmodule ExWire.Adapter.TCP do
 
   TODO: clients may send an auth before (or as) we do, and we should handle this case without error.
   """
-  def handle_info(info={:tcp, socket, data}, state=%{is_outbound: true, remote_id: remote_id, host: host, auth_data: auth_data, my_ephemeral_key_pair: {_my_ephemeral_public_key, my_ephemeral_private_key}=my_ephemeral_key_pair, my_nonce: my_nonce}) do
+  def handle_info(_info={:tcp, socket, data}, state=%{is_outbound: true, remote_id: _remote_id, host: host, auth_data: auth_data, my_ephemeral_key_pair: {_my_ephemeral_public_key, my_ephemeral_private_key}=_my_ephemeral_key_pair, my_nonce: my_nonce}) do
     case Handshake.try_handle_ack(data, auth_data, my_ephemeral_private_key, my_nonce, host) do
       {:ok, secrets, frame_rest} ->
 
@@ -205,8 +205,10 @@ defmodule ExWire.Adapter.TCP do
 
   @doc """
   If we receive a `send` and we have secrets set, we'll send the message as a framed Eth packet.
+
+  However, if we haven't yet sent a Hello message, we should queue the message and try again later.
   """
-  def handle_cast({:send, %{packet: {packet_mod, packet_type, packet_data}}}=data, state = %{host: host, active: false}) when packet_mod != ExWire.Packet.Hello do
+  def handle_cast({:send, %{packet: {packet_mod, _packet_type, _packet_data}}}=data, state = %{host: host, active: false}) when packet_mod != ExWire.Packet.Hello do
     Logger.info("[Network] Queueing packet #{Atom.to_string(packet_mod)} to #{host}")
 
     # TODO: Should we monitor this process, etc?

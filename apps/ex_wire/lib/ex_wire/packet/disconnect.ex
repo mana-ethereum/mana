@@ -79,7 +79,7 @@ defmodule ExWire.Packet.Disconnect do
   ## Examples
 
       iex> %ExWire.Packet.Disconnect{reason: :timeout_on_receiving_message}
-      ...> ExWire.Packet.Disconnect.serialize
+      ...> |> ExWire.Packet.Disconnect.serialize
       [0x0b]
   """
   @spec serialize(t) :: ExRLP.t
@@ -95,7 +95,7 @@ defmodule ExWire.Packet.Disconnect do
 
   ## Examples
 
-      iex> ExWire.Packet.Disconnect.deserialize([0x0b])
+      iex> ExWire.Packet.Disconnect.deserialize([<<0x0b>>])
       %ExWire.Packet.Disconnect{reason: :timeout_on_receiving_message}
   """
   @spec deserialize(ExRLP.t) :: t
@@ -119,7 +119,7 @@ defmodule ExWire.Packet.Disconnect do
       %ExWire.Packet.Disconnect{reason: :too_many_peers}
 
       iex> ExWire.Packet.Disconnect.new(:something_else)
-      ** (ArgumentError) invalid raison
+      ** (RuntimeError) Invalid reason
   """
   def new(reason) do
     if @reasons[reason] == nil, do: raise "Invalid reason"
@@ -135,7 +135,7 @@ defmodule ExWire.Packet.Disconnect do
   ## Examples
 
       iex> ExWire.Packet.Disconnect.get_reason_msg(:timeout_on_receiving_message)
-      "Timeout on receiving a message"
+      "timeout on receiving a message"
   """
   @spec get_reason_msg(integer()) :: String.t
   def get_reason_msg(reason) do

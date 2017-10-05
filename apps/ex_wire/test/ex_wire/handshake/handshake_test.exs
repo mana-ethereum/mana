@@ -8,7 +8,7 @@ defmodule HandshakeTest do
     my_static_private_key = ExthCrypto.Test.private_key(:key_a)
     her_static_public_key = ExthCrypto.Test.public_key(:key_b)
 
-    {my_auth_msg, my_ephemeral_key_pair, nonce} = Handshake.build_auth_msg(
+    {my_auth_msg, my_ephemeral_key_pair, _nonce} = Handshake.build_auth_msg(
       my_static_public_key,
       my_static_private_key,
       her_static_public_key
