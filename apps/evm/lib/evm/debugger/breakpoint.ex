@@ -87,55 +87,49 @@ defmodule EVM.Debugger.Breakpoint do
   ## Examples
 
       iex> breakpoint = %EVM.Debugger.Breakpoint{conditions: [address: <<20::160>>], pc: :next}
-      iex> state = <<>>
       iex> machine_state = %EVM.MachineState{}
       iex> sub_state = %EVM.SubState{}
       iex> exec_env = %EVM.ExecEnv{address: <<20::160>>}
-      iex> EVM.Debugger.Breakpoint.matches?(breakpoint, state, machine_state, sub_state, exec_env)
+      iex> EVM.Debugger.Breakpoint.matches?(breakpoint, machine_state, sub_state, exec_env)
       true
 
       iex> breakpoint = %EVM.Debugger.Breakpoint{conditions: [address: <<20::160>>], pc: 999}
-      iex> state = <<>>
       iex> machine_state = %EVM.MachineState{}
       iex> sub_state = %EVM.SubState{}
       iex> exec_env = %EVM.ExecEnv{address: <<20::160>>}
-      iex> EVM.Debugger.Breakpoint.matches?(breakpoint, state, machine_state, sub_state, exec_env)
+      iex> EVM.Debugger.Breakpoint.matches?(breakpoint, machine_state, sub_state, exec_env)
       false
 
       iex> breakpoint = %EVM.Debugger.Breakpoint{conditions: [address: <<20::160>>], pc: 999}
-      iex> state = <<>>
       iex> machine_state = %EVM.MachineState{program_counter: 999}
       iex> sub_state = %EVM.SubState{}
       iex> exec_env = %EVM.ExecEnv{address: <<20::160>>}
-      iex> EVM.Debugger.Breakpoint.matches?(breakpoint, state, machine_state, sub_state, exec_env)
+      iex> EVM.Debugger.Breakpoint.matches?(breakpoint, machine_state, sub_state, exec_env)
       true
 
       iex> breakpoint = %EVM.Debugger.Breakpoint{conditions: [address: <<20::160>>], pc: nil}
-      iex> state = <<>>
       iex> machine_state = %EVM.MachineState{program_counter: 999}
       iex> sub_state = %EVM.SubState{}
       iex> exec_env = %EVM.ExecEnv{address: <<20::160>>}
-      iex> EVM.Debugger.Breakpoint.matches?(breakpoint, state, machine_state, sub_state, exec_env)
+      iex> EVM.Debugger.Breakpoint.matches?(breakpoint, machine_state, sub_state, exec_env)
       false
 
       iex> breakpoint = %EVM.Debugger.Breakpoint{conditions: [address: <<20::160>>], enabled: false, pc: :next}
-      iex> state = <<>>
       iex> machine_state = %EVM.MachineState{}
       iex> sub_state = %EVM.SubState{}
       iex> exec_env = %EVM.ExecEnv{address: <<20::160>>}
-      iex> EVM.Debugger.Breakpoint.matches?(breakpoint, state, machine_state, sub_state, exec_env)
+      iex> EVM.Debugger.Breakpoint.matches?(breakpoint, machine_state, sub_state, exec_env)
       false
 
       iex> breakpoint = %EVM.Debugger.Breakpoint{conditions: [address: <<20::160>>], pc: :next}
-      iex> state = <<>>
       iex> machine_state = %EVM.MachineState{}
       iex> sub_state = %EVM.SubState{}
       iex> exec_env = %EVM.ExecEnv{address: <<21::160>>}
-      iex> EVM.Debugger.Breakpoint.matches?(breakpoint, state, machine_state, sub_state, exec_env)
+      iex> EVM.Debugger.Breakpoint.matches?(breakpoint, machine_state, sub_state, exec_env)
       false
   """
-  @spec matches?(t, EVM.state, EVM.MachineState.t, EVM.SubState.t, EVM.ExecEnv.t) :: boolean()
-  def matches?(breakpoint, _state, machine_state, _sub_state, exec_env) do
+  @spec matches?(t, EVM.MachineState.t, EVM.SubState.t, EVM.ExecEnv.t) :: boolean()
+  def matches?(breakpoint, machine_state, _sub_state, exec_env) do
     breakpoint.enabled and break_on_next_pc?(breakpoint, machine_state.program_counter) and Enum.all?(breakpoint.conditions, fn {condition, condition_val} ->
       case condition do
         :address -> exec_env.address == condition_val

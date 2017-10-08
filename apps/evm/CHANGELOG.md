@@ -1,3 +1,5 @@
+# 0.1.12
+* Move state management out of the EVM and use `AccountInterface` instead
 # 0.1.11
 * Add basic implementation of the CALL opcode
 # 0.1.10

@@ -21,30 +21,29 @@ defmodule EVM.VM do
   ## Examples
 
       # Full program
-      iex> EVM.VM.run(%{}, 24, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:push1, 3, :push1, 5, :add, :push1, 0x00, :mstore, :push1, 32, :push1, 0, :return])})
-      {%{}, 0, %EVM.SubState{}, <<0x08::256>>}
+      iex> EVM.VM.run(24, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:push1, 3, :push1, 5, :add, :push1, 0x00, :mstore, :push1, 32, :push1, 0, :return])})
+      {0, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:push1, 3, :push1, 5, :add, :push1, 0x00, :mstore, :push1, 32, :push1, 0, :return])}, <<0x08::256>>}
 
       # Program with implicit stop
-      iex> EVM.VM.run(%{}, 9, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:push1, 3, :push1, 5, :add])})
-      {%{}, 0, %EVM.SubState{}, ""}
+      iex> EVM.VM.run(9, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:push1, 3, :push1, 5, :add])})
+      {0, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.     compile([:push1, 3, :push1, 5, :add])}, ""}
 
       # Program with explicit stop
-      iex> EVM.VM.run(%{}, 5, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:push1, 3, :stop])})
-      {%{}, 2, %EVM.SubState{}, ""}
+      iex> EVM.VM.run(5, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:push1, 3, :stop])})
+      {2, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:push1, 3, :stop])}, ""}
 
       # Program with exception halt
-      iex> EVM.VM.run(%{}, 5, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:add])})
-      {nil, 5, %EVM.SubState{}, ""}
+      iex> EVM.VM.run(5, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:add])})
+      {5, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:add])}, ""}
   """
-  @spec run(EVM.world_state, Gas.t, ExecEnv.t) :: {EVM.world_state | nil, Gas.t, EVM.SubState.t, output}
-  def run(state, gas, exec_env) do
+  @spec run(Gas.t, ExecEnv.t) :: {EVM.world_state | nil, Gas.t, EVM.SubState.t, output}
+  def run(gas, exec_env) do
     machine_state = %EVM.MachineState{gas: gas}
     sub_state = %EVM.SubState{}
 
-    # Note, we drop exec env from return value
-    {n_state, n_machine_state, n_sub_state, _n_exec_env, output} = exec(state, machine_state, sub_state, exec_env)
+    {n_machine_state, n_sub_state, n_exec_env, output} = exec(machine_state, sub_state, exec_env)
 
-    {n_state, n_machine_state.gas, n_sub_state, output}
+    {n_machine_state.gas, n_sub_state, n_exec_env, output}
   end
 
   @doc """
@@ -55,43 +54,43 @@ defmodule EVM.VM do
 
   ## Examples
 
-      iex> EVM.VM.exec(%{}, %EVM.MachineState{program_counter: 0, gas: 5, stack: [1, 2]}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:add])})
-      {%{}, %EVM.MachineState{program_counter: 2, gas: 2, stack: [3]}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:add])}, <<>>}
+      iex> EVM.VM.exec(%EVM.MachineState{program_counter: 0, gas: 5, stack: [1, 2]}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:add])})
+      {%EVM.MachineState{program_counter: 2, gas: 2, stack: [3]}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:add])}, <<>>}
 
-      iex> EVM.VM.exec(%{}, %EVM.MachineState{program_counter: 0, gas: 9, stack: []}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:push1, 3, :push1, 5, :add])})
-      {%{}, %EVM.MachineState{program_counter: 6, gas: 0, stack: [8]}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:push1, 3, :push1, 5, :add])}, ""}
+      iex> EVM.VM.exec(%EVM.MachineState{program_counter: 0, gas: 9, stack: []}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:push1, 3, :push1, 5, :add])})
+      {%EVM.MachineState{program_counter: 6, gas: 0, stack: [8]}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:push1, 3, :push1, 5, :add])}, ""}
 
-      iex> EVM.VM.exec(%{}, %EVM.MachineState{program_counter: 0, gas: 24, stack: []}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:push1, 3, :push1, 5, :add, :push1, 0x00, :mstore, :push1, 32, :push1, 0, :return])})
-      {%{}, %EVM.MachineState{active_words: 1, memory: <<0x08::256>>, gas: 0, program_counter: 13, stack: []}, %EVM.SubState{logs: "", refund: 0, suicide_list: []}, %EVM.ExecEnv{machine_code: <<96, 3, 96, 5, 1, 96, 0, 82, 96, 32, 96, 0, 243>>}, <<8::256>>}
+      iex> EVM.VM.exec(%EVM.MachineState{program_counter: 0, gas: 24, stack: []}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:push1, 3, :push1, 5, :add, :push1, 0x00, :mstore, :push1, 32, :push1, 0, :return])})
+      {%EVM.MachineState{active_words: 1, memory: <<0x08::256>>, gas: 0, program_counter: 13, stack: []}, %EVM.SubState{logs: "", refund: 0, suicide_list: []}, %EVM.ExecEnv{machine_code: <<96, 3, 96, 5, 1, 96, 0, 82, 96, 32, 96, 0, 243>>}, <<8::256>>}
   """
-  @spec exec(EVM.world_state, MachineState.t, SubState.t, ExecEnv.t) :: {EVM.world_state | nil, MachineState.t, SubState.t, ExecEnv.t, output}
-  def exec(state, machine_state, sub_state, exec_env) do
-    do_exec(state, machine_state, sub_state, exec_env, sub_state)
+  @spec exec(MachineState.t, SubState.t, ExecEnv.t) :: {MachineState.t, SubState.t, ExecEnv.t, output}
+  def exec(machine_state, sub_state, exec_env) do
+    do_exec(machine_state, sub_state, exec_env, sub_state)
   end
 
-  @spec do_exec(EVM.world_state, MachineState.t, SubState.t, ExecEnv.t, SubState.t) :: {EVM.world_state | nil, MachineState.t, SubState.t, ExecEnv.t, output}
-  defp do_exec(state, machine_state, sub_state, exec_env, original_sub_state) do
+  @spec do_exec(MachineState.t, SubState.t, ExecEnv.t, SubState.t) :: {MachineState.t, SubState.t, ExecEnv.t, output}
+  defp do_exec(machine_state, sub_state, exec_env, original_sub_state) do
 
     # Debugger generally runs here.
-    {state, machine_state, sub_state, exec_env} = if EVM.Debugger.is_enabled? do
-      case EVM.Debugger.is_breakpoint?(state, machine_state, sub_state, exec_env) do
-        :continue -> {state, machine_state, sub_state, exec_env}
+    {machine_state, sub_state, exec_env} = if EVM.Debugger.is_enabled? do
+      case EVM.Debugger.is_breakpoint?(machine_state, sub_state, exec_env) do
+        :continue -> {machine_state, sub_state, exec_env}
         breakpoint ->
-          EVM.Debugger.break(breakpoint, state, machine_state, sub_state, exec_env)
+          EVM.Debugger.break(breakpoint, machine_state, sub_state, exec_env)
       end
     else
-      {state, machine_state, sub_state, exec_env}
+      {machine_state, sub_state, exec_env}
     end
 
-    case Functions.is_exception_halt?(state, machine_state, exec_env) do
+    case Functions.is_exception_halt?(machine_state, exec_env) do
       {:halt, _reason} ->
         # We're exception halting, undo it all.
-        {nil, machine_state, original_sub_state, exec_env, <<>>} # Question: should we return the original sub-state?
+        {machine_state, original_sub_state, exec_env, <<>>} # Question: should we return the original sub-state?
       :continue ->
-        {n_state, n_machine_state, n_sub_state, n_exec_env} = cycle(state, machine_state, sub_state, exec_env)
+        {n_machine_state, n_sub_state, n_exec_env} = cycle(machine_state, sub_state, exec_env)
         case Functions.is_normal_halting?(machine_state, exec_env) do
-          nil -> do_exec(n_state, n_machine_state, n_sub_state, n_exec_env, original_sub_state) # continue execution
-          output -> {n_state, n_machine_state, n_sub_state, n_exec_env, output} # break execution and return
+          nil -> do_exec(n_machine_state, n_sub_state, n_exec_env, original_sub_state) # continue execution
+          output -> {n_machine_state, n_sub_state, n_exec_env, output} # break execution and return
         end
     end
   end
@@ -102,21 +101,20 @@ defmodule EVM.VM do
 
   ## Examples
 
-      iex> state = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db(:evm_vm_test_2))
-      iex> EVM.VM.cycle(state, %EVM.MachineState{program_counter: 0, gas: 5, stack: [1, 2]}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:add])})
-      {%MerklePatriciaTree.Trie{db: {MerklePatriciaTree.DB.ETS, :evm_vm_test_2}, root_hash: MerklePatriciaTree.Trie.empty_trie_root_hash}, %EVM.MachineState{program_counter: 1, gas: 2, stack: [3]}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:add])}}
+      iex> EVM.VM.cycle(%EVM.MachineState{program_counter: 0, gas: 5, stack: [1, 2]}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:add])})
+      {%EVM.MachineState{program_counter: 1, gas: 2, stack: [3]}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:add])}}
   """
-  @spec cycle(EVM.world_state, MachineState.t, SubState.t, ExecEnv.t) :: {EVM.world_state, MachineState.t, SubState.t, ExecEnv.t}
-  def cycle(state, machine_state, sub_state, exec_env) do
+  @spec cycle(MachineState.t, SubState.t, ExecEnv.t) :: {EVM.world_state, MachineState.t, SubState.t, ExecEnv.t}
+  def cycle(machine_state, sub_state, exec_env) do
     operation = MachineCode.current_operation(machine_state, exec_env)
     inputs = Operation.inputs(operation, machine_state)
     machine_state = machine_state
-      |> MachineState.subtract_gas(state, exec_env)
-    {state, machine_state, sub_state, exec_env} = Operation.run_operation(operation, state, machine_state, sub_state, exec_env)
+      |> MachineState.subtract_gas(exec_env)
+    {machine_state, sub_state, exec_env} = Operation.run_operation(operation, machine_state, sub_state, exec_env)
     machine_state = machine_state
       |> MachineState.move_program_counter(operation, inputs)
 
-    {state, machine_state, sub_state, exec_env}
+    {machine_state, sub_state, exec_env}
   end
 
 end

@@ -1,7 +1,9 @@
 defmodule EVM.Operation.StackMemoryStorageAndFlow do
   alias EVM.Helpers
-  alias EVM.Stack
+  alias EVM.Interface.AccountInterface
   alias EVM.Memory
+  alias EVM.Stack
+  alias EVM.ExecEnv
   alias MathHelper
   alias MerklePatriciaTree.Trie
   use Bitwise
@@ -82,22 +84,26 @@ defmodule EVM.Operation.StackMemoryStorageAndFlow do
   ## Examples
 
       iex> address = 0x0000000000000000000000000000000000000001
-      iex> db = MerklePatriciaTree.Test.random_ets_db()
-      iex> state = EVM.Operation.StackMemoryStorageAndFlow.sstore([0x11223344556677889900, 0x111222333444555], %{state: %{address => %{storage: MerklePatriciaTree.Trie.new(db)}}, exec_env: %EVM.ExecEnv{address: address}})[:state]
-      iex> EVM.Operation.StackMemoryStorageAndFlow.sload([0x11223344556677889900], %{state: state, stack: [], exec_env: %EVM.ExecEnv{address: address}})
+      iex> key = 0x11223344556677889900
+      iex> value = 0x111222333444555
+      iex> account_interface = EVM.Interface.Mock.MockAccountInterface.new()
+      iex> account_interface = EVM.Operation.StackMemoryStorageAndFlow.sstore([key, value], %{exec_env: %EVM.ExecEnv{address: address, account_interface: account_interface}})[:exec_env].account_interface
+      iex> EVM.Operation.StackMemoryStorageAndFlow.sload([key], %{exec_env: %EVM.ExecEnv{account_interface: account_interface, address: address}})
       0x111222333444555
 
+
       iex> address = 0x0000000000000000000000000000000000000001
-      iex> db = MerklePatriciaTree.Test.random_ets_db()
-      iex> state = EVM.Operation.StackMemoryStorageAndFlow.sstore([0x11223344556677889900, 0x111222333444555], %{state: %{address => %{storage: MerklePatriciaTree.Trie.new(db)}}, exec_env: %EVM.ExecEnv{address: address}})[:state][address][:storage]
-      iex> EVM.Operation.StackMemoryStorageAndFlow.sload([0x1234], %{state: %{address => %{storage: state}}, stack: [], exec_env: %EVM.ExecEnv{address: address}})
+      iex> key = 0x11223344556677889900
+      iex> other_key = 0x1234
+      iex> value = 0x111222333444555
+      iex> account_interface = EVM.Interface.Mock.MockAccountInterface.new()
+      iex> account_interface = EVM.Operation.StackMemoryStorageAndFlow.sstore([key, value], %{exec_env: %EVM.ExecEnv{address: address, account_interface: account_interface}})[:exec_env].account_interface
+      iex> EVM.Operation.StackMemoryStorageAndFlow.sload([other_key], %{exec_env: %EVM.ExecEnv{account_interface: account_interface}})
       0x0
   """
   @spec sload(Operation.stack_args, Operation.vm_map) :: Operation.op_result
-  def sload([key], %{state: state, stack: stack, exec_env: %{address: address}}) do
-    (get_in(state, [address, :storage]) || %Trie{})
-      |> Trie.get(<<key::size(256)>>)
-      |> Helpers.decode_signed
+  def sload([key], %{exec_env: exec_env}) do
+    ExecEnv.get_storage(exec_env, key)
   end
 
   @doc """
@@ -110,35 +116,26 @@ defmodule EVM.Operation.StackMemoryStorageAndFlow do
 
   ## Examples
 
-      iex> address = 0x0000000000000000000000000000000000000001
-      iex> db = MerklePatriciaTree.Test.random_ets_db(:store_word_test)
-      iex> EVM.Operation.StackMemoryStorageAndFlow.sstore([0x11223344556677889900, 0x111222333444555], %{state: %{address => %{storage: MerklePatriciaTree.Trie.new(db)}}, exec_env: %EVM.ExecEnv{address: address}})[:state][address][:storage]
-      %MerklePatriciaTree.Trie{db: {MerklePatriciaTree.DB.ETS, :store_word_test}, root_hash: <<77, 102, 57, 173, 238, 57, 137, 237, 16, 96, 205, 248, 1, 201, 72, 65, 51, 86, 115, 120, 46, 253, 163, 44, 146, 241, 46, 237, 87, 11, 122, 100>>}
 
       iex> address = 0x0000000000000000000000000000000000000001
-      iex> db = MerklePatriciaTree.Test.random_ets_db()
-      iex> EVM.Operation.StackMemoryStorageAndFlow.sstore([0x11223344556677889900, 0x111222333444555], %{state: %{address => %{storage: MerklePatriciaTree.Trie.new(db)}}, exec_env: %EVM.ExecEnv{address: address}})[:state][address][:storage] |> MerklePatriciaTree.Trie.Inspector.all_values()
-      [
-        {<<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-           17, 34, 51, 68, 85, 102, 119, 136, 153, 0>>,
-         <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-           0, 0, 1, 17, 34, 35, 51, 68, 69, 85>>
-        }
-      ]
+      iex> key = 0x11223344556677889900
+      iex> value = 0x111222333444555
+      iex> account_interface = EVM.Interface.Mock.MockAccountInterface.new()
+      iex> account_interface = EVM.Operation.StackMemoryStorageAndFlow.sstore([key, value], %{exec_env: %EVM.ExecEnv{address: address, account_interface: account_interface}})[:exec_env].account_interface
+      iex> account_interface |> EVM.Interface.AccountInterface.get_storage(address, key)
+      0x111222333444555
 
       iex> address = 0x0000000000000000000000000000000000000001
-      iex> db = MerklePatriciaTree.Test.random_ets_db()
-      iex> EVM.Operation.StackMemoryStorageAndFlow.sstore([0x0, 0x0], %{state: %{address => %{storage: MerklePatriciaTree.Trie.new(db)}}, exec_env: %EVM.ExecEnv{address: address}})[:state][address][:storage] |> MerklePatriciaTree.Trie.Inspector.all_values()
-      [
-      ]
+      iex> account_interface = EVM.Interface.Mock.MockAccountInterface.new()
+      iex> EVM.Operation.StackMemoryStorageAndFlow.sstore([0x0, 0x0], %{exec_env: %EVM.ExecEnv{address: address, account_interface: account_interface}})[:exec_env].account_interface |> EVM.Interface.AccountInterface.dump_storage()
+      %{1 => %{}}
+
   """
   @spec sstore(Operation.stack_args, Operation.vm_map) :: Operation.op_result
-  def sstore([key, value], %{state: state, exec_env: %{address: address}}) do
-    value = if value == 0, do: nil, else: <<value::size(256)>>
-    trie = (get_in(state, [address, :storage]) || %Trie{})
-      |> Trie.update(<<key::size(256)>>, value)
+  def sstore([key, value], %{exec_env: exec_env}) do
+    exec_env = ExecEnv.put_storage(exec_env, key, value)
 
-    %{state: put_in(state, [address, :storage], trie)}
+    %{exec_env: exec_env}
   end
 
   @doc """

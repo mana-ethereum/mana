@@ -1,4 +1,6 @@
 defmodule EVM.ExecEnv do
+  alias EVM.Interface.AccountInterface
+
   @moduledoc """
   Stores information about the execution environment which led
   to this EVM being called. This is, for instance, the sender of
@@ -65,4 +67,24 @@ defmodule EVM.ExecEnv do
     }
   end
 
+  @spec put_storage(ExecEnv.t, EVM.val, EVM.val) :: ExecEnv.t
+  def put_storage(exec_env=%{account_interface: account_interface, address: address}, key, value) do
+    account_interface = account_interface
+      |> AccountInterface.put_storage(address, key, value)
+
+    Map.put(exec_env, :account_interface, account_interface)
+  end
+
+  @spec get_storage(ExecEnv.t, EVM.val) :: EVM.val
+  def get_storage(exec_env=%{account_interface: account_interface, address: address}, key) do
+    account_interface = account_interface
+      |> AccountInterface.get_storage(address, key)
+  end
+
+  @spec suicide_account(ExecEnv.t) :: ExecEnv.t
+  def suicide_account(exec_env=%{account_interface: account_interface, address: address}) do
+    account_interface = account_interface
+      |> AccountInterface.suicide_account(address)
+    Map.put(exec_env, :account_interface, account_interface)
+  end
 end

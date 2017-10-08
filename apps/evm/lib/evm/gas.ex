@@ -6,7 +6,7 @@ defmodule EVM.Gas do
   alias EVM.MachineState
   alias EVM.MachineCode
   alias EVM.Operation
-  alias MerklePatriciaTree.Trie
+  alias EVM.ExecEnv
 
   @type t :: EVM.val
   @type gas_price :: EVM.Wei.t
@@ -73,14 +73,14 @@ defmodule EVM.Gas do
   ## Examples
 
       # TODO: Figure out how to hand in state
-      iex> EVM.Gas.cost(%{}, %EVM.MachineState{}, %EVM.ExecEnv{})
+      iex> EVM.Gas.cost(%EVM.MachineState{}, %EVM.ExecEnv{})
       0
   """
-  @spec cost(EVM.state, MachineState.t, ExecEnv.t) :: t | nil
-  def cost(state, machine_state, exec_env) do
+  @spec cost(MachineState.t, ExecEnv.t) :: t | nil
+  def cost(machine_state, exec_env) do
     operation = MachineCode.current_operation(machine_state, exec_env)
     inputs = Operation.inputs(operation, machine_state)
-    operation_cost = operation_cost(operation.sym, inputs, state, machine_state, exec_env)
+    operation_cost = operation_cost(operation.sym, inputs, machine_state, exec_env)
     memory_cost = memory_cost(operation.sym, inputs, machine_state)
 
     memory_cost + operation_cost
@@ -90,7 +90,7 @@ defmodule EVM.Gas do
     memory_expansion_cost(machine_state, memory_offset, length)
   end
 
-  def memory_cost(:extcodecopy, [address, code_offset, memory_offset, length], machine_state) do
+  def memory_cost(:extcodecopy, [_address, _code_offset, memory_offset, length], machine_state) do
     if (memory_offset + length > EVM.max_int()) do
       0
     else
@@ -107,7 +107,7 @@ defmodule EVM.Gas do
   end
 
 
-  def memory_cost(:mstore8, [memory_offset, value], machine_state) do
+  def memory_cost(:mstore8, [memory_offset, _value], machine_state) do
     memory_expansion_cost(machine_state, memory_offset, 1)
   end
 
@@ -115,17 +115,19 @@ defmodule EVM.Gas do
     memory_expansion_cost(machine_state, memory_offset, length)
   end
 
-  def memory_cost(:mstore, [memory_offset, value], machine_state) do
+  def memory_cost(:mstore, [memory_offset, _value], machine_state) do
     memory_expansion_cost(machine_state, memory_offset, 32)
   end
 
-  def memory_cost(:call, [gas_limit, to_address, value, in_offset, in_length, out_offset, out_length], machine_state) do
+  def memory_cost(:call, [_gas_limit, _to_address, _value, _in_offset, _in_length, out_offset, out_length], machine_state) do
     memory_expansion_cost(machine_state, out_offset, out_length)
   end
 
-  def memory_cost(:create, [value, in_offset, in_length], machine_state) do
+  def memory_cost(:create, [_value, in_offset, in_length], machine_state) do
     memory_expansion_cost(machine_state, in_offset, in_length)
   end
+
+  def memory_cost(_operation, _inputs, _machine_state), do: 0
 
   # From Eq 220: Cmem(μ′i)−Cmem(μi)
   def memory_expansion_cost(machine_state, offset, length) do
@@ -138,7 +140,6 @@ defmodule EVM.Gas do
     end
   end
 
-  def memory_cost(_operation, _inputs, _machine_state), do: 0
 
   # Eq 223
   def memory_expansion_value(
@@ -168,67 +169,68 @@ defmodule EVM.Gas do
   ## Examples
 
       iex> address = 0x0000000000000000000000000000000000000001
-      iex> exec_env = %EVM.ExecEnv{address: address}
-      iex> EVM.Gas.operation_cost(:sstore, [], nil, %EVM.MachineState{stack: [0, 0]}, exec_env) 5000
+      iex> account_interface = EVM.Interface.Mock.MockAccountInterface.new()
+      iex> exec_env = %EVM.ExecEnv{address: address, account_interface: account_interface}
+      iex> EVM.Gas.operation_cost(:sstore, [], %EVM.MachineState{stack: [0, 0]}, exec_env) 5000
 
-      iex> EVM.Gas.operation_cost(:exp, [0, 0], nil, %EVM.MachineState{}, exec_env)
+      iex> EVM.Gas.operation_cost(:exp, [0, 0], %EVM.MachineState{}, exec_env)
       10
 
-      iex> EVM.Gas.operation_cost(:exp, [0, 1024], nil, %EVM.MachineState{}, exec_env)
+      iex> EVM.Gas.operation_cost(:exp, [0, 1024], %EVM.MachineState{}, exec_env)
       30
 
-      iex> EVM.Gas.operation_cost(:jumpdest, [], nil, nil, exec_env)
+      iex> EVM.Gas.operation_cost(:jumpdest, [], nil, exec_env)
       1
 
-      iex> EVM.Gas.operation_cost(:blockhash, [], nil, nil, exec_env)
+      iex> EVM.Gas.operation_cost(:blockhash, [], nil, exec_env)
       20
 
-      iex> EVM.Gas.operation_cost(:stop, [], nil, nil, exec_env)
+      iex> EVM.Gas.operation_cost(:stop, [], nil, exec_env)
       0
 
-      iex> EVM.Gas.operation_cost(:address, [], nil, nil, exec_env)
+      iex> EVM.Gas.operation_cost(:address, [], nil, exec_env)
       2
 
-      iex> EVM.Gas.operation_cost(:push0, [], nil, nil, exec_env)
+      iex> EVM.Gas.operation_cost(:push0, [], nil, exec_env)
       3
 
-      iex> EVM.Gas.operation_cost(:mul, [], nil, nil, exec_env)
+      iex> EVM.Gas.operation_cost(:mul, [], nil, exec_env)
       5
 
-      iex> EVM.Gas.operation_cost(:addmod, [], nil, nil, exec_env)
+      iex> EVM.Gas.operation_cost(:addmod, [], nil, exec_env)
       8
 
-      iex> EVM.Gas.operation_cost(:jumpi, [], nil, nil, exec_env)
+      iex> EVM.Gas.operation_cost(:jumpi, [], nil, exec_env)
       10
 
-      iex> EVM.Gas.operation_cost(:extcodesize, [], nil, nil, exec_env)
+      iex> EVM.Gas.operation_cost(:extcodesize, [], nil, exec_env)
       700
 
-      iex> EVM.Gas.operation_cost(:sha3, [0, 0], nil, %EVM.MachineState{stack: [0, 0]}, exec_env)
+      iex> EVM.Gas.operation_cost(:sha3, [0, 0], %EVM.MachineState{stack: [0, 0]}, exec_env)
       30
-      iex> EVM.Gas.operation_cost(:sha3, [10, 1024], nil, %EVM.MachineState{stack: [10, 1024]}, exec_env)
+      iex> EVM.Gas.operation_cost(:sha3, [10, 1024], %EVM.MachineState{stack: [10, 1024]}, exec_env)
       222
 
   """
   @spec operation_cost(atom(), list(EVM.val), EVM.state, MachineState.t) :: t | nil
-  def operation_cost(operation \\ nil, inputs \\ nil, state \\ nil, machine_state \\ nil, exec_env \\ nil)
-  def operation_cost(:exp, [_base, exponent], _state, _machine_state, _exec_env) do
+  def operation_cost(operation \\ nil, inputs \\ nil, machine_state \\ nil, exec_env \\ nil)
+  def operation_cost(:exp, [_base, exponent], _machine_state, _exec_env) do
     @g_exp + @g_expbyte * MathHelper.integer_byte_size(exponent)
   end
 
-  def operation_cost(:codecopy, [_memory_offset, _code_offset, length], _state, _machine_state, _exec_env) do
+  def operation_cost(:codecopy, [_memory_offset, _code_offset, length], _machine_state, _exec_env) do
     @g_verylow + @g_copy * MathHelper.bits_to_words(length)
   end
 
-  def operation_cost(:calldatacopy, [_memory_offset, _code_offset, length], _state, _machine_state, _exec_env) do
+  def operation_cost(:calldatacopy, [_memory_offset, _code_offset, length], _machine_state, _exec_env) do
     @g_verylow + @g_copy * MathHelper.bits_to_words(length)
   end
 
-  def operation_cost(:extcodecopy, [_address, _code_offset, _mem_offset, length], _state, _machine_state, _exec_env) do
+  def operation_cost(:extcodecopy, [_address, _code_offset, _mem_offset, length], _machine_state, _exec_env) do
     @g_extcode + @g_copy * MathHelper.bits_to_words(length)
   end
 
-  def operation_cost(:sha3, [_length, offset], _state, _machine_state, _exec_env) do
+  def operation_cost(:sha3, [_length, offset], _machine_state, _exec_env) do
     @g_sha3 + @g_sha3word * MathHelper.bits_to_words(offset)
   end
 
@@ -240,38 +242,28 @@ defmodule EVM.Gas do
   ## Examples
 
     iex> address = 0x0000000000000000000000000000000000000001
-    iex> exec_env = %EVM.ExecEnv{address: address}
-    iex> account_state = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db(:evm_vm_test))
-    ...>  |> MerklePatriciaTree.Trie.update(<<0>>, 1)
-    iex> EVM.Gas.operation_cost(:sstore, [0, 0], %{address => %{storage: account_state}}, %EVM.MachineState{}, exec_env)
+    iex> account_interface = EVM.Interface.Mock.MockAccountInterface.new()
+    iex> exec_env = %EVM.ExecEnv{address: address, account_interface: account_interface}
+    iex> EVM.Gas.operation_cost(:sstore, [0, 0], %EVM.MachineState{}, exec_env)
     5000
-    iex> EVM.Gas.operation_cost(:sstore, [0, 2], %{address => %{storage: account_state}}, %EVM.MachineState{}, exec_env)
+    iex> EVM.Gas.operation_cost(:sstore, [0, 2], %EVM.MachineState{}, exec_env)
     20000
   """
-  def operation_cost(:sstore, [key, new_value], state, _machine_state, exec_env) do
-    old_value = get_in(state, [exec_env.address, :storage])
-      |> Trie.get(<<key::size(256)>>)
+  def operation_cost(:sstore, [key, new_value], _machine_state, exec_env) do
+    old_value = ExecEnv.get_storage(exec_env, key)
 
-    if old_value || new_value == 0 do
+    if old_value != 0 || new_value == 0 do
       @g_sreset
     else
       @g_sset
     end
   end
 
-  def operation_cost(:call, [gas_limit, to_address, value, in_offset, in_length, out_offset, out_length], state, _machine_state, _exec_env) do
+  def operation_cost(:call, [gas_limit, _to_address, value, _in_offset, _in_length, _out_offset, _out_length], _machine_state, _exec_env) do
     @g_call + call_value_cost(value) + gas_limit
   end
 
-  defp call_value_cost(value) do
-    if value == 0 do
-      0
-    else
-      @g_callvalue - @g_callstipend
-    end
-  end
-
-  def operation_cost(operation, inputs, _state, _machine_state, _exec_env) do
+  def operation_cost(operation, _inputs, _machine_state, _exec_env) do
     cond do
       operation in @w_very_low_instr -> @g_verylow
       operation in @w_zero_instr -> @g_zero
@@ -291,6 +283,13 @@ defmodule EVM.Gas do
     end
   end
 
+  defp call_value_cost(value) do
+    if value == 0 do
+      0
+    else
+      @g_callvalue - @g_callstipend
+    end
+  end
 
   @doc """
   Returns the gas cost for G_txdata{zero, nonzero} as defined in

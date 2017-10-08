@@ -54,14 +54,13 @@ defmodule EvmTest do
 
   test "Ethereum Common Tests" do
     for {test_group_name, _test_group} <- @passing_tests_by_group do
-      for {test_name, test} <- passing_tests(test_group_name) do
-        {state, gas, _, _} = EVM.VM.run(
-          state(test),
+      for {_test_name, test} <- passing_tests(test_group_name) do
+        {gas, _, exec_env, _} = EVM.VM.run(
           hex_to_int(test["exec"]["gas"]),
           %EVM.ExecEnv{
             account_interface: account_interface(test),
             address: hex_to_int(test["exec"]["address"]),
-            contract_interface: contract_interface(test),
+            contract_interface: contract_interface(),
             block_interface: block_interface(test),
             data: hex_to_binary(test["exec"]["data"]),
             gas_price: hex_to_binary(test["exec"]["gasPrice"]),
@@ -72,26 +71,12 @@ defmodule EvmTest do
           }
         )
 
-        assert_state(test, state)
+        assert_state(test, exec_env.account_interface)
 
         if test["gas"] do
           assert hex_to_int(test["gas"]) == gas
         end
       end
-    end
-  end
-
-  def state(test) do
-    db = MerklePatriciaTree.Test.random_ets_db()
-    for {address, value} <- test["pre"], into: %{} do
-      {hex_to_int(address), account_state(value, db)}
-    end
-  end
-
-  def account_state(account, db) do
-    for {key, value} <- account, into: %{} do
-      value = if key == "storage", do: account_storage(value, db), else: value
-      {String.to_atom(key), value}
     end
   end
 
@@ -101,9 +86,8 @@ defmodule EvmTest do
     end)
   end
 
-  def contract_interface(test) do
+  def contract_interface() do
     EVM.Interface.Mock.MockContractInterface.new(
-      state(test),
       0,
       %EVM.SubState{},
       <<>>
@@ -116,20 +100,24 @@ defmodule EvmTest do
         balance: 0,
         code: hex_to_binary(test["exec"]["code"]),
         nonce: 0,
+        storage: %{},
     }}
     account_map = Enum.reduce(test["pre"], account_map, fn({address, account}, address_map) ->
+      storage = account["storage"]
+        |> Enum.into(%{}, fn({key, value}) ->
+          {hex_to_int(key), hex_to_int(value)}
+        end)
       Map.merge(address_map, %{
           hex_to_int(address) => %{
             balance: hex_to_int(account["balance"]),
             code: hex_to_binary(account["code"]),
             nonce: hex_to_int(account["nonce"]),
+            storage: storage,
           }
         })
     end)
 
-    EVM.Interface.Mock.MockAccountInterface.new(%{
-      account_map: account_map
-    })
+    EVM.Interface.Mock.MockAccountInterface.new(account_map)
   end
 
   def block_interface(test) do
@@ -208,9 +196,9 @@ defmodule EvmTest do
     |> :binary.decode_unsigned
   end
 
-  def assert_state(test, state) do
+  def assert_state(test, mock_account_interface) do
     if Map.get(test, "post") do
-      assert expected_state(test) == actual_state(state)
+      assert expected_state(test) == actual_state(mock_account_interface)
     end
   end
 
@@ -225,21 +213,20 @@ defmodule EvmTest do
 
       {hex_to_int(address), storage}
     end
+      |> Enum.reject(fn({_key, value}) -> value == %{} end)
+      |> Enum.into(%{})
   end
 
-  def actual_state(state) do
-    for {address, account_state} <- state, into: %{} do
-      storage = Map.get(account_state, :storage)
-        |> MerklePatriciaTree.Trie.Inspector.all_values()
-        |> Enum.reduce(%{}, fn ({key, value}, state) ->
-          Map.put(state, r_trim(key), r_trim(value))
+  def actual_state(mock_account_interface) do
+    mock_account_interface
+      |> EVM.Interface.AccountInterface.dump_storage()
+      |> Enum.reject(fn({_key, value}) -> value == %{} end)
+      |> Enum.into(%{}, fn({address, storage}) ->
+        storage = Enum.into(storage, %{}, fn({key, value}) ->
+          {:binary.encode_unsigned(key), :binary.encode_unsigned(value)}
         end)
 
-      {address, storage}
-    end
+       {address, storage}
+      end)
   end
-
-  def r_trim(n), do: n
-    |> :binary.decode_unsigned
-    |> :binary.encode_unsigned
 end

@@ -210,30 +210,29 @@ defmodule EVM.Operation do
       # TODO: How to handle trie state in tests?
 
       # Add
-      iex> EVM.Operation.run_operation(EVM.Operation.metadata(:add), %{}, %EVM.MachineState{stack: [1, 2]}, %EVM.SubState{}, %EVM.ExecEnv{})
-      {%{}, %EVM.MachineState{stack: [3]}, %EVM.SubState{}, %EVM.ExecEnv{}}
+      iex> EVM.Operation.run_operation(EVM.Operation.metadata(:add), %EVM.MachineState{stack: [1, 2]}, %EVM.SubState{}, %EVM.ExecEnv{})
+      {%EVM.MachineState{stack: [3]}, %EVM.SubState{}, %EVM.ExecEnv{}}
 
       # Push
-      iex> EVM.Operation.run_operation(EVM.Operation.metadata(:push1), %{}, %EVM.MachineState{stack: [1, 2]}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: <<00, 01>>})
-      {%{}, %EVM.MachineState{stack: [1, 1, 2]}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: <<0, 1>>}}
+      iex> EVM.Operation.run_operation(EVM.Operation.metadata(:push1), %EVM.MachineState{stack: [1, 2]}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: <<00, 01>>})
+      {%EVM.MachineState{stack: [1, 1, 2]}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: <<0, 1>>}}
 
       # nil
-      iex> EVM.Operation.run_operation(EVM.Operation.metadata(:stop), %{}, %EVM.MachineState{stack: [1, 2]}, %EVM.SubState{}, %EVM.ExecEnv{})
-      {%{}, %EVM.MachineState{stack: [1, 2]}, %EVM.SubState{}, %EVM.ExecEnv{}}
+      iex> EVM.Operation.run_operation(EVM.Operation.metadata(:stop), %EVM.MachineState{stack: [1, 2]}, %EVM.SubState{}, %EVM.ExecEnv{})
+      {%EVM.MachineState{stack: [1, 2]}, %EVM.SubState{}, %EVM.ExecEnv{}}
 
       # Unimplemented
-      iex> EVM.Operation.run_operation(EVM.Operation.metadata(:log0), %{}, %EVM.MachineState{stack: [1, 2]}, %EVM.SubState{}, %EVM.ExecEnv{})
-      {%{}, %EVM.MachineState{stack: []}, %EVM.SubState{}, %EVM.ExecEnv{}}
+      iex> EVM.Operation.run_operation(EVM.Operation.metadata(:log0), %EVM.MachineState{stack: [1, 2]}, %EVM.SubState{}, %EVM.ExecEnv{})
+      {%EVM.MachineState{stack: []}, %EVM.SubState{}, %EVM.ExecEnv{}}
   """
-  @spec run_operation(EVM.Operation.Metadata.t, EVM.world_state, MachineState.t, SubState.t, ExecEnv.t) :: {EVM.world_state, MachineState.t, SubState.t, ExecEnv.t}
-  def run_operation(operation, state, machine_state, sub_state, exec_env) do
-    {args, updated_machine_state} = operation_args(operation, state, machine_state, sub_state, exec_env)
+  @spec run_operation(EVM.Operation.Metadata.t, MachineState.t, SubState.t, ExecEnv.t) :: {MachineState.t, SubState.t, ExecEnv.t}
+  def run_operation(operation, machine_state, sub_state, exec_env) do
+    {args, updated_machine_state} = operation_args(operation, machine_state, sub_state, exec_env)
 
     apply_to_group_module(operation.sym, args)
       |> normalize_op_result(updated_machine_state.stack)
       |> merge_state(
         operation.sym,
-        state,
         updated_machine_state,
         sub_state,
         exec_env
@@ -292,12 +291,11 @@ defmodule EVM.Operation do
     Stack.peek_n(machine_state.stack, operation.input_count)
   end
 
-  defp operation_args(operation, state, machine_state, sub_state, exec_env) do
+  defp operation_args(operation, machine_state, sub_state, exec_env) do
     {stack_args, updated_machine_state} = EVM.MachineState.pop_n(machine_state, operation.input_count)
 
     vm_map = %{
       stack: updated_machine_state.stack,
-      state: state,
       machine_state: updated_machine_state,
       sub_state: sub_state,
       exec_env: exec_env
@@ -311,48 +309,46 @@ defmodule EVM.Operation do
 
   ## Examples
 
-      iex> EVM.Operation.merge_state(:noop, EVM.Operation.metadata(:add), %{}, %EVM.MachineState{}, %EVM.SubState{}, %EVM.ExecEnv{})
-      {%{}, %EVM.MachineState{}, %EVM.SubState{}, %EVM.ExecEnv{}}
+      iex> EVM.Operation.merge_state(:noop, EVM.Operation.metadata(:add), %EVM.MachineState{}, %EVM.SubState{}, %EVM.ExecEnv{})
+      {%EVM.MachineState{}, %EVM.SubState{}, %EVM.ExecEnv{}}
 
-      iex> EVM.Operation.merge_state(:unimplemented, EVM.Operation.metadata(:blarg), %{}, %EVM.MachineState{}, %EVM.SubState{}, %EVM.ExecEnv{})
-      {%{}, %EVM.MachineState{}, %EVM.SubState{}, %EVM.ExecEnv{}}
+      iex> EVM.Operation.merge_state(:unimplemented, EVM.Operation.metadata(:blarg), %EVM.MachineState{}, %EVM.SubState{}, %EVM.ExecEnv{})
+      {%EVM.MachineState{}, %EVM.SubState{}, %EVM.ExecEnv{}}
 
-      iex> EVM.Operation.merge_state(%{stack: [1, 2, 3]}, :add, %{}, %EVM.MachineState{}, %EVM.SubState{}, %EVM.ExecEnv{})
-      {%{}, %EVM.MachineState{stack: [1, 2, 3]}, %EVM.SubState{}, %EVM.ExecEnv{}}
+      iex> EVM.Operation.merge_state(%{stack: [1, 2, 3]}, :add, %EVM.MachineState{}, %EVM.SubState{}, %EVM.ExecEnv{})
+      {%EVM.MachineState{stack: [1, 2, 3]}, %EVM.SubState{}, %EVM.ExecEnv{}}
 
-      iex> EVM.Operation.merge_state(%{machine_state: %EVM.MachineState{stack: [1, 2, 3]}}, :add, %{}, %EVM.MachineState{}, %EVM.SubState{}, %EVM.ExecEnv{})
-      {%{}, %EVM.MachineState{stack: [1, 2, 3]}, %EVM.SubState{}, %EVM.ExecEnv{}}
+      iex> EVM.Operation.merge_state(%{machine_state: %EVM.MachineState{stack: [1, 2, 3]}}, :add, %EVM.MachineState{}, %EVM.SubState{}, %EVM.ExecEnv{})
+      {%EVM.MachineState{stack: [1, 2, 3]}, %EVM.SubState{}, %EVM.ExecEnv{}}
 
-      iex> EVM.Operation.merge_state(%{machine_state: %EVM.MachineState{}, sub_state: %EVM.SubState{refund: 5}}, :add, %{}, %EVM.MachineState{}, %EVM.SubState{}, %EVM.ExecEnv{})
-      {%{}, %EVM.MachineState{}, %EVM.SubState{refund: 5}, %EVM.ExecEnv{}}
+      iex> EVM.Operation.merge_state(%{machine_state: %EVM.MachineState{}, sub_state: %EVM.SubState{refund: 5}}, :add, %EVM.MachineState{}, %EVM.SubState{}, %EVM.ExecEnv{})
+      {%EVM.MachineState{}, %EVM.SubState{refund: 5}, %EVM.ExecEnv{}}
 
-      iex> EVM.Operation.merge_state(%{exec_env: %EVM.ExecEnv{stack_depth: 1}}, :add, %{}, %EVM.MachineState{}, %EVM.SubState{}, %EVM.ExecEnv{})
-      {%{}, %EVM.MachineState{}, %EVM.SubState{}, %EVM.ExecEnv{stack_depth: 1}}
+      iex> EVM.Operation.merge_state(%{exec_env: %EVM.ExecEnv{stack_depth: 1}}, :add, %EVM.MachineState{}, %EVM.SubState{}, %EVM.ExecEnv{})
+      {%EVM.MachineState{}, %EVM.SubState{}, %EVM.ExecEnv{stack_depth: 1}}
 
-      iex> EVM.Operation.merge_state(%{stack: [1, 2, 3], machine_state: %EVM.MachineState{program_counter: 5, stack: [4, 5]}}, :add, %{}, %EVM.MachineState{}, %EVM.SubState{}, %EVM.ExecEnv{})
-      {%{}, %EVM.MachineState{program_counter: 5, stack: [1, 2, 3]}, %EVM.SubState{}, %EVM.ExecEnv{}}
+      iex> EVM.Operation.merge_state(%{stack: [1, 2, 3], machine_state: %EVM.MachineState{program_counter: 5, stack: [4, 5]}}, :add, %EVM.MachineState{}, %EVM.SubState{}, %EVM.ExecEnv{})
+      {%EVM.MachineState{program_counter: 5, stack: [1, 2, 3]}, %EVM.SubState{}, %EVM.ExecEnv{}}
 
-      iex> EVM.Operation.merge_state(%EVM.MachineState{program_counter: 5, stack: [4, 5]}, :add, %{}, %EVM.MachineState{}, %EVM.SubState{}, %EVM.ExecEnv{})
-      {%{}, %EVM.MachineState{program_counter: 5, stack: [4, 5]}, %EVM.SubState{}, %EVM.ExecEnv{}}
+      iex> EVM.Operation.merge_state(%EVM.MachineState{program_counter: 5, stack: [4, 5]}, :add, %EVM.MachineState{}, %EVM.SubState{}, %EVM.ExecEnv{})
+      {%EVM.MachineState{program_counter: 5, stack: [4, 5]}, %EVM.SubState{}, %EVM.ExecEnv{}}
   """
-  @spec merge_state(EVM.Operation.Impl.op_result, operation, EVM.world_state, MachineState.t, SubState.t, ExecEnv.t) :: {EVM.world_state, MachineState.t, SubState.t, ExecEnv.t}
-  def merge_state(:noop, _operation, state, machine_state, sub_state, exec_env) do
-    {state, machine_state, sub_state, exec_env}
+  @spec merge_state(EVM.Operation.Impl.op_result, operation, MachineState.t, SubState.t, ExecEnv.t) :: {EVM.world_state, MachineState.t, SubState.t, ExecEnv.t}
+  def merge_state(:noop, _operation, machine_state, sub_state, exec_env) do
+    {machine_state, sub_state, exec_env}
   end
 
-  def merge_state(:unimplemented, operation, state, machine_state, sub_state, exec_env) do
+  def merge_state(:unimplemented, operation, machine_state, sub_state, exec_env) do
     Logger.debug("Executing (and ignoring) unimplemented operation: #{operation}")
 
-    {state, machine_state, sub_state, exec_env}
+    {machine_state, sub_state, exec_env}
   end
 
-  def merge_state(updated_machine_state=%EVM.MachineState{}, _operation, state, _old_machine_state, sub_state, exec_env) do
-    {state, updated_machine_state, sub_state, exec_env}
+  def merge_state(updated_machine_state=%EVM.MachineState{}, _operation, _old_machine_state, sub_state, exec_env) do
+    {updated_machine_state, sub_state, exec_env}
   end
 
-  def merge_state(op_result=%{}, _operation, state, machine_state, sub_state, exec_env) do
-    next_state = op_result[:state] || state
-
+  def merge_state(op_result=%{}, _operation, machine_state, sub_state, exec_env) do
     # For machine state, we can update it by setting machine_state, or stack, or both.
     base_machine_state = op_result[:machine_state] || machine_state
     next_machine_state = if op_result[:stack], do: %{base_machine_state | stack: op_result[:stack]}, else: base_machine_state
@@ -361,7 +357,6 @@ defmodule EVM.Operation do
     next_exec_env = op_result[:exec_env] || exec_env
 
     {
-      next_state,
       next_machine_state,
       next_sub_state,
       next_exec_env

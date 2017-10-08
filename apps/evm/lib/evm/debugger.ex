@@ -113,25 +113,23 @@ defmodule EVM.Debugger do
   ## Examples
 
       iex> EVM.Debugger.Breakpoint.set_breakpoint(%EVM.Debugger.Breakpoint{conditions: [address: <<25::160>>], pc: :next})
-      iex> state = <<>>
       iex> machine_state = %EVM.MachineState{}
       iex> sub_state = %EVM.SubState{}
       iex> exec_env = %EVM.ExecEnv{address: <<25::160>>}
-      iex> EVM.Debugger.is_breakpoint?(state, machine_state, sub_state, exec_env) |> Map.put(:id, nil)
+      iex> EVM.Debugger.is_breakpoint?(machine_state, sub_state, exec_env) |> Map.put(:id, nil)
       %EVM.Debugger.Breakpoint{conditions: [address: <<25::160>>], pc: :next}
 
       iex> EVM.Debugger.Breakpoint.set_breakpoint(%EVM.Debugger.Breakpoint{conditions: [address: <<25::160>>], enabled: false})
-      iex> state = <<>>
       iex> machine_state = %EVM.MachineState{}
       iex> sub_state = %EVM.SubState{}
       iex> exec_env = %EVM.ExecEnv{address: <<26::160>>}
-      iex> EVM.Debugger.is_breakpoint?(state, machine_state, sub_state, exec_env)
+      iex> EVM.Debugger.is_breakpoint?(machine_state, sub_state, exec_env)
       :continue
   """
-  @spec is_breakpoint?(EVM.state, MachineState.t, SubState.t, ExecEnv.t) :: :continue | Breakpoint.t
-  def is_breakpoint?(state, machine_state, sub_state, exec_env) do
+  @spec is_breakpoint?(MachineState.t, SubState.t, ExecEnv.t) :: :continue | Breakpoint.t
+  def is_breakpoint?(machine_state, sub_state, exec_env) do
     Enum.find(Breakpoint.get_breakpoints(), :continue, fn breakpoint ->
-      Breakpoint.matches?(breakpoint, state, machine_state, sub_state, exec_env)
+      Breakpoint.matches?(breakpoint, machine_state, sub_state, exec_env)
     end)
   end
 
@@ -142,24 +140,22 @@ defmodule EVM.Debugger do
 
       iex> id = EVM.Debugger.Breakpoint.set_breakpoint(%EVM.Debugger.Breakpoint{conditions: [address: <<25::160>>], enabled: false})
       iex> breakpoint = EVM.Debugger.Breakpoint.get_breakpoint(id)
-      iex> state = <<>>
       iex> machine_state = %EVM.MachineState{}
       iex> sub_state = %EVM.SubState{}
       iex> exec_env = %EVM.ExecEnv{address: <<26::160>>}
-      iex> EVM.Debugger.break(breakpoint, state, machine_state, sub_state, exec_env, ["continue"])
-      { <<>>, %EVM.MachineState{}, %EVM.SubState{}, %EVM.ExecEnv{address: <<26::160>>} }
+      iex> EVM.Debugger.break(breakpoint, machine_state, sub_state, exec_env, ["continue"])
+      { %EVM.MachineState{}, %EVM.SubState{}, %EVM.ExecEnv{address: <<26::160>>} }
 
       iex> id = EVM.Debugger.Breakpoint.set_breakpoint(%EVM.Debugger.Breakpoint{conditions: [address: <<25::160>>], enabled: false})
       iex> breakpoint = EVM.Debugger.Breakpoint.get_breakpoint(id)
-      iex> state = <<>>
       iex> machine_state = %EVM.MachineState{}
       iex> sub_state = %EVM.SubState{}
       iex> exec_env = %EVM.ExecEnv{address: <<26::160>>}
-      iex> EVM.Debugger.break(breakpoint, state, machine_state, sub_state, exec_env, ["zzzzzzz", "continue"])
-      { <<>>, %EVM.MachineState{}, %EVM.SubState{}, %EVM.ExecEnv{address: <<26::160>>} }
+      iex> EVM.Debugger.break(breakpoint, machine_state, sub_state, exec_env, ["zzzzzzz", "continue"])
+      { %EVM.MachineState{}, %EVM.SubState{}, %EVM.ExecEnv{address: <<26::160>>} }
   """
-  @spec break(Breakpoint.t, EVM.state, MachineState.t, SubState.t, ExecEnv.t, [String.t]) :: { EVM.state, MachineState.t, SubState.t, ExecEnv.t }
-  def break(breakpoint, state, machine_state, sub_state, exec_env, input_sequence \\ []) do
+  @spec break(Breakpoint.t, MachineState.t, SubState.t, ExecEnv.t, [String.t]) :: { MachineState.t, SubState.t, ExecEnv.t }
+  def break(breakpoint, machine_state, sub_state, exec_env, input_sequence \\ []) do
     Breakpoint.clear_pc_if_one_time_break(breakpoint.id)
 
     if breakpoint.pc == :start do
@@ -178,7 +174,7 @@ defmodule EVM.Debugger do
       IO.puts("")
     end
 
-    prompt(breakpoint, state, machine_state, sub_state, exec_env, input_sequence)
+    prompt(breakpoint, machine_state, sub_state, exec_env, input_sequence)
   end
 
   @spec print_machine_state(MachineState.t) :: any()
@@ -209,37 +205,37 @@ defmodule EVM.Debugger do
     end
   end
 
-  @spec prompt(Breakpoint.t, EVM.state, MachineState.t, SubState.t, ExecEnv.t, [String.t]) :: { EVM.state, MachineState.t, SubState.t, ExecEnv.t }
-  defp prompt(breakpoint, state, machine_state, sub_state, exec_env, [input | rest]), do: handle_input(input, breakpoint, state, machine_state, sub_state, exec_env, rest)
-  defp prompt(breakpoint, state, machine_state, sub_state, exec_env, []) do
+  @spec prompt(Breakpoint.t, MachineState.t, SubState.t, ExecEnv.t, [String.t]) :: { MachineState.t, SubState.t, ExecEnv.t }
+  defp prompt(breakpoint, machine_state, sub_state, exec_env, [input | rest]), do: handle_input(input, breakpoint, machine_state, sub_state, exec_env, rest)
+  defp prompt(breakpoint, machine_state, sub_state, exec_env, []) do
     IO.gets(">> ")
-    |> handle_input(breakpoint, state, machine_state, sub_state, exec_env, [])
+    |> handle_input(breakpoint, machine_state, sub_state, exec_env, [])
   end
 
-  @spec handle_input(String.t, Breakpoint.t, EVM.state, MachineState.t, SubState.t, ExecEnv.t, [String.t]) :: { EVM.state, MachineState.t, SubState.t, ExecEnv.t }
-  def handle_input(input, breakpoint, state, machine_state, sub_state, exec_env, input_sequence) do
+  @spec handle_input(String.t, Breakpoint.t, MachineState.t, SubState.t, ExecEnv.t, [String.t]) :: { MachineState.t, SubState.t, ExecEnv.t }
+  def handle_input(input, breakpoint, machine_state, sub_state, exec_env, input_sequence) do
     case String.split(input |> String.trim, " ", trim: true) do
-      [] -> prompt(breakpoint, state, machine_state, sub_state, exec_env, input_sequence)
+      [] -> prompt(breakpoint, machine_state, sub_state, exec_env, input_sequence)
       [command_string|args] ->
         command = Enum.find(@commands, fn command ->
           command.name == command_string or command.shortcut == String.first(command_string)
         end)
 
         if command do
-          handle_prompt(command.command, args, breakpoint, state, machine_state, sub_state, exec_env, input_sequence)
+          handle_prompt(command.command, args, breakpoint, machine_state, sub_state, exec_env, input_sequence)
         else
           IO.puts("unknown command: `#{command_string}`")
 
-          prompt(breakpoint, state, machine_state, sub_state, exec_env, input_sequence)
+          prompt(breakpoint, machine_state, sub_state, exec_env, input_sequence)
         end
     end
   end
 
   # Handle prompt passes the prompt information bac
-  @spec handle_prompt(atom(), [String.t], Breakpoint.t, EVM.state, MachineState.t, SubState.t, ExecEnv.t, [String.t]) :: { EVM.state, MachineState.t, SubState.t, ExecEnv.t }
-  defp handle_prompt(command, args, breakpoint, state, machine_state, sub_state, exec_env, input_sequence)
+  @spec handle_prompt(atom(), [String.t], Breakpoint.t, MachineState.t, SubState.t, ExecEnv.t, [String.t]) :: { MachineState.t, SubState.t, ExecEnv.t }
+  defp handle_prompt(command, args, breakpoint, machine_state, sub_state, exec_env, input_sequence)
 
-  defp handle_prompt(:help, _args, breakpoint, state, machine_state, sub_state, exec_env, input_sequence) do
+  defp handle_prompt(:help, _args, breakpoint, machine_state, sub_state, exec_env, input_sequence) do
     # TODO: Handle args, make nicer
 
     IO.puts("")
@@ -260,16 +256,16 @@ defmodule EVM.Debugger do
 
     IO.puts("")
 
-    prompt(breakpoint, state, machine_state, sub_state, exec_env, input_sequence)
+    prompt(breakpoint, machine_state, sub_state, exec_env, input_sequence)
   end
 
-  defp handle_prompt(:debug, _args, breakpoint, state, machine_state, sub_state, exec_env, input_sequence) do
-    IO.inspect([state, machine_state, sub_state, exec_env], limit: :infinity)
+  defp handle_prompt(:debug, _args, breakpoint, machine_state, sub_state, exec_env, input_sequence) do
+    IO.inspect([machine_state, sub_state, exec_env], limit: :infinity)
 
-    prompt(breakpoint, state, machine_state, sub_state, exec_env, input_sequence)
+    prompt(breakpoint, machine_state, sub_state, exec_env, input_sequence)
   end
 
-  defp handle_prompt(:stack, _args, breakpoint, state, machine_state, sub_state, exec_env, input_sequence) do
+  defp handle_prompt(:stack, _args, breakpoint, machine_state, sub_state, exec_env, input_sequence) do
     IO.puts("")
     IO.puts("Machine Stack")
 
@@ -297,10 +293,10 @@ defmodule EVM.Debugger do
 
     IO.puts("")
 
-    prompt(breakpoint, state, machine_state, sub_state, exec_env, input_sequence)
+    prompt(breakpoint, machine_state, sub_state, exec_env, input_sequence)
   end
 
-  defp handle_prompt(:memory, _args, breakpoint, state, machine_state=%EVM.MachineState{memory: memory}, sub_state, exec_env, input_sequence) do
+  defp handle_prompt(:memory, _args, breakpoint, machine_state=%EVM.MachineState{memory: memory}, sub_state, exec_env, input_sequence) do
     total_size = byte_size(memory)
     size_width = if total_size > 0, do: total_size |> :math.log10 |> :math.ceil |> round, else: 0
 
@@ -326,22 +322,22 @@ defmodule EVM.Debugger do
       IO.puts "[#{String.pad_leading(offset |> to_string, size_width)}] #{hex} #{ascii}"
     end
 
-    prompt(breakpoint, state, machine_state, sub_state, exec_env, input_sequence)
+    prompt(breakpoint, machine_state, sub_state, exec_env, input_sequence)
   end
 
-  defp handle_prompt(:machine_state, _args, breakpoint, state, machine_state, sub_state, exec_env, input_sequence) do
+  defp handle_prompt(:machine_state, _args, breakpoint, machine_state, sub_state, exec_env, input_sequence) do
     print_machine_state(machine_state)
 
-    prompt(breakpoint, state, machine_state, sub_state, exec_env, input_sequence)
+    prompt(breakpoint, machine_state, sub_state, exec_env, input_sequence)
   end
 
-  defp handle_prompt(:pc, _args, breakpoint, state, machine_state, sub_state, exec_env, input_sequence) do
+  defp handle_prompt(:pc, _args, breakpoint, machine_state, sub_state, exec_env, input_sequence) do
     IO.puts("The current program count is: #{machine_state.program_counter}")
 
-    prompt(breakpoint, state, machine_state, sub_state, exec_env, input_sequence)
+    prompt(breakpoint, machine_state, sub_state, exec_env, input_sequence)
   end
 
-  defp handle_prompt(:where, args, breakpoint, state, machine_state, sub_state, exec_env, input_sequence) do
+  defp handle_prompt(:where, args, breakpoint, machine_state, sub_state, exec_env, input_sequence) do
     len = case Enum.at(args, 0, nil) do
       nil -> @current_instruction_length
       str ->
@@ -353,17 +349,17 @@ defmodule EVM.Debugger do
 
     print_current_instruction(exec_env, machine_state, @current_instruction_start, len * 2)
 
-    prompt(breakpoint, state, machine_state, sub_state, exec_env, input_sequence)
+    prompt(breakpoint, machine_state, sub_state, exec_env, input_sequence)
   end
 
-  defp handle_prompt(:next, _args, breakpoint, state, machine_state, sub_state, exec_env, _input_sequence) do
+  defp handle_prompt(:next, _args, breakpoint, machine_state, sub_state, exec_env, _input_sequence) do
     Breakpoint.set_next(breakpoint.id)
 
-    { state, machine_state, sub_state, exec_env }
+    { machine_state, sub_state, exec_env }
   end
 
-  defp handle_prompt(:continue, _args, _breakpoint, state, machine_state, sub_state, exec_env, _input_sequence) do
-    { state, machine_state, sub_state, exec_env }
+  defp handle_prompt(:continue, _args, _breakpoint, machine_state, sub_state, exec_env, _input_sequence) do
+    { machine_state, sub_state, exec_env }
   end
 
   @spec printable(integer()) :: boolean()
