@@ -127,6 +127,10 @@ defmodule EVM.Gas do
     memory_expansion_cost(machine_state, in_offset, in_length)
   end
 
+  def memory_cost(:return, [offset, length], machine_state) do
+    memory_expansion_cost(machine_state, offset, length)
+  end
+
   def memory_cost(_operation, _inputs, _machine_state), do: 0
 
   # From Eq 220: Cmem(μ′i)−Cmem(μi)
@@ -265,8 +269,8 @@ defmodule EVM.Gas do
     end
   end
 
-  def operation_cost(:call, [gas_limit, _to_address, value, _in_offset, _in_length, _out_offset, _out_length], _machine_state, _exec_env) do
-    @g_call + call_value_cost(value) + gas_limit
+  def operation_cost(:call, [gas_limit, to_address, value, _in_offset, _in_length, _out_offset, _out_length], _machine_state, exec_env) do
+    @g_call + call_value_cost(value) + new_account_cost(to_address, exec_env) + gas_limit
   end
 
   def operation_cost(operation, _inputs, _machine_state, _exec_env) do
@@ -296,6 +300,16 @@ defmodule EVM.Gas do
       @g_callvalue - @g_callstipend
     end
   end
+
+  defp new_account_cost(address, exec_env) do
+    if exec_env.account_interface
+      |> EVM.Interface.AccountInterface.account_exists?(address) do
+      0
+    else
+      @g_newaccount
+    end
+  end
+
 
   @doc """
   Returns the gas cost for G_txdata{zero, nonzero} as defined in

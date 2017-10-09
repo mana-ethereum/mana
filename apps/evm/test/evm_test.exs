@@ -34,10 +34,12 @@ defmodule EvmTest do
       :TestNameRegistrator,
       :callstatelessToNameRegistrator0,
       :callstatelessToReturn1,
+      :createNameRegistrator,
       :createNameRegistratorOutOfMemoryBonds0,
       :createNameRegistratorOutOfMemoryBonds1,
       :return0,
       :return1,
+      :return2,
       :suicide0,
       :suicideNotExistingAccount,
       :suicideSendEtherToMe,
@@ -45,9 +47,7 @@ defmodule EvmTest do
       # :CallToPrecompiledContract,
       # :callcodeToNameRegistrator0,
       # :callcodeToReturn1,
-      # :createNameRegistrator,
       # :createNameRegistratorValueTooHigh,
-      # :return2,
     ],
   }
 

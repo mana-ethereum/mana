@@ -5,13 +5,19 @@ defprotocol EVM.Interface.AccountInterface do
 
   @type t :: module()
 
+  @spec account_exists?(t, EVM.address) :: boolean()
+  def account_exists?(t, address)
+
   @spec get_account_balance(t, EVM.address) :: nil | EVM.Wei.t
   def get_account_balance(t, address)
 
   @spec get_account_code(t, EVM.address) :: nil | binary()
   def get_account_code(t, address)
 
-  @spec increment_account_nonce(t, EVM.address) :: { t, integer() }
+  @spec get_account_nonce(EVM.Interface.AccountInterface.t, EVM.address) :: integer()
+  def get_account_nonce(mock_account_interface, address)
+
+  @spec increment_account_nonce(t, EVM.address) :: t
   def increment_account_nonce(t, address)
 
   @spec get_storage(t, EVM.address, integer()) :: {:ok, integer()} | :account_not_found | :key_not_found

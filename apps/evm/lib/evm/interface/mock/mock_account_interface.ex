@@ -23,6 +23,11 @@ end
 
 defimpl EVM.Interface.AccountInterface, for: EVM.Interface.Mock.MockAccountInterface do
 
+  @spec account_exists?(EVM.Interface.AccountInterface.t, EVM.address) :: boolean()
+  def account_exists?(mock_account_interface, address) do
+    !!get_account(mock_account_interface, address)
+  end
+
   @spec get_account_balance(EVM.Interface.AccountInterface.t, EVM.address) :: nil | EVM.Wei.t
   def get_account_balance(mock_account_interface, address) do
     account = get_account(mock_account_interface, address)
@@ -110,6 +115,26 @@ defimpl EVM.Interface.AccountInterface, for: EVM.Interface.Mock.MockAccountInter
       |> Map.delete(address)
 
     %{ mock_account_interface | account_map: account_map }
+  end
+
+  @spec get_account_nonce(EVM.Interface.AccountInterface.t, EVM.address) :: integer()
+  def get_account_nonce(mock_account_interface, address) do
+    get_in(mock_account_interface.account_map, [address, :nonce])
+  end
+  @spec increment_account_nonce(EVM.Interface.AccountInterface.t, EVM.address) :: {integer(), EVM.Interface.AccountInterface.t}
+  def increment_account_nonce(mock_account_interface, address) do
+    account = get_account(mock_account_interface, address)
+
+    nonce = if account do
+      account.nonce
+    else
+      0
+    end
+
+    {
+      nonce,
+      put_account(mock_account_interface, address, %{account| nonce: nonce}),
+    }
   end
 
   @spec dump_storage(EVM.Interface.AccountInterface.t) :: %{ EVM.address => EVM.val }

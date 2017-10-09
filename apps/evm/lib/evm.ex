@@ -21,9 +21,7 @@ defmodule EVM do
   @word_size_in_bytes 4
   @byte_size 8
   @int_size 256
-  @address_size 160
   @max_int round(:math.pow(2, @int_size))
-  @max_address round(:math.pow(2, @address_size))
 
   @doc """
   Returns maximum allowed integer size.
@@ -36,14 +34,4 @@ defmodule EVM do
   Returns word size in bits.
   """
   def word_size(), do: @word_size_in_bytes * @byte_size
-
-  @doc """
-  Returns the maximum allowed address size.
-  """
-  def address_size, do: @address_size
-  @doc """
-  Returns the maximum allowed address value.
-  """
-  def max_address, do: @max_address
-
 end

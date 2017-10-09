@@ -21,7 +21,7 @@ defmodule EVM.Operation.System do
       ...>     [1_000, 5, 5],
       ...>     %{exec_env: exec_env, machine_state: machine_state})
       iex> n_machine_state
-      %EVM.MachineState{gas: 800, stack: [EVM.Helpers.left_pad_bytes(100, 20), 1], active_words: 1, memory: "________input"}
+      %EVM.MachineState{gas: 800, stack: [0x601bcc2189b7096d8dfaa6f74efeebef20486d0d, 1], active_words: 1, memory: "________input"}
   """
   @spec create(Operation.stack_args, Operation.vm_map) :: Operation.op_result
   def create([value, in_offset, in_size], %{exec_env: exec_env, machine_state: machine_state}) do
@@ -55,7 +55,9 @@ defmodule EVM.Operation.System do
 
     # Note if was exception halt or other failure on stack
     result = if is_allowed do
-      AccountInterface.new_contract_address(updated_account_interface, exec_env.address, 0) |> Helpers.wrap_address
+      nonce = exec_env.account_interface
+        |> AccountInterface.get_account_nonce(exec_env.address)
+      EVM.Address.create(exec_env.address, nonce)
     else
       0
     end

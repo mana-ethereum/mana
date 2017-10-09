@@ -5,6 +5,7 @@ defmodule EVM.Helpers do
 
   require Logger
   use Bitwise
+  alias EVM.Address
 
   @doc """
   Inverts a map so each key becomes a value,
@@ -64,13 +65,13 @@ defmodule EVM.Helpers do
       iex> EVM.Helpers.wrap_address(<<1>>)
       <<1>>
 
-      iex> EVM.Helpers.wrap_address(EVM.max_address() + 1)
+      iex> EVM.Helpers.wrap_address(EVM.Address.max() + 1)
       1
   """
-  def wrap_address(n) when is_integer(n), do: band(n, EVM.max_address() - 1)
+  def wrap_address(n) when is_integer(n), do: band(n, Address.max() - 1)
   def wrap_address(n) when is_binary(n) do
-    if byte_size(n) > EVM.address_size() do
-      :binary.part(n, 0, EVM.address_size())
+    if byte_size(n) > Address.size() do
+      :binary.part(n, 0, Address.size())
     else
       n
     end
@@ -205,6 +206,16 @@ defmodule EVM.Helpers do
   def right_pad_bytes(n, size) do
     padding_size = (size - byte_size(n)) * EVM.byte_size()
     n <> <<0:: size(padding_size)>>
+  end
+
+  @doc """
+  Take the last n bytes of a binary
+  """
+  @spec take_n_last_bytes(binary(), integer()) :: integer()
+  def take_n_last_bytes(data, n) do
+    length = byte_size(data)
+
+    :binary.part(data, length - n, n)
   end
 
   @doc """
