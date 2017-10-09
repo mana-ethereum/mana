@@ -4,12 +4,22 @@ defmodule ExWire.Config do
   """
 
   @port Application.get_env(:ex_wire, :port, 30304)
-  @private_key ExthCrypto.ECIES.ECDH.new_ecdh_keypair() |> Tuple.to_list() |> List.last # Application.get_env(:ex_wire, :private_key)
+  @private_key ( case Application.get_env(:ex_wire, :private_key) do
+    key when is_binary(key) -> key
+    :random -> ExthCrypto.ECIES.ECDH.new_ecdh_keypair() |> Tuple.to_list() |> List.last
+  end )
   @protocol_version Application.get_env(:ex_wire, :protocol_version)
   @network_id Application.get_env(:ex_wire, :network_id)
   @p2p_version Application.get_env(:ex_wire, :p2p_version)
   @caps Application.get_env(:ex_wire, :caps)
   @version Mix.Project.config[:version]
+  @sync Application.get_env(:ex_wire, :sync)
+  @chain Application.get_env(:ex_wire, :chain) |> Blockchain.Chain.load_chain
+  @bootnodes ( case Application.get_env(:ex_wire, :bootnodes) do
+    nodes when is_list(nodes) -> nodes
+    :from_chain -> @chain.nodes |> Enum.take(-1) # TODO: Take all
+  end )
+  @commitment_count Application.get_env(:ex_wire, :commitment_count)
 
   @doc """
   Returns a private key that is generated when a new session is created. It is
@@ -42,5 +52,17 @@ defmodule ExWire.Config do
 
   @spec client_id() :: String.t
   def client_id, do: "Exthereum/#{@version}"
+
+  @spec sync() :: boolean()
+  def sync, do: @sync
+
+  @spec bootnodes() :: [String.t]
+  def bootnodes, do: @bootnodes
+
+  @spec chain() :: Blockchain.Chain.t
+  def chain, do: @chain
+
+  @spec commitment_count() :: integer()
+  def commitment_count, do: @commitment_count
 
 end

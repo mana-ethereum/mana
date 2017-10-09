@@ -5,7 +5,7 @@ defmodule ExWire.Packet.BlockBodies do
   ```
   **BlockBodies** [`+0x06`, [`transactions_0`, `uncles_0`] , ...]
 
-  Reply to GetBlockBodies. The items in the list (following the message ID) are
+  Reply to `GetBlockBodies`. The items in the list (following the message ID) are
   some of the blocks, minus the header, in the format described in the main Ethereum
   specification, previously asked for in a `GetBlockBodies` message. This may
   validly contain no items if no blocks were able to be returned for the
@@ -34,12 +34,12 @@ defmodule ExWire.Packet.BlockBodies do
 
       iex> %ExWire.Packet.BlockBodies{
       ...>   blocks: [
-      ...>     %ExWire.Struct.Block{transaction_list: [], uncle_list: []},
-      ...>     %ExWire.Struct.Block{transaction_list: [], uncle_list: []}
+      ...>     %ExWire.Struct.Block{transactions_list: [[<<5>>, <<6>>, <<7>>, <<1::160>>, <<8>>, "hi", <<27>>, <<9>>, <<10>>]], ommers: [<<1::256>>]},
+      ...>     %ExWire.Struct.Block{transactions_list: [[<<6>>, <<6>>, <<7>>, <<1::160>>, <<8>>, "hi", <<27>>, <<9>>, <<10>>]], ommers: [<<1::256>>]}
       ...>   ]
       ...> }
       ...> |> ExWire.Packet.BlockBodies.serialize()
-      [[[], []], [[], []]]
+      [ [[[<<5>>, <<6>>, <<7>>, <<1::160>>, <<8>>, "hi", <<27>>, <<9>>, <<10>>]], [<<1::256>>]], [[[<<6>>, <<6>>, <<7>>, <<1::160>>, <<8>>, "hi", <<27>>, <<9>>, <<10>>]], [<<1::256>>]] ]
   """
   @spec serialize(t) :: ExRLP.t
   def serialize(packet=%__MODULE__{}) do
@@ -52,11 +52,19 @@ defmodule ExWire.Packet.BlockBodies do
 
   ## Examples
 
-      iex> ExWire.Packet.BlockBodies.deserialize([[[], []], [[], []]])
+      iex> ExWire.Packet.BlockBodies.deserialize([ [[[<<5>>, <<6>>, <<7>>, <<1::160>>, <<8>>, "hi", <<27>>, <<9>>, <<10>>]], [<<1::256>>]], [[[<<6>>, <<6>>, <<7>>, <<1::160>>, <<8>>, "hi", <<27>>, <<9>>, <<10>>]], [<<1::256>>]] ])
       %ExWire.Packet.BlockBodies{
         blocks: [
-          %ExWire.Struct.Block{transaction_list: [], uncle_list: []},
-          %ExWire.Struct.Block{transaction_list: [], uncle_list: []}
+          %ExWire.Struct.Block{
+            transactions_list: [[<<5>>, <<6>>, <<7>>, <<1::160>>, <<8>>, "hi", <<27>>, <<9>>, <<10>>]],
+            transactions: [%Blockchain.Transaction{nonce: 5, gas_price: 6, gas_limit: 7, to: <<1::160>>, value: 8, v: 27, r: 9, s: 10, data: "hi"}],
+            ommers: [<<1::256>>]
+          },
+          %ExWire.Struct.Block{
+            transactions_list: [[<<6>>, <<6>>, <<7>>, <<1::160>>, <<8>>, "hi", <<27>>, <<9>>, <<10>>]],
+            transactions: [%Blockchain.Transaction{nonce: 6, gas_price: 6, gas_limit: 7, to: <<1::160>>, value: 8, v: 27, r: 9, s: 10, data: "hi"}],
+            ommers: [<<1::256>>]
+          }
         ]
       }
   """
@@ -81,10 +89,7 @@ defmodule ExWire.Packet.BlockBodies do
   """
   @spec handle(ExWire.Packet.packet) :: ExWire.Packet.handle_response
   def handle(packet=%__MODULE__{}) do
-    # TODO: Do.
-    Logger.debug("[Packet] Peer sent #{Enum.count(packet.blocks)} block(s).")
-
-    packet.blocks |> Exth.inspect("Got blocks, adding to chain")
+    Logger.info("[Packet] Peer sent #{Enum.count(packet.blocks)} block(s).")
 
     :ok
   end

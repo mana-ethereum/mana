@@ -1,6 +1,12 @@
 defmodule ExWire.Adapter.TCP do
   @moduledoc """
-  Starts a TCP server to handle incoming and outgoing RLPx connections.
+  Starts a TCP server to handle incoming and outgoing RLPx, DevP2P, Eth Wire connection.
+
+  Once this connection is up, it's possible to add a subscriber to the different packets
+  that are sent over the connection. This is the primary way of handling packets.
+
+  Note: incoming connections are not fully tested at this moment.
+  Note: we do not currently store token to restart connections (this upsets some peers)
   """
   use GenServer
 
@@ -13,8 +19,11 @@ defmodule ExWire.Adapter.TCP do
   @doc """
   Starts an outbound peer to peer connection.
   """
-  def start_link(:outbound, host, port, remote_id) do
-    GenServer.start_link(__MODULE__, %{is_outbound: true, host: host, port: port, remote_id: remote_id, active: false})
+  def start_link(:outbound, host, port, remote_id, subscribers \\ []) do
+    remote_id_hex = remote_id |> Binary.drop(1) |> ExthCrypto.Math.bin_to_hex
+    ident = Binary.take(remote_id_hex, 6) <> "..." <> Binary.take(remote_id_hex, -6)
+
+    GenServer.start_link(__MODULE__, %{is_outbound: true, host: host, port: port, remote_id: remote_id, active: false, subscribers: subscribers, ident: ident})
   end
 
   @doc """
@@ -22,10 +31,10 @@ defmodule ExWire.Adapter.TCP do
 
   We'll also prepare and send out an authentication message immediately after connecting.
   """
-  def init(state=%{is_outbound: true, host: host, port: port, remote_id: remote_id}) do
+  def init(state=%{is_outbound: true, host: host, port: port, remote_id: remote_id, ident: ident}) do
     {:ok, socket} = :gen_tcp.connect(host |> String.to_charlist, port, [:binary])
 
-    Logger.debug("[Network] Established outbound connection with #{host}, sending auth.")
+    Logger.debug("[Network] [#{ident}] Established outbound connection with #{host}, sending auth.")
 
     # TODO: Move into simpler function
     {my_auth_msg, my_ephemeral_key_pair, my_nonce} = ExWire.Handshake.build_auth_msg(
@@ -49,10 +58,19 @@ defmodule ExWire.Adapter.TCP do
   end
 
   @doc """
-  Allows a client to new incoming packets.
+  Allows a client to subscribe to incoming packets. Subscribers must be in the form
+  of `{module, function, args}`, in which case we'll call `module.function(packet, ...args)`,
+  or `{:server, server_pid}` for a GenServer, in which case we'll send a message
+  `{:packet, packet, %{remote_id: remote_id, ident: ident}}`.
   """
   def handle_call({:subscribe, {_module, _function, _args}=mfa}, _from, state) do
     updated_state = Map.update(state, :subscribers, [mfa], fn subscribers -> [mfa | subscribers] end)
+
+    {:reply, :ok, updated_state}
+  end
+
+  def handle_call({:subscribe, {:server, server}=server}, _from, state) do
+    updated_state = Map.update(state, :subscribers, [server], fn subscribers -> [server | subscribers] end)
 
     {:reply, :ok, updated_state}
   end
@@ -67,11 +85,11 @@ defmodule ExWire.Adapter.TCP do
 
   TODO: clients may send an auth before (or as) we do, and we should handle this case without error.
   """
-  def handle_info(_info={:tcp, socket, data}, state=%{is_outbound: true, remote_id: _remote_id, host: host, auth_data: auth_data, my_ephemeral_key_pair: {_my_ephemeral_public_key, my_ephemeral_private_key}=_my_ephemeral_key_pair, my_nonce: my_nonce}) do
+  def handle_info(_info={:tcp, socket, data}, state=%{is_outbound: true, remote_id: _remote_id, host: host, auth_data: auth_data, my_ephemeral_key_pair: {_my_ephemeral_public_key, my_ephemeral_private_key}=_my_ephemeral_key_pair, my_nonce: my_nonce, ident: ident}) do
     case Handshake.try_handle_ack(data, auth_data, my_ephemeral_private_key, my_nonce, host) do
       {:ok, secrets, frame_rest} ->
 
-        Logger.debug("[Network] Got ack from #{host}, deriving secrets and sending HELLO")
+        Logger.debug("[Network] [#{ident}] Got ack from #{host}, deriving secrets and sending HELLO")
 
         send_hello(self())
 
@@ -88,18 +106,18 @@ defmodule ExWire.Adapter.TCP do
           handle_info({:tcp, socket, frame_rest}, updated_state)
         end
       {:invalid, reason} ->
-        Logger.warn("[Network] Failed to get handshake message when expecting ack - #{reason}")
+        Logger.warn("[Network] [#{ident}] Failed to get handshake message when expecting ack - #{reason}")
 
         {:noreply, state}
     end
   end
 
   # TODO: How do we set remote id?
-  def handle_info({:tcp, _socket, data}, state=%{is_outbound: false, remote_id: remote_id, host: host, my_ephemeral_key_pair: my_ephemeral_key_pair, my_nonce: my_nonce}) do
+  def handle_info({:tcp, _socket, data}, state=%{is_outbound: false, remote_id: remote_id, host: host, my_ephemeral_key_pair: my_ephemeral_key_pair, my_nonce: my_nonce, ident: ident}) do
     case Handshake.try_handle_auth(data, my_ephemeral_key_pair, my_nonce, remote_id, host) do
       {:ok, ack_data, secrets} ->
 
-        Logger.debug("[Network] Received auth from #{host}")
+        Logger.debug("[Network] [#{ident}] Received auth from #{host}")
 
         # Send ack back to sender
         GenServer.cast(self(), {:send, %{data: ack_data}})
@@ -114,12 +132,12 @@ defmodule ExWire.Adapter.TCP do
           my_nonce: nil
           })}
       {:invalid, reason} ->
-        Logger.warn("[Network] Received unknown handshake message when expecting auth - #{reason}")
+        Logger.warn("[Network] [#{ident}] Received unknown handshake message when expecting auth - #{reason}")
         {:noreply, state}
     end
   end
 
-  def handle_info(_info={:tcp, socket, data}, state=%{host: host, secrets: secrets}) do
+  def handle_info(_info={:tcp, socket, data}, state=%{host: host, secrets: secrets, remote_id: remote_id, ident: ident}) do
     total_data = Map.get(state, :queued_data, <<>>) <> data
 
     case Frame.unframe(total_data, secrets) do
@@ -129,14 +147,14 @@ defmodule ExWire.Adapter.TCP do
         # TODO: Maybe move into smaller functions for testing
         {packet, handle_result} = case Packet.get_packet_mod(packet_type) do
           {:ok, packet_mod} ->
-            Logger.debug("[Network] Got packet #{Atom.to_string(packet_mod)} from #{host}")
+            Logger.debug("[Network] [#{ident}] Got packet #{Atom.to_string(packet_mod)} from #{host}")
 
             packet = packet_data
               |> packet_mod.deserialize()
 
             {packet, packet_mod.handle(packet)}
           :unknown_packet_type ->
-            Logger.warn("[Network] Received unknown or unhandled packet type `#{packet_type}` from #{host}")
+            Logger.warn("[Network] [#{ident}] Received unknown or unhandled packet type `#{packet_type}` from #{host}")
 
             {nil, :ok}
         end
@@ -151,7 +169,7 @@ defmodule ExWire.Adapter.TCP do
 
             Map.merge(state, %{active: false})
           {:disconnect, reason} ->
-            Logger.warn("[Network] Disconnecting to peer due to: #{Packet.Disconnect.get_reason_msg(reason)}")
+            Logger.warn("[Network] [#{ident}] Disconnecting to peer due to: #{Packet.Disconnect.get_reason_msg(reason)}")
             # TODO: Add a timeout and disconnect ourselves
             send_packet(self(), Packet.Disconnect.new(reason))
 
@@ -164,8 +182,11 @@ defmodule ExWire.Adapter.TCP do
 
         # Let's inform any subscribers
         if not is_nil(packet) do
-          for {module, function, args} <- Map.get(state, :subscribers, []) do
-            apply(module, function, [packet | args])
+          for subscriber <- Map.get(state, :subscribers, []) do
+            case subscriber do
+              {module, function, args} -> apply(module, function, [packet | args])
+              {:server, server} -> send(server, {:packet, packet, %{remote_id: remote_id, ident: ident}})
+            end
           end
         end
 
@@ -180,14 +201,14 @@ defmodule ExWire.Adapter.TCP do
       {:error, "Insufficent data"} ->
         {:noreply, Map.put(state, :queued_data, total_data)}
       {:error, reason} ->
-        Logger.error("[Network] Failed to read incoming packet from #{host} `#{reason}`)")
+        Logger.error("[Network] [#{ident}] Failed to read incoming packet from #{host} `#{reason}`)")
 
         {:noreply, state}
     end
   end
 
-  def handle_info({:tcp_closed, _socket}, state) do
-    Logger.warn("[Network] Peer closed connection.")
+  def handle_info({:tcp_closed, _socket}, state=%{ident: ident}) do
+    Logger.warn("[Network] [#{ident}] Peer closed connection.")
 
     {:noreply, Map.put(state, :active, false)}
   end
@@ -195,8 +216,8 @@ defmodule ExWire.Adapter.TCP do
   @doc """
   If we receive a `send` before secrets are set, we'll send the data directly over the wire.
   """
-  def handle_cast({:send, %{data: data}}, state = %{socket: socket, host: host}) do
-    Logger.debug("[Network] Sending raw data message of length #{byte_size(data)} byte(s) to #{host}")
+  def handle_cast({:send, %{data: data}}, state = %{socket: socket, host: host, ident: ident}) do
+    Logger.debug("[Network] [#{ident}] Sending raw data message of length #{byte_size(data)} byte(s) to #{host}")
 
     :ok = :gen_tcp.send(socket, data)
 
@@ -206,23 +227,25 @@ defmodule ExWire.Adapter.TCP do
   @doc """
   If we receive a `send` and we have secrets set, we'll send the message as a framed Eth packet.
 
-  However, if we haven't yet sent a Hello message, we should queue the message and try again later.
+  However, if we haven't yet sent a Hello message, we should queue the message and try again later. Most
+  servers will disconnect if we send a non-Hello message as our first message.
   """
-  def handle_cast({:send, %{packet: {packet_mod, _packet_type, _packet_data}}}=data, state = %{host: host, active: false}) when packet_mod != ExWire.Packet.Hello do
-    Logger.info("[Network] Queueing packet #{Atom.to_string(packet_mod)} to #{host}")
+  def handle_cast({:send, %{packet: {packet_mod, _packet_type, _packet_data}}}=data, state = %{host: host, active: false, ident: ident}) when packet_mod != ExWire.Packet.Hello do
+    Logger.info("[Network] [#{ident}] Queueing packet #{Atom.to_string(packet_mod)} to #{host}")
 
     # TODO: Should we monitor this process, etc?
     pid = self()
     spawn fn ->
       :timer.sleep(500)
+
       GenServer.cast(pid, data)
     end
 
     {:noreply, state}
   end
 
-  def handle_cast({:send, %{packet: {packet_mod, packet_type, packet_data}}}, state = %{socket: socket, secrets: secrets, host: host}) do
-    Logger.info("[Network] Sending packet #{Atom.to_string(packet_mod)} to #{host}")
+  def handle_cast({:send, %{packet: {packet_mod, packet_type, packet_data}}}, state = %{socket: socket, secrets: secrets, host: host, ident: ident}) do
+    Logger.info("[Network] [#{ident}] Sending packet #{Atom.to_string(packet_mod)} to #{host}")
 
     {frame, updated_secrets} = Frame.frame(packet_type, packet_data, secrets)
 

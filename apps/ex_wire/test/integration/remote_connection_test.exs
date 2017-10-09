@@ -3,10 +3,13 @@ defmodule ExWire.RemoteConnectionTest do
   This test case will connect to a live running node (preferably Geth or Parity).
   We'll attempt to pull blocks from the remote peer.
 
-  Before starting, you'll run to run a Parity or Geth node.
+  Before starting, you may want to run a Parity or Geth node.
 
   E.g. `cargo run -- --chain=ropsten --bootnodes=`
   E.g. `cargo run -- --chain=ropsten --bootnodes= --logging network,discovery=trace`
+  E.g. `build/bin/geth --testnet --bootnodes= --port 31313 --verbosity 6`
+
+  If you do set, set the `REMOTE_TEST_PEER` environment variable to the full `enode://...` address.
   """
   use ExUnit.Case, async: true
 
@@ -22,15 +25,6 @@ defmodule ExWire.RemoteConnectionTest do
   @local_peer_port 35353
   @local_tcp_port 36363
 
-  # Local Parity
-  # @public_node_url "enode://4581188ce6e4af8f6c755481994d7df1532e3a427ee1e48811559f3f778f9727662cbbd7ce0213ebfb246629148958492995ae80bad44b017bd8d160f5789f1d@127.0.0.1:30303"
-
-  # Local Geth
-  # @public_node_url "enode://78251af55c063e9971705721a67ce1a1c538b560fa6fc7ad64680c86cbaa79cacd893d4b29b7ac2a2298e9725b1db429b892387013f01b44f535fc72f30b0945@127.0.0.1:31313"
-
-  # Remote Geth
-  @public_node_url "enode://20c9ad97c081d63397d7b685a412227a40e23c8bdc6688c6f37e97cfbc22d2b4d1db1510d8f61e6a8866ad7f0e17c02b14182d37ea7c3c8b9c2683aeb6b733a1@52.169.14.227:30303"
-
   def receive(inbound_message, pid) do
     send(pid, {:inbound_message, inbound_message})
   end
@@ -39,13 +33,15 @@ defmodule ExWire.RemoteConnectionTest do
     send(pid, {:incoming_packet, inbound_packet})
   end
 
+  @remote_test_peer System.get_env("REMOTE_TEST_PEER") || ( ExWire.Config.chain.nodes |> List.last )
+
   test "connect to remote peer for discovery" do
     %URI{
       scheme: "enode",
       userinfo: remote_id,
       host: remote_host,
       port: remote_peer_port
-    } = URI.parse(@public_node_url)
+    } = URI.parse(@remote_test_peer)
 
     remote_ip = with {:ok, remote_ip} <- :inet.ip(remote_host |> String.to_charlist) do
       remote_ip |> Tuple.to_list
@@ -88,7 +84,7 @@ defmodule ExWire.RemoteConnectionTest do
         find_neighbours = %ExWire.Message.FindNeighbours{
           target: remote_id |> ExthCrypto.Math.hex_to_bin,
           timestamp: ExWire.Util.Timestamp.soon()
-        } |> IO.inspect
+        }
 
         ExWire.Network.send(find_neighbours, client_pid, remote_peer)
 
@@ -104,7 +100,7 @@ defmodule ExWire.RemoteConnectionTest do
         # Check the message looks good
         message = decode_message(inbound_message)
 
-        IO.inspect(["Got neighbors", message], limit: :infinity)
+        assert Enum.count(message.nodes) > 5
       after 2_000 ->
         raise "Expected neighbours, but did not receive before timeout."
     end
@@ -128,7 +124,7 @@ defmodule ExWire.RemoteConnectionTest do
       userinfo: remote_id,
       host: remote_host,
       port: remote_peer_port
-    } = URI.parse(@public_node_url)
+    } = URI.parse(@remote_test_peer)
 
     remote_id = remote_id |> ExthCrypto.Math.hex_to_bin |> ExthCrypto.Key.raw_to_der
 
@@ -187,8 +183,8 @@ defmodule ExWire.RemoteConnectionTest do
     receive do
       {:incoming_packet, _packet=%Packet.BlockBodies{blocks: [block]}} ->
         # This is a genesis block
-        assert block.transaction_list == []
-        assert block.uncle_list == []
+        assert block.transactions_list == []
+        assert block.ommers == []
 
         Logger.warn("Successfully received genesis block from peer.")
       {:incoming_packet, packet} ->

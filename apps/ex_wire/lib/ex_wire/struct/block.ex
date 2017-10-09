@@ -4,13 +4,14 @@ defmodule ExWire.Struct.Block do
   """
 
   defstruct [
-    :transaction_list,
-    :uncle_list
+    :transactions_list,
+    :transactions,
+    :ommers
   ]
 
   @type t :: %__MODULE__{
-    transaction_list: [any()],
-    uncle_list: [any()]
+    transactions: [Blockchain.Transaction.t],
+    ommers: [binary()]
   }
 
   @doc """
@@ -18,37 +19,41 @@ defmodule ExWire.Struct.Block do
 
   ## Examples
 
-      iex> %ExWire.Struct.Block{transaction_list: [], uncle_list: []}
+      iex> %ExWire.Struct.Block{transactions_list: [[<<5>>, <<6>>, <<7>>, <<1::160>>, <<8>>, "hi", <<27>>, <<9>>, <<10>>]], ommers: [<<1::256>>]}
       ...> |> ExWire.Struct.Block.serialize
-      [[], []]
+      [[[<<5>>, <<6>>, <<7>>, <<1::160>>, <<8>>, "hi", <<27>>, <<9>>, <<10>>]], [<<1::256>>]]
   """
   @spec serialize(t) :: ExRLP.t
   def serialize(struct) do
     [
-      struct.transaction_list,
-      struct.uncle_list
+      struct.transactions_list,
+      struct.ommers
     ]
   end
 
   @doc """
-  Given an RLP-encoded block from Eth Wire Protocol,
-  decodes into a Block struct.
+  Given an RLP-encoded block from Eth Wire Protocol, decodes into a Block struct.
 
   ## Examples
 
-      iex> ExWire.Struct.Block.deserialize([[], []])
-      %ExWire.Struct.Block{transaction_list: [], uncle_list: []}
+      iex> ExWire.Struct.Block.deserialize([[[<<5>>, <<6>>, <<7>>, <<1::160>>, <<8>>, "hi", <<27>>, <<9>>, <<10>>]], [<<1::256>>]])
+      %ExWire.Struct.Block{
+        transactions_list: [[<<5>>, <<6>>, <<7>>, <<1::160>>, <<8>>, "hi", <<27>>, <<9>>, <<10>>]],
+        transactions: [%Blockchain.Transaction{nonce: 5, gas_price: 6, gas_limit: 7, to: <<1::160>>, value: 8, v: 27, r: 9, s: 10, data: "hi"}],
+        ommers: [<<1::256>>]
+      }
   """
   @spec deserialize(ExRLP.t) :: t
   def deserialize(rlp) do
     [
-      transaction_list,
-      uncle_list
+      transactions_list,
+      ommers
     ] = rlp
 
     %__MODULE__{
-      transaction_list: transaction_list,
-      uncle_list: uncle_list
+      transactions_list: transactions_list,
+      transactions: ( for transaction_rlp <- transactions_list, do: Blockchain.Transaction.deserialize(transaction_rlp) ),
+      ommers: ommers
     }
   end
 

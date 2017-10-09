@@ -31,10 +31,10 @@ defmodule ExWire.Mixfile do
       {:keccakf1600, "~> 2.0.0", hex: :keccakf1600_orig},
       {:libsecp256k1, "~> 0.1.3"},
       {:ex_rlp, "~> 0.2.1"},
-      {:blockchain, "~> 0.1.4"},
+      {:blockchain, "~> 0.1.5"},
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
       {:exth_crypto, "~> 0.1.4"},
-      {:evm, "~> 0.1.10", override: true}
+      {:evm, "~> 0.1.11"}
     ]
   end
 end

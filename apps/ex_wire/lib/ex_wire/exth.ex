@@ -5,7 +5,7 @@ defmodule Exth do
 
   @spec inspect(any(), String.t | nil) :: any()
   def inspect(variable, prefix \\ nil) do
-    args = if prefix, do: [prefix, variable], else: nil
+    args = if prefix, do: [prefix, variable], else: variable
 
     IO.inspect(args, limit: :infinity)
 

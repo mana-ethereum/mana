@@ -17,9 +17,21 @@ defmodule ExWire do
     port = Keyword.get(args, :port, ExWire.Config.listen_port())
     name = Keyword.get(args, :name, ExWire)
 
+    sync_children = if ExWire.Config.sync do
+      # TODO: Replace with level db
+      db = MerklePatriciaTree.Test.random_ets_db()
+
+      [
+        worker(ExWire.PeerSup, [ExWire.Config.bootnodes]),
+        worker(ExWire.Sync, [db])
+      ]
+    else
+      []
+    end
+
     children = [
-      worker(network_adapter, [{ExWire.Network, []}, port])
-    ]
+      worker(network_adapter, [{ExWire.Network, []}, port]),
+    ] ++ sync_children
 
     opts = [strategy: :one_for_one, name: name]
     Supervisor.start_link(children, opts)

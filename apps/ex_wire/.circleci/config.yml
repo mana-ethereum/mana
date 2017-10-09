@@ -13,7 +13,7 @@ jobs:
       - run: mix deps.get
       # TODO: The following step shouldn't be necessary.
       - run: cd deps/libsecp256k1 && rebar compile
-      - run: mix test
+      - run: mix test --exclude network
       - run: mix dialyzer
       - save_cache:
           key: _build
