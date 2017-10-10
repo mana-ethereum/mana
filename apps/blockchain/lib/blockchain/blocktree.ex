@@ -166,15 +166,17 @@ defmodule Blockchain.Blocktree do
       iex> Blockchain.Blocktree.verify_and_add_block(tree_1, chain, block_2, trie.db)
       {:invalid, [:invalid_difficulty, :invalid_gas_limit, :child_timestamp_invalid]}
   """
-  @spec verify_and_add_block(t, Chain.t, Block.t, MerklePatriciaTree.DB.db) :: {:ok, t} | {:invalid, [atom()]}
-  def verify_and_add_block(blocktree, chain, block, db) do
+  @spec verify_and_add_block(t, Chain.t, Block.t, MerklePatriciaTree.DB.db, boolean()) :: {:ok, t} | :parent_not_found | {:invalid, [atom()]}
+  def verify_and_add_block(blocktree, chain, block, db, do_validate \\ true) do
     parent = case Blockchain.Block.get_parent_block(block, db) do
       :genesis -> nil
       {:ok, parent} -> parent
-      els -> raise InvalidBlockError, "Failed to find parent block: #{inspect els}"
+      :not_found -> :parent_not_found
     end
 
-    with :valid <- Block.is_fully_valid?(block, chain, parent, db) do
+    validation = if do_validate, do: Block.is_fully_valid?(block, chain, parent, db), else: :valid
+
+    with :valid <- validation do
       {:ok, block_hash} = Block.put_block(block, db)
       block = %{block | block_hash: block_hash} # Cache computed block hash
 
