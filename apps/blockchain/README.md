@@ -17,7 +17,7 @@ by adding `blockchain` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
-  [{:blockchain, "~> 0.1.4"}]
+  [{:blockchain, "~> 0.1.5"}]
 end
 ```
 
