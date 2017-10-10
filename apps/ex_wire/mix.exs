@@ -5,7 +5,7 @@ defmodule ExWire.Mixfile do
     [app: :ex_wire,
      version: "0.1.1",
      elixir: "~> 1.4",
-     description: "Elixir Client for Ethereum's RLPx and DevP2P Protocol",
+     description: "Elixir Client for Ethereum's RLPx, DevP2P and Eth Wire Protocol",
       package: [
         maintainers: ["Mason Fischer", "Geoffrey Hayes", "Ayrat Badykov"],
         licenses: ["MIT"],
