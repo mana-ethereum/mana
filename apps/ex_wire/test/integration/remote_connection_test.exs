@@ -119,18 +119,11 @@ defmodule ExWire.RemoteConnectionTest do
   end
 
   test "connect to remote peer for handshake" do
-    %URI{
-      scheme: "enode",
-      userinfo: remote_id,
-      host: remote_host,
-      port: remote_peer_port
-    } = URI.parse(@remote_test_peer)
+    {:ok, peer} = ExWire.Struct.Peer.from_uri(@remote_test_peer)
 
-    remote_id = remote_id |> ExthCrypto.Math.hex_to_bin |> ExthCrypto.Key.raw_to_der
+    {:ok, client_pid} = TCP.start_link(:outbound, peer)
 
-    {:ok, client_pid} = TCP.start_link(:outbound, remote_host, remote_peer_port, remote_id)
-
-    TCP.subscribe(client_pid, __MODULE__, :receive_packet, [self()])
+    TCP.subscribe(client_pid, {__MODULE__, :receive_packet, [self()]})
 
     receive_status(client_pid)
   end

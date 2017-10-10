@@ -68,13 +68,13 @@ defmodule ExWire.Packet do
 
   ## Examples
 
-      iex> ExWire.Packet.get_packet_type(ExWire.Packet.Hello)
+      iex> ExWire.Packet.get_packet_type(%ExWire.Packet.Hello{})
       {:ok, 0x00}
 
-      iex> ExWire.Packet.get_packet_mod(ExWire.Packet.Status)
+      iex> ExWire.Packet.get_packet_type(%ExWire.Packet.Status{})
       {:ok, 0x10}
 
-      iex> ExWire.Packet.get_packet_mod(ExWire)
+      iex> ExWire.Packet.get_packet_type(%ExWire.Struct.Neighbour{})
       :unknown_packet
   """
   @spec get_packet_type(struct()) :: {:ok, integer()} | :unknown_packet

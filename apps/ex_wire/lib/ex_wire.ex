@@ -22,7 +22,7 @@ defmodule ExWire do
       db = MerklePatriciaTree.Test.random_ets_db()
 
       [
-        worker(ExWire.PeerSup, [ExWire.Config.bootnodes]),
+        worker(ExWire.PeerSupervisor, [ExWire.Config.bootnodes]),
         worker(ExWire.Sync, [db])
       ]
     else

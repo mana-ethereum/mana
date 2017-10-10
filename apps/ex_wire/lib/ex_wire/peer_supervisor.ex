@@ -1,4 +1,4 @@
-defmodule ExWire.PeerSup do
+defmodule ExWire.PeerSupervisor do
   @moduledoc """
   The Peer Supervisor is responsible for maintaining a set of peer TCP connections.
 
@@ -20,16 +20,9 @@ defmodule ExWire.PeerSup do
     # TODO: Ask for peers, etc.
 
     children = for bootnode <- bootnodes do
-      %URI{
-        scheme: "enode",
-        userinfo: remote_id,
-        host: remote_host,
-        port: remote_peer_port
-      } = URI.parse(bootnode)
+      {:ok, peer} = ExWire.Struct.Peer.from_uri(bootnode)
 
-      remote_id = remote_id |> ExthCrypto.Math.hex_to_bin |> ExthCrypto.Key.raw_to_der
-
-      worker(ExWire.Adapter.TCP, [:outbound, remote_host, remote_peer_port, remote_id, [{:server, ExWire.Sync}]])
+      worker(ExWire.Adapter.TCP, [:outbound, peer, [{:server, ExWire.Sync}]])
     end
 
     Supervisor.init(children, strategy: :one_for_one)

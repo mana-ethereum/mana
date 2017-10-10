@@ -17,6 +17,7 @@ defmodule ExWire.Sync do
   alias ExWire.Struct.BlockQueue
   alias ExWire.Packet.BlockHeaders
   alias ExWire.Packet.BlockBodies
+  alias ExWire.PeerSupervisor
 
   @doc """
   Starts a Sync process.
@@ -47,17 +48,17 @@ defmodule ExWire.Sync do
   When were receive a block header, we'll add it to our block queue. When we receive the corresponding block body,
   we'll add that as well.
   """
-  def handle_info({:packet, %BlockHeaders{}=block_headers, %{remote_id: remote_id, ident: _ident}}, state=%{block_queue: block_queue, block_tree: block_tree, chain: chain, db: db, last_requested_block: last_requested_block}) do
+  def handle_info({:packet, %BlockHeaders{}=block_headers, peer}, state=%{block_queue: block_queue, block_tree: block_tree, chain: chain, db: db, last_requested_block: last_requested_block}) do
     {next_block_queue, next_block_tree} = Enum.reduce(block_headers.headers, {block_queue, block_tree}, fn header, {block_queue, block_tree} ->
       header_hash = header |> Header.hash
 
-      {block_queue, block_tree, should_request_block} = BlockQueue.add_header_to_block_queue(block_queue, block_tree, header, header_hash, remote_id, chain, db)
+      {block_queue, block_tree, should_request_block} = BlockQueue.add_header_to_block_queue(block_queue, block_tree, header, header_hash, peer.remote_id, chain, db)
 
       if should_request_block do
         Logger.debug("[Sync] Requesting block body #{header.number}")
 
         # TODO: Bulk up these requests?
-        ExWire.PeerSup.send_packet(ExWire.PeerSup, %ExWire.Packet.GetBlockBodies{hashes: [header_hash]})
+        PeerSupervisor.send_packet(PeerSupervisor, %ExWire.Packet.GetBlockBodies{hashes: [header_hash]})
       end
 
       {block_queue, block_tree}
@@ -78,7 +79,7 @@ defmodule ExWire.Sync do
     }
   end
 
-  def handle_info({:packet, %BlockBodies{}=block_bodies, %{remote_id: _remote_id, ident: _ident}}, state=%{block_queue: block_queue, block_tree: block_tree, chain: chain, db: db, last_requested_block: last_requested_block}) do
+  def handle_info({:packet, %BlockBodies{}=block_bodies, _peer}, state=%{block_queue: block_queue, block_tree: block_tree, chain: chain, db: db, last_requested_block: last_requested_block}) do
     {next_block_queue, next_block_tree} = Enum.reduce(block_bodies.blocks, {block_queue, block_tree}, fn block_body, {block_queue, block_tree} ->
       BlockQueue.add_block_struct_to_block_queue(block_queue, block_tree, block_body, chain, db)
     end)
@@ -98,8 +99,8 @@ defmodule ExWire.Sync do
     }
   end
 
-  def handle_info({:packet, packet, %{remote_id: _remote_id, ident: ident}}, state) do
-    Logger.debug("[Sync] Ignoring packet #{packet.__struct__} from #{ident}")
+  def handle_info({:packet, packet, peer}, state) do
+    Logger.debug("[Sync] Ignoring packet #{packet.__struct__} from #{peer}")
 
     {:noreply, state}
   end
@@ -112,7 +113,7 @@ defmodule ExWire.Sync do
 
     Logger.debug("[Sync] Requesting block #{next_number}")
 
-    ExWire.PeerSup.send_packet(ExWire.PeerSup, %ExWire.Packet.GetBlockHeaders{block_identifier: next_number, max_headers: 1, skip: 0, reverse: false})
+    ExWire.PeerSupervisor.send_packet(ExWire.PeerSupervisor, %ExWire.Packet.GetBlockHeaders{block_identifier: next_number, max_headers: 1, skip: 0, reverse: false})
 
     next_number
   end
