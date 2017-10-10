@@ -1,7 +1,13 @@
 defmodule ExWire.Sync do
   @moduledoc """
-  A server which connects to a number of remote peers. Once we connect
-  to a sufficient number of peers, we'll start to sync new blocks.
+  This is the heart of our syncing logic. Once we've connected to a number
+  of peers via `ExWire.PeerSup`, we begin to ask for new blocks from those
+  peers. As we receive blocks, we add them to our `ExWire.Struct.BlockQueue`.
+  If the blocks are confirmed by enough peers, then we verify the block and
+  add it to our block tree.
+
+  Note: we do not currently store the block tree, and thus we need to build
+        it from genesis each time.
   """
   use GenServer
 
@@ -22,8 +28,8 @@ defmodule ExWire.Sync do
   @doc """
   Once we start a sync server, we'll wait for active peers.
 
-  TODO: Obviously, we don't always want to sync from the genesis.
-        We'll need to add some "restore state" logic.
+  TODO: We do not always want to sync from the genesis.
+        We will need to add some "restore state" logic.
   """
   def init(db) do
     block_tree = Blockchain.Blocktree.new_tree()

@@ -9,7 +9,7 @@ by adding `ex_wire` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
-  [{:ex_wire, "~> 0.1.0"}]
+  [{:ex_wire, "~> 0.1.1"}]
 end
 ```
 
