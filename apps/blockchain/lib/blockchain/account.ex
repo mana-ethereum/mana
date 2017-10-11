@@ -428,15 +428,16 @@ defmodule Blockchain.Account do
       %Blockchain.Account{code_hash: <<241, 136, 94, 218, 84, 183, 160, 83, 49, 140, 212, 30,
                                         32, 147, 34, 13, 171, 21, 214, 83, 129, 177, 21, 122, 54, 51, 168,
                                         59, 253, 92, 146, 57>>}
-      iex> MerklePatriciaTree.Trie.get(state, BitHelper.kec(<<1, 2, 3>>))
-      <<1, 2, 3>>
+      iex> MerklePatriciaTree.DB.get(state.db, BitHelper.kec(<<1, 2, 3>>))
+      {:ok, <<1, 2, 3>>}
   """
   @spec put_code(EVM.state, EVM.address, EVM.MachineCode.t) :: EVM.state
   def put_code(state, contract_address, machine_code) do
     kec = BitHelper.kec(machine_code)
 
+    MerklePatriciaTree.DB.put!(state.db, kec, machine_code)
+
     state
-      |> Trie.update(kec, machine_code)
       |> update_account(contract_address, fn (acct) ->
         %{acct | code_hash: kec}
       end)
@@ -464,11 +465,6 @@ defmodule Blockchain.Account do
       {:ok, <<>>}
 
       iex> MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
-      ...> |> Blockchain.Account.put_account(<<0x01::160>>, %Blockchain.Account{code_hash: <<555>>})
-      ...> |> Blockchain.Account.get_machine_code(<<0x01::160>>)
-      :not_found
-
-      iex> MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
       ...> |> Blockchain.Account.put_code(<<0x01::160>>, <<1, 2, 3>>)
       ...> |> Blockchain.Account.get_machine_code(<<0x01::160>>)
       {:ok, <<1, 2, 3>>}
@@ -481,9 +477,9 @@ defmodule Blockchain.Account do
     case account.code_hash do
       @empty_keccak -> {:ok, <<>>}
       code_hash ->
-        case Trie.get(state, code_hash) do
+        case MerklePatriciaTree.DB.get(state.db, code_hash) do
           nil -> :not_found
-          machine_code when is_binary(machine_code) -> {:ok, machine_code}
+          {:ok, machine_code} when is_binary(machine_code) -> {:ok, machine_code}
         end
     end
   end
@@ -544,13 +540,13 @@ defmodule Blockchain.Account do
   @spec storage_put(DB.db, EVM.EVM.trie_root, integer(), integer()) :: EVM.trie_root
   defp storage_put(db, storage_root, key, value) do
     Trie.new(db, storage_root)
-    |> Trie.update(key |> :binary.encode_unsigned |> BitHelper.kec, value |> ExRLP.encode)
+    |> Trie.update(key |> :binary.encode_unsigned |> BitHelper.pad(32) |> BitHelper.kec, value |> ExRLP.encode)
   end
 
   @spec storage_fetch(DB.db, EVM.EVM.trie_root, integer()) :: integer() | nil
   defp storage_fetch(db, storage_root, key) do
     Trie.new(db, storage_root)
-    |> Trie.get(key |> :binary.encode_unsigned |> BitHelper.kec)
+    |> Trie.get(key |> :binary.encode_unsigned |> BitHelper.pad(32)|> BitHelper.kec)
   end
 
 end

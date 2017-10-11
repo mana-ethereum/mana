@@ -25,7 +25,7 @@ defmodule Blockchain.Contract do
       ...> |> Blockchain.Account.put_account(<<0x10::160>>, %Blockchain.Account{balance: 11, nonce: 5})
       ...> |> Blockchain.Contract.create_contract(<<0x10::160>>, <<0x10::160>>, 1000, 1, 5, EVM.MachineCode.compile([:push1, 3, :push1, 5, :add, :push1, 0x00, :mstore, :push1, 32, :push1, 0, :return]), 5, %Block.Header{nonce: 1})
       {
-        %MerklePatriciaTree.Trie{db: {MerklePatriciaTree.DB.ETS, :contract_create_test}, root_hash: <<98, 127, 176, 34, 60, 87, 113, 153, 133, 112, 237, 229, 251, 94, 163, 145, 234, 68, 26, 244, 25, 19, 211, 192, 172, 75, 106, 198, 229, 248, 105, 39>>},
+        %MerklePatriciaTree.Trie{db: {MerklePatriciaTree.DB.ETS, :contract_create_test}, root_hash: <<9, 235, 32, 146, 153, 242, 209, 192, 224, 61, 214, 174, 48, 24, 148, 28, 51, 254, 7, 82, 58, 82, 220, 157, 29, 159, 203, 51, 52, 240, 37, 122>>},
         976,
         %EVM.SubState{}
       }
@@ -34,7 +34,7 @@ defmodule Blockchain.Contract do
       iex> Blockchain.Account.get_machine_code(state, Blockchain.Contract.new_contract_address(<<0x10::160>>, 5))
       {:ok, <<0x08::256>>}
       iex> MerklePatriciaTree.Trie.Inspector.all_keys(state) |> Enum.count
-      3
+      2
   """
   @spec create_contract(EVM.state, EVM.address, EVM.address, EVM.Gas.t, EVM.Gas.gas_price, EVM.Wei.t, EVM.MachineCode.t, integer(), Header.t) :: {EVM.state, EVM.Gas.t, EVM.SubState.t}
   def create_contract(state, sender, originator, available_gas, gas_price, endowment, init_code, stack_depth, block_header) do
@@ -95,7 +95,7 @@ defmodule Blockchain.Contract do
       ...> |> Blockchain.Account.put_code(<<0x20::160>>, EVM.MachineCode.compile([:push1, 3, :push1, 5, :add, :push1, 0x00, :mstore, :push1, 32, :push1, 0, :return]))
       ...> |> Blockchain.Contract.message_call(<<0x10::160>>, <<0x10::160>>, <<0x20::160>>, <<0x20::160>>, 1000, 1, 5, 5, <<1, 2, 3>>, 5, %Block.Header{nonce: 1})
       {
-        %MerklePatriciaTree.Trie{db: {MerklePatriciaTree.DB.ETS, :message_call_test}, root_hash: <<10, 196, 161, 81, 223, 4, 171, 127, 206, 82, 83, 156, 61, 5, 44, 225, 206, 88, 22, 193, 27, 83, 226, 3, 15, 254, 193, 75, 188, 50, 125, 104>>},
+        %MerklePatriciaTree.Trie{db: {MerklePatriciaTree.DB.ETS, :message_call_test}, root_hash: <<163, 151, 95, 0, 149, 63, 81, 220, 74, 101, 219, 175, 240, 97, 153, 167, 249, 229, 144, 75, 101, 233, 126, 177, 8, 188, 105, 165, 28, 248, 67, 156>>},
         976,
         %EVM.SubState{},
         <<0x08::256>>
@@ -103,7 +103,7 @@ defmodule Blockchain.Contract do
       iex> Blockchain.Account.get_accounts(state, [<<0x10::160>>, <<0x20::160>>])
       [%Blockchain.Account{balance: 5}, %Blockchain.Account{balance: 25, code_hash: <<135, 110, 129, 59, 111, 55, 97, 45, 238, 64, 115, 133, 37, 188, 196, 107, 160, 151, 31, 167, 249, 187, 243, 251, 173, 170, 244, 204, 78, 134, 208, 239>>}]
       iex> MerklePatriciaTree.Trie.Inspector.all_keys(state) |> Enum.count
-      3
+      2
   """
   @spec message_call(EVM.state, EVM.address, EVM.address, EVM.address, EVM.address, EVM.Gas.t, EVM.Gas.gas_price, EVM.Wei.t, EVM.Wei.t, binary(), integer(), Header.t) :: { EVM.state, EVM.Gas.t, EVM.SubState.t, EVM.VM.output }
   def message_call(state, sender, originator, recipient, contract, available_gas, gas_price, value, apparent_value, data, stack_depth, block_header) do
