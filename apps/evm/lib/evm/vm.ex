@@ -18,6 +18,8 @@ defmodule EVM.VM do
   This function computes the Ξ function Eq.(116) of the Section 9.4 of the Yellow Paper. This is the complete
   result of running a given program in the VM.
 
+  Note: We replace returning state with exec env, which in our implementation contains the world state.
+
   ## Examples
 
       # Full program
@@ -36,7 +38,7 @@ defmodule EVM.VM do
       iex> EVM.VM.run(5, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:add])})
       {5, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:add])}, ""}
   """
-  @spec run(Gas.t, ExecEnv.t) :: {EVM.world_state | nil, Gas.t, EVM.SubState.t, output}
+  @spec run(Gas.t, ExecEnv.t) :: {Gas.t, EVM.SubState.t, ExecEnv.t, output}
   def run(gas, exec_env) do
     machine_state = %EVM.MachineState{gas: gas}
     sub_state = %EVM.SubState{}
@@ -50,7 +52,7 @@ defmodule EVM.VM do
   Runs a cycle of our VM in a recursive fashion, defined as `X`, Eq.(122) of the
   Yellow Paper. This function halts when return is called or an exception raised.
 
-  TODO: Add gas to return
+  TODO: Add gas to return (is this done?)
 
   ## Examples
 

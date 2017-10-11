@@ -23,8 +23,7 @@ defmodule EVM.ExecEnv do
     machine_code: <<>>,          # b
     stack_depth: 0,              # e
     block_interface: nil,        # h (wrapped in interface)
-    account_interface: nil,
-    contract_interface: nil,
+    account_interface: nil
   ]
 
   @type t :: %__MODULE__{
@@ -37,8 +36,7 @@ defmodule EVM.ExecEnv do
     machine_code: EVM.MachineCode.t,
     stack_depth: integer(),
     block_interface: EVM.Interface.BlockInterface.t,
-    account_interface: EVM.Interface.AccountInterface.t,
-    contract_interface: EVM.Interface.ContractInterface.t,
+    account_interface: EVM.Interface.AccountInterface.t
   }
 
   @doc """
@@ -50,8 +48,8 @@ defmodule EVM.ExecEnv do
 
   # TODO: Examples
   """
-  @spec exec_env_for_message_call(EVM.address, EVM.address, EVM.Gas.gas_price, binary(), EVM.address, EVM.Wei.t, integer(), EVM.MachineCode.t, EVM.Interface.BlockInterface.t, EVM.Interface.AccountInterface.t, EVM.Interface.ContractInterface.t) :: t
-  def exec_env_for_message_call(recipient, originator, gas_price, data, sender, value_in_wei, stack_depth, machine_code, block_interface, account_interface, contract_interface) do
+  @spec exec_env_for_message_call(EVM.address, EVM.address, EVM.Gas.gas_price, binary(), EVM.address, EVM.Wei.t, integer(), EVM.MachineCode.t, EVM.Interface.BlockInterface.t, EVM.Interface.AccountInterface.t) :: t
+  def exec_env_for_message_call(recipient, originator, gas_price, data, sender, value_in_wei, stack_depth, machine_code, block_interface, account_interface) do
     %__MODULE__{
       address: recipient,
       originator: originator,
@@ -62,29 +60,30 @@ defmodule EVM.ExecEnv do
       stack_depth: stack_depth,
       machine_code: machine_code,
       block_interface: block_interface,
-      account_interface: account_interface,
-      contract_interface: contract_interface,
+      account_interface: account_interface
     }
   end
 
-  @spec put_storage(ExecEnv.t, EVM.val, EVM.val) :: ExecEnv.t
+  @spec put_storage(ExecEnv.t, integer(), integer()) :: ExecEnv.t
   def put_storage(exec_env=%{account_interface: account_interface, address: address}, key, value) do
-    account_interface = account_interface
+    account_interface =
+      account_interface
       |> AccountInterface.put_storage(address, key, value)
 
     Map.put(exec_env, :account_interface, account_interface)
   end
 
-  @spec get_storage(ExecEnv.t, EVM.val) :: EVM.val
-  def get_storage(exec_env=%{account_interface: account_interface, address: address}, key) do
-    account_interface = account_interface
-      |> AccountInterface.get_storage(address, key)
+  @spec get_storage(ExecEnv.t, integer()) :: {:ok, integer()} | :account_not_found | :key_not_found
+  def get_storage(_exec_env=%{account_interface: account_interface, address: address}, key) do
+    AccountInterface.get_storage(account_interface, address, key)
   end
 
   @spec suicide_account(ExecEnv.t) :: ExecEnv.t
   def suicide_account(exec_env=%{account_interface: account_interface, address: address}) do
-    account_interface = account_interface
+    account_interface =
+      account_interface
       |> AccountInterface.suicide_account(address)
+
     Map.put(exec_env, :account_interface, account_interface)
   end
 end

@@ -1,11 +1,9 @@
 defmodule EVM.Operation.StackMemoryStorageAndFlow do
   alias EVM.Helpers
-  alias EVM.Interface.AccountInterface
   alias EVM.Memory
   alias EVM.Stack
   alias EVM.ExecEnv
   alias MathHelper
-  alias MerklePatriciaTree.Trie
   use Bitwise
 
   @doc """
@@ -103,7 +101,11 @@ defmodule EVM.Operation.StackMemoryStorageAndFlow do
   """
   @spec sload(Operation.stack_args, Operation.vm_map) :: Operation.op_result
   def sload([key], %{exec_env: exec_env}) do
-    ExecEnv.get_storage(exec_env, key)
+    case ExecEnv.get_storage(exec_env, key) do
+      :account_not_found -> 0
+      :key_not_found -> 0
+      {:ok, value} -> value
+    end
   end
 
   @doc """
@@ -121,9 +123,9 @@ defmodule EVM.Operation.StackMemoryStorageAndFlow do
       iex> key = 0x11223344556677889900
       iex> value = 0x111222333444555
       iex> account_interface = EVM.Interface.Mock.MockAccountInterface.new()
-      iex> account_interface = EVM.Operation.StackMemoryStorageAndFlow.sstore([key, value], %{exec_env: %EVM.ExecEnv{address: address, account_interface: account_interface}})[:exec_env].account_interface
-      iex> account_interface |> EVM.Interface.AccountInterface.get_storage(address, key)
-      0x111222333444555
+      iex> EVM.Operation.StackMemoryStorageAndFlow.sstore([key, value], %{exec_env: %EVM.ExecEnv{address: address, account_interface: account_interface}})[:exec_env].account_interface
+      ...> |> EVM.Interface.AccountInterface.get_storage(address, key)
+      {:ok, 0x111222333444555}
 
       iex> address = 0x0000000000000000000000000000000000000001
       iex> account_interface = EVM.Interface.Mock.MockAccountInterface.new()
