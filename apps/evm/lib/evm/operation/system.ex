@@ -188,7 +188,7 @@ defmodule EVM.Operation.System do
 
     if call_gas <= account_balance && exec_env.stack_depth < EVM.Functions.max_stack_depth do
 
-      { _n_state, n_gas, _n_sub_state, n_output } = message_call(
+      { n_gas, _n_sub_state, _n_exec_env, n_output } = message_call(
         exec_env.account_interface,
         exec_env.address,          # sender
         exec_env.originator,       # originator
