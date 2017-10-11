@@ -41,6 +41,7 @@ defmodule Blockchain.Contract do
 
     sender_account = Account.get_account(state, sender)
     contract_address = new_contract_address(sender, sender_account.nonce)
+    state_with_blank_contract = create_blank_contract(state, contract_address, sender, endowment)
 
     exec_env = create_contract_exec_env(
       contract_address,
@@ -51,12 +52,11 @@ defmodule Blockchain.Contract do
       init_code,
       stack_depth,
       block_header,
-      state.db)
+      state_with_blank_contract)
 
     {state_after_init, remaining_gas, accrued_sub_state, output} =
-      state
-      |> create_blank_contract(contract_address, sender, endowment)
-      |> EVM.VM.run(available_gas, exec_env)
+      EVM.VM.run(available_gas, exec_env)
+      |> interpret_vm_result
 
     contract_creation_cost = get_contract_creation_cost(output)
     insufficient_gas_before_homestead = remaining_gas < contract_creation_cost and Header.is_before_homestead?(block_header)
@@ -112,6 +112,8 @@ defmodule Blockchain.Contract do
 
     {:ok, machine_code} = Account.get_machine_code(state, contract) # note, this could fail if machine code is not in state
 
+    state_initialized_for_message_call = initialize_message_call(state, sender, recipient, value)
+
     exec_env = create_message_call_exec_env(
       sender,
       originator,
@@ -122,11 +124,9 @@ defmodule Blockchain.Contract do
       stack_depth,
       machine_code,
       block_header,
-      state.db)
+      state_initialized_for_message_call)
 
-    state
-      |> initialize_message_call(sender, recipient, value)
-      |> exec_fun.(available_gas, exec_env)
+    exec_fun.(available_gas, exec_env) |> interpret_vm_result
   end
 
   @doc """
@@ -201,7 +201,9 @@ defmodule Blockchain.Contract do
 
   ## Examples
 
-      iex> Blockchain.Contract.create_contract_exec_env(<<0x01::160>>, <<0x02::160>>, 5, <<0x03::160>>, 6, <<1, 2, 3>>, 14, %Block.Header{nonce: 1}, MerklePatriciaTree.Test.random_ets_db(:create_contract_exec_env))
+      iex> db = MerklePatriciaTree.Test.random_ets_db(:create_contract_exec_env)
+      iex> state = MerklePatriciaTree.Trie.new(db)
+      iex> Blockchain.Contract.create_contract_exec_env(<<0x01::160>>, <<0x02::160>>, 5, <<0x03::160>>, 6, <<1, 2, 3>>, 14, %Block.Header{nonce: 1}, state)
       %EVM.ExecEnv{
         address: <<0x01::160>>,
         originator: <<0x02::160>>,
@@ -212,12 +214,11 @@ defmodule Blockchain.Contract do
         machine_code: <<1, 2, 3>>,
         stack_depth: 14,
         block_interface: %Blockchain.Interface.BlockInterface{block_header: %Block.Header{nonce: 1}, db: {MerklePatriciaTree.DB.ETS, :create_contract_exec_env}},
-        account_interface: %Blockchain.Interface.AccountInterface{},
-        contract_interface: %Blockchain.Interface.ContractInterface{},
+        account_interface: %Blockchain.Interface.AccountInterface{state: %MerklePatriciaTree.Trie{db: {MerklePatriciaTree.DB.ETS, :create_contract_exec_env}, root_hash: <<86, 232, 31, 23, 27, 204, 85, 166, 255, 131, 69, 230, 146, 192, 248, 110, 91, 72, 224, 27, 153, 108, 173, 192, 1, 98, 47, 181, 227, 99, 180, 33>>}}
       }
   """
-  @spec create_contract_exec_env(EVM.address, EVM.address, EVM.Wei.t, EVM.address, EVM.Wei.t, EVM.MachineCode.t, integer(), Header.t, DB.db) :: EVM.ExecEnv.t
-  def create_contract_exec_env(contract_address, originator, gas_price, sender, endowment, init_code, stack_depth, block_header, db) do
+  @spec create_contract_exec_env(EVM.address, EVM.address, EVM.Wei.t, EVM.address, EVM.Wei.t, EVM.MachineCode.t, integer(), Header.t, EVM.state) :: EVM.ExecEnv.t
+  def create_contract_exec_env(contract_address, originator, gas_price, sender, endowment, init_code, stack_depth, block_header, state) do
     %EVM.ExecEnv{
       address: contract_address,
       originator: originator,
@@ -227,9 +228,8 @@ defmodule Blockchain.Contract do
       value_in_wei: endowment,
       machine_code: init_code,
       stack_depth: stack_depth,
-      block_interface: Blockchain.Interface.BlockInterface.new(block_header, db),
-      account_interface: Blockchain.Interface.AccountInterface.new(),
-      contract_interface: Blockchain.Interface.ContractInterface.new(),
+      block_interface: Blockchain.Interface.BlockInterface.new(block_header, state.db),
+      account_interface: Blockchain.Interface.AccountInterface.new(state)
     }
   end
 
@@ -241,7 +241,9 @@ defmodule Blockchain.Contract do
 
   ## Examples
 
-      iex> Blockchain.Contract.create_message_call_exec_env(<<0x01::160>>, <<0x02::160>>, <<0x03::160>>, 4, 5, <<1, 2, 3>>, 14, <<2, 3, 4>>, %Block.Header{nonce: 1}, MerklePatriciaTree.Test.random_ets_db(:create_message_call_exec_env))
+      iex> db = MerklePatriciaTree.Test.random_ets_db(:create_message_call_exec_env)
+      iex> state = MerklePatriciaTree.Trie.new(db)
+      iex> Blockchain.Contract.create_message_call_exec_env(<<0x01::160>>, <<0x02::160>>, <<0x03::160>>, 4, 5, <<1, 2, 3>>, 14, <<2, 3, 4>>, %Block.Header{nonce: 1}, state)
       %EVM.ExecEnv{
         address: <<0x03::160>>,
         originator: <<0x02::160>>,
@@ -252,12 +254,11 @@ defmodule Blockchain.Contract do
         machine_code: <<2, 3, 4>>,
         stack_depth: 14,
         block_interface: %Blockchain.Interface.BlockInterface{block_header: %Block.Header{nonce: 1}, db: {MerklePatriciaTree.DB.ETS, :create_message_call_exec_env}},
-        account_interface: %Blockchain.Interface.AccountInterface{},
-        contract_interface: %Blockchain.Interface.ContractInterface{},
+        account_interface: %Blockchain.Interface.AccountInterface{state: %MerklePatriciaTree.Trie{db: {MerklePatriciaTree.DB.ETS, :create_message_call_exec_env}, root_hash: <<86, 232, 31, 23, 27, 204, 85, 166, 255, 131, 69, 230, 146, 192, 248, 110, 91, 72, 224, 27, 153, 108, 173, 192, 1, 98, 47, 181, 227, 99, 180, 33>>}}
       }
   """
-  @spec create_message_call_exec_env(EVM.address, EVM.address, EVM.address, EVM.Wei.t, EVM.Wei.t, binary(), integer(), EVM.MachineCode.t, Header.t, DB.db) :: EVM.ExecEnv.t
-  def create_message_call_exec_env(sender, originator, recipient, gas_price, apparent_value, data, stack_depth, machine_code, block_header, db) do
+  @spec create_message_call_exec_env(EVM.address, EVM.address, EVM.address, EVM.Wei.t, EVM.Wei.t, binary(), integer(), EVM.MachineCode.t, Header.t, EVM.state) :: EVM.ExecEnv.t
+  def create_message_call_exec_env(sender, originator, recipient, gas_price, apparent_value, data, stack_depth, machine_code, block_header, state) do
     %EVM.ExecEnv{
       address: recipient,
       originator: originator,
@@ -267,9 +268,8 @@ defmodule Blockchain.Contract do
       value_in_wei: apparent_value,
       machine_code: machine_code,
       stack_depth: stack_depth,
-      block_interface: Blockchain.Interface.BlockInterface.new(block_header, db),
-      account_interface: Blockchain.Interface.AccountInterface.new(),
-      contract_interface: Blockchain.Interface.ContractInterface.new(),
+      block_interface: Blockchain.Interface.BlockInterface.new(block_header, state.db),
+      account_interface: Blockchain.Interface.AccountInterface.new(state),
     }
   end
 
@@ -293,32 +293,35 @@ defmodule Blockchain.Contract do
   ## Examples
 
       iex> Blockchain.Contract.get_message_call_exec_fun(<<1::160>>)
-      &EVM.Builtin.run_ecrec/3
+      &EVM.Builtin.run_ecrec/2
 
       iex> Blockchain.Contract.get_message_call_exec_fun(<<2::160>>)
-      &EVM.Builtin.run_sha256/3
+      &EVM.Builtin.run_sha256/2
 
       iex> Blockchain.Contract.get_message_call_exec_fun(<<3::160>>)
-      &EVM.Builtin.run_rip160/3
+      &EVM.Builtin.run_rip160/2
 
       iex> Blockchain.Contract.get_message_call_exec_fun(<<4::160>>)
-      &EVM.Builtin.run_id/3
+      &EVM.Builtin.run_id/2
 
       iex> Blockchain.Contract.get_message_call_exec_fun(<<5::160>>)
-      &EVM.VM.run/3
+      &EVM.VM.run/2
 
       iex> Blockchain.Contract.get_message_call_exec_fun(<<6::160>>)
-      &EVM.VM.run/3
+      &EVM.VM.run/2
   """
-  @spec get_message_call_exec_fun(EVM.address) :: ( (EVM.state, EVM.Gas.t, EVM.ExecEnv.t) -> {EVM.state, EVM.Gas.t, EVM.SubState.t, EVM.VM.output} )
+  @spec get_message_call_exec_fun(EVM.address) :: ( (EVM.Gas.t, EVM.ExecEnv.t) -> {EVM.state, EVM.Gas.t, EVM.SubState.t, EVM.VM.output} )
   def get_message_call_exec_fun(recipient) do
     case :binary.decode_unsigned(recipient) do
-      1 -> &EVM.Builtin.run_ecrec/3
-      2 -> &EVM.Builtin.run_sha256/3
-      3 -> &EVM.Builtin.run_rip160/3
-      4 -> &EVM.Builtin.run_id/3
-      _ -> &EVM.VM.run/3
+      1 -> &EVM.Builtin.run_ecrec/2
+      2 -> &EVM.Builtin.run_sha256/2
+      3 -> &EVM.Builtin.run_rip160/2
+      4 -> &EVM.Builtin.run_id/2
+      _ -> &EVM.VM.run/2
     end
   end
+
+  @spec interpret_vm_result({EVM.Gas.t, EVM.SubState.t, EVM.ExecEnv.t, EVM.VM.output}) :: {EVM.state, EVM.Gas.t, EVM.SubState.t, EVM.VM.output}
+  defp interpret_vm_result({gas, sub_state, exec_env, output}), do: {exec_env.account_interface.state, gas, sub_state, output}
 
 end
