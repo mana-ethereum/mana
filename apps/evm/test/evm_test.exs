@@ -60,7 +60,6 @@ defmodule EvmTest do
           %EVM.ExecEnv{
             account_interface: account_interface(test),
             address: hex_to_int(test["exec"]["address"]),
-            contract_interface: contract_interface(),
             block_interface: block_interface(test),
             data: hex_to_binary(test["exec"]["data"]),
             gas_price: hex_to_binary(test["exec"]["gasPrice"]),
@@ -86,14 +85,6 @@ defmodule EvmTest do
     end)
   end
 
-  def contract_interface() do
-    EVM.Interface.Mock.MockContractInterface.new(
-      0,
-      %EVM.SubState{},
-      <<>>
-    )
-  end
-
   def account_interface(test) do
     account_map = %{
       hex_to_int(test["exec"]["caller"]) => %{
@@ -117,7 +108,16 @@ defmodule EvmTest do
         })
     end)
 
-    EVM.Interface.Mock.MockAccountInterface.new(account_map)
+    contract_result = %{
+      gas: 0,
+      sub_state: %EVM.SubState{},
+      output: <<>>
+    }
+
+    EVM.Interface.Mock.MockAccountInterface.new(
+      account_map,
+      contract_result
+    )
   end
 
   def block_interface(test) do

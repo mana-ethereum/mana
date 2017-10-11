@@ -171,7 +171,8 @@ defmodule EVM.Gas do
       iex> address = 0x0000000000000000000000000000000000000001
       iex> account_interface = EVM.Interface.Mock.MockAccountInterface.new()
       iex> exec_env = %EVM.ExecEnv{address: address, account_interface: account_interface}
-      iex> EVM.Gas.operation_cost(:sstore, [], %EVM.MachineState{stack: [0, 0]}, exec_env) 5000
+      iex> EVM.Gas.operation_cost(:sstore, [], %EVM.MachineState{stack: [0, 0]}, exec_env)
+      5000
 
       iex> EVM.Gas.operation_cost(:exp, [0, 0], %EVM.MachineState{}, exec_env)
       10

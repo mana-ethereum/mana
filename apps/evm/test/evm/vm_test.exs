@@ -57,6 +57,6 @@ defmodule EVM.VMTest do
     expected_account_interface = EVM.Interface.Mock.MockAccountInterface.new(expected_account_state)
     expected_exec_env = Map.put(exec_env, :account_interface, expected_account_interface)
 
-    assert result == {0, %EVM.SubState{logs: "", refund: 0, suicide_list: []}, expected_exec_env, ""}
+    assert result == {15000, %EVM.SubState{logs: "", refund: 0, suicide_list: []}, expected_exec_env, ""}
   end
 end
