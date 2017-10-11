@@ -52,8 +52,6 @@ defmodule EVM.VM do
   Runs a cycle of our VM in a recursive fashion, defined as `X`, Eq.(122) of the
   Yellow Paper. This function halts when return is called or an exception raised.
 
-  TODO: Add gas to return (is this done?)
-
   ## Examples
 
       iex> EVM.VM.exec(%EVM.MachineState{program_counter: 0, gas: 5, stack: [1, 2]}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:add])})
