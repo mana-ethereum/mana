@@ -91,7 +91,7 @@ defmodule MerklePatriciaTree.Trie.Node do
     case Storage.get_node(trie) do
       nil -> :empty
       <<>> -> :empty
-      :not_found -> :not_found
+      :not_found -> :empty
       branches when length(branches) == 17 ->
         {:branch, branches}
       [hp_k, v] ->

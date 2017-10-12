@@ -84,7 +84,7 @@ defmodule MerklePatriciaTree.Trie.Storage do
     iex> MerklePatriciaTree.Trie.Storage.get_node(%{trie| root_hash: <<141, 163, 93, 242, 120, 27, 128, 97, 138, 56, 116, 101, 165, 201, 165, 139, 86, 73, 85, 153, 45, 38, 207, 186, 196, 202, 111, 84, 214, 26, 122, 164>>})
     ["AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"]
   """
-  @spec get_node(Trie.t) :: ExRLP.t
+  @spec get_node(Trie.t) :: ExRLP.t | :not_found
   def get_node(trie) do
     case trie.root_hash do
       <<>> -> <<>>
