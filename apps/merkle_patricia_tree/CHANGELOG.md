@@ -1,3 +1,5 @@
+# 0.2.6
+* Don't raise on key not found
 # 0.2.5
 * Add back empty trie function :(
 # 0.2.4

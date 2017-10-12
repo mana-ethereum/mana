@@ -87,6 +87,7 @@ defmodule MerklePatriciaTree.Trie do
 
     case Node.decode_trie(trie) do
       :empty -> nil # no node, bail
+      :not_found -> :not_found
       {:branch, branches} ->
         # branch node
         case Enum.at(branches, nibble) do

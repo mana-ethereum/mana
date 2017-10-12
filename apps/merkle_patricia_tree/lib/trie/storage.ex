@@ -73,7 +73,8 @@ defmodule MerklePatriciaTree.Trie.Storage do
 
     iex> MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db(), <<254, 112, 17, 90, 21, 82, 19, 29, 72, 106, 175, 110, 87, 220, 249, 140, 74, 165, 64, 94, 174, 79, 78, 189, 145, 143, 92, 53, 173, 136, 220, 145>>)
     ...> |> MerklePatriciaTree.Trie.Storage.get_node()
-    ** (RuntimeError) Cannot find value in DB: <<254, 112, 17, 90, 21, 82, 19, 29, 72, 106, 175, 110, 87, 220, 249, 140, 74, 165, 64, 94, 174, 79, 78, 189, 145, 143, 92, 53, 173, 136, 220, 145>>
+    :not_found
+
 
     iex> trie = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db(), <<130, 72, 105>>)
     iex> MerklePatriciaTree.Trie.Storage.put_node(["AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"], trie)
@@ -91,7 +92,7 @@ defmodule MerklePatriciaTree.Trie.Storage do
       h ->
         case DB.get(trie.db, h) do # stored in db
           {:ok, v} -> ExRLP.decode(v)
-          :not_found -> raise "Cannot find value in DB: #{inspect trie.root_hash}"
+          :not_found -> :not_found
         end
     end
   end
