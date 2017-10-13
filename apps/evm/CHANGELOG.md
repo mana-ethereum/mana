@@ -1,3 +1,5 @@
+# 0.1.13
+* Update gas calculations for CALL and RETURN opcodes
 # 0.1.12
 * Move state management out of the EVM and use `AccountInterface` instead
 # 0.1.11
