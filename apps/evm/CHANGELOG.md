@@ -1,3 +1,5 @@
+# 0.1.14
+* Update CALL opcode to pass blockchain tests
 # 0.1.13
 * Update gas calculations for CALL and RETURN opcodes
 # 0.1.12

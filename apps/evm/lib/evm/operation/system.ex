@@ -4,6 +4,7 @@ defmodule EVM.Operation.System do
   alias EVM.Interface.AccountInterface
   alias EVM.Interface.BlockInterface
   alias EVM.Helpers
+  alias EVM.Address
   alias EVM.Stack
 
   @doc """
@@ -57,7 +58,7 @@ defmodule EVM.Operation.System do
     result = if is_allowed do
       nonce = exec_env.account_interface
         |> AccountInterface.get_account_nonce(exec_env.address)
-      EVM.Address.create(exec_env.address, nonce)
+      EVM.Address.new(exec_env.address, nonce)
     else
       0
     end
@@ -73,136 +74,58 @@ defmodule EVM.Operation.System do
   end
 
   @doc """
-  For call: Message-call into an account.
-  For call code: Message-call into this account with an alternative account's code.
-  For delegate call: Message-call into this account with an alternative account's code, but persisting the current values for sender and value.
+  Message-call into an account. Transfer `value` wei from callers account to callees account then run the code in that account.
 
   ## Examples
 
-      # CALL
-      iex> block_interface = EVM.Interface.Mock.MockBlockInterface.new(%Block.Header{})
-      iex> account_map = %{<<0::160>> => %{balance: 5_000, nonce: 5}}
-      iex> account_interface = EVM.Interface.Mock.MockAccountInterface.new(%{account_map: account_map}, %{gas: 500, sub_state: nil, output: "output"})
-      iex> exec_env = %EVM.ExecEnv{stack_depth: 0, address: <<0::160>>, account_interface: account_interface, block_interface: block_interface}
-      iex> machine_state = %EVM.MachineState{gas: 300, stack: [1], memory: "________" <> "input"}
-      iex> %{machine_state: n_machine_state} =
-      ...>   EVM.Operation.System.call(
-      ...>     :call,
-      ...>     [100, <<0x01::160>>, 1_000, 5, 5, 1, 6],
-      ...>     %{exec_env: exec_env, machine_state: machine_state})
-      iex> n_machine_state
-      %EVM.MachineState{gas: 800, stack: [1, 1], active_words: 1, memory: "_output_input", program_counter: 0}
-
-      # CALLCODE
-      iex> block_interface = EVM.Interface.Mock.MockBlockInterface.new(%Block.Header{})
-      iex> account_map = %{<<0::160>> => %{balance: 5_000}}
-      iex> account_interface = EVM.Interface.Mock.MockAccountInterface.new(account_map, %{gas: 500, sub_state: nil, output: "output"})
-      iex> exec_env = %EVM.ExecEnv{stack_depth: 0, address: <<0::160>>, account_interface: account_interface, block_interface: block_interface}
-      iex> machine_state = %EVM.MachineState{gas: 300, stack: [1], memory: "________" <> "input"}
-      iex> %{machine_state: n_machine_state} =
-      ...>   EVM.Operation.System.call(
-      ...>     :call_code,
-      ...>     [100, <<0x01::160>>, 1_000, 5, 5, 1, 6],
-      ...>     %{exec_env: exec_env, machine_state: machine_state})
-      iex> n_machine_state
-      %EVM.MachineState{gas: 800, stack: [1, 1], active_words: 1, memory: "_output_input"}
-
-      # DELEGATECALL
-      iex> block_interface = EVM.Interface.Mock.MockBlockInterface.new(%Block.Header{})
-      iex> account_map = %{<<0::160>> => %{balance: 5_000}}
-      iex> account_interface = EVM.Interface.Mock.MockAccountInterface.new(account_map, %{gas: 500, sub_state: nil, output: "output"})
-      iex> exec_env = %EVM.ExecEnv{stack_depth: 0, address: <<0::160>>, account_interface: account_interface, block_interface: block_interface}
-      iex> machine_state = %EVM.MachineState{gas: 300, stack: [1], memory: "________" <> "input"}
-      iex> %{machine_state: n_machine_state} =
-      ...>   EVM.Operation.System.call(
-      ...>     :delegate_call,
-      ...>     [100, <<0x01::160>>, 5, 5, 1, 6],
-      ...>     %{exec_env: exec_env, machine_state: machine_state})
-      iex> n_machine_state
-      %EVM.MachineState{gas: 800, stack: [1, 1], active_words: 1, memory: "_output_input"}
-  """
-  @spec call(atom(), Operation.stack_args, Operation.vm_map) :: Operation.op_result
-  def call(:delegate_call, [call_gas, to, in_offset, in_size, out_offset, out_size], vm_map) do
-    # pass 0 as `value` for delegate call
-    call(:delegate_call, [call_gas, to, 0, in_offset, in_size, out_offset, out_size], vm_map)
-  end
-
-  def call(type, [call_gas, to, value, in_offset, in_size, out_offset, out_size], %{exec_env: exec_env, machine_state: machine_state}) when type in [:call, :call_code, :delegate_call] do
-
-    to_addr = Helpers.wrap_address(to)
-    {data, machine_state} = EVM.Memory.read(machine_state, in_offset, in_size)
-    account_balance = AccountInterface.get_account_balance(exec_env.account_interface, exec_env.address)
-    block_header = BlockInterface.get_block_header(exec_env.block_interface)
-
-    is_allowed = value <= account_balance and exec_env.stack_depth < EVM.Functions.max_stack_depth
-
-    recipient = if type == :call_code || type == :delegate_call, do: exec_env.address, else: to_addr
-    apparent_value = if type == :delegate_call, do: exec_env.value_in_wei, else: value
-
-    { n_account_interface, n_gas, _n_sub_state, n_output } = if is_allowed do
-      AccountInterface.message_call(
-        exec_env.account_interface,
-        exec_env.address,          # sender
-        exec_env.originator,       # originator
-        recipient,                 # recipient
-        to_addr,                   # contract
-        call_gas,                  # available_gas # TODO: Call gas?
-        exec_env.gas_price,        # gas_price
-        value,                     # value
-        apparent_value,            # apparent_value
-        data,                      # data
-        exec_env.stack_depth + 1,  # stack_depth
-        block_header)              # block_header
-    else
-        # TODO: What are we supposed to put as output?
-        { exec_env.account_interface, call_gas, nil, <<>> }
-    end
-
-    # Write the output, bounded by specified size
-    final_output = if byte_size(n_output) > out_size do
-      :binary.part(n_output, 0, out_size)
-    else
-      n_output
-    end
-
-    machine_state = EVM.Memory.write(machine_state, out_offset, final_output)
-    exec_env = %{ exec_env | account_interface: n_account_interface }
-
-    # Add back extra gas
-    machine_state = %{machine_state | gas: machine_state.gas + n_gas}
-
-    # Note if was exception halt or other failure on stack
-    was_successful = if is_allowed, do: 1, else: 0 |> Helpers.wrap_int
-    machine_state = %{machine_state | stack: Stack.push(machine_state.stack, was_successful)}
-
-    %{
-      machine_state: machine_state,
-      exec_env: exec_env
-      # TODO: sub_state
-    }
-  end
-
+      iex> account_map = %{
+      ...>   <<0::160>> => %{balance: 100, nonce: 5, code: <<>>},
+      ...>   <<1::160>> => %{balance: 100, nonce: 5, code: <<>>},
+      ...>   <<2::160>> => %{balance: 100, nonce: 5, code: <<>>},
+      ...> }
+      iex> account_interface = EVM.Interface.Mock.MockAccountInterface.new(account_map)
+      iex> exec_env = %EVM.ExecEnv{
+      ...>   account_interface: account_interface,
+      ...>   sender: <<0::160>>,
+      ...>   address: <<0::160>>
+      ...> }
+      iex> machine_state = %EVM.MachineState{gas: 1000}
+      iex> %{machine_state: machine_state, exec_env: exec_env} =
+      ...> EVM.Operation.System.call([10, 1, 1, 0, 0, 0, 0],
+      ...>   %{exec_env: exec_env, machine_state: machine_state})
+      iex> EVM.Stack.peek(machine_state.stack)
+      1
+      iex> exec_env.account_interface
+      ...>   |> EVM.Interface.AccountInterface.get_account_balance(<<0::160>>)
+      99
+      iex> exec_env.account_interface
+      ...>   |> EVM.Interface.AccountInterface.get_account_balance(<<1::160>>)
+      101
+"""
   @spec call(Operation.stack_args, Operation.vm_map) :: Operation.op_result
   def call([call_gas, to, value, in_offset, in_size, out_offset, _out_size], %{exec_env: exec_env, machine_state: machine_state}) do
 
-    { contract_code, machine_state } = EVM.Memory.read(machine_state, in_offset, in_size)
+    to = Address.new(to)
+    { data, machine_state } = EVM.Memory.read(machine_state, in_offset, in_size)
     account_balance = AccountInterface.get_account_balance(exec_env.account_interface, exec_env.address)
-
+    machine_code = AccountInterface.get_account_code(exec_env.account_interface, to)
     if call_gas <= account_balance && exec_env.stack_depth < EVM.Functions.max_stack_depth do
 
-      { n_gas, _n_sub_state, _n_exec_env, n_output } = message_call(
-        exec_env.account_interface,
-        exec_env.address,          # sender
-        exec_env.originator,       # originator
-        exec_env.address,          # recipient
-        to,                        # contract
-        call_gas,                  # available_gas # TODO: Call gas?
-        exec_env.gas_price,        # gas_price
-        value,                     # value
-        exec_env.value_in_wei,     # apparent_value
-        contract_code,             # data
-        exec_env.stack_depth)      # stack_depth
+      exec_env = ExecEnv.tranfer_wei_to(exec_env, to, value)
 
+      { n_gas, _n_sub_state, n_exec_env, n_output } = EVM.VM.run(
+          call_gas,
+          Map.merge(exec_env,%{
+            address: to,                               # a
+            sender: exec_env.address,                  # s
+            data: data,                                # d
+            value_in_wei: value,                       # v
+            machine_code: machine_code,                # b
+            stack_depth: exec_env.stack_depth + 1,     # e
+          })
+      )
+
+      exec_env = %{exec_env | account_interface: n_exec_env.account_interface}
       # TODO: Set n_account_interface
 
       machine_state = EVM.Memory.write(machine_state, out_offset, n_output)
@@ -212,23 +135,15 @@ defmodule EVM.Operation.System do
       machine_state = %{machine_state | stack: Stack.push(machine_state.stack, 1)}
 
       %{
-        machine_state: machine_state
+        machine_state: machine_state,
+        exec_env: exec_env,
         # TODO: sub_state
       }
     else
-      %{machine_state | stack: Stack.push(machine_state.stack, 0)}
+    %{
+      machine_state: %{machine_state | stack: Stack.push(machine_state.stack, 0)},
+    }
     end
-  end
-
-  @spec message_call(EVM.Interface.AccountInterface.t, EVM.address, EVM.address, EVM.address, EVM.address, EVM.Gas.t, EVM.Gas.gas_price, EVM.Wei.t, EVM.Wei.t, binary(), integer()) :: { EVM.state, EVM.Gas.t, EVM.SubState.t, EVM.VM.output }
-  defp message_call(_mock_account_interface, _sender, _originator, _recipient, _contract, available_gas, _gas_price, _value, _apparent_value, data, stack_depth) do
-    EVM.VM.run(
-      available_gas,
-      %EVM.ExecEnv{
-        machine_code: data,
-        stack_depth: stack_depth + 1,
-      }
-    )
   end
 
   @doc """

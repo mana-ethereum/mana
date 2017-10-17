@@ -11,6 +11,12 @@ defprotocol EVM.Interface.AccountInterface do
   @spec get_account_balance(t, EVM.address) :: nil | EVM.Wei.t
   def get_account_balance(t, address)
 
+  @spec add_wei(t, EVM.address, integer()) :: nil | EVM.Wei.t
+  def add_wei(t, address, value)
+
+  @spec transfer(t, EVM.address, EVM.address, integer()) :: nil | EVM.Wei.t
+  def transfer(t, from, to, value)
+
   @spec get_account_code(t, EVM.address) :: nil | binary()
   def get_account_code(t, address)
 

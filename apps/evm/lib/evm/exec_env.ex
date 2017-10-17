@@ -86,4 +86,11 @@ defmodule EVM.ExecEnv do
 
     Map.put(exec_env, :account_interface, account_interface)
   end
+
+  def tranfer_wei_to(exec_env, to, value) do
+    account_interface = exec_env.account_interface
+      |> AccountInterface.transfer(exec_env.address, to, value)
+
+    exec_env = %{exec_env| account_interface: account_interface}
+  end
 end

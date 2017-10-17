@@ -3,7 +3,7 @@ defmodule EVM.Mixfile do
 
   def project do
     [app: :evm,
-     version: "0.1.13",
+     version: "0.1.14",
      elixir: "~> 1.4",
      description: "Ethereum's Virtual Machine, in all its glory.",
       package: [

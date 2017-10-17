@@ -6,6 +6,7 @@ defmodule EVM.Gas do
   alias EVM.MachineState
   alias EVM.MachineCode
   alias EVM.Operation
+  alias EVM.Address
   alias EVM.ExecEnv
 
   @type t :: EVM.val
@@ -270,7 +271,9 @@ defmodule EVM.Gas do
   end
 
   def operation_cost(:call, [gas_limit, to_address, value, _in_offset, _in_length, _out_offset, _out_length], _machine_state, exec_env) do
-    @g_call + call_value_cost(value) + new_account_cost(to_address, exec_env) + gas_limit
+    to_address = Address.new(to_address)
+
+    @g_call + call_value_cost(value) + new_account_cost(exec_env, to_address) + gas_limit
   end
 
   def operation_cost(operation, _inputs, _machine_state, _exec_env) do
@@ -301,7 +304,7 @@ defmodule EVM.Gas do
     end
   end
 
-  defp new_account_cost(address, exec_env) do
+  defp new_account_cost(exec_env, address) do
     if exec_env.account_interface
       |> EVM.Interface.AccountInterface.account_exists?(address) do
       0
