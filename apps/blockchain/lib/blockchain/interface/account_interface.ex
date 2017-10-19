@@ -64,6 +64,23 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
     end
   end
 
+  @spec add_wei(EVM.Interface.AccountInterface.t, EVM.address, integer()) :: EVM.Interface.AccountInterface.t
+  def add_wei(account_interface, address, value) do
+    state = Blockchain.Account.add_wei(account_interface.state, address, value)
+
+    Map.put(account_interface, :state, state)
+  end
+
+  @spec transfer(EVM.Interface.AccountInterface.t, EVM.address, EVM.address, integer()) :: EVM.Interface.AccountInterface.t
+  def transfer(account_interface, from, to, value) do
+    {:ok, state} = account_interface.state
+      |> Blockchain.Account.transfer(from, to, value)
+
+    Map.put(account_interface, :state, state)
+  end
+
+
+
   @doc """
   Given an account interface and an address, returns the code stored at given address.
 

@@ -7,6 +7,10 @@ defmodule Blockchain.StateTest do
 
   @passing_tests_by_group %{
     stexample: [:add11],
+    stcall_codes: [
+      :callcall_00,
+      :callcode_checkPC,
+    ],
   }
 
   test "Blockchain state tests" do
@@ -22,15 +26,37 @@ defmodule Blockchain.StateTest do
         }
           |> Blockchain.Transaction.Signature.sign_transaction(maybe_hex(test["transaction"]["secretKey"]))
 
+
         {state, _, _} = Blockchain.Transaction.execute_transaction(
           state,
           transaction,
           %Block.Header{beneficiary: maybe_hex(test["env"]["currentCoinbase"])}
         )
 
-        assert state.root_hash == maybe_hex(List.first(test["post"]["Homestead"])["hash"])
+        assert state.root_hash == maybe_hex(List.first(test["post"]["Frontier"])["hash"])
       end
     end
+  end
+
+  def dump_state(state) do
+    state
+      |> MerklePatriciaTree.Trie.Inspector.all_values()
+      |> Enum.map(fn({key, value}) ->
+        {
+          key |> Base.encode16(case: :lower),
+          value |> ExRLP.decode() |> Blockchain.Account.deserialize()
+        }
+      end)
+      |> Enum.map(fn({address_key, account}) ->
+        IO.puts address_key
+        IO.puts "  Balance: #{account.balance}"
+        IO.puts "  Nonce: #{account.nonce}"
+        IO.puts "  Storage Root:"
+        IO.puts "  " <> (account.storage_root |> Base.encode16)
+        IO.puts "  Code Hash"
+        IO.puts "  " <> (account.code_hash |> Base.encode16)
+      end)
+
   end
 
   def passing_tests(test_group_name, test_group) do

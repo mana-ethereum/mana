@@ -304,9 +304,9 @@ defmodule Blockchain.Transaction do
       <<>> -> Blockchain.Contract.create_contract(state_0, sender, originator, gas, trx.gas_price, trx.value, trx.init, stack_depth, block_header) # Λ
       recipient ->
         # Note, we only want to take the first 3 items from the tuples, as designated Θ_3 in the literature
-        {state_, remaining_gas_, sub_state_, _output} = Blockchain.Contract.message_call(state_0, sender, originator, recipient, recipient, gas, trx.gas_price, trx.value, apparent_value, trx.data, stack_depth, block_header) # Θ_3
+        {state, remaining_gas_, sub_state_, _output} = Blockchain.Contract.message_call(state_0, sender, originator, recipient, recipient, gas, trx.gas_price, trx.value, apparent_value, trx.data, stack_depth, block_header) # Θ_3
 
-        {state_, remaining_gas_, sub_state_}
+        {state, remaining_gas_, sub_state_}
     end
 
     refund = calculate_total_refund(trx, remaining_gas, sub_state.refund)
