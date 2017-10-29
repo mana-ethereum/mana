@@ -1,43 +1,59 @@
 defmodule Blockchain.Bloom do
-  @required_bytes [0, 2, 4]
+  use Bitwise
 
-  @spec create(binary()) :: [integer()]
+  @spec create(binary()) :: integer()
   def create(data) when is_binary(data) do
-    data
-    |> sha3_bytes
-    |> Enum.reduce(new_bloom_list(), fn(byte, acc) ->
-      acc |> List.replace_at(byte, 1)
+    bloom(0, data)
+  end
+
+  @spec add(integer(), binary()) :: integer()
+  def add(bloom_number, data) when is_binary(data) do
+    bloom(bloom_number, data)
+  end
+
+  @spec contains?(integer(), binary()) :: boolean()
+  def contains?(current_bloom, val)
+      when is_integer(current_bloom) and
+           is_binary(val) do
+    bloom = create(val)
+
+    (bloom &&& current_bloom) == bloom
+  end
+
+  @spec bloom(integer(), binary()) :: integer()
+  defp bloom(number, data) do
+    bits =
+      data
+      |> sha3_hash
+      |> bit_numbers
+
+    number |> add_bits(bits)
+  end
+
+  @spec sha3_hash(binary()) :: binary()
+  defp sha3_hash(data) do
+    data |> :keccakf1600.sha3_256
+  end
+
+  @spec add_bits(integer(), [integer()]) :: integer()
+  defp add_bits(bloom_number, bits) do
+    bits
+    |> Enum.reduce(bloom_number, fn(bit_number, bloom) ->
+      bloom ||| (1 <<< bit_number)
     end)
   end
 
-  @spec new_bloom_list() :: [integer()]
-  defp new_bloom_list do
-    List.duplicate(0, 256)
-  end
+  @spec bit_numbers(binary()) :: [integer()]
+  defp bit_numbers(hash) do
+    {result, _} =
+      1..3
+      |> Enum.reduce({[], hash}, fn(_, acc) ->
+        {bits, <<a1, a2, tail::bitstring>>} = acc
+        new_bit = ((a1 <<< 8) + a2) &&& 2047
 
-  @spec sha3_bytes(binary()) :: [integer]
-  def sha3_bytes(data) when is_binary(data) do
-    data
-    |> sha3_binary
-    |> to_bytes
-    |> required_bytes
-  end
+        {[new_bit|bits], tail}
+      end)
 
-  @spec to_bytes(binary(), [] | [integer]) :: [integer()]
-  defp to_bytes(binary, acc \\ [])
-
-  defp to_bytes("", acc), do: acc
-
-  defp to_bytes(<<b :: size(8), tail :: bitstring>>, acc), do: to_bytes(tail, acc ++ [b])
-
-  @spec sha3_binary(binary()) :: binary()
-  defp sha3_binary(data) when is_binary(data), do: data |> :keccakf1600.sha3_256
-
-  @spec required_bytes([integer()]) :: [integer]
-  defp required_bytes(bytes) when is_list(bytes) do
-    @required_bytes
-    |> Enum.map(fn(byte) ->
-      bytes |> Enum.at(byte)
-    end)
+    result
   end
 end
