@@ -17,6 +17,8 @@ defmodule Blockchain.BloomTest do
       new_filter = EthBloom.add(@default_filter, "punk")
 
       assert Bloom.contains?(new_filter, "punk")
+      assert Bloom.contains?(new_filter, "rock")
+      refute Bloom.contains?(new_filter, "blues")
     end
   end
 end
