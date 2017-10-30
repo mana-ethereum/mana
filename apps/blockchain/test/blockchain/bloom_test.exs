@@ -14,7 +14,7 @@ defmodule Blockchain.BloomTest do
 
   describe "EthBloom.add/2" do
     test "adds element to bloom filter" do
-      new_filter = EthBloom.add(@default_filter, "punk")
+      new_filter = Bloom.add(@default_filter, "punk")
 
       assert Bloom.contains?(new_filter, "punk")
       assert Bloom.contains?(new_filter, "rock")
