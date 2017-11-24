@@ -1,3 +1,6 @@
+# 0.1.6
+* Continue to pass more state common tests (CALLCODE)
+* Add core Bloom Filter implementation
 # 0.1.5
 * Integrate with EVM debugger
 * Update `verify_and_add_block` command's interface
