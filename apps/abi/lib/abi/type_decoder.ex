@@ -27,7 +27,7 @@ defmodule ABI.TypeDecoder do
       ...>    )
       [69, true]
 
-      iex> "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000b00000000000000000000000000000000000000000068656c6c6f20776f726c64"
+      iex> "000000000000000000000000000000000000000000000000000000000000000b00000000000000000000000000000000000000000068656c6c6f20776f726c64"
       ...> |> Base.decode16!(case: :lower)
       ...> |> ABI.TypeDecoder.decode(
       ...>      %ABI.FunctionSelector{
@@ -53,8 +53,8 @@ defmodule ABI.TypeDecoder do
   end
 
   @spec decode_type(ABI.FunctionSelector.type, binary()) :: {any(), binary()}
-  defp decode_type({:uint, size}, data) do
-    decode_uint(data, size)
+  defp decode_type({:uint, size_in_bits}, data) do
+    decode_uint(data, size_in_bits)
   end
 
   defp decode_type(:address, data), do: decode_bytes(data, 20)
@@ -71,8 +71,8 @@ defmodule ABI.TypeDecoder do
   end
 
   defp decode_type(:string, data) do
-    {string_size, rest} = decode_uint(data, 256)
-    decode_bytes(rest, string_size)
+    {string_size_in_bytes, rest} = decode_uint(data, 256)
+    decode_bytes(rest, string_size_in_bytes)
   end
 
   defp decode_type(:bytes, data) do
@@ -85,23 +85,22 @@ defmodule ABI.TypeDecoder do
   end
 
   @spec decode_uint(binary(), integer()) :: {integer(), binary()}
-  defp decode_uint(data, size) do
+  defp decode_uint(data, size_in_bits) do
     # TODO: Create `left_pad` repo, err, add to `ExthCrypto.Math`
-    total_size = size + ExthCrypto.Math.mod(32 - size, 32)
-    bit_size = total_size * 8
+    total_bit_size = size_in_bits + ExthCrypto.Math.mod(256 - size_in_bits, 256)
 
-    <<value::integer-size(bit_size), rest::binary>> = data
+    <<value::integer-size(total_bit_size), rest::binary>> = data
 
     {value, rest}
   end
 
   @spec decode_bytes(binary(), integer()) :: {binary(), binary()}
-  def decode_bytes(data, size) do
+  def decode_bytes(data, size_in_bytes) do
     # TODO: Create `unleft_pad` repo, err, add to `ExthCrypto.Math`
-    total_size = size + ExthCrypto.Math.mod(32 - size, 32)
-    padding_size = total_size - size
+    total_size_in_bytes = size_in_bytes + ExthCrypto.Math.mod(32 - size_in_bytes, 32)
+    padding_size_in_bytes = total_size_in_bytes - size_in_bytes
 
-    <<_padding::binary-size(padding_size), value::binary-size(size), rest::binary()>> = data
+    <<_padding::binary-size(padding_size_in_bytes), value::binary-size(size_in_bytes), rest::binary()>> = data
 
     {value, rest}
   end
