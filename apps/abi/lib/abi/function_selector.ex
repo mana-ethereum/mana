@@ -42,13 +42,43 @@ defmodule ABI.FunctionSelector do
           {:array, :string}
         ]
       }
+
+      iex> ABI.FunctionSelector.decode("rollover()")
+      %ABI.FunctionSelector{
+        function: "rollover",
+        types: []
+      }
+
+      iex> ABI.FunctionSelector.decode("pet(address[])")
+      %ABI.FunctionSelector{
+        function: "pet",
+        types: [
+          {:array, :address}
+        ]
+      }
+
+      iex> ABI.FunctionSelector.decode("paw(string[2])")
+      %ABI.FunctionSelector{
+        function: "paw",
+        types: [
+          {:array, :string, 2}
+        ]
+      }
+
+      iex> ABI.FunctionSelector.decode("shake((string))")
+      %ABI.FunctionSelector{
+        function: "shake",
+        types: [
+          {:tuple, [:string]}
+        ]
+      }
   """
   def decode(signature) do
-    captures = Regex.named_captures(~r/(?<function>[a-zA-Z_$][a-zA-Z_$0-9]*)\((?<types>(([^,]+),?)+)\)/, signature)
+    captures = Regex.named_captures(~r/(?<function>[a-zA-Z_$][a-zA-Z_$0-9]*)\((?<types>(([^,]+),?)*)\)/, signature)
 
     %ABI.FunctionSelector{
       function: captures["function"],
-      types: captures["types"] |> String.split(",") |> Enum.map(&decode_type/1),
+      types: captures["types"] |> String.split(",", trim: true) |> Enum.map(&decode_type/1),
       returns: nil
     }
   end
@@ -69,13 +99,27 @@ defmodule ABI.FunctionSelector do
   def decode_type("string"), do: :string
   def decode_type("address"), do: :address
   def decode_type(els) do
-    if String.ends_with?(els, "[]") do
-      {:array,
-        els
-        |> String.slice(0, String.length(els) - 2)
-        |> decode_type()}
-    else
-      raise "Unsupported type: #{els}"
+    cond do
+      # Check for array type
+      captures = Regex.named_captures(~r/(?<type>[a-z0-9]+)\[(?<element_count>\d*)\]/, els) ->
+        type = decode_type(captures["type"])
+
+        if captures["element_count"] != "" do
+          {element_count, ""} = Integer.parse(captures["element_count"])
+
+          {:array, type, element_count}
+        else
+          {:array, type}
+        end
+      # Check for tuples
+      captures = Regex.named_captures(~r/\((?<types>[a-z0-9\[\]]+,?)+\)/, els) ->
+        types =
+          String.split(captures["types"], ",", trim: true)
+          |> Enum.map(fn type -> decode_type(type) end)
+
+        {:tuple, types}
+      true ->
+        raise "Unsupported type: #{els}"
     end
   end
 
@@ -89,10 +133,12 @@ defmodule ABI.FunctionSelector do
       ...>   types: [
       ...>     {:uint, 256},
       ...>     :bool,
-      ...>     {:array, :string}
+      ...>     {:array, :string},
+      ...>     {:array, :string, 3},
+      ...>     {:tuple, [{:uint, 256}, :bool]}
       ...>   ]
       ...> })
-      "bark(uint256,bool,string[])"
+      "bark(uint256,bool,string[],string[3],(uint256,bool))"
   """
   def encode(function_selector) do
     types = get_types(function_selector) |> Enum.join(",")
@@ -111,6 +157,14 @@ defmodule ABI.FunctionSelector do
   defp get_type(:string), do: "string"
   defp get_type(:address), do: "address"
   defp get_type({:array, type}), do: "#{get_type(type)}[]"
-  defp get_type(els), do: "Unsupported type: #{els}"
+  defp get_type({:array, type, element_count}), do: "#{get_type(type)}[#{element_count}]"
+  defp get_type({:tuple, types}) do
+    encoded_types = types
+    |> Enum.map(&get_type/1)
+    |> Enum.join(",")
+
+    "(#{encoded_types})"
+  end
+  defp get_type(els), do: "Unsupported type: #{inspect els}"
 
 end

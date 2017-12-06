@@ -51,6 +51,26 @@ iex> ABI.decode("baz(uint,address)", "000000000000000000000000000000000000000000
 [50, <<1::160>> |> :binary.decode_unsigned]
 ```
 
+## Support
+
+Currently supports:
+
+  * [X] `uint<M>`
+  * [X] `int<M>`
+  * [X] `address`
+  * [X] `uint`
+  * [X] `bool`
+  * [ ] `fixed<M>x<N>`
+  * [ ] `ufixed<M>x<N>`
+  * [ ] `fixed`
+  * [ ] `bytes<M>`
+  * [ ] `function`
+  * [X] `<type>[M]`
+  * [X] `bytes`
+  * [X] `string`
+  * [X] `<type>[]`
+  * [X] `(T1,T2,...,Tn)` (* currently ABI parsing doesn't parse tuples with multiple elements)
+
 # Docs
 
 * [Solidity ABI](https://solidity.readthedocs.io/en/develop/abi-spec.html)

@@ -38,6 +38,55 @@ defmodule ABI.TypeDecoder do
       ...>      }
       ...>    )
       ["hello world"]
+
+      iex> "00000000000000000000000000000000000000000000000000000000000000110000000000000000000000000000000000000000000000000000000000000001"
+      ...> |> Base.decode16!(case: :lower)
+      ...> |> ABI.TypeDecoder.decode(
+      ...>      %ABI.FunctionSelector{
+      ...>        function: "baz",
+      ...>        types: [
+      ...>          {:tuple, [{:uint, 32}, :bool]}
+      ...>        ]
+      ...>      }
+      ...>    )
+      [{17, true}]
+
+      iex> "00000000000000000000000000000000000000000000000000000000000000110000000000000000000000000000000000000000000000000000000000000001"
+      ...> |> Base.decode16!(case: :lower)
+      ...> |> ABI.TypeDecoder.decode(
+      ...>      %ABI.FunctionSelector{
+      ...>        function: "baz",
+      ...>        types: [
+      ...>          {:array, {:uint, 32}, 2}
+      ...>        ]
+      ...>      }
+      ...>    )
+      [[17, 1]]
+
+      iex> "000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000110000000000000000000000000000000000000000000000000000000000000001"
+      ...> |> Base.decode16!(case: :lower)
+      ...> |> ABI.TypeDecoder.decode(
+      ...>      %ABI.FunctionSelector{
+      ...>        function: "baz",
+      ...>        types: [
+      ...>          {:array, {:uint, 32}}
+      ...>        ]
+      ...>      }
+      ...>    )
+      [[17, 1]]
+
+      iex> "000000000000000000000000000000000000000000000000000000000000001100000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001"
+      ...> |> Base.decode16!(case: :lower)
+      ...> |> ABI.TypeDecoder.decode(
+      ...>      %ABI.FunctionSelector{
+      ...>        function: "baz",
+      ...>        types: [
+      ...>          {:array, {:uint, 32}, 2},
+      ...>          :bool
+      ...>        ]
+      ...>      }
+      ...>    )
+      [[17, 1], true]
   """
   def decode(encoded_data, function_selector) do
     do_decode(function_selector.types, encoded_data)
@@ -78,6 +127,29 @@ defmodule ABI.TypeDecoder do
   defp decode_type(:bytes, data) do
     {byte_size, rest} = decode_uint(data, 256)
     decode_bytes(rest, byte_size)
+  end
+
+  defp decode_type({:array, type}, data) do
+    {element_count, rest} = decode_uint(data, 256)
+    decode_type({:array, type, element_count}, rest)
+  end
+
+  defp decode_type({:array, type, element_count}, data) do
+    repeated_type = Enum.map(1..element_count, fn _ -> type end)
+
+    {tuple, rest} = decode_type({:tuple, repeated_type}, data)
+
+    {tuple |> Tuple.to_list, rest}
+  end
+
+  defp decode_type({:tuple, types}, starting_data) do
+    {elements, rest} = Enum.reduce(types, {[], starting_data}, fn type, {elements, data} ->
+      {el, rest} = decode_type(type, data)
+
+      {[el|elements], rest}
+    end)
+
+    {elements |> Enum.reverse |> List.to_tuple, rest}
   end
 
   defp decode_type(els, _) do
