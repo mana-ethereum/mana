@@ -27,26 +27,38 @@ defmodule ABI.TypeEncoder do
       iex> ["hello world"]
       ...> |> ABI.TypeEncoder.encode(
       ...>      %ABI.FunctionSelector{
-      ...>        function: "baz",
+      ...>        function: nil,
       ...>        types: [
       ...>          :string,
       ...>        ]
       ...>      }
       ...>    )
       ...> |> Base.encode16(case: :lower)
-      "f117da84000000000000000000000000000000000000000000000000000000000000000b00000000000000000000000000000000000000000068656c6c6f20776f726c64"
+      "000000000000000000000000000000000000000000000000000000000000000b00000000000000000000000000000000000000000068656c6c6f20776f726c64"
+
+      iex> [{"awesome", true}]
+      ...> |> ABI.TypeEncoder.encode(
+      ...>      %ABI.FunctionSelector{
+      ...>        function: nil,
+      ...>        types: [
+      ...>          {:tuple, [:string, :bool]}
+      ...>        ]
+      ...>      }
+      ...>    )
+      ...> |> Base.encode16(case: :lower)
+      "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000700000000000000000000000000000000000000000000000000617765736f6d65"
 
       iex> [{17, true}]
       ...> |> ABI.TypeEncoder.encode(
       ...>      %ABI.FunctionSelector{
-      ...>        function: "baz",
+      ...>        function: nil,
       ...>        types: [
       ...>          {:tuple, [{:uint, 32}, :bool]}
       ...>        ]
       ...>      }
       ...>    )
       ...> |> Base.encode16(case: :lower)
-      "7013c9f100000000000000000000000000000000000000000000000000000000000000110000000000000000000000000000000000000000000000000000000000000001"
+      "00000000000000000000000000000000000000000000000000000000000000110000000000000000000000000000000000000000000000000000000000000001"
 
       iex> [[17, 1]]
       ...> |> ABI.TypeEncoder.encode(
@@ -63,7 +75,7 @@ defmodule ABI.TypeEncoder do
       iex> [[17, 1], true]
       ...> |> ABI.TypeEncoder.encode(
       ...>      %ABI.FunctionSelector{
-      ...>        function: "baz",
+      ...>        function: nil,
       ...>        types: [
       ...>          {:array, {:uint, 32}, 2},
       ...>          :bool
@@ -71,19 +83,19 @@ defmodule ABI.TypeEncoder do
       ...>      }
       ...>    )
       ...> |> Base.encode16(case: :lower)
-      "07147446000000000000000000000000000000000000000000000000000000000000001100000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001"
+      "000000000000000000000000000000000000000000000000000000000000001100000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001"
 
       iex> [[17, 1]]
       ...> |> ABI.TypeEncoder.encode(
       ...>      %ABI.FunctionSelector{
-      ...>        function: "baz",
+      ...>        function: nil,
       ...>        types: [
       ...>          {:array, {:uint, 32}}
       ...>        ]
       ...>      }
       ...>    )
       ...> |> Base.encode16(case: :lower)
-      "23191c47000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000110000000000000000000000000000000000000000000000000000000000000001"
+      "000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000110000000000000000000000000000000000000000000000000000000000000001"
   """
   def encode(data, function_selector) do
     encode_method_id(function_selector) <>
@@ -91,6 +103,7 @@ defmodule ABI.TypeEncoder do
   end
 
   @spec encode_method_id(%ABI.FunctionSelector{}) :: binary()
+  defp encode_method_id(%ABI.FunctionSelector{function: nil}), do: ""
   defp encode_method_id(function_selector) do
     # Encode selector e.g. "baz(uint32,bool)" and take keccak
     kec = function_selector
@@ -138,13 +151,19 @@ defmodule ABI.TypeEncoder do
   end
 
   defp encode_type({:tuple, types}, [data|rest]) do
-    {encoded, []} = Enum.reduce(types, {<<>>, data |> Tuple.to_list}, fn type, {curr, data} ->
-      {next_el, rest} = encode_type(type, data)
+    {head, tail, []} = Enum.reduce(types, {<<>>, <<>>, data |> Tuple.to_list}, fn type, {head, tail, data} ->
+      {el, rest} = encode_type(type, data)
 
-      {curr <> next_el, rest}
+      if ABI.FunctionSelector.is_dynamic?(type) do
+        # If we're a dynamic type, just encoded the length to head and the element to body
+        {head <> encode_uint(byte_size(el), 256), tail <> el, rest}
+      else
+        # If we're a static type, simply encode the el to the head
+        {head <> el, tail, rest}
+      end
     end)
 
-    {encoded, rest}
+    {head <> tail, rest}
   end
 
   defp encode_type({:array, type, element_count}, [data | rest]) do
@@ -153,7 +172,7 @@ defmodule ABI.TypeEncoder do
     encode_type({:tuple, repeated_type}, [data |> List.to_tuple | rest])
   end
 
-  defp encode_type({:array, type}, [data|rest]=all_data) do
+  defp encode_type({:array, type}, [data|_rest]=all_data) do
     element_count = Enum.count(data)
 
     encoded_uint = encode_uint(element_count, 256)

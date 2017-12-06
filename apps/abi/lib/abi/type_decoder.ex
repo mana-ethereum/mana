@@ -31,7 +31,7 @@ defmodule ABI.TypeDecoder do
       ...> |> Base.decode16!(case: :lower)
       ...> |> ABI.TypeDecoder.decode(
       ...>      %ABI.FunctionSelector{
-      ...>        function: "baz",
+      ...>        function: nil,
       ...>        types: [
       ...>          :string
       ...>        ]
@@ -43,7 +43,7 @@ defmodule ABI.TypeDecoder do
       ...> |> Base.decode16!(case: :lower)
       ...> |> ABI.TypeDecoder.decode(
       ...>      %ABI.FunctionSelector{
-      ...>        function: "baz",
+      ...>        function: nil,
       ...>        types: [
       ...>          {:tuple, [{:uint, 32}, :bool]}
       ...>        ]
@@ -55,7 +55,7 @@ defmodule ABI.TypeDecoder do
       ...> |> Base.decode16!(case: :lower)
       ...> |> ABI.TypeDecoder.decode(
       ...>      %ABI.FunctionSelector{
-      ...>        function: "baz",
+      ...>        function: nil,
       ...>        types: [
       ...>          {:array, {:uint, 32}, 2}
       ...>        ]
@@ -67,7 +67,7 @@ defmodule ABI.TypeDecoder do
       ...> |> Base.decode16!(case: :lower)
       ...> |> ABI.TypeDecoder.decode(
       ...>      %ABI.FunctionSelector{
-      ...>        function: "baz",
+      ...>        function: nil,
       ...>        types: [
       ...>          {:array, {:uint, 32}}
       ...>        ]
@@ -79,7 +79,7 @@ defmodule ABI.TypeDecoder do
       ...> |> Base.decode16!(case: :lower)
       ...> |> ABI.TypeDecoder.decode(
       ...>      %ABI.FunctionSelector{
-      ...>        function: "baz",
+      ...>        function: nil,
       ...>        types: [
       ...>          {:array, {:uint, 32}, 2},
       ...>          :bool
@@ -87,6 +87,30 @@ defmodule ABI.TypeDecoder do
       ...>      }
       ...>    )
       [[17, 1], true]
+
+      iex> "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000700000000000000000000000000000000000000000000000000617765736f6d65"
+      ...> |> Base.decode16!(case: :lower)
+      ...> |> ABI.TypeDecoder.decode(
+      ...>      %ABI.FunctionSelector{
+      ...>        function: nil,
+      ...>        types: [
+      ...>          {:tuple, [:string, :bool]}
+      ...>        ]
+      ...>      }
+      ...>    )
+      [{"awesome", true}]
+
+      iex> "00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000000"
+      ...> |> Base.decode16!(case: :lower)
+      ...> |> ABI.TypeDecoder.decode(
+      ...>      %ABI.FunctionSelector{
+      ...>        function: nil,
+      ...>        types: [
+      ...>          {:tuple, [{:array, :address}]}
+      ...>        ]
+      ...>      }
+      ...>    )
+      [{[]}]
   """
   def decode(encoded_data, function_selector) do
     do_decode(function_selector.types, encoded_data)
@@ -134,6 +158,7 @@ defmodule ABI.TypeDecoder do
     decode_type({:array, type, element_count}, rest)
   end
 
+  defp decode_type({:array, _type, 0}, data), do: {[], data}
   defp decode_type({:array, type, element_count}, data) do
     repeated_type = Enum.map(1..element_count, fn _ -> type end)
 
@@ -143,13 +168,32 @@ defmodule ABI.TypeDecoder do
   end
 
   defp decode_type({:tuple, types}, starting_data) do
+    # First pass, decode static types
     {elements, rest} = Enum.reduce(types, {[], starting_data}, fn type, {elements, data} ->
-      {el, rest} = decode_type(type, data)
+      if ABI.FunctionSelector.is_dynamic?(type) do
+        {el_length, rest} = decode_type({:uint, 256}, data)
 
-      {[el|elements], rest}
+        {[{:dynamic, type, el_length}|elements], rest}
+      else
+        {el, rest} = decode_type(type, data)
+
+        {[el|elements], rest}
+      end
     end)
 
-    {elements |> Enum.reverse |> List.to_tuple, rest}
+    # Second pass, decode dynamic types
+    {elements, rest} = Enum.reduce(elements, {[], rest}, fn el, {elements, data} ->
+      case el do
+        {:dynamic, type, _len} ->
+          {el, rest} = decode_type(type, data)
+
+          {[el|elements], rest}
+        _ ->
+          {[el|elements], data}
+      end
+    end)
+
+    {elements |> List.to_tuple, rest}
   end
 
   defp decode_type(els, _) do

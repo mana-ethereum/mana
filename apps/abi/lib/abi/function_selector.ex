@@ -74,13 +74,23 @@ defmodule ABI.FunctionSelector do
       }
   """
   def decode(signature) do
-    captures = Regex.named_captures(~r/(?<function>[a-zA-Z_$][a-zA-Z_$0-9]*)\((?<types>(([^,]+),?)*)\)/, signature)
+    captures = Regex.named_captures(~r/(?<function>[a-zA-Z_$][a-zA-Z_$0-9]*)?\((?<types>(([^,]+),?)*)\)/, signature)
 
-    %ABI.FunctionSelector{
-      function: captures["function"],
-      types: captures["types"] |> String.split(",", trim: true) |> Enum.map(&decode_type/1),
-      returns: nil
-    }
+    if captures["function"] != "" do
+      # Encode as a function call
+      %ABI.FunctionSelector{
+        function: captures["function"],
+        types: captures["types"] |> String.split(",", trim: true) |> Enum.map(&decode_type/1),
+        returns: nil
+      }
+    else
+      # Encode as a tuple
+      %ABI.FunctionSelector{
+        function: nil,
+        types: [{:tuple, captures["types"] |> String.split(",", trim: true) |> Enum.map(&decode_type/1)}],
+        returns: nil
+      }
+    end
   end
 
   def decode_type("uint" <> size_str) do
@@ -166,5 +176,13 @@ defmodule ABI.FunctionSelector do
     "(#{encoded_types})"
   end
   defp get_type(els), do: "Unsupported type: #{inspect els}"
+
+  @spec is_dynamic?(ABI.FunctionSelector.type) :: boolean
+  def is_dynamic?(:bytes), do: true
+  def is_dynamic?(:string), do: true
+  def is_dynamic?({:array, _type}), do: true
+  def is_dynamic?({:array, _type, _length}), do: true
+  def is_dynamic?({:tuple, _types}), do: true
+  def is_dynamic?(_), do: false
 
 end
