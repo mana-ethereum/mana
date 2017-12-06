@@ -1,7 +1,6 @@
 defmodule HexPrefix do
-	@moduledoc File.read!("#{__DIR__}/../README.md")
-
-	@type t :: {[0x0..0xf], boolean()}
+  @moduledoc File.read!("#{__DIR__}/../README.md")
+  @type t :: {[0x0..0xf], boolean()}
 
   @doc """
   Encodes a list of nibbles using hex-prefix notation.
@@ -32,9 +31,9 @@ defmodule HexPrefix do
     iex> HexPrefix.encode({[ 15, 1, 12, 11, 8 ], true})
     <<0x3f, 0x1c, 0xb8>>
   """
-	@spec encode(__MODULE__.t) :: binary()
-	def encode({nibbles, terminator}) do
-		{base, nibbles} = if rem(length(nibbles), 2) == 0 do # even
+  @spec encode(__MODULE__.t) :: binary()
+  def encode({nibbles, terminator}) do
+    {base, nibbles} = if rem(length(nibbles), 2) == 0 do # even
       {<<16*f(terminator)>>, nibbles}
     else
       {<<16*(f(terminator)+1)+hd(nibbles)>>, tl(nibbles)}
@@ -44,7 +43,7 @@ defmodule HexPrefix do
     Enum.reduce(nibbles |> Enum.chunk(2), base, fn([n1, n2], acc) ->
       acc <> <<16*n1+n2::8>>
     end)
-	end
+  end
 
   defp f(false), do: 0
   defp f(true), do: 2
