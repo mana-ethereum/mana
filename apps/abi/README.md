@@ -10,7 +10,7 @@ by adding `abi` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:abi, "~> 0.1.5"}
+    {:abi, "~> 0.1.6"}
   ]
 end
 ```

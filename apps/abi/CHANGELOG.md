@@ -1,3 +1,5 @@
+# 0.1.6
+* Add public interface to raw function versions.
 # 0.1.5
 * Bugfix so that addresses are still left padded.
 # 0.1.4

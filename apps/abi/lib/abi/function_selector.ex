@@ -80,17 +80,31 @@ defmodule ABI.FunctionSelector do
       # Encode as a function call
       %ABI.FunctionSelector{
         function: captures["function"],
-        types: captures["types"] |> String.split(",", trim: true) |> Enum.map(&decode_type/1),
+        types: decode_raw(captures["types"]),
         returns: nil
       }
     else
       # Encode as a tuple
       %ABI.FunctionSelector{
         function: nil,
-        types: [{:tuple, captures["types"] |> String.split(",", trim: true) |> Enum.map(&decode_type/1)}],
+        types: [{:tuple, decode_raw(captures["types"])}],
         returns: nil
       }
     end
+  end
+
+  @doc """
+  Decodes the given type-string as a simple array of types.
+
+  ## Examples
+
+      iex> ABI.FunctionSelector.decode_raw("string,uint256")
+      [:string, {:uint, 256}]
+  """
+  def decode_raw(type_string) do
+    type_string
+    |> String.split(",", trim: true)
+    |> Enum.map(&decode_type/1)
   end
 
   def decode_type("uint" <> size_str) do

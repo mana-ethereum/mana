@@ -99,7 +99,23 @@ defmodule ABI.TypeEncoder do
   """
   def encode(data, function_selector) do
     encode_method_id(function_selector) <>
-    do_encode(function_selector.types, data)
+    encode_raw(data, function_selector.types)
+  end
+
+  @doc """
+  Simiar to `ABI.TypeEncoder.encode/2` except we accept
+  an array of types instead of a function selector. We also
+  do not pre-pend the method id.
+
+  ## Examples
+
+      iex> [{"awesome", true}]
+      ...> |> ABI.TypeEncoder.encode_raw([{:tuple, [:string, :bool]}])
+      ...> |> Base.encode16(case: :lower)
+      "000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000007617765736f6d6500000000000000000000000000000000000000000000000000"
+  """
+  def encode_raw(data, types) do
+    do_encode(types, data)
   end
 
   @spec encode_method_id(%ABI.FunctionSelector{}) :: binary()

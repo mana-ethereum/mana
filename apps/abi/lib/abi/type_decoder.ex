@@ -113,7 +113,22 @@ defmodule ABI.TypeDecoder do
       [{[]}]
   """
   def decode(encoded_data, function_selector) do
-    do_decode(function_selector.types, encoded_data)
+    decode_raw(encoded_data, function_selector.types)
+  end
+
+  @doc """
+  Similar to `ABI.TypeDecoder.decode/2` except accepts a list of types instead
+  of a function selector.
+
+  ## Examples
+
+      iex> "000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000007617765736f6d6500000000000000000000000000000000000000000000000000"
+      ...> |> Base.decode16!(case: :lower)
+      ...> |> ABI.TypeDecoder.decode_raw([{:tuple, [:string, :bool]}])
+      [{"awesome", true}]
+  """
+  def decode_raw(encoded_data, types) do
+    do_decode(types, encoded_data)
   end
 
   @spec do_decode([ABI.FunctionSelector.type], binary()) :: [any()]
