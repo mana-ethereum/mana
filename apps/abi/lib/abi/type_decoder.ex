@@ -27,7 +27,7 @@ defmodule ABI.TypeDecoder do
       ...>    )
       [69, true]
 
-      iex> "000000000000000000000000000000000000000000000000000000000000000b00000000000000000000000000000000000000000068656c6c6f20776f726c64"
+      iex> "000000000000000000000000000000000000000000000000000000000000000b68656c6c6f20776f726c64000000000000000000000000000000000000000000"
       ...> |> Base.decode16!(case: :lower)
       ...> |> ABI.TypeDecoder.decode(
       ...>      %ABI.FunctionSelector{
@@ -88,7 +88,7 @@ defmodule ABI.TypeDecoder do
       ...>    )
       [[17, 1], true]
 
-      iex> "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000700000000000000000000000000000000000000000000000000617765736f6d65"
+      iex> "000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000007617765736f6d6500000000000000000000000000000000000000000000000000"
       ...> |> Base.decode16!(case: :lower)
       ...> |> ABI.TypeDecoder.decode(
       ...>      %ABI.FunctionSelector{
@@ -171,9 +171,9 @@ defmodule ABI.TypeDecoder do
     # First pass, decode static types
     {elements, rest} = Enum.reduce(types, {[], starting_data}, fn type, {elements, data} ->
       if ABI.FunctionSelector.is_dynamic?(type) do
-        {el_length, rest} = decode_type({:uint, 256}, data)
+        {tail_position, rest} = decode_type({:uint, 256}, data)
 
-        {[{:dynamic, type, el_length}|elements], rest}
+        {[{:dynamic, type, tail_position}|elements], rest}
       else
         {el, rest} = decode_type(type, data)
 
@@ -184,7 +184,7 @@ defmodule ABI.TypeDecoder do
     # Second pass, decode dynamic types
     {elements, rest} = Enum.reduce(elements, {[], rest}, fn el, {elements, data} ->
       case el do
-        {:dynamic, type, _len} ->
+        {:dynamic, type, _tail_position} ->
           {el, rest} = decode_type(type, data)
 
           {[el|elements], rest}
@@ -212,11 +212,11 @@ defmodule ABI.TypeDecoder do
 
   @spec decode_bytes(binary(), integer()) :: {binary(), binary()}
   def decode_bytes(data, size_in_bytes) do
-    # TODO: Create `unleft_pad` repo, err, add to `ExthCrypto.Math`
+    # TODO: Create `unright_pad` repo, err, add to `ExthCrypto.Math`
     total_size_in_bytes = size_in_bytes + ExthCrypto.Math.mod(32 - size_in_bytes, 32)
     padding_size_in_bytes = total_size_in_bytes - size_in_bytes
 
-    <<_padding::binary-size(padding_size_in_bytes), value::binary-size(size_in_bytes), rest::binary()>> = data
+    <<value::binary-size(size_in_bytes), _padding::binary-size(padding_size_in_bytes), rest::binary()>> = data
 
     {value, rest}
   end
