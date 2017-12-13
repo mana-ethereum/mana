@@ -1,3 +1,5 @@
+# 0.1.5
+* Bugfix so that addresses are still left padded.
 # 0.1.4
 * Bugfix for tuples to properly handle tail pointer poisition.
 # 0.1.3

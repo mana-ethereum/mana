@@ -130,7 +130,7 @@ defmodule ABI.TypeDecoder do
     decode_uint(data, size_in_bits)
   end
 
-  defp decode_type(:address, data), do: decode_bytes(data, 20)
+  defp decode_type(:address, data), do: decode_bytes(data, 20, :left)
 
   defp decode_type(:bool, data) do
     {encoded_value, rest} = decode_uint(data, 8)
@@ -145,12 +145,12 @@ defmodule ABI.TypeDecoder do
 
   defp decode_type(:string, data) do
     {string_size_in_bytes, rest} = decode_uint(data, 256)
-    decode_bytes(rest, string_size_in_bytes)
+    decode_bytes(rest, string_size_in_bytes, :right)
   end
 
   defp decode_type(:bytes, data) do
     {byte_size, rest} = decode_uint(data, 256)
-    decode_bytes(rest, byte_size)
+    decode_bytes(rest, byte_size, :right)
   end
 
   defp decode_type({:array, type}, data) do
@@ -210,15 +210,22 @@ defmodule ABI.TypeDecoder do
     {value, rest}
   end
 
-  @spec decode_bytes(binary(), integer()) :: {binary(), binary()}
-  def decode_bytes(data, size_in_bytes) do
+  @spec decode_bytes(binary(), integer(), atom()) :: {binary(), binary()}
+  def decode_bytes(data, size_in_bytes, padding_direction) do
     # TODO: Create `unright_pad` repo, err, add to `ExthCrypto.Math`
     total_size_in_bytes = size_in_bytes + ExthCrypto.Math.mod(32 - size_in_bytes, 32)
     padding_size_in_bytes = total_size_in_bytes - size_in_bytes
 
-    <<value::binary-size(size_in_bytes), _padding::binary-size(padding_size_in_bytes), rest::binary()>> = data
+    case padding_direction do
+      :left ->
+        <<_padding::binary-size(padding_size_in_bytes), value::binary-size(size_in_bytes), rest::binary()>> = data
 
-    {value, rest}
+        {value, rest}
+      :right ->
+        <<value::binary-size(size_in_bytes), _padding::binary-size(padding_size_in_bytes), rest::binary()>> = data
+
+        {value, rest}
+    end
   end
 
 end
