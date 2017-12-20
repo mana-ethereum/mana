@@ -65,6 +65,14 @@ defmodule ABI.FunctionSelector do
         ]
       }
 
+      iex> ABI.FunctionSelector.decode("scram(uint256[])")
+      %ABI.FunctionSelector{
+        function: "scram",
+        types: [
+          {:array, {:uint, 256}}
+        ]
+      }
+
       iex> ABI.FunctionSelector.decode("shake((string))")
       %ABI.FunctionSelector{
         function: "shake",
@@ -107,7 +115,32 @@ defmodule ABI.FunctionSelector do
     |> Enum.map(&decode_type/1)
   end
 
-  def decode_type("uint" <> size_str) do
+  def decode_type(full_type) do
+    cond do
+      # Check for array type
+      captures = Regex.named_captures(~r/(?<type>[a-z0-9]+)\[(?<element_count>\d*)\]/, full_type) ->
+        type = decode_type(captures["type"])
+
+        if captures["element_count"] != "" do
+          {element_count, ""} = Integer.parse(captures["element_count"])
+
+          {:array, type, element_count}
+        else
+          {:array, type}
+        end
+      # Check for tuples
+      captures = Regex.named_captures(~r/\((?<types>[a-z0-9\[\]]+,?)+\)/, full_type) ->
+        types =
+          String.split(captures["types"], ",", trim: true)
+          |> Enum.map(fn type -> decode_type(type) end)
+
+        {:tuple, types}
+      true ->
+        decode_single_type(full_type)
+    end
+  end
+
+  def decode_single_type("uint" <> size_str) do
     size = case size_str do
       "" -> 256 # default
       _ ->
@@ -119,32 +152,11 @@ defmodule ABI.FunctionSelector do
     {:uint, size}
   end
 
-  def decode_type("bool"), do: :bool
-  def decode_type("string"), do: :string
-  def decode_type("address"), do: :address
-  def decode_type(els) do
-    cond do
-      # Check for array type
-      captures = Regex.named_captures(~r/(?<type>[a-z0-9]+)\[(?<element_count>\d*)\]/, els) ->
-        type = decode_type(captures["type"])
-
-        if captures["element_count"] != "" do
-          {element_count, ""} = Integer.parse(captures["element_count"])
-
-          {:array, type, element_count}
-        else
-          {:array, type}
-        end
-      # Check for tuples
-      captures = Regex.named_captures(~r/\((?<types>[a-z0-9\[\]]+,?)+\)/, els) ->
-        types =
-          String.split(captures["types"], ",", trim: true)
-          |> Enum.map(fn type -> decode_type(type) end)
-
-        {:tuple, types}
-      true ->
-        raise "Unsupported type: #{els}"
-    end
+  def decode_single_type("bool"), do: :bool
+  def decode_single_type("string"), do: :string
+  def decode_single_type("address"), do: :address
+  def decode_single_type(els) do
+    raise "Unsupported type: #{els}"
   end
 
   @doc """

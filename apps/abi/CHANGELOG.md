@@ -1,3 +1,5 @@
+# 0.1.7
+* Fix support for arrays of uint types
 # 0.1.6
 * Add public interface to raw function versions.
 # 0.1.5
