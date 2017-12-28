@@ -1,3 +1,5 @@
+# 0.1.8
+* Fix ordering of elements in tuples
 # 0.1.7
 * Fix support for arrays of uint types
 # 0.1.6

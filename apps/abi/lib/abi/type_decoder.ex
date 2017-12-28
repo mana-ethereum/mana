@@ -111,6 +111,25 @@ defmodule ABI.TypeDecoder do
       ...>      }
       ...>    )
       [{[]}]
+
+      iex> "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000c556e617574686f72697a656400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000000000000000000000000204a2bf2ff0a4eaf1890c8d8679eaa446fb852c4000000000000000000000000861d9af488d5fa485bb08ab6912fff4f7450849a"
+      ...> |> Base.decode16!(case: :lower)
+      ...> |> ABI.TypeDecoder.decode(
+      ...>      %ABI.FunctionSelector{
+      ...>        function: nil,
+      ...>        types: [{:tuple,[
+      ...>          :string,
+      ...>          {:array, {:uint, 256}}
+      ...>        ]}]
+      ...>      }
+      ...>    )
+      [{
+        "Unauthorized",
+        [
+          184341788326688649239867304918349890235378717380,
+          765664983403968947098136133435535343021479462042,
+        ]
+      }]
   """
   def decode(encoded_data, function_selector) do
     decode_raw(encoded_data, function_selector.types)
@@ -197,7 +216,7 @@ defmodule ABI.TypeDecoder do
     end)
 
     # Second pass, decode dynamic types
-    {elements, rest} = Enum.reduce(elements, {[], rest}, fn el, {elements, data} ->
+    {elements, rest} = Enum.reduce(elements |> Enum.reverse, {[], rest}, fn el, {elements, data} ->
       case el do
         {:dynamic, type, _tail_position} ->
           {el, rest} = decode_type(type, data)
@@ -208,7 +227,7 @@ defmodule ABI.TypeDecoder do
       end
     end)
 
-    {elements |> List.to_tuple, rest}
+    {elements |> Enum.reverse |> List.to_tuple, rest}
   end
 
   defp decode_type(els, _) do
