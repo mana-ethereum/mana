@@ -114,6 +114,12 @@ defmodule EVM.MachineCode do
   @doc """
   Decompiles machine code.
 
+  ## Options
+
+  * `:strict` (boolean) - if `true`, decompilation will raise an exception when unknown opcodes are encountered. If `false`, an `{:unknown, integer()}` will appear in place of the decoded op. Defaults to `true`.
+
+  * `:pad` (boolean) - if `false`, decompilation will raise an exception if an opcode requires `n` bytes of argument data, and the remaining bytecode stream is less than `n` bytes in size. If `true`, the opcode will instead decode successfully, with its argument data padded with `<<0>>` bytes to the expected length. This option is useful when decompiling damaged or partial machine code, but should not otherwise be used. Defaults to `false`.
+
   ## Examples
 
       iex> EVM.MachineCode.decompile(<<0x60, 0x03, 0x60, 0x05, 0x01, 0xf3>>)
@@ -125,18 +131,44 @@ defmodule EVM.MachineCode do
       iex> EVM.MachineCode.decompile(<<>>)
       []
   """
-  @spec decompile(binary()) :: [atom() | integer()]
-  def decompile(<<>>), do: []
-  def decompile(<<opcode::8, rest::binary()>>) do
-    metadata = EVM.Operation.metadata(opcode)
+  @type decompile_option :: {:strict, true | false}
+  @spec decompile(binary(), [decompile_option]) :: [atom() | integer()]
+  def decompile(bytecode, opts \\ []), do: decompile([], bytecode, opts)
 
-    case metadata.machine_code_offset do
-      nil ->
-        [metadata.sym | decompile(rest)]
-      n ->
-        <<data::binary - size(n), non_data_rest::binary()>> = rest
-        [metadata.sym | :binary.bin_to_list(data)] ++ decompile(non_data_rest)
-    end
+  defp decompile(acc, <<>>, _), do: Enum.reverse(acc)
+  defp decompile(acc, <<opcode::8, bytecode::binary()>>, opts) do
+    {op, rest_of_bytecode} = decompile_opcode(opcode, EVM.Operation.metadata(opcode), bytecode, opts)
+    decompile([op | acc], rest_of_bytecode, opts)
   end
 
+  defp decompile_opcode(opcode, nil, bytecode, opts) do
+    if opts[:strict] do
+      raise ArgumentError, "unknown opcode 0x#{Integer.to_string(opcode, 16)} encountered"
+    else
+      {{:unknown, opcode}, bytecode}
+    end
+  end
+  defp decompile_opcode(_opcode, %{sym: sym, machine_code_offset: nil}, bytecode, _opts) do
+    {sym, bytecode}
+  end
+  defp decompile_opcode(_opcode, %{sym: sym, machine_code_offset: 0}, bytecode, _opts) do
+    {sym, bytecode}
+  end
+  defp decompile_opcode(opcode, %{sym: sym, machine_code_offset: args_size}, bytecode, opts) do
+    {encoded_args, rest_of_bytecode} = consume_op_args({opcode, sym}, bytecode, args_size, opts)
+    {{sym, encoded_args}, rest_of_bytecode}
+  end
+
+  defp consume_op_args({opcode, sym}, bytecode, args_size, opts) when args_size > byte_size(bytecode) do
+    if opts[:pad] do
+      pad_by_bits = (args_size - byte_size(bytecode)) * 8
+      {bytecode <> <<0::size(pad_by_bits)>>, <<>>}
+    else
+      raise ArgumentError, "while decoding EVM op #{inspect(sym)} (0x#{Integer.to_string(opcode, 16)}), exhausted bytecode stream looking for #{args_size} byte(s)"
+    end
+  end
+  defp consume_op_args(_opcode, bytecode, args_size, _opts) do
+    <<op_args::binary-size(args_size), rest::binary()>> = bytecode
+    {op_args, rest}
+  end
 end
