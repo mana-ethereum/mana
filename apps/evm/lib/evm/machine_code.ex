@@ -140,7 +140,7 @@ defmodule EVM.MachineCode do
   end
 
   defp decompile_opcode(opcode, nil, bytecode, opts) do
-    if opts[:strict] do
+    if Keyword.get(opts, :strict, true)  do
       raise ArgumentError, "unknown opcode 0x#{Integer.to_string(opcode, 16)} encountered"
     else
       {[{:unknown, opcode}], bytecode}
