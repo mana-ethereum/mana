@@ -136,25 +136,26 @@ defmodule EVM.MachineCode do
   defp decompile(acc, <<>>, _), do: Enum.reverse(acc)
   defp decompile(acc, <<opcode::8, bytecode::binary()>>, opts) do
     {op, rest_of_bytecode} = decompile_opcode(opcode, EVM.Operation.metadata(opcode), bytecode, opts)
-    decompile([op | acc], rest_of_bytecode, opts)
+    decompile(op ++ acc, rest_of_bytecode, opts)
   end
 
   defp decompile_opcode(opcode, nil, bytecode, opts) do
     if opts[:strict] do
       raise ArgumentError, "unknown opcode 0x#{Integer.to_string(opcode, 16)} encountered"
     else
-      {{:unknown, opcode}, bytecode}
+      {[{:unknown, opcode}], bytecode}
     end
   end
   defp decompile_opcode(_opcode, %{sym: sym, machine_code_offset: args_size}, bytecode, _opts) do
     decompile_instr(sym, args_size, bytecode)
   end
 
-  defp decompile_instr(sym, nil, bytecode), do: {sym, bytecode}
-  defp decompile_instr(sym, 0, bytecode), do: {sym, bytecode}
+  defp decompile_instr(sym, nil, bytecode), do: {[sym], bytecode}
+  defp decompile_instr(sym, 0, bytecode), do: {[sym], bytecode}
   defp decompile_instr(sym, args_size, bytecode) do
-    {encoded_args, rest_of_bytecode} = consume_instr_args(bytecode, args_size)
-    {{sym, encoded_args}, rest_of_bytecode}
+    {encoded_argdata, rest_of_bytecode} = consume_instr_args(bytecode, args_size)
+    argdata = :binary.bin_to_list(encoded_argdata)
+    {Enum.reverse([sym | argdata]), rest_of_bytecode}
   end
 
   defp consume_instr_args(bytecode, args_size) when args_size > byte_size(bytecode) do
