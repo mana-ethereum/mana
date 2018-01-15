@@ -118,8 +118,6 @@ defmodule EVM.MachineCode do
 
   * `:strict` (boolean) - if `true`, decompilation will raise an exception when unknown opcodes are encountered. If `false`, an `{:unknown, integer()}` will appear in place of the decoded op. Defaults to `true`.
 
-  * `:pad` (boolean) - if `false`, decompilation will raise an exception if an opcode requires `n` bytes of argument data, and the remaining bytecode stream is less than `n` bytes in size. If `true`, the opcode will instead decode successfully, with its argument data padded with `<<0>>` bytes to the expected length. This option is useful when decompiling damaged or partial machine code, but should not otherwise be used. Defaults to `false`.
-
   ## Examples
 
       iex> EVM.MachineCode.decompile(<<0x60, 0x03, 0x60, 0x05, 0x01, 0xf3>>)
@@ -148,26 +146,22 @@ defmodule EVM.MachineCode do
       {{:unknown, opcode}, bytecode}
     end
   end
-  defp decompile_opcode(_opcode, %{sym: sym, machine_code_offset: nil}, bytecode, _opts) do
-    {sym, bytecode}
+  defp decompile_opcode(_opcode, %{sym: sym, machine_code_offset: args_size}, bytecode, _opts) do
+    decompile_instr(sym, args_size, bytecode)
   end
-  defp decompile_opcode(_opcode, %{sym: sym, machine_code_offset: 0}, bytecode, _opts) do
-    {sym, bytecode}
-  end
-  defp decompile_opcode(opcode, %{sym: sym, machine_code_offset: args_size}, bytecode, opts) do
-    {encoded_args, rest_of_bytecode} = consume_op_args({opcode, sym}, bytecode, args_size, opts)
+
+  defp decompile_instr(sym, nil, bytecode), do: {sym, bytecode}
+  defp decompile_instr(sym, 0, bytecode), do: {sym, bytecode}
+  defp decompile_instr(sym, args_size, bytecode) do
+    {encoded_args, rest_of_bytecode} = consume_instr_args(bytecode, args_size)
     {{sym, encoded_args}, rest_of_bytecode}
   end
 
-  defp consume_op_args({opcode, sym}, bytecode, args_size, opts) when args_size > byte_size(bytecode) do
-    if opts[:pad] do
-      pad_by_bits = (args_size - byte_size(bytecode)) * 8
-      {bytecode <> <<0::size(pad_by_bits)>>, <<>>}
-    else
-      raise ArgumentError, "while decoding EVM op #{inspect(sym)} (0x#{Integer.to_string(opcode, 16)}), exhausted bytecode stream looking for #{args_size} byte(s)"
-    end
+  defp consume_instr_args(bytecode, args_size) when args_size > byte_size(bytecode) do
+    pad_by_bits = (args_size - byte_size(bytecode)) * 8
+    {bytecode <> <<0::size(pad_by_bits)>>, <<>>}
   end
-  defp consume_op_args(_opcode, bytecode, args_size, _opts) do
+  defp consume_instr_args(bytecode, args_size) do
     <<op_args::binary-size(args_size), rest::binary()>> = bytecode
     {op_args, rest}
   end
