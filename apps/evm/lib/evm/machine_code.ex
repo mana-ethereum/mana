@@ -128,6 +128,12 @@ defmodule EVM.MachineCode do
 
       iex> EVM.MachineCode.decompile(<<>>)
       []
+
+      iex> EVM.MachineCode.decompile(<<0x68, 0x00, 0x29>>)
+      [:push9, 0, 41, 0, 0, 0, 0, 0, 0, 0]
+
+      iex> EVM.MachineCode.decompile(<<0xfe, 0xf3>>, strict: false)
+      [{:unknown, 254}, :return]
   """
   @type decompile_option :: {:strict, true | false}
   @spec decompile(binary(), [decompile_option]) :: [atom() | integer()]
