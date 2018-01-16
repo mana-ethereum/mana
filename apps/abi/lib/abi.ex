@@ -28,7 +28,7 @@ defmodule ABI do
   def encode(function_signature, data) do
     ABI.TypeEncoder.encode(
       data,
-      ABI.FunctionSelector.decode(function_signature)
+      ABI.Parser.parse!(function_signature)
     )
   end
 
@@ -50,8 +50,7 @@ defmodule ABI do
   def decode(function_signature, data) do
     ABI.TypeDecoder.decode(
       data,
-      ABI.FunctionSelector.decode(function_signature)
+      ABI.Parser.parse!(function_signature)
     )
   end
-
 end

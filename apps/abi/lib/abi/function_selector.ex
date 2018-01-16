@@ -19,8 +19,7 @@ defmodule ABI.FunctionSelector do
   defstruct [:function, :types, :returns]
 
   @doc """
-  Decodes a function selector to struct. This is a simple version
-  and we may opt to do format parsing later.
+  Decodes a function selector to a struct.
 
   ## Examples
 
@@ -82,23 +81,7 @@ defmodule ABI.FunctionSelector do
       }
   """
   def decode(signature) do
-    captures = Regex.named_captures(~r/(?<function>[a-zA-Z_$][a-zA-Z_$0-9]*)?\((?<types>(([^,]+),?)*)\)/, signature)
-
-    if captures["function"] != "" do
-      # Encode as a function call
-      %ABI.FunctionSelector{
-        function: captures["function"],
-        types: decode_raw(captures["types"]),
-        returns: nil
-      }
-    else
-      # Encode as a tuple
-      %ABI.FunctionSelector{
-        function: nil,
-        types: [{:tuple, decode_raw(captures["types"])}],
-        returns: nil
-      }
-    end
+    ABI.Parser.parse!(signature, as: :selector)
   end
 
   @doc """
@@ -108,55 +91,31 @@ defmodule ABI.FunctionSelector do
 
       iex> ABI.FunctionSelector.decode_raw("string,uint256")
       [:string, {:uint, 256}]
+
+      iex> ABI.FunctionSelector.decode_raw("")
+      []
   """
   def decode_raw(type_string) do
-    type_string
-    |> String.split(",", trim: true)
-    |> Enum.map(&decode_type/1)
+    {:tuple, types} = decode_type("(#{type_string})")
+    types
   end
 
-  def decode_type(full_type) do
-    cond do
-      # Check for array type
-      captures = Regex.named_captures(~r/(?<type>[a-z0-9]+)\[(?<element_count>\d*)\]/, full_type) ->
-        type = decode_type(captures["type"])
+  @doc """
+  Decodes the given type-string as a single type.
 
-        if captures["element_count"] != "" do
-          {element_count, ""} = Integer.parse(captures["element_count"])
+  ## Examples
 
-          {:array, type, element_count}
-        else
-          {:array, type}
-        end
-      # Check for tuples
-      captures = Regex.named_captures(~r/\((?<types>[a-z0-9\[\]]+,?)+\)/, full_type) ->
-        types =
-          String.split(captures["types"], ",", trim: true)
-          |> Enum.map(fn type -> decode_type(type) end)
+      iex> ABI.FunctionSelector.decode_type("uint256")
+      {:uint, 256}
 
-        {:tuple, types}
-      true ->
-        decode_single_type(full_type)
-    end
-  end
+      iex> ABI.FunctionSelector.decode_type("(bool,address)")
+      {:tuple, [:bool, :address]}
 
-  def decode_single_type("uint" <> size_str) do
-    size = case size_str do
-      "" -> 256 # default
-      _ ->
-        {size, ""} = Integer.parse(size_str)
-
-        size
-    end
-
-    {:uint, size}
-  end
-
-  def decode_single_type("bool"), do: :bool
-  def decode_single_type("string"), do: :string
-  def decode_single_type("address"), do: :address
-  def decode_single_type(els) do
-    raise "Unsupported type: #{els}"
+      iex> ABI.FunctionSelector.decode_type("address[][3]")
+      {:array, {:array, :address}, 3}
+  """
+  def decode_type(single_type) do
+    ABI.Parser.parse!(single_type, as: :type)
   end
 
   @doc """
