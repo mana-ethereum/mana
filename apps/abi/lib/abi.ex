@@ -36,7 +36,7 @@ defmodule ABI do
       "b85d0bd200000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001"
   """
   def encode(function_signature, data) when is_binary(function_signature) do
-    encode(ABI.FunctionSelector.decode(function_signature), data)
+    encode(ABI.Parser.parse!(function_signature), data)
   end
   def encode(%ABI.FunctionSelector{} = function_selector, data) do
     ABI.TypeEncoder.encode(data, function_selector)
@@ -67,7 +67,7 @@ defmodule ABI do
       [<<1::160>>, true]
   """
   def decode(function_signature, data) when is_binary(function_signature) do
-    decode(ABI.FunctionSelector.decode(function_signature), data)
+    decode(ABI.Parser.parse!(function_signature), data)
   end
   def decode(%ABI.FunctionSelector{} = function_selector, data) do
     ABI.TypeDecoder.decode(data, function_selector)

@@ -1,3 +1,7 @@
+# 0.1.9
+* Add support for parsing ABI specification documents (`.abi.json` files)
+* Reimplement function signature parsing using a BNF grammar
+* Fix potential stack overflow during encoding/decoding
 # 0.1.8
 * Fix ordering of elements in tuples
 # 0.1.7
