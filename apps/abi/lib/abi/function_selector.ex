@@ -115,6 +115,35 @@ defmodule ABI.FunctionSelector do
     |> Enum.map(&decode_type/1)
   end
 
+  @doc false
+  def parse_specification_item(%{"type" => "function"} = item) do
+    %{
+      "name" => function_name,
+      "inputs" => named_inputs,
+      "outputs" => named_outputs
+    } = item
+
+    input_types = Enum.map(named_inputs, &parse_specification_type/1)
+    output_types = Enum.map(named_outputs, &parse_specification_type/1)
+
+    %ABI.FunctionSelector{
+      function: function_name,
+      types: input_types,
+      returns: List.first(output_types)
+    }
+  end
+  def parse_specification_item(%{"type" => "fallback"}) do
+    %ABI.FunctionSelector{
+      function: nil,
+      types: [],
+      returns: nil
+    }
+  end
+  def parse_specification_item(_), do: nil
+
+  defp parse_specification_type(%{"type" => type}), do: decode_type(type)
+
+  @doc false
   def decode_type(full_type) do
     cond do
       # Check for array type
@@ -140,6 +169,7 @@ defmodule ABI.FunctionSelector do
     end
   end
 
+  @doc false
   def decode_single_type("uint" <> size_str) do
     size = case size_str do
       "" -> 256 # default
@@ -203,6 +233,7 @@ defmodule ABI.FunctionSelector do
   end
   defp get_type(els), do: "Unsupported type: #{inspect els}"
 
+  @doc false
   @spec is_dynamic?(ABI.FunctionSelector.type) :: boolean
   def is_dynamic?(:bytes), do: true
   def is_dynamic?(:string), do: true
