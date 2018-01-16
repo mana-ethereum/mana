@@ -1,15 +1,15 @@
 Definitions.
 
 INT        = [0-9]+
-LETTERS    = [a-z_]+
+LETTERS    = [a-zA-Z_]+
 WHITESPACE = [\s\t\n\r]
 TYPES      = uint|int|address|bool|fixed|uint|ufixed|bytes|function|string
 
 Rules.
 
-{TYPES}       : {token, {atom,       TokenLine, list_to_atom(TokenChars)}}.
-{INT}         : {token, {int,        TokenLine, list_to_integer(TokenChars)}}.
-{LETTERS}     : {token, {binary,     TokenLine, list_to_binary(TokenChars)}}.
+{TYPES}       : {token, {typename,   TokenLine, TokenChars}}.
+{INT}         : {token, {digits,     TokenLine, TokenChars}}.
+{LETTERS}     : {token, {letters,    TokenLine, TokenChars}}.
 \[            : {token, {'[',        TokenLine}}.
 \]            : {token, {']',        TokenLine}}.
 \(            : {token, {'(',        TokenLine}}.
