@@ -114,6 +114,10 @@ defmodule EVM.MachineCode do
   @doc """
   Decompiles machine code.
 
+  ## Options
+
+  * `:strict` (boolean) - if `true`, decompilation will raise an exception when unknown opcodes are encountered. If `false`, an `{:unknown, integer()}` will appear in place of the decoded op. Defaults to `true`.
+
   ## Examples
 
       iex> EVM.MachineCode.decompile(<<0x60, 0x03, 0x60, 0x05, 0x01, 0xf3>>)
@@ -124,19 +128,48 @@ defmodule EVM.MachineCode do
 
       iex> EVM.MachineCode.decompile(<<>>)
       []
-  """
-  @spec decompile(binary()) :: [atom() | integer()]
-  def decompile(<<>>), do: []
-  def decompile(<<opcode::8, rest::binary()>>) do
-    metadata = EVM.Operation.metadata(opcode)
 
-    case metadata.machine_code_offset do
-      nil ->
-        [metadata.sym | decompile(rest)]
-      n ->
-        <<data::binary - size(n), non_data_rest::binary()>> = rest
-        [metadata.sym | :binary.bin_to_list(data)] ++ decompile(non_data_rest)
-    end
+      iex> EVM.MachineCode.decompile(<<0x68, 0x00, 0x29>>)
+      [:push9, 0, 41, 0, 0, 0, 0, 0, 0, 0]
+
+      iex> EVM.MachineCode.decompile(<<0xfe, 0xf3>>, strict: false)
+      [{:unknown, 254}, :return]
+  """
+  @type decompile_option :: {:strict, true | false}
+  @spec decompile(binary(), [decompile_option]) :: [atom() | integer()]
+  def decompile(bytecode, opts \\ []), do: decompile([], bytecode, opts)
+
+  defp decompile(acc, <<>>, _), do: Enum.reverse(acc)
+  defp decompile(acc, <<opcode::8, bytecode::binary()>>, opts) do
+    {op, rest_of_bytecode} = decompile_opcode(opcode, EVM.Operation.metadata(opcode), bytecode, opts)
+    decompile(op ++ acc, rest_of_bytecode, opts)
   end
 
+  defp decompile_opcode(opcode, nil, bytecode, opts) do
+    if Keyword.get(opts, :strict, true)  do
+      raise ArgumentError, "unknown opcode 0x#{Integer.to_string(opcode, 16)} encountered"
+    else
+      {[{:unknown, opcode}], bytecode}
+    end
+  end
+  defp decompile_opcode(_opcode, %{sym: sym, machine_code_offset: args_size}, bytecode, _opts) do
+    decompile_instr(sym, args_size, bytecode)
+  end
+
+  defp decompile_instr(sym, nil, bytecode), do: {[sym], bytecode}
+  defp decompile_instr(sym, 0, bytecode), do: {[sym], bytecode}
+  defp decompile_instr(sym, args_size, bytecode) do
+    {encoded_argdata, rest_of_bytecode} = consume_instr_args(bytecode, args_size)
+    argdata = :binary.bin_to_list(encoded_argdata)
+    {Enum.reverse([sym | argdata]), rest_of_bytecode}
+  end
+
+  defp consume_instr_args(bytecode, args_size) when args_size > byte_size(bytecode) do
+    pad_by_bits = (args_size - byte_size(bytecode)) * 8
+    {bytecode <> <<0::size(pad_by_bits)>>, <<>>}
+  end
+  defp consume_instr_args(bytecode, args_size) do
+    <<op_args::binary-size(args_size), rest::binary()>> = bytecode
+    {op_args, rest}
+  end
 end
