@@ -54,4 +54,58 @@ defmodule ABI do
     )
   end
 
+  @doc """
+  Parses the given ABI specification document into an array of `ABI.FunctionSelector`s.
+
+  Non-function entries (e.g. constructors) in the ABI specification are skipped. Fallback function entries are accepted.
+
+  This function can be used in combination with a JSON parser, e.g. [`Poison`](https://hex.pm/packages/poison), to parse ABI specification JSON files.
+
+  ## Examples
+
+      iex> File.read!("priv/dog.abi.json")
+      ...> |> Poison.decode!
+      ...> |> ABI.parse_specification
+      [%ABI.FunctionSelector{function: "bark", returns: nil, types: [:address, :bool]},
+       %ABI.FunctionSelector{function: "rollover", returns: :bool, types: []}]
+
+      iex> [%{
+      ...>   "constant" => true,
+      ...>   "inputs" => [
+      ...>     %{"name" => "at", "type" => "address"},
+      ...>     %{"name" => "loudly", "type" => "bool"}
+      ...>   ],
+      ...>   "name" => "bark",
+      ...>   "outputs" => [],
+      ...>   "payable" => false,
+      ...>   "stateMutability" => "nonpayable",
+      ...>   "type" => "function"
+      ...> }]
+      ...> |> ABI.parse_specification
+      [%ABI.FunctionSelector{function: "bark", returns: nil, types: [:address, :bool]}]
+
+      iex> [%{
+      ...>   "inputs" => [
+      ...>      %{"name" => "_numProposals", "type" => "uint8"}
+      ...>   ],
+      ...>   "payable" => false,
+      ...>   "stateMutability" => "nonpayable",
+      ...>   "type" => "constructor"
+      ...> }]
+      ...> |> ABI.parse_specification
+      []
+
+      iex> [%{
+      ...>   "payable" => false,
+      ...>   "stateMutability" => "nonpayable",
+      ...>   "type" => "fallback"
+      ...> }]
+      ...> |> ABI.parse_specification
+      [%ABI.FunctionSelector{function: nil, returns: nil, types: []}]
+  """
+  def parse_specification(doc) do
+    doc
+    |> Enum.map(&ABI.FunctionSelector.parse_specification_item/1)
+    |> Enum.filter(&(&1))
+  end
 end
