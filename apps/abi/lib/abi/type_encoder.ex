@@ -115,7 +115,7 @@ defmodule ABI.TypeEncoder do
       "000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000007617765736f6d6500000000000000000000000000000000000000000000000000"
   """
   def encode_raw(data, types) do
-    do_encode(types, data)
+    do_encode(types, data, [])
   end
 
   @spec encode_method_id(%ABI.FunctionSelector{}) :: binary()
@@ -133,12 +133,12 @@ defmodule ABI.TypeEncoder do
     init
   end
 
-  @spec do_encode([ABI.FunctionSelector.type], [any()]) :: binary()
-  defp do_encode([], _), do: <<>>
-  defp do_encode([type|remaining_types], data) do
+  @spec do_encode([ABI.FunctionSelector.type], [any()], [binary()]) :: binary()
+  defp do_encode([], _, acc), do: :erlang.iolist_to_binary(Enum.reverse(acc))
+  defp do_encode([type|remaining_types], data, acc) do
     {encoded, remaining_data} = encode_type(type, data)
 
-    encoded <> do_encode(remaining_types, remaining_data)
+    do_encode(remaining_types, remaining_data, [encoded | acc])
   end
 
   @spec encode_type(ABI.FunctionSelector.type, [any()]) :: {binary(), [any()]}

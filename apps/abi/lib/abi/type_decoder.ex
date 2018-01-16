@@ -147,16 +147,16 @@ defmodule ABI.TypeDecoder do
       [{"awesome", true}]
   """
   def decode_raw(encoded_data, types) do
-    do_decode(types, encoded_data)
+    do_decode(types, encoded_data, [])
   end
 
-  @spec do_decode([ABI.FunctionSelector.type], binary()) :: [any()]
-  defp do_decode([], bin) when byte_size(bin) > 0, do: raise("Found extra binary data: #{inspect bin}")
-  defp do_decode([], _), do: []
-  defp do_decode([type|remaining_types], data) do
+  @spec do_decode([ABI.FunctionSelector.type], binary(), [any()]) :: [any()]
+  defp do_decode([], bin, _) when byte_size(bin) > 0, do: raise("Found extra binary data: #{inspect bin}")
+  defp do_decode([], _, acc), do: Enum.reverse(acc)
+  defp do_decode([type|remaining_types], data, acc) do
     {decoded, remaining_data} = decode_type(type, data)
 
-    [decoded | do_decode(remaining_types, remaining_data)]
+    do_decode(remaining_types, remaining_data, [decoded | acc])
   end
 
   @spec decode_type(ABI.FunctionSelector.type, binary()) :: {any(), binary()}

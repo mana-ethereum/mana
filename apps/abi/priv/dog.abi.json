@@ -1,0 +1,35 @@
+[
+  {
+    "constant": true,
+    "inputs": [
+      {
+        "name": "at",
+        "type": "address"
+      },
+      {
+        "name": "loudly",
+        "type": "bool"
+      }
+    ],
+    "name": "bark",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "rollover",
+    "outputs": [
+      {
+        "name": "is_a_good_boy",
+        "type": "bool"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+]
