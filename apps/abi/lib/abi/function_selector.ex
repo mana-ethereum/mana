@@ -48,6 +48,12 @@ defmodule ABI.FunctionSelector do
         types: []
       }
 
+      iex> ABI.FunctionSelector.decode("do_playDead3()")
+      %ABI.FunctionSelector{
+        function: "do_playDead3",
+        types: []
+      }
+
       iex> ABI.FunctionSelector.decode("pet(address[])")
       %ABI.FunctionSelector{
         function: "pet",
