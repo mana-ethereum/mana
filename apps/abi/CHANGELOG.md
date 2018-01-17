@@ -1,3 +1,6 @@
+# 0.1.10
+* Fix parsing of function names containing uppercase letters/digits/underscores
+* Add support for `bytes<M>`
 # 0.1.9
 * Add support for parsing ABI specification documents (`.abi.json` files)
 * Reimplement function signature parsing using a BNF grammar
