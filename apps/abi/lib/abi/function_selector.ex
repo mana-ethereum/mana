@@ -181,20 +181,28 @@ defmodule ABI.FunctionSelector do
     end
   end
 
+  defp get_type(nil), do: nil
+  defp get_type({:int, size}), do: "int#{size}"
   defp get_type({:uint, size}), do: "uint#{size}"
-  defp get_type(:bool), do: "bool"
-  defp get_type(:string), do: "string"
   defp get_type(:address), do: "address"
-  defp get_type({:array, type}), do: "#{get_type(type)}[]"
-  defp get_type({:array, type, element_count}), do: "#{get_type(type)}[#{element_count}]"
-  defp get_type({:tuple, types}) do
-    encoded_types = types
-    |> Enum.map(&get_type/1)
-    |> Enum.join(",")
+  defp get_type(:bool), do: "bool"
+  defp get_type({:fixed, element_count, precision}), do: "fixed#{element_count}x#{precision}"
+  defp get_type({:ufixed, element_count, precision}), do: "ufixed#{element_count}x#{precision}"
+  defp get_type({:bytes, size}), do: "bytes#{size}"
+  defp get_type(:function), do: "function"
 
-    "(#{encoded_types})"
+  defp get_type({:array, type, element_count}), do: "#{get_type(type)}[#{element_count}]"
+
+  defp get_type(:bytes), do: "bytes"
+  defp get_type(:string), do: "string"
+  defp get_type({:array, type}), do: "#{get_type(type)}[]"
+
+  defp get_type({:tuple, types}) do
+    encoded_types = Enum.map(types, &get_type/1)
+    "(#{Enum.join(encoded_types, ",")})"
   end
-  defp get_type(els), do: "Unsupported type: #{inspect els}"
+
+  defp get_type(els), do: raise "Unsupported type: #{inspect els}"
 
   @doc false
   @spec is_dynamic?(ABI.FunctionSelector.type) :: boolean

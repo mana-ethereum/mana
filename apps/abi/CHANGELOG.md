@@ -1,3 +1,5 @@
+# 0.1.11
+* Add support for method ID calculation of all standard types
 # 0.1.10
 * Fix parsing of function names containing uppercase letters/digits/underscores
 * Add support for `bytes<M>`
