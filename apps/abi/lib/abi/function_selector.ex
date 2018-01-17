@@ -194,7 +194,7 @@ defmodule ABI.FunctionSelector do
 
     "(#{encoded_types})"
   end
-  defp get_type(els), do: "Unsupported type: #{inspect els}"
+  defp get_type(els), do: raise "Unsupported type: #{inspect els}"
 
   @doc false
   @spec is_dynamic?(ABI.FunctionSelector.type) :: boolean
