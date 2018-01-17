@@ -48,17 +48,17 @@ defmodule ABI.TypeEncoder do
       ...> |> Base.encode16(case: :lower)
       "000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000007617765736f6d6500000000000000000000000000000000000000000000000000"
 
-      iex> [{17, true}]
+      iex> [{17, true, <<32, 64>>}]
       ...> |> ABI.TypeEncoder.encode(
       ...>      %ABI.FunctionSelector{
       ...>        function: nil,
       ...>        types: [
-      ...>          {:tuple, [{:uint, 32}, :bool]}
+      ...>          {:tuple, [{:uint, 32}, :bool, {:bytes, 2}]}
       ...>        ]
       ...>      }
       ...>    )
       ...> |> Base.encode16(case: :lower)
-      "00000000000000000000000000000000000000000000000000000000000000110000000000000000000000000000000000000000000000000000000000000001"
+      "000000000000000000000000000000000000000000000000000000000000001100000000000000000000000000000000000000000000000000000000000000012040000000000000000000000000000000000000000000000000000000000000"
 
       iex> [[17, 1]]
       ...> |> ABI.TypeEncoder.encode(
@@ -164,6 +164,16 @@ defmodule ABI.TypeEncoder do
 
   defp encode_type(:bytes, [data|rest]) do
     {encode_uint(byte_size(data), 256) <> encode_bytes(data), rest}
+  end
+
+  defp encode_type({:bytes, size}, [data|rest]) when is_binary(data) and byte_size(data) <= size do
+    {encode_bytes(data), rest}
+  end
+  defp encode_type({:bytes, size}, [data|_]) when is_binary(data) do
+    raise "size mismatch for bytes#{size}: #{inspect(data)}"
+  end
+  defp encode_type({:bytes, size}, [data|_]) do
+    raise "wrong datatype for bytes#{size}: #{inspect(data)}"
   end
 
   defp encode_type({:tuple, types}, [data|rest]) do
