@@ -8,7 +8,13 @@ defmodule ABI.FunctionSelector do
 
   @type type ::
     {:uint, integer()} |
-    :bool
+    :bool |
+    :bytes |
+    :string |
+    :address |
+    {:array, type} |
+    {:array, type, non_neg_integer} |
+    {:tuple, [type]}
 
   @type t :: %__MODULE__{
     function: String.t,
