@@ -1,3 +1,6 @@
+# 0.1.12
+* Fix `string` decoding to truncate on encountering NUL
+* Fix some edge-cases in `tuple` encoding/decoding
 # 0.1.11
 * Add support for method ID calculation of all standard types
 # 0.1.10
