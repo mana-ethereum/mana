@@ -180,7 +180,8 @@ defmodule ABI.TypeDecoder do
 
   defp decode_type(:string, data) do
     {string_size_in_bytes, rest} = decode_uint(data, 256)
-    decode_bytes(rest, string_size_in_bytes, :right)
+    {raw_bytes, rest} = decode_bytes(rest, string_size_in_bytes, :right)
+    {nul_terminate_string(raw_bytes), rest}
   end
 
   defp decode_type(:bytes, data) do
@@ -268,4 +269,9 @@ defmodule ABI.TypeDecoder do
     end
   end
 
+  defp nul_terminate_string(raw_string) do
+    raw_string = :erlang.iolist_to_binary(raw_string)
+    [pre_nul_part | _] = :binary.split(raw_string, <<0>>)
+    pre_nul_part
+  end
 end
