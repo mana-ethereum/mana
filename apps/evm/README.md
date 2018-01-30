@@ -11,7 +11,7 @@ Add `:evm` as a dependency to your project's `mix.exs`:
 ```elixir
 defp deps do
   [
-    {:merkle_patricia_tree, "~> 0.1.6"}
+    {:evm, "~> 0.1.6"}
   ]
 end
 ```
