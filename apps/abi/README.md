@@ -77,3 +77,7 @@ Currently supports:
 * [Solidity Docs](https://solidity.readthedocs.io/)
 * [Solidity Grammar](https://github.com/ethereum/solidity/blob/develop/docs/grammar.txt)
 * [Exthereum Blockchain](https://github.com/exthereum/blockchain)
+
+# Collaboration
+
+This ABI library is licensed under the MIT license. Feel free to submit issues, pull requests or fork the code as you wish.
