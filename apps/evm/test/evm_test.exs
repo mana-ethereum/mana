@@ -3,12 +3,12 @@ defmodule EvmTest do
   use ExUnit.Case, async: true
 
   @passing_tests_by_group %{
-    sha3: :all,
-    arithmetic: :all,
+    sha3_test: :all,
+    arithmetic_test: :all,
     bitwise_logic_operation: :all,
-    block_info: :all,
+    block_info_test: :all,
     environmental_info: :all,
-    push_dup_swap: :all,
+    push_dup_swap_test: :all,
     i_oand_flow_operations: :all,
     system_operations: [
       :ABAcalls0,
@@ -167,22 +167,36 @@ defmodule EvmTest do
   end
 
   def passing_tests(test_group_name) do
-    read_test_file(test_group_name)
-      |> Enum.filter(fn({test_name, _test}) ->
-        passing_tests_in_group = Map.get(@passing_tests_by_group, test_group_name)
-
-        passing_tests_in_group == :all ||
-          Enum.member?(passing_tests_in_group, String.to_atom(test_name))
-      end)
+    passing_tests_in_group = if Map.get(@passing_tests_by_group, test_group_name) == :all do
+      all_tests_of_type(test_group_name)
+    else
+      Map.get(@passing_tests_by_group, test_group_name)
+    end |> Enum.map(fn(test_name) ->
+      {test_name, read_test_file(test_group_name, test_name)}
+    end)
   end
 
-  def read_test_file(type) do
-    {:ok, body} = File.read(test_file_name(type))
-    Poison.decode!(body)
+  def read_test_file(group, name) do
+    {:ok, body} = File.read(test_file_name(group, name))
+    Poison.decode!(body)[name |> Atom.to_string]
   end
 
-  def test_file_name(type) do
-    "test/support/ethereum_common_tests/VMTests/vm#{Macro.camelize(Atom.to_string(type))}Test.json"
+  def all_tests_of_type(type) do
+    {:ok, files} = File.ls(test_directory_name(type))
+
+    Enum.map(files, fn(file_name) ->
+      file_name
+        |> String.replace_suffix(".json", "")
+        |> String.to_atom()
+    end)
+  end
+
+  def test_directory_name(type) do
+    "test/support/ethereum_common_tests/VMTests/vm#{Macro.camelize(Atom.to_string(type))}"
+  end
+
+  def test_file_name(group, name) do
+    "test/support/ethereum_common_tests/VMTests/vm#{Macro.camelize(Atom.to_string(group))}/#{name}.json"
   end
 
   def hex_to_binary(string) do
