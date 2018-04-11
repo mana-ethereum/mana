@@ -9,63 +9,132 @@ defmodule EVM.Gas do
   alias EVM.Address
   alias EVM.ExecEnv
 
-  @type t :: EVM.val
-  @type gas_price :: EVM.Wei.t
+  @type t :: EVM.val()
+  @type gas_price :: EVM.Wei.t()
 
-  @g_zero 0  # Nothing paid for operations of the set Wzero.
-  @g_base 2  # Amount of gas to pay for operations of the set Wbase.
-  @g_verylow 3  # Amount of gas to pay for operations of the set Wverylow.
-  @g_low 5  # Amount of gas to pay for operations of the set Wlow.
-  @g_mid 8  # Amount of gas to pay for operations of the set Wmid.
-  @g_high 10  # Amount of gas to pay for operations of the set Whigh.
-  @g_extcode 20  # Amount of gas to pay for operations of the set Wextcode.
-  @g_balance 20  # Amount of gas to pay for a BALANCE operation.
-  @g_sload 50  # Paid for a SLOAD operation.
-  @g_jumpdest 1  # Paid for a JUMPDEST operation.
-  @g_sset 20000  # Paid for an SSTORE operation when the storage value is set to non-zero from zero.
-  @g_sreset 5000  # Paid for an SSTORE operation when the storage value’s zeroness remains unchanged or is set to zero.
-  @g_sclear 15000  # Refund given (added into refund counter) when the storage value is set to zero from non-zero.
-  @g_suicide 24000  # Refund given (added into refund counter) for suiciding an account.
-  @g_suicide 5000  # Amount of gas to pay for a SUICIDE operation.
-  @g_create 32000  # Paid for a CREATE operation.
-  @g_codedeposit 200  # Paid per byte for a CREATE operation to succeed in placing code into state.
-  @g_call 40  # Paid for a CALL operation.
-  @g_callvalue 9000  # Paid for a non-zero value transfer as part of the CALL operation.
-  @g_callstipend 2300  # A stipend for the called contract subtracted from Gcallvalue for a non-zero value transfer.
-  @g_newaccount 25000  # Paid for a CALL or SUICIDE operation which creates an account.
-  @g_exp 10  # Partial payment for an EXP operation.
-  @g_expbyte 10  # Partial payment when multiplied by dlog256(exponent)e for the EXP operation.
-  @g_memory 3  # Paid for every additional word when expanding memory.
-  @g_quad_coeff_div 512 # The divsor of quadratic costs
-  @g_txcreate 32000  # Paid by all contract-creating transactions after the Homestead transition.
-  @g_txdatazero 4  # Paid for every zero byte of data or code for a transaction.
-  @g_txdatanonzero 68  # Paid for every non-zero byte of data or code for a transaction.
-  @g_transaction 21000  # Paid for every transaction.
-  @g_log 375  # Partial payment for a LOG operation.
-  @g_logdata 8  # Paid for each byte in a LOG operation’s data.
-  @g_logtopic 375  # Paid for each topic of a LOG operation.
-  @g_sha3 30  # Paid for each SHA3 operation.
-  @g_sha3word 6  # Paid for each word (rounded up) for input data to a SHA3 operation.
-  @g_copy 3  # Partial payment for *COPY operations, multiplied by words copied, rounded up.
-  @g_blockhash 20  # Payment for BLOCKHASH operation
+  # Nothing paid for operations of the set Wzero.
+  @g_zero 0
+  # Amount of gas to pay for operations of the set Wbase.
+  @g_base 2
+  # Amount of gas to pay for operations of the set Wverylow.
+  @g_verylow 3
+  # Amount of gas to pay for operations of the set Wlow.
+  @g_low 5
+  # Amount of gas to pay for operations of the set Wmid.
+  @g_mid 8
+  # Amount of gas to pay for operations of the set Whigh.
+  @g_high 10
+  # Amount of gas to pay for operations of the set Wextcode.
+  @g_extcode 20
+  # Amount of gas to pay for a BALANCE operation.
+  @g_balance 20
+  # Paid for a SLOAD operation.
+  @g_sload 50
+  # Paid for a JUMPDEST operation.
+  @g_jumpdest 1
+  # Paid for an SSTORE operation when the storage value is set to non-zero from zero.
+  @g_sset 20000
+  # Paid for an SSTORE operation when the storage value’s zeroness remains unchanged or is set to zero.
+  @g_sreset 5000
+  # Refund given (added into refund counter) when the storage value is set to zero from non-zero.
+  @g_sclear 15000
+  # Refund given (added into refund counter) for suiciding an account.
+  @g_suicide 24000
+  # Amount of gas to pay for a SUICIDE operation.
+  @g_suicide 5000
+  # Paid for a CREATE operation.
+  @g_create 32000
+  # Paid per byte for a CREATE operation to succeed in placing code into state.
+  @g_codedeposit 200
+  # Paid for a CALL operation.
+  @g_call 40
+  # Paid for a non-zero value transfer as part of the CALL operation.
+  @g_callvalue 9000
+  # A stipend for the called contract subtracted from Gcallvalue for a non-zero value transfer.
+  @g_callstipend 2300
+  # Paid for a CALL or SUICIDE operation which creates an account.
+  @g_newaccount 25000
+  # Partial payment for an EXP operation.
+  @g_exp 10
+  # Partial payment when multiplied by dlog256(exponent)e for the EXP operation.
+  @g_expbyte 10
+  # Paid for every additional word when expanding memory.
+  @g_memory 3
+  # The divsor of quadratic costs
+  @g_quad_coeff_div 512
+  # Paid by all contract-creating transactions after the Homestead transition.
+  @g_txcreate 32000
+  # Paid for every zero byte of data or code for a transaction.
+  @g_txdatazero 4
+  # Paid for every non-zero byte of data or code for a transaction.
+  @g_txdatanonzero 68
+  # Paid for every transaction.
+  @g_transaction 21000
+  # Partial payment for a LOG operation.
+  @g_log 375
+  # Paid for each byte in a LOG operation’s data.
+  @g_logdata 8
+  # Paid for each topic of a LOG operation.
+  @g_logtopic 375
+  # Paid for each SHA3 operation.
+  @g_sha3 30
+  # Paid for each word (rounded up) for input data to a SHA3 operation.
+  @g_sha3word 6
+  # Partial payment for *COPY operations, multiplied by words copied, rounded up.
+  @g_copy 3
+  # Payment for BLOCKHASH operation
+  @g_blockhash 20
 
   @w_zero_instr [:stop, :return, :suicide]
-  @w_base_instr [:address, :origin, :caller, :callvalue, :calldatasize, :codesize, :gasprice, :coinbase, :timestamp, :number, :difficulty, :gaslimit, :pop, :pc, :msize, :gas]
+  @w_base_instr [
+    :address,
+    :origin,
+    :caller,
+    :callvalue,
+    :calldatasize,
+    :codesize,
+    :gasprice,
+    :coinbase,
+    :timestamp,
+    :number,
+    :difficulty,
+    :gaslimit,
+    :pop,
+    :pc,
+    :msize,
+    :gas
+  ]
   @push_instrs Enum.map(0..32, fn n -> :"push#{n}" end)
   @dup_instrs Enum.map(0..16, fn n -> :"dup#{n}" end)
   @swap_instrs Enum.map(0..16, fn n -> :"swap#{n}" end)
   @log_instrs Enum.map(1..4, fn n -> :"log#{n}" end)
   @w_very_low_instr [
-    :add, :sub, :calldatacopy, :codecopy, :not_, :lt, :gt, :slt, :sgt, :eq, :iszero, :and_, :or_, :xor_,
-    :byte, :calldataload, :mload, :mstore, :mstore8] ++
-      @push_instrs ++ @dup_instrs ++ @swap_instrs
+                      :add,
+                      :sub,
+                      :calldatacopy,
+                      :codecopy,
+                      :not_,
+                      :lt,
+                      :gt,
+                      :slt,
+                      :sgt,
+                      :eq,
+                      :iszero,
+                      :and_,
+                      :or_,
+                      :xor_,
+                      :byte,
+                      :calldataload,
+                      :mload,
+                      :mstore,
+                      :mstore8
+                    ] ++ @push_instrs ++ @dup_instrs ++ @swap_instrs
   @w_low_instr [:mul, :div, :sdiv, :mod, :smod, :signextend]
   @w_mid_instr [:addmod, :mulmod, :jump]
   @w_high_instr [:jumpi]
   @w_extcode_instr [:extcodesize]
   @call_operations [:call, :callcode, :delegatecall]
   @memory_operations [:mstore, :mstore8, :sha3, :codecopy, :extcodecopy, :calldatacopy, :mload]
-
 
   @doc """
   Returns the cost to execute the given a cycle of the VM. This is defined
@@ -77,7 +146,7 @@ defmodule EVM.Gas do
       iex> EVM.Gas.cost(%EVM.MachineState{}, %EVM.ExecEnv{})
       0
   """
-  @spec cost(MachineState.t, ExecEnv.t) :: t | nil
+  @spec cost(MachineState.t(), ExecEnv.t()) :: t | nil
   def cost(machine_state, exec_env) do
     operation = MachineCode.current_operation(machine_state, exec_env)
     inputs = Operation.inputs(operation, machine_state)
@@ -92,7 +161,7 @@ defmodule EVM.Gas do
   end
 
   def memory_cost(:extcodecopy, [_address, _code_offset, memory_offset, length], machine_state) do
-    if (memory_offset + length > EVM.max_int()) do
+    if memory_offset + length > EVM.max_int() do
       0
     else
       memory_expansion_cost(machine_state, memory_offset, length)
@@ -107,7 +176,6 @@ defmodule EVM.Gas do
     memory_expansion_cost(machine_state, memory_offset, 32)
   end
 
-
   def memory_cost(:mstore8, [memory_offset, _value], machine_state) do
     memory_expansion_cost(machine_state, memory_offset, 1)
   end
@@ -120,7 +188,11 @@ defmodule EVM.Gas do
     memory_expansion_cost(machine_state, memory_offset, 32)
   end
 
-  def memory_cost(:call, [_gas_limit, _to_address, _value, _in_offset, _in_length, out_offset, out_length], machine_state) do
+  def memory_cost(
+        :call,
+        [_gas_limit, _to_address, _value, _in_offset, _in_length, out_offset, out_length],
+        machine_state
+      ) do
     memory_expansion_cost(machine_state, out_offset, out_length)
   end
 
@@ -139,19 +211,22 @@ defmodule EVM.Gas do
     memory_expansion_value = memory_expansion_value(machine_state.active_words, offset, length)
 
     if memory_expansion_value > machine_state.active_words do
-      quadratic_memory_cost(memory_expansion_value) - quadratic_memory_cost(machine_state.active_words)
+      quadratic_memory_cost(memory_expansion_value) -
+        quadratic_memory_cost(machine_state.active_words)
     else
       0
     end
   end
 
-
   # Eq 223
   def memory_expansion_value(
-    active_words, # s
-    offset,       # f
-    length        # l
-  ) do
+        # s
+        active_words,
+        # f
+        offset,
+        # l
+        length
+      ) do
     if length == 0 do
       active_words
     else
@@ -218,8 +293,9 @@ defmodule EVM.Gas do
       222
 
   """
-  @spec operation_cost(atom(), list(EVM.val), EVM.state, MachineState.t) :: t | nil
+  @spec operation_cost(atom(), list(EVM.val()), EVM.state(), MachineState.t()) :: t | nil
   def operation_cost(operation \\ nil, inputs \\ nil, machine_state \\ nil, exec_env \\ nil)
+
   def operation_cost(:exp, [_base, exponent], _machine_state, _exec_env) do
     @g_exp + @g_expbyte * MathHelper.integer_byte_size(exponent)
   end
@@ -228,11 +304,21 @@ defmodule EVM.Gas do
     @g_verylow + @g_copy * MathHelper.bits_to_words(length)
   end
 
-  def operation_cost(:calldatacopy, [_memory_offset, _code_offset, length], _machine_state, _exec_env) do
+  def operation_cost(
+        :calldatacopy,
+        [_memory_offset, _code_offset, length],
+        _machine_state,
+        _exec_env
+      ) do
     @g_verylow + @g_copy * MathHelper.bits_to_words(length)
   end
 
-  def operation_cost(:extcodecopy, [_address, _code_offset, _mem_offset, length], _machine_state, _exec_env) do
+  def operation_cost(
+        :extcodecopy,
+        [_address, _code_offset, _mem_offset, length],
+        _machine_state,
+        _exec_env
+      ) do
     @g_extcode + @g_copy * MathHelper.bits_to_words(length)
   end
 
@@ -261,16 +347,24 @@ defmodule EVM.Gas do
     cond do
       new_value == 0 ->
         @g_sreset
+
       old_value == :account_not_found ->
         @g_sset
+
       old_value == :key_not_found ->
         @g_sset
+
       true ->
         @g_sreset
     end
   end
 
-  def operation_cost(:call, [gas_limit, to_address, value, _in_offset, _in_length, _out_offset, _out_length], _machine_state, exec_env) do
+  def operation_cost(
+        :call,
+        [gas_limit, to_address, value, _in_offset, _in_length, _out_offset, _out_length],
+        _machine_state,
+        exec_env
+      ) do
     to_address = Address.new(to_address)
 
     @g_call + call_value_cost(value) + new_account_cost(exec_env, to_address) + gas_limit
@@ -306,13 +400,12 @@ defmodule EVM.Gas do
 
   defp new_account_cost(exec_env, address) do
     if exec_env.account_interface
-      |> EVM.Interface.AccountInterface.account_exists?(address) do
+       |> EVM.Interface.AccountInterface.account_exists?(address) do
       0
     else
       @g_newaccount
     end
   end
-
 
   @doc """
   Returns the gas cost for G_txdata{zero, nonzero} as defined in
@@ -341,7 +434,8 @@ defmodule EVM.Gas do
         0 -> @g_txdatazero
         _ -> @g_txdatanonzero
       end
-    end |> Enum.sum
+    end
+    |> Enum.sum()
   end
 
   @doc "Paid by all contract-creating transactions after the Homestead transition."
@@ -351,5 +445,4 @@ defmodule EVM.Gas do
   @doc "Paid for every transaction."
   @spec g_transaction() :: t
   def g_transaction, do: @g_transaction
-
 end

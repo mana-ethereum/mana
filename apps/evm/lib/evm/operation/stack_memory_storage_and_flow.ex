@@ -16,7 +16,7 @@ defmodule EVM.Operation.StackMemoryStorageAndFlow do
       iex> EVM.Operation.StackMemoryStorageAndFlow.pop([55], %{stack: []})
       :noop
   """
-  @spec pop(Operation.stack_args, Operation.vm_map) :: Operation.op_result
+  @spec pop(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def pop(_args, %{}) do
     # no effect, but we popped a value
     :noop
@@ -36,7 +36,7 @@ defmodule EVM.Operation.StackMemoryStorageAndFlow do
       # TODO: Add a test for overflow, etc.
       # TODO: Handle sign?
   """
-  @spec mload(Operation.stack_args, Operation.vm_map) :: Operation.op_result
+  @spec mload(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def mload([offset], %{machine_state: machine_state}) do
     {value, machine_state} = EVM.Memory.read(machine_state, offset, 32)
 
@@ -57,7 +57,7 @@ defmodule EVM.Operation.StackMemoryStorageAndFlow do
       # TODO: Add a test for overflow, etc.
       # TODO: Handle sign?
   """
-  @spec mstore(Operation.stack_args, Operation.vm_map) :: Operation.op_result
+  @spec mstore(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def mstore([offset, value], %{machine_state: machine_state}) do
     machine_state = EVM.Memory.write(machine_state, offset, Helpers.left_pad_bytes(value))
 
@@ -67,7 +67,7 @@ defmodule EVM.Operation.StackMemoryStorageAndFlow do
   @doc """
   Save byte to memory.
   """
-  @spec mstore8(Operation.stack_args, Operation.vm_map) :: Operation.op_result
+  @spec mstore8(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def mstore8([offset, value], %{machine_state: machine_state}) do
     machine_state = Memory.write(machine_state, offset, value, EVM.byte_size())
 
@@ -99,7 +99,7 @@ defmodule EVM.Operation.StackMemoryStorageAndFlow do
       iex> EVM.Operation.StackMemoryStorageAndFlow.sload([other_key], %{exec_env: %EVM.ExecEnv{account_interface: account_interface}})
       0x0
   """
-  @spec sload(Operation.stack_args, Operation.vm_map) :: Operation.op_result
+  @spec sload(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def sload([key], %{exec_env: exec_env}) do
     case ExecEnv.get_storage(exec_env, key) do
       :account_not_found -> 0
@@ -133,7 +133,7 @@ defmodule EVM.Operation.StackMemoryStorageAndFlow do
       %{1 => %{}}
 
   """
-  @spec sstore(Operation.stack_args, Operation.vm_map) :: Operation.op_result
+  @spec sstore(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def sstore([key, value], %{exec_env: exec_env}) do
     exec_env = ExecEnv.put_storage(exec_env, key, value)
 
@@ -144,7 +144,7 @@ defmodule EVM.Operation.StackMemoryStorageAndFlow do
   Jumps are handled by `EVM.ProgramCounter.next`. This is a noop.
 
   """
-  @spec jump(Operation.stack_args, Operation.vm_map) :: Operation.op_result
+  @spec jump(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def jump(_args, _vm_map) do
     :noop
   end
@@ -153,7 +153,7 @@ defmodule EVM.Operation.StackMemoryStorageAndFlow do
   Jumps are handled by `EVM.ProgramCounter.next`. This is a noop.
 
   """
-  @spec jumpi(Operation.stack_args, Operation.vm_map) :: Operation.op_result
+  @spec jumpi(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def jumpi(_args, _vm_map) do
     :noop
   end
@@ -180,7 +180,7 @@ defmodule EVM.Operation.StackMemoryStorageAndFlow do
       iex> EVM.Operation.StackMemoryStorageAndFlow.msize([], %{machine_state: %EVM.MachineState{active_words: 1}})
       32
   """
-  @spec msize(Operation.stack_args, Operation.vm_map) :: Operation.op_result
+  @spec msize(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def msize(_args, %{machine_state: %{active_words: active_words}}) do
     active_words * EVM.word_size()
   end
@@ -193,7 +193,7 @@ defmodule EVM.Operation.StackMemoryStorageAndFlow do
       iex> EVM.Operation.StackMemoryStorageAndFlow.gas([], %{machine_state: %{gas: 99}})
       99
   """
-  @spec gas(Operation.stack_args, Operation.vm_map) :: Operation.op_result
+  @spec gas(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def gas(_args, %{machine_state: machine_state}) do
     machine_state.gas
   end
@@ -208,7 +208,7 @@ defmodule EVM.Operation.StackMemoryStorageAndFlow do
       iex> EVM.Operation.StackMemoryStorageAndFlow.jumpdest([], %{stack: []})
       :noop
   """
-  @spec jumpdest(Operation.stack_args, Operation.vm_map) :: Operation.op_result
+  @spec jumpdest(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def jumpdest(_args, %{}) do
     :noop
   end

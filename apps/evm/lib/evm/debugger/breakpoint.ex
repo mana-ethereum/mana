@@ -9,22 +9,21 @@ defmodule EVM.Debugger.Breakpoint do
   @type id :: integer()
 
   @type conditions :: [
-    :address, # only triggers when contract executes at given address
-  ]
+          # only triggers when contract executes at given address
+          :address
+        ]
 
   @type t :: %__MODULE__{
-    id: id,
-    enabled: boolean(),
-    conditions: keyword(conditions),
-    pc: nil | :start | :next | integer()
-  }
+          id: id,
+          enabled: boolean(),
+          conditions: keyword(conditions),
+          pc: nil | :start | :next | integer()
+        }
 
-  defstruct [
-    id: nil,
-    enabled: true,
-    conditions: [],
-    pc: nil
-  ]
+  defstruct id: nil,
+            enabled: true,
+            conditions: [],
+            pc: nil
 
   @doc """
   Initializes the debugger. Must be called prior to getting or checking
@@ -128,13 +127,14 @@ defmodule EVM.Debugger.Breakpoint do
       iex> EVM.Debugger.Breakpoint.matches?(breakpoint, machine_state, sub_state, exec_env)
       false
   """
-  @spec matches?(t, EVM.MachineState.t, EVM.SubState.t, EVM.ExecEnv.t) :: boolean()
+  @spec matches?(t, EVM.MachineState.t(), EVM.SubState.t(), EVM.ExecEnv.t()) :: boolean()
   def matches?(breakpoint, machine_state, _sub_state, exec_env) do
-    breakpoint.enabled and break_on_next_pc?(breakpoint, machine_state.program_counter) and Enum.all?(breakpoint.conditions, fn {condition, condition_val} ->
-      case condition do
-        :address -> exec_env.address == condition_val
-      end
-    end)
+    breakpoint.enabled and break_on_next_pc?(breakpoint, machine_state.program_counter) and
+      Enum.all?(breakpoint.conditions, fn {condition, condition_val} ->
+        case condition do
+          :address -> exec_env.address == condition_val
+        end
+      end)
   end
 
   @doc """
@@ -154,21 +154,24 @@ defmodule EVM.Debugger.Breakpoint do
       iex> %EVM.Debugger.Breakpoint{conditions: [], pc: nil} |> EVM.Debugger.Breakpoint.describe
       "(waiting)"
   """
-  @spec describe(t) :: String.t
+  @spec describe(t) :: String.t()
   def describe(breakpoint) do
-    conditions = for {k, v} <- breakpoint.conditions do
-      case k do
-        :address -> "contract address 0x#{Base.encode16(v, case: :lower)}"
+    conditions =
+      for {k, v} <- breakpoint.conditions do
+        case k do
+          :address -> "contract address 0x#{Base.encode16(v, case: :lower)}"
+        end
       end
-    end |> Enum.join(" ")
+      |> Enum.join(" ")
 
-    state = case breakpoint.pc do
-      :next -> "next"
-      :start -> "start"
-      nil -> "waiting"
-    end
+    state =
+      case breakpoint.pc do
+        :next -> "next"
+        :start -> "start"
+        nil -> "waiting"
+      end
 
-    "#{conditions} (#{state})" |> String.trim
+    "#{conditions} (#{state})" |> String.trim()
   end
 
   @doc """
@@ -184,11 +187,15 @@ defmodule EVM.Debugger.Breakpoint do
       iex> breakpoints |> Enum.member?(breakpoint)
       true
   """
-  @spec get_breakpoints() :: [Breakpoint.t]
+  @spec get_breakpoints() :: [Breakpoint.t()]
   def get_breakpoints() do
-    :ets.foldl(fn {_id, breakpoint}, acc ->
-      [breakpoint | acc]
-    end, [], @table)
+    :ets.foldl(
+      fn {_id, breakpoint}, acc ->
+        [breakpoint | acc]
+      end,
+      [],
+      @table
+    )
   end
 
   @doc """
@@ -200,9 +207,9 @@ defmodule EVM.Debugger.Breakpoint do
       iex> EVM.Debugger.Breakpoint.disable_breakpoint(id) |> Map.put(:id, nil)
       %EVM.Debugger.Breakpoint{conditions: [address: <<1::160>>], enabled: false}
   """
-  @spec disable_breakpoint(id) :: Breakpoint.t
+  @spec disable_breakpoint(id) :: Breakpoint.t()
   def disable_breakpoint(breakpoint_id) do
-    update_breakpoint(breakpoint_id, fn(breakpoint) ->
+    update_breakpoint(breakpoint_id, fn breakpoint ->
       %{breakpoint | enabled: false}
     end)
   end
@@ -216,9 +223,9 @@ defmodule EVM.Debugger.Breakpoint do
       iex> EVM.Debugger.Breakpoint.enable_breakpoint(id) |> Map.put(:id, nil)
       %EVM.Debugger.Breakpoint{conditions: [address: <<1::160>>], enabled: true}
   """
-  @spec enable_breakpoint(id) :: Breakpoint.t
+  @spec enable_breakpoint(id) :: Breakpoint.t()
   def enable_breakpoint(breakpoint_id) do
-    update_breakpoint(breakpoint_id, fn(breakpoint) ->
+    update_breakpoint(breakpoint_id, fn breakpoint ->
       %{breakpoint | enabled: true}
     end)
   end
@@ -233,7 +240,7 @@ defmodule EVM.Debugger.Breakpoint do
       iex> EVM.Debugger.Breakpoint.set_next(id) |> Map.put(:id, nil)
       %EVM.Debugger.Breakpoint{conditions: [address: <<1::160>>], pc: :next}
   """
-  @spec set_next(id) :: Breakpoint.t
+  @spec set_next(id) :: Breakpoint.t()
   def set_next(breakpoint_id) do
     update_breakpoint(breakpoint_id, fn breakpoint ->
       %{breakpoint | pc: :next}
@@ -257,7 +264,7 @@ defmodule EVM.Debugger.Breakpoint do
       iex> EVM.Debugger.Breakpoint.clear_pc_if_one_time_break(id) |> Map.put(:id, nil)
       %EVM.Debugger.Breakpoint{conditions: [address: <<1::160>>], pc: 5}
   """
-  @spec clear_pc_if_one_time_break(id) :: Breakpoint.t
+  @spec clear_pc_if_one_time_break(id) :: Breakpoint.t()
   def clear_pc_if_one_time_break(breakpoint_id) do
     update_breakpoint(breakpoint_id, fn breakpoint ->
       if breakpoint.pc in [:start, :next] do
@@ -292,7 +299,7 @@ defmodule EVM.Debugger.Breakpoint do
 
   # This is will be true if we're instructed to break on :next or :start, or
   # when the machine's breakpoint's pc matches the machine's pc.
-  @spec break_on_next_pc?(t, EVM.MachineState.program_counter) :: boolean()
+  @spec break_on_next_pc?(t, EVM.MachineState.program_counter()) :: boolean()
   def break_on_next_pc?(breakpoint, pc) do
     case breakpoint.pc do
       nil -> false
@@ -302,5 +309,4 @@ defmodule EVM.Debugger.Breakpoint do
       _ -> false
     end
   end
-
 end

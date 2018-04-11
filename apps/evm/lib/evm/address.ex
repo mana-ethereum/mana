@@ -24,8 +24,8 @@ defmodule EVM.Address do
   @spec new(integer()) :: binary()
   def new(address) do
     address
-      |> :binary.encode_unsigned
-      |>  EVM.Helpers.left_pad_bytes(@size)
+    |> :binary.encode_unsigned()
+    |> EVM.Helpers.left_pad_bytes(@size)
   end
 
   @doc """
@@ -34,8 +34,8 @@ defmodule EVM.Address do
   @spec new(integer(), integer()) :: binary()
   def new(address, nonce) do
     ExRLP.encode([address, nonce])
-      |> :keccakf1600.sha3_256()
-      |> EVM.Helpers.take_n_last_bytes(@size)
-      |> :binary.decode_unsigned
+    |> :keccakf1600.sha3_256()
+    |> EVM.Helpers.take_n_last_bytes(@size)
+    |> :binary.decode_unsigned()
   end
 end

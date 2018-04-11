@@ -3,5 +3,4 @@ defmodule EVM.Operation.MetadataTest do
   doctest EVM.Operation.Metadata
 
   # TODO: Add real tests here
-
 end

@@ -31,13 +31,13 @@ defmodule EVM.Helpers do
   @spec invert(map()) :: map()
   def invert(m) do
     m
-      |> Enum.into([])
-      |> Enum.map(fn {a, b} -> {b, a} end)
-      |> Enum.into(%{})
+    |> Enum.into([])
+    |> Enum.map(fn {a, b} -> {b, a} end)
+    |> Enum.into(%{})
   end
 
-  def bit_at(n, at), do: band((bsr(n, at)), 1)
-  def bit_position(byte_position), do: byte_position * 8  + 7
+  def bit_at(n, at), do: band(bsr(n, at), 1)
+  def bit_position(byte_position), do: byte_position * 8 + 7
 
   @doc """
   Wrap ints greater than the max int around back to 0
@@ -50,7 +50,7 @@ defmodule EVM.Helpers do
       iex> EVM.Helpers.wrap_int(EVM.max_int() + 1)
       1
   """
-  @spec wrap_int(integer()) :: EVM.val
+  @spec wrap_int(integer()) :: EVM.val()
   def wrap_int(n) when n > 0, do: band(n, EVM.max_int() - 1)
   def wrap_int(n), do: n
 
@@ -69,6 +69,7 @@ defmodule EVM.Helpers do
       1
   """
   def wrap_address(n) when is_integer(n), do: band(n, Address.max() - 1)
+
   def wrap_address(n) when is_binary(n) do
     if byte_size(n) > Address.size() do
       :binary.part(n, 0, Address.size())
@@ -88,18 +89,19 @@ defmodule EVM.Helpers do
       iex> EVM.Helpers.encode_signed(-1)
       EVM.max_int() - 1
   """
-  @spec encode_signed(integer()) :: EVM.val
+  @spec encode_signed(integer()) :: EVM.val()
   def encode_signed(n) when n < 0, do: EVM.max_int() - abs(n)
   def encode_signed(n), do: n
 
-  @spec decode_signed(integer() | nil) :: EVM.val
+  @spec decode_signed(integer() | nil) :: EVM.val()
   def decode_signed(n) when is_nil(n), do: 0
+
   def decode_signed(n) when is_integer(n) do
     decode_signed(:binary.encode_unsigned(n))
   end
 
   def decode_signed(n) when is_binary(n) do
-    <<sign :: size(1), _ :: bitstring>> = n
+    <<sign::size(1), _::bitstring>> = n
 
     if sign == 0 do
       :binary.decode_unsigned(n)
@@ -108,20 +110,21 @@ defmodule EVM.Helpers do
     end
   end
 
-  @spec encode_val(integer() | binary() | list(integer())) :: list(EVM.val)
+  @spec encode_val(integer() | binary() | list(integer())) :: list(EVM.val())
   def encode_val(n) when is_binary(n), do: :binary.decode_unsigned(n)
   def encode_val(n) when is_list(n), do: Enum.map(n, &encode_val/1)
+
   def encode_val(n) do
     n
-      |> wrap_int
-      |> encode_signed
+    |> wrap_int
+    |> encode_signed
   end
 
   @doc """
   Helper function to print an instruction message.
   """
   def inspect(msg, prefix) do
-    Logger.debug(inspect [prefix, ":", msg])
+    Logger.debug(inspect([prefix, ":", msg]))
 
     msg
   end
@@ -153,10 +156,12 @@ defmodule EVM.Helpers do
         total_bits = read_length * 8
 
         <<0::size(total_bits)>>
+
       end_pos > total_data_length ->
         data_read_length = total_data_length - start_pos
-        padding = ( read_length - data_read_length ) * 8
+        padding = (read_length - data_read_length) * 8
         binary_part(data, start_pos, data_read_length) <> <<0::size(padding)>>
+
       true ->
         binary_part(data, start_pos, read_length)
     end
@@ -176,13 +181,15 @@ defmodule EVM.Helpers do
   """
   @spec left_pad_bytes(binary() | integer(), integer()) :: integer()
   def left_pad_bytes(n, size \\ EVM.word_size())
-  def left_pad_bytes(n, size) when is_integer(n), do:
-    left_pad_bytes(:binary.encode_unsigned(n), size)
+
+  def left_pad_bytes(n, size) when is_integer(n),
+    do: left_pad_bytes(:binary.encode_unsigned(n), size)
 
   def left_pad_bytes(n, size) when size < byte_size(n), do: n
+
   def left_pad_bytes(n, size) do
     padding_size = (size - byte_size(n)) * EVM.byte_size()
-    <<0:: size(padding_size)>> <> n
+    <<0::size(padding_size)>> <> n
   end
 
   @doc """
@@ -199,13 +206,15 @@ defmodule EVM.Helpers do
   """
   @spec right_pad_bytes(binary() | integer(), integer()) :: integer()
   def right_pad_bytes(n, size \\ EVM.word_size())
-  def right_pad_bytes(n, size) when is_integer(n), do:
-    right_pad_bytes(:binary.encode_unsigned(n), size)
+
+  def right_pad_bytes(n, size) when is_integer(n),
+    do: right_pad_bytes(:binary.encode_unsigned(n), size)
 
   def right_pad_bytes(n, size) when size < byte_size(n), do: n
+
   def right_pad_bytes(n, size) do
     padding_size = (size - byte_size(n)) * EVM.byte_size()
-    n <> <<0:: size(padding_size)>>
+    n <> <<0::size(padding_size)>>
   end
 
   @doc """

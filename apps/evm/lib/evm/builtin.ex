@@ -7,15 +7,19 @@ defmodule EVM.Builtin do
   TODO: Implement and add doc tests.
   """
 
-  @spec run_ecrec(EVM.Gas.t, EVM.ExecEnv.t) :: {EVM.Gas.t, EVM.SubState.t, EVM.ExecEnv.t, EVM.VM.output}
+  @spec run_ecrec(EVM.Gas.t(), EVM.ExecEnv.t()) ::
+          {EVM.Gas.t(), EVM.SubState.t(), EVM.ExecEnv.t(), EVM.VM.output()}
   def run_ecrec(gas, exec_env), do: {gas, %EVM.SubState{}, exec_env, <<>>}
 
-  @spec run_sha256(EVM.Gas.t, EVM.ExecEnv.t) :: {EVM.Gas.t, EVM.SubState.t, EVM.ExecEnv.t, EVM.VM.output}
+  @spec run_sha256(EVM.Gas.t(), EVM.ExecEnv.t()) ::
+          {EVM.Gas.t(), EVM.SubState.t(), EVM.ExecEnv.t(), EVM.VM.output()}
   def run_sha256(gas, exec_env), do: {gas, %EVM.SubState{}, exec_env, <<>>}
 
-  @spec run_rip160(EVM.Gas.t, EVM.ExecEnv.t) :: {EVM.Gas.t, EVM.SubState.t, EVM.ExecEnv.t, EVM.VM.output}
+  @spec run_rip160(EVM.Gas.t(), EVM.ExecEnv.t()) ::
+          {EVM.Gas.t(), EVM.SubState.t(), EVM.ExecEnv.t(), EVM.VM.output()}
   def run_rip160(gas, exec_env), do: {gas, %EVM.SubState{}, exec_env, <<>>}
 
-  @spec run_id(EVM.Gas.t, EVM.ExecEnv.t) :: {EVM.Gas.t, EVM.SubState.t, EVM.ExecEnv.t, EVM.VM.output}
+  @spec run_id(EVM.Gas.t(), EVM.ExecEnv.t()) ::
+          {EVM.Gas.t(), EVM.SubState.t(), EVM.ExecEnv.t(), EVM.VM.output()}
   def run_id(gas, exec_env), do: {gas, %EVM.SubState{}, exec_env, <<>>}
 end

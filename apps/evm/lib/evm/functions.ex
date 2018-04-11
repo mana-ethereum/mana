@@ -41,7 +41,7 @@ defmodule EVM.Functions do
       iex> EVM.Functions.is_normal_halting?(%EVM.MachineState{stack: [1, 1], memory: <<0xabcd::16>>}, %EVM.ExecEnv{machine_code: <<EVM.Operation.encode(:return)>>})
       <<0xcd>>
   """
-  @spec is_normal_halting?(MachineState.t, ExecEnv.t) :: nil | binary()
+  @spec is_normal_halting?(MachineState.t(), ExecEnv.t()) :: nil | binary()
   def is_normal_halting?(machine_state, exec_env) do
     case MachineCode.current_operation(machine_state, exec_env).sym do
       :return -> h_return(machine_state)
@@ -51,7 +51,7 @@ defmodule EVM.Functions do
   end
 
   # Defined in Appendix H of the Yellow Paper
-  @spec h_return(MachineState.t) :: binary()
+  @spec h_return(MachineState.t()) :: binary()
   defp h_return(machine_state) do
     {[offset, length], _} = EVM.Stack.pop_n(machine_state.stack, 2)
 
@@ -95,27 +95,36 @@ defmodule EVM.Functions do
       iex> EVM.Functions.is_exception_halt?(%EVM.MachineState{program_counter: 0, gas: 0xffff, stack: (for _ <- 1..1024, do: 0x0)}, %EVM.ExecEnv{machine_code: <<EVM.Operation.encode(:push1)>>})
       {:halt, :stack_overflow}
   """
-  @spec is_exception_halt?(MachineState.t, ExecEnv.t) :: :continue | {:halt, String.t}
+  @spec is_exception_halt?(MachineState.t(), ExecEnv.t()) :: :continue | {:halt, String.t()}
   def is_exception_halt?(machine_state, exec_env) do
     operation = Operation.get_operation_at(exec_env.machine_code, machine_state.program_counter)
     operation_metadata = Operation.metadata(operation)
-    input_count = Map.get(operation_metadata || %{}, :input_count)   #dw
-    output_count = Map.get(operation_metadata || %{}, :output_count) #aw
-    inputs = if operation_metadata do
-      Operation.inputs(operation_metadata, machine_state)
-    end
+    # dw
+    input_count = Map.get(operation_metadata || %{}, :input_count)
+    # aw
+    output_count = Map.get(operation_metadata || %{}, :output_count)
+
+    inputs =
+      if operation_metadata do
+        Operation.inputs(operation_metadata, machine_state)
+      end
 
     cond do
       operation == nil || input_count == nil ->
         {:halt, :undefined_instruction}
+
       length(machine_state.stack) < input_count ->
         {:halt, :stack_underflow}
+
       Gas.cost(machine_state, exec_env) > machine_state.gas ->
         {:halt, :out_of_gas}
-      Stack.length(machine_state.stack) - input_count + output_count > @max_stack  ->
+
+      Stack.length(machine_state.stack) - input_count + output_count > @max_stack ->
         {:halt, :stack_overflow}
+
       is_invalid_jump_destination?(operation_metadata, inputs, exec_env.machine_code) ->
         {:halt, :invalid_jump_destination}
+
       true ->
         :continue
     end
@@ -126,10 +135,8 @@ defmodule EVM.Functions do
   end
 
   defp is_invalid_jump_destination?(%{sym: :jumpi}, [position, condition], machine_code) do
-    condition != 0  && not MachineCode.valid_jump_dest?(position, machine_code)
+    condition != 0 && not MachineCode.valid_jump_dest?(position, machine_code)
   end
 
-  defp is_invalid_jump_destination?(_operation, _inputs, _machine_code),
-    do: false
-
+  defp is_invalid_jump_destination?(_operation, _inputs, _machine_code), do: false
 end

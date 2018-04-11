@@ -3,16 +3,22 @@ defmodule EVM do
   Documentation for EVM.
   """
 
-  @type account :: %{                                  #σ[a]
-    :nonce => integer(),                               #σ[a]n
-    :balance => integer(),                             #σ[a]b
-    :storage => MerklePatriciaTree.Trie.t,             #σ[a]s
-    :code => binary(),                                 #σ[a]c
-  }
-  @type world_state :: %{                               # σ
-    binary() => account()
-  }
-  @type trie_root :: MerklePatriciaTree.Trie.root_hash
+  # σ[a]
+  @type account :: %{
+          # σ[a]n
+          :nonce => integer(),
+          # σ[a]b
+          :balance => integer(),
+          # σ[a]s
+          :storage => MerklePatriciaTree.Trie.t(),
+          # σ[a]c
+          :code => binary()
+        }
+  # σ
+  @type world_state :: %{
+          binary() => account()
+        }
+  @type trie_root :: MerklePatriciaTree.Trie.root_hash()
   @type val :: integer()
   @type address :: <<_::160>>
   @type hash :: <<_::256>>

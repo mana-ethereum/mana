@@ -7,5 +7,4 @@ defmodule EVM.Debugger.BreakpointTest do
 
     :ok
   end
-
 end

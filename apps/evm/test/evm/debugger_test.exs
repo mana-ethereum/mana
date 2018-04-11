@@ -7,5 +7,4 @@ defmodule EVM.DebuggerTest do
 
     :ok
   end
-
 end
