@@ -52,9 +52,10 @@ TODO: Add diagram or debug output
 
 ## Author
 
+Mason Fischer (@masonforest)
 Geoffrey Hayes (@hayesgm)
 Ayrat Badykov (@ayrat555)
 
 ## License
 
-HexPrefix is released under the MIT License. See the LICENSE file for further details.
+EVM is released under the MIT License. See the LICENSE file for further details.
