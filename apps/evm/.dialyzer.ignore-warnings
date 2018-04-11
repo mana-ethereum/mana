@@ -1,0 +1,24 @@
+# protocol warnings
+
+:0: Unknown function 'Elixir.EVM.Interface.AccountInterface.Atom':'__impl__'/1
+:0: Unknown function 'Elixir.EVM.Interface.AccountInterface.BitString':'__impl__'/1
+:0: Unknown function 'Elixir.EVM.Interface.AccountInterface.Float':'__impl__'/1
+:0: Unknown function 'Elixir.EVM.Interface.AccountInterface.Function':'__impl__'/1
+:0: Unknown function 'Elixir.EVM.Interface.AccountInterface.Integer':'__impl__'/1
+:0: Unknown function 'Elixir.EVM.Interface.AccountInterface.List':'__impl__'/1
+:0: Unknown function 'Elixir.EVM.Interface.AccountInterface.Map':'__impl__'/1
+:0: Unknown function 'Elixir.EVM.Interface.AccountInterface.PID':'__impl__'/1
+:0: Unknown function 'Elixir.EVM.Interface.AccountInterface.Port':'__impl__'/1
+:0: Unknown function 'Elixir.EVM.Interface.AccountInterface.Reference':'__impl__'/1
+:0: Unknown function 'Elixir.EVM.Interface.AccountInterface.Tuple':'__impl__'/1
+:0: Unknown function 'Elixir.EVM.Interface.BlockInterface.Atom':'__impl__'/1
+:0: Unknown function 'Elixir.EVM.Interface.BlockInterface.BitString':'__impl__'/1
+:0: Unknown function 'Elixir.EVM.Interface.BlockInterface.Float':'__impl__'/1
+:0: Unknown function 'Elixir.EVM.Interface.BlockInterface.Function':'__impl__'/1
+:0: Unknown function 'Elixir.EVM.Interface.BlockInterface.Integer':'__impl__'/1
+:0: Unknown function 'Elixir.EVM.Interface.BlockInterface.List':'__impl__'/1
+:0: Unknown function 'Elixir.EVM.Interface.BlockInterface.Map':'__impl__'/1
+:0: Unknown function 'Elixir.EVM.Interface.BlockInterface.PID':'__impl__'/1
+:0: Unknown function 'Elixir.EVM.Interface.BlockInterface.Port':'__impl__'/1
+:0: Unknown function 'Elixir.EVM.Interface.BlockInterface.Reference':'__impl__'/1
+:0: Unknown function 'Elixir.EVM.Interface.BlockInterface.Tuple':'__impl__'/1
