@@ -93,7 +93,7 @@ defmodule EVM.Helpers do
   def encode_signed(n) when n < 0, do: EVM.max_int() - abs(n)
   def encode_signed(n), do: n
 
-  @spec decode_signed(integer() | nil) :: EVM.val()
+  @spec decode_signed(integer() | nil) :: EVM.val() | nil
   def decode_signed(n) when is_nil(n), do: 0
 
   def decode_signed(n) when is_integer(n) do
@@ -179,7 +179,7 @@ defmodule EVM.Helpers do
       iex> EVM.Helpers.left_pad_bytes(<<1, 2, 3>>, 2)
       <<1, 2, 3>>
   """
-  @spec left_pad_bytes(binary() | integer(), integer()) :: integer()
+  @spec left_pad_bytes(binary() | integer(), integer()) :: binary()
   def left_pad_bytes(n, size \\ EVM.word_size())
 
   def left_pad_bytes(n, size) when is_integer(n),
@@ -204,7 +204,7 @@ defmodule EVM.Helpers do
       iex> EVM.Helpers.right_pad_bytes(<<1, 2, 3>>, 2)
       <<1, 2, 3>>
   """
-  @spec right_pad_bytes(binary() | integer(), integer()) :: integer()
+  @spec right_pad_bytes(binary() | integer(), integer()) :: binary()
   def right_pad_bytes(n, size \\ EVM.word_size())
 
   def right_pad_bytes(n, size) when is_integer(n),
@@ -220,7 +220,7 @@ defmodule EVM.Helpers do
   @doc """
   Take the last n bytes of a binary
   """
-  @spec take_n_last_bytes(binary(), integer()) :: integer()
+  @spec take_n_last_bytes(binary(), integer()) :: binary()
   def take_n_last_bytes(data, n) do
     length = byte_size(data)
 

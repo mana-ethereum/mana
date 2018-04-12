@@ -1,5 +1,6 @@
-%{"bunt": {:hex, :bunt, "0.2.0", "951c6e801e8b1d2cbe58ebbd3e616a869061ddadcc4863d0a2182541acae9a38", [:mix], [], "hexpm"},
-  "credo": {:hex, :credo, "0.8.4", "4e50acac058cf6292d6066e5b0d03da5e1483702e1ccde39abba385c9f03ead4", [:mix], [{:bunt, "~> 0.2.0", [hex: :bunt, repo: "hexpm", optional: false]}], "hexpm"},
+%{
+  "bunt": {:hex, :bunt, "0.2.0", "951c6e801e8b1d2cbe58ebbd3e616a869061ddadcc4863d0a2182541acae9a38", [:mix], [], "hexpm"},
+  "credo": {:hex, :credo, "0.9.1", "f021affa11b32a94dc2e807a6472ce0914289c9132f99644a97fc84432b202a1", [:mix], [{:bunt, "~> 0.2.0", [hex: :bunt, repo: "hexpm", optional: false]}, {:poison, ">= 0.0.0", [hex: :poison, repo: "hexpm", optional: false]}], "hexpm"},
   "dialyxir": {:hex, :dialyxir, "0.5.1", "b331b091720fd93e878137add264bac4f644e1ddae07a70bf7062c7862c4b952", [:mix], [], "hexpm"},
   "earmark": {:hex, :earmark, "1.2.3", "206eb2e2ac1a794aa5256f3982de7a76bf4579ff91cb28d0e17ea2c9491e46a4", [:mix], [], "hexpm"},
   "eleveldb": {:hex, :eleveldb, "2.2.20", "1fff63a5055bbf4bf821f797ef76065882b193f5e8095f95fcd9287187773b58", [:rebar3], [], "hexpm"},
@@ -9,4 +10,5 @@
   "hex_prefix": {:hex, :hex_prefix, "0.1.0", "e96b5cbb6ad8493196ce193726240023f5ce0ae0753118a19a5b43e2db0267ca", [:mix], [], "hexpm"},
   "keccakf1600": {:hex, :keccakf1600_orig, "2.0.0", "0a7217ddb3ee8220d449bbf7575ec39d4e967099f220a91e3dfca4dbaef91963", [:rebar3], [], "hexpm"},
   "merkle_patricia_tree": {:hex, :merkle_patricia_tree, "0.2.5", "cdbd2addf8fe46c5d6025dc76b31049c3d252c776b7ec01b0760f5142848e5b2", [:mix], [{:ex_rlp, "~> 0.2.0", [hex: :ex_rlp, repo: "hexpm", optional: false]}, {:exleveldb, "~> 0.11.1", [hex: :exleveldb, repo: "hexpm", optional: false]}, {:hex_prefix, "~> 0.1.0", [hex: :hex_prefix, repo: "hexpm", optional: false]}, {:keccakf1600, "~> 2.0.0", [hex: :keccakf1600_orig, repo: "hexpm", optional: false]}], "hexpm"},
-  "poison": {:hex, :poison, "3.1.0", "d9eb636610e096f86f25d9a46f35a9facac35609a7591b3be3326e99a0484665", [:mix], [], "hexpm"}}
+  "poison": {:hex, :poison, "3.1.0", "d9eb636610e096f86f25d9a46f35a9facac35609a7591b3be3326e99a0484665", [:mix], [], "hexpm"},
+}

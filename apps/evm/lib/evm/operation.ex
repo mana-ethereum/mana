@@ -284,7 +284,7 @@ defmodule EVM.Operation do
       [1, 2]
 
   """
-  @spec inputs(Stack.t(), Operation.t()) :: list(EVM.val())
+  @spec inputs(EVM.Operation.Metadata.t(), Operation.t()) :: list(EVM.val())
   def inputs(_stack, nil), do: []
 
   def inputs(operation, machine_state) do
@@ -341,7 +341,7 @@ defmodule EVM.Operation do
           MachineState.t(),
           SubState.t(),
           ExecEnv.t()
-        ) :: {EVM.world_state(), MachineState.t(), SubState.t(), ExecEnv.t()}
+        ) :: {MachineState.t(), SubState.t(), ExecEnv.t()}
   def merge_state(:noop, _operation, machine_state, sub_state, exec_env) do
     {machine_state, sub_state, exec_env}
   end

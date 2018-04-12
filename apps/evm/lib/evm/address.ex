@@ -31,7 +31,7 @@ defmodule EVM.Address do
   @doc """
   Returns an address given an address and a nonce.
   """
-  @spec new(integer(), integer()) :: binary()
+  @spec new(integer(), integer()) :: non_neg_integer()
   def new(address, nonce) do
     ExRLP.encode([address, nonce])
     |> :keccakf1600.sha3_256()

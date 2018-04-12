@@ -117,7 +117,7 @@ defmodule EVM.VM do
       {%EVM.MachineState{program_counter: 1, gas: 2, stack: [3]}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:add])}}
   """
   @spec cycle(MachineState.t(), SubState.t(), ExecEnv.t()) ::
-          {EVM.world_state(), MachineState.t(), SubState.t(), ExecEnv.t()}
+          {MachineState.t(), SubState.t(), ExecEnv.t()}
   def cycle(machine_state, sub_state, exec_env) do
     operation = MachineCode.current_operation(machine_state, exec_env)
     inputs = Operation.inputs(operation, machine_state)
