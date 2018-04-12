@@ -139,7 +139,7 @@ defmodule EVM.Debugger do
       iex> EVM.Debugger.Breakpoint.get_breakpoint(id) |> Map.put(:id, nil)
       %EVM.Debugger.Breakpoint{conditions: [address: <<188, 31, 252, 22, 32, 218, 20, 104, 98, 74, 89, 108, 184, 65, 211, 94, 107, 47, 31, 182>>], pc: :start}
   """
-  @spec break_on(keyword(Breakpoint.conditions())) :: Breakpoint.t()
+  @spec break_on(keyword(Breakpoint.conditions())) :: Breakpoint.id()
   def break_on(conditions) do
     Breakpoint.set_breakpoint(%Breakpoint{conditions: conditions, pc: :start})
   end
@@ -229,7 +229,7 @@ defmodule EVM.Debugger do
     )
   end
 
-  @spec print_current_instruction(MachineState.t(), ExecEnv.t(), integer(), integer()) :: any()
+  @spec print_current_instruction(ExecEnv.t(), MachineState.t(), integer(), integer()) :: any()
   defp print_current_instruction(
          exec_env,
          machine_state,
