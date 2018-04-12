@@ -6,6 +6,7 @@ defmodule EVM.Operation.System do
   alias EVM.Helpers
   alias EVM.Address
   alias EVM.Stack
+  alias EVM.Operation
 
   @doc """
   Create a new account with associated code.

@@ -1,4 +1,7 @@
 defmodule EVM.ProgramCounter do
+  alias EVM.MachineState
+  alias EVM.Operation.Metadata
+
   @moduledoc """
   Module for manipulating the program counter which keeps track
   of where we are in the contract code.
@@ -20,7 +23,7 @@ defmodule EVM.ProgramCounter do
       iex> EVM.ProgramCounter.next(7, EVM.Operation.metadata(:jumpi), [1, 0])
       8
   """
-  @spec next(integer(), Operation.Metadata.t(), list(EVM.val())) :: MachineState.t()
+  @spec next(integer(), Metadata.t(), list(EVM.val())) :: MachineState.t()
   def next(_current_position, %{sym: :jump}, [position]) do
     position
   end

@@ -293,7 +293,7 @@ defmodule EVM.Gas do
       222
 
   """
-  @spec operation_cost(atom(), list(EVM.val()), EVM.state(), MachineState.t()) :: t | nil
+  @spec operation_cost(atom(), list(EVM.val()), list(EVM.val()), MachineState.t()) :: t | nil
   def operation_cost(operation \\ nil, inputs \\ nil, machine_state \\ nil, exec_env \\ nil)
 
   def operation_cost(:exp, [_base, exponent], _machine_state, _exec_env) do

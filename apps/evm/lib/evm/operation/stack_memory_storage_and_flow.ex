@@ -4,6 +4,7 @@ defmodule EVM.Operation.StackMemoryStorageAndFlow do
   alias EVM.Stack
   alias EVM.ExecEnv
   alias MathHelper
+  alias EVM.Operation
   use Bitwise
 
   @doc """

@@ -8,9 +8,10 @@ defmodule EVM.MachineState do
 
   alias EVM.Gas
   alias EVM.Stack
-  alias EVM.Operation
   alias EVM.MachineState
   alias EVM.ProgramCounter
+  alias EVM.ExecEnv
+  alias EVM.Operation.Metadata
 
             # g
   defstruct gas: nil,
@@ -109,7 +110,7 @@ defmodule EVM.MachineState do
       iex> EVM.MachineState.move_program_counter(%EVM.MachineState{program_counter: 9}, EVM.Operation.metadata(:add), [1, 1])
       %EVM.MachineState{program_counter: 10}
   """
-  @spec move_program_counter(MachineState.t(), Operation.Metadata.t(), list(EVM.val())) ::
+  @spec move_program_counter(MachineState.t(), Metadata.t(), list(EVM.val())) ::
           MachineState.t()
   def move_program_counter(machine_state, operation_metadata, inputs) do
     next_postion = ProgramCounter.next(machine_state.program_counter, operation_metadata, inputs)

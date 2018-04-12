@@ -92,7 +92,7 @@ defmodule EVM.ExecEnv do
     }
   end
 
-  @spec put_storage(ExecEnv.t(), integer(), integer()) :: ExecEnv.t()
+  @spec put_storage(t(), integer(), integer()) :: t()
   def put_storage(
         exec_env = %{account_interface: account_interface, address: address},
         key,
@@ -105,13 +105,13 @@ defmodule EVM.ExecEnv do
     Map.put(exec_env, :account_interface, account_interface)
   end
 
-  @spec get_storage(ExecEnv.t(), integer()) ::
+  @spec get_storage(t(), integer()) ::
           {:ok, integer()} | :account_not_found | :key_not_found
   def get_storage(_exec_env = %{account_interface: account_interface, address: address}, key) do
     AccountInterface.get_storage(account_interface, address, key)
   end
 
-  @spec suicide_account(ExecEnv.t()) :: ExecEnv.t()
+  @spec suicide_account(t()) :: t()
   def suicide_account(exec_env = %{account_interface: account_interface, address: address}) do
     account_interface =
       account_interface

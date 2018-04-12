@@ -1,4 +1,6 @@
 defmodule EVM.Operation.Duplication do
+  alias EVM.Operation
+
   @doc """
   Duplicate stack item n-times.
 

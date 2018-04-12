@@ -1,4 +1,6 @@
 defmodule EVM.Operation.Exchange do
+  alias EVM.Operation
+
   @doc """
   Swaps the first and last values on the stack.
 

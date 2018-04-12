@@ -187,7 +187,7 @@ defmodule EVM.Debugger.Breakpoint do
       iex> breakpoints |> Enum.member?(breakpoint)
       true
   """
-  @spec get_breakpoints() :: [Breakpoint.t()]
+  @spec get_breakpoints() :: [t()]
   def get_breakpoints() do
     :ets.foldl(
       fn {_id, breakpoint}, acc ->
@@ -207,7 +207,7 @@ defmodule EVM.Debugger.Breakpoint do
       iex> EVM.Debugger.Breakpoint.disable_breakpoint(id) |> Map.put(:id, nil)
       %EVM.Debugger.Breakpoint{conditions: [address: <<1::160>>], enabled: false}
   """
-  @spec disable_breakpoint(id) :: Breakpoint.t()
+  @spec disable_breakpoint(id) :: t()
   def disable_breakpoint(breakpoint_id) do
     update_breakpoint(breakpoint_id, fn breakpoint ->
       %{breakpoint | enabled: false}
@@ -223,7 +223,7 @@ defmodule EVM.Debugger.Breakpoint do
       iex> EVM.Debugger.Breakpoint.enable_breakpoint(id) |> Map.put(:id, nil)
       %EVM.Debugger.Breakpoint{conditions: [address: <<1::160>>], enabled: true}
   """
-  @spec enable_breakpoint(id) :: Breakpoint.t()
+  @spec enable_breakpoint(id) :: t()
   def enable_breakpoint(breakpoint_id) do
     update_breakpoint(breakpoint_id, fn breakpoint ->
       %{breakpoint | enabled: true}
@@ -240,7 +240,7 @@ defmodule EVM.Debugger.Breakpoint do
       iex> EVM.Debugger.Breakpoint.set_next(id) |> Map.put(:id, nil)
       %EVM.Debugger.Breakpoint{conditions: [address: <<1::160>>], pc: :next}
   """
-  @spec set_next(id) :: Breakpoint.t()
+  @spec set_next(id) :: t()
   def set_next(breakpoint_id) do
     update_breakpoint(breakpoint_id, fn breakpoint ->
       %{breakpoint | pc: :next}
@@ -264,7 +264,7 @@ defmodule EVM.Debugger.Breakpoint do
       iex> EVM.Debugger.Breakpoint.clear_pc_if_one_time_break(id) |> Map.put(:id, nil)
       %EVM.Debugger.Breakpoint{conditions: [address: <<1::160>>], pc: 5}
   """
-  @spec clear_pc_if_one_time_break(id) :: Breakpoint.t()
+  @spec clear_pc_if_one_time_break(id) :: t()
   def clear_pc_if_one_time_break(breakpoint_id) do
     update_breakpoint(breakpoint_id, fn breakpoint ->
       if breakpoint.pc in [:start, :next] do

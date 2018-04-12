@@ -10,6 +10,7 @@ defmodule EVM.Operation do
   alias EVM.MachineState
   alias EVM.Stack
   alias EVM.SubState
+  alias EVM.Operation
   alias EVM.Operation.Metadata.StopAndArithmetic, as: StopAndArithmeticMetadata
   alias EVM.Operation.Metadata.ComparisonAndBitwiseLogic, as: ComparisonAndBitwiseLogicMetadata
   alias EVM.Operation.Metadata.SHA3, as: SHA3Metadata
@@ -35,11 +36,13 @@ defmodule EVM.Operation do
           optional(:machine_state) => MachineState.t(),
           optional(:sub_state) => SubState.t(),
           optional(:exec_env) => ExecEnv.t(),
-          optional(:block_interface) => EVM.BlockInterface.t(),
-          optional(:contract_interface) => EVM.ContractInterface.t(),
-          optional(:account_interface) => EVM.AccountInterface.t()
+          optional(:block_interface) => EVM.Interface.BlockInterface.t(),
+          # EVM.Interface.ContractInterface.t()
+          optional(:contract_interface) => any(),
+          optional(:account_interface) => EVM.Interface.AccountInterface.t()
         }
   @type noop :: :noop
+  @type op_result :: any()
 
   @operations StopAndArithmeticMetadata.operations() ++
                 ComparisonAndBitwiseLogicMetadata.operations() ++
@@ -238,7 +241,7 @@ defmodule EVM.Operation do
     )
   end
 
-  @spec apply_to_group_module(operation, list(EVM.val())) :: Operation.op_result()
+  @spec apply_to_group_module(operation, list(EVM.val())) :: op_result()
   defp apply_to_group_module(operation, args) do
     %EVM.Operation.Metadata{fun: fun, group: group} = metadata(operation)
     method = fun || operation
@@ -246,7 +249,7 @@ defmodule EVM.Operation do
     apply(group_to_module(group), method, args)
   end
 
-  @spec group_to_module(atom()) :: Operation.op_result()
+  @spec group_to_module(atom()) :: op_result()
   defp group_to_module(group),
     do:
       ("Elixir.EVM.Operation." <> Macro.camelize(Atom.to_string(group)))
@@ -265,8 +268,7 @@ defmodule EVM.Operation do
       %{stack: [1, 2]}
 
   """
-  @spec normalize_op_result(EVM.val() | list(EVM.val()) | Operation.op_result(), EVM.stack()) ::
-          Operation.op_result()
+  @spec normalize_op_result(EVM.val() | list(EVM.val()) | op_result(), EVM.Stack.t()) :: op_result()
   def normalize_op_result(op_result, updated_stack) do
     if is_integer(op_result) || is_list(op_result) || is_binary(op_result) do
       %{stack: Stack.push(updated_stack, Helpers.encode_val(op_result))}
@@ -284,7 +286,7 @@ defmodule EVM.Operation do
       [1, 2]
 
   """
-  @spec inputs(EVM.Operation.Metadata.t(), Operation.t()) :: list(EVM.val())
+  @spec inputs(EVM.Operation.Metadata.t(), EVM.MachineState.t()) :: list(EVM.val())
   def inputs(_stack, nil), do: []
 
   def inputs(operation, machine_state) do
@@ -336,7 +338,7 @@ defmodule EVM.Operation do
       {%EVM.MachineState{program_counter: 5, stack: [4, 5]}, %EVM.SubState{}, %EVM.ExecEnv{}}
   """
   @spec merge_state(
-          EVM.Operation.Impl.op_result(),
+          op_result(),
           operation,
           MachineState.t(),
           SubState.t(),

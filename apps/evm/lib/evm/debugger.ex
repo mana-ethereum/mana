@@ -6,6 +6,9 @@ defmodule EVM.Debugger do
 
   alias EVM.Debugger.Breakpoint
   alias EVM.Debugger.Command
+  alias EVM.SubState
+  alias EVM.ExecEnv
+  alias EVM.MachineState
 
   @commands [
     %Command{
@@ -161,7 +164,7 @@ defmodule EVM.Debugger do
       iex> EVM.Debugger.is_breakpoint?(machine_state, sub_state, exec_env)
       :continue
   """
-  @spec is_breakpoint?(MachineState.t(), SubState.t(), ExecEnv.t()) :: :continue | Breakpoint.t()
+  @spec is_breakpoint?(MachineState.t(), SubState.t(), EVM.ExecEnv.t()) :: :continue | Breakpoint.t()
   def is_breakpoint?(machine_state, sub_state, exec_env) do
     Enum.find(Breakpoint.get_breakpoints(), :continue, fn breakpoint ->
       Breakpoint.matches?(breakpoint, machine_state, sub_state, exec_env)
