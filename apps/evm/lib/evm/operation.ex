@@ -10,7 +10,6 @@ defmodule EVM.Operation do
   alias EVM.MachineState
   alias EVM.Stack
   alias EVM.SubState
-  alias EVM.Operation
   alias EVM.Operation.Metadata.StopAndArithmetic, as: StopAndArithmeticMetadata
   alias EVM.Operation.Metadata.ComparisonAndBitwiseLogic, as: ComparisonAndBitwiseLogicMetadata
   alias EVM.Operation.Metadata.SHA3, as: SHA3Metadata
@@ -268,7 +267,8 @@ defmodule EVM.Operation do
       %{stack: [1, 2]}
 
   """
-  @spec normalize_op_result(EVM.val() | list(EVM.val()) | op_result(), EVM.Stack.t()) :: op_result()
+  @spec normalize_op_result(EVM.val() | list(EVM.val()) | op_result(), EVM.Stack.t()) ::
+          op_result()
   def normalize_op_result(op_result, updated_stack) do
     if is_integer(op_result) || is_list(op_result) || is_binary(op_result) do
       %{stack: Stack.push(updated_stack, Helpers.encode_val(op_result))}

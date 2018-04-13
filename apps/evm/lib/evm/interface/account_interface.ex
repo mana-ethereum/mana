@@ -1,5 +1,6 @@
 defprotocol EVM.Interface.AccountInterface do
   alias Block.Header
+
   @moduledoc """
   Interface for interacting with accounts.
   """

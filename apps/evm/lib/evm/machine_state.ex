@@ -82,7 +82,7 @@ defmodule EVM.MachineState do
       iex> EVM.MachineState.pop_n(%EVM.MachineState{stack: [1, 2, 3]}, 2)
       {[1 ,2], %EVM.MachineState{stack: [3]}}
   """
-  @spec pop_n(MachineState.t(), integer()) :: {MachineState.t(), list(EVM.val())}
+  @spec pop_n(MachineState.t(), integer()) :: {list(EVM.val()), MachineState.t()}
   def pop_n(machine_state, n) do
     {values, stack} = Stack.pop_n(machine_state.stack, n)
     machine_state = %{machine_state | stack: stack}
@@ -110,8 +110,7 @@ defmodule EVM.MachineState do
       iex> EVM.MachineState.move_program_counter(%EVM.MachineState{program_counter: 9}, EVM.Operation.metadata(:add), [1, 1])
       %EVM.MachineState{program_counter: 10}
   """
-  @spec move_program_counter(MachineState.t(), Metadata.t(), list(EVM.val())) ::
-          MachineState.t()
+  @spec move_program_counter(MachineState.t(), Metadata.t(), list(EVM.val())) :: MachineState.t()
   def move_program_counter(machine_state, operation_metadata, inputs) do
     next_postion = ProgramCounter.next(machine_state.program_counter, operation_metadata, inputs)
 
