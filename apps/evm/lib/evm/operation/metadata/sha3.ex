@@ -6,8 +6,8 @@ defmodule EVM.Operation.Metadata.SHA3 do
       sym: :sha3,
       input_count: 2,
       output_count: 1,
-      group: :sha3,
-    },
+      group: :sha3
+    }
   ]
 
   def operations, do: @operations

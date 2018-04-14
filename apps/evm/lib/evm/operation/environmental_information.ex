@@ -13,7 +13,7 @@ defmodule EVM.Operation.EnvironmentalInformation do
       iex> EVM.Operation.EnvironmentalInformation.address([], %{exec_env: %EVM.ExecEnv{address: <<01, 00>>}})
       <<1, 0>>
   """
-  @spec address(Operation.stack_args, Operation.vm_map) :: Operation.op_result
+  @spec address(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def address([], %{exec_env: exec_env}) do
     exec_env.address
   end
@@ -38,18 +38,20 @@ defmodule EVM.Operation.EnvironmentalInformation do
       iex> EVM.Operation.EnvironmentalInformation.balance([123], %{state: state, exec_env: exec_env, machine_state: %EVM.MachineState{}}).machine_state.stack
       [0]
   """
-  @spec balance(Operation.stack_args, Operation.vm_map) :: Operation.op_result
+  @spec balance(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def balance([address], %{exec_env: exec_env, machine_state: machine_state}) do
     wrapped_address = Helpers.wrap_address(address)
 
-    balance = case AccountInterface.get_account_balance(exec_env.account_interface, wrapped_address) do
-      nil -> 0
-      balance -> balance
-    end
+    balance =
+      case AccountInterface.get_account_balance(exec_env.account_interface, wrapped_address) do
+        nil -> 0
+        balance -> balance
+      end
+
     machine_state = %{machine_state | stack: Stack.push(machine_state.stack, balance)}
 
     %{
-      machine_state: machine_state,
+      machine_state: machine_state
     }
   end
 
@@ -64,7 +66,7 @@ defmodule EVM.Operation.EnvironmentalInformation do
       iex> EVM.Operation.EnvironmentalInformation.origin([], %{exec_env: exec_env})
       <<1::160>>
   """
-  @spec origin(Operation.stack_args, Operation.vm_map) :: Operation.op_result
+  @spec origin(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def origin([], %{exec_env: exec_env}) do
     exec_env.originator
   end
@@ -80,7 +82,7 @@ defmodule EVM.Operation.EnvironmentalInformation do
       iex> EVM.Operation.EnvironmentalInformation.caller([], %{exec_env: exec_env, machine_state: %EVM.MachineState{}})
       <<2::160>>
   """
-  @spec caller(Operation.stack_args, Operation.vm_map) :: Operation.op_result
+  @spec caller(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def caller([], %{exec_env: exec_env}) do
     exec_env.sender
   end
@@ -94,7 +96,7 @@ defmodule EVM.Operation.EnvironmentalInformation do
       iex> EVM.Operation.EnvironmentalInformation.callvalue([], %{exec_env: exec_env})
       1_000
   """
-  @spec callvalue(Operation.stack_args, Operation.vm_map) :: Operation.op_result
+  @spec callvalue(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def callvalue([], %{exec_env: exec_env}) do
     exec_env.value_in_wei
   end
@@ -115,9 +117,9 @@ defmodule EVM.Operation.EnvironmentalInformation do
       iex> EVM.Operation.EnvironmentalInformation.calldataload([100], %{exec_env: %{data: (for _ <- 1..3, into: <<>>, do: <<1>>)}})
       0
   """
-  @spec calldataload(Operation.stack_args, Operation.vm_map) :: Operation.op_result
+  @spec calldataload(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def calldataload([s0], %{exec_env: %{data: data}}) do
-    Helpers.read_zero_padded(data, s0, 32) |> Helpers.decode_signed
+    Helpers.read_zero_padded(data, s0, 32) |> Helpers.decode_signed()
   end
 
   @doc """
@@ -129,7 +131,7 @@ defmodule EVM.Operation.EnvironmentalInformation do
       iex> EVM.Operation.EnvironmentalInformation.calldatasize([], %{exec_env: exec_env})
       11
   """
-  @spec calldatasize(Operation.stack_args, Operation.vm_map) :: Operation.op_result
+  @spec calldatasize(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def calldatasize([], %{exec_env: exec_env}) do
     exec_env.data |> byte_size
   end
@@ -145,8 +147,11 @@ defmodule EVM.Operation.EnvironmentalInformation do
       iex> EVM.Operation.EnvironmentalInformation.calldatacopy([0, 0, 1], %{exec_env: %EVM.ExecEnv{data: code}, machine_state: %EVM.MachineState{}})
       %{machine_state: %EVM.MachineState{active_words: 1, gas: nil, memory: <<54>> <> <<0::248>>, program_counter: 0, previously_active_words: 0, stack: []}}
   """
-  @spec calldatacopy(Operation.stack_args, Operation.vm_map) :: Operation.op_result
-  def calldatacopy([memory_start, call_data_start, length], %{exec_env: exec_env, machine_state: machine_state}) do
+  @spec calldatacopy(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
+  def calldatacopy([memory_start, call_data_start, length], %{
+        exec_env: exec_env,
+        machine_state: machine_state
+      }) do
     if length == 0 do
       0
     else
@@ -165,7 +170,7 @@ defmodule EVM.Operation.EnvironmentalInformation do
       iex> EVM.Operation.EnvironmentalInformation.codesize([], %{exec_env: %{machine_code: <<0::256>>}})
       32
   """
-  @spec codesize(Operation.stack_args, Operation.vm_map) :: Operation.op_result
+  @spec codesize(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def codesize(_args, %{exec_env: exec_env}) do
     byte_size(exec_env.machine_code)
   end
@@ -179,8 +184,11 @@ defmodule EVM.Operation.EnvironmentalInformation do
       iex> EVM.Operation.EnvironmentalInformation.codecopy([0, 0, 1], %{exec_env: %EVM.ExecEnv{machine_code: code}, machine_state: %EVM.MachineState{}})
       %{machine_state: %EVM.MachineState{active_words: 1, gas: nil, memory: <<54>> <> <<0::248>>, program_counter: 0, previously_active_words: 0, stack: []}}
   """
-  @spec codecopy(Operation.stack_args, Operation.vm_map) :: Operation.op_result
-  def codecopy([mem_offset, code_offset, length], %{exec_env: exec_env, machine_state: machine_state}) do
+  @spec codecopy(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
+  def codecopy([mem_offset, code_offset, length], %{
+        exec_env: exec_env,
+        machine_state: machine_state
+      }) do
     if length == 0 do
       0
     else
@@ -199,7 +207,7 @@ defmodule EVM.Operation.EnvironmentalInformation do
       iex> EVM.Operation.EnvironmentalInformation.gasprice([], %{exec_env: %{gas_price: 98}})
       98
   """
-  @spec gasprice(Operation.stack_args, Operation.vm_map) :: Operation.op_result
+  @spec gasprice(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def gasprice(_args, %{exec_env: exec_env}) do
     exec_env.gas_price
   end
@@ -216,23 +224,24 @@ defmodule EVM.Operation.EnvironmentalInformation do
       iex> EVM.Operation.EnvironmentalInformation.extcodesize([0x01], %{exec_env: exec_env, state: state, machine_state: %EVM.MachineState{}}).machine_state.stack
       [4]
   """
-  @spec extcodesize(Operation.stack_args, Operation.vm_map) :: Operation.op_result
+  @spec extcodesize(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def extcodesize([address], %{exec_env: exec_env, machine_state: machine_state}) do
     wrapped_address = Helpers.wrap_address(address)
 
     account_code = AccountInterface.get_account_code(exec_env.account_interface, wrapped_address)
 
-    extcodesize = if account_code do
-      byte_size(account_code)
-    else
-      0
-    end
+    extcodesize =
+      if account_code do
+        byte_size(account_code)
+      else
+        0
+      end
+
     machine_state = %{machine_state | stack: Stack.push(machine_state.stack, extcodesize)}
 
     %{
-      machine_state: machine_state,
+      machine_state: machine_state
     }
-
   end
 
   @doc """
@@ -248,14 +257,18 @@ defmodule EVM.Operation.EnvironmentalInformation do
       iex> EVM.Operation.EnvironmentalInformation.extcodecopy([<<0::160>>, 0, 0, 1], %{exec_env: %EVM.ExecEnv{account_interface: account_interface}, machine_state: %EVM.MachineState{}, state: state})[:machine_state]
       %EVM.MachineState{active_words: 1, gas: nil, memory: <<54>> <> <<0::248>>, program_counter: 0, previously_active_words: 0, stack: []}
   """
-  @spec extcodecopy(Operation.stack_args, Operation.vm_map) :: Operation.op_result
-  def extcodecopy([address, code_offset, mem_offset, length], %{machine_state: machine_state, exec_env: exec_env}) do
-    if length == 0 || (length + mem_offset > EVM.max_int()) do
+  @spec extcodecopy(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
+  def extcodecopy([address, code_offset, mem_offset, length], %{
+        machine_state: machine_state,
+        exec_env: exec_env
+      }) do
+    if length == 0 || length + mem_offset > EVM.max_int() do
       0
     else
       wrapped_address = Helpers.wrap_address(address)
 
-      account_code = AccountInterface.get_account_code(exec_env.account_interface, wrapped_address)
+      account_code =
+        AccountInterface.get_account_code(exec_env.account_interface, wrapped_address)
 
       data = EVM.Memory.read_zeroed_memory(account_code, code_offset, length)
       machine_state = EVM.Memory.write(machine_state, mem_offset, Helpers.right_pad_bytes(data))
@@ -263,5 +276,4 @@ defmodule EVM.Operation.EnvironmentalInformation do
       %{machine_state: machine_state}
     end
   end
-
 end

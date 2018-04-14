@@ -24,18 +24,18 @@ defmodule EVM.Address do
   @spec new(integer()) :: binary()
   def new(address) do
     address
-      |> :binary.encode_unsigned
-      |>  EVM.Helpers.left_pad_bytes(@size)
+    |> :binary.encode_unsigned()
+    |> EVM.Helpers.left_pad_bytes(@size)
   end
 
   @doc """
   Returns an address given an address and a nonce.
   """
-  @spec new(integer(), integer()) :: binary()
+  @spec new(integer(), integer()) :: non_neg_integer()
   def new(address, nonce) do
     ExRLP.encode([address, nonce])
-      |> :keccakf1600.sha3_256()
-      |> EVM.Helpers.take_n_last_bytes(@size)
-      |> :binary.decode_unsigned
+    |> :keccakf1600.sha3_256()
+    |> EVM.Helpers.take_n_last_bytes(@size)
+    |> :binary.decode_unsigned()
   end
 end

@@ -29,7 +29,7 @@ defmodule EVM.Memory do
       iex> EVM.Memory.read(%EVM.MachineState{memory: <<1::256>>, active_words: 0}, 0, 35)
       {<<1::256, 0::24>>, %EVM.MachineState{memory: <<1::256>>, active_words: 2}}
   """
-  @spec read(MachineState.t, EVM.val, EVM.val) :: {binary(), MachineState.t}
+  @spec read(MachineState.t(), EVM.val(), EVM.val()) :: {binary(), MachineState.t()}
   def read(machine_state, offset, bytes \\ EVM.word_size()) do
     data = read_zeroed_memory(machine_state.memory, offset, bytes)
 
@@ -67,31 +67,38 @@ defmodule EVM.Memory do
       iex> EVM.Memory.write(%EVM.MachineState{memory: <<1, 1, 1>>, active_words: 0}, 5, <<1::80>>)
       %EVM.MachineState{memory: <<1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1>>, active_words: 1}
   """
-  @spec write(MachineState.t, EVM.val, binary(), integer()) :: MachineState.t
+  @spec write(MachineState.t(), EVM.val(), binary() | integer(), integer() | nil) ::
+          MachineState.t()
   def write(machine_state, offset_bytes, original_data, size \\ nil)
-  def write(machine_state, offset_bytes, data, size) when is_integer(data), do:
-    write(machine_state, offset_bytes, :binary.encode_unsigned(data), size)
-  def write(machine_state=%MachineState{}, offset_bytes, original_data, size) do
-    data = if size do
-      original_data
-        |> :binary.decode_unsigned
+
+  def write(machine_state, offset_bytes, data, size) when is_integer(data),
+    do: write(machine_state, offset_bytes, :binary.encode_unsigned(data), size)
+
+  def write(machine_state = %MachineState{}, offset_bytes, original_data, size) do
+    data =
+      if size do
+        original_data
+        |> :binary.decode_unsigned()
         |> rem(size * EVM.word_size())
-        |> :binary.encode_unsigned
-    else
-      original_data
-    end
+        |> :binary.encode_unsigned()
+      else
+        original_data
+      end
+
     memory_size = byte_size(machine_state.memory)
     data_size = byte_size(data)
     final_pos = offset_bytes + data_size
-    padding_bits = ( max(final_pos - memory_size, 0) ) * 8
+    padding_bits = max(final_pos - memory_size, 0) * 8
     final_memory_byte = max(memory_size - final_pos, 0)
 
     memory = machine_state.memory <> <<0::size(padding_bits)>>
 
-    updated_memory = :binary.part(memory, 0, offset_bytes) <> data <> :binary.part(memory, final_pos, final_memory_byte)
+    updated_memory =
+      :binary.part(memory, 0, offset_bytes) <>
+        data <> :binary.part(memory, final_pos, final_memory_byte)
 
-    %{machine_state | memory: updated_memory }
-      |> MachineState.maybe_set_active_words(get_active_words(offset_bytes + byte_size(data)))
+    %{machine_state | memory: updated_memory}
+    |> MachineState.maybe_set_active_words(get_active_words(offset_bytes + byte_size(data)))
   end
 
   @doc """
@@ -112,20 +119,22 @@ defmodule EVM.Memory do
       iex> EVM.Memory.read_zeroed_memory(<<16, 17, 18, 19>>, 100, 1)
       <<0>>
   """
-  @spec read_zeroed_memory(binary(), EVM.val, EVM.val) :: binary()
-  def read_zeroed_memory(memory, offset, bytes) when is_integer(memory), do:
-    read_zeroed_memory(:binary.encode_unsigned(memory), offset, bytes)
+  @spec read_zeroed_memory(binary(), EVM.val(), EVM.val()) :: binary()
+  def read_zeroed_memory(memory, offset, bytes) when is_integer(memory),
+    do: read_zeroed_memory(:binary.encode_unsigned(memory), offset, bytes)
+
   def read_zeroed_memory(memory, offset, bytes) do
     cond do
       memory == nil || offset > byte_size(memory) ->
         # We're totally out of memory, let's just drop zeros
         bytes_in_bits = bytes * 8
         <<0::size(bytes_in_bits)>>
+
       true ->
         memory_size = byte_size(memory)
         final_pos = offset + bytes
         memory_bytes_final_pos = min(final_pos, memory_size)
-        padding = ( final_pos - memory_bytes_final_pos ) * 8
+        padding = (final_pos - memory_bytes_final_pos) * 8
 
         :binary.part(memory, offset, memory_bytes_final_pos - offset) <> <<0::size(padding)>>
     end
@@ -147,7 +156,7 @@ defmodule EVM.Memory do
   """
   def get_active_words(bytes) do
     # note: round has no effect due to ceil, just being used for float to int conversion
-    :math.ceil( bytes / 32 ) |> round
+    :math.ceil(bytes / 32) |> round
   end
 
   @doc """
@@ -158,6 +167,12 @@ defmodule EVM.Memory do
   you might see `μ'_i` in the Yellow Paper.
   """
 
-  @spec active_words_after(EVM.Operation.instruction, EVM.state, EVM.MachineState.t, EVM.ExecEnv.t) :: integer()
-  def active_words_after(_instruction, _state, machine_state, _exec_env), do: machine_state.active_words
+  @spec active_words_after(
+          EVM.Operation.operation(),
+          list(EVM.val()),
+          EVM.MachineState.t(),
+          EVM.ExecEnv.t()
+        ) :: integer()
+  def active_words_after(_instruction, _state, machine_state, _exec_env),
+    do: machine_state.active_words
 end

@@ -14,7 +14,7 @@ defmodule EVM.Operation.StopAndArithmetic do
       iex> EVM.Operation.StopAndArithmetic.stop([], %{})
       :noop
   """
-  @spec stop(Operation.stack_args, Operation.vm_map) :: Operation.noop
+  @spec stop(Operation.stack_args(), Operation.vm_map()) :: Operation.noop()
   def stop([], %{}) do
     :noop
   end
@@ -35,7 +35,7 @@ defmodule EVM.Operation.StopAndArithmetic do
       iex> EVM.Operation.StopAndArithmetic.add([0, 0], %{})
       0
   """
-  @spec add(Operation.stack_args, Operation.vm_map) :: EVM.val
+  @spec add(Operation.stack_args(), Operation.vm_map()) :: EVM.val()
   def add([s0, s1], _), do: s0 + s1
 
   @doc """
@@ -49,7 +49,7 @@ defmodule EVM.Operation.StopAndArithmetic do
       iex> EVM.Operation.StopAndArithmetic.mul([5, -2], %{})
       -10
   """
-  @spec mul(Operation.stack_args, Operation.vm_map) :: EVM.val
+  @spec mul(Operation.stack_args(), Operation.vm_map()) :: EVM.val()
   def mul([s0, s1], _), do: s0 * s1
 
   @doc """
@@ -63,7 +63,7 @@ defmodule EVM.Operation.StopAndArithmetic do
       iex> EVM.Operation.StopAndArithmetic.sub([-1, 5], %{})
       -6
   """
-  @spec sub(Operation.stack_args, Operation.vm_map) :: EVM.val
+  @spec sub(Operation.stack_args(), Operation.vm_map()) :: EVM.val()
   def sub([s0, s1], _), do: s0 - s1
 
   @doc """
@@ -86,31 +86,35 @@ defmodule EVM.Operation.StopAndArithmetic do
   @doc """
   Signed integer division operation (truncated).
   """
-  @spec sdiv(Operation.stack_args, Operation.vm_map) :: EVM.val
+  @spec sdiv(Operation.stack_args(), Operation.vm_map()) :: EVM.val()
   def sdiv([s0, s1], _) do
     case Helpers.decode_signed(s1) do
       0 ->
-          0
+        0
+
       1 ->
         s0
+
       -1 ->
         0 - Helpers.decode_signed(s0)
+
       _ ->
-        MathHelper.round_int((Helpers.decode_signed(s0) / Helpers.decode_signed(s1)))
+        MathHelper.round_int(Helpers.decode_signed(s0) / Helpers.decode_signed(s1))
     end
   end
 
   @doc """
   Modulo remainder operation.
   """
-  @spec mod(Operation.stack_args, Operation.vm_map) :: EVM.val
-  def mod([s0, s1], _), do: if (s1 == 0), do: 0, else: rem(s0, s1)
+  @spec mod(Operation.stack_args(), Operation.vm_map()) :: EVM.val()
+  def mod([s0, s1], _), do: if(s1 == 0, do: 0, else: rem(s0, s1))
 
   @doc """
   Signed modulo remainder operation.
   """
-  @spec smod(Operation.stack_args, Operation.vm_map) :: EVM.val
+  @spec smod(Operation.stack_args(), Operation.vm_map()) :: EVM.val()
   def smod([_, s1], _) when s1 == 0, do: 0
+
   def smod([s0, s1], _) do
     rem(Helpers.decode_signed(s0), Helpers.decode_signed(s1))
   end
@@ -118,14 +122,14 @@ defmodule EVM.Operation.StopAndArithmetic do
   @doc """
   Modulo addition operation.
   """
-  @spec addmod(Operation.stack_args, Operation.vm_map) :: EVM.val
+  @spec addmod(Operation.stack_args(), Operation.vm_map()) :: EVM.val()
   def addmod([_, _, s2], _) when s2 == 0, do: 0
   def addmod([s0, s1, s2], _), do: rem(s0 + s1, s2)
 
   @doc """
   Modulo multiplication operation.
   """
-  @spec mulmod(Operation.stack_args, Operation.vm_map) :: EVM.val
+  @spec mulmod(Operation.stack_args(), Operation.vm_map()) :: EVM.val()
   def mulmod([_, _, s2], _) when s2 == 0, do: 0
   def mulmod([s0, s1, s2], _), do: rem(s0 * s1, s2)
 
@@ -137,22 +141,23 @@ defmodule EVM.Operation.StopAndArithmetic do
       iex> EVM.Operation.StopAndArithmetic.exp([2, 3], %{})
       8
   """
-  @spec exp(Operation.stack_args, Operation.vm_map) :: EVM.val
+  @spec exp(Operation.stack_args(), Operation.vm_map()) :: EVM.val()
   def exp([s0, s1], _) do
     :crypto.mod_pow(s0, s1, EVM.max_int())
-      |> :binary.decode_unsigned
+    |> :binary.decode_unsigned()
   end
 
   @doc """
   Extend length of two’s complement signed integer.
   """
-  @spec signextend(Operation.stack_args, Operation.vm_map) :: EVM.val
+  @spec signextend(Operation.stack_args(), Operation.vm_map()) :: EVM.val()
   def signextend([s0, s1], _) when s0 > 31, do: s1
+
   def signextend([s0, s1], _) do
-    if (Helpers.bit_at(s1, Helpers.bit_position(s0)) == 1) do
+    if Helpers.bit_at(s1, Helpers.bit_position(s0)) == 1 do
       bor(s1, EVM.max_int() - (1 <<< Helpers.bit_position(s0)))
     else
-      band(s1, ((1 <<< Helpers.bit_position(s0)) - 1))
+      band(s1, (1 <<< Helpers.bit_position(s0)) - 1)
     end
   end
 end

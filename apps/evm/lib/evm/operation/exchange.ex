@@ -1,4 +1,6 @@
 defmodule EVM.Operation.Exchange do
+  alias EVM.Operation
+
   @doc """
   Swaps the first and last values on the stack.
 
@@ -9,9 +11,9 @@ defmodule EVM.Operation.Exchange do
       iex> EVM.Operation.Exchange.swap([1, 2, 3, 4, 5, 6], %{})
       [6, 2, 3, 4, 5, 1]
   """
-  @spec swap(Operation.stack_args, Operation.vm_map) :: Operation.op_result
+  @spec swap(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def swap([first | rest], _vm_map) do
-    [last | middle ] = :lists.reverse(rest)
+    [last | middle] = :lists.reverse(rest)
     [last | :lists.reverse([first | middle])]
   end
 end

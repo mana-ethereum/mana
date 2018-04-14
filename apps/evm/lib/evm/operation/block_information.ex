@@ -26,9 +26,10 @@ defmodule EVM.Operation.BlockInformation do
       iex> EVM.Operation.BlockInformation.blockhash([-1], %{exec_env: exec_env})
       0
   """
-  @spec blockhash(Operation.stack_args, Operation.vm_map) :: Operation.op_result
+  @spec blockhash(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def blockhash([block_number], %{exec_env: exec_env}) do
     block_difference = exec_env.block_interface.block_header.number - block_number
+
     if block_difference > 256 || block_difference < 0 do
       0
     else
@@ -47,7 +48,7 @@ defmodule EVM.Operation.BlockInformation do
       iex> EVM.Operation.BlockInformation.coinbase([], %{exec_env: exec_env})
       <<0x55::160>>
   """
-  @spec coinbase(Operation.stack_args, Operation.vm_map) :: Operation.op_result
+  @spec coinbase(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def coinbase(_args, %{exec_env: exec_env}) do
     block_header = BlockInterface.get_block_header(exec_env.block_interface)
 
@@ -64,7 +65,7 @@ defmodule EVM.Operation.BlockInformation do
       iex> EVM.Operation.BlockInformation.timestamp([], %{exec_env: exec_env})
       1_000_000
   """
-  @spec timestamp(Operation.stack_args, Operation.vm_map) :: Operation.op_result
+  @spec timestamp(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def timestamp(_args, %{exec_env: exec_env}) do
     block_header = BlockInterface.get_block_header(exec_env.block_interface)
 
@@ -81,7 +82,7 @@ defmodule EVM.Operation.BlockInformation do
       iex> EVM.Operation.BlockInformation.number([], %{exec_env: exec_env})
       1_500_000
   """
-  @spec number(Operation.stack_args, Operation.vm_map) :: Operation.op_result
+  @spec number(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def number(_args, %{exec_env: exec_env}) do
     block_header = BlockInterface.get_block_header(exec_env.block_interface)
 
@@ -98,7 +99,7 @@ defmodule EVM.Operation.BlockInformation do
       iex> EVM.Operation.BlockInformation.difficulty([], %{exec_env: exec_env})
       2_000_000
   """
-  @spec difficulty(Operation.stack_args, Operation.vm_map) :: Operation.op_result
+  @spec difficulty(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def difficulty(_args, %{exec_env: exec_env}) do
     block_header = BlockInterface.get_block_header(exec_env.block_interface)
 
@@ -115,7 +116,7 @@ defmodule EVM.Operation.BlockInformation do
       iex> EVM.Operation.BlockInformation.gaslimit([], %{exec_env: exec_env})
       3_000_000
   """
-  @spec gaslimit(Operation.stack_args, Operation.vm_map) :: Operation.op_result
+  @spec gaslimit(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def gaslimit(_args, %{exec_env: exec_env}) do
     block_header = BlockInterface.get_block_header(exec_env.block_interface)
 

@@ -34,7 +34,7 @@ defmodule MathHelper do
       iex> MathHelper.round_int(-0.5)
       0
   """
-  @spec floor(number()) :: integer()
+  @spec round_int(number()) :: integer()
   def round_int(n) when n < 0, do: round(:math.ceil(n))
   def round_int(n), do: round(:math.floor(n))
 
