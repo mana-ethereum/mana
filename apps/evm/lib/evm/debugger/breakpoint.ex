@@ -14,9 +14,9 @@ defmodule EVM.Debugger.Breakpoint do
         ]
 
   @type t :: %__MODULE__{
-          id: id,
+          id: id | nil,
           enabled: boolean(),
-          conditions: keyword(conditions),
+          conditions: conditions | [],
           pc: nil | :start | :next | integer()
         }
 
