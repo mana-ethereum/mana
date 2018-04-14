@@ -67,7 +67,7 @@ defmodule EVM.Memory do
       iex> EVM.Memory.write(%EVM.MachineState{memory: <<1, 1, 1>>, active_words: 0}, 5, <<1::80>>)
       %EVM.MachineState{memory: <<1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1>>, active_words: 1}
   """
-  @spec write(MachineState.t(), EVM.val(), binary(), integer()) :: MachineState.t()
+  @spec write(MachineState.t(), EVM.val(), binary() | integer(), integer() | nil) :: MachineState.t()
   def write(machine_state, offset_bytes, original_data, size \\ nil)
 
   def write(machine_state, offset_bytes, data, size) when is_integer(data),
