@@ -18,8 +18,8 @@ defmodule MerklePatriciaTree.DB do
   @type value :: binary()
 
   @callback init(db_name) :: db
-  @callback get(db_ref, MerklePatriciaTree.Trie.key) :: {:ok, value} | :not_found
-  @callback put!(db_ref, MerklePatriciaTree.Trie.key, value) :: :ok
+  @callback get(db_ref, MerklePatriciaTree.Trie.key()) :: {:ok, value} | :not_found
+  @callback put!(db_ref, MerklePatriciaTree.Trie.key(), value) :: :ok
 
   @doc """
   Retrieves a key from the database.
@@ -35,8 +35,8 @@ defmodule MerklePatriciaTree.DB do
       iex> MerklePatriciaTree.DB.get(db, "name")
       {:ok, "bob"}
   """
-  @spec get(db, MerklePatriciaTree.Trie.key) :: {:ok, value} | :not_found
-  def get(_db={db_mod, db_ref}, key) do
+  @spec get(db, MerklePatriciaTree.Trie.key()) :: {:ok, value} | :not_found
+  def get(_db = {db_mod, db_ref}, key) do
     db_mod.get(db_ref, key)
   end
 
@@ -54,7 +54,7 @@ defmodule MerklePatriciaTree.DB do
       iex> MerklePatriciaTree.DB.get!(db, "name")
       "bob"
   """
-  @spec get!(db, MerklePatriciaTree.Trie.key) :: value
+  @spec get!(db, MerklePatriciaTree.Trie.key()) :: value
   def get!(db, key) do
     case get(db, key) do
       {:ok, value} -> value
@@ -77,9 +77,8 @@ defmodule MerklePatriciaTree.DB do
       iex> MerklePatriciaTree.DB.get(db, "name")
       {:ok, "tom"}
   """
-  @spec put!(db, MerklePatriciaTree.Trie.key, value) :: :ok
-  def put!(_db={db_mod, db_ref}, key, value) do
+  @spec put!(db, MerklePatriciaTree.Trie.key(), value) :: :ok
+  def put!(_db = {db_mod, db_ref}, key, value) do
     db_mod.put!(db_ref, key, value)
   end
-
 end

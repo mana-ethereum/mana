@@ -19,7 +19,7 @@ defmodule MerklePatriciaTree.DB.ETSTest do
   end
 
   test "get!/1" do
-    db={_, db_ref} = ETS.init(MerklePatriciaTree.Test.random_atom(20))
+    db = {_, db_ref} = ETS.init(MerklePatriciaTree.Test.random_atom(20))
 
     :ets.insert(db_ref, {"key", "value"})
     assert DB.get!(db, "key") == "value"

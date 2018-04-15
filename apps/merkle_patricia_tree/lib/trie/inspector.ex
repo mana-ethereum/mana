@@ -28,26 +28,33 @@ defmodule MerklePatriciaTree.Trie.Inspector do
         {"type", "fighter"},
       ]
   """
-  @spec all_values(Trie.t) :: [{binary(), binary()}]
+  @spec all_values(Trie.t()) :: [{binary(), binary()}]
   def all_values(trie) do
     get_trie_value(trie, <<>>)
   end
 
-  @spec get_trie_value(Trie.t, binary()) :: [{binary(), binary()}]
+  @spec get_trie_value(Trie.t(), binary()) :: [{binary(), binary()}]
   defp get_trie_value(trie, prefix) do
     case Node.decode_trie(trie) do
-      :empty -> []
-      {:leaf, k, v} -> [{merge_prefix(prefix, k), v}]
-      {:ext, k, v} -> get_trie_value(%{trie| root_hash: v}, merge_prefix(prefix, k))
+      :empty ->
+        []
+
+      {:leaf, k, v} ->
+        [{merge_prefix(prefix, k), v}]
+
+      {:ext, k, v} ->
+        get_trie_value(%{trie | root_hash: v}, merge_prefix(prefix, k))
+
       {:branch, branches} ->
-        branch_value = List.last(branches) # TODO: We need to fix nil branch value!
+        # TODO: We need to fix nil branch value!
+        branch_value = List.last(branches)
         base = if branch_value != <<>>, do: [{prefix, branch_value}], else: []
 
-        Enum.reduce(0..15, base, fn (el, values) ->
+        Enum.reduce(0..15, base, fn el, values ->
           branch_root_hash = Enum.at(branches, el)
           branch_prefix = <<prefix::bitstring, el::size(4)>>
 
-          values ++ get_trie_value(%{trie| root_hash: branch_root_hash}, branch_prefix)
+          values ++ get_trie_value(%{trie | root_hash: branch_root_hash}, branch_prefix)
         end)
     end
   end
@@ -81,9 +88,9 @@ defmodule MerklePatriciaTree.Trie.Inspector do
         "type",
       ]
   """
-  @spec all_keys(Trie.t) :: [binary()]
+  @spec all_keys(Trie.t()) :: [binary()]
   def all_keys(trie) do
-    trie |> all_values |> Enum.map(fn {k,_v} -> k end)
+    trie |> all_values |> Enum.map(fn {k, _v} -> k end)
   end
 
   @doc """
@@ -91,7 +98,7 @@ defmodule MerklePatriciaTree.Trie.Inspector do
 
   TODO: Test, possibly.
   """
-  @spec inspect_trie(Trie.t) :: Trie.t
+  @spec inspect_trie(Trie.t()) :: Trie.t()
   def inspect_trie(trie) do
     IO.puts("~~~Trie~~~")
     IO.puts(do_inspect_trie(trie, 0))
@@ -101,7 +108,7 @@ defmodule MerklePatriciaTree.Trie.Inspector do
   end
 
   defp do_inspect_trie(trie, depth, prefix \\ "") do
-    whitespace = if depth > 0, do: (for _ <- 1..(2*depth), do: " "), else: ""
+    whitespace = if depth > 0, do: for(_ <- 1..(2 * depth), do: " "), else: ""
     trie_node = Node.decode_trie(trie)
     node_info = inspect_trie_node(trie_node, trie, depth)
     "#{whitespace}#{prefix}Node: #{node_info}"
@@ -116,7 +123,7 @@ defmodule MerklePatriciaTree.Trie.Inspector do
   end
 
   defp inspect_trie_node({:ext, shared_prefix, v}, trie, depth) do
-    sub = do_inspect_trie(%{trie| root_hash: v}, depth + 1)
+    sub = do_inspect_trie(%{trie | root_hash: v}, depth + 1)
 
     "ext (prefix: #{shared_prefix |> inspect})\n#{sub}"
   end
@@ -124,8 +131,9 @@ defmodule MerklePatriciaTree.Trie.Inspector do
   defp inspect_trie_node({:branch, branches}, trie, depth) do
     base = "branch (value: #{List.last(branches) |> inspect})"
 
-    Enum.reduce(0..15, base, fn (el, acc) ->
-      acc <> "\n" <> do_inspect_trie(%{trie| root_hash: Enum.at(branches, el)}, depth + 1, "[#{el}] ")
+    Enum.reduce(0..15, base, fn el, acc ->
+      acc <>
+        "\n" <> do_inspect_trie(%{trie | root_hash: Enum.at(branches, el)}, depth + 1, "[#{el}] ")
     end)
   end
 
@@ -133,7 +141,7 @@ defmodule MerklePatriciaTree.Trie.Inspector do
   Helper function to print an instruction message.
   """
   def inspect(msg, prefix) do
-    Logger.debug(inspect [prefix, ":", msg])
+    Logger.debug(inspect([prefix, ":", msg]))
 
     msg
   end

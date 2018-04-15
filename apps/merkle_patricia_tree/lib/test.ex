@@ -42,7 +42,7 @@ defmodule MerklePatriciaTree.Test do
       false
   """
   def random_string(length) do
-    :crypto.strong_rand_bytes(length) |> Base.url_encode64 |> binary_part(0, length)
+    :crypto.strong_rand_bytes(length) |> Base.url_encode64() |> binary_part(0, length)
   end
 
   @doc """
@@ -62,6 +62,6 @@ defmodule MerklePatriciaTree.Test do
       false
   """
   def random_atom(length) do
-    length |> random_string |> String.to_atom
+    length |> random_string |> String.to_atom()
   end
 end

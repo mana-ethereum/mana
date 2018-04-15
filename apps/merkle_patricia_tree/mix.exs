@@ -2,7 +2,8 @@ defmodule MerklePatriciaTree.Mixfile do
   use Mix.Project
 
   def project do
-    [app: :merkle_patricia_tree,
+    [
+      app: :merkle_patricia_tree,
       version: "0.2.6",
       elixir: "~> 1.6",
       description: "Ethereum's Merkle Patricia Trie data structure",
@@ -11,9 +12,10 @@ defmodule MerklePatriciaTree.Mixfile do
         licenses: ["MIT"],
         links: %{"GitHub" => "https://github.com/exthereum/merkle_patricia_tree"}
       ],
-      build_embedded: Mix.env == :prod,
-      start_permanent: Mix.env == :prod,
-      deps: deps()]
+      build_embedded: Mix.env() == :prod,
+      start_permanent: Mix.env() == :prod,
+      deps: deps()
+    ]
   end
 
   # Configuration for the OTP application
@@ -45,7 +47,7 @@ defmodule MerklePatriciaTree.Mixfile do
       {:ex_rlp, "~> 0.2.0"},
       {:keccakf1600, "~> 2.0.0", hex: :keccakf1600_orig},
       {:exleveldb, "~> 0.13"},
-      {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
+      {:dialyxir, "~> 0.5", only: [:dev], runtime: false}
     ]
   end
 end

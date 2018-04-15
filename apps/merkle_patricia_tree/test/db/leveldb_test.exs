@@ -20,7 +20,7 @@ defmodule MerklePatriciaTree.DB.LevelDBTest do
   end
 
   test "get!/1" do
-    db={_, db_ref} = LevelDB.init("/tmp/db#{MerklePatriciaTree.Test.random_string(20)}")
+    db = {_, db_ref} = LevelDB.init("/tmp/db#{MerklePatriciaTree.Test.random_string(20)}")
 
     Exleveldb.put(db_ref, "key", "value")
     assert DB.get!(db, "key") == "value"
@@ -38,11 +38,10 @@ defmodule MerklePatriciaTree.DB.LevelDBTest do
   end
 
   test "simple init, put, get" do
-    db={_, db_ref} = LevelDB.init("/tmp/db#{MerklePatriciaTree.Test.random_string(20)}")
+    db = {_, db_ref} = LevelDB.init("/tmp/db#{MerklePatriciaTree.Test.random_string(20)}")
 
     assert LevelDB.put!(db_ref, "name", "bob") == :ok
     assert DB.get!(db, "name") == "bob"
     assert LevelDB.get(db_ref, "age") == :not_found
   end
-
 end
