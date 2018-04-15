@@ -85,7 +85,6 @@ defmodule ExRLP.Encode do
 end
 
 defprotocol ExRLP.Encoder do
-  @dialyzer {:nowarn_function, __protocol__: 1}
   def encode(value, options \\ nil)
 end
 
@@ -119,7 +118,9 @@ end
 defimpl ExRLP.Encoder, for: Map do
   alias ExRLP.Encode
 
-  @spec encode(map(), keyword()) :: binary()
+  @dialyzer {:nowarn_function, encode: 2}
+
+  @spec encode(%{key: ExRLP.t()}, keyword()) :: binary()
   def encode(map, options) do
     map
     |> Map.values()

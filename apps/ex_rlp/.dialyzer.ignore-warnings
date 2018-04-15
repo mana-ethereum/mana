@@ -1,0 +1,19 @@
+# protocol warnings
+
+:0: Unknown function 'Elixir.ExRLP.Decoder.Atom':'__impl__'/1
+:0: Unknown function 'Elixir.ExRLP.Decoder.Float':'__impl__'/1
+:0: Unknown function 'Elixir.ExRLP.Decoder.Function':'__impl__'/1
+:0: Unknown function 'Elixir.ExRLP.Decoder.Integer':'__impl__'/1
+:0: Unknown function 'Elixir.ExRLP.Decoder.List':'__impl__'/1
+:0: Unknown function 'Elixir.ExRLP.Decoder.Map':'__impl__'/1
+:0: Unknown function 'Elixir.ExRLP.Decoder.PID':'__impl__'/1
+:0: Unknown function 'Elixir.ExRLP.Decoder.Port':'__impl__'/1
+:0: Unknown function 'Elixir.ExRLP.Decoder.Reference':'__impl__'/1
+:0: Unknown function 'Elixir.ExRLP.Decoder.Tuple':'__impl__'/1
+:0: Unknown function 'Elixir.ExRLP.Encoder.Atom':'__impl__'/1
+:0: Unknown function 'Elixir.ExRLP.Encoder.Float':'__impl__'/1
+:0: Unknown function 'Elixir.ExRLP.Encoder.Function':'__impl__'/1
+:0: Unknown function 'Elixir.ExRLP.Encoder.PID':'__impl__'/1
+:0: Unknown function 'Elixir.ExRLP.Encoder.Port':'__impl__'/1
+:0: Unknown function 'Elixir.ExRLP.Encoder.Reference':'__impl__'/1
+:0: Unknown function 'Elixir.ExRLP.Encoder.Tuple':'__impl__'/1
