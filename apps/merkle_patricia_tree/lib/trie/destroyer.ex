@@ -40,10 +40,7 @@ defmodule MerklePatriciaTree.Trie.Destroyer do
   defp trie_remove_key({:ext, ext_prefix, node_hash}, key_prefix, trie) do
     {_matching_prefix, ext_tl, remaining_tl} = ListHelper.overlap(ext_prefix, key_prefix)
 
-    unless length(ext_tl) == 0 do
-      # Prefix doesn't match ext, do nothing.
-      {:ext, ext_prefix, node_hash}
-    else
+    if ext_tl |> Enum.empty?() do
       existing_node = Node.decode_trie(node_hash |> Trie.into(trie))
       updated_node = trie_remove_key(existing_node, remaining_tl, trie)
 
@@ -61,6 +58,9 @@ defmodule MerklePatriciaTree.Trie.Destroyer do
         els ->
           {:ext, ext_prefix, els |> Node.encode_node(trie)}
       end
+    else
+      # Prefix doesn't match ext, do nothing.
+      {:ext, ext_prefix, node_hash}
     end
   end
 
@@ -76,7 +76,7 @@ defmodule MerklePatriciaTree.Trie.Destroyer do
       List.update_at(branches, prefix_hd, fn branch ->
         branch_node = branch |> Trie.into(trie) |> Node.decode_trie()
 
-        trie_remove_key(branch_node, prefix_tl, trie) |> Node.encode_node(trie)
+        branch_node |> trie_remove_key(prefix_tl, trie) |> Node.encode_node(trie)
       end)
 
     non_blank_branches =
@@ -88,7 +88,7 @@ defmodule MerklePatriciaTree.Trie.Destroyer do
     final_value = List.last(updated_branches)
 
     cond do
-      Enum.count(non_blank_branches) == 0 ->
+      non_blank_branches |> Enum.empty?() ->
         # We just have a final value, this will need to percolate up
         {:leaf, [], final_value}
 

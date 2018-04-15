@@ -76,7 +76,10 @@ defmodule MerklePatriciaTree.TrieTest do
       trie = %{
         trie
         | root_hash:
-            extension_node([0x01, 0x02], leaf_node([0x03], "cool")) |> ExRLP.encode() |> store(db)
+            [0x01, 0x02]
+            |> extension_node(leaf_node([0x03], "cool"))
+            |> ExRLP.encode()
+            |> store(db)
       }
 
       assert Trie.get(trie, <<0x01::4>>) == nil
@@ -93,7 +96,8 @@ defmodule MerklePatriciaTree.TrieTest do
       trie = %{
         trie
         | root_hash:
-            extension_node([0x01, 0x02], extension_node([0x03], leaf_node([0x04], "cool")))
+            [0x01, 0x02]
+            |> extension_node(extension_node([0x03], leaf_node([0x04], "cool")))
             |> ExRLP.encode()
             |> store(db)
       }
@@ -111,7 +115,8 @@ defmodule MerklePatriciaTree.TrieTest do
       trie = %{
         trie
         | root_hash:
-            extension_node([0x01], branch_node([leaf_node([0x02], "hi") | blanks(15)], "cool"))
+            [0x01]
+            |> extension_node(branch_node([leaf_node([0x02], "hi") | blanks(15)], "cool"))
             |> ExRLP.encode()
             |> store(db)
       }
@@ -131,10 +136,8 @@ defmodule MerklePatriciaTree.TrieTest do
       trie = %{
         trie
         | root_hash:
-            extension_node(
-              [0x01, 0x02],
-              leaf_node([0x03], long_string) |> ExRLP.encode() |> store(db)
-            )
+            [0x01, 0x02]
+            |> extension_node([0x03] |> leaf_node(long_string) |> ExRLP.encode() |> store(db))
             |> ExRLP.encode()
             |> store(db)
       }
@@ -181,7 +184,7 @@ defmodule MerklePatriciaTree.TrieTest do
       long_string = Enum.join(for _ <- 1..60, do: "A")
       long_string_2 = Enum.join(for _ <- 1..60, do: "B")
 
-      trie = Trie.new(db, leaf_node([0x01, 0x02], long_string) |> ExRLP.encode() |> store(db))
+      trie = Trie.new(db, [0x01, 0x02] |> leaf_node(long_string) |> ExRLP.encode() |> store(db))
       trie_2 = Trie.update(trie, <<0x01::4, 0x02::4>>, long_string_2)
 
       assert Trie.get(trie, <<0x01::4, 0x02::4>>) == long_string
@@ -190,7 +193,8 @@ defmodule MerklePatriciaTree.TrieTest do
 
     test "update branch under ext node", %{db: db} do
       trie =
-        Trie.new(db)
+        db
+        |> Trie.new()
         |> Trie.update(<<0x01::4, 0x02::4>>, "wee")
         |> Trie.update(<<0x01::4, 0x02::4, 0x03::4>>, "cool")
 
@@ -205,7 +209,8 @@ defmodule MerklePatriciaTree.TrieTest do
 
     test "update multiple keys", %{db: db} do
       trie =
-        Trie.new(db)
+        db
+        |> Trie.new()
         |> Trie.update(<<0x01::4, 0x02::4, 0x03::4>>, "a")
         |> Trie.update(<<0x01::4, 0x02::4, 0x03::4, 0x04::4>>, "b")
         |> Trie.update(<<0x01::4, 0x02::4, 0x04::4>>, "c")
@@ -219,7 +224,8 @@ defmodule MerklePatriciaTree.TrieTest do
 
     test "a set of updates", %{db: db} do
       trie =
-        Trie.new(db)
+        db
+        |> Trie.new()
         |> Trie.update(<<5::4, 7::4, 10::4, 15::4, 15::4>>, "a")
         |> Trie.update(<<5::4, 11::4, 0::4, 0::4, 14::4>>, "b")
         |> Trie.update(<<5::4, 10::4, 0::4, 0::4, 14::4>>, "c")
@@ -235,7 +241,8 @@ defmodule MerklePatriciaTree.TrieTest do
 
     test "yet another set of updates", %{db: db} do
       trie =
-        Trie.new(db)
+        db
+        |> Trie.new()
         |> Trie.update(
           <<15::4, 10::4, 5::4, 11::4, 5::4, 2::4, 10::4, 9::4, 6::4, 13::4, 10::4, 3::4, 10::4,
             6::4, 7::4, 1::4>>,
@@ -273,7 +280,8 @@ defmodule MerklePatriciaTree.TrieTest do
 
     test "yet another set of updates now in memory", %{db: db} do
       trie =
-        Trie.new(db)
+        db
+        |> Trie.new()
         |> Trie.update(
           <<15::4, 10::4, 5::4, 11::4, 5::4, 2::4, 10::4, 9::4, 6::4, 13::4, 10::4, 3::4, 10::4,
             6::4, 7::4, 1::4>>,

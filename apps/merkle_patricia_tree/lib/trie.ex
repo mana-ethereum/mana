@@ -135,7 +135,8 @@ defmodule MerklePatriciaTree.Trie do
   """
   @spec update(__MODULE__.t(), __MODULE__.key(), ExRLP.t() | nil) :: __MODULE__.t()
   def update(trie, key, nil) do
-    Node.decode_trie(trie)
+    trie
+    |> Node.decode_trie()
     |> Destroyer.remove_key(Helper.get_nibbles(key), trie)
     |> Node.encode_node(trie)
     |> into(trie)
@@ -148,7 +149,8 @@ defmodule MerklePatriciaTree.Trie do
     # on a branch node), then we'll walk back up the tree and
     # update all previous ndes. This may require changing the
     # type of the node.
-    Node.decode_trie(trie)
+    trie
+    |> Node.decode_trie()
     |> Builder.put_key(Helper.get_nibbles(key), value, trie)
     |> Node.encode_node(trie)
     |> into(trie)

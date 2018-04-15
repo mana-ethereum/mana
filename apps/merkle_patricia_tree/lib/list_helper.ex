@@ -66,8 +66,8 @@ defmodule MerklePatriciaTree.ListHelper do
     {[15], [10, 5, 11], [11, 1, 14]}
   """
   @spec overlap([integer()], [integer()]) :: {[integer()], [integer()], [integer()]}
-  def overlap([], [_ | _] = b), do: {[], [], b}
-  def overlap([_ | _] = a, []), do: {[], a, []}
+  def overlap([], b = [_ | _]), do: {[], [], b}
+  def overlap(a = [_ | _], []), do: {[], a, []}
   def overlap([], []), do: {[], [], []}
 
   def overlap([a0 | a], [b0 | b]) when a0 == b0 do

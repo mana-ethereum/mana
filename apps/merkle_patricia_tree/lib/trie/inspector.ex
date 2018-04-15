@@ -129,7 +129,7 @@ defmodule MerklePatriciaTree.Trie.Inspector do
   end
 
   defp inspect_trie_node({:branch, branches}, trie, depth) do
-    base = "branch (value: #{List.last(branches) |> inspect})"
+    base = "branch (value: #{branches |> List.last() |> inspect})"
 
     Enum.reduce(0..15, base, fn el, acc ->
       acc <>
