@@ -2,18 +2,20 @@ defmodule HexPrefix.Mixfile do
   use Mix.Project
 
   def project do
-    [app: :hex_prefix,
-     version: "0.1.0",
-     elixir: "~> 1.0",
-     description: "Ethereum's Hex Prefix encoding",
-     package: [
-       maintainers: ["Geoffrey Hayes", "Ayrat Badykov"],
-       licenses: ["MIT"],
-       links: %{"GitHub" => "https://github.com/exthereum/hex_prefix"}
-     ],
-     build_embedded: Mix.env == :prod,
-     start_permanent: Mix.env == :prod,
-     deps: deps()]
+    [
+      app: :hex_prefix,
+      version: "0.1.0",
+      elixir: "~> 1.6",
+      description: "Ethereum's Hex Prefix encoding",
+      package: [
+        maintainers: ["Geoffrey Hayes", "Ayrat Badykov"],
+        licenses: ["MIT"],
+        links: %{"GitHub" => "https://github.com/exthereum/hex_prefix"}
+      ],
+      build_embedded: Mix.env() == :prod,
+      start_permanent: Mix.env() == :prod,
+      deps: deps()
+    ]
   end
 
   # Configuration for the OTP application
@@ -38,9 +40,9 @@ defmodule HexPrefix.Mixfile do
   # Type `mix help deps` for more examples and options
   defp deps do
     [
-      {:credo, "~> 0.8", only: [:dev, :test], runtime: false},
-      {:ex_doc, "~> 0.14", only: :dev, runtime: false},
-      {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
+      {:credo, "~> 0.9", only: [:dev, :test], runtime: false},
+      {:ex_doc, "~> 0.16", only: :dev, runtime: false},
+      {:dialyxir, "~> 0.5", only: [:dev], runtime: false}
     ]
   end
 end
