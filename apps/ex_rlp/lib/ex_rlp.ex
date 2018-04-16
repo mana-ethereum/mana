@@ -105,5 +105,4 @@ defmodule ExRLP do
   def decode(item, type \\ :binary, options \\ []) do
     item |> Decoder.decode(type, options)
   end
-
 end
