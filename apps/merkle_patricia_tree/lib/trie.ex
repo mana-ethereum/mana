@@ -17,7 +17,7 @@ defmodule MerklePatriciaTree.Trie do
           root_hash: root_hash
         }
 
-  @type key :: binary()
+  @type key :: binary() |  [integer()]
 
   @empty_trie <<>>
   @empty_trie_root_hash @empty_trie |> ExRLP.encode() |> :keccakf1600.sha3_256()
