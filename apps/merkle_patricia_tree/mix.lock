@@ -5,7 +5,7 @@
   "earmark": {:hex, :earmark, "1.2.3", "206eb2e2ac1a794aa5256f3982de7a76bf4579ff91cb28d0e17ea2c9491e46a4", [:mix], [], "hexpm"},
   "eleveldb": {:hex, :eleveldb, "2.2.20", "1fff63a5055bbf4bf821f797ef76065882b193f5e8095f95fcd9287187773b58", [:rebar3], [], "hexpm"},
   "ex_doc": {:hex, :ex_doc, "0.16.2", "3b3e210ebcd85a7c76b4e73f85c5640c011d2a0b2f06dcdf5acdb2ae904e5084", [:mix], [{:earmark, "~> 1.1", [hex: :earmark, repo: "hexpm", optional: false]}], "hexpm"},
-  "ex_rlp": {:hex, :ex_rlp, "0.2.0", "ba63b95e4dc8829e99bfe50533edc0edb2fc229e906701cedab1e4fb40e305a9", [:mix], [], "hexpm"},
+  "ex_rlp": {:hex, :ex_rlp, "0.2.1", "bd320900d6316cdfe01d365d4bda22eb2f39b359798daeeffd3bd1ca7ba958ec", [:mix], [], "hexpm"},
   "exleveldb": {:hex, :exleveldb, "0.13.1", "7f82ef6ae75bdcbea4e7aaa297601e7adea3631525114412fa7548d83b70bbca", [:mix], [{:eleveldb, "~> 2.2.20", [hex: :eleveldb, repo: "hexpm", optional: false]}], "hexpm"},
   "hex_prefix": {:hex, :hex_prefix, "0.1.0", "e96b5cbb6ad8493196ce193726240023f5ce0ae0753118a19a5b43e2db0267ca", [:mix], [], "hexpm"},
   "keccakf1600": {:hex, :keccakf1600_orig, "2.0.0", "0a7217ddb3ee8220d449bbf7575ec39d4e967099f220a91e3dfca4dbaef91963", [:rebar3], [], "hexpm"},

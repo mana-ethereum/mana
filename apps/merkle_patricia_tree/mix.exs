@@ -43,9 +43,9 @@ defmodule MerklePatriciaTree.Mixfile do
     [
       {:credo, "~> 0.9.1", only: [:dev, :test], runtime: false},
       {:poison, "~> 3.1.0", only: [:dev, :test], runtime: false},
-      {:ex_doc, "~> 0.14", only: :dev, runtime: false},
+      {:ex_doc, "~> 0.16", only: :dev, runtime: false},
       {:hex_prefix, "~> 0.1.0"},
-      {:ex_rlp, "~> 0.2.0"},
+      {:ex_rlp, "~> 0.2.1"},
       {:keccakf1600, "~> 2.0.0", hex: :keccakf1600_orig},
       {:exleveldb, "~> 0.13"},
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false}
