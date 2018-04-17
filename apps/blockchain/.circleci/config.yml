@@ -11,5 +11,5 @@ jobs:
       - run: mix local.hex --force
       - run: mix local.rebar --force
       - run: mix deps.get
-      - run: mix test
+      - run: DEBUG=1 mix test
       - run: mix dialyzer
