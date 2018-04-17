@@ -4,7 +4,7 @@ jobs:
     docker:
       - image: elixir:latest
     steps:
-      - run: apt-get update; apt-get -y install libtool autoconf
+      - run: apt-get update; apt-get -y install libtool autoconf libgmp3-dev
       - checkout
       - run: git submodule sync --recursive
       - run: git submodule update --recursive --init
