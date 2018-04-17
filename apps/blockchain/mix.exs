@@ -41,7 +41,7 @@ defmodule Blockchain.Mixfile do
   # Type "mix help deps" for more examples and options
   defp deps do
     [
-      {:libsecp256k1, github: "omisego/libsecp256k1"},
+      {:libsecp256k1, "~> 0.1.4"},
       {:keccakf1600, "~> 2.0.0", hex: :keccakf1600_orig},
       {:credo, "~>  0.9.1", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.16", only: :dev, runtime: false},
