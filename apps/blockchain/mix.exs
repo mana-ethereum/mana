@@ -4,7 +4,7 @@ defmodule Blockchain.Mixfile do
   def project do
     [
       app: :blockchain,
-      version: "0.1.6",
+      version: "0.1.7",
       elixir: "~> 1.6",
       description: "Ethereum's Blockchain Manager",
       package: [
