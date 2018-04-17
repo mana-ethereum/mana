@@ -6,8 +6,8 @@ defmodule Blockchain.StateTest do
   use ExUnit.Case, async: true
 
   @passing_tests_by_group %{
-    stexample: [:add11],
-    stcall_codes: [
+    stExample: [:add11],
+    stCallCodes: [
       :callcall_00,
       :callcode_checkPC,
     ],
@@ -75,7 +75,7 @@ defmodule Blockchain.StateTest do
   end
 
   def state_test_file_name(type, test) do
-    "test/support/ethereum_common_tests/GeneralStateTests/#{Macro.camelize(Atom.to_string(type))}/#{test}.json"
+    System.cwd() <> "/test/support/ethereum_common_tests/GeneralStateTests/#{Atom.to_string(type)}/#{test}.json"
   end
 
   def account_interface(test) do
