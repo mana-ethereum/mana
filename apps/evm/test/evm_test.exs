@@ -2,6 +2,7 @@ defmodule EvmTest do
   alias MerklePatriciaTree.Trie
   use ExUnit.Case, async: true
 
+  @ethereum_common_tests_path "../../ethereum_common_tests"
   @passing_tests_by_group %{
     sha3_test: :all,
     arithmetic_test: :all,
@@ -195,11 +196,11 @@ defmodule EvmTest do
   end
 
   def test_directory_name(type) do
-    "test/support/ethereum_common_tests/VMTests/vm#{Macro.camelize(Atom.to_string(type))}"
+    "#{@ethereum_common_tests_path}/VMTests/vm#{Macro.camelize(Atom.to_string(type))}"
   end
 
   def test_file_name(group, name) do
-    "test/support/ethereum_common_tests/VMTests/vm#{Macro.camelize(Atom.to_string(group))}/#{name}.json"
+    "#{@ethereum_common_tests_path}/VMTests/vm#{Macro.camelize(Atom.to_string(group))}/#{name}.json"
   end
 
   def hex_to_binary(string) do

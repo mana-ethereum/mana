@@ -34,7 +34,7 @@ defmodule Exleveldb.Mixfile do
       {:eleveldb, github: "exthereum/eleveldb", branch: "develop"},
       {:earmark, "~> 1.0", only: :dev},
       {:ex_doc, "~> 0.12", only: :dev},
-      {:dialyxir, "~> 0.3.5", only: :dev}
+      {:dialyxir, "~> 0.5", only: :dev}
     ]
   end
 

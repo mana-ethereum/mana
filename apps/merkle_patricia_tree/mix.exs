@@ -4,6 +4,10 @@ defmodule MerklePatriciaTree.Mixfile do
   def project do
     [app: :merkle_patricia_tree,
       version: "0.2.6",
+      build_path: "../../_build",
+      config_path: "../../config/config.exs",
+      deps_path: "../../deps",
+      lockfile: "../../mix.lock",
       elixir: "~> 1.4",
       description: "Ethereum's Merkle Patricia Trie data structure",
       package: [
@@ -41,10 +45,10 @@ defmodule MerklePatriciaTree.Mixfile do
       {:credo, "~> 0.8", only: [:dev, :test], runtime: false},
       {:poison, "~> 3.1.0", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.14", only: :dev, runtime: false},
-      {:hex_prefix, "~> 0.1.0"},
-      {:ex_rlp, "~> 0.2.0"},
+      {:hex_prefix, in_umbrella: true},
+      {:ex_rlp, in_umbrella: true},
       {:keccakf1600, "~> 2.0.0", hex: :keccakf1600_orig},
-      {:exleveldb, "~> 0.11.1"},
+      {:exleveldb, in_umbrella: true},
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
     ]
   end

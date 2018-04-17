@@ -5,6 +5,10 @@ defmodule EVM.Mixfile do
     [
       app: :evm,
       version: "0.1.14",
+      build_path: "../../_build",
+      config_path: "../../config/config.exs",
+      deps_path: "../../deps",
+      lockfile: "../../mix.lock",
       elixir: "~> 1.6",
       description: "Ethereum's Virtual Machine, in all its glory.",
       package: [
@@ -45,7 +49,7 @@ defmodule EVM.Mixfile do
       {:credo, "~> 0.9.1", only: [:dev, :test], runtime: false},
       {:poison, "~> 3.1.0", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.14", only: :dev, runtime: false},
-      {:merkle_patricia_tree, "~> 0.2.5"},
+      {:merkle_patricia_tree, in_umbrella: true},
       {:keccakf1600, "~> 2.0.0", hex: :keccakf1600_orig},
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false}
     ]

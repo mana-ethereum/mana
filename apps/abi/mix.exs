@@ -4,6 +4,10 @@ defmodule ABI.Mixfile do
   def project do
     [app: :abi,
      version: "0.1.12",
+     build_path: "../../_build",
+     config_path: "../../config/config.exs",
+     deps_path: "../../deps",
+     lockfile: "../../mix.lock",
       elixir: "~> 1.4",
       description: "Ethereum's ABI Interface",
       package: [
@@ -28,7 +32,7 @@ defmodule ABI.Mixfile do
     [
       {:ex_doc, "~> 0.14", only: :dev, runtime: false},
       {:poison, "~> 3.1", only: [:dev, :test]},
-      {:exth_crypto, "~> 0.1.4"}
+      {:exth_crypto, in_umbrella: true}
     ]
   end
 end
