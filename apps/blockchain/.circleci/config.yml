@@ -8,10 +8,42 @@ jobs:
       - checkout
       - run: git submodule sync --recursive
       - run: git submodule update --recursive --init
+
+      - restore_cache:
+         keys:
+           - v1-dependency-cache-{{ arch }}-{{ checksum "mix.lock" }}
+           - v1-dependency-cache-{{ arch }}
+           - v1-dependency-cache
+
       - run: mix local.hex --force
       - run: mix local.rebar --force
       - run: mix deps.get
       # TODO: The following step shouldn't be necessary.
       - run: cd deps/libsecp256k1 && rebar compile
+      - run: mix credo
+      - run: mix format --check-formatted
+
       - run: mix test
+
+      - save_cache:
+          key: v1-dependency-cache-{{ arch }}-{{ checksum "mix.lock" }}
+          paths:
+            - _build
+            - deps
+            - ~/.mix
+
+      - restore_cache:
+          keys:
+            - v1-plt-cache-{{ arch }}-{{ checksum "mix.lock" }}
+            - v1-plt-cache-{{ arch }}
+            - v1-plt-cache
+
+      - run: mix dialyzer --plt
+
+      - save_cache:
+          key: v1-plt-cache-{{ arch }}-{{ checksum "mix.lock" }}
+          paths:
+            - _build
+            - ~/.mix
+
       - run: mix dialyzer
