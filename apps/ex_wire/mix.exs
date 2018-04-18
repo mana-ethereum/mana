@@ -4,7 +4,7 @@ defmodule ExWire.Mixfile do
   def project do
     [app: :ex_wire,
      version: "0.1.1",
-     elixir: "~> 1.4",
+     elixir: "~> 1.6",
      description: "Elixir Client for Ethereum's RLPx, DevP2P and Eth Wire Protocol",
       package: [
         maintainers: ["Mason Fischer", "Geoffrey Hayes", "Ayrat Badykov"],
@@ -27,10 +27,10 @@ defmodule ExWire.Mixfile do
 
   defp deps do
     [
-      {:credo, "~> 0.8", only: [:dev, :test], runtime: false},
-      {:ex_doc, "~> 0.14", only: :dev, runtime: false},
+      {:credo, "~> 0.9.1", only: [:dev, :test], runtime: false},
+      {:ex_doc, "~> 0.16", only: :dev, runtime: false},
       {:ex_rlp, "~> 0.2.1"},
-      {:blockchain, "~> 0.1.5"},
+      {:blockchain, "~> 0.1.7"},
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
       {:exth_crypto, "~> 0.1.4"},
       {:evm, "~> 0.1.11"}
