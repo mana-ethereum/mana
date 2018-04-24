@@ -84,9 +84,9 @@ defmodule EvmTest do
       :return2,
       :suicide0,
       :suicideNotExistingAccount,
-      :suicideSendEtherToMe
+      :suicideSendEtherToMe,
+      :CallToPrecompiledContract,
 
-      # :CallToPrecompiledContract,
       # :callcodeToNameRegistrator0,
       # :callcodeToReturn1,
       # :createNameRegistratorValueTooHigh,

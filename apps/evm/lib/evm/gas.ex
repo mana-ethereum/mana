@@ -190,10 +190,13 @@ defmodule EVM.Gas do
 
   def memory_cost(
         :call,
-        [_gas_limit, _to_address, _value, _in_offset, _in_length, out_offset, out_length],
+        [_gas_limit, _to_address, _value, in_offset, in_length, out_offset, out_length],
         machine_state
       ) do
-    memory_expansion_cost(machine_state, out_offset, out_length)
+    out_memory = memory_expansion_cost(machine_state, out_offset, out_length)
+    in_memory = memory_expansion_cost(machine_state, in_offset, in_length)
+
+    if out_memory > in_memory, do: out_memory, else: in_memory
   end
 
   def memory_cost(:create, [_value, in_offset, in_length], machine_state) do
