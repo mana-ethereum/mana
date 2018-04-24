@@ -373,6 +373,15 @@ defmodule EVM.Gas do
     @g_call + call_value_cost(value) + new_account_cost(exec_env, to_address) + gas_limit
   end
 
+  def operation_cost(
+        :callcode,
+        [gas_limit, _to_address, value, _in_offset, _in_length, _out_offset, _out_length],
+        _machine_state,
+        _exec_env
+      ) do
+    @g_call + call_value_cost(value) + gas_limit
+  end
+
   def operation_cost(operation, _inputs, _machine_state, _exec_env) do
     cond do
       operation in @w_very_low_instr -> @g_verylow

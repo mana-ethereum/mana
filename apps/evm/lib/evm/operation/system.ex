@@ -171,6 +171,17 @@ defmodule EVM.Operation.System do
     end
   end
 
+  @spec callcode(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
+  def callcode(
+        [call_gas, _to, value, in_offset, in_size, out_offset, out_size],
+        %{
+          exec_env: exec_env,
+          machine_state: _machine_state
+        } = vm_map
+      ) do
+    call([call_gas, exec_env.address, value, in_offset, in_size, out_offset, out_size], vm_map)
+  end
+
   @doc """
   Halt execution returning output data,
 
