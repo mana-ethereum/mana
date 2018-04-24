@@ -64,9 +64,6 @@ defmodule EVM.Operation.System do
         {exec_env.account_interface, machine_state.gas, nil}
       end
 
-    # Add back extra gas
-    machine_state = %{machine_state | gas: machine_state.gas + n_gas}
-
     # Note if was exception halt or other failure on stack
     result =
       if is_allowed do
