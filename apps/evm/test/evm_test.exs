@@ -52,46 +52,7 @@ defmodule EvmTest do
       # :"loop-mul",
     ],
     i_oand_flow_operations: :all,
-    system_operations: [
-      :ABAcalls0,
-      :ABAcalls1,
-      :ABAcalls2,
-      :ABAcalls3,
-      :ABAcallsSuicide0,
-      :ABAcallsSuicide1,
-      :CallRecursiveBomb0,
-      :CallRecursiveBomb1,
-      :CallRecursiveBomb2,
-      :CallRecursiveBomb3,
-      :CallToNameRegistrator0,
-      :CallToNameRegistratorNotMuchMemory0,
-      :CallToNameRegistratorNotMuchMemory1,
-      :CallToNameRegistratorOutOfGas,
-      :CallToNameRegistratorTooMuchMemory0,
-      :CallToNameRegistratorTooMuchMemory1,
-      :CallToNameRegistratorTooMuchMemory2,
-      :CallToReturn1,
-      :PostToNameRegistrator0,
-      :PostToReturn1,
-      :TestNameRegistrator,
-      :callstatelessToNameRegistrator0,
-      :callstatelessToReturn1,
-      :createNameRegistrator,
-      :createNameRegistratorOutOfMemoryBonds0,
-      :createNameRegistratorOutOfMemoryBonds1,
-      :return0,
-      :return1,
-      :return2,
-      :suicide0,
-      :suicideNotExistingAccount,
-      :suicideSendEtherToMe,
-      :createNameRegistratorValueTooHigh,
-      :CallToPrecompiledContract
-
-      # These tests need `callcode` operation which is not implemented yet.
-      # :callcodeToNameRegistrator0,
-      # :callcodeToReturn1,
-    ]
+    system_operations: :all
   }
 
   test "Ethereum Common Tests" do
