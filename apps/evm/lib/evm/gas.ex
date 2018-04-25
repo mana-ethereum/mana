@@ -199,6 +199,17 @@ defmodule EVM.Gas do
     max(out_memory_cost, in_memory_cost)
   end
 
+  def memory_cost(
+        :callcode,
+        [_gas_limit, _to_address, _value, in_offset, in_length, out_offset, out_length],
+        machine_state
+      ) do
+    out_memory_cost = memory_expansion_cost(machine_state, out_offset, out_length)
+    in_memory_cost = memory_expansion_cost(machine_state, in_offset, in_length)
+
+    max(out_memory_cost, in_memory_cost)
+  end
+
   def memory_cost(:create, [_value, in_offset, in_length], machine_state) do
     memory_expansion_cost(machine_state, in_offset, in_length)
   end
