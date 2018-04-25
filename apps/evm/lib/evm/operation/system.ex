@@ -23,7 +23,7 @@ defmodule EVM.Operation.System do
       ...>     [1_000, 5, 5],
       ...>     %{exec_env: exec_env, machine_state: machine_state})
       iex> n_machine_state
-      %EVM.MachineState{gas: 800, stack: [0x601bcc2189b7096d8dfaa6f74efeebef20486d0d, 1], active_words: 1, memory: "________input"}
+      %EVM.MachineState{gas: 300, stack: [0x601bcc2189b7096d8dfaa6f74efeebef20486d0d, 1], active_words: 1, memory: "________input"}
   """
   @spec create(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def create([value, in_offset, in_size], %{exec_env: exec_env, machine_state: machine_state}) do
@@ -63,9 +63,6 @@ defmodule EVM.Operation.System do
       else
         {exec_env.account_interface, machine_state.gas, nil}
       end
-
-    # Add back extra gas
-    machine_state = %{machine_state | gas: machine_state.gas + n_gas}
 
     # Note if was exception halt or other failure on stack
     result =
