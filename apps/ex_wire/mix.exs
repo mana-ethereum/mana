@@ -8,7 +8,7 @@ defmodule ExWire.Mixfile do
      config_path: "../../config/config.exs",
      deps_path: "../../deps",
      lockfile: "../../mix.lock",
-     elixir: "~> 1.4",
+     elixir: "~> 1.6",
      description: "Elixir Client for Ethereum's RLPx, DevP2P and Eth Wire Protocol",
       package: [
         maintainers: ["Mason Fischer", "Geoffrey Hayes", "Ayrat Badykov"],
@@ -31,10 +31,17 @@ defmodule ExWire.Mixfile do
 
   defp deps do
     [
+<<<<<<< HEAD
       {:credo, "~> 0.8", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.14", only: :dev, runtime: false},
       {:ex_rlp, in_umbrella: true},
       {:blockchain, in_umbrella: true},
+=======
+      {:credo, "~> 0.9.1", only: [:dev, :test], runtime: false},
+      {:ex_doc, "~> 0.16", only: :dev, runtime: false},
+      {:ex_rlp, "~> 0.2.1"},
+      {:blockchain, "~> 0.1.7"},
+>>>>>>> ex_wire/masonforest/monorepo
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
       {:exth_crypto, in_umbrella: true},
       {:evm, in_umbrella: true}
