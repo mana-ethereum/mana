@@ -90,7 +90,8 @@ defmodule EvmTest do
       # :callcodeToNameRegistrator0,
       # :callcodeToReturn1,
       # :createNameRegistratorValueTooHigh,
-    ]
+    ],
+    tests: :all
   }
 
   test "Ethereum Common Tests" do
