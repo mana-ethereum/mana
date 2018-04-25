@@ -95,7 +95,7 @@ defmodule EVM.Functions do
       iex> EVM.Functions.is_exception_halt?(%EVM.MachineState{program_counter: 0, gas: 0xffff, stack: (for _ <- 1..1024, do: 0x0)}, %EVM.ExecEnv{machine_code: <<EVM.Operation.encode(:push1)>>})
       {:halt, :stack_overflow}
   """
-  @spec is_exception_halt?(MachineState.t, ExecEnv.t) :: :continue | {:halt, atom()}
+  @spec is_exception_halt?(MachineState.t(), ExecEnv.t()) :: :continue | {:halt, atom()}
   def is_exception_halt?(machine_state, exec_env) do
     operation = Operation.get_operation_at(exec_env.machine_code, machine_state.program_counter)
     operation_metadata = Operation.metadata(operation)
@@ -110,7 +110,7 @@ defmodule EVM.Functions do
       end
 
     cond do
-      is_nil(operation) || is_nil(input_count) ->
+      is_nil(input_count) ->
         {:halt, :undefined_instruction}
 
       length(machine_state.stack) < input_count ->

@@ -19,6 +19,8 @@ defmodule EVM.Interface.Mock.MockAccountInterface do
 end
 
 defimpl EVM.Interface.AccountInterface, for: EVM.Interface.Mock.MockAccountInterface do
+  alias Block.Header
+
   @spec account_exists?(EVM.Interface.AccountInterface.t(), EVM.address()) :: boolean()
   def account_exists?(mock_account_interface, address) do
     !!get_account(mock_account_interface, :binary.decode_unsigned(address))

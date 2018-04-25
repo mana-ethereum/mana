@@ -1,6 +1,7 @@
 defmodule EVM.Operation.ComparisonAndBitwiseLogic do
   alias MathHelper
   alias EVM.Helpers
+  alias EVM.Operation
   use Bitwise
 
   @doc """
@@ -17,7 +18,7 @@ defmodule EVM.Operation.ComparisonAndBitwiseLogic do
       iex> EVM.Operation.ComparisonAndBitwiseLogic.lt([55, 55], %{})
       0
   """
-  @spec lt(Operation.stack_args(), Operation.vm_map()) :: Operation.Operation.op_result()
+  @spec lt(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def lt([s0, s1], _), do: if(s0 < s1, do: 1, else: 0)
 
   @doc """
@@ -34,7 +35,7 @@ defmodule EVM.Operation.ComparisonAndBitwiseLogic do
       iex> EVM.Operation.ComparisonAndBitwiseLogic.gt([55, 55], %{})
       0
   """
-  @spec gt(Operation.stack_args(), Operation.vm_map()) :: Operation.Operation.op_result()
+  @spec gt(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def gt([s0, s1], _), do: if(s0 > s1, do: 1, else: 0)
 
   @doc """
@@ -51,7 +52,7 @@ defmodule EVM.Operation.ComparisonAndBitwiseLogic do
       iex> EVM.Operation.ComparisonAndBitwiseLogic.slt([55, 55], %{})
       0
   """
-  @spec slt(Operation.stack_args(), Operation.vm_map()) :: Operation.Operation.op_result()
+  @spec slt(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def slt([s0, s1], _) do
     if Helpers.decode_signed(s0) < Helpers.decode_signed(s1) do
       1
@@ -74,7 +75,7 @@ defmodule EVM.Operation.ComparisonAndBitwiseLogic do
       iex> EVM.Operation.ComparisonAndBitwiseLogic.sgt([55, 55], %{})
       0
   """
-  @spec sgt(Operation.stack_args(), Operation.vm_map()) :: Operation.Operation.op_result()
+  @spec sgt(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def sgt([s0, s1], _) do
     if Helpers.decode_signed(s0) > Helpers.decode_signed(s1) do
       1
@@ -97,7 +98,7 @@ defmodule EVM.Operation.ComparisonAndBitwiseLogic do
       iex> EVM.Operation.ComparisonAndBitwiseLogic.eq([0, 0], %{})
       1
   """
-  @spec eq(Operation.stack_args(), Operation.vm_map()) :: Operation.Operation.op_result()
+  @spec eq(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def eq([s0, s1], _), do: if(s0 == s1, do: 1, else: 0)
 
   @doc """
@@ -111,7 +112,7 @@ defmodule EVM.Operation.ComparisonAndBitwiseLogic do
       iex> EVM.Operation.ComparisonAndBitwiseLogic.iszero([1], %{})
       0
   """
-  @spec iszero(Operation.stack_args(), Operation.vm_map()) :: Operation.Operation.op_result()
+  @spec iszero(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def iszero([s0], _vm_map), do: if(s0 == 0, do: 1, else: 0)
 
   @doc """
@@ -125,7 +126,7 @@ defmodule EVM.Operation.ComparisonAndBitwiseLogic do
       iex> EVM.Operation.ComparisonAndBitwiseLogic.and_([1, 0], %{})
       0
   """
-  @spec and_(Operation.stack_args(), Operation.vm_map()) :: Operation.Operation.op_result()
+  @spec and_(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def and_([s0, s1], _vm_map), do: band(s0, s1)
 
   @doc """
@@ -142,7 +143,7 @@ defmodule EVM.Operation.ComparisonAndBitwiseLogic do
       iex> EVM.Operation.ComparisonAndBitwiseLogic.or_([0, 0], %{})
       0
   """
-  @spec or_(Operation.stack_args(), Operation.vm_map()) :: Operation.Operation.op_result()
+  @spec or_(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def or_([s0, s1], _vm_map), do: bor(s0, s1)
 
   @doc """
@@ -156,7 +157,7 @@ defmodule EVM.Operation.ComparisonAndBitwiseLogic do
       iex> EVM.Operation.ComparisonAndBitwiseLogic.or_([1, 0], %{})
       1
   """
-  @spec xor_(Operation.stack_args(), Operation.vm_map()) :: Operation.Operation.op_result()
+  @spec xor_(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def xor_([s0, s1], _vm_map), do: bxor(s0, s1)
 
   @doc """
@@ -167,7 +168,7 @@ defmodule EVM.Operation.ComparisonAndBitwiseLogic do
       -2
 
   """
-  @spec not_(Operation.stack_args(), Operation.vm_map()) :: Operation.Operation.op_result()
+  @spec not_(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def not_([s0], _), do: bnot(s0)
 
   @doc """

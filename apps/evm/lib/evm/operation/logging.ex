@@ -1,4 +1,6 @@
 defmodule EVM.Operation.Logging do
+  alias EVM.Operation
+
   @doc """
   Append log record with no topics.
 

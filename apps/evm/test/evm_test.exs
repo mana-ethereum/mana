@@ -10,6 +10,48 @@ defmodule EvmTest do
     block_info_test: :all,
     environmental_info: :all,
     push_dup_swap_test: :all,
+    random_test: [
+      :"201503110219PYTHON",
+      :"201503110346PYTHON_PUSH24",
+      :"201503111844PYTHON",
+      :"201503120317PYTHON",
+      :"201503120547PYTHON",
+      :"201503102320PYTHON",
+      :"201503110206PYTHON",
+      :"201503110226PYTHON_DUP6",
+      :"201503110526PYTHON",
+      :"201503112218PYTHON",
+      :"201503120525PYTHON",
+      :"201503120909PYTHON",
+      {:randomTest, [test_key: "randomVMtest"]}
+
+      # These tests need `callcode` operation which is not implemented yet.
+      # :"201503102148PYTHON",
+      # :"201503102037PYTHON",
+      # :"201503102300PYTHON",
+      # :"201503110050PYTHON",
+    ],
+    performance: [
+      :ackermann31,
+      :ackermann33,
+      :fibonacci16,
+      :manyFunctions100,
+      :ackermann32,
+      :fibonacci10,
+
+      # :"loop-divadd-10M",
+      # :"loop-exp-16b-100k",
+      # :"loop-exp-2b-100k",
+      # :"loop-exp-4b-100k",
+      # :"loop-exp-nop-1M",
+      # :"loop-mulmod-2M",
+      # :"loop-add-10M",
+      # :"loop-divadd-unr100-10M",
+      # :"loop-exp-1b-1M",
+      # :"loop-exp-32b-100k",
+      # :"loop-exp-8b-100k",
+      # :"loop-mul",
+    ],
     i_oand_flow_operations: :all,
     system_operations: [
       :ABAcalls0,
@@ -43,12 +85,13 @@ defmodule EvmTest do
       :return2,
       :suicide0,
       :suicideNotExistingAccount,
-      :suicideSendEtherToMe
+      :suicideSendEtherToMe,
+      :createNameRegistratorValueTooHigh,
+      :CallToPrecompiledContract
 
-      # :CallToPrecompiledContract,
+      # These tests need `callcode` operation which is not implemented yet.
       # :callcodeToNameRegistrator0,
       # :callcodeToReturn1,
-      # :createNameRegistratorValueTooHigh,
     ]
   }
 
@@ -169,20 +212,29 @@ defmodule EvmTest do
   end
 
   def passing_tests(test_group_name) do
-    passing_tests_in_group =
+    tests =
       if Map.get(@passing_tests_by_group, test_group_name) == :all do
         all_tests_of_type(test_group_name)
       else
         Map.get(@passing_tests_by_group, test_group_name)
       end
-      |> Enum.map(fn test_name ->
-        {test_name, read_test_file(test_group_name, test_name)}
-      end)
+
+    Enum.map(tests, fn test_data ->
+      case test_data do
+        {test_name, options} -> {test_name, read_test_file(test_group_name, test_name, options)}
+        test_name -> {test_name, read_test_file(test_group_name, test_name)}
+      end
+    end)
   end
 
   def read_test_file(group, name) do
     {:ok, body} = File.read(test_file_name(group, name))
     Poison.decode!(body)[name |> Atom.to_string()]
+  end
+
+  def read_test_file(group, name, test_key: test_key) do
+    {:ok, body} = File.read(test_file_name(group, name))
+    Poison.decode!(body)[test_key]
   end
 
   def all_tests_of_type(type) do
@@ -210,7 +262,8 @@ defmodule EvmTest do
   end
 
   def hex_to_int(string) do
-    hex_to_binary(string)
+    string
+    |> hex_to_binary()
     |> :binary.decode_unsigned()
   end
 

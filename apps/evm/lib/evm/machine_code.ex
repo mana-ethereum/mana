@@ -2,6 +2,7 @@ defmodule EVM.MachineCode do
   @moduledoc """
   Functions for helping read a contract's machine code.
   """
+  alias EVM.Operation.Metadata
   alias EVM.Operation
   alias EVM.MachineState
   alias EVM.ExecEnv
@@ -25,7 +26,7 @@ defmodule EVM.MachineCode do
       iex> EVM.MachineCode.current_operation(%EVM.MachineState{program_counter: 2}, %EVM.ExecEnv{machine_code: <<0x15::8, 0x11::8, 0x12::8>>})
       %EVM.Operation.Metadata{args: [], description: "Signed less-than comparision.", fun: nil, group: :comparison_and_bitwise_logic, id: 18, input_count: 2, machine_code_offset: 0, output_count: 1, sym: :slt}
   """
-  @spec current_operation(MachineState.t(), ExecEnv.t()) :: Operation.Metadata.t()
+  @spec current_operation(MachineState.t(), ExecEnv.t()) :: Metadata.t()
   def current_operation(machine_state, exec_env) do
     Operation.get_operation_at(exec_env.machine_code, machine_state.program_counter)
     |> Operation.metadata()

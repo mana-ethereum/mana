@@ -190,10 +190,13 @@ defmodule EVM.Gas do
 
   def memory_cost(
         :call,
-        [_gas_limit, _to_address, _value, _in_offset, _in_length, out_offset, out_length],
+        [_gas_limit, _to_address, _value, in_offset, in_length, out_offset, out_length],
         machine_state
       ) do
-    memory_expansion_cost(machine_state, out_offset, out_length)
+    out_memory_cost = memory_expansion_cost(machine_state, out_offset, out_length)
+    in_memory_cost = memory_expansion_cost(machine_state, in_offset, in_length)
+
+    max(out_memory_cost, in_memory_cost)
   end
 
   def memory_cost(:create, [_value, in_offset, in_length], machine_state) do
@@ -293,7 +296,7 @@ defmodule EVM.Gas do
       222
 
   """
-  @spec operation_cost(atom(), list(EVM.val()), EVM.state(), MachineState.t()) :: t | nil
+  @spec operation_cost(atom(), list(EVM.val()), list(EVM.val()), MachineState.t()) :: t | nil
   def operation_cost(operation \\ nil, inputs \\ nil, machine_state \\ nil, exec_env \\ nil)
 
   def operation_cost(:exp, [_base, exponent], _machine_state, _exec_env) do

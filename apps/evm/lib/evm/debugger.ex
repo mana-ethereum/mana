@@ -6,6 +6,9 @@ defmodule EVM.Debugger do
 
   alias EVM.Debugger.Breakpoint
   alias EVM.Debugger.Command
+  alias EVM.SubState
+  alias EVM.ExecEnv
+  alias EVM.MachineState
 
   @commands [
     %Command{
@@ -136,7 +139,7 @@ defmodule EVM.Debugger do
       iex> EVM.Debugger.Breakpoint.get_breakpoint(id) |> Map.put(:id, nil)
       %EVM.Debugger.Breakpoint{conditions: [address: <<188, 31, 252, 22, 32, 218, 20, 104, 98, 74, 89, 108, 184, 65, 211, 94, 107, 47, 31, 182>>], pc: :start}
   """
-  @spec break_on(keyword(Breakpoint.conditions())) :: Breakpoint.t()
+  @spec break_on(keyword(Breakpoint.conditions())) :: Breakpoint.id()
   def break_on(conditions) do
     Breakpoint.set_breakpoint(%Breakpoint{conditions: conditions, pc: :start})
   end
@@ -161,7 +164,8 @@ defmodule EVM.Debugger do
       iex> EVM.Debugger.is_breakpoint?(machine_state, sub_state, exec_env)
       :continue
   """
-  @spec is_breakpoint?(MachineState.t(), SubState.t(), ExecEnv.t()) :: :continue | Breakpoint.t()
+  @spec is_breakpoint?(MachineState.t(), SubState.t(), EVM.ExecEnv.t()) ::
+          :continue | Breakpoint.t()
   def is_breakpoint?(machine_state, sub_state, exec_env) do
     Enum.find(Breakpoint.get_breakpoints(), :continue, fn breakpoint ->
       Breakpoint.matches?(breakpoint, machine_state, sub_state, exec_env)
@@ -226,7 +230,7 @@ defmodule EVM.Debugger do
     )
   end
 
-  @spec print_current_instruction(MachineState.t(), ExecEnv.t(), integer(), integer()) :: any()
+  @spec print_current_instruction(ExecEnv.t(), MachineState.t(), integer(), integer()) :: any()
   defp print_current_instruction(
          exec_env,
          machine_state,

@@ -23,7 +23,10 @@ defmodule Block.HeaderTest do
     }
 
     assert header ==
-             header |> Header.serialize() |> ExRLP.encode() |> ExRLP.decode()
+             header
+             |> Header.serialize()
+             |> ExRLP.encode()
+             |> ExRLP.decode()
              |> Header.deserialize()
   end
 end
