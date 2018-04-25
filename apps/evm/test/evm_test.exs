@@ -9,27 +9,7 @@ defmodule EvmTest do
     block_info_test: :all,
     environmental_info: :all,
     push_dup_swap_test: :all,
-    random_test: [
-      :"201503110219PYTHON",
-      :"201503110346PYTHON_PUSH24",
-      :"201503111844PYTHON",
-      :"201503120317PYTHON",
-      :"201503120547PYTHON",
-      :"201503102320PYTHON",
-      :"201503110206PYTHON",
-      :"201503110226PYTHON_DUP6",
-      :"201503110526PYTHON",
-      :"201503112218PYTHON",
-      :"201503120525PYTHON",
-      :"201503120909PYTHON",
-      {:randomTest, [test_key: "randomVMtest"]}
-
-      # These tests need `callcode` operation which is not implemented yet.
-      # :"201503102148PYTHON",
-      # :"201503102037PYTHON",
-      # :"201503102300PYTHON",
-      # :"201503110050PYTHON",
-    ],
+    random_test: :all,
     performance: [
       :ackermann31,
       :ackermann33,
