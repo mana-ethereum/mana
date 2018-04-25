@@ -159,22 +159,15 @@ defmodule EvmTest do
         Map.get(@passing_tests_by_group, test_group_name)
       end
 
-    Enum.map(tests, fn test_data ->
-      case test_data do
-        {test_name, options} -> {test_name, read_test_file(test_group_name, test_name, options)}
-        test_name -> {test_name, read_test_file(test_group_name, test_name)}
-      end
+    tests
+    |> Enum.map(fn test_name ->
+      {test_name, read_test_file(test_group_name, test_name)}
     end)
   end
 
   def read_test_file(group, name) do
     {:ok, body} = File.read(test_file_name(group, name))
     Poison.decode!(body)[name |> Atom.to_string()]
-  end
-
-  def read_test_file(group, name, test_key: test_key) do
-    {:ok, body} = File.read(test_file_name(group, name))
-    Poison.decode!(body)[test_key]
   end
 
   def all_tests_of_type(type) do
