@@ -31,7 +31,7 @@ defmodule MerklePatriciaTree.ListHelper do
     []
   """
   @spec get_postfix([integer()], [integer()]) :: [integer()] | nil
-  def get_postfix([h0|t0], [h1|t1]) do
+  def get_postfix([h0 | t0], [h1 | t1]) do
     if h0 == h1 do
       get_postfix(t0, t1)
     else
@@ -40,7 +40,7 @@ defmodule MerklePatriciaTree.ListHelper do
   end
 
   def get_postfix(l, []), do: l
-  def get_postfix([], [_|_]), do: nil
+  def get_postfix([], [_ | _]), do: nil
 
   @doc """
   Returns the overlap of two lists in terms of a shared prefix, then the relative postfixes
@@ -66,13 +66,13 @@ defmodule MerklePatriciaTree.ListHelper do
     {[15], [10, 5, 11], [11, 1, 14]}
   """
   @spec overlap([integer()], [integer()]) :: {[integer()], [integer()], [integer()]}
-  def overlap([], [_|_]=b), do: {[], [], b}
-  def overlap([_|_]=a, []), do: {[], a, []}
+  def overlap([], b = [_ | _]), do: {[], [], b}
+  def overlap(a = [_ | _], []), do: {[], a, []}
   def overlap([], []), do: {[], [], []}
 
-  def overlap([a0|a], [b0|b]) when a0 == b0 do
+  def overlap([a0 | a], [b0 | b]) when a0 == b0 do
     {o1, a1, b1} = overlap(a, b)
-    {[a0|o1], a1, b1}
+    {[a0 | o1], a1, b1}
   end
 
   def overlap(a, b), do: {[], a, b}

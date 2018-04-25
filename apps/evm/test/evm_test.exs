@@ -18,12 +18,10 @@ defmodule EvmTest do
       :"201503120547PYTHON",
       :"201503102320PYTHON",
       :"201503110206PYTHON",
-      :"201503110226PYTHON_DUP6",
       :"201503110526PYTHON",
       :"201503112218PYTHON",
       :"201503120525PYTHON",
       :"201503120909PYTHON",
-      {:randomTest, [test_key: "randomVMtest"]}
 
       # These tests need `callcode` operation which is not implemented yet.
       # :"201503102148PYTHON",

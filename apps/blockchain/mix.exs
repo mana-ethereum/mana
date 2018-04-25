@@ -53,23 +53,13 @@ defmodule Blockchain.Mixfile do
     [
       {:libsecp256k1, "~> 0.1.4"},
       {:keccakf1600, "~> 2.0.0", hex: :keccakf1600_orig},
-<<<<<<< HEAD
-      {:credo, "~> 0.8", only: [:dev, :test], runtime: false},
-      {:ex_doc, "~> 0.14", only: :dev, runtime: false},
+      {:credo, "~>  0.9.1", only: [:dev, :test], runtime: false},
+      {:ex_doc, "~> 0.16", only: :dev, runtime: false},
       {:merkle_patricia_tree, in_umbrella: true},
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
       {:ex_rlp, in_umbrella: true},
       {:evm, in_umbrella: true},
-      {:poison, "~> 3.1.0"},
-=======
-      {:credo, "~>  0.9.1", only: [:dev, :test], runtime: false},
-      {:ex_doc, "~> 0.16", only: :dev, runtime: false},
-      {:merkle_patricia_tree, "~> 0.2.6"},
-      {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
-      {:ex_rlp, "~> 0.2.1"},
-      {:evm, "~> 0.1.14"},
       {:poison, "~> 3.1.0"}
->>>>>>> blockchain/masonforest/monorepo
     ]
   end
 end

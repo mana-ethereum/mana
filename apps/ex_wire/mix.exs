@@ -31,17 +31,10 @@ defmodule ExWire.Mixfile do
 
   defp deps do
     [
-<<<<<<< HEAD
-      {:credo, "~> 0.8", only: [:dev, :test], runtime: false},
-      {:ex_doc, "~> 0.14", only: :dev, runtime: false},
-      {:ex_rlp, in_umbrella: true},
-      {:blockchain, in_umbrella: true},
-=======
       {:credo, "~> 0.9.1", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.16", only: :dev, runtime: false},
-      {:ex_rlp, "~> 0.2.1"},
-      {:blockchain, "~> 0.1.7"},
->>>>>>> ex_wire/masonforest/monorepo
+      {:ex_rlp, in_umbrella: true},
+      {:blockchain, in_umbrella: true},
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
       {:exth_crypto, in_umbrella: true},
       {:evm, in_umbrella: true}

@@ -11,10 +11,10 @@ defmodule MerklePatriciaTree.Trie.Node do
   alias MerklePatriciaTree.Trie.Storage
 
   @type trie_node ::
-    :empty |
-    {:leaf, [integer()], binary()} |
-    {:ext, [integer()], binary()} |
-    {:branch, [binary()]}
+          :empty
+          | {:leaf, [integer()], binary()}
+          | {:ext, [integer()], binary()}
+          | {:branch, [binary()]}
 
   @doc """
   Given a node, this function will encode the node
@@ -40,7 +40,7 @@ defmodule MerklePatriciaTree.Trie.Node do
   iex> MerklePatriciaTree.Trie.Node.encode_node({:ext, [1, 2, 3], <<>>}, trie)
   [<<17, 35>>, ""]
   """
-  @spec encode_node(trie_node, Trie.t) :: nil | binary()
+  @spec encode_node(trie_node, Trie.t()) :: nil | binary()
   def encode_node(trie_node, trie) do
     trie_node
     |> encode_node_type()
@@ -86,14 +86,21 @@ defmodule MerklePatriciaTree.Trie.Node do
   iex> |> MerklePatriciaTree.Trie.Node.decode_trie()
   {:ext, [1, 2, 3], <<>>}
   """
-  @spec decode_trie(Trie.t) :: trie_node
+  @spec decode_trie(Trie.t()) :: trie_node
   def decode_trie(trie) do
     case Storage.get_node(trie) do
-      nil -> :empty
-      <<>> -> :empty
-      :not_found -> :empty
+      nil ->
+        :empty
+
+      <<>> ->
+        :empty
+
+      :not_found ->
+        :empty
+
       branches when length(branches) == 17 ->
         {:branch, branches}
+
       [hp_k, v] ->
         # extension or leaf node
         {prefix, is_leaf} = HexPrefix.decode(hp_k)
@@ -103,6 +110,6 @@ defmodule MerklePatriciaTree.Trie.Node do
         else
           {:ext, prefix, v}
         end
-      end
+    end
   end
 end
