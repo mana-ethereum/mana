@@ -22,7 +22,7 @@ defmodule EVM.Address do
   """
 
   @spec new(integer()) :: binary()
-  def new(address) do
+  def new(address) when is_number(address) do
     address
     |> :binary.encode_unsigned()
     |> EVM.Helpers.left_pad_bytes(@size)
