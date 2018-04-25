@@ -91,7 +91,8 @@ defmodule EvmTest do
       # These tests need `callcode` operation which is not implemented yet.
       # :callcodeToNameRegistrator0,
       # :callcodeToReturn1,
-    ]
+    ],
+    tests: :all
   }
 
   test "Ethereum Common Tests" do
