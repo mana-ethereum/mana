@@ -1,6 +1,6 @@
 defmodule HexPrefix do
   @moduledoc File.read!("#{__DIR__}/../README.md")
-  @type t :: {[0x0..0xf], boolean()}
+  @type t :: {[0x0..0xF], boolean()}
 
   @doc """
   Encodes a list of nibbles using hex-prefix notation.
@@ -31,17 +31,19 @@ defmodule HexPrefix do
     iex> HexPrefix.encode({[ 15, 1, 12, 11, 8 ], true})
     <<0x3f, 0x1c, 0xb8>>
   """
-  @spec encode(__MODULE__.t) :: binary()
+  @spec encode(__MODULE__.t()) :: binary()
   def encode({nibbles, terminator}) do
-    {base, nibbles} = if rem(length(nibbles), 2) == 0 do # even
-      {<<16*f(terminator)>>, nibbles}
-    else
-      {<<16*(f(terminator)+1)+hd(nibbles)>>, tl(nibbles)}
-    end
+    # even
+    {base, nibbles} =
+      if rem(length(nibbles), 2) == 0 do
+        {<<16 * f(terminator)>>, nibbles}
+      else
+        {<<16 * (f(terminator) + 1) + hd(nibbles)>>, tl(nibbles)}
+      end
 
     # Group in pairs, we know it's even
-    Enum.reduce(nibbles |> Enum.chunk(2), base, fn([n1, n2], acc) ->
-      acc <> <<16*n1+n2::8>>
+    Enum.reduce(nibbles |> Enum.chunk(2), base, fn [n1, n2], acc ->
+      acc <> <<16 * n1 + n2::8>>
     end)
   end
 
@@ -81,7 +83,7 @@ defmodule HexPrefix do
   def decode(hp) do
     # First two bits are unused, then encode terminator, then parity, then maybe first nibble, then rest
     # We just pattern match for each
-    <<_::size(2), terminator::size(1), parity::size(1), hd::bitstring - size(4), rest::binary>> = hp
+    <<_::size(2), terminator::size(1), parity::size(1), hd::bitstring-size(4), rest::binary>> = hp
 
     # Ignore first nibble unless parity flag is set
     base = if parity == 1, do: [:binary.decode_unsigned(<<0::4, hd::bits>>, :big)], else: []
