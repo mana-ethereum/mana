@@ -16,7 +16,7 @@ defmodule EvmTest do
       :fibonacci16,
       :manyFunctions100,
       :ackermann32,
-      :fibonacci10,
+      :fibonacci10
 
       # :"loop-divadd-10M",
       # :"loop-exp-16b-100k",

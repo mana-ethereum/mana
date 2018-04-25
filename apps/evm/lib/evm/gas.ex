@@ -188,26 +188,12 @@ defmodule EVM.Gas do
     memory_expansion_cost(machine_state, memory_offset, 32)
   end
 
-  def memory_cost(
-        :call,
-        [_gas_limit, _to_address, _value, in_offset, in_length, out_offset, out_length],
-        machine_state
-      ) do
-    out_memory_cost = memory_expansion_cost(machine_state, out_offset, out_length)
-    in_memory_cost = memory_expansion_cost(machine_state, in_offset, in_length)
-
-    max(out_memory_cost, in_memory_cost)
+  def memory_cost(:call, stack_args, machine_state) do
+    call_memory_cost(stack_args, machine_state)
   end
 
-  def memory_cost(
-        :callcode,
-        [_gas_limit, _to_address, _value, in_offset, in_length, out_offset, out_length],
-        machine_state
-      ) do
-    out_memory_cost = memory_expansion_cost(machine_state, out_offset, out_length)
-    in_memory_cost = memory_expansion_cost(machine_state, in_offset, in_length)
-
-    max(out_memory_cost, in_memory_cost)
+  def memory_cost(:callcode, stack_args, machine_state) do
+    call_memory_cost(stack_args, machine_state)
   end
 
   def memory_cost(:create, [_value, in_offset, in_length], machine_state) do
@@ -219,6 +205,17 @@ defmodule EVM.Gas do
   end
 
   def memory_cost(_operation, _inputs, _machine_state), do: 0
+
+  @spec call_memory_cost(Operation.stack_args(), MachineState.t()) :: t
+  defp call_memory_cost(
+         [_gas_limit, _to_address, _value, in_offset, in_length, out_offset, out_length],
+         machine_state
+       ) do
+    out_memory_cost = memory_expansion_cost(machine_state, out_offset, out_length)
+    in_memory_cost = memory_expansion_cost(machine_state, in_offset, in_length)
+
+    max(out_memory_cost, in_memory_cost)
+  end
 
   # From Eq 220: Cmem(μ′i)−Cmem(μi)
   def memory_expansion_cost(machine_state, offset, length) do
