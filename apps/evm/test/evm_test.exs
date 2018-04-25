@@ -32,7 +32,8 @@ defmodule EvmTest do
       # :"loop-mul",
     ],
     i_oand_flow_operations: :all,
-    system_operations: :all
+    system_operations: :all,
+    tests: :all
   }
 
   test "Ethereum Common Tests" do
