@@ -18,6 +18,7 @@ defmodule EvmTest do
       :ackermann32,
       :fibonacci10
 
+      # These tests take too long to execute but they pass.
       # :"loop-divadd-10M",
       # :"loop-exp-16b-100k",
       # :"loop-exp-2b-100k",
