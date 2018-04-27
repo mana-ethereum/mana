@@ -25,7 +25,7 @@ defmodule EVM do
   @type timestamp :: integer()
   @type log_entry :: %{
           address: address(),
-          topics: [],
+          topics: [integer()],
           data: binary()
         }
 
