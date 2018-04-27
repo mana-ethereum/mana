@@ -152,12 +152,12 @@ defmodule EVM.Operation.EnvironmentalInformation do
         exec_env: exec_env,
         machine_state: machine_state
       }) do
-    if length == 0 do
-      0
-    else
+    if length > 0 do
       data = EVM.Memory.read_zeroed_memory(exec_env.data, call_data_start, length)
       machine_state = EVM.Memory.write(machine_state, memory_start, Helpers.right_pad_bytes(data))
 
+      %{machine_state: machine_state}
+    else
       %{machine_state: machine_state}
     end
   end
