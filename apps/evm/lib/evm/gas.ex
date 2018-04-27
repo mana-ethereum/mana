@@ -107,7 +107,7 @@ defmodule EVM.Gas do
   @push_instrs Enum.map(0..32, fn n -> :"push#{n}" end)
   @dup_instrs Enum.map(0..16, fn n -> :"dup#{n}" end)
   @swap_instrs Enum.map(0..16, fn n -> :"swap#{n}" end)
-  @log_instrs Enum.map(1..4, fn n -> :"log#{n}" end)
+  @log_instrs Enum.map(0..4, fn n -> :"log#{n}" end)
   @w_very_low_instr [
                       :add,
                       :sub,
@@ -390,6 +390,26 @@ defmodule EVM.Gas do
     @g_call + call_value_cost(value) + gas_limit
   end
 
+  def operation_cost(:log0, [_offset, size | _], _machine_state, _exec_end) do
+    @g_log + @g_logdata * size
+  end
+
+  def operation_cost(:log1, [_offset, size | _], _machine_state, _exec_end) do
+    @g_log + @g_logdata * size + @g_logtopic
+  end
+
+  def operation_cost(:log2, [_offset, size | _], _machine_state, _exec_end) do
+    @g_log + @g_logdata * size + @g_logtopic * 2
+  end
+
+  def operation_cost(:log3, [_offset, size | _], _machine_state, _exec_end) do
+    @g_log + @g_logdata * size + @g_logtopic * 3
+  end
+
+  def operation_cost(:log4, [_offset, size | _], _machine_state, _exec_end) do
+    @g_log + @g_logdata * size + @g_logtopic * 4
+  end
+
   def operation_cost(operation, _inputs, _machine_state, _exec_env) do
     cond do
       operation in @w_very_low_instr -> @g_verylow
@@ -405,7 +425,6 @@ defmodule EVM.Gas do
       operation == :balance -> @g_balance
       operation == :sload -> @g_sload
       operation == :jumpdest -> @g_jumpdest
-      operation in @log_instrs -> 0
       true -> 0
     end
   end
