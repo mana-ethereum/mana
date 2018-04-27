@@ -10,8 +10,8 @@ defmodule EVM.Operation.Logging do
 
   """
   @spec log0(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
-  def log0(_args, %{stack: _stack}) do
-    :unimplemented
+  def log0(args, vm_map) do
+    args |> log(vm_map)
   end
 
   @doc """
