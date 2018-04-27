@@ -10,6 +10,7 @@ defmodule EvmTest do
     environmental_info: :all,
     push_dup_swap_test: :all,
     random_test: :all,
+    log_test: :all,
     performance: [
       :ackermann31,
       :ackermann33,

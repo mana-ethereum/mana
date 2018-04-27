@@ -39,7 +39,7 @@ defmodule EVM.SubState do
         suicide_list: []
       }
   """
-  @spec add_log(t(), EVM.address(), Operation.stack_args, binary()) :: t()
+  @spec add_log(t(), EVM.address(), Operation.stack_args(), binary()) :: t()
   def add_log(sub_state, address, topics, data) do
     log_entry = %{
       address: address,

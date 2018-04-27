@@ -68,9 +68,12 @@ defmodule EVM.Operation.Logging do
     args |> log(vm_map)
   end
 
-
   @spec log(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
-  defp log([offset, size | topics], %{exec_env: exec_env, sub_state: sub_state, machine_state: machine_state}) do
+  defp log([offset, size | topics], %{
+         exec_env: exec_env,
+         sub_state: sub_state,
+         machine_state: machine_state
+       }) do
     {data, _} = machine_state |> Memory.read(offset, size)
     address = exec_env.address
     updated_substate = sub_state |> SubState.add_log(address, topics, data)
