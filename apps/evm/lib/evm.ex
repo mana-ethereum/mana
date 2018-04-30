@@ -23,11 +23,6 @@ defmodule EVM do
   @type address :: <<_::160>>
   @type hash :: <<_::256>>
   @type timestamp :: integer()
-  @type log_entry :: %{
-          address: address(),
-          topics: [integer()],
-          data: binary()
-        }
 
   @word_size_in_bytes 4
   @byte_size 8
