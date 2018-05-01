@@ -10,6 +10,7 @@ defmodule EvmTest do
     environmental_info: :all,
     push_dup_swap_test: :all,
     random_test: :all,
+    log_test: :all,
     performance: [
       :ackermann31,
       :ackermann33,
@@ -18,6 +19,7 @@ defmodule EvmTest do
       :ackermann32,
       :fibonacci10
 
+      # These tests take too long to execute but they pass.
       # :"loop-divadd-10M",
       # :"loop-exp-16b-100k",
       # :"loop-exp-2b-100k",
@@ -39,7 +41,7 @@ defmodule EvmTest do
   test "Ethereum Common Tests" do
     for {test_group_name, _test_group} <- @passing_tests_by_group do
       for {_test_name, test} <- passing_tests(test_group_name) do
-        {gas, _, exec_env, _} =
+        {gas, sub_state, exec_env, _} =
           EVM.VM.run(hex_to_int(test["exec"]["gas"]), %EVM.ExecEnv{
             account_interface: account_interface(test),
             address: hex_to_int(test["exec"]["address"]),
@@ -56,6 +58,12 @@ defmodule EvmTest do
 
         if test["gas"] do
           assert hex_to_int(test["gas"]) == gas
+        end
+
+        if test["logs"] do
+          logs_hash = sub_state.logs |> logs_hash
+
+          assert hex_to_binary(test["logs"]) == logs_hash
         end
       end
     end
@@ -236,5 +244,11 @@ defmodule EvmTest do
 
       {address, storage}
     end)
+  end
+
+  def logs_hash(logs) do
+    logs
+    |> ExRLP.encode()
+    |> :keccakf1600.sha3_256()
   end
 end

@@ -61,7 +61,7 @@ defmodule EVM.VM do
       {%EVM.MachineState{program_counter: 6, gas: 0, stack: [8]}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:push1, 3, :push1, 5, :add])}, ""}
 
       iex> EVM.VM.exec(%EVM.MachineState{program_counter: 0, gas: 24, stack: []}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:push1, 3, :push1, 5, :add, :push1, 0x00, :mstore, :push1, 32, :push1, 0, :return])})
-      {%EVM.MachineState{active_words: 1, memory: <<0x08::256>>, gas: 0, program_counter: 13, stack: []}, %EVM.SubState{logs: "", refund: 0, suicide_list: []}, %EVM.ExecEnv{machine_code: <<96, 3, 96, 5, 1, 96, 0, 82, 96, 32, 96, 0, 243>>}, <<8::256>>}
+      {%EVM.MachineState{active_words: 1, memory: <<0x08::256>>, gas: 0, program_counter: 13, stack: []}, %EVM.SubState{logs: [], refund: 0, suicide_list: []}, %EVM.ExecEnv{machine_code: <<96, 3, 96, 5, 1, 96, 0, 82, 96, 32, 96, 0, 243>>}, <<8::256>>}
   """
   @spec exec(MachineState.t(), SubState.t(), ExecEnv.t()) ::
           {MachineState.t(), SubState.t(), ExecEnv.t(), output}
