@@ -8,6 +8,8 @@ defmodule EVM.Operation.System do
   alias EVM.Stack
   alias EVM.Operation
 
+  @dialyzer {:no_return, callcode: 2}
+
   @doc """
   Create a new account with associated code.
 
@@ -120,7 +122,7 @@ defmodule EVM.Operation.System do
         exec_env: exec_env,
         machine_state: machine_state
       }) do
-    to = Address.new(to)
+    to = if is_number(to), do: Address.new(to), else: to
     {data, machine_state} = EVM.Memory.read(machine_state, in_offset, in_size)
 
     account_balance =
@@ -169,6 +171,35 @@ defmodule EVM.Operation.System do
         machine_state: %{machine_state | stack: Stack.push(machine_state.stack, 0)}
       }
     end
+  end
+
+  @doc """
+    Exactly equivalent to `call` except  the recipient is in fact the same account as at present, simply that the code is overwritten.
+
+    ## Examples
+
+        iex> account_interface = EVM.Interface.Mock.MockAccountInterface.new(%{})
+        iex> exec_env = %EVM.ExecEnv{
+        ...>   account_interface: account_interface,
+        ...>   sender: <<0::160>>,
+        ...>   address: <<5::160>>
+        ...> }
+        iex> machine_state = %EVM.MachineState{gas: 1000}
+        iex> %{machine_state: machine_state, exec_env: exec_env} =
+        ...> EVM.Operation.System.callcode([10, 1, 1, 0, 0, 0, 0],
+        ...>   %{exec_env: exec_env, machine_state: machine_state})
+        iex> EVM.Stack.peek(machine_state.stack)
+        1
+  """
+  @spec callcode(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
+  def callcode(
+        [call_gas, _to, value, in_offset, in_size, out_offset, out_size],
+        vm_map = %{
+          exec_env: exec_env,
+          machine_state: _machine_state
+        }
+      ) do
+    call([call_gas, exec_env.address, value, in_offset, in_size, out_offset, out_size], vm_map)
   end
 
   @doc """

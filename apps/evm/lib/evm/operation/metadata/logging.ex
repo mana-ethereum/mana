@@ -5,7 +5,7 @@ defmodule EVM.Operation.Metadata.Logging do
                     id: 0xA0 + n,
                     description: "Append log record with no topics.",
                     sym: :"log#{n}",
-                    input_count: 2,
+                    input_count: 2 + n,
                     output_count: 0,
                     group: :logging
                   }

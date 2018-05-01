@@ -32,7 +32,7 @@ defmodule EVM.VMTest do
     result = EVM.VM.run(24, exec_env)
 
     assert result ==
-             {0, %EVM.SubState{logs: "", refund: 0, suicide_list: []}, exec_env, <<0x08::256>>}
+             {0, %EVM.SubState{logs: [], refund: 0, suicide_list: []}, exec_env, <<0x08::256>>}
   end
 
   test "simple program with block storage", %{account_interface: account_interface} do
@@ -69,6 +69,6 @@ defmodule EVM.VMTest do
     expected_exec_env = Map.put(exec_env, :account_interface, expected_account_interface)
 
     assert result ==
-             {0, %EVM.SubState{logs: "", refund: 0, suicide_list: []}, expected_exec_env, ""}
+             {0, %EVM.SubState{logs: [], refund: 0, suicide_list: []}, expected_exec_env, ""}
   end
 end

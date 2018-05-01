@@ -6,17 +6,17 @@ defmodule EVM do
   # σ[a]
   @type account :: %{
           # σ[a]n
-          :nonce => integer(),
+          nonce: integer(),
           # σ[a]b
-          :balance => integer(),
+          balance: integer(),
           # σ[a]s
-          :storage => MerklePatriciaTree.Trie.t(),
+          storage: MerklePatriciaTree.Trie.t(),
           # σ[a]c
-          :code => binary()
+          code: binary()
         }
   # σ
   @type world_state :: %{
-          binary() => account()
+          address() => account()
         }
   @type trie_root :: MerklePatriciaTree.Trie.root_hash()
   @type val :: integer()
