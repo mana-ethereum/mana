@@ -80,7 +80,7 @@ defmodule EVM.LogEntry do
     topics =
       log.topics
       |> Enum.map(fn topic ->
-        topic |> Helpers.left_pad_bytes
+        topic |> Helpers.left_pad_bytes()
       end)
 
     [log.address, topics, log.data]
