@@ -51,6 +51,7 @@ defmodule EVM.Mixfile do
       {:ex_doc, "~> 0.14", only: :dev, runtime: false},
       {:merkle_patricia_tree, in_umbrella: true},
       {:keccakf1600, "~> 2.0.0", hex: :keccakf1600_orig},
+      {:ex_rlp, "~> 0.3.0"},
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false}
     ]
   end

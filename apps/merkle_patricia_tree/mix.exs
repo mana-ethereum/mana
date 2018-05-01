@@ -49,7 +49,7 @@ defmodule MerklePatriciaTree.Mixfile do
       {:poison, "~> 3.1.0", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.16", only: :dev, runtime: false},
       {:hex_prefix, in_umbrella: true},
-      {:ex_rlp, in_umbrella: true},
+      {:ex_rlp, "~> 0.3.0"},
       {:keccakf1600, "~> 2.0.0", hex: :keccakf1600_orig},
       {:exleveldb, in_umbrella: true},
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false}
