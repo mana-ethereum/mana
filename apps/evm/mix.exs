@@ -42,10 +42,12 @@ defmodule EVM.Mixfile do
   # Type "mix help deps" for more examples and options
   defp deps do
     [
+      {:ex_rlp, "~> 0.3.0"},
       {:credo, "~> 0.9.1", only: [:dev, :test], runtime: false},
       {:poison, "~> 3.1.0", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.14", only: :dev, runtime: false},
-      {:merkle_patricia_tree, "~> 0.2.5"},
+      {:merkle_patricia_tree,
+       git: "git@github.com:poanetwork/merkle_patricia_tree.git", branch: 'update_ex_rlp'},
       {:keccakf1600, "~> 2.0.0", hex: :keccakf1600_orig},
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false}
     ]

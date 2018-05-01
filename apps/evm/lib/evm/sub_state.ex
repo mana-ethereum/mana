@@ -26,7 +26,7 @@ defmodule EVM.SubState do
   ## Examples
 
       iex> sub_state = %EVM.SubState{suicide_list: [], logs: [], refund: 0}
-      iex> sub_state |> EVM.SubState.add_log(<<0::160>>, [1, 10, 12], "adsfa")
+      iex> sub_state |> EVM.SubState.add_log(0, [1, 10, 12], "adsfa")
       %EVM.SubState{
         logs: [
           %EVM.LogEntry{
