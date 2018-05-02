@@ -117,7 +117,7 @@ defmodule EVM.Operation.Logging do
       iex> args = [0, 32,
       ...>   115792089237316195423570985008687907853269984665640564039457584007913129639935,
       ...>   115792089237316195423570985008687907853269984665640564039457584007913129639935]
-      iex> EVM.Operation.Logging.log1(args, vm_map)
+      iex> EVM.Operation.Logging.log2(args, vm_map)
       %{
         sub_state: %EVM.SubState{
           logs: [
@@ -164,7 +164,7 @@ defmodule EVM.Operation.Logging do
       iex> sub_state = %EVM.SubState{logs: [], refund: 0, suicide_list: []}
       iex> vm_map = %{sub_state: sub_state, exec_env: env, machine_state: machine_state}
       iex> args = [1, 0, 0, 0, 0]
-      iex> EVM.Operation.Logging.log1(args, vm_map)
+      iex> EVM.Operation.Logging.log3(args, vm_map)
       %{
         sub_state: %EVM.SubState{
           logs: [
@@ -212,7 +212,7 @@ defmodule EVM.Operation.Logging do
       iex> vm_map = %{sub_state: sub_state, exec_env: env, machine_state: machine_state}
       iex> args = [115792089237316195423570985008687907853269984665640564039457584007913129639935,
       ...>   1, 0, 0, 0, 0]
-      iex> EVM.Operation.Logging.log1(args, vm_map)
+      iex> EVM.Operation.Logging.log4(args, vm_map)
       %{
         sub_state: %EVM.SubState{
           logs: [
