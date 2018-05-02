@@ -107,7 +107,7 @@ defmodule EVM.Gas do
   @push_instrs Enum.map(0..32, fn n -> :"push#{n}" end)
   @dup_instrs Enum.map(0..16, fn n -> :"dup#{n}" end)
   @swap_instrs Enum.map(0..16, fn n -> :"swap#{n}" end)
-  @log_instrs Enum.map(1..4, fn n -> :"log#{n}" end)
+  @log_instrs Enum.map(0..4, fn n -> :"log#{n}" end)
   @w_very_low_instr [
                       :add,
                       :sub,
@@ -188,15 +188,12 @@ defmodule EVM.Gas do
     memory_expansion_cost(machine_state, memory_offset, 32)
   end
 
-  def memory_cost(
-        :call,
-        [_gas_limit, _to_address, _value, in_offset, in_length, out_offset, out_length],
-        machine_state
-      ) do
-    out_memory_cost = memory_expansion_cost(machine_state, out_offset, out_length)
-    in_memory_cost = memory_expansion_cost(machine_state, in_offset, in_length)
+  def memory_cost(:call, stack_args, machine_state) do
+    call_memory_cost(stack_args, machine_state)
+  end
 
-    max(out_memory_cost, in_memory_cost)
+  def memory_cost(:callcode, stack_args, machine_state) do
+    call_memory_cost(stack_args, machine_state)
   end
 
   def memory_cost(:create, [_value, in_offset, in_length], machine_state) do
@@ -208,6 +205,17 @@ defmodule EVM.Gas do
   end
 
   def memory_cost(_operation, _inputs, _machine_state), do: 0
+
+  @spec call_memory_cost(Operation.stack_args(), MachineState.t()) :: t
+  defp call_memory_cost(
+         [_gas_limit, _to_address, _value, in_offset, in_length, out_offset, out_length],
+         machine_state
+       ) do
+    out_memory_cost = memory_expansion_cost(machine_state, out_offset, out_length)
+    in_memory_cost = memory_expansion_cost(machine_state, in_offset, in_length)
+
+    max(out_memory_cost, in_memory_cost)
+  end
 
   # From Eq 220: Cmem(μ′i)−Cmem(μi)
   def memory_expansion_cost(machine_state, offset, length) do
@@ -373,6 +381,35 @@ defmodule EVM.Gas do
     @g_call + call_value_cost(value) + new_account_cost(exec_env, to_address) + gas_limit
   end
 
+  def operation_cost(
+        :callcode,
+        [gas_limit, _to_address, value, _in_offset, _in_length, _out_offset, _out_length],
+        _machine_state,
+        _exec_env
+      ) do
+    @g_call + call_value_cost(value) + gas_limit
+  end
+
+  def operation_cost(:log0, [_offset, size | _], _machine_state, _exec_end) do
+    @g_log + @g_logdata * size
+  end
+
+  def operation_cost(:log1, [_offset, size | _], _machine_state, _exec_end) do
+    @g_log + @g_logdata * size + @g_logtopic
+  end
+
+  def operation_cost(:log2, [_offset, size | _], _machine_state, _exec_end) do
+    @g_log + @g_logdata * size + @g_logtopic * 2
+  end
+
+  def operation_cost(:log3, [_offset, size | _], _machine_state, _exec_end) do
+    @g_log + @g_logdata * size + @g_logtopic * 3
+  end
+
+  def operation_cost(:log4, [_offset, size | _], _machine_state, _exec_end) do
+    @g_log + @g_logdata * size + @g_logtopic * 4
+  end
+
   def operation_cost(operation, _inputs, _machine_state, _exec_env) do
     cond do
       operation in @w_very_low_instr -> @g_verylow
@@ -388,7 +425,6 @@ defmodule EVM.Gas do
       operation == :balance -> @g_balance
       operation == :sload -> @g_sload
       operation == :jumpdest -> @g_jumpdest
-      operation in @log_instrs -> 0
       true -> 0
     end
   end

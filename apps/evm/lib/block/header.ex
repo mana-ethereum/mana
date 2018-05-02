@@ -3,8 +3,10 @@ defmodule Block.Header do
   This structure codifies the header of a block in the blockchain.
   """
 
+  alias ExthCrypto.Hash.Keccak
+
   @empty_trie MerklePatriciaTree.Trie.empty_trie_root_hash
-  @empty_keccak [] |> ExRLP.encode |> :keccakf1600.sha3_256
+  @empty_keccak [] |> ExRLP.encode |> Keccak.kec
 
   defstruct [
     parent_hash: nil,                # Hp P(BH)Hr
@@ -160,7 +162,7 @@ defmodule Block.Header do
   """
   @spec hash(t) :: EVM.hash
   def hash(header) do
-    header |> serialize() |> ExRLP.encode |> :keccakf1600.sha3_256()
+    header |> serialize() |> ExRLP.encode |> Keccak.kec()
   end
 
   @doc """

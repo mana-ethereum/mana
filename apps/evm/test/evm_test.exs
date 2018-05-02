@@ -1,5 +1,6 @@
 defmodule EvmTest do
   alias MerklePatriciaTree.Trie
+  alias ExthCrypto.Hash.Keccak
   use ExUnit.Case, async: true
 
   @ethereum_common_tests_path "../../ethereum_common_tests"
@@ -10,33 +11,17 @@ defmodule EvmTest do
     block_info_test: :all,
     environmental_info: :all,
     push_dup_swap_test: :all,
-    random_test: [
-      :"201503110219PYTHON",
-      :"201503110346PYTHON_PUSH24",
-      :"201503111844PYTHON",
-      :"201503120317PYTHON",
-      :"201503120547PYTHON",
-      :"201503102320PYTHON",
-      :"201503110206PYTHON",
-      :"201503110526PYTHON",
-      :"201503112218PYTHON",
-      :"201503120525PYTHON",
-      :"201503120909PYTHON",
-
-      # These tests need `callcode` operation which is not implemented yet.
-      # :"201503102148PYTHON",
-      # :"201503102037PYTHON",
-      # :"201503102300PYTHON",
-      # :"201503110050PYTHON",
-    ],
+    random_test: :all,
+    log_test: :all,
     performance: [
       :ackermann31,
       :ackermann33,
       :fibonacci16,
       :manyFunctions100,
       :ackermann32,
-      :fibonacci10,
+      :fibonacci10
 
+      # These tests take too long to execute but they pass.
       # :"loop-divadd-10M",
       # :"loop-exp-16b-100k",
       # :"loop-exp-2b-100k",
@@ -51,52 +36,14 @@ defmodule EvmTest do
       # :"loop-mul",
     ],
     i_oand_flow_operations: :all,
-    system_operations: [
-      :ABAcalls0,
-      :ABAcalls1,
-      :ABAcalls2,
-      :ABAcalls3,
-      :ABAcallsSuicide0,
-      :ABAcallsSuicide1,
-      :CallRecursiveBomb0,
-      :CallRecursiveBomb1,
-      :CallRecursiveBomb2,
-      :CallRecursiveBomb3,
-      :CallToNameRegistrator0,
-      :CallToNameRegistratorNotMuchMemory0,
-      :CallToNameRegistratorNotMuchMemory1,
-      :CallToNameRegistratorOutOfGas,
-      :CallToNameRegistratorTooMuchMemory0,
-      :CallToNameRegistratorTooMuchMemory1,
-      :CallToNameRegistratorTooMuchMemory2,
-      :CallToReturn1,
-      :PostToNameRegistrator0,
-      :PostToReturn1,
-      :TestNameRegistrator,
-      :callstatelessToNameRegistrator0,
-      :callstatelessToReturn1,
-      :createNameRegistrator,
-      :createNameRegistratorOutOfMemoryBonds0,
-      :createNameRegistratorOutOfMemoryBonds1,
-      :return0,
-      :return1,
-      :return2,
-      :suicide0,
-      :suicideNotExistingAccount,
-      :suicideSendEtherToMe,
-      :createNameRegistratorValueTooHigh,
-      :CallToPrecompiledContract
-
-      # These tests need `callcode` operation which is not implemented yet.
-      # :callcodeToNameRegistrator0,
-      # :callcodeToReturn1,
-    ]
+    system_operations: :all,
+    tests: :all
   }
 
   test "Ethereum Common Tests" do
     for {test_group_name, _test_group} <- @passing_tests_by_group do
       for {_test_name, test} <- passing_tests(test_group_name) do
-        {gas, _, exec_env, _} =
+        {gas, sub_state, exec_env, _} =
           EVM.VM.run(hex_to_int(test["exec"]["gas"]), %EVM.ExecEnv{
             account_interface: account_interface(test),
             address: hex_to_int(test["exec"]["address"]),
@@ -113,6 +60,12 @@ defmodule EvmTest do
 
         if test["gas"] do
           assert hex_to_int(test["gas"]) == gas
+        end
+
+        if test["logs"] do
+          logs_hash = sub_state.logs |> logs_hash
+
+          assert hex_to_binary(test["logs"]) == logs_hash
         end
       end
     end
@@ -217,22 +170,15 @@ defmodule EvmTest do
         Map.get(@passing_tests_by_group, test_group_name)
       end
 
-    Enum.map(tests, fn test_data ->
-      case test_data do
-        {test_name, options} -> {test_name, read_test_file(test_group_name, test_name, options)}
-        test_name -> {test_name, read_test_file(test_group_name, test_name)}
-      end
+    tests
+    |> Enum.map(fn test_name ->
+      {test_name, read_test_file(test_group_name, test_name)}
     end)
   end
 
   def read_test_file(group, name) do
     {:ok, body} = File.read(test_file_name(group, name))
     Poison.decode!(body)[name |> Atom.to_string()]
-  end
-
-  def read_test_file(group, name, test_key: test_key) do
-    {:ok, body} = File.read(test_file_name(group, name))
-    Poison.decode!(body)[test_key]
   end
 
   def all_tests_of_type(type) do
@@ -300,5 +246,11 @@ defmodule EvmTest do
 
       {address, storage}
     end)
+  end
+
+  def logs_hash(logs) do
+    logs
+    |> ExRLP.encode()
+    |> Keccak.kec()
   end
 end

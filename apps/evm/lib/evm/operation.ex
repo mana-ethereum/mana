@@ -220,10 +220,6 @@ defmodule EVM.Operation do
       # nil
       iex> EVM.Operation.run_operation(EVM.Operation.metadata(:stop), %EVM.MachineState{stack: [1, 2]}, %EVM.SubState{}, %EVM.ExecEnv{})
       {%EVM.MachineState{stack: [1, 2]}, %EVM.SubState{}, %EVM.ExecEnv{}}
-
-      # Unimplemented
-      iex> EVM.Operation.run_operation(EVM.Operation.metadata(:log0), %EVM.MachineState{stack: [1, 2]}, %EVM.SubState{}, %EVM.ExecEnv{})
-      {%EVM.MachineState{stack: []}, %EVM.SubState{}, %EVM.ExecEnv{}}
   """
   @spec run_operation(EVM.Operation.Metadata.t(), MachineState.t(), SubState.t(), ExecEnv.t()) ::
           {MachineState.t(), SubState.t(), ExecEnv.t()}
@@ -316,9 +312,6 @@ defmodule EVM.Operation do
       iex> EVM.Operation.merge_state(:noop, EVM.Operation.metadata(:add), %EVM.MachineState{}, %EVM.SubState{}, %EVM.ExecEnv{})
       {%EVM.MachineState{}, %EVM.SubState{}, %EVM.ExecEnv{}}
 
-      iex> EVM.Operation.merge_state(:unimplemented, EVM.Operation.metadata(:blarg), %EVM.MachineState{}, %EVM.SubState{}, %EVM.ExecEnv{})
-      {%EVM.MachineState{}, %EVM.SubState{}, %EVM.ExecEnv{}}
-
       iex> EVM.Operation.merge_state(%{stack: [1, 2, 3]}, :add, %EVM.MachineState{}, %EVM.SubState{}, %EVM.ExecEnv{})
       {%EVM.MachineState{stack: [1, 2, 3]}, %EVM.SubState{}, %EVM.ExecEnv{}}
 
@@ -345,12 +338,6 @@ defmodule EVM.Operation do
           ExecEnv.t()
         ) :: {MachineState.t(), SubState.t(), ExecEnv.t()}
   def merge_state(:noop, _operation, machine_state, sub_state, exec_env) do
-    {machine_state, sub_state, exec_env}
-  end
-
-  def merge_state(:unimplemented, operation, machine_state, sub_state, exec_env) do
-    Logger.debug("Executing (and ignoring) unimplemented operation: #{operation}")
-
     {machine_state, sub_state, exec_env}
   end
 

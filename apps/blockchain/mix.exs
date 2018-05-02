@@ -57,7 +57,7 @@ defmodule Blockchain.Mixfile do
       {:ex_doc, "~> 0.16", only: :dev, runtime: false},
       {:merkle_patricia_tree, in_umbrella: true},
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
-      {:ex_rlp, in_umbrella: true},
+      {:ex_rlp, "~> 0.3.0"},
       {:evm, in_umbrella: true},
       {:poison, "~> 3.1.0"}
     ]

@@ -2,6 +2,9 @@ defmodule EVM.Address do
   @moduledoc """
   EVM address functions and constants.
   """
+
+  alias ExthCrypto.Hash.Keccak
+
   @size 20
   @max round(:math.pow(2, @size * EVM.byte_size()))
 
@@ -22,7 +25,7 @@ defmodule EVM.Address do
   """
 
   @spec new(integer()) :: binary()
-  def new(address) do
+  def new(address) when is_number(address) do
     address
     |> :binary.encode_unsigned()
     |> EVM.Helpers.left_pad_bytes(@size)
@@ -33,8 +36,9 @@ defmodule EVM.Address do
   """
   @spec new(integer(), integer()) :: non_neg_integer()
   def new(address, nonce) do
-    ExRLP.encode([address, nonce])
-    |> :keccakf1600.sha3_256()
+    [address, nonce]
+    |> ExRLP.encode()
+    |> Keccak.kec()
     |> EVM.Helpers.take_n_last_bytes(@size)
     |> :binary.decode_unsigned()
   end
