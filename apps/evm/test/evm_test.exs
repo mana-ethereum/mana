@@ -1,5 +1,6 @@
 defmodule EvmTest do
   alias MerklePatriciaTree.Trie
+  alias ExthCrypto.Hash.Keccak
   use ExUnit.Case, async: true
 
   @ethereum_common_tests_path "../../ethereum_common_tests"
@@ -250,6 +251,6 @@ defmodule EvmTest do
   def logs_hash(logs) do
     logs
     |> ExRLP.encode()
-    |> :keccakf1600.sha3_256()
+    |> Keccak.kec()
   end
 end
