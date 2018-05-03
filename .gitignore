@@ -4,3 +4,7 @@
 erl_crash.dump
 *.ez
 *.beam
+
+# Ignore generated code from yecc and leex
+*_lexer.erl
+*_parser.erl
