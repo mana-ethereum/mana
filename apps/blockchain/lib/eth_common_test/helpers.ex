@@ -42,12 +42,12 @@ defmodule EthCommonTest.Helpers do
   @spec load_hex(String.t) :: integer()
   def load_hex(hex_data), do: hex_data |> load_raw_hex |> :binary.decode_unsigned
 
-  @spec read_test_file(atom(), atom()) :: any()
-  def read_test_file(test_set, test_subset) do
+  @spec read_test_file(String.t) :: any()
+  def read_test_file(file_name) do
     # This is pretty terrible, but the JSON is just messed up in a number
     # of these tests (it contains duplicate keys with very strange values)
     body =
-      File.read!(test_file_name(test_set, test_subset))
+      File.read!(file_name)
       |> String.split("\n")
       |> Enum.filter(fn x -> not (x |> String.contains?("secretkey ")) end)
       |> Enum.join("\n")
@@ -60,9 +60,14 @@ defmodule EthCommonTest.Helpers do
     "../../ethereum_common_tests/#{test_set}/#{to_string(test_subset)}.json"
   end
 
+  @spec test_files(String.t) :: [String.t]
+  def test_files(test_set) do
+    Path.wildcard("../../ethereum_common_tests/#{test_set}/**/*.json")
+  end
+
   @spec load_src(String.t, String.t) :: any()
   def load_src(filler_type, filler) do
-    read_test_file("src/#{filler_type}", filler)
+    test_file_name("src/#{filler_type}", filler) |> read_test_file()
   end
 
 end
