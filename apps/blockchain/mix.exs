@@ -22,6 +22,7 @@ defmodule Blockchain.Mixfile do
         licenses: ["MIT"],
         links: %{"GitHub" => "https://github.com/exthereum/blockchain"}
       ],
+      test_paths: [],
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
       deps: deps()
