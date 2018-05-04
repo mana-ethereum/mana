@@ -48,3 +48,4 @@ jobs:
           paths: "_build"
 
       - run: elixir --erl "+hmax 33554432" -S mix test --exclude network
+      - run: mix dialyzer --halt-exit-status

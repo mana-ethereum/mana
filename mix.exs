@@ -15,6 +15,9 @@ defmodule Exthereum.MixProject do
         :merkle_patricia_tree,
       ],
       start_permanent: Mix.env() == :prod,
+      dialyzer: [
+        excluded_paths: [Path.join(File.cwd!, "_build/test/lib/evm/ebin")]
+      ],
       deps: deps()
     ]
   end
@@ -25,6 +28,8 @@ defmodule Exthereum.MixProject do
   #
   # Run "mix help deps" for examples and options.
   defp deps do
-    []
+    [
+      {:dialyxir, "~> 0.5", only: [:dev, :test], runtime: false}
+    ]
   end
 end
