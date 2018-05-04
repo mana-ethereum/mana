@@ -10,7 +10,6 @@ defmodule Exthereum.MixProject do
         :evm,
         :ex_rlp,
         :ex_wire,
-        :exleveldb,
         :exth_crypto,
         :hex_prefix,
         :merkle_patricia_tree,
