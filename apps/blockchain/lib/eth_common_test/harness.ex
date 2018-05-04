@@ -6,12 +6,12 @@ defmodule EthCommonTest.Harness do
   defmacro __using__(_opts) do
     quote do
       import EthCommonTest.Helpers
-      import EthCommonTest.Harness, only: [eth_test: 4, define_common_tests: 2]
+      import EthCommonTest.Harness, only: [eth_test: 4, define_common_tests: 3]
     end
   end
 
-  defmacro define_common_tests(test_set, fun) do
-    common_tests = EthCommonTest.Helpers.test_files(test_set)
+  defmacro define_common_tests(test_set, options, fun) do
+    common_tests = EthCommonTest.Helpers.test_files(test_set, options)
 
     for test_path <- common_tests do
       test_data = EthCommonTest.Helpers.read_test_file(test_path)

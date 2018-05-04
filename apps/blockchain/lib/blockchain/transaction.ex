@@ -266,7 +266,7 @@ defmodule Blockchain.Transaction do
       ...> |> Blockchain.Account.put_account(sender, %Blockchain.Account{balance: 400_000, nonce: 5})
       ...> |> Blockchain.Transaction.execute_transaction(trx, %Block.Header{beneficiary: beneficiary})
       iex> {gas, logs}
-      {53780, <<>>}
+      {53780, []}
       iex> Blockchain.Account.get_accounts(state, [sender, beneficiary, contract_address])
       [%Blockchain.Account{balance: 238655, nonce: 6}, %Blockchain.Account{balance: 161340}, %Blockchain.Account{balance: 5, code_hash: <<243, 247, 169, 254, 54, 79, 170, 185, 59, 33, 109, 165, 10, 50, 20, 21, 79, 34, 160, 162, 180, 21, 178, 58, 132, 200, 22, 158, 139, 99, 110, 227>>}]
 
@@ -283,7 +283,7 @@ defmodule Blockchain.Transaction do
       ...> |> Blockchain.Account.put_code(contract_address, machine_code)
       ...> |> Blockchain.Transaction.execute_transaction(trx, %Block.Header{beneficiary: beneficiary})
       iex> {gas, logs}
-      {21780, <<>>}
+      {21780, []}
       iex> Blockchain.Account.get_accounts(state, [sender, beneficiary, contract_address])
       [%Blockchain.Account{balance: 334655, nonce: 6}, %Blockchain.Account{balance: 65340}, %Blockchain.Account{balance: 5, code_hash: <<216, 114, 80, 103, 17, 50, 164, 75, 162, 123, 123, 99, 162, 105, 226, 15, 215, 200, 136, 216, 29, 106, 193, 119, 1, 173, 138, 37, 219, 39, 23, 231>>}]
   """

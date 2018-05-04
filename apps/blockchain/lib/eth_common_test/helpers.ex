@@ -60,9 +60,14 @@ defmodule EthCommonTest.Helpers do
     "../../ethereum_common_tests/#{test_set}/#{to_string(test_subset)}.json"
   end
 
-  @spec test_files(String.t) :: [String.t]
-  def test_files(test_set) do
-    Path.wildcard("../../ethereum_common_tests/#{test_set}/**/*.json")
+  @spec test_files(String.t, keyword(String.t)) :: [String.t]
+  def test_files(test_set, options \\ []) do
+    tests_to_ignore = Keyword.get(options, :except, [])
+    tests = Path.wildcard("../../ethereum_common_tests/#{test_set}/**/*.json")
+
+    Enum.reject(tests, fn test_path ->
+      Enum.member?(tests_to_ignore, filename_without_extension(test_path))
+    end)
   end
 
   @spec load_src(String.t, String.t) :: any()
@@ -70,4 +75,11 @@ defmodule EthCommonTest.Helpers do
     test_file_name("src/#{filler_type}", filler) |> read_test_file()
   end
 
+  defp filename_without_extension(path) do
+    path
+    |> Path.split()
+    |> Enum.reverse()
+    |> hd()
+    |> Path.rootname()
+  end
 end
