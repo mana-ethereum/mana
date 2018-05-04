@@ -18,7 +18,7 @@ defmodule Blockchain.BlockTest do
         gas_limit: test["gasLimit"] |> maybe_hex,
         difficulty: test["difficulty"] |> maybe_hex,
         author: test["coinbase"] |> maybe_hex,
-        mix_hash: test["mixhash"] |> maybe_hex,
+        mix_hash: test["mixHash"] |> maybe_hex,
         nonce: test["nonce"] |> maybe_hex,
       },
       accounts: get_test_accounts(test["alloc"])

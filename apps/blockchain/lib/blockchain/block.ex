@@ -835,7 +835,7 @@ defmodule Blockchain.Block do
       iex> Enum.count(block.transactions)
       1
       iex> Blockchain.Block.get_receipt(block, 0, db)
-      %Blockchain.Transaction.Receipt{bloom_filter: "", cumulative_gas: 53780, logs: "", state: block.header.state_root}
+      %Blockchain.Transaction.Receipt{bloom_filter: "", cumulative_gas: 53780, logs: [], state: block.header.state_root}
       iex> Blockchain.Block.get_transaction(block, 0, db)
       %Blockchain.Transaction{data: "", gas_limit: 100000, gas_price: 3, init: <<96, 3, 96, 5, 1, 96, 0, 82, 96, 32, 96, 0, 243>>, nonce: 5, r: 107081699003708865501096995082166450904153826331883689397382301082384794234940, s: 15578885506929783846367818105804923093083001199223955674477534036059482186127, to: "", v: 27, value: 5}
       iex> Blockchain.Block.get_state(block, db)
