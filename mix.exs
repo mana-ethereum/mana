@@ -15,9 +15,7 @@ defmodule Exthereum.MixProject do
         :merkle_patricia_tree,
       ],
       start_permanent: Mix.env() == :prod,
-      dialyzer: [
-        excluded_paths: [Path.join(File.cwd!, "_build/test/lib/evm/ebin")]
-      ],
+      dialyzer: [ignore_warnings: ".dialyzer.ignore-warnings"],
       deps: deps()
     ]
   end
