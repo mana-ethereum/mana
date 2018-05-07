@@ -3,6 +3,7 @@ defmodule ExWire.Struct.Peer do
   Represents a Peer for an RLPx / Eth Wire connection.
   """
   alias ExWire.Struct.Peer
+  alias ExWire.Crypto
   use Bitwise
 
   defstruct [
@@ -105,14 +106,21 @@ defmodule ExWire.Struct.Peer do
            214, 6>>
       }}
       iex> ExWire.Struct.Peer.distance(peer1, peer2)
-      4836423436078365946549741868094714594498094329507634765136070090702808166453086944189931728465215433851189918595312248910582541005005227897546715740183451
+      111350667629608750073573792561198123916662985479046951183316364174341139821949
   """
   @spec distance(Peer.t(), Peer.t()) :: integer()
   def distance(%Peer{remote_id: remote_id1}, %Peer{remote_id: remote_id2}) do
-    remote_int_id1 = remote_id1 |> :binary.decode_unsigned()
-    remote_int_id2 = remote_id2 |> :binary.decode_unsigned()
+    remote_int_id1 = remote_id1 |> remote_id_hash()
+    remote_int_id2 = remote_id2 |> remote_id_hash()
 
     remote_int_id1 ^^^ remote_int_id2
+  end
+
+  @spec remote_id_hash(binary()) :: integer()
+  defp remote_id_hash(remote_id) do
+    remote_id
+    |> Crypto.hash()
+    |> :binary.decode_unsigned()
   end
 end
 
