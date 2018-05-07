@@ -47,5 +47,4 @@ jobs:
           key: v1-build-cache
           paths: "_build"
 
-      - run: mix test --exclude network --trace
-
+      - run: elixir --erl "+hmax 33554432" -S mix test --exclude network
