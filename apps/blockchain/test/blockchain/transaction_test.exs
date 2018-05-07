@@ -8,73 +8,198 @@ defmodule Blockchain.TransactionTest do
   alias Blockchain.Transaction
   alias Blockchain.Transaction.Signature
 
-  # Load filler data
-  setup_all do
-    frontier_filler = load_src("TransactionTestsFiller", "ttTransactionTestFiller")
-    homestead_filler = load_src("TransactionTestsFiller/Homestead", "ttTransactionTestFiller")
-    eip155_filler = load_src("TransactionTestsFiller/EIP155", "ttTransactionTestEip155VitaliksTestsFiller")
+  @chains ~w(
+    Byzantium
+    Constantinople
+    EIP150
+    EIP158
+    Frontier
+    Homestead
+  )
 
-    {:ok, %{
-      frontier_filler: frontier_filler,
-      homestead_filler: homestead_filler,
-      eip155_filler: eip155_filler}}
-  end
+  define_common_tests "TransactionTests/ttAddress", [], fn test_name, test_data ->
+    parsed_test = parse_test(test_data, test_name)
 
-  eth_test "TransactionTests", :ttTransactionTest, :all, fn test, test_subset, test_name, %{frontier_filler: filler} ->
-    trx_data = test["transaction"]
-    src_data = filler[test_name]
-    transaction = (trx_data || src_data["transaction"]) |> load_trx
+    for {_network, test} <- parsed_test.tests_by_network do
+      for {method, value} <- test do
+        case method do
+          :hash ->
+            assert BitHelper.kec(parsed_test.rlp) == value
 
-    if src_data["expect"] == "invalid" do
-      # TODO: Include checks of "invalid" tests
-      Logger.debug("Skipping `invalid` transaction test: TransactionTests - #{test_subset} - #{test_name}")
-
-      nil
-    else
-      assert transaction |> Transaction.serialize == test["rlp"] |> load_hex |> :binary.encode_unsigned |> ExRLP.decode
-
-      if test["hash"], do: assert transaction |> Transaction.serialize |> ExRLP.encode |> BitHelper.kec == test["hash"] |> maybe_hex
-      if test["sender"], do: assert Signature.sender(transaction) == {:ok, test["sender"] |> maybe_hex}
+          :sender ->
+            assert Signature.sender(parsed_test.transaction) == {:ok, value}
+        end
+      end
     end
   end
 
-  # Test Homestead
-  eth_test "TransactionTests/Homestead", :ttTransactionTest, :all, fn test, test_subset, test_name, %{homestead_filler: filler} ->
-    trx_data = test["transaction"]
-    src_data = filler[test_name]
-    transaction = (trx_data || src_data["transaction"]) |> load_trx
+  define_common_tests "TransactionTests/ttData", [except: ["String10MbData"]], fn test_name, test_data ->
+    parsed_test = parse_test(test_data, test_name)
 
-    if src_data["expect"] == "invalid" do
-      # TODO: Include checks of "invalid" tests
-      Logger.debug("Skipping invalid transaction test: TransactionTests/Homestead - #{test_subset} - #{test_name}")
+    for {_network, test} <- parsed_test.tests_by_network do
+      for {method, value} <- test do
+        case method do
+          :hash ->
+            assert BitHelper.kec(parsed_test.rlp) == value
 
-      nil
-    else
-      assert transaction |> Transaction.serialize == test["rlp"] |> load_hex |> :binary.encode_unsigned |> ExRLP.decode
-
-      if test["hash"], do: assert transaction |> Transaction.serialize |> ExRLP.encode |> BitHelper.kec == test["hash"] |> maybe_hex
-      if test["sender"], do: assert Signature.sender(transaction) == {:ok, test["sender"] |> maybe_hex}
+          :sender ->
+            assert Signature.sender(parsed_test.transaction) == {:ok, value}
+        end
+      end
     end
   end
 
-  # Test EIP155
-  eth_test "TransactionTests/EIP155", :ttTransactionTestEip155VitaliksTests, :all, fn test, test_subset, test_name, %{eip155_filler: filler} ->
-    trx_data = test["transaction"]
-    src_data = filler[test_name]
-    transaction = (trx_data || src_data["transaction"]) |> load_trx
-    chain_id = 1
+  define_common_tests "TransactionTests/ttGasLimit", [], fn test_name, test_data ->
+    parsed_test = parse_test(test_data, test_name)
 
-    if src_data["expect"] == "invalid" do
-      # TODO: Include checks of "invalid" tests
-      Logger.debug("Skipping invalid transaction test: TransactionTests/EIP555 - #{test_subset} - #{test_name}")
+    for {_network, test} <- parsed_test.tests_by_network do
+      for {method, value} <- test do
+        case method do
+          :hash ->
+            assert BitHelper.kec(parsed_test.rlp) == value
 
-      nil
-    else
-      assert transaction |> Transaction.serialize == test["rlp"] |> load_hex |> :binary.encode_unsigned |> ExRLP.decode
-
-      if test["hash"], do: assert transaction |> Transaction.serialize(chain_id) |> ExRLP.encode |> BitHelper.kec == test["hash"] |> maybe_hex
-      if test["sender"], do: assert Signature.sender(transaction, chain_id) == {:ok, test["sender"] |> maybe_hex}
+          :sender ->
+            if parsed_test.transaction.v < 30 do
+              assert Signature.sender(parsed_test.transaction) == {:ok, value}
+            end
+        end
+      end
     end
+  end
+
+  define_common_tests "TransactionTests/ttGasPrice", [], fn test_name, test_data ->
+    parsed_test = parse_test(test_data, test_name)
+
+    for {_network, test} <- parsed_test.tests_by_network do
+      for {method, value} <- test do
+        case method do
+          :hash ->
+            assert BitHelper.kec(parsed_test.rlp) == value
+
+          :sender ->
+            assert Signature.sender(parsed_test.transaction) == {:ok, value}
+        end
+      end
+    end
+  end
+
+  define_common_tests "TransactionTests/ttNonce", [], fn test_name, test_data ->
+    parsed_test = parse_test(test_data, test_name)
+
+    for {_network, test} <- parsed_test.tests_by_network do
+      for {method, value} <- test do
+        case method do
+          :hash ->
+            assert BitHelper.kec(parsed_test.rlp) == value
+
+          :sender ->
+            assert Signature.sender(parsed_test.transaction) == {:ok, value}
+        end
+      end
+    end
+  end
+
+
+  define_common_tests "TransactionTests/ttRSValue", [], fn test_name, test_data ->
+    parsed_test = parse_test(test_data, test_name)
+
+    for {_network, test} <- parsed_test.tests_by_network do
+      for {method, value} <- test do
+        case method do
+          :hash ->
+            assert BitHelper.kec(parsed_test.rlp) == value
+
+          :sender ->
+            if parsed_test.transaction.v < 30 do
+              assert Signature.sender(parsed_test.transaction) == {:ok, value}
+            end
+        end
+      end
+    end
+  end
+
+  define_common_tests "TransactionTests/ttSignature", [except: ["TransactionWithTooFewRLPElements", "TransactionWithTooManyRLPElements"]],
+    fn test_name, test_data ->
+
+    parsed_test = parse_test(test_data, test_name)
+
+    for {_network, test} <- parsed_test.tests_by_network do
+      for {method, value} <- test do
+        case method do
+          :hash ->
+            assert BitHelper.kec(parsed_test.rlp) == value
+
+          :sender ->
+            if parsed_test.transaction.v < 30 do
+              assert Signature.sender(parsed_test.transaction) == {:ok, value}
+            end
+        end
+      end
+    end
+  end
+
+  define_common_tests "TransactionTests/ttVValue", [], fn test_name, test_data ->
+    parsed_test = parse_test(test_data, test_name)
+
+    for {_network, test} <- parsed_test.tests_by_network do
+      for {method, value} <- test do
+        case method do
+          :hash ->
+            assert BitHelper.kec(parsed_test.rlp) == value
+
+          :sender ->
+            if parsed_test.transaction.v < 30 do
+              assert Signature.sender(parsed_test.transaction) == {:ok, value}
+            end
+        end
+      end
+    end
+  end
+
+  define_common_tests "TransactionTests/ttValue", [], fn test_name, test_data ->
+    parsed_test = parse_test(test_data, test_name)
+
+    for {_network, test} <- parsed_test.tests_by_network do
+      for {method, value} <- test do
+        case method do
+          :hash ->
+            assert BitHelper.kec(parsed_test.rlp) == value
+
+          :sender ->
+            assert Signature.sender(parsed_test.transaction) == {:ok, value}
+        end
+      end
+    end
+  end
+
+  defp parse_test(test, test_name) do
+    rlp = test[test_name]["rlp"] |> maybe_hex()
+
+    transaction =
+        rlp
+        |> ExRLP.decode()
+        |> Transaction.deserialize()
+
+    %{
+      tests_by_network: organize_tests_by_chains(test[test_name]),
+      rlp:  rlp,
+      transaction: transaction,
+    }
+  end
+
+  defp organize_tests_by_chains(tests) do
+    tests
+    |> Map.take(@chains)
+    |> Enum.map(fn {network, test} ->
+      {
+        network,
+        Enum.map(test, fn {key_to_test, value} ->
+          { String.to_atom(key_to_test), maybe_hex(value) }
+        end)
+        |> Enum.into(%{})
+      }
+    end)
+    |> Enum.into(%{})
   end
 
   describe "when handling transactions" do
@@ -98,29 +223,11 @@ defmodule Blockchain.TransactionTest do
         |> Blockchain.Transaction.execute_transaction(trx, %Block.Header{beneficiary: beneficiary})
 
       assert gas_used == 53004
-      assert logs == ""
+      assert logs == []
       assert Blockchain.Account.get_accounts(state, [sender, beneficiary, contract_address]) ==
         [
           %Blockchain.Account{balance: 240983, nonce: 6}, %Blockchain.Account{balance: 159012}, %Blockchain.Account{balance: 5}
         ]
     end
-  end
-
-  defp load_trx(trx_data) do
-    to = trx_data["to"] |> maybe_address
-    data = trx_data["data"] |> maybe_hex
-
-    %Blockchain.Transaction{
-      nonce: trx_data["nonce"] |> load_integer,
-      gas_price: trx_data["gasPrice"] |> load_integer,
-      gas_limit: trx_data["gasLimit"] |> load_integer,
-      to: to,
-      value: trx_data["value"] |> load_integer,
-      v: trx_data["v"] |> load_integer,
-      r: trx_data["r"] |> load_integer,
-      s: trx_data["s"] |> load_integer,
-      init: (if to == <<>>, do: data, else: <<>>),
-      data: (if to == <<>>, do: <<>>, else: data)
-    }
   end
 end

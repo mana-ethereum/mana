@@ -185,7 +185,7 @@ defmodule EVM.Operation.System do
         ...>   address: <<5::160>>
         ...> }
         iex> machine_state = %EVM.MachineState{gas: 1000}
-        iex> %{machine_state: machine_state, exec_env: exec_env} =
+        iex> %{machine_state: machine_state, exec_env: _exec_env} =
         ...> EVM.Operation.System.callcode([10, 1, 1, 0, 0, 0, 0],
         ...>   %{exec_env: exec_env, machine_state: machine_state})
         iex> EVM.Stack.peek(machine_state.stack)
