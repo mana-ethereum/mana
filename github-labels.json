@@ -1,0 +1,30 @@
+[
+  { "name": "tag: new feature", "color": "#159818" },
+  { "name": "tag: breaking change", "color": "#e11d21" },
+  { "name": "tag: bug fix", "color": "#fbca04" },
+  { "name": "tag: enhancement", "color": "#84b6eb" },
+  { "name": "tag: documentation", "color": "#cc317c" },
+  { "name": "tag: internal", "color": "#cccccc" },
+  { "name": "tag: duplicate", "color": "#bfe5bf" },
+
+  { "name": "abi", "color": "#cc317c" },
+  { "name": "blockchain", "color": "#159818" },
+  { "name": "evm", "color": "#84b6eb" },
+  { "name": "ex_wire", "color": "#fbca04" },
+  { "name": "exth_crypto", "color": "#eb6420" },
+  { "name": "merkle_patricia_tree", "color": "#006b75" },
+
+  { "name": "priority: low", "color": "#009800" },
+  { "name": "priority: medium", "color": "#fbca04" },
+  { "name": "priority: high", "color": "#eb6420" },
+  { "name": "priority: critical", "color": "#e11d21" },
+
+  { "name": "status: wontfix", "color": "#000000" },
+  { "name": "status: accepted", "color": "#009800" },
+  { "name": "status: blocked", "color": "#e11d21" },
+  { "name": "status: completed", "color": "#006b75" },
+  { "name": "status: in progress", "color": "#cccccc" },
+  { "name": "status: on hold", "color": "#e11d21" },
+  { "name": "status: pending", "color": "#fef2c0" },
+  { "name": "status: review needed", "color": "#fbca04" }
+]
