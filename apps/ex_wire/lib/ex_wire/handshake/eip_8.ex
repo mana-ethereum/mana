@@ -23,8 +23,20 @@ defmodule ExWire.Handshake.EIP8 do
       iex> bin |> ExthCrypto.Math.bin_to_hex
       "00e6049871eb081567823267592abac8ec9e9fddfdece7901a15f233b53f304d7860686c21601ba1a7f56680e22d0ac03eccd08e496469514c25ae1d5e55f391c1956f0102030405060708090a0b0c0d0e0f102cb1de6abaaa6f731dbe4cd77135af3c6c49a8a065db5017e108aebc6db886a1f242e876982f69985e62412d240107652d4a78e5d7e3989d74fd7f97b3c4a34d2736ee8a912f7ea23c3327f0ed9b9d15b7999644b6e00a440eebc24da9dabb6412f4c6573d2a18c6678ad689e3b1849a33d0fa1c7ffb43a4033428646258196942e611ea2bf31b983e98356f2f57951c4aebb8dd54"
   """
-  @spec wrap_eip_8(ExRLP.t, ExthCrypto.Key.public_key, binary(), {ExthCrypto.Key.public_key, ExthCrypto.Key.private_key} | nil, Cipher.init_vector | nil) :: {:ok, binary()} | {:error, String.t}
-  def wrap_eip_8(rlp, her_static_public_key, remote_addr, my_ephemeral_key_pair \\ nil, init_vector \\ nil) do
+  @spec wrap_eip_8(
+          ExRLP.t(),
+          ExthCrypto.Key.public_key(),
+          binary(),
+          {ExthCrypto.Key.public_key(), ExthCrypto.Key.private_key()} | nil,
+          Cipher.init_vector() | nil
+        ) :: {:ok, binary()} | {:error, String.t()}
+  def wrap_eip_8(
+        rlp,
+        her_static_public_key,
+        remote_addr,
+        my_ephemeral_key_pair \\ nil,
+        init_vector \\ nil
+      ) do
     Logger.debug("[Network] Sending EIP8 Handshake to #{remote_addr}")
 
     # According to EIP-8, we add padding to prevent length detection attacks. Thus, it should be
@@ -41,7 +53,15 @@ defmodule ExWire.Handshake.EIP8 do
     auth_size = <<auth_size_int::integer-big-size(16)>>
 
     # ecies.encrypt(recipient-pubk, auth-body, auth-size)
-    with {:ok, enc_auth_body} <- ExthCrypto.ECIES.encrypt(her_static_public_key, auth_body, <<>>, auth_size, my_ephemeral_key_pair, init_vector) do
+    with {:ok, enc_auth_body} <-
+           ExthCrypto.ECIES.encrypt(
+             her_static_public_key,
+             auth_body,
+             <<>>,
+             auth_size,
+             my_ephemeral_key_pair,
+             init_vector
+           ) do
       # size of enc-auth-body, encoded as a big-endian 16-bit integer
       enc_auth_body_size = byte_size(enc_auth_body)
 
@@ -88,19 +108,27 @@ defmodule ExWire.Handshake.EIP8 do
           152, 53, 88, 100, 245, 144, 55, 227, 38, 231, 236, 155, 45, 148, 117, 128>>,
         ""}
   """
-  @spec unwrap_eip_8(binary(), ExthCrypto.Key.private_key, binary()) :: {:ok, RLP.t, binary(), binary()} | {:error, String.t}
+  @spec unwrap_eip_8(binary(), ExthCrypto.Key.private_key(), binary()) ::
+          {:ok, RLP.t(), binary(), binary()} | {:error, String.t()}
   def unwrap_eip_8(encoded_packet, my_static_private_key, remote_addr) do
     Logger.debug("[Network] Received EIP8 Handshake from #{remote_addr}")
     <<auth_size_int::size(16), _::binary()>> = encoded_packet
 
     case encoded_packet do
-      <<auth_size::binary-size(2), ecies_encoded_message::binary-size(auth_size_int), frame_rest::binary()>> ->
-        with {:ok, rlp_bin} <- ExthCrypto.ECIES.decrypt(my_static_private_key, ecies_encoded_message, <<>>, auth_size) do
+      <<auth_size::binary-size(2), ecies_encoded_message::binary-size(auth_size_int),
+        frame_rest::binary()>> ->
+        with {:ok, rlp_bin} <-
+               ExthCrypto.ECIES.decrypt(
+                 my_static_private_key,
+                 ecies_encoded_message,
+                 <<>>,
+                 auth_size
+               ) do
           rlp = ExRLP.decode(rlp_bin)
-
 
           {:ok, rlp, auth_size <> ecies_encoded_message, frame_rest}
         end
+
       _ ->
         {:error, "Invalid encoded packet"}
     end

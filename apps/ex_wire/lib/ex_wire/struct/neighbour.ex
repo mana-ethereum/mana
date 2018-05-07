@@ -5,15 +5,13 @@ defmodule ExWire.Struct.Neighbour do
 
   alias ExWire.Struct.Endpoint
 
-  defstruct [
-    endpoint: nil,
-    node: nil
-  ]
+  defstruct endpoint: nil,
+            node: nil
 
   @type t :: %__MODULE__{
-    endpoint: ExWire.Struct.Endpoint.t,
-    node: ExWire.node_id,
-  }
+          endpoint: ExWire.Struct.Endpoint.t(),
+          node: ExWire.node_id()
+        }
 
   @doc """
   Returns a struct given an `ip` in binary form, plus an
@@ -32,11 +30,11 @@ defmodule ExWire.Struct.Neighbour do
         node: <<7, 7>>
       }
   """
-  @spec decode(ExRLP.t) :: t
+  @spec decode(ExRLP.t()) :: t
   def decode([ip, udp_port, tcp_port, node_id]) do
     %__MODULE__{
       endpoint: Endpoint.decode([ip, udp_port, tcp_port]),
-      node: node_id,
+      node: node_id
     }
   end
 
@@ -58,9 +56,8 @@ defmodule ExWire.Struct.Neighbour do
       ...> )
       [<<1, 2, 3, 4>>, <<>>, <<0, 5>>, <<7, 8>>]
   """
-  @spec encode(t) :: ExRLP.t
+  @spec encode(t) :: ExRLP.t()
   def encode(%__MODULE__{endpoint: endpoint, node: node_id}) do
     Endpoint.encode(endpoint) ++ [node_id]
   end
-
 end

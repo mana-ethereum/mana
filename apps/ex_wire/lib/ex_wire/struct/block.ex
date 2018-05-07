@@ -10,9 +10,9 @@ defmodule ExWire.Struct.Block do
   ]
 
   @type t :: %__MODULE__{
-    transactions: [Blockchain.Transaction.t],
-    ommers: [binary()]
-  }
+          transactions: [Blockchain.Transaction.t()],
+          ommers: [binary()]
+        }
 
   @doc """
   Given a Block, serializes for transport over Eth Wire Protocol.
@@ -23,7 +23,7 @@ defmodule ExWire.Struct.Block do
       ...> |> ExWire.Struct.Block.serialize
       [[[<<5>>, <<6>>, <<7>>, <<1::160>>, <<8>>, "hi", <<27>>, <<9>>, <<10>>]], [<<1::256>>]]
   """
-  @spec serialize(t) :: ExRLP.t
+  @spec serialize(t) :: ExRLP.t()
   def serialize(struct) do
     [
       struct.transactions_list,
@@ -43,7 +43,7 @@ defmodule ExWire.Struct.Block do
         ommers: [<<1::256>>]
       }
   """
-  @spec deserialize(ExRLP.t) :: t
+  @spec deserialize(ExRLP.t()) :: t
   def deserialize(rlp) do
     [
       transactions_list,
@@ -52,9 +52,12 @@ defmodule ExWire.Struct.Block do
 
     %__MODULE__{
       transactions_list: transactions_list,
-      transactions: ( for transaction_rlp <- transactions_list, do: Blockchain.Transaction.deserialize(transaction_rlp) ),
+      transactions:
+        for(
+          transaction_rlp <- transactions_list,
+          do: Blockchain.Transaction.deserialize(transaction_rlp)
+        ),
       ommers: ommers
     }
   end
-
 end

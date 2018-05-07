@@ -24,8 +24,8 @@ defmodule ExWire.Packet.Pong do
       ...> |> ExWire.Packet.Pong.serialize
       []
   """
-  @spec serialize(t) :: ExRLP.t
-  def serialize(_packet=%__MODULE__{}) do
+  @spec serialize(t) :: ExRLP.t()
+  def serialize(_packet = %__MODULE__{}) do
     []
   end
 
@@ -38,7 +38,7 @@ defmodule ExWire.Packet.Pong do
       iex> ExWire.Packet.Pong.deserialize([])
       %ExWire.Packet.Pong{}
   """
-  @spec deserialize(ExRLP.t) :: t
+  @spec deserialize(ExRLP.t()) :: t
   def deserialize(rlp) do
     [] = rlp
 
@@ -54,8 +54,8 @@ defmodule ExWire.Packet.Pong do
       iex> ExWire.Packet.Pong.handle(%ExWire.Packet.Pong{})
       :ok
   """
-  @spec handle(ExWire.Packet.packet) :: ExWire.Packet.handle_response
-  def handle(_packet=%__MODULE__{}) do
+  @spec handle(ExWire.Packet.packet()) :: ExWire.Packet.handle_response()
+  def handle(_packet = %__MODULE__{}) do
     # TODO: Track RTT time
 
     :ok

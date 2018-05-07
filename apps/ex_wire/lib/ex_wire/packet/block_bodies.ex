@@ -20,8 +20,8 @@ defmodule ExWire.Packet.BlockBodies do
   @behaviour ExWire.Packet
 
   @type t :: %__MODULE__{
-    blocks: [Block.t]
-  }
+          blocks: [Block.t()]
+        }
 
   defstruct [
     :blocks
@@ -41,8 +41,8 @@ defmodule ExWire.Packet.BlockBodies do
       ...> |> ExWire.Packet.BlockBodies.serialize()
       [ [[[<<5>>, <<6>>, <<7>>, <<1::160>>, <<8>>, "hi", <<27>>, <<9>>, <<10>>]], [<<1::256>>]], [[[<<6>>, <<6>>, <<7>>, <<1::160>>, <<8>>, "hi", <<27>>, <<9>>, <<10>>]], [<<1::256>>]] ]
   """
-  @spec serialize(t) :: ExRLP.t
-  def serialize(packet=%__MODULE__{}) do
+  @spec serialize(t) :: ExRLP.t()
+  def serialize(packet = %__MODULE__{}) do
     for block <- packet.blocks, do: Block.serialize(block)
   end
 
@@ -68,7 +68,7 @@ defmodule ExWire.Packet.BlockBodies do
         ]
       }
   """
-  @spec deserialize(ExRLP.t) :: t
+  @spec deserialize(ExRLP.t()) :: t
   def deserialize(rlp) do
     blocks = for block <- rlp, do: Block.deserialize(block)
 
@@ -87,11 +87,10 @@ defmodule ExWire.Packet.BlockBodies do
       ...> |> ExWire.Packet.GetBlockBodies.handle()
       :ok
   """
-  @spec handle(ExWire.Packet.packet) :: ExWire.Packet.handle_response
-  def handle(packet=%__MODULE__{}) do
+  @spec handle(ExWire.Packet.packet()) :: ExWire.Packet.handle_response()
+  def handle(packet = %__MODULE__{}) do
     Logger.info("[Packet] Peer sent #{Enum.count(packet.blocks)} block(s).")
 
     :ok
   end
-
 end

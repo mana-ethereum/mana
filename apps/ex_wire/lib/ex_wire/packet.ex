@@ -11,10 +11,11 @@ defmodule ExWire.Packet do
   @type block_identifier :: binary() | integer()
   @type block_hash :: {binary(), integer()}
 
-  @callback serialize(packet) :: ExRLP.t
-  @callback deserialize(ExRLP.t) :: packet
+  @callback serialize(packet) :: ExRLP.t()
+  @callback deserialize(ExRLP.t()) :: packet
 
-  @type handle_response :: :ok | :activate | :peer_disconnect | {:disconnect, atom()} | {:send, struct()}
+  @type handle_response ::
+          :ok | :activate | :peer_disconnect | {:disconnect, atom()} | {:send, struct()}
   @callback handle(packet) :: handle_response
 
   @packet_types %{
@@ -24,12 +25,17 @@ defmodule ExWire.Packet do
     0x03 => Packet.Pong,
     ### Ethereum Sub-protocol
     0x10 => Packet.Status,
-    0x11 => Packet.NewBlockHashes, # New model syncing (PV62)
+    # New model syncing (PV62)
+    0x11 => Packet.NewBlockHashes,
     0x12 => Packet.Transactions,
-    0x13 => Packet.GetBlockHeaders, # New model syncing (PV62)
-    0x14 => Packet.BlockHeaders, # New model syncing (PV62)
-    0x15 => Packet.GetBlockBodies, # New model syncing (PV62)
-    0x16 => Packet.BlockBodies, # New model syncing (PV62)
+    # New model syncing (PV62)
+    0x13 => Packet.GetBlockHeaders,
+    # New model syncing (PV62)
+    0x14 => Packet.BlockHeaders,
+    # New model syncing (PV62)
+    0x15 => Packet.GetBlockBodies,
+    # New model syncing (PV62)
+    0x16 => Packet.BlockBodies
     # 0x17 => Packet.NewBlock,
     ### Fast synchronization (PV63)
     # 0x1d => Packet.GetNodeData,
@@ -38,7 +44,7 @@ defmodule ExWire.Packet do
     # 0x20 => Packet.Receipts
   }
 
-  @packet_types_inverted (for {k, v} <- @packet_types, do: {v, k}) |> Enum.into(%{})
+  @packet_types_inverted for({k, v} <- @packet_types, do: {v, k}) |> Enum.into(%{})
 
   @doc """
   Returns the module which contains functions to
@@ -78,11 +84,10 @@ defmodule ExWire.Packet do
       :unknown_packet
   """
   @spec get_packet_type(struct()) :: {:ok, integer()} | :unknown_packet
-  def get_packet_type(_packet=%{__struct__: packet_struct}) do
+  def get_packet_type(_packet = %{__struct__: packet_struct}) do
     case @packet_types_inverted[packet_struct] do
       nil -> :unknown_packet
       packet_type -> {:ok, packet_type}
     end
   end
-
 end

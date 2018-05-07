@@ -8,17 +8,15 @@ defmodule ExWire.Message.Neighbours do
   @behaviour ExWire.Message
   @message_id 0x04
 
-  defstruct [
-    nodes: [],
-    timestamp: [],
-  ]
+  defstruct nodes: [],
+            timestamp: []
 
   @type t :: %__MODULE__{
-    nodes: [Neighbour.t],
-    timestamp: integer()
-  }
+          nodes: [Neighbour.t()],
+          timestamp: integer()
+        }
 
-  @spec message_id() :: ExWire.Message.message_id
+  @spec message_id() :: ExWire.Message.message_id()
   def message_id, do: @message_id
 
   @doc """
@@ -67,7 +65,7 @@ defmodule ExWire.Message.Neighbours do
 
     %__MODULE__{
       nodes: Enum.map(encoded_nodes, &Neighbour.decode/1),
-      timestamp: :binary.decode_unsigned(timestamp),
+      timestamp: :binary.decode_unsigned(timestamp)
     }
   end
 
@@ -91,7 +89,7 @@ defmodule ExWire.Message.Neighbours do
   def encode(%__MODULE__{nodes: nodes, timestamp: timestamp}) do
     ExRLP.encode([
       Enum.map(nodes, &Neighbour.encode/1),
-      timestamp,
+      timestamp
     ])
   end
 
@@ -103,7 +101,6 @@ defmodule ExWire.Message.Neighbours do
       iex> ExWire.Message.Neighbours.to(%ExWire.Message.Neighbours{nodes: [], timestamp: 1})
       nil
   """
-  @spec to(t) :: Endpoint.t | nil
+  @spec to(t) :: Endpoint.t() | nil
   def to(_message), do: nil
-
 end

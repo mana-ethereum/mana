@@ -11,11 +11,11 @@ defmodule ExWire.Struct.Peer do
   ]
 
   @type t :: %__MODULE__{
-    host: String.t,
-    port: integer(),
-    remote_id: String.t,
-    ident: String.t,
-  }
+          host: String.t(),
+          port: integer(),
+          remote_id: String.t(),
+          ident: String.t()
+        }
 
   @doc """
   Constructs a new Peer struct.
@@ -30,9 +30,9 @@ defmodule ExWire.Struct.Peer do
         ident: "6ce059...1acd9d"
       }
   """
-  @spec new(Sring.t, integer(), String.t) :: t
+  @spec new(Sring.t(), integer(), String.t()) :: t
   def new(host, port, remote_id_hex) do
-    remote_id = remote_id_hex |> ExthCrypto.Math.hex_to_bin |> ExthCrypto.Key.raw_to_der
+    remote_id = remote_id_hex |> ExthCrypto.Math.hex_to_bin() |> ExthCrypto.Key.raw_to_der()
     ident = Binary.take(remote_id_hex, 6) <> "..." <> Binary.take(remote_id_hex, -6)
 
     %__MODULE__{
@@ -62,7 +62,7 @@ defmodule ExWire.Struct.Peer do
       iex> ExWire.Struct.Peer.from_uri("abc")
       {:error, "Invalid URI"}
   """
-  @spec from_uri(String.t) :: {:ok, t} | {:error, String.t}
+  @spec from_uri(String.t()) :: {:ok, t} | {:error, String.t()}
   def from_uri(uri) do
     case URI.parse(uri) do
       %URI{
@@ -72,17 +72,19 @@ defmodule ExWire.Struct.Peer do
         port: port
       } ->
         {:ok, __MODULE__.new(host, port, remote_id_hex)}
-      %URI{scheme: nil} -> {:error, "Invalid URI"}
-      %URI{scheme: scheme} -> {:error, "URI scheme must be enode, got #{scheme}"}
+
+      %URI{scheme: nil} ->
+        {:error, "Invalid URI"}
+
+      %URI{scheme: scheme} ->
+        {:error, "URI scheme must be enode, got #{scheme}"}
     end
   end
 end
 
 defimpl String.Chars, for: ExWire.Struct.Peer do
-
-  @spec to_string(ExWire.Struct.Peer.t) :: String.t
+  @spec to_string(ExWire.Struct.Peer.t()) :: String.t()
   def to_string(peer) do
     peer.ident
   end
-
 end

@@ -30,14 +30,14 @@ defmodule ExWire.Packet.Status do
   @behaviour ExWire.Packet
 
   @type t :: %__MODULE__{
-    protocol_version: integer(),
-    network_id: integer(),
-    total_difficulty: integer(),
-    best_hash: binary(),
-    genesis_hash: binary(),
-    manifest_hash: binary(),
-    block_number: integer()
-  }
+          protocol_version: integer(),
+          network_id: integer(),
+          total_difficulty: integer(),
+          best_hash: binary(),
+          genesis_hash: binary(),
+          manifest_hash: binary(),
+          block_number: integer()
+        }
 
   defstruct [
     :protocol_version,
@@ -58,8 +58,8 @@ defmodule ExWire.Packet.Status do
       ...> |> ExWire.Packet.Status.serialize
       [0x63, 3, 10, <<5>>, <<4>>]
   """
-  @spec serialize(t) :: ExRLP.t
-  def serialize(packet=%__MODULE__{}) do
+  @spec serialize(t) :: ExRLP.t()
+  def serialize(packet = %__MODULE__{}) do
     [
       packet.protocol_version,
       packet.network_id,
@@ -82,26 +82,38 @@ defmodule ExWire.Packet.Status do
       iex> ExWire.Packet.Status.deserialize([<<0x63>>, <<3>>, <<10>>, <<5>>, <<4>>, <<11>>, <<11>>])
       %ExWire.Packet.Status{protocol_version: 0x63, network_id: 3, total_difficulty: 10, best_hash: <<5>>, genesis_hash: <<4>>, manifest_hash: <<11>>, block_number: 11}
   """
-  @spec deserialize(ExRLP.t) :: t
+  @spec deserialize(ExRLP.t()) :: t
   def deserialize(rlp) do
     [
-      protocol_version |
-      [network_id |
-      [total_difficulty |
-      [best_hash |
-      [genesis_hash |
-      rest
-    ]]]]] = rlp
+      protocol_version
+      | [
+          network_id
+          | [
+              total_difficulty
+              | [
+                  best_hash
+                  | [
+                      genesis_hash
+                      | rest
+                    ]
+                ]
+            ]
+        ]
+    ] = rlp
 
-    {manifest_hash, block_number} = case rest do
-      [] -> {nil, nil}
-      [manifest_hash, block_number] -> {manifest_hash, block_number  |> :binary.decode_unsigned}
-    end
+    {manifest_hash, block_number} =
+      case rest do
+        [] ->
+          {nil, nil}
+
+        [manifest_hash, block_number] ->
+          {manifest_hash, block_number |> :binary.decode_unsigned()}
+      end
 
     %__MODULE__{
-      protocol_version: protocol_version |> :binary.decode_unsigned,
-      network_id: network_id |> :binary.decode_unsigned,
-      total_difficulty: total_difficulty |> :binary.decode_unsigned,
+      protocol_version: protocol_version |> :binary.decode_unsigned(),
+      network_id: network_id |> :binary.decode_unsigned(),
+      total_difficulty: total_difficulty |> :binary.decode_unsigned(),
       best_hash: best_hash,
       genesis_hash: genesis_hash,
       manifest_hash: manifest_hash,
@@ -126,13 +138,18 @@ defmodule ExWire.Packet.Status do
       ...> |> ExWire.Packet.Status.handle()
       {:disconnect, :useless_peer}
   """
-  @spec handle(ExWire.Packet.packet) :: ExWire.Packet.handle_response
-  def handle(packet=%__MODULE__{}) do
-    if System.get_env("TRACE"), do: Logger.debug("[Packet] Got Status: #{inspect packet}")
+  @spec handle(ExWire.Packet.packet()) :: ExWire.Packet.handle_response()
+  def handle(packet = %__MODULE__{}) do
+    if System.get_env("TRACE"), do: Logger.debug("[Packet] Got Status: #{inspect(packet)}")
 
-    unless packet.protocol_version == ExWire.Config.protocol_version do
+    unless packet.protocol_version == ExWire.Config.protocol_version() do
       # TODO: We need to follow up on disconnection packets with disconnection ourselves
-      Logger.debug("[Packet] Disconnecting to due incompatible protocol version (them #{packet.protocol_version}, us: #{ExWire.Config.protocol_version})")
+      Logger.debug(
+        "[Packet] Disconnecting to due incompatible protocol version (them #{
+          packet.protocol_version
+        }, us: #{ExWire.Config.protocol_version()})"
+      )
+
       {:disconnect, :useless_peer}
     else
       :ok

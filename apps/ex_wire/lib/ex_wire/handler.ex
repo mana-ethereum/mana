@@ -15,33 +15,31 @@ defmodule ExWire.Handler do
     0x01 => ExWire.Handler.Ping,
     0x02 => ExWire.Handler.Pong,
     0x03 => ExWire.Handler.FindNeighbours,
-    0x04 => ExWire.Handler.Neighbours,
+    0x04 => ExWire.Handler.Neighbours
   }
 
   defmodule Params do
     @moduledoc "Struct to store parameters from an incoming message"
 
-    defstruct [
-      remote_host: nil,
-      signature: nil,
-      recovery_id: nil,
-      hash: nil,
-      data: nil,
-      timestamp: nil,
-    ]
+    defstruct remote_host: nil,
+              signature: nil,
+              recovery_id: nil,
+              hash: nil,
+              data: nil,
+              timestamp: nil
 
     @type t :: %__MODULE__{
-      remote_host: ExWire.Struct.Endpoint.t,
-      signature: Crpyto.signature,
-      recovery_id: Crypto.recovery_id,
-      hash: Cryto.hash,
-      data: binary(),
-      timestamp: integer(),
-    }
+            remote_host: ExWire.Struct.Endpoint.t(),
+            signature: Crpyto.signature(),
+            recovery_id: Crypto.recovery_id(),
+            hash: Cryto.hash(),
+            data: binary(),
+            timestamp: integer()
+          }
   end
 
-  @type handler_response :: :not_implented | :no_response | Message.t
-  @callback handle(Params.t) :: handler_response
+  @type handler_response :: :not_implented | :no_response | Message.t()
+  @callback handle(Params.t()) :: handler_response
 
   @doc """
   Decides which module to route the given message to,
@@ -73,14 +71,15 @@ defmodule ExWire.Handler do
 
       # TODO: Add a `no_response` test case
   """
-  @spec dispatch(integer(), Params.t) :: handler_response
+  @spec dispatch(integer(), Params.t()) :: handler_response
   def dispatch(type, params) do
     case @handlers[type] do
       nil ->
-        Logger.warn("Message code `#{inspect type, base: :hex}` not implemented")
+        Logger.warn("Message code `#{inspect(type, base: :hex)}` not implemented")
         :not_implemented
-      mod when is_atom(mod) -> apply(mod, :handle, [params])
+
+      mod when is_atom(mod) ->
+        apply(mod, :handle, [params])
     end
   end
-
 end

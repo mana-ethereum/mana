@@ -7,19 +7,17 @@ defmodule ExWire.Message.Pong do
 
   @message_id 0x02
 
-  defstruct [
-    to: nil,
-    hash: nil,
-    timestamp: nil,
-  ]
+  defstruct to: nil,
+            hash: nil,
+            timestamp: nil
 
   @type t :: %__MODULE__{
-    to: Endpoint.t,
-    hash: binary(),
-    timestamp: integer()
-  }
+          to: Endpoint.t(),
+          hash: binary(),
+          timestamp: integer()
+        }
 
-  @spec message_id() :: ExWire.Message.message_id
+  @spec message_id() :: ExWire.Message.message_id()
   def message_id, do: @message_id
 
   @doc """
@@ -45,7 +43,7 @@ defmodule ExWire.Message.Pong do
     %__MODULE__{
       to: Endpoint.decode(to),
       hash: hash,
-      timestamp: :binary.decode_unsigned(timestamp),
+      timestamp: :binary.decode_unsigned(timestamp)
     }
   end
 
@@ -66,7 +64,7 @@ defmodule ExWire.Message.Pong do
     ExRLP.encode([
       Endpoint.encode(to),
       hash,
-      timestamp,
+      timestamp
     ])
   end
 
@@ -82,9 +80,8 @@ defmodule ExWire.Message.Pong do
       ...> )
       %ExWire.Struct.Endpoint{ip: [1, 2, 3, 4], tcp_port: 5, udp_port: nil}
   """
-  @spec to(t) :: Endpoint.t | nil
+  @spec to(t) :: Endpoint.t() | nil
   def to(message) do
     message.to
   end
-
 end

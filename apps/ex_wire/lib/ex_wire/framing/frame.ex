@@ -15,15 +15,24 @@ defmodule ExWire.Framing.Frame do
 
   @type frame :: binary()
 
-  @spec frame(integer(), ExRLP.t, Secrets.t) :: {frame, Secrets.t}
-  def frame(packet_type, packet_data, frame_secrets=%Secrets{egress_mac: egress_mac, encoder_stream: encoder_stream, mac_encoder: mac_encoder, mac_secret: mac_secret}) do
+  @spec frame(integer(), ExRLP.t(), Secrets.t()) :: {frame, Secrets.t()}
+  def frame(
+        packet_type,
+        packet_data,
+        frame_secrets = %Secrets{
+          egress_mac: egress_mac,
+          encoder_stream: encoder_stream,
+          mac_encoder: mac_encoder,
+          mac_secret: mac_secret
+        }
+      ) do
     # frame:
     #     normal: rlp(packet-type) [|| rlp(packet-data)] || padding
     #     chunked-0: rlp(packet-type) || rlp(packet-data...)
     #     chunked-n: rlp(...packet-data) || padding
     # padding: zero-fill to 16-byte boundary (only necessary for last frame)
     frame_unpadded =
-      ExRLP.encode(packet_type) <> (if packet_data, do: ExRLP.encode(packet_data), else: <<>>)
+      ExRLP.encode(packet_type) <> if packet_data, do: ExRLP.encode(packet_data), else: <<>>
 
     # frame-size: 3-byte integer size of frame, big endian encoded (excludes padding)
     frame_size_int = byte_size(frame_unpadded)
@@ -43,7 +52,8 @@ defmodule ExWire.Framing.Frame do
     # protocol_type = <<>>
     # context_id = <<>>
     # header_data = [protocol_type, context_id] |> ExRLP.encode()
-    header_data = <<0xc2, 0x80, 0x80>> # Honestly, this is what Geth and Parity use as a header data.
+    # Honestly, this is what Geth and Parity use as a header data.
+    header_data = <<0xC2, 0x80, 0x80>>
     header_padding = padding_for(byte_size(frame_size <> header_data), 16)
 
     # header: frame-size || header-data || padding
@@ -57,11 +67,12 @@ defmodule ExWire.Framing.Frame do
 
     {encoder_stream, frame_unpadded_enc} = AES.stream_encrypt(frame_unpadded, encoder_stream)
 
-    {encoder_stream, frame_padding_enc} = if byte_size(frame_padding) > 0 do
-      AES.stream_encrypt(frame_padding, encoder_stream)
-    else
-      {encoder_stream, <<>>}
-    end
+    {encoder_stream, frame_padding_enc} =
+      if byte_size(frame_padding) > 0 do
+        AES.stream_encrypt(frame_padding, encoder_stream)
+      else
+        {encoder_stream, <<>>}
+      end
 
     frame_enc = frame_unpadded_enc <> frame_padding_enc
 
@@ -82,10 +93,20 @@ defmodule ExWire.Framing.Frame do
     {frame, %{frame_secrets | egress_mac: egress_mac, encoder_stream: encoder_stream}}
   end
 
-  @spec unframe(binary(), Secrets.t) :: {:ok, integer(), binary(), binary(), Secrets.t} | {:error, String.t}
-  def unframe(frame, frame_secrets=%Secrets{ingress_mac: ingress_mac, decoder_stream: decoder_stream, mac_encoder: mac_encoder, mac_secret: mac_secret}) do
+  @spec unframe(binary(), Secrets.t()) ::
+          {:ok, integer(), binary(), binary(), Secrets.t()} | {:error, String.t()}
+  def unframe(
+        frame,
+        frame_secrets = %Secrets{
+          ingress_mac: ingress_mac,
+          decoder_stream: decoder_stream,
+          mac_encoder: mac_encoder,
+          mac_secret: mac_secret
+        }
+      ) do
     <<
-      header_enc::binary-size(16), # is header always 128 bits?
+      # is header always 128 bits?
+      header_enc::binary-size(16),
       header_mac::binary-size(16),
       frame_rest::binary()
     >> = frame
@@ -113,7 +134,6 @@ defmodule ExWire.Framing.Frame do
       if byte_size(frame_rest) < frame_size + frame_padding_bytes + 16 do
         {:error, "Insufficent data"}
       else
-
         # let's go and ignore the entire header data....
         <<
           frame_enc::binary-size(frame_size),
@@ -131,7 +151,8 @@ defmodule ExWire.Framing.Frame do
         if expected_frame_mac != frame_mac do
           {:error, "Failed to match frame ingress mac"}
         else
-          {decoder_stream, frame_with_padding} = AES.stream_decrypt(frame_enc_with_padding, decoder_stream)
+          {decoder_stream, frame_with_padding} =
+            AES.stream_decrypt(frame_enc_with_padding, decoder_stream)
 
           <<
             frame::binary-size(frame_size),
@@ -145,8 +166,8 @@ defmodule ExWire.Framing.Frame do
 
           {
             :ok,
-            packet_type_rlp |> ExRLP.decode |> :binary.decode_unsigned,
-            packet_data_rlp |> ExRLP.decode,
+            packet_type_rlp |> ExRLP.decode() |> :binary.decode_unsigned(),
+            packet_data_rlp |> ExRLP.decode(),
             frame_rest,
             %{frame_secrets | ingress_mac: ingress_mac, decoder_stream: decoder_stream}
           }
@@ -157,20 +178,25 @@ defmodule ExWire.Framing.Frame do
 
   # updateMAC reseeds the given hash with encrypted seed.
   # it returns the first 16 bytes of the hash sum after seeding.
-  @spec update_mac(MAC.mac_inst, ExthCrypto.Cipher.cipher, ExthCrypto.Key.symmetric_key, binary()) :: MAC.mac_inst
+  @spec update_mac(
+          MAC.mac_inst(),
+          ExthCrypto.Cipher.cipher(),
+          ExthCrypto.Key.symmetric_key(),
+          binary()
+        ) :: MAC.mac_inst()
   defp update_mac(mac, mac_encoder, mac_secret, seed) do
     final = MAC.final(mac) |> Binary.take(16)
 
     enc = ExthCrypto.Cipher.encrypt(final, mac_secret, mac_encoder) |> Binary.take(-16)
 
-    enc_xored = ExthCrypto.Math.xor(enc, (if seed, do: seed, else: final))
+    enc_xored = ExthCrypto.Math.xor(enc, if(seed, do: seed, else: final))
 
     MAC.update(mac, enc_xored)
   end
 
   @spec padding_size(integer(), integer()) :: integer()
   defp padding_size(given_size, to_size) do
-    ( to_size - rem(given_size, to_size) )
+    to_size - rem(given_size, to_size)
   end
 
   @spec padding_for(integer(), integer()) :: binary()
@@ -179,5 +205,4 @@ defmodule ExWire.Framing.Frame do
 
     <<0::size(padding_bits)>>
   end
-
 end

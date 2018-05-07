@@ -32,8 +32,8 @@ defmodule ExWire.Packet.Disconnect do
   @behaviour ExWire.Packet
 
   @type t :: %__MODULE__{
-    reason: integer()
-  }
+          reason: integer()
+        }
 
   defstruct [
     :reason
@@ -66,12 +66,12 @@ defmodule ExWire.Packet.Disconnect do
     null_node_identity_received: 0x07,
     client_quitting: 0x08,
     unexpected_identity: 0x09,
-    identity_is_same_as_self: 0x0a,
-    timeout_on_receiving_message: 0x0b,
-    other_reason: 0x10,
+    identity_is_same_as_self: 0x0A,
+    timeout_on_receiving_message: 0x0B,
+    other_reason: 0x10
   }
 
-  @reasons_inverted (for {k, v} <- @reasons, do: {v, k}) |> Enum.into(%{})
+  @reasons_inverted for({k, v} <- @reasons, do: {v, k}) |> Enum.into(%{})
 
   @doc """
   Given a Disconnect packet, serializes for transport over Eth Wire Protocol.
@@ -82,8 +82,8 @@ defmodule ExWire.Packet.Disconnect do
       ...> |> ExWire.Packet.Disconnect.serialize
       [0x0b]
   """
-  @spec serialize(t) :: ExRLP.t
-  def serialize(packet=%__MODULE__{}) do
+  @spec serialize(t) :: ExRLP.t()
+  def serialize(packet = %__MODULE__{}) do
     [
       Map.get(@reasons, packet.reason)
     ]
@@ -98,14 +98,14 @@ defmodule ExWire.Packet.Disconnect do
       iex> ExWire.Packet.Disconnect.deserialize([<<0x0b>>])
       %ExWire.Packet.Disconnect{reason: :timeout_on_receiving_message}
   """
-  @spec deserialize(ExRLP.t) :: t
+  @spec deserialize(ExRLP.t()) :: t
   def deserialize(rlp) do
     [
       reason
     ] = rlp
 
     %__MODULE__{
-      reason: @reasons_inverted[reason |> :binary.decode_unsigned]
+      reason: @reasons_inverted[reason |> :binary.decode_unsigned()]
     }
   end
 
@@ -122,7 +122,7 @@ defmodule ExWire.Packet.Disconnect do
       ** (RuntimeError) Invalid reason
   """
   def new(reason) do
-    if @reasons[reason] == nil, do: raise "Invalid reason"
+    if @reasons[reason] == nil, do: raise("Invalid reason")
 
     %__MODULE__{
       reason: reason
@@ -137,7 +137,7 @@ defmodule ExWire.Packet.Disconnect do
       iex> ExWire.Packet.Disconnect.get_reason_msg(:timeout_on_receiving_message)
       "timeout on receiving a message"
   """
-  @spec get_reason_msg(integer()) :: String.t
+  @spec get_reason_msg(integer()) :: String.t()
   def get_reason_msg(reason) do
     @reason_msgs[reason]
   end
@@ -152,9 +152,11 @@ defmodule ExWire.Packet.Disconnect do
       ...> |> ExWire.Packet.GetBlockBodies.handle()
       :ok
   """
-  @spec handle(ExWire.Packet.packet) :: ExWire.Packet.handle_response
-  def handle(packet=%__MODULE__{}) do
-    Logger.info("[Packet] Peer asked to disconnect for #{get_reason_msg(packet.reason) || packet.reason}.")
+  @spec handle(ExWire.Packet.packet()) :: ExWire.Packet.handle_response()
+  def handle(packet = %__MODULE__{}) do
+    Logger.info(
+      "[Packet] Peer asked to disconnect for #{get_reason_msg(packet.reason) || packet.reason}."
+    )
 
     :peer_disconnect
   end

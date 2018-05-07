@@ -3,7 +3,8 @@ defmodule ExWire.Util.Timestamp do
   Helper functions for getting current time.
   """
 
-  @expiration 20 # seconds
+  # seconds
+  @expiration 20
 
   @doc """
   Returns the current time as a unix epoch.
@@ -20,5 +21,4 @@ defmodule ExWire.Util.Timestamp do
   def soon do
     now() + @expiration
   end
-
 end

@@ -35,68 +35,102 @@ defmodule ExWire.Sync do
   def init(db) do
     block_tree = Blockchain.Blocktree.new_tree()
 
-    {:ok, %{
-      block_queue: %BlockQueue{},
-      block_tree: block_tree,
-      chain: ExWire.Config.chain(),
-      db: db,
-      last_requested_block: request_next_block(block_tree)
-    }}
+    {:ok,
+     %{
+       block_queue: %BlockQueue{},
+       block_tree: block_tree,
+       chain: ExWire.Config.chain(),
+       db: db,
+       last_requested_block: request_next_block(block_tree)
+     }}
   end
 
   @doc """
   When were receive a block header, we'll add it to our block queue. When we receive the corresponding block body,
   we'll add that as well.
   """
-  def handle_info({:packet, %BlockHeaders{}=block_headers, peer}, state=%{block_queue: block_queue, block_tree: block_tree, chain: chain, db: db, last_requested_block: last_requested_block}) do
-    {next_block_queue, next_block_tree} = Enum.reduce(block_headers.headers, {block_queue, block_tree}, fn header, {block_queue, block_tree} ->
-      header_hash = header |> Header.hash
+  def handle_info(
+        {:packet, %BlockHeaders{} = block_headers, peer},
+        state = %{
+          block_queue: block_queue,
+          block_tree: block_tree,
+          chain: chain,
+          db: db,
+          last_requested_block: last_requested_block
+        }
+      ) do
+    {next_block_queue, next_block_tree} =
+      Enum.reduce(block_headers.headers, {block_queue, block_tree}, fn header,
+                                                                       {block_queue, block_tree} ->
+        header_hash = header |> Header.hash()
 
-      {block_queue, block_tree, should_request_block} = BlockQueue.add_header_to_block_queue(block_queue, block_tree, header, header_hash, peer.remote_id, chain, db)
+        {block_queue, block_tree, should_request_block} =
+          BlockQueue.add_header_to_block_queue(
+            block_queue,
+            block_tree,
+            header,
+            header_hash,
+            peer.remote_id,
+            chain,
+            db
+          )
 
-      if should_request_block do
-        Logger.debug("[Sync] Requesting block body #{header.number}")
+        if should_request_block do
+          Logger.debug("[Sync] Requesting block body #{header.number}")
 
-        # TODO: Bulk up these requests?
-        PeerSupervisor.send_packet(PeerSupervisor, %ExWire.Packet.GetBlockBodies{hashes: [header_hash]})
+          # TODO: Bulk up these requests?
+          PeerSupervisor.send_packet(PeerSupervisor, %ExWire.Packet.GetBlockBodies{
+            hashes: [header_hash]
+          })
+        end
+
+        {block_queue, block_tree}
+      end)
+
+    # We can make this better, but it's basically "if we change, request another block"
+    new_last_requested_block =
+      if next_block_tree.parent_map != block_tree.parent_map do
+        request_next_block(next_block_tree)
+      else
+        last_requested_block
       end
 
-      {block_queue, block_tree}
-    end)
-
-    # We can make this better, but it's basically "if we change, request another block"
-    new_last_requested_block = if next_block_tree.parent_map != block_tree.parent_map do
-      request_next_block(next_block_tree)
-    else
-      last_requested_block
-    end
-
     {:noreply,
-      state
-      |> Map.put(:block_queue, next_block_queue)
-      |> Map.put(:block_tree, next_block_tree)
-      |> Map.put(:last_requested_block, new_last_requested_block)
-    }
+     state
+     |> Map.put(:block_queue, next_block_queue)
+     |> Map.put(:block_tree, next_block_tree)
+     |> Map.put(:last_requested_block, new_last_requested_block)}
   end
 
-  def handle_info({:packet, %BlockBodies{}=block_bodies, _peer}, state=%{block_queue: block_queue, block_tree: block_tree, chain: chain, db: db, last_requested_block: last_requested_block}) do
-    {next_block_queue, next_block_tree} = Enum.reduce(block_bodies.blocks, {block_queue, block_tree}, fn block_body, {block_queue, block_tree} ->
-      BlockQueue.add_block_struct_to_block_queue(block_queue, block_tree, block_body, chain, db)
-    end)
+  def handle_info(
+        {:packet, %BlockBodies{} = block_bodies, _peer},
+        state = %{
+          block_queue: block_queue,
+          block_tree: block_tree,
+          chain: chain,
+          db: db,
+          last_requested_block: last_requested_block
+        }
+      ) do
+    {next_block_queue, next_block_tree} =
+      Enum.reduce(block_bodies.blocks, {block_queue, block_tree}, fn block_body,
+                                                                     {block_queue, block_tree} ->
+        BlockQueue.add_block_struct_to_block_queue(block_queue, block_tree, block_body, chain, db)
+      end)
 
     # We can make this better, but it's basically "if we change, request another block"
-    new_last_requested_block = if next_block_tree.parent_map != block_tree.parent_map do
-      request_next_block(next_block_tree)
-    else
-      last_requested_block
-    end
+    new_last_requested_block =
+      if next_block_tree.parent_map != block_tree.parent_map do
+        request_next_block(next_block_tree)
+      else
+        last_requested_block
+      end
 
     {:noreply,
-      state
-      |> Map.put(:block_queue, next_block_queue)
-      |> Map.put(:block_tree, next_block_tree)
-      |> Map.put(:last_requested_block, new_last_requested_block)
-    }
+     state
+     |> Map.put(:block_queue, next_block_queue)
+     |> Map.put(:block_tree, next_block_tree)
+     |> Map.put(:last_requested_block, new_last_requested_block)}
   end
 
   def handle_info({:packet, packet, peer}, state) do
@@ -106,16 +140,21 @@ defmodule ExWire.Sync do
   end
 
   def request_next_block(block_tree) do
-    next_number = case Blockchain.Blocktree.get_canonical_block(block_tree) do
-      :root -> 0
-      %Blockchain.Block{header: %Block.Header{number: number}} -> number + 1
-    end
+    next_number =
+      case Blockchain.Blocktree.get_canonical_block(block_tree) do
+        :root -> 0
+        %Blockchain.Block{header: %Block.Header{number: number}} -> number + 1
+      end
 
     Logger.debug("[Sync] Requesting block #{next_number}")
 
-    ExWire.PeerSupervisor.send_packet(ExWire.PeerSupervisor, %ExWire.Packet.GetBlockHeaders{block_identifier: next_number, max_headers: 1, skip: 0, reverse: false})
+    ExWire.PeerSupervisor.send_packet(ExWire.PeerSupervisor, %ExWire.Packet.GetBlockHeaders{
+      block_identifier: next_number,
+      max_headers: 1,
+      skip: 0,
+      reverse: false
+    })
 
     next_number
   end
-
 end
