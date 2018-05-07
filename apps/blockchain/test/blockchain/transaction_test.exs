@@ -33,7 +33,7 @@ defmodule Blockchain.TransactionTest do
     end
   end
 
-  define_common_tests "TransactionTests/ttData", [], fn test_name, test_data ->
+  define_common_tests "TransactionTests/ttData", [except: ["String10MbData"]], fn test_name, test_data ->
     parsed_test = parse_test(test_data, test_name)
 
     for {_network, test} <- parsed_test.tests_by_network do
