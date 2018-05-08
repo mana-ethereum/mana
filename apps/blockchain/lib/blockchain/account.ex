@@ -10,15 +10,8 @@ defmodule Blockchain.Account do
   @empty_trie MerklePatriciaTree.Trie.empty_trie_root_hash()
 
   # State defined in Section 4.1 of the Yellow Paper
-  defstruct nonce: 0,
-
-            # σn
-            # σb
-            balance: 0,
-            # σs
-            storage_root: @empty_trie,
-            # σc
-            code_hash: @empty_keccak
+  # nonce: σn, balance: σb, storate_root: σs, code_hash: σc
+  defstruct nonce: 0, balance: 0, storage_root: @empty_trie, code_hash: @empty_keccak
 
   # Types defined as Eq.(12) of the Yellow Paper
   @type t :: %__MODULE__{

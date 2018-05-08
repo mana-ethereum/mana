@@ -8,26 +8,16 @@ defmodule Blockchain.Transaction do
   alias Blockchain.Account
   alias Block.Header
 
+  # nonce: Tn, gas_price: Tp, gas_limit: Tg, to: Tt, value: Tv,  v: Tw, r: Tr, s: Ts, init: Ti, data: Td
   defstruct nonce: 0,
-
-            # Tn
-            # Tp
             gas_price: 0,
-            # Tg
             gas_limit: 0,
-            # Tt
             to: <<>>,
-            # Tv
             value: 0,
-            # Tw
             v: nil,
-            # Tr
             r: nil,
-            # Ts
             s: nil,
-            # Ti
             init: <<>>,
-            # Td
             data: <<>>
 
   @type t :: %__MODULE__{
