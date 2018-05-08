@@ -28,16 +28,9 @@ defmodule ExWire.Handshake.Struct.AckRespV4 do
 
   @spec deserialize(ExRLP.t()) :: t
   def deserialize(rlp) do
-    [
-      remote_ephemeral_public_key
-      | [
-          remote_nonce
-          | [
-              remote_version
-              | _tl
-            ]
-        ]
-    ] = rlp
+    [remote_ephemeral_public_key | rlp_tail] = rlp
+    [remote_nonce | rlp_tail] = rlp_tail
+    [remote_version | _tl] = rlp_tail
 
     %__MODULE__{
       remote_ephemeral_public_key: remote_ephemeral_public_key,

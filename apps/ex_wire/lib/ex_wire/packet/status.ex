@@ -84,22 +84,11 @@ defmodule ExWire.Packet.Status do
   """
   @spec deserialize(ExRLP.t()) :: t
   def deserialize(rlp) do
-    [
-      protocol_version
-      | [
-          network_id
-          | [
-              total_difficulty
-              | [
-                  best_hash
-                  | [
-                      genesis_hash
-                      | rest
-                    ]
-                ]
-            ]
-        ]
-    ] = rlp
+    [protocol_version | rlp_tail] = rlp
+    [network_id | rlp_tail] = rlp_tail
+    [total_difficulty | rlp_tail] = rlp_tail
+    [best_hash | rlp_tail] = rlp_tail
+    [genesis_hash | rest] = rlp_tail
 
     {manifest_hash, block_number} =
       case rest do

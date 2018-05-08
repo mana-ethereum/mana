@@ -35,19 +35,10 @@ defmodule ExWire.Handshake.Struct.AuthMsgV4 do
 
   @spec deserialize(ExRLP.t()) :: t
   def deserialize(rlp) do
-    [
-      signature
-      | [
-          remote_public_key
-          | [
-              remote_nonce
-              | [
-                  remote_version
-                  | _tl
-                ]
-            ]
-        ]
-    ] = rlp
+    [signature | rlp_tail] = rlp
+    [remote_public_key | rlp_tail] = rlp_tail
+    [remote_nonce | rlp_tail] = rlp_tail
+    [remote_version | _tl] = rlp_tail
 
     %__MODULE__{
       signature: signature,
