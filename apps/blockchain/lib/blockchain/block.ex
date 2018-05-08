@@ -13,14 +13,13 @@ defmodule Blockchain.Block do
   alias MerklePatriciaTree.DB
 
   # Defined in Eq.(18)
+  # block_hash: Hash for this block, acts simply as a cache,
+  # header: B_H,
+  # transactions: B_T,
+  # ommers: B_U
   defstruct block_hash: nil,
-
-            # Hash for this block, acts simply as a cache.
-            # B_H
             header: %Header{},
-            # B_T
             transactions: [],
-            # B_U
             ommers: []
 
   @type t :: %__MODULE__{
