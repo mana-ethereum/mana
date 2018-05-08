@@ -3,20 +3,18 @@ defmodule ExWire.Struct.Endpoint do
   Struct to represent an endpoint in ExWire.
   """
 
-  defstruct [
-    ip: nil,
-    udp_port: nil,
-    tcp_port: nil
-  ]
+  defstruct ip: nil,
+            udp_port: nil,
+            tcp_port: nil
 
   @type ip :: [integer()]
   @type ip_port :: integer()
 
   @type t :: %__MODULE__{
-    ip: ip,
-    udp_port: ip_port | nil,
-    tcp_port: ip_port | nil,
-  }
+          ip: ip,
+          udp_port: ip_port | nil,
+          tcp_port: ip_port | nil
+        }
 
   @doc """
   Returns a struct given an `ip` in binary form, plus an
@@ -31,12 +29,12 @@ defmodule ExWire.Struct.Endpoint do
         tcp_port: 5,
       }
   """
-  @spec decode(ExRLP.t) :: t
+  @spec decode(ExRLP.t()) :: t
   def decode([ip, udp_port, tcp_port]) do
     %__MODULE__{
       ip: decode_ip(ip),
       udp_port: decode_port(udp_port),
-      tcp_port: decode_port(tcp_port),
+      tcp_port: decode_port(tcp_port)
     }
   end
 
@@ -64,7 +62,7 @@ defmodule ExWire.Struct.Endpoint do
   @spec decode_ip(binary()) :: ip
   def decode_ip(data) do
     data
-      |> :binary.bin_to_list
+    |> :binary.bin_to_list()
   end
 
   @doc """
@@ -104,12 +102,12 @@ defmodule ExWire.Struct.Endpoint do
       iex> ExWire.Struct.Endpoint.encode(%ExWire.Struct.Endpoint{ip: [1, 2, 3, 4], udp_port: nil, tcp_port: 5})
       [<<1, 2, 3, 4>>, <<>>, <<0, 5>>]
   """
-  @spec encode(t) :: ExRLP.t
+  @spec encode(t) :: ExRLP.t()
   def encode(%__MODULE__{ip: ip, tcp_port: tcp_port, udp_port: udp_port}) do
     [
       encode_ip(ip),
       encode_port(udp_port),
-      encode_port(tcp_port),
+      encode_port(tcp_port)
     ]
   end
 
@@ -128,7 +126,7 @@ defmodule ExWire.Struct.Endpoint do
   @spec encode_ip(ip) :: binary()
   def encode_ip(ip) do
     ip
-    |> :binary.list_to_bin
+    |> :binary.list_to_bin()
   end
 
   @doc """
@@ -149,7 +147,7 @@ defmodule ExWire.Struct.Endpoint do
   def encode_port(port) do
     case port do
       nil -> <<>>
-      _ -> port |> :binary.encode_unsigned |> ExthCrypto.Math.pad(2)
+      _ -> port |> :binary.encode_unsigned() |> ExthCrypto.Math.pad(2)
     end
   end
 end

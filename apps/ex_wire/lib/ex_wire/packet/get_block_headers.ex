@@ -16,11 +16,11 @@ defmodule ExWire.Packet.GetBlockHeaders do
   @behaviour ExWire.Packet
 
   @type t :: %__MODULE__{
-    block_identifier: Packet.block_identifier,
-    max_headers: integer(),
-    skip: integer(),
-    reverse: boolean()
-  }
+          block_identifier: Packet.block_identifier(),
+          max_headers: integer(),
+          skip: integer(),
+          reverse: boolean()
+        }
 
   defstruct [
     :block_identifier,
@@ -42,13 +42,13 @@ defmodule ExWire.Packet.GetBlockHeaders do
       ...> |> ExWire.Packet.GetBlockHeaders.serialize
       [<<5>>, 10, 2, 0]
   """
-  @spec serialize(t) :: ExRLP.t
-  def serialize(packet=%__MODULE__{}) do
+  @spec serialize(t) :: ExRLP.t()
+  def serialize(packet = %__MODULE__{}) do
     [
       packet.block_identifier,
       packet.max_headers,
       packet.skip,
-      (if packet.reverse, do: 1, else: 0)
+      if(packet.reverse, do: 1, else: 0)
     ]
   end
 
@@ -64,7 +64,7 @@ defmodule ExWire.Packet.GetBlockHeaders do
       iex> ExWire.Packet.GetBlockHeaders.deserialize([<<5>>, 10, 2, 0])
       %ExWire.Packet.GetBlockHeaders{block_identifier: <<5>>, max_headers: 10, skip: 2, reverse: false}
   """
-  @spec deserialize(ExRLP.t) :: t
+  @spec deserialize(ExRLP.t()) :: t
   def deserialize(rlp) do
     [
       block_identifier,
@@ -91,9 +91,8 @@ defmodule ExWire.Packet.GetBlockHeaders do
       ...> |> ExWire.Packet.GetBlockHeaders.handle()
       :ok
   """
-  @spec handle(ExWire.Packet.packet) :: ExWire.Packet.handle_response
-  def handle(_packet=%__MODULE__{}) do
+  @spec handle(ExWire.Packet.packet()) :: ExWire.Packet.handle_response()
+  def handle(_packet = %__MODULE__{}) do
     :ok
   end
-
 end

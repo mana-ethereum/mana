@@ -26,8 +26,8 @@ defmodule ExWire.Packet.Ping do
       ...> |> ExWire.Packet.Ping.serialize
       []
   """
-  @spec serialize(t) :: ExRLP.t
-  def serialize(_packet=%__MODULE__{}) do
+  @spec serialize(t) :: ExRLP.t()
+  def serialize(_packet = %__MODULE__{}) do
     []
   end
 
@@ -40,7 +40,7 @@ defmodule ExWire.Packet.Ping do
       iex> ExWire.Packet.Ping.deserialize([])
       %ExWire.Packet.Ping{}
   """
-  @spec deserialize(ExRLP.t) :: t
+  @spec deserialize(ExRLP.t()) :: t
   def deserialize(rlp) do
     [] = rlp
 
@@ -55,8 +55,8 @@ defmodule ExWire.Packet.Ping do
       iex> ExWire.Packet.Ping.handle(%ExWire.Packet.Ping{})
       {:send, %ExWire.Packet.Pong{}}
   """
-  @spec handle(ExWire.Packet.packet) :: ExWire.Packet.handle_response
-  def handle(_packet=%__MODULE__{}) do
+  @spec handle(ExWire.Packet.packet()) :: ExWire.Packet.handle_response()
+  def handle(_packet = %__MODULE__{}) do
     Logger.debug("[Packet] Received ping, responding pong.")
 
     {:send, %ExWire.Packet.Pong{}}

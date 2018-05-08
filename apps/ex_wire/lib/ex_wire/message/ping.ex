@@ -8,21 +8,19 @@ defmodule ExWire.Message.Ping do
   @behaviour ExWire.Message
   @message_id 0x01
 
-  defstruct [
-    version: nil,
-    from: nil,
-    to: nil,
-    timestamp: nil,
-  ]
+  defstruct version: nil,
+            from: nil,
+            to: nil,
+            timestamp: nil
 
   @type t :: %__MODULE__{
-    version: integer(),
-    from: Endpoint.t,
-    to: Endpoint.t,
-    timestamp: integer()
-  }
+          version: integer(),
+          from: Endpoint.t(),
+          to: Endpoint.t(),
+          timestamp: integer()
+        }
 
-  @spec message_id() :: ExWire.Message.message_id
+  @spec message_id() :: ExWire.Message.message_id()
   def message_id, do: @message_id
 
   @doc """
@@ -50,7 +48,7 @@ defmodule ExWire.Message.Ping do
       version: :binary.decode_unsigned(version),
       from: Endpoint.decode(from),
       to: Endpoint.decode(to),
-      timestamp: :binary.decode_unsigned(timestamp),
+      timestamp: :binary.decode_unsigned(timestamp)
     }
   end
 
@@ -73,7 +71,7 @@ defmodule ExWire.Message.Ping do
       version,
       Endpoint.encode(from),
       Endpoint.encode(to),
-      timestamp,
+      timestamp
     ])
   end
 
@@ -90,9 +88,8 @@ defmodule ExWire.Message.Ping do
       ...> )
       %ExWire.Struct.Endpoint{ip: [5, 6, 7, 8], tcp_port: nil, udp_port: 6}
   """
-  @spec to(t) :: Endpoint.t | nil
+  @spec to(t) :: Endpoint.t() | nil
   def to(message) do
     message.to
   end
-
 end

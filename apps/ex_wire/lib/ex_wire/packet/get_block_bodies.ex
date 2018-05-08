@@ -13,12 +13,10 @@ defmodule ExWire.Packet.GetBlockBodies do
   @behaviour ExWire.Packet
 
   @type t :: %__MODULE__{
-    hashes: [binary()]
-  }
+          hashes: [binary()]
+        }
 
-  defstruct [
-    hashes: []
-  ]
+  defstruct hashes: []
 
   @doc """
   Given a GetBlockBodies packet, serializes for transport over Eth Wire Protocol.
@@ -29,8 +27,8 @@ defmodule ExWire.Packet.GetBlockBodies do
       ...> |> ExWire.Packet.GetBlockBodies.serialize
       [<<5>>, <<6>>]
   """
-  @spec serialize(t) :: ExRLP.t
-  def serialize(packet=%__MODULE__{}) do
+  @spec serialize(t) :: ExRLP.t()
+  def serialize(packet = %__MODULE__{}) do
     packet.hashes
   end
 
@@ -43,9 +41,10 @@ defmodule ExWire.Packet.GetBlockBodies do
       iex> ExWire.Packet.GetBlockBodies.deserialize([<<5>>, <<6>>])
       %ExWire.Packet.GetBlockBodies{hashes: [<<5>>, <<6>>]}
   """
-  @spec deserialize(ExRLP.t) :: t
+  @spec deserialize(ExRLP.t()) :: t
   def deserialize(rlp) do
-    hashes = [_h|_t] = rlp # verify it's a list
+    # verify it's a list
+    hashes = [_h | _t] = rlp
 
     %__MODULE__{
       hashes: hashes
@@ -62,9 +61,8 @@ defmodule ExWire.Packet.GetBlockBodies do
       ...> |> ExWire.Packet.GetBlockBodies.handle()
       :ok
   """
-  @spec handle(ExWire.Packet.packet) :: ExWire.Packet.handle_response
-  def handle(_packet=%__MODULE__{}) do
+  @spec handle(ExWire.Packet.packet()) :: ExWire.Packet.handle_response()
+  def handle(_packet = %__MODULE__{}) do
     :ok
   end
-
 end

@@ -32,14 +32,13 @@ defmodule ExWire.Handler.Neighbours do
       ...> })
       :no_response
   """
-  @spec handle(Handler.Params.t) :: Handler.handler_response
+  @spec handle(Handler.Params.t()) :: Handler.handler_response()
   def handle(params) do
     neighbours = Neighbours.decode(params.data)
 
     # TODO: Add to buckets
-    Logger.warn("Got neighbours: #{inspect neighbours.nodes}")
+    Logger.warn("Got neighbours: #{inspect(neighbours.nodes)}")
 
     :no_response
   end
-
 end

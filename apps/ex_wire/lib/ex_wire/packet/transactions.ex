@@ -18,8 +18,8 @@ defmodule ExWire.Packet.Transactions do
   @behaviour ExWire.Packet
 
   @type t :: %__MODULE__{
-    transactions: [any()]
-  }
+          transactions: [any()]
+        }
 
   defstruct [
     :transactions
@@ -39,9 +39,10 @@ defmodule ExWire.Packet.Transactions do
       ...> |> ExWire.Packet.Transactions.serialize
       [ [1, 2, 3], [4, 5, 6] ]
   """
-  @spec serialize(t) :: ExRLP.t
-  def serialize(packet=%__MODULE__{}) do
-    packet.transactions # TODO: Serialize accurately
+  @spec serialize(t) :: ExRLP.t()
+  def serialize(packet = %__MODULE__{}) do
+    # TODO: Serialize accurately
+    packet.transactions
   end
 
   @doc """
@@ -58,7 +59,7 @@ defmodule ExWire.Packet.Transactions do
         ]
       }
   """
-  @spec deserialize(ExRLP.t) :: t
+  @spec deserialize(ExRLP.t()) :: t
   def deserialize(rlp) do
     # TODO: Deserialize from proper struct
 
@@ -77,12 +78,11 @@ defmodule ExWire.Packet.Transactions do
       ...> |> ExWire.Packet.Transactions.handle()
       :ok
   """
-  @spec handle(ExWire.Packet.packet) :: ExWire.Packet.handle_response
-  def handle(packet=%__MODULE__{}) do
+  @spec handle(ExWire.Packet.packet()) :: ExWire.Packet.handle_response()
+  def handle(packet = %__MODULE__{}) do
     # TODO: Do.
     Logger.debug("[Packet] Peer sent #{Enum.count(packet.transactions)} transaction(s).")
 
     :ok
   end
-
 end
