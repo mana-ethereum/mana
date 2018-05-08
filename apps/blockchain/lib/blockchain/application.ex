@@ -15,7 +15,12 @@ defmodule Blockchain.Application do
           EVM.Debugger.enable()
           id = EVM.Debugger.break_on(address: breakpoint_address)
 
-          Logger.warn("Debugger has been enabled. Set breakpoint ##{id} on contract address 0x#{breakpoint_address_hex}.")
+          Logger.warn(
+            "Debugger has been enabled. Set breakpoint ##{id} on contract address 0x#{
+              breakpoint_address_hex
+            }."
+          )
+
         :error ->
           Logger.error("Invalid breakpoint address: #{breakpoint_address_hex}")
       end

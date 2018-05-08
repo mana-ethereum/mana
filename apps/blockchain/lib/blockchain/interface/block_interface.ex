@@ -4,14 +4,12 @@ defmodule Blockchain.Interface.BlockInterface do
   """
 
   @type t :: %__MODULE__{
-    block_header: Block.Header.t,
-    db: MerklePatriciaTree.DB.db
-  }
+          block_header: Block.Header.t(),
+          db: MerklePatriciaTree.DB.db()
+        }
 
-  defstruct [
-    block_header: nil,
-    db: nil
-  ]
+  defstruct block_header: nil,
+            db: nil
 
   @doc """
   Returns a new block interface.
@@ -29,13 +27,12 @@ defmodule Blockchain.Interface.BlockInterface do
   def new(block_header, db) do
     %__MODULE__{
       block_header: block_header,
-      db: db,
+      db: db
     }
   end
 end
 
 defimpl EVM.Interface.BlockInterface, for: Blockchain.Interface.BlockInterface do
-
   # TODO: Add test case
   @doc """
   Returns the header of the currently being processed block.
@@ -46,7 +43,7 @@ defimpl EVM.Interface.BlockInterface, for: Blockchain.Interface.BlockInterface d
       ...> |> EVM.Interface.BlockInterface.get_block_header()
       %Block.Header{number: 10}
   """
-  @spec get_block_header(EVM.Interface.BlockInterface.t) :: Block.Header.t
+  @spec get_block_header(EVM.Interface.BlockInterface.t()) :: Block.Header.t()
   def get_block_header(block_interface) do
     block_interface.block_header
   end
@@ -66,7 +63,7 @@ defimpl EVM.Interface.BlockInterface, for: Blockchain.Interface.BlockInterface d
       ...> |> EVM.Interface.BlockInterface.get_block_by_hash(block_hash)
       %Block.Header{number: 5, parent_hash: <<1, 2, 3>>, beneficiary: <<2, 3, 4>>, difficulty: 100, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>}
   """
-  @spec get_block_by_hash(EVM.Interface.BlockInterface.t, EVM.hash) :: Block.Header.t | nil
+  @spec get_block_by_hash(EVM.Interface.BlockInterface.t(), EVM.hash()) :: Block.Header.t() | nil
   def get_block_by_hash(block_interface, block_hash) do
     case Blockchain.Block.get_block(block_hash, block_interface.db) do
       {:ok, block} -> block.header
@@ -89,12 +86,16 @@ defimpl EVM.Interface.BlockInterface, for: Blockchain.Interface.BlockInterface d
       ...> |> EVM.Interface.BlockInterface.get_block_by_number(0)
       <<78, 28, 127, 10, 192, 253, 127, 239, 254, 179, 39, 34, 245, 44, 152, 98, 128, 71, 238, 155, 100, 161, 199, 71, 243, 223, 172, 191, 74, 99, 128, 63>>
   """
-  @spec get_block_by_number(EVM.Interface.BlockInterface.t, non_neg_integer()) :: Block.Header.t | nil
+  @spec get_block_by_number(EVM.Interface.BlockInterface.t(), non_neg_integer()) ::
+          Block.Header.t() | nil
   def get_block_by_number(block_interface, steps) do
-    case Blockchain.Block.get_block_hash_by_steps(block_interface.block_header |> Block.Header.hash, steps, block_interface.db) do
+    case Blockchain.Block.get_block_hash_by_steps(
+           block_interface.block_header |> Block.Header.hash(),
+           steps,
+           block_interface.db
+         ) do
       {:ok, block_header} -> block_header
       :not_found -> nil
     end
   end
-
 end

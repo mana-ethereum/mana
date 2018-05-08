@@ -13,8 +13,7 @@ defmodule Blockchain.Bloom do
 
   @spec contains?(integer(), binary()) :: boolean()
   def contains?(current_bloom, val)
-      when is_integer(current_bloom) and
-           is_binary(val) do
+      when is_integer(current_bloom) and is_binary(val) do
     bloom = create(val)
 
     (bloom &&& current_bloom) == bloom
@@ -32,14 +31,14 @@ defmodule Blockchain.Bloom do
 
   @spec sha3_hash(binary()) :: binary()
   defp sha3_hash(data) do
-    data |> :keccakf1600.sha3_256
+    data |> :keccakf1600.sha3_256()
   end
 
   @spec add_bits(integer(), [integer()]) :: integer()
   defp add_bits(bloom_number, bits) do
     bits
-    |> Enum.reduce(bloom_number, fn(bit_number, bloom) ->
-      bloom ||| (1 <<< bit_number)
+    |> Enum.reduce(bloom_number, fn bit_number, bloom ->
+      bloom ||| 1 <<< bit_number
     end)
   end
 
@@ -47,11 +46,11 @@ defmodule Blockchain.Bloom do
   defp bit_numbers(hash) do
     {result, _} =
       1..3
-      |> Enum.reduce({[], hash}, fn(_, acc) ->
+      |> Enum.reduce({[], hash}, fn _, acc ->
         {bits, <<head::integer-size(16), tail::bitstring>>} = acc
         new_bit = head &&& 2047
 
-        {[new_bit|bits], tail}
+        {[new_bit | bits], tail}
       end)
 
     result

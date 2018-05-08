@@ -11,17 +11,19 @@ defmodule RopstenTest do
   @n 11
 
   setup_all do
-    blocks = File.read!("test/support/ropsten_blocks.dat")
-    |> BitHelper.from_hex
-    |> ExRLP.decode
-    |> Enum.map(fn block ->
-      block |> ExRLP.decode |> Blockchain.Block.deserialize
-    end)
-    |> Enum.take(@n)
+    blocks =
+      File.read!("test/support/ropsten_blocks.dat")
+      |> BitHelper.from_hex()
+      |> ExRLP.decode()
+      |> Enum.map(fn block ->
+        block |> ExRLP.decode() |> Blockchain.Block.deserialize()
+      end)
+      |> Enum.take(@n)
 
-    {:ok, %{
-      blocks: blocks
-      }}
+    {:ok,
+     %{
+       blocks: blocks
+     }}
   end
 
   test "processing the first #{@n} blocks of the live ropsten block tree", %{blocks: blocks} do

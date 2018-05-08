@@ -4,8 +4,8 @@ defmodule Blockchain.Interface.AccountInterface do
   """
 
   @type t :: %__MODULE__{
-    state: EVM.state
-  }
+          state: EVM.state()
+        }
 
   defstruct [
     :state
@@ -25,7 +25,7 @@ defmodule Blockchain.Interface.AccountInterface do
         }
       }
   """
-  @spec new(EVM.state) :: t
+  @spec new(EVM.state()) :: t
   def new(state) do
     %__MODULE__{
       state: state
@@ -34,7 +34,6 @@ defmodule Blockchain.Interface.AccountInterface do
 end
 
 defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterface do
-
   @doc """
   Given an account interface and an address, returns the balance at that address.
 
@@ -56,7 +55,8 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
       ...> |> EVM.Interface.AccountInterface.get_account_balance(<<2::160>>)
       nil
   """
-  @spec get_account_balance(EVM.Interface.AccountInterface.t, EVM.address) :: nil | EVM.Wei.t
+  @spec get_account_balance(EVM.Interface.AccountInterface.t(), EVM.address()) ::
+          nil | EVM.Wei.t()
   def get_account_balance(account_interface, address) do
     case Blockchain.Account.get_account(account_interface.state, address) do
       nil -> nil
@@ -64,22 +64,23 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
     end
   end
 
-  @spec add_wei(EVM.Interface.AccountInterface.t, EVM.address, integer()) :: EVM.Interface.AccountInterface.t
+  @spec add_wei(EVM.Interface.AccountInterface.t(), EVM.address(), integer()) ::
+          EVM.Interface.AccountInterface.t()
   def add_wei(account_interface, address, value) do
     state = Blockchain.Account.add_wei(account_interface.state, address, value)
 
     Map.put(account_interface, :state, state)
   end
 
-  @spec transfer(EVM.Interface.AccountInterface.t, EVM.address, EVM.address, integer()) :: EVM.Interface.AccountInterface.t
+  @spec transfer(EVM.Interface.AccountInterface.t(), EVM.address(), EVM.address(), integer()) ::
+          EVM.Interface.AccountInterface.t()
   def transfer(account_interface, from, to, value) do
-    {:ok, state} = account_interface.state
+    {:ok, state} =
+      account_interface.state
       |> Blockchain.Account.transfer(from, to, value)
 
     Map.put(account_interface, :state, state)
   end
-
-
 
   @doc """
   Given an account interface and an address, returns the code stored at given address.
@@ -102,7 +103,7 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
       ...> |> EVM.Interface.AccountInterface.get_account_code(<<2::160>>)
       <<>>
   """
-  @spec get_account_code(EVM.Interface.AccountInterface.t, EVM.address) :: nil | binary()
+  @spec get_account_code(EVM.Interface.AccountInterface.t(), EVM.address()) :: nil | binary()
   def get_account_code(account_interface, address) do
     case Blockchain.Account.get_machine_code(account_interface.state, address) do
       {:ok, machine_code} -> machine_code
@@ -127,11 +128,13 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
       iex> nonce_2
       1
   """
-  @spec increment_account_nonce(EVM.Interface.AccountInterface.t, EVM.address) :: { EVM.Interface.AccountInterface.t, integer() }
+  @spec increment_account_nonce(EVM.Interface.AccountInterface.t(), EVM.address()) ::
+          {EVM.Interface.AccountInterface.t(), integer()}
   def increment_account_nonce(account_interface, address) do
-    { state, before_acct, _after_acct } = Blockchain.Account.increment_nonce(account_interface.state, address, true)
+    {state, before_acct, _after_acct} =
+      Blockchain.Account.increment_nonce(account_interface.state, address, true)
 
-    { Map.put(account_interface, :state, state), before_acct.nonce }
+    {Map.put(account_interface, :state, state), before_acct.nonce}
   end
 
   @doc """
@@ -161,12 +164,13 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
       ...> |> EVM.Interface.AccountInterface.get_storage(<<2::160>>, 5)
       :account_not_found
   """
-  @spec get_storage(EVM.Interface.AccountInterface.t, EVM.address, integer()) :: {:ok, integer()} | :account_not_found | :key_not_found
+  @spec get_storage(EVM.Interface.AccountInterface.t(), EVM.address(), integer()) ::
+          {:ok, integer()} | :account_not_found | :key_not_found
   def get_storage(account_interface, address, key) do
     Blockchain.Account.get_storage(account_interface.state, address, key)
   end
 
-  @spec account_exists?(EVM.Interface.AccountInterface.t, EVM.address) :: boolean()
+  @spec account_exists?(EVM.Interface.AccountInterface.t(), EVM.address()) :: boolean()
   def account_exists?(account_interface, address) do
     !!Blockchain.Account.get_account(account_interface.state, address)
   end
@@ -198,7 +202,8 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
       ...> |> EVM.Interface.AccountInterface.get_storage(<<2::160>>, 5)
       :account_not_found
   """
-  @spec put_storage(EVM.Interface.AccountInterface.t, EVM.address, integer(), integer()) :: EVM.Interface.AccountInterface.t
+  @spec put_storage(EVM.Interface.AccountInterface.t(), EVM.address(), integer(), integer()) ::
+          EVM.Interface.AccountInterface.t()
   def put_storage(account_interface, address, key, value) do
     updated_state = Blockchain.Account.put_storage(account_interface.state, address, key, value)
 
@@ -227,7 +232,8 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
       ...> |> EVM.Interface.AccountInterface.get_account_balance(<<1::160>>)
       5
   """
-  @spec suicide_account(EVM.Interface.AccountInterface.t, EVM.address) :: EVM.Interface.AccountInterface.t
+  @spec suicide_account(EVM.Interface.AccountInterface.t(), EVM.address()) ::
+          EVM.Interface.AccountInterface.t()
   def suicide_account(account_interface, address) do
     updated_state = Blockchain.Account.del_account(account_interface.state, address)
 
@@ -247,7 +253,7 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
       ...> |> EVM.Interface.AccountInterface.dump_storage()
       %{<<5>> => <<6>>}
   """
-  @spec dump_storage(EVM.Interface.AccountInterface.t) :: %{ EVM.address => EVM.val }
+  @spec dump_storage(EVM.Interface.AccountInterface.t()) :: %{EVM.address() => EVM.val()}
   def dump_storage(account_interface) do
     MerklePatriciaTree.Trie.Inspector.all_values(account_interface.state) |> Enum.into(%{})
   end
@@ -268,11 +274,51 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
       iex> account_interface.state.root_hash
       <<163, 151, 95, 0, 149, 63, 81, 220, 74, 101, 219, 175, 240, 97, 153, 167, 249, 229, 144, 75, 101, 233, 126, 177, 8, 188, 105, 165, 28, 248, 67, 156>>
   """
-  @spec message_call(EVM.Interface.AccountInterface.t, EVM.address, EVM.address, EVM.address, EVM.address, EVM.Gas.t, EVM.Gas.gas_price, EVM.Wei.t, EVM.Wei.t, binary(), integer(), Header.t) :: { EVM.Interface.AccountInterface.t, EVM.Gas.t, EVM.SubState.t, EVM.VM.output }
-  def message_call(account_interface, sender, originator, recipient, contract, available_gas, gas_price, value, apparent_value, data, stack_depth, block_header) do
-    { state, gas, sub_state, output } = Blockchain.Contract.message_call(account_interface.state, sender, originator, recipient, contract, available_gas, gas_price, value, apparent_value, data, stack_depth, block_header)
+  @spec message_call(
+          EVM.Interface.AccountInterface.t(),
+          EVM.address(),
+          EVM.address(),
+          EVM.address(),
+          EVM.address(),
+          EVM.Gas.t(),
+          EVM.Gas.gas_price(),
+          EVM.Wei.t(),
+          EVM.Wei.t(),
+          binary(),
+          integer(),
+          Header.t()
+        ) :: {EVM.Interface.AccountInterface.t(), EVM.Gas.t(), EVM.SubState.t(), EVM.VM.output()}
+  def message_call(
+        account_interface,
+        sender,
+        originator,
+        recipient,
+        contract,
+        available_gas,
+        gas_price,
+        value,
+        apparent_value,
+        data,
+        stack_depth,
+        block_header
+      ) do
+    {state, gas, sub_state, output} =
+      Blockchain.Contract.message_call(
+        account_interface.state,
+        sender,
+        originator,
+        recipient,
+        contract,
+        available_gas,
+        gas_price,
+        value,
+        apparent_value,
+        data,
+        stack_depth,
+        block_header
+      )
 
-    { Map.put(account_interface, :state, state), gas, sub_state, output }
+    {Map.put(account_interface, :state, state), gas, sub_state, output}
   end
 
   @doc """
@@ -288,11 +334,42 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
       iex> account_interface.state.root_hash
       <<9, 235, 32, 146, 153, 242, 209, 192, 224, 61, 214, 174, 48, 24, 148, 28, 51, 254, 7, 82, 58, 82, 220, 157, 29, 159, 203, 51, 52, 240, 37, 122>>
   """
-  @spec create_contract(EVM.Interface.AccountInterface.t, EVM.address, EVM.address, EVM.Gas.t, EVM.Gas.gas_price, EVM.Wei.t, EVM.MachineCode.t, integer(), Header.t) :: { EVM.Interface.AccountInterface.t, EVM.Gas.t, EVM.SubState.t }
-  def create_contract(account_interface, sender, originator, available_gas, gas_price, endowment, init_code, stack_depth, block_header) do
-    { state, gas, sub_state } = Blockchain.Contract.create_contract(account_interface.state, sender, originator, available_gas, gas_price, endowment, init_code, stack_depth, block_header)
+  @spec create_contract(
+          EVM.Interface.AccountInterface.t(),
+          EVM.address(),
+          EVM.address(),
+          EVM.Gas.t(),
+          EVM.Gas.gas_price(),
+          EVM.Wei.t(),
+          EVM.MachineCode.t(),
+          integer(),
+          Header.t()
+        ) :: {EVM.Interface.AccountInterface.t(), EVM.Gas.t(), EVM.SubState.t()}
+  def create_contract(
+        account_interface,
+        sender,
+        originator,
+        available_gas,
+        gas_price,
+        endowment,
+        init_code,
+        stack_depth,
+        block_header
+      ) do
+    {state, gas, sub_state} =
+      Blockchain.Contract.create_contract(
+        account_interface.state,
+        sender,
+        originator,
+        available_gas,
+        gas_price,
+        endowment,
+        init_code,
+        stack_depth,
+        block_header
+      )
 
-    { Map.put(account_interface, :state, state), gas, sub_state }
+    {Map.put(account_interface, :state, state), gas, sub_state}
   end
 
   @doc """
@@ -307,9 +384,9 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
       ...> |> EVM.Interface.AccountInterface.new_contract_address(<<0x01::160>>, 1)
       <<82, 43, 50, 148, 230, 208, 106, 162, 90, 208, 241, 184, 137, 18, 66, 227, 53, 211, 180, 89>>
   """
-  @spec new_contract_address(EVM.Interface.AccountInterface.t, EVM.address, integer()) :: EVM.address
+  @spec new_contract_address(EVM.Interface.AccountInterface.t(), EVM.address(), integer()) ::
+          EVM.address()
   def new_contract_address(_account_interface, address, nonce) do
     Blockchain.Contract.new_contract_address(address, nonce)
   end
-
 end

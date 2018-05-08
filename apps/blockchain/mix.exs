@@ -2,12 +2,13 @@ defmodule Blockchain.Mixfile do
   use Mix.Project
 
   def project do
-    [app: :blockchain,
-     version: "0.1.6",
-     build_path: "../../_build",
-     config_path: "../../config/config.exs",
-     deps_path: "../../deps",
-     lockfile: "../../mix.lock",
+    [
+      app: :blockchain,
+      version: "0.1.6",
+      build_path: "../../_build",
+      config_path: "../../config/config.exs",
+      deps_path: "../../deps",
+      lockfile: "../../mix.lock",
       elixir: "~> 1.4",
       app: :blockchain,
       version: "0.1.7",
