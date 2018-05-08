@@ -41,9 +41,9 @@ defmodule ExWire.Struct.Peer do
           157>>
       }
   """
-  @spec new(Sring.t, integer(), String.t, keyword()) :: t
-  def new(host, port, remote_id_hex, options \\ [time:  :actual]) do
-    remote_id = remote_id_hex |> ExthCrypto.Math.hex_to_bin |> ExthCrypto.Key.raw_to_der
+  @spec new(Sring.t(), integer(), String.t(), keyword()) :: t
+  def new(host, port, remote_id_hex, options \\ [time: :actual]) do
+    remote_id = remote_id_hex |> ExthCrypto.Math.hex_to_bin() |> ExthCrypto.Key.raw_to_der()
     ident = Binary.take(remote_id_hex, 6) <> "..." <> Binary.take(remote_id_hex, -6)
 
     %__MODULE__{
@@ -80,7 +80,7 @@ defmodule ExWire.Struct.Peer do
       iex> ExWire.Struct.Peer.from_uri("abc")
       {:error, "Invalid URI"}
   """
-  @spec from_uri(String.t, Keyword.t()) :: {:ok, t} | {:error, String.t}
+  @spec from_uri(String.t(), Keyword.t()) :: {:ok, t} | {:error, String.t()}
   def from_uri(uri, options \\ []) do
     case URI.parse(uri) do
       %URI{
@@ -90,8 +90,12 @@ defmodule ExWire.Struct.Peer do
         port: port
       } ->
         {:ok, __MODULE__.new(host, port, remote_id_hex, options)}
-      %URI{scheme: nil} -> {:error, "Invalid URI"}
-      %URI{scheme: scheme} -> {:error, "URI scheme must be enode, got #{scheme}"}
+
+      %URI{scheme: nil} ->
+        {:error, "Invalid URI"}
+
+      %URI{scheme: scheme} ->
+        {:error, "URI scheme must be enode, got #{scheme}"}
     end
   end
 

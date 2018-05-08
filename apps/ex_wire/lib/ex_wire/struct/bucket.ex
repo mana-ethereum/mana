@@ -10,10 +10,10 @@ defmodule ExWire.Struct.Bucket do
   defstruct [:current_node, :nodes, :updated_at]
 
   @type t :: %__MODULE__{
-    current_node: Peer.t(),
-    nodes: [Peer.t()],
-    updated_at: integer()
-  }
+          current_node: Peer.t(),
+          nodes: [Peer.t()],
+          updated_at: integer()
+        }
 
   @doc """
   Creates new bucket.
@@ -238,7 +238,7 @@ defmodule ExWire.Struct.Bucket do
   def remove_node(bucket = %Bucket{nodes: nodes}, node) do
     new_nodes =
       nodes
-      |> Enum.drop_while(fn(bucket_node) ->
+      |> Enum.drop_while(fn bucket_node ->
         Peer.equal?(node, bucket_node)
       end)
 
@@ -285,8 +285,9 @@ defmodule ExWire.Struct.Bucket do
       true
   """
   @spec member?(t(), Peer.t()) :: boolean()
-  def member?( %Bucket{nodes: nodes},  node) do
-    nodes |> Enum.any?(fn(bucket_node) ->
+  def member?(%Bucket{nodes: nodes}, node) do
+    nodes
+    |> Enum.any?(fn bucket_node ->
       Peer.equal?(bucket_node, node)
     end)
   end
@@ -301,7 +302,7 @@ defmodule ExWire.Struct.Bucket do
       iex> bucket |> ExWire.Struct.Bucket.full?()
       false
   """
-  
+
   @spec full?(t()) :: boolean()
   def full?(%Bucket{nodes: nodes}) do
     Enum.count(nodes) == KademliaConfig.bucket_size()
