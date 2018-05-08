@@ -21,19 +21,17 @@ defmodule Blockchain.Blocktree do
 
   alias Blockchain.Block
 
-  defstruct [
-    block: nil,
-    children: [],
-    total_difficulty: 0,
-    parent_map: %{},
-  ]
+  defstruct block: nil,
+            children: [],
+            total_difficulty: 0,
+            parent_map: %{}
 
   @type t :: %__MODULE__{
-    block: :root | Block.t,
-    children: %{EVM.hash => t},
-    total_difficulty: integer(),
-    parent_map: %{EVM.hash => EVM.hash},
-  }
+          block: :root | Block.t(),
+          children: %{EVM.hash() => t},
+          total_difficulty: integer(),
+          parent_map: %{EVM.hash() => EVM.hash()}
+        }
 
   @doc """
   Creates a new empty blocktree.
@@ -60,7 +58,7 @@ defmodule Blockchain.Blocktree do
 
   # Creates a new trie with a given root. This should be used to
   # create sub-trees internally.
-  @spec rooted_tree(Block.t) :: t
+  @spec rooted_tree(Block.t()) :: t
   defp rooted_tree(gen_block) do
     %__MODULE__{
       block: gen_block,
@@ -101,10 +99,12 @@ defmodule Blockchain.Blocktree do
       ...> |> Blockchain.Blocktree.get_canonical_block()
       %Blockchain.Block{block_hash: <<41>>, header: %Block.Header{difficulty: 129, number: 8, parent_hash: <<30>>}}
   """
-  @spec get_canonical_block(t) :: Block.t
+  @spec get_canonical_block(t) :: Block.t()
   def get_canonical_block(blocktree) do
     case Enum.count(blocktree.children) do
-      0 -> blocktree.block
+      0 ->
+        blocktree.block
+
       _ ->
         {_hash, tree} = Enum.max_by(blocktree.children, fn {_k, v} -> v.total_difficulty end)
 
@@ -166,19 +166,22 @@ defmodule Blockchain.Blocktree do
       iex> Blockchain.Blocktree.verify_and_add_block(tree_1, chain, block_2, trie.db)
       {:invalid, [:invalid_difficulty, :invalid_gas_limit, :child_timestamp_invalid]}
   """
-  @spec verify_and_add_block(t, Chain.t, Block.t, MerklePatriciaTree.DB.db, boolean()) :: {:ok, t} | :parent_not_found | {:invalid, [atom()]}
+  @spec verify_and_add_block(t, Chain.t(), Block.t(), MerklePatriciaTree.DB.db(), boolean()) ::
+          {:ok, t} | :parent_not_found | {:invalid, [atom()]}
   def verify_and_add_block(blocktree, chain, block, db, do_validate \\ true) do
-    parent = case Blockchain.Block.get_parent_block(block, db) do
-      :genesis -> nil
-      {:ok, parent} -> parent
-      :not_found -> :parent_not_found
-    end
+    parent =
+      case Blockchain.Block.get_parent_block(block, db) do
+        :genesis -> nil
+        {:ok, parent} -> parent
+        :not_found -> :parent_not_found
+      end
 
     validation = if do_validate, do: Block.is_fully_valid?(block, chain, parent, db), else: :valid
 
     with :valid <- validation do
       {:ok, block_hash} = Block.put_block(block, db)
-      block = %{block | block_hash: block_hash} # Cache computed block hash
+      # Cache computed block hash
+      block = %{block | block_hash: block_hash}
 
       {:ok, add_block(blocktree, block)}
     end
@@ -225,20 +228,27 @@ defmodule Blockchain.Blocktree do
         }
       }
   """
-  @spec add_block(t, Block.t) :: t
+  @spec add_block(t, Block.t()) :: t
   def add_block(blocktree, block) do
-    block_hash = block.block_hash || ( block |> Block.hash() )
-    blocktree = %{blocktree | parent_map: Map.put(blocktree.parent_map, block_hash, block.header.parent_hash)}
+    block_hash = block.block_hash || block |> Block.hash()
+
+    blocktree = %{
+      blocktree
+      | parent_map: Map.put(blocktree.parent_map, block_hash, block.header.parent_hash)
+    }
 
     case get_path_to_root(blocktree, block_hash) do
-      :no_path -> raise InvalidBlockError, "No path to root" # TODO: How we can better handle this case?
+      # TODO: How we can better handle this case?
+      :no_path ->
+        raise InvalidBlockError, "No path to root"
+
       {:ok, path} ->
         do_add_block(blocktree, block, block_hash, path)
     end
   end
 
   # Recursively walk tree and to add children block
-  @spec do_add_block(t, Block.t, EVM.hash, [EVM.hash]) :: t
+  @spec do_add_block(t, Block.t(), EVM.hash(), [EVM.hash()]) :: t
   defp do_add_block(blocktree, block, block_hash, path) do
     case path do
       [] ->
@@ -246,27 +256,32 @@ defmodule Blockchain.Blocktree do
         new_children = Map.put(blocktree.children, block_hash, tree)
 
         %{blocktree | children: new_children, total_difficulty: max_difficulty(new_children)}
-      [path_hash|rest] ->
+
+      [path_hash | rest] ->
         case blocktree.children[path_hash] do
-          nil -> raise InvalidBlockError, "Invalid path to root, missing path #{inspect path_hash}" # this should be impossible unless the tree is missing nodes
+          # this should be impossible unless the tree is missing nodes
+          nil ->
+            raise InvalidBlockError, "Invalid path to root, missing path #{inspect(path_hash)}"
+
           sub_tree ->
             # Recurse and update the children of this tree. Note, we may also need to adjust the total
             # difficulty of this subtree.
             new_child = do_add_block(sub_tree, block, block_hash, rest)
 
             # TODO: Does this parent_hash only exist at the root node?
-            %{blocktree |
-              children: Map.put(blocktree.children, path_hash, new_child),
-              total_difficulty: max(blocktree.total_difficulty, new_child.total_difficulty),
+            %{
+              blocktree
+              | children: Map.put(blocktree.children, path_hash, new_child),
+                total_difficulty: max(blocktree.total_difficulty, new_child.total_difficulty)
             }
         end
     end
   end
 
   # Gets the maximum difficulty amoungst a set of child nodes
-  @spec max_difficulty(%{EVM.hash => t}) :: integer()
+  @spec max_difficulty(%{EVM.hash() => t}) :: integer()
   defp max_difficulty(children) do
-    Enum.map(children, fn {_, child} -> child.total_difficulty end) |> Enum.max
+    Enum.map(children, fn {_, child} -> child.total_difficulty end) |> Enum.max()
   end
 
   @doc """
@@ -311,7 +326,7 @@ defmodule Blockchain.Blocktree do
       ...>   <<32>>)
       :no_path
   """
-  @spec get_path_to_root(t, EVM.hash) :: {:ok, [EVM.hash]} | :no_path
+  @spec get_path_to_root(t, EVM.hash()) :: {:ok, [EVM.hash()]} | :no_path
   def get_path_to_root(blocktree, hash) do
     case do_get_path_to_root(blocktree, hash) do
       {:ok, path} -> {:ok, Enum.reverse(path)}
@@ -319,15 +334,20 @@ defmodule Blockchain.Blocktree do
     end
   end
 
-  @spec do_get_path_to_root(t, EVM.hash) :: {:ok, [EVM.hash]} | :no_path
+  @spec do_get_path_to_root(t, EVM.hash()) :: {:ok, [EVM.hash()]} | :no_path
   defp do_get_path_to_root(blocktree, hash) do
     case Map.get(blocktree.parent_map, hash, :no_path) do
-      :no_path -> :no_path
-      <<0::256>> -> {:ok, []}
-      parent_hash -> case do_get_path_to_root(blocktree, parent_hash) do
-        :no_path -> :no_path
-        {:ok, path} -> {:ok, [parent_hash | path]}
-      end
+      :no_path ->
+        :no_path
+
+      <<0::256>> ->
+        {:ok, []}
+
+      parent_hash ->
+        case do_get_path_to_root(blocktree, parent_hash) do
+          :no_path -> :no_path
+          {:ok, path} -> {:ok, [parent_hash | path]}
+        end
     end
   end
 
@@ -344,14 +364,14 @@ defmodule Blockchain.Blocktree do
   """
   @spec inspect_tree(t) :: [any()]
   def inspect_tree(blocktree) do
-    value = case blocktree.block do
-      :root -> :root
-      block -> {block.header.number, block.block_hash}
-    end
+    value =
+      case blocktree.block do
+        :root -> :root
+        block -> {block.header.number, block.block_hash}
+      end
 
     children = for {_, child} <- blocktree.children, do: inspect_tree(child)
 
     [value | children]
   end
-
 end

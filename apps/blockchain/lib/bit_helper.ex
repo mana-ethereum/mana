@@ -33,7 +33,7 @@ defmodule BitHelper do
   @spec mask(integer(), integer()) :: integer()
   def mask(n, bits) when is_integer(n) do
     # Calculates n bitwise-and 0b1111...<bits>
-    n &&& ( ( 2 <<< ( bits - 1 ) ) - 1 )
+    n &&& (2 <<< (bits - 1)) - 1
   end
 
   @doc """
@@ -69,7 +69,7 @@ defmodule BitHelper do
   def mask_bitstring(b, bits) do
     size = bit_size(b)
     skip_size = max(size - bits, 0)
-    padding = max(bits  - size, 0)
+    padding = max(bits - size, 0)
 
     <<_::size(skip_size), included_part::bits>> = b
 
@@ -116,10 +116,13 @@ defmodule BitHelper do
     desired_bits = desired_length * 8
 
     case byte_size(binary) do
-      0 -> <<0::size(desired_bits)>>
+      0 ->
+        <<0::size(desired_bits)>>
+
       x when x <= desired_length ->
-        padding_bits = ( desired_length - x ) * 8
+        padding_bits = (desired_length - x) * 8
         <<0::size(padding_bits)>> <> binary
+
       _ ->
         raise "Binary too long for padding"
     end
@@ -174,7 +177,7 @@ defmodule BitHelper do
       iex> BitHelper.from_hex("aabbcc")
       <<0xaa, 0xbb, 0xcc>>
   """
-  @spec from_hex(String.t) :: binary()
+  @spec from_hex(String.t()) :: binary()
   def from_hex(hex_data), do: Base.decode16!(hex_data, case: :lower)
 
   @doc """
@@ -185,6 +188,6 @@ defmodule BitHelper do
       iex> BitHelper.to_hex(<<0xaa, 0xbb, 0xcc>>)
       "aabbcc"
   """
-  @spec to_hex(binary()) :: String.t
+  @spec to_hex(binary()) :: String.t()
   def to_hex(bin), do: Base.encode16(bin, case: :lower)
 end

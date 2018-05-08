@@ -20,7 +20,7 @@ defmodule EthCommonTest.Harness do
       json_data = Poison.encode!(test_data)
 
       quote do
-        test("#{unquote(test_name)}") do
+        test "#{unquote(test_name)}" do
           data = unquote(json_data) |> Poison.decode!()
 
           unquote(fun).(unquote(test_name), data)

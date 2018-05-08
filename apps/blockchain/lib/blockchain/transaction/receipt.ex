@@ -10,20 +10,20 @@ defmodule Blockchain.Transaction.Receipt do
   """
 
   # Defined in Eq.(19)
-  defstruct [
-    state: <<>>,
-    cumulative_gas: 0,
-    bloom_filter: <<>>,
-    logs: <<>>,
-  ]
+  defstruct state: <<>>,
+            cumulative_gas: 0,
+            bloom_filter: <<>>,
+            logs: <<>>
 
   # Types defined in Eq.(20)
   @type t :: %__MODULE__{
-    state: EVM.trie_root,
-    cumulative_gas: EVM.Gas.t, # Defined in Eq.(21)
-    bloom_filter: binary(), # TODO: Bloom filter
-    logs: EVM.SubState.logs,
-  }
+          state: EVM.trie_root(),
+          # Defined in Eq.(21)
+          cumulative_gas: EVM.Gas.t(),
+          # TODO: Bloom filter
+          bloom_filter: binary(),
+          logs: EVM.SubState.logs()
+        }
 
   @doc """
   Encodes a transaction receipt such that it can be
@@ -38,13 +38,13 @@ defmodule Blockchain.Transaction.Receipt do
       iex> Blockchain.Transaction.Receipt.serialize(%Blockchain.Transaction.Receipt{state: <<1,2,3>>, cumulative_gas: 5, bloom_filter: <<2,3,4>>, logs: "hi mom"})
       [<<1,2,3>>, 5, <<2,3,4>>, "hi mom"]
   """
-  @spec serialize(t) :: ExRLP.t
+  @spec serialize(t) :: ExRLP.t()
   def serialize(trx_receipt) do
     [
       trx_receipt.state,
       trx_receipt.cumulative_gas,
       trx_receipt.bloom_filter,
-      trx_receipt.logs,
+      trx_receipt.logs
     ]
   end
 
@@ -60,7 +60,7 @@ defmodule Blockchain.Transaction.Receipt do
     iex> Blockchain.Transaction.Receipt.deserialize([<<>>, <<0>>, <<>>, <<>>])
     %Blockchain.Transaction.Receipt{}
   """
-  @spec deserialize(ExRLP.t) :: t
+  @spec deserialize(ExRLP.t()) :: t
   def deserialize(rlp) do
     [
       state,
@@ -76,5 +76,4 @@ defmodule Blockchain.Transaction.Receipt do
       logs: logs
     }
   end
-
 end

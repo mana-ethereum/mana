@@ -13,21 +13,25 @@ defmodule Blockchain.Block do
   alias MerklePatriciaTree.DB
 
   # Defined in Eq.(18)
-  defstruct [
-    block_hash: nil,   # Hash for this block, acts simply as a cache.
-    header: %Header{}, # B_H
-    transactions: [],  # B_T
-    ommers: [],        # B_U
-  ]
+  defstruct block_hash: nil,
+
+            # Hash for this block, acts simply as a cache.
+            # B_H
+            header: %Header{},
+            # B_T
+            transactions: [],
+            # B_U
+            ommers: []
 
   @type t :: %__MODULE__{
-    block_hash: EVM.hash | nil,
-    header: Header.t,
-    transactions: [Transaction.t],
-    ommers: [Header.t],
-  }
+          block_hash: EVM.hash() | nil,
+          header: Header.t(),
+          transactions: [Transaction.t()],
+          ommers: [Header.t()]
+        }
 
-  @reward_wei 5.0e18 |> round # R_b in Eq.(150)
+  # R_b in Eq.(150)
+  @reward_wei 5.0e18 |> round
 
   @doc """
   Encodes a block such that it can be represented in
@@ -69,12 +73,12 @@ defmodule Blockchain.Block do
       []
     ]
   """
-  @spec serialize(t) :: ExRLP.t
+  @spec serialize(t) :: ExRLP.t()
   def serialize(block) do
     [
       Header.serialize(block.header),
       Enum.map(block.transactions, &Transaction.serialize/1),
-      Enum.map(block.ommers, &Header.serialize/1),
+      Enum.map(block.ommers, &Header.serialize/1)
     ]
   end
 
@@ -95,7 +99,7 @@ defmodule Blockchain.Block do
         ommers: [%Block.Header{parent_hash: <<11::256>>, ommers_hash: <<12::256>>, beneficiary: <<13::160>>, state_root: <<14::256>>, transactions_root: <<15::256>>, receipts_root: <<16::256>>, logs_bloom: <<>>, difficulty: 5, number: 1, gas_limit: 5, gas_used: 3, timestamp: 6, extra_data: "Hi mom", mix_hash: <<17::256>>, nonce: <<18::64>>}]
       }
   """
-  @spec deserialize(ExRLP.t) :: t
+  @spec deserialize(ExRLP.t()) :: t
   def deserialize(rlp) do
     [
       header,
@@ -106,7 +110,7 @@ defmodule Blockchain.Block do
     %__MODULE__{
       header: Header.deserialize(header),
       transactions: Enum.map(transactions, &Transaction.deserialize/1),
-      ommers: Enum.map(ommers, &Header.deserialize/1),
+      ommers: Enum.map(ommers, &Header.deserialize/1)
     }
   end
 
@@ -126,9 +130,9 @@ defmodule Blockchain.Block do
       ...> |> Blockchain.Block.hash()
       <<218, 225, 46, 241, 196, 160, 136, 96, 109, 216, 73, 167, 92, 174, 91, 228, 85, 112, 234, 129, 99, 200, 158, 61, 223, 166, 165, 132, 187, 24, 142, 193>>
   """
-  @spec hash(t) :: EVM.hash
+  @spec hash(t) :: EVM.hash()
   def hash(block) do
-    block.header |> Header.hash
+    block.header |> Header.hash()
   end
 
   @doc """
@@ -151,11 +155,11 @@ defmodule Blockchain.Block do
       iex> serialized_block |> ExRLP.decode |> Blockchain.Block.deserialize()
       %Blockchain.Block{header: %Block.Header{number: 5, parent_hash: <<1, 2, 3>>, beneficiary: <<2, 3, 4>>, difficulty: 100, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>}}
   """
-  @spec put_block(t, DB.db) :: {:ok, EVM.hash}
+  @spec put_block(t, DB.db()) :: {:ok, EVM.hash()}
   def put_block(block, db) do
     hash = block |> hash
 
-    :ok = MerklePatriciaTree.DB.put!(db, hash, block |> serialize |> ExRLP.encode)
+    :ok = MerklePatriciaTree.DB.put!(db, hash, block |> serialize |> ExRLP.encode())
 
     {:ok, hash}
   end
@@ -184,10 +188,10 @@ defmodule Blockchain.Block do
         header: %Block.Header{number: 5, parent_hash: <<1, 2, 3>>, beneficiary: <<2, 3, 4>>, difficulty: 100, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>}
       }}
   """
-  @spec get_block(EVM.hash, DB.db) :: {:ok, t} | :not_found
+  @spec get_block(EVM.hash(), DB.db()) :: {:ok, t} | :not_found
   def get_block(block_hash, db) do
     with {:ok, rlp} <- MerklePatriciaTree.DB.get(db, block_hash) do
-      {:ok, rlp |> ExRLP.decode |> deserialize()}
+      {:ok, rlp |> ExRLP.decode() |> deserialize()}
     end
   end
 
@@ -255,14 +259,19 @@ defmodule Blockchain.Block do
               152, 98, 128, 71, 238, 155, 100, 161, 199, 71, 243, 223, 172, 191,
               74, 99, 128, 63>>}
   """
-  @spec get_block_hash_by_steps(EVM.hash, non_neg_integer(), DB.db) :: {:ok, EVM.hash} | :not_found
+  @spec get_block_hash_by_steps(EVM.hash(), non_neg_integer(), DB.db()) ::
+          {:ok, EVM.hash()} | :not_found
   def get_block_hash_by_steps(curr_block_hash, steps, db) do
     do_get_block_hash_by_steps(curr_block_hash, steps, db)
   end
 
-  @spec get_block_hash_by_steps(EVM.hash, non_neg_integer(), DB.db) :: {:ok, EVM.hash} | :not_found
+  @spec get_block_hash_by_steps(EVM.hash(), non_neg_integer(), DB.db()) ::
+          {:ok, EVM.hash()} | :not_found
   defp do_get_block_hash_by_steps(block_hash, 0, _db), do: {:ok, block_hash}
-  defp do_get_block_hash_by_steps(_block_hash, steps, _db) when steps < 0 or steps > 256, do: :not_found
+
+  defp do_get_block_hash_by_steps(_block_hash, steps, _db) when steps < 0 or steps > 256,
+    do: :not_found
+
   defp do_get_block_hash_by_steps(block_hash, steps, db) do
     with {:ok, block} <- get_block(block_hash, db) do
       do_get_block_hash_by_steps(block.header.parent_hash, steps - 1, db)
@@ -292,7 +301,7 @@ defmodule Blockchain.Block do
       iex> Blockchain.Block.get_parent_block(%Blockchain.Block{header: %Block.Header{parent_hash: block |> Blockchain.Block.hash}}, db)
       :not_found
   """
-  @spec get_parent_block(t, DB.db) :: {:ok, t} | :genesis | :not_found
+  @spec get_parent_block(t, DB.db()) :: {:ok, t} | :genesis | :not_found
   def get_parent_block(block, db) do
     case block.header.number do
       0 -> :genesis
@@ -333,15 +342,15 @@ defmodule Blockchain.Block do
       ...> |> Blockchain.Block.get_receipt(7, trie.db)
       nil
   """
-  @spec get_receipt(t, integer(), DB.db) :: Receipt.t | nil
+  @spec get_receipt(t, integer(), DB.db()) :: Receipt.t() | nil
   def get_receipt(block, i, db) do
     serialized_receipt =
       Trie.new(db, block.header.receipts_root)
-      |> Trie.get(i |> ExRLP.encode)
+      |> Trie.get(i |> ExRLP.encode())
 
     case serialized_receipt do
       nil -> nil
-      _ -> Receipt.deserialize(serialized_receipt |> ExRLP.decode)
+      _ -> Receipt.deserialize(serialized_receipt |> ExRLP.decode())
     end
   end
 
@@ -371,15 +380,15 @@ defmodule Blockchain.Block do
       ...> |> Blockchain.Block.get_transaction(7, trie.db)
       nil
   """
-  @spec get_transaction(t, integer(), DB.db) :: Transaction.t | nil
+  @spec get_transaction(t, integer(), DB.db()) :: Transaction.t() | nil
   def get_transaction(block, i, db) do
     serialized_transaction =
       Trie.new(db, block.header.transactions_root)
-      |> Trie.get(i |> ExRLP.encode)
+      |> Trie.get(i |> ExRLP.encode())
 
     case serialized_transaction do
       nil -> nil
-      _ -> Transaction.deserialize(serialized_transaction |> ExRLP.decode)
+      _ -> Transaction.deserialize(serialized_transaction |> ExRLP.decode())
     end
   end
 
@@ -423,14 +432,17 @@ defmodule Blockchain.Block do
       ...> |> Blockchain.Block.get_cumulative_gas(trie.db)
       ** (RuntimeError) cannot find receipt
   """
-  @spec get_cumulative_gas(t, atom()) :: EVM.Gas.t
-  def get_cumulative_gas(block=%__MODULE__{}, db) do
+  @spec get_cumulative_gas(t, atom()) :: EVM.Gas.t()
+  def get_cumulative_gas(block = %__MODULE__{}, db) do
     case get_transaction_count(block) do
-      0 -> 0
-      i -> case get_receipt(block, i, db) do
-        nil -> raise "cannot find receipt"
-        receipt -> receipt.cumulative_gas
-      end
+      0 ->
+        0
+
+      i ->
+        case get_receipt(block, i, db) do
+          nil -> raise "cannot find receipt"
+          receipt -> receipt.cumulative_gas
+        end
     end
   end
 
@@ -466,7 +478,7 @@ defmodule Blockchain.Block do
 
       # TODO: Add test case with initial storage
   """
-  @spec gen_genesis_block(Chain.t, DB.db) :: t
+  @spec gen_genesis_block(Chain.t(), DB.db()) :: t
   def gen_genesis_block(chain, db) do
     empty_trie = Trie.new(db)
 
@@ -480,38 +492,42 @@ defmodule Blockchain.Block do
         difficulty: chain.genesis[:difficulty],
         gas_limit: chain.genesis[:gas_limit],
         mix_hash: chain.genesis[:mix_hash],
-        nonce: chain.genesis[:nonce],
-      },
+        nonce: chain.genesis[:nonce]
+      }
     }
 
     trie = Trie.new(db, block.header.state_root)
 
-    final_trie = Enum.reduce(chain.accounts |> Enum.into([]), trie, fn {address, account_map}, trie ->
+    final_trie =
+      Enum.reduce(chain.accounts |> Enum.into([]), trie, fn {address, account_map}, trie ->
+        initial_storage_trie =
+          if account_map[:storage_root],
+            do: Trie.new(db, account_map[:storage_root]),
+            else: empty_trie
 
-      initial_storage_trie = if account_map[:storage_root], do: Trie.new(db, account_map[:storage_root]), else: empty_trie
+        storage_trie =
+          if account_map[:storage] do
+            Enum.reduce(account_map[:storage], initial_storage_trie, fn {key, value}, trie ->
+              Account.put_storage(trie, address, key, value)
+            end)
+          else
+            initial_storage_trie
+          end
 
-      storage_trie = if account_map[:storage] do
-        Enum.reduce(account_map[:storage], initial_storage_trie, fn {key, value}, trie ->
-          Account.put_storage(trie, address, key, value)
-        end)
-      else
-        initial_storage_trie
-      end
+        account = %Account{
+          nonce: account_map[:nonce] || 0,
+          balance: account_map[:balance],
+          storage_root: storage_trie.root_hash
+        }
 
-      account = %Account{
-        nonce: account_map[:nonce] || 0,
-        balance: account_map[:balance],
-        storage_root: storage_trie.root_hash,
-      }
+        Account.put_account(
+          trie,
+          address,
+          account
+        )
+      end)
 
-      Account.put_account(
-        trie,
-        address,
-        account
-      )
-    end)
-
-    %{ block | header: %{ block.header | state_root: final_trie.root_hash } }
+    %{block | header: %{block.header | state_root: final_trie.root_hash}}
   end
 
   @doc """
@@ -554,7 +570,15 @@ defmodule Blockchain.Block do
         }
       }
   """
-  @spec gen_child_block(t, Chain.t, [timestamp: EVM.timestamp, gas_limit: EVM.val, beneficiary: EVM.address, extra_data: binary(), state_root: EVM.hash]) :: t
+  @spec gen_child_block(
+          t,
+          Chain.t(),
+          timestamp: EVM.timestamp(),
+          gas_limit: EVM.val(),
+          beneficiary: EVM.address(),
+          extra_data: binary(),
+          state_root: EVM.hash()
+        ) :: t
   def gen_child_block(parent_block, chain, opts \\ []) do
     timestamp = opts[:timestamp] || System.system_time(:second)
     gas_limit = opts[:gas_limit] || parent_block.header.gas_limit
@@ -562,7 +586,14 @@ defmodule Blockchain.Block do
     extra_data = opts[:extra_data] || <<>>
     state_root = opts[:state_root] || parent_block.header.state_root
 
-    %Blockchain.Block{header: %Block.Header{state_root: state_root, timestamp: timestamp, extra_data: extra_data, beneficiary: beneficiary}}
+    %Blockchain.Block{
+      header: %Block.Header{
+        state_root: state_root,
+        timestamp: timestamp,
+        extra_data: extra_data,
+        beneficiary: beneficiary
+      }
+    }
     |> identity()
     |> set_block_number(parent_block)
     |> set_block_difficulty(chain, parent_block)
@@ -582,7 +613,10 @@ defmodule Blockchain.Block do
       %Blockchain.Block{header: %Block.Header{number: 33, extra_data: "hello"}}
   """
   @spec set_block_number(t, t) :: t
-  def set_block_number(block=%Blockchain.Block{header: header}, _parent_block=%Blockchain.Block{header: %Block.Header{number: parent_number}}) do
+  def set_block_number(
+        block = %Blockchain.Block{header: header},
+        _parent_block = %Blockchain.Block{header: %Block.Header{number: parent_number}}
+      ) do
     %{block | header: %{header | number: parent_number + 1}}
   end
 
@@ -608,10 +642,18 @@ defmodule Blockchain.Block do
       ...> )
       %Blockchain.Block{header: %Block.Header{number: 1, timestamp: 1_479_642_530, difficulty: 997_888}}
   """
-  @spec set_block_difficulty(t, Chain.t, t) :: t
-  def set_block_difficulty(block=%Blockchain.Block{header: header}, chain, parent_block) do
+  @spec set_block_difficulty(t, Chain.t(), t) :: t
+  def set_block_difficulty(block = %Blockchain.Block{header: header}, chain, parent_block) do
     # TODO: Incorporate more of chain
-    difficulty = Header.get_difficulty(header, (if parent_block, do: parent_block.header, else: nil), chain.genesis[:difficulty], chain.engine["Ethash"][:minimum_difficulty], chain.engine["Ethash"][:difficulty_bound_divisor], chain.engine["Ethash"][:homestead_transition])
+    difficulty =
+      Header.get_difficulty(
+        header,
+        if(parent_block, do: parent_block.header, else: nil),
+        chain.genesis[:difficulty],
+        chain.engine["Ethash"][:minimum_difficulty],
+        chain.engine["Ethash"][:difficulty_bound_divisor],
+        chain.engine["Ethash"][:homestead_transition]
+      )
 
     %{block | header: %{header | difficulty: difficulty}}
   end
@@ -640,9 +682,15 @@ defmodule Blockchain.Block do
       ...> )
       ** (RuntimeError) Block gas limit not valid
   """
-  @spec set_block_gas_limit(t, Chain.t, t, EVM.Gas.t) :: t
+  @spec set_block_gas_limit(t, Chain.t(), t, EVM.Gas.t()) :: t
   def set_block_gas_limit(block, chain, parent_block, gas_limit) do
-    if not Header.is_gas_limit_valid?(gas_limit, parent_block.header.gas_limit, chain.params[:gas_limit_bound_divisor], chain.params[:min_gas_limit]), do: raise "Block gas limit not valid"
+    if not Header.is_gas_limit_valid?(
+         gas_limit,
+         parent_block.header.gas_limit,
+         chain.params[:gas_limit_bound_divisor],
+         chain.params[:min_gas_limit]
+       ),
+       do: raise("Block gas limit not valid")
 
     %{block | header: %{block.header | gas_limit: gas_limit}}
   end
@@ -662,13 +710,13 @@ defmodule Blockchain.Block do
         }
       }
   """
-  @spec add_ommers_to_block(t, [Header.t]) :: t
+  @spec add_ommers_to_block(t, [Header.t()]) :: t
   def add_ommers_to_block(block, ommers) do
     total_ommers = block.ommers ++ ommers
     serialized_ommers_list = Enum.map(total_ommers, &Block.Header.serialize/1)
-    new_ommers_hash = BitHelper.kec(serialized_ommers_list |> ExRLP.encode)
+    new_ommers_hash = BitHelper.kec(serialized_ommers_list |> ExRLP.encode())
 
-    %{ block | ommers: total_ommers, header: %{ block.header | ommers_hash: new_ommers_hash } }
+    %{block | ommers: total_ommers, header: %{block.header | ommers_hash: new_ommers_hash}}
   end
 
   @doc """
@@ -681,7 +729,7 @@ defmodule Blockchain.Block do
       ...> |> Blockchain.Block.get_ommer(0)
       %Block.Header{parent_hash: <<1::256>>, ommers_hash: <<2::256>>, beneficiary: <<3::160>>, state_root: <<4::256>>, transactions_root: <<5::256>>, receipts_root: <<6::256>>, logs_bloom: <<>>, difficulty: 5, number: 1, gas_limit: 5, gas_used: 3, timestamp: 6, extra_data: "Hi mom", mix_hash: <<7::256>>, nonce: <<8::64>>}
   """
-  @spec get_ommer(t, integer()) :: Header.t
+  @spec get_ommer(t, integer()) :: Header.t()
   def get_ommer(block, i) do
     Enum.at(block.ommers, i)
   end
@@ -730,14 +778,21 @@ defmodule Blockchain.Block do
       ...> |> Blockchain.Block.is_holistic_valid?(chain, parent_block, db)
       {:invalid, [:state_root_mismatch, :ommers_hash_mismatch, :transactions_root_mismatch, :receipts_root_mismatch]}
   """
-  @spec is_holistic_valid?(t, Chain.t, t | nil, DB.db) :: :valid | {:invalid, [atom()]}
+  @spec is_holistic_valid?(t, Chain.t(), t | nil, DB.db()) :: :valid | {:invalid, [atom()]}
   def is_holistic_valid?(block, chain, parent_block, db) do
-
-    base_block = if parent_block |> is_nil do
-      gen_genesis_block(chain, db)
-    else
-      gen_child_block(parent_block, chain, beneficiary: block.header.beneficiary, timestamp: block.header.timestamp, gas_limit: block.header.gas_limit, extra_data: block.header.extra_data)
-    end
+    base_block =
+      if parent_block |> is_nil do
+        gen_genesis_block(chain, db)
+      else
+        gen_child_block(
+          parent_block,
+          chain,
+          beneficiary: block.header.beneficiary,
+          timestamp: block.header.timestamp,
+          gas_limit: block.header.gas_limit,
+          extra_data: block.header.extra_data
+        )
+      end
 
     child_block =
       base_block
@@ -746,11 +801,29 @@ defmodule Blockchain.Block do
       |> add_rewards_to_block(db, chain.params[:block_reward])
 
     # The following checks Holistic Validity, as defined in Eq.(29)
-    errors = []
-      ++ if child_block.header.state_root == block.header.state_root, do: [], else: [:state_root_mismatch]
-      ++ if child_block.header.ommers_hash == block.header.ommers_hash, do: [], else: [:ommers_hash_mismatch]
-      ++ if child_block.header.transactions_root == block.header.transactions_root, do: [], else: [:transactions_root_mismatch]
-      ++ if child_block.header.receipts_root == block.header.receipts_root, do: [], else: [:receipts_root_mismatch]
+    errors =
+      [] ++
+        if child_block.header.state_root == block.header.state_root,
+          do: [],
+          else:
+            [:state_root_mismatch] ++
+              if(
+                child_block.header.ommers_hash == block.header.ommers_hash,
+                do: [],
+                else:
+                  [:ommers_hash_mismatch] ++
+                    if(
+                      child_block.header.transactions_root == block.header.transactions_root,
+                      do: [],
+                      else:
+                        [:transactions_root_mismatch] ++
+                          if(
+                            child_block.header.receipts_root == block.header.receipts_root,
+                            do: [],
+                            else: [:receipts_root_mismatch]
+                          )
+                    )
+              )
 
     if errors == [], do: :valid, else: {:invalid, errors}
   end
@@ -785,20 +858,22 @@ defmodule Blockchain.Block do
       iex> Blockchain.Block.is_fully_valid?(child, chain, parent, db)
       :valid
   """
-  @spec is_fully_valid?(t, Chain.t, t, DB.db) :: :valid | {:invalid, [atom()]}
+  @spec is_fully_valid?(t, Chain.t(), t, DB.db()) :: :valid | {:invalid, [atom()]}
   def is_fully_valid?(block, chain, parent_block, db) do
     if block.header.number > 0 and parent_block == nil do
       {:errors, [:non_genesis_block_requires_parent]}
     else
-      with :valid <- Block.Header.is_valid?(
-          block.header,
-          (if parent_block, do: parent_block.header, else: nil),
-          chain.engine["Ethash"][:homestead_transition],
-          chain.genesis[:difficulty],
-          chain.engine["Ethash"][:minimum_difficulty],
-          chain.engine["Ethash"][:difficulty_bound_divisor],
-          chain.params[:gas_limit_bound_divisor],
-          chain.params[:min_gas_limit]) do
+      with :valid <-
+             Block.Header.is_valid?(
+               block.header,
+               if(parent_block, do: parent_block.header, else: nil),
+               chain.engine["Ethash"][:homestead_transition],
+               chain.genesis[:difficulty],
+               chain.engine["Ethash"][:minimum_difficulty],
+               chain.engine["Ethash"][:difficulty_bound_divisor],
+               chain.params[:gas_limit_bound_divisor],
+               chain.params[:min_gas_limit]
+             ) do
         # Pass to holistic validity check
         is_holistic_valid?(block, chain, parent_block, db)
       end
@@ -842,23 +917,34 @@ defmodule Blockchain.Block do
       ...> |> Blockchain.Account.get_accounts([sender, beneficiary, contract_address])
       [%Blockchain.Account{balance: 238655, nonce: 6}, %Blockchain.Account{balance: 161340}, %Blockchain.Account{balance: 5, code_hash: <<243, 247, 169, 254, 54, 79, 170, 185, 59, 33, 109, 165, 10, 50, 20, 21, 79, 34, 160, 162, 180, 21, 178, 58, 132, 200, 22, 158, 139, 99, 110, 227>>}]
   """
-  @spec add_transactions_to_block(t, [Transaction.t], DB.db) :: t
+  @spec add_transactions_to_block(t, [Transaction.t()], DB.db()) :: t
   def add_transactions_to_block(block, transactions, db) do
     trx_count = get_transaction_count(block)
 
     do_add_transactions_to_block(block, transactions, db, trx_count)
   end
 
-  @spec do_add_transactions_to_block(t, [Transaction.t], DB.db, integer()) :: t
+  @spec do_add_transactions_to_block(t, [Transaction.t()], DB.db(), integer()) :: t
   defp do_add_transactions_to_block(block, [], _, _), do: block
-  defp do_add_transactions_to_block(block=%__MODULE__{header: header}, [trx|transactions], db, trx_count) do
+
+  defp do_add_transactions_to_block(
+         block = %__MODULE__{header: header},
+         [trx | transactions],
+         db,
+         trx_count
+       ) do
     state = MerklePatriciaTree.Trie.new(db, header.state_root)
     # TODO: How do we deal with invalid transactions
     {new_state, gas_used, logs} = Blockchain.Transaction.execute_transaction(state, trx, header)
 
     total_gas_used = block.header.gas_used + gas_used
 
-    receipt = %Blockchain.Transaction.Receipt{state: new_state.root_hash, cumulative_gas: total_gas_used, logs: logs} # TODO: Add bloom filter
+    # TODO: Add bloom filter
+    receipt = %Blockchain.Transaction.Receipt{
+      state: new_state.root_hash,
+      cumulative_gas: total_gas_used,
+      logs: logs
+    }
 
     updated_block =
       block
@@ -871,14 +957,14 @@ defmodule Blockchain.Block do
   end
 
   # Updates a block to have a new state root given a state object
-  @spec put_state(t, EVM.state) :: t
-  defp put_state(block=%__MODULE__{header: header}, new_state) do
+  @spec put_state(t, EVM.state()) :: t
+  defp put_state(block = %__MODULE__{header: header}, new_state) do
     %{block | header: %{header | state_root: new_state.root_hash}}
   end
 
   # Updates a block to have total gas used set in the header
-  @spec put_gas_used(t, EVM.Gas.t) :: t
-  defp put_gas_used(block=%__MODULE__{header: header}, gas_used) do
+  @spec put_gas_used(t, EVM.Gas.t()) :: t
+  defp put_gas_used(block = %__MODULE__{header: header}, gas_used) do
     %{block | header: %{header | gas_used: gas_used}}
   end
 
@@ -894,11 +980,11 @@ defmodule Blockchain.Block do
       ...> |> MerklePatriciaTree.Trie.Inspector.all_values()
       [{<<5>>, <<208, 131, 1, 2, 3, 10, 131, 2, 3, 4, 134, 104, 105, 32, 109, 111, 109>>}]
   """
-  @spec put_receipt(t, integer(), Receipt.t, DB.db) :: t
+  @spec put_receipt(t, integer(), Receipt.t(), DB.db()) :: t
   def put_receipt(block, i, receipt, db) do
     updated_receipts_root =
       Trie.new(db, block.header.receipts_root)
-      |> Trie.update(ExRLP.encode(i), Receipt.serialize(receipt) |> ExRLP.encode)
+      |> Trie.update(ExRLP.encode(i), Receipt.serialize(receipt) |> ExRLP.encode())
 
     %{block | header: %{block.header | receipts_root: updated_receipts_root.root_hash}}
   end
@@ -918,14 +1004,19 @@ defmodule Blockchain.Block do
       ...> |> MerklePatriciaTree.Trie.Inspector.all_values()
       [{<<0x80>>, <<201, 1, 128, 128, 128, 128, 128, 2, 3, 4>>}]
   """
-  @spec put_transaction(t, integer(), Transaction.t, DB.db) :: t
+  @spec put_transaction(t, integer(), Transaction.t(), DB.db()) :: t
   def put_transaction(block, i, trx, db) do
-    total_transactions =  block.transactions ++ [trx]
+    total_transactions = block.transactions ++ [trx]
+
     updated_transactions_root =
       Trie.new(db, block.header.transactions_root)
-      |> Trie.update(ExRLP.encode(i), Transaction.serialize(trx) |> ExRLP.encode)
+      |> Trie.update(ExRLP.encode(i), Transaction.serialize(trx) |> ExRLP.encode())
 
-    %{block | transactions: total_transactions, header: %{block.header | transactions_root: updated_transactions_root.root_hash}}
+    %{
+      block
+      | transactions: total_transactions,
+        header: %{block.header | transactions_root: updated_transactions_root.root_hash}
+    }
   end
 
   @doc """
@@ -968,7 +1059,7 @@ defmodule Blockchain.Block do
       ...> |> Blockchain.Account.get_accounts([miner])
       [%Blockchain.Account{balance: 400100}]
   """
-  @spec add_rewards_to_block(t, DB.db, EVM.Wei.t) :: t
+  @spec add_rewards_to_block(t, DB.db(), EVM.Wei.t()) :: t
   def add_rewards_to_block(block, db, reward_wei \\ @reward_wei) do
     # TODO: Add ommer rewards
 
@@ -976,7 +1067,8 @@ defmodule Blockchain.Block do
       # No rewards for genesis block
       block
     else
-      if block.header.beneficiary |> is_nil, do: raise "Unable to add block rewards, beneficiary is nil"
+      if block.header.beneficiary |> is_nil,
+        do: raise("Unable to add block rewards, beneficiary is nil")
 
       set_state(
         block,
@@ -1017,7 +1109,7 @@ defmodule Blockchain.Block do
       iex> Blockchain.Block.get_state(%Blockchain.Block{header: %Block.Header{state_root: <<5::256>>}}, db)
       %MerklePatriciaTree.Trie{root_hash: <<5::256>>, db: {MerklePatriciaTree.DB.ETS, :get_state}}
   """
-  @spec get_state(t, DB.db) :: Trie.t
+  @spec get_state(t, DB.db()) :: Trie.t()
   def get_state(block, db) do
     Trie.new(db, block.header.state_root)
   end
@@ -1030,7 +1122,7 @@ defmodule Blockchain.Block do
       iex> Blockchain.Block.set_state(%Blockchain.Block{}, trie)
       %Blockchain.Block{header: %Block.Header{state_root: <<5::256>>}}
   """
-  @spec set_state(t, Trie.t) :: t
+  @spec set_state(t, Trie.t()) :: t
   def set_state(block, trie) do
     put_header(block, :state_root, trie.root_hash)
   end
