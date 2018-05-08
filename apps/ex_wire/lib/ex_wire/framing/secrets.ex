@@ -9,14 +9,14 @@ defmodule ExWire.Framing.Secrets do
   alias ExthCrypto.Hash.Keccak
 
   @type t :: %__MODULE__{
-    egress_mac: MAC.mac_inst,
-    ingress_mac: MAC.mac_inst,
-    mac_encoder: ExthCrypto.Cipher.cipher,
-    mac_secret: ExthCrypto.Key.symmetric_key,
-    encoder_stream: ExthCrypto.Cipher.stream,
-    decoder_stream: ExthCrypto.Cipher.stream,
-    token: binary()
-  }
+          egress_mac: MAC.mac_inst(),
+          ingress_mac: MAC.mac_inst(),
+          mac_encoder: ExthCrypto.Cipher.cipher(),
+          mac_secret: ExthCrypto.Key.symmetric_key(),
+          encoder_stream: ExthCrypto.Cipher.stream(),
+          decoder_stream: ExthCrypto.Cipher.stream(),
+          token: binary()
+        }
 
   defstruct [
     :egress_mac,
@@ -28,12 +28,18 @@ defmodule ExWire.Framing.Secrets do
     :token
   ]
 
-  @spec new(MAC.mac_inst, MAC.mac_inst, ExthCrypto.Key.symmetric_key, ExthCrypto.Key.symmetric_key, binary()) :: t
+  @spec new(
+          MAC.mac_inst(),
+          MAC.mac_inst(),
+          ExthCrypto.Key.symmetric_key(),
+          ExthCrypto.Key.symmetric_key(),
+          binary()
+        ) :: t
   def new(egress_mac, ingress_mac, mac_secret, symmetric_key, token) do
     # initialize AES stream with empty init_vector
     encoder_stream = AES.stream_init(:ctr, symmetric_key, <<0::size(128)>>)
     decoder_stream = AES.stream_init(:ctr, symmetric_key, <<0::size(128)>>)
-    mac_encoder = {AES, AES.block_size, :ecb}
+    mac_encoder = {AES, AES.block_size(), :ecb}
 
     %__MODULE__{
       egress_mac: egress_mac,
@@ -54,11 +60,31 @@ defmodule ExWire.Framing.Secrets do
   # TODO: Add examples
   # TODO: Clean up API interface
   """
-  @spec derive_secrets(boolean(), ExthCrypto.Key.private_key, ExthCrypto.Key.public_key, binary(), binary(), binary(), binary()) :: t
-  def derive_secrets(is_initiator, my_ephemeral_private_key, remote_ephemeral_public_key, remote_nonce, my_nonce, auth_data, ack_data) do
-    remote_ephemeral_public_key_raw = remote_ephemeral_public_key |> ExthCrypto.Key.raw_to_der
+  @spec derive_secrets(
+          boolean(),
+          ExthCrypto.Key.private_key(),
+          ExthCrypto.Key.public_key(),
+          binary(),
+          binary(),
+          binary(),
+          binary()
+        ) :: t
+  def derive_secrets(
+        is_initiator,
+        my_ephemeral_private_key,
+        remote_ephemeral_public_key,
+        remote_nonce,
+        my_nonce,
+        auth_data,
+        ack_data
+      ) do
+    remote_ephemeral_public_key_raw = remote_ephemeral_public_key |> ExthCrypto.Key.raw_to_der()
 
-    ephemeral_shared_secret = ExthCrypto.ECIES.ECDH.generate_shared_secret(my_ephemeral_private_key, remote_ephemeral_public_key_raw)
+    ephemeral_shared_secret =
+      ExthCrypto.ECIES.ECDH.generate_shared_secret(
+        my_ephemeral_private_key,
+        remote_ephemeral_public_key_raw
+      )
 
     # TODO: Nonces will need to be reversed come winter
     shared_secret = Keccak.kec(ephemeral_shared_secret <> Keccak.kec(remote_nonce <> my_nonce))
@@ -74,15 +100,17 @@ defmodule ExWire.Framing.Secrets do
       |> MAC.update(ExthCrypto.Math.xor(mac_secret, remote_nonce))
       |> MAC.update(auth_data)
 
-    mac_2 = MAC.init(:kec)
+    mac_2 =
+      MAC.init(:kec)
       |> MAC.update(ExthCrypto.Math.xor(mac_secret, my_nonce))
       |> MAC.update(ack_data)
 
-    {egress_mac, ingress_mac} = if is_initiator do
-      {mac_1, mac_2}
-    else
-      {mac_2, mac_1}
-    end
+    {egress_mac, ingress_mac} =
+      if is_initiator do
+        {mac_1, mac_2}
+      else
+        {mac_2, mac_1}
+      end
 
     __MODULE__.new(
       egress_mac,

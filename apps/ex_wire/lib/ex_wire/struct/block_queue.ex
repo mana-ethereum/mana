@@ -23,28 +23,26 @@ defmodule ExWire.Struct.BlockQueue do
   require Logger
 
   # These will be used to help us determine if a block is empty
-  @empty_trie MerklePatriciaTree.Trie.empty_trie_root_hash
-  @empty_hash [] |> ExRLP.encode |> ExthCrypto.Hash.Keccak.kec()
+  @empty_trie MerklePatriciaTree.Trie.empty_trie_root_hash()
+  @empty_hash [] |> ExRLP.encode() |> ExthCrypto.Hash.Keccak.kec()
 
-  defstruct [
-    queue: %{},
-    do_validation: true
-  ]
+  defstruct queue: %{},
+            do_validation: true
 
   @type block_item :: %{
-    commitments: [binary()],
-    block: Blockchain.Block.t,
-    ready: boolean()
-  }
+          commitments: [binary()],
+          block: Blockchain.Block.t(),
+          ready: boolean()
+        }
 
   @type block_map :: %{
-    EVM.hash => block_item
-  }
+          EVM.hash() => block_item
+        }
 
   @type t :: %__MODULE__{
-    queue: %{integer() => block_map},
-    do_validation: boolean()
-  }
+          queue: %{integer() => block_map},
+          do_validation: boolean()
+        }
 
   @doc """
   Adds a given header received by a peer to a block queue. Returns wether or not we should
@@ -66,23 +64,47 @@ defmodule ExWire.Struct.BlockQueue do
 
       # TODO: Add a second addition example
   """
-  @spec add_header_to_block_queue(t, Blocktree.t, Header.t, EVM.hash, binary(), Chain.t, MerklePatriciaTree.DB.db) :: {t, Blocktree.t, boolean()}
-  def add_header_to_block_queue(block_queue=%__MODULE__{queue: queue}, block_tree, header, header_hash, remote_id, chain, db) do
+  @spec add_header_to_block_queue(
+          t,
+          Blocktree.t(),
+          Header.t(),
+          EVM.hash(),
+          binary(),
+          Chain.t(),
+          MerklePatriciaTree.DB.db()
+        ) :: {t, Blocktree.t(), boolean()}
+  def add_header_to_block_queue(
+        block_queue = %__MODULE__{queue: queue},
+        block_tree,
+        header,
+        header_hash,
+        remote_id,
+        chain,
+        db
+      ) do
     block_map = Map.get(queue, header.number, %{})
 
-    {block_map, should_request_body} = case Map.get(block_map, header_hash) do
-      nil ->
-        is_empty = is_block_empty?(header) # may already be ready, already.
-        block_map = Map.put(block_map, header_hash, %{
-          commitments: MapSet.new([remote_id]),
-          block: %Block{header: header},
-          ready: is_empty
-        })
+    {block_map, should_request_body} =
+      case Map.get(block_map, header_hash) do
+        nil ->
+          # may already be ready, already.
+          is_empty = is_block_empty?(header)
 
-        {block_map, not is_empty}
-      block_item ->
-        {Map.put(block_map, header_hash, %{block_item | commitments: MapSet.put(block_item.commitments, remote_id)}), false}
-    end
+          block_map =
+            Map.put(block_map, header_hash, %{
+              commitments: MapSet.new([remote_id]),
+              block: %Block{header: header},
+              ready: is_empty
+            })
+
+          {block_map, not is_empty}
+
+        block_item ->
+          {Map.put(block_map, header_hash, %{
+             block_item
+             | commitments: MapSet.put(block_item.commitments, remote_id)
+           }), false}
+      end
 
     updated_block_queue = %{block_queue | queue: Map.put(queue, header.number, block_map)}
 
@@ -140,24 +162,44 @@ defmodule ExWire.Struct.BlockQueue do
       iex> block_queue.queue[1][<<1::256>>].block.ommers
       ["ommers"]
   """
-  @spec add_block_struct_to_block_queue(t, BlockStruct.t, Blocktree.t, Chain.t, MerklePatriciaTree.DB.db) :: t
-  def add_block_struct_to_block_queue(block_queue=%__MODULE__{queue: queue}, block_tree, block_struct, chain, db) do
+  @spec add_block_struct_to_block_queue(
+          t,
+          BlockStruct.t(),
+          Blocktree.t(),
+          Chain.t(),
+          MerklePatriciaTree.DB.db()
+        ) :: t
+  def add_block_struct_to_block_queue(
+        block_queue = %__MODULE__{queue: queue},
+        block_tree,
+        block_struct,
+        chain,
+        db
+      ) do
     transactions_root = get_transactions_root(block_struct.transactions_list)
     ommers_hash = get_ommers_hash(block_struct.ommers)
 
-    updated_queue = Enum.reduce(queue, queue, fn {number, block_map}, queue ->
-      updated_block_map = Enum.reduce(block_map, block_map, fn {hash, block_item}, block_map ->
-        if block_item.block.header.transactions_root == transactions_root and block_item.block.header.ommers_hash == ommers_hash do
-          # This is now ready! (though, it may not still have enough commitments)
-          block = %{block_item.block | transactions: block_struct.transactions, ommers: block_struct.ommers }
-          Map.put(block_map, hash, %{block_item | block: block, ready: true})
-        else
-          block_map
-        end
-      end)
+    updated_queue =
+      Enum.reduce(queue, queue, fn {number, block_map}, queue ->
+        updated_block_map =
+          Enum.reduce(block_map, block_map, fn {hash, block_item}, block_map ->
+            if block_item.block.header.transactions_root == transactions_root and
+                 block_item.block.header.ommers_hash == ommers_hash do
+              # This is now ready! (though, it may not still have enough commitments)
+              block = %{
+                block_item.block
+                | transactions: block_struct.transactions,
+                  ommers: block_struct.ommers
+              }
 
-      Map.put(queue, number, updated_block_map)
-    end)
+              Map.put(block_map, hash, %{block_item | block: block, ready: true})
+            else
+              block_map
+            end
+          end)
+
+        Map.put(queue, number, updated_block_map)
+      end)
 
     updated_block_queue = %{block_queue | queue: updated_queue}
 
@@ -192,28 +234,43 @@ defmodule ExWire.Struct.BlockQueue do
       iex> block_queue.queue
       %{}
   """
-  @spec process_block_queue(t, Blocktree.t, Chain.t, MerklePatriciaTree.DB.db) :: {t, Blocktree.t}
-  def process_block_queue(block_queue=%__MODULE__{do_validation: do_validation}, block_tree, chain, db) do
+  @spec process_block_queue(t, Blocktree.t(), Chain.t(), MerklePatriciaTree.DB.db()) ::
+          {t, Blocktree.t()}
+  def process_block_queue(
+        block_queue = %__MODULE__{do_validation: do_validation},
+        block_tree,
+        chain,
+        db
+      ) do
     # We can only process the next canonical block
 
     {remaining_block_queue, blocks} = get_complete_blocks(block_queue)
 
-    block_tree = Enum.reduce(blocks, block_tree, fn block, block_tree ->
-      case Blockchain.Blocktree.verify_and_add_block(block_tree, chain, block, db, do_validation) do
-        :parent_not_found ->
-          Logger.debug("[Block Queue] Failed to verify block due to missing parent")
+    block_tree =
+      Enum.reduce(blocks, block_tree, fn block, block_tree ->
+        case Blockchain.Blocktree.verify_and_add_block(
+               block_tree,
+               chain,
+               block,
+               db,
+               do_validation
+             ) do
+          :parent_not_found ->
+            Logger.debug("[Block Queue] Failed to verify block due to missing parent")
 
-          block_tree
-        {:invalid, reasons} ->
-          Logger.debug("[Block Queue] Failed to verify block due to #{inspect reasons}")
+            block_tree
 
-          block_tree
-        {:ok, new_block_tree} ->
-          Logger.debug("[Block Queue] Verified block and added to new block tree")
+          {:invalid, reasons} ->
+            Logger.debug("[Block Queue] Failed to verify block due to #{inspect(reasons)}")
 
-          new_block_tree
-      end
-    end)
+            block_tree
+
+          {:ok, new_block_tree} ->
+            Logger.debug("[Block Queue] Verified block and added to new block tree")
+
+            new_block_tree
+        end
+      end)
 
     {remaining_block_queue, block_tree}
   end
@@ -295,25 +352,28 @@ defmodule ExWire.Struct.BlockQueue do
         ]
       }
   """
-  @spec get_complete_blocks(t) :: {t, [Block.t]}
-  def get_complete_blocks(block_queue=%__MODULE__{queue: queue}) do
-    {queue, blocks} = Enum.reduce(queue, {queue, []}, fn {number, block_map}, {queue, blocks} ->
-      {final_block_map, new_blocks} = Enum.reduce(block_map, {block_map, []}, fn {hash, block_item}, {block_map, blocks} ->
-        if block_item.ready and MapSet.size(block_item.commitments) >= ExWire.Config.commitment_count() do
-          { Map.delete(block_map, hash), [block_item.block | blocks] }
+  @spec get_complete_blocks(t) :: {t, [Block.t()]}
+  def get_complete_blocks(block_queue = %__MODULE__{queue: queue}) do
+    {queue, blocks} =
+      Enum.reduce(queue, {queue, []}, fn {number, block_map}, {queue, blocks} ->
+        {final_block_map, new_blocks} =
+          Enum.reduce(block_map, {block_map, []}, fn {hash, block_item}, {block_map, blocks} ->
+            if block_item.ready and
+                 MapSet.size(block_item.commitments) >= ExWire.Config.commitment_count() do
+              {Map.delete(block_map, hash), [block_item.block | blocks]}
+            else
+              {block_map, blocks}
+            end
+          end)
+
+        total_blocks = blocks ++ new_blocks
+
+        if final_block_map == %{} do
+          {Map.delete(queue, number), total_blocks}
         else
-          { block_map, blocks }
+          {Map.put(queue, number, final_block_map), total_blocks}
         end
       end)
-
-      total_blocks = blocks ++ new_blocks
-
-      if final_block_map == %{} do
-        {Map.delete(queue, number), total_blocks}
-      else
-        {Map.put(queue, number, final_block_map), total_blocks}
-      end
-    end)
 
     {%{block_queue | queue: queue}, blocks}
   end
@@ -345,25 +405,26 @@ defmodule ExWire.Struct.BlockQueue do
       ...> |> ExWire.Struct.BlockQueue.is_block_empty?
       false
   """
-  @spec is_block_empty?(Header.t) :: boolean()
+  @spec is_block_empty?(Header.t()) :: boolean()
   def is_block_empty?(header) do
     header.transactions_root == @empty_trie and header.ommers_hash == @empty_hash
   end
 
-  @spec get_transactions_root([ExRLP.t]) :: MerklePatriciaTree.Trie.root_hash
+  @spec get_transactions_root([ExRLP.t()]) :: MerklePatriciaTree.Trie.root_hash()
   defp get_transactions_root(transactions_list) do
-    db = MerklePatriciaTree.Test.random_ets_db() # this is a throw-away
+    # this is a throw-away
+    db = MerklePatriciaTree.Test.random_ets_db()
 
-    trie = Enum.reduce(transactions_list |> Enum.with_index, Trie.new(db), fn {trx, i}, trie ->
-      Trie.update(trie, ExRLP.encode(i), ExRLP.encode(trx))
-    end)
+    trie =
+      Enum.reduce(transactions_list |> Enum.with_index(), Trie.new(db), fn {trx, i}, trie ->
+        Trie.update(trie, ExRLP.encode(i), ExRLP.encode(trx))
+      end)
 
     trie.root_hash
   end
 
-  @spec get_ommers_hash([EVM.hash]) :: ExthCrypto.hash
+  @spec get_ommers_hash([EVM.hash()]) :: ExthCrypto.hash()
   defp get_ommers_hash(ommers) do
-    ommers |> ExRLP.encode |> ExthCrypto.Hash.Keccak.kec()
+    ommers |> ExRLP.encode() |> ExthCrypto.Hash.Keccak.kec()
   end
-
 end

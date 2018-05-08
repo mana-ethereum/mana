@@ -16,19 +16,17 @@ defmodule ExWire.Network do
     Struct to define an inbound message from a remote peer
     """
 
-    defstruct [
-      data: nil,
-      server_pid: nil,
-      remote_host: nil,
-      timestamp: nil,
-    ]
+    defstruct data: nil,
+              server_pid: nil,
+              remote_host: nil,
+              timestamp: nil
 
     @type t :: %__MODULE__{
-      data: binary(),
-      server_pid: pid(),
-      remote_host: ExWire.Struct.Endpoint.t,
-      timestamp: integer(),
-    }
+            data: binary(),
+            server_pid: pid(),
+            remote_host: ExWire.Struct.Endpoint.t(),
+            timestamp: integer()
+          }
   end
 
   @type handler_action :: :no_action | {:sent_message, atom()}
@@ -62,8 +60,15 @@ defmodule ExWire.Network do
       ...> })
       ** (ExWire.Crypto.HashMismatch) Invalid hash
   """
-  @spec receive(InboundMessage.t) :: handler_action
-  def receive(inbound_message=%InboundMessage{data: data, server_pid: _server_pid, remote_host: _remote_host, timestamp: _timestamp}) do
+  @spec receive(InboundMessage.t()) :: handler_action
+  def receive(
+        inbound_message = %InboundMessage{
+          data: data,
+          server_pid: _server_pid,
+          remote_host: _remote_host,
+          timestamp: _timestamp
+        }
+      ) do
     :ok = assert_integrity(data)
 
     handle(inbound_message)
@@ -82,7 +87,7 @@ defmodule ExWire.Network do
       ** (ExWire.Crypto.HashMismatch) Invalid hash
   """
   @spec assert_integrity(binary()) :: :ok
-  def assert_integrity(<< hash :: size(256), payload :: bits >>) do
+  def assert_integrity(<<hash::size(256), payload::bits>>) do
     Crypto.assert_hash(payload, <<hash::256>>)
   end
 
@@ -109,31 +114,35 @@ defmodule ExWire.Network do
       ...> })
       :no_action
   """
-  @spec handle(InboundMessage.t) :: handler_action
+  @spec handle(InboundMessage.t()) :: handler_action
   def handle(%InboundMessage{
-    data: <<
-      hash :: size(256),
-      signature :: size(512),
-      recovery_id:: integer-size(8),
-      type:: integer-size(8),
-      data :: bitstring
-    >>,
-    server_pid: server_pid,
-    remote_host: remote_host,
-    timestamp: timestamp,
-  }) do
+        data: <<
+          hash::size(256),
+          signature::size(512),
+          recovery_id::integer-size(8),
+          type::integer-size(8),
+          data::bitstring
+        >>,
+        server_pid: server_pid,
+        remote_host: remote_host,
+        timestamp: timestamp
+      }) do
     params = %Handler.Params{
       remote_host: remote_host,
       signature: signature,
       recovery_id: recovery_id,
       hash: hash,
       data: data,
-      timestamp: timestamp,
+      timestamp: timestamp
     }
 
     case Handler.dispatch(type, params) do
-      :not_implemented -> :no_action
-      :no_response -> :no_action
+      :not_implemented ->
+        :no_action
+
+      :no_response ->
+        :no_action
+
       response_message ->
         # TODO: This is a simple way to determine who to send the message to,
         #       but we may want to revise.
@@ -169,7 +178,7 @@ defmodule ExWire.Network do
         }
       }
   """
-  @spec send(ExWire.Message.t, pid(), ExWire.Struct.Endpoint.t) :: handler_action
+  @spec send(ExWire.Message.t(), pid(), ExWire.Struct.Endpoint.t()) :: handler_action
   def send(message, server_pid, to) do
     GenServer.cast(
       server_pid,
@@ -177,7 +186,7 @@ defmodule ExWire.Network do
         :send,
         %{
           to: to,
-          data: Protocol.encode(message, ExWire.Config.private_key()),
+          data: Protocol.encode(message, ExWire.Config.private_key())
         }
       }
     )

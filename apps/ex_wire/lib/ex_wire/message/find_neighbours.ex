@@ -8,17 +8,15 @@ defmodule ExWire.Message.FindNeighbours do
   @behaviour ExWire.Message
   @message_id 0x03
 
-  defstruct [
-    target: nil,
-    timestamp: nil,
-  ]
+  defstruct target: nil,
+            timestamp: nil
 
   @type t :: %__MODULE__{
-    target: ExWire.node_id,
-    timestamp: integer()
-  }
+          target: ExWire.node_id(),
+          timestamp: integer()
+        }
 
-  @spec message_id() :: ExWire.Message.message_id
+  @spec message_id() :: ExWire.Message.message_id()
   def message_id, do: @message_id
 
   @doc """
@@ -42,7 +40,7 @@ defmodule ExWire.Message.FindNeighbours do
 
     %__MODULE__{
       target: target,
-      timestamp: :binary.decode_unsigned(timestamp),
+      timestamp: :binary.decode_unsigned(timestamp)
     }
   end
 
@@ -59,7 +57,7 @@ defmodule ExWire.Message.FindNeighbours do
   def encode(%__MODULE__{target: target, timestamp: timestamp}) do
     ExRLP.encode([
       target,
-      timestamp,
+      timestamp
     ])
   end
 
@@ -71,7 +69,6 @@ defmodule ExWire.Message.FindNeighbours do
       iex> ExWire.Message.FindNeighbours.to(%ExWire.Message.FindNeighbours{target: <<1>>, timestamp: 2})
       nil
   """
-  @spec to(t) :: Endpoint.t | nil
+  @spec to(t) :: Endpoint.t() | nil
   def to(_message), do: nil
-
 end

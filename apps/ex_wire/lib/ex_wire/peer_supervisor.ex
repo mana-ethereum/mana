@@ -19,11 +19,12 @@ defmodule ExWire.PeerSupervisor do
   def init(bootnodes) do
     # TODO: Ask for peers, etc.
 
-    children = for bootnode <- bootnodes do
-      {:ok, peer} = ExWire.Struct.Peer.from_uri(bootnode)
+    children =
+      for bootnode <- bootnodes do
+        {:ok, peer} = ExWire.Struct.Peer.from_uri(bootnode)
 
-      worker(ExWire.Adapter.TCP, [:outbound, peer, [{:server, ExWire.Sync}]])
-    end
+        worker(ExWire.Adapter.TCP, [:outbound, peer, [{:server, ExWire.Sync}]])
+      end
 
     Supervisor.init(children, strategy: :one_for_one)
   end
@@ -41,5 +42,4 @@ defmodule ExWire.PeerSupervisor do
       if is_pid(child), do: ExWire.Adapter.TCP.send_packet(child, packet)
     end
   end
-
 end

@@ -16,12 +16,12 @@ defmodule ExWire.Struct.Peer do
   ]
 
   @type t :: %__MODULE__{
-    host: String.t,
-    port: integer(),
-    remote_id: String.t,
-    ident: String.t,
-    last_seen: integer()
-  }
+          host: String.t(),
+          port: integer(),
+          remote_id: String.t(),
+          ident: String.t(),
+          last_seen: integer()
+        }
 
   @doc """
   Constructs a new Peer struct.
@@ -160,7 +160,7 @@ defmodule ExWire.Struct.Peer do
 end
 
 defimpl String.Chars, for: ExWire.Struct.Peer do
-  @spec to_string(ExWire.Struct.Peer.t) :: String.t
+  @spec to_string(ExWire.Struct.Peer.t()) :: String.t()
   def to_string(peer) do
     peer.ident
   end

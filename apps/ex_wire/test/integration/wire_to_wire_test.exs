@@ -12,11 +12,17 @@ defmodule WireToWireTest do
   @them_port 9999
 
   setup do
-    server = ExWire.start(nil, [network_adapter: ExWire.Adapter.UDP, port: @them_port, name: __MODULE__.Server])
+    server =
+      ExWire.start(
+        nil,
+        network_adapter: ExWire.Adapter.UDP,
+        port: @them_port,
+        name: __MODULE__.Server
+      )
 
     remote_host = %ExWire.Struct.Endpoint{
       ip: @localhost,
-      udp_port: @them_port,
+      udp_port: @them_port
     }
 
     {:ok, %{server: server, remote_host: remote_host}}
@@ -35,7 +41,7 @@ defmodule WireToWireTest do
       version: 1,
       from: %ExWire.Struct.Endpoint{ip: @localhost, tcp_port: nil, udp_port: @us_port},
       to: %ExWire.Struct.Endpoint{ip: @localhost, tcp_port: nil, udp_port: @them_port},
-      timestamp: timestamp,
+      timestamp: timestamp
     }
 
     ExWire.Network.send(ping, client_pid, remote_host)
@@ -45,22 +51,29 @@ defmodule WireToWireTest do
         message = decode_message(inbound_message)
 
         assert message.__struct__ == ExWire.Message.Pong
-        assert message.to == %ExWire.Struct.Endpoint{ip: [127, 0, 0, 1], tcp_port: nil, udp_port: @us_port}
+
+        assert message.to == %ExWire.Struct.Endpoint{
+                 ip: [127, 0, 0, 1],
+                 tcp_port: nil,
+                 udp_port: @us_port
+               }
+
         assert message.timestamp >= timestamp
-      after 2_000 ->
+    after
+      2_000 ->
         raise "Expected pong, but did not receive before timeout."
     end
   end
 
   def decode_message(%ExWire.Network.InboundMessage{
-    data: <<
-      _hash :: size(256),
-      _signature :: size(512),
-      _recovery_id:: integer-size(8),
-      type:: integer-size(8),
-      data :: bitstring
-    >>
-  }) do
+        data: <<
+          _hash::size(256),
+          _signature::size(512),
+          _recovery_id::integer-size(8),
+          type::integer-size(8),
+          data::bitstring
+        >>
+      }) do
     ExWire.Message.decode(type, data)
   end
 end

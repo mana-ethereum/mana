@@ -12,23 +12,23 @@ defmodule ExWireTest do
   @them %ExWire.Struct.Endpoint{
     ip: [0, 0, 0, 1],
     udp_port: 30303,
-    tcp_port: nil,
+    tcp_port: nil
   }
 
   @us %ExWire.Struct.Endpoint{
     ip: [0, 0, 0, 2],
     udp_port: 30303,
-    tcp_port: nil,
+    tcp_port: nil
   }
 
   setup do
-    Process.register self(), :test
+    Process.register(self(), :test)
 
     :ok
   end
 
   test "`ping` responds with a `pong`" do
-    timestamp = Timestamp.now
+    timestamp = Timestamp.now()
 
     ping = %Ping{
       version: 4,
@@ -47,7 +47,7 @@ defmodule ExWireTest do
   end
 
   test "`find_neighbours` responds with `neighbors`" do
-    timestamp = Timestamp.now
+    timestamp = Timestamp.now()
 
     find_neighbours = %FindNeighbours{
       target: <<1>>,
@@ -77,7 +77,7 @@ defmodule ExWireTest do
         %{
           data: encoded_message,
           remote_host: @us,
-          timestamp: timestamp,
+          timestamp: timestamp
         }
       }
     )

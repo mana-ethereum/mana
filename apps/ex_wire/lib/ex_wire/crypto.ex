@@ -26,10 +26,10 @@ defmodule ExWire.Crypto do
       iex> ExWire.Crypto.node_id(<<1>>)
       {:error, "Private key size not 32 bytes"}
   """
-  @spec node_id(ExthCrypto.Key.private_key) :: {:ok, ExWire.node_id} | {:error, String.t}
+  @spec node_id(ExthCrypto.Key.private_key()) :: {:ok, ExWire.node_id()} | {:error, String.t()}
   def node_id(private_key) do
     case ExthCrypto.Signature.get_public_key(private_key) do
-      {:ok, <<public_key::binary()>>} -> {:ok, public_key |> ExthCrypto.Key.der_to_raw}
+      {:ok, <<public_key::binary()>>} -> {:ok, public_key |> ExthCrypto.Key.der_to_raw()}
       {:error, reason} -> {:error, to_string(reason)}
     end
   end
@@ -99,5 +99,4 @@ defmodule ExWire.Crypto do
   def hash(data) do
     ExthCrypto.Hash.Keccak.kec(data)
   end
-
 end

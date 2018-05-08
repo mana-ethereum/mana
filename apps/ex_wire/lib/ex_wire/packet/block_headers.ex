@@ -17,8 +17,8 @@ defmodule ExWire.Packet.BlockHeaders do
   @behaviour ExWire.Packet
 
   @type t :: %__MODULE__{
-    headers: [Block.Header.t]
-  }
+          headers: [Block.Header.t()]
+        }
 
   defstruct [
     :headers
@@ -37,8 +37,8 @@ defmodule ExWire.Packet.BlockHeaders do
       ...> |> ExWire.Packet.BlockHeaders.serialize
       [ [<<1::256>>, <<2::256>>, <<3::160>>, <<4::256>>, <<5::256>>, <<6::256>>, <<>>, 5, 1, 5, 3, 6, "Hi mom", <<7::256>>, <<8::64>>] ]
   """
-  @spec serialize(t) :: ExRLP.t
-  def serialize(packet=%__MODULE__{}) do
+  @spec serialize(t) :: ExRLP.t()
+  def serialize(packet = %__MODULE__{}) do
     for header <- packet.headers, do: Block.Header.serialize(header)
   end
 
@@ -55,7 +55,7 @@ defmodule ExWire.Packet.BlockHeaders do
         ]
       }
   """
-  @spec deserialize(ExRLP.t) :: t
+  @spec deserialize(ExRLP.t()) :: t
   def deserialize(rlp) do
     headers = for header <- rlp, do: Block.Header.deserialize(header)
 
@@ -74,8 +74,8 @@ defmodule ExWire.Packet.BlockHeaders do
       ...> |> ExWire.Packet.BlockHeaders.handle()
       :ok
   """
-  @spec handle(ExWire.Packet.packet) :: ExWire.Packet.handle_response
-  def handle(packet=%__MODULE__{}) do
+  @spec handle(ExWire.Packet.packet()) :: ExWire.Packet.handle_response()
+  def handle(packet = %__MODULE__{}) do
     # TODO: Do.
     Logger.debug("[Packet] Peer sent #{Enum.count(packet.headers)} header(s)")
 
@@ -83,5 +83,4 @@ defmodule ExWire.Packet.BlockHeaders do
 
     :ok
   end
-
 end

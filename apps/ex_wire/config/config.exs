@@ -5,11 +5,14 @@ use Mix.Config
 config :ex_wire,
   p2p_version: 0x04,
   protocol_version: 63,
-  network_id: 3, # ropsten
+  # ropsten
+  network_id: 3,
   caps: [{"eth", 62}, {"eth", 63}],
   chain: :ropsten,
-  private_key: :random, # TODO: This should be set and stored in a file
+  # TODO: This should be set and stored in a file
+  private_key: :random,
   bootnodes: :from_chain,
-  commitment_count: 1 # Number of peer advertisements before we trust a block
+  # Number of peer advertisements before we trust a block
+  commitment_count: 1
 
-import_config "#{Mix.env}.exs"
+import_config "#{Mix.env()}.exs"

@@ -20,8 +20,8 @@ defmodule ExWire.Packet.NewBlockHashes do
   @behaviour ExWire.Packet
 
   @type t :: %__MODULE__{
-    hashes: [ExWire.Packet.block_hash]
-  }
+          hashes: [ExWire.Packet.block_hash()]
+        }
 
   defstruct [
     :hashes
@@ -40,8 +40,8 @@ defmodule ExWire.Packet.NewBlockHashes do
       ...> |> ExWire.Packet.NewBlockHashes.serialize()
       []
   """
-  @spec serialize(t) :: ExRLP.t
-  def serialize(packet=%__MODULE__{}) do
+  @spec serialize(t) :: ExRLP.t()
+  def serialize(packet = %__MODULE__{}) do
     for {hash, number} <- packet.hashes, do: [hash, number]
   end
 
@@ -57,10 +57,11 @@ defmodule ExWire.Packet.NewBlockHashes do
       iex> ExWire.Packet.NewBlockHashes.deserialize([])
       ** (MatchError) no match of right hand side value: []
   """
-  @spec deserialize(ExRLP.t) :: t
+  @spec deserialize(ExRLP.t()) :: t
   def deserialize(rlp) do
-    hash_lists = [_h|_t] = rlp # must be an array with at least one element
-    if Enum.count(hash_lists) > 256, do: raise "Too many hashes"
+    # must be an array with at least one element
+    hash_lists = [_h | _t] = rlp
+    if Enum.count(hash_lists) > 256, do: raise("Too many hashes")
 
     hashes = for [hash, number] <- hash_lists, do: {hash, number}
 
@@ -79,11 +80,10 @@ defmodule ExWire.Packet.NewBlockHashes do
       ...> |> ExWire.Packet.NewBlockHashes.handle()
       :ok
   """
-  @spec handle(ExWire.Packet.packet) :: ExWire.Packet.handle_response
-  def handle(_packet=%__MODULE__{}) do
+  @spec handle(ExWire.Packet.packet()) :: ExWire.Packet.handle_response()
+  def handle(_packet = %__MODULE__{}) do
     # TODO: Do something
 
     :ok
   end
-
 end
