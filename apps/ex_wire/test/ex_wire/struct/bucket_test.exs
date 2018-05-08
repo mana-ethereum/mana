@@ -1,10 +1,10 @@
 defmodule ExWire.Struct.BucketTest do
   use ExUnit.Case, async: true
 
+  doctest ExWire.Struct.Bucket
+
   alias ExWire.Struct.Bucket
   alias ExWire.KademliaConfig
-
-  doctest ExWire.Struct.Bucket
 
   describe "add_node/3" do
     setup do

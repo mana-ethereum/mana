@@ -11,8 +11,16 @@ defmodule ExWire.KademliaConfig do
   # alpha
   @concurrency 3
 
+  # key size. 0 <= i < @id_size - number of buckets
+  @id_size 256
+
   @spec bucket_size() :: integer()
   def bucket_size do
     @bucket_size
+  end
+
+  @spec id_size() :: integer()
+  def id_size do
+    @id_size
   end
 end
