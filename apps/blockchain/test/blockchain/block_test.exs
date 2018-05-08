@@ -7,27 +7,31 @@ defmodule Blockchain.BlockTest do
   alias Blockchain.Block
   alias Blockchain.Transaction
 
-  eth_test "GenesisTests", :basic_genesis_tests, [:test2, :test3], fn test, _test_subset, _test_name, _ ->
-    db = MerklePatriciaTree.Test.random_ets_db()
+  define_common_tests "GenesisTests", [], fn _test_name, test_data ->
+    for {internal_test_name, test} <- test_data do
+      if Enum.member?(["test2", "test3"], internal_test_name) do
+        db = MerklePatriciaTree.Test.random_ets_db()
 
-    chain = %Blockchain.Chain{
-      genesis: %{
-        timestamp: test["timestamp"] |> maybe_hex,
-        parent_hash: test["parentHash"] |> maybe_hex,
-        extra_data: test["extraData"] |> maybe_hex,
-        gas_limit: test["gasLimit"] |> maybe_hex,
-        difficulty: test["difficulty"] |> maybe_hex,
-        author: test["coinbase"] |> maybe_hex,
-        mix_hash: test["mixHash"] |> maybe_hex,
-        nonce: test["nonce"] |> maybe_hex,
-      },
-      accounts: get_test_accounts(test["alloc"])
-    }
+        chain = %Blockchain.Chain{
+          genesis: %{
+            timestamp: test["timestamp"] |> maybe_hex,
+            parent_hash: test["parentHash"] |> maybe_hex,
+            extra_data: test["extraData"] |> maybe_hex,
+            gas_limit: test["gasLimit"] |> maybe_hex,
+            difficulty: test["difficulty"] |> maybe_hex,
+            author: test["coinbase"] |> maybe_hex,
+            mix_hash: test["mixHash"] |> maybe_hex,
+            nonce: test["nonce"] |> maybe_hex,
+          },
+          accounts: get_test_accounts(test["alloc"])
+        }
 
-    block = Block.gen_genesis_block(chain, db)
+        block = Block.gen_genesis_block(chain, db)
 
-    # Check that our block matches the serialization from common tests
-    assert Block.serialize(block) == test["result"] |> maybe_hex |> ExRLP.decode
+        # Check that our block matches the serialization from common tests
+        assert Block.serialize(block) == test["result"] |> maybe_hex |> ExRLP.decode
+      end
+    end
   end
 
   defp get_test_accounts(alloc) do
