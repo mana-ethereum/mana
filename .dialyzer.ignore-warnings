@@ -48,3 +48,8 @@ lib/evm/interface/mock/mock_account_interface.ex:199: The return type {integer()
 
 lib/evm/machine_code.ex:113: The variable _@1 can never match since previous clauses completely covered the type bitstring()
 lib/evm/machine_code.ex:113: Cons will produce an improper list since its 2nd argument is binary(
+
+
+# Introduced by Elixir 1.6.4 https://github.com/elixir-lang/elixir/issues/7508
+lib/trie/helper.ex:41: Guard test is_binary(_@1::<<_:4>>) can never succeed
+lib/trie/helper.ex:41: The variable _@1 can never match since previous clauses completely covered the type <<_:4>>
