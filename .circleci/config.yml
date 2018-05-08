@@ -48,3 +48,19 @@ jobs:
           paths: "_build"
 
       - run: elixir --erl "+hmax 33554432" -S mix test --exclude network
+
+      - restore_cache:
+          keys:
+            - v1-plt-cache-{{ arch }}-{{ checksum "mix.lock" }}
+            - v1-plt-cache-{{ arch }}
+            - v1-plt-cache
+
+      - run: mix dialyzer --plt
+
+      - save_cache:
+          key: v1-plt-cache-{{ arch }}-{{ checksum "mix.lock" }}
+          paths:
+            - _build
+            - ~/.mix
+
+      - run: mix dialyzer --halt-exit-status
