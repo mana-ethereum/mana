@@ -70,8 +70,8 @@ defmodule ExWire.Struct.RoutingTable do
   @spec initialize_buckets(Peer.t()) :: [Bucket.t()]
   defp initialize_buckets(peer) do
     1..KademliaConfig.id_size()
-    |> Enum.map(fn _num ->
-      Bucket.new()
+    |> Enum.map(fn num ->
+      Bucket.new(num)
     end)
   end
 end

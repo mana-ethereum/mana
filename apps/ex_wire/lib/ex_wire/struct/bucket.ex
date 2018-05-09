@@ -7,9 +7,10 @@ defmodule ExWire.Struct.Bucket do
   alias ExWire.Util.Timestamp
   alias ExWire.KademliaConfig
 
-  defstruct [:nodes, :updated_at]
+  defstruct [:id, :nodes, :updated_at]
 
   @type t :: %__MODULE__{
+          id: integer(),
           nodes: [Peer.t()],
           updated_at: integer()
         }
@@ -18,16 +19,18 @@ defmodule ExWire.Struct.Bucket do
   Creates new bucket.
 
   ## Examples
-      iex> ExWire.Struct.Bucket.new(time: :test)
+      iex> ExWire.Struct.Bucket.new(1, time: :test)
       %ExWire.Struct.Bucket{
+        id: 1,
         nodes: [],
         updated_at: 1525704921
       }
 
   """
   @spec new(Peer.t()) :: t()
-  def new(options \\ [time: :actual]) do
+  def new(id, options \\ [time: :actual]) do
     %__MODULE__{
+      id: id,
       nodes: [],
       updated_at: Timestamp.now(options[:time])
     }
@@ -39,7 +42,7 @@ defmodule ExWire.Struct.Bucket do
   ## Examples
 
       iex> node = ExWire.Struct.Peer.new("13.84.180.140", 30303, "30b7ab30a01c124a6cceca36863ece12c4f5fa68e3ba9b0b51407ccc002eeed3b3102d20a88f1c1d3c3154e2449317b8ef95090e77b312d5cc39354f86d5d606", time: :test)
-      iex> ExWire.Struct.Bucket.new(time: :test)
+      iex> ExWire.Struct.Bucket.new(1, time: :test)
       ...> |> ExWire.Struct.Bucket.add_node(node, time: :test)
       {:insert_node,
        %ExWire.Struct.Peer{
@@ -54,6 +57,7 @@ defmodule ExWire.Struct.Bucket do
            214, 6>>
        },
        %ExWire.Struct.Bucket{
+         id: 1,
          nodes: [
            %ExWire.Struct.Peer{
              host: "13.84.180.140",
@@ -85,7 +89,7 @@ defmodule ExWire.Struct.Bucket do
   ## Examples
 
       iex> node = ExWire.Struct.Peer.new("13.84.180.140", 30303, "30b7ab30a01c124a6cceca36863ece12c4f5fa68e3ba9b0b51407ccc002eeed3b3102d20a88f1c1d3c3154e2449317b8ef95090e77b312d5cc39354f86d5d606", time: :test)
-      iex> ExWire.Struct.Bucket.new(time: :test)
+      iex> ExWire.Struct.Bucket.new(1, time: :test)
       ...>   |> ExWire.Struct.Bucket.insert_node(node, time: :test)
       ...>   |> ExWire.Struct.Bucket.head()
       %ExWire.Struct.Peer{
@@ -110,7 +114,7 @@ defmodule ExWire.Struct.Bucket do
 
       iex> node = ExWire.Struct.Peer.new("13.84.180.140", 30303, "30b7ab30a01c124a6cceca36863ece12c4f5fa68e3ba9b0b51407ccc002eeed3b3102d20a88f1c1d3c3154e2449317b8ef95090e77b312d5cc39354f86d5d606", time: :test)
       iex> node1 = ExWire.Struct.Peer.new("13.84.181.140", 30303, "20c9ad97c081d63397d7b685a412227a40e23c8bdc6688c6f37e97cfbc22d2b4d1db1510d8f61e6a8866ad7f0e17c02b14182d37ea7c3c8b9c2683aeb6b733a1", time: :test)
-      iex> ExWire.Struct.Bucket.new(time: :test)
+      iex> ExWire.Struct.Bucket.new(1, time: :test)
       ...>   |> ExWire.Struct.Bucket.insert_node(node, time: :test)
       ...>   |> ExWire.Struct.Bucket.insert_node(node1, time: :test)
       ...>   |> ExWire.Struct.Bucket.tail()
@@ -135,9 +139,10 @@ defmodule ExWire.Struct.Bucket do
   ## Examples
 
       iex> node = ExWire.Struct.Peer.new("13.84.180.140", 30303, "30b7ab30a01c124a6cceca36863ece12c4f5fa68e3ba9b0b51407ccc002eeed3b3102d20a88f1c1d3c3154e2449317b8ef95090e77b312d5cc39354f86d5d606", time: :test)
-      iex> ExWire.Struct.Bucket.new(time: :test)
+      iex> ExWire.Struct.Bucket.new(1, time: :test)
       ...> |> ExWire.Struct.Bucket.insert_node(node, time: :test)
       %ExWire.Struct.Bucket{
+        id: 1,
         nodes: [
           %ExWire.Struct.Peer{
             host: "13.84.180.140",
@@ -165,9 +170,10 @@ defmodule ExWire.Struct.Bucket do
   ## Examples
 
       iex> node = ExWire.Struct.Peer.new("13.84.180.140", 30303, "30b7ab30a01c124a6cceca36863ece12c4f5fa68e3ba9b0b51407ccc002eeed3b3102d20a88f1c1d3c3154e2449317b8ef95090e77b312d5cc39354f86d5d606", time: :test)
-      iex> bucket = ExWire.Struct.Bucket.new(time: :test)
+      iex> bucket = ExWire.Struct.Bucket.new(1, time: :test)
       ...>   |> ExWire.Struct.Bucket.insert_node(node, time: :test)
       %ExWire.Struct.Bucket{
+        id: 1,
         nodes: [
           %ExWire.Struct.Peer{
             host: "13.84.180.140",
@@ -185,6 +191,7 @@ defmodule ExWire.Struct.Bucket do
       }
       iex> bucket |> ExWire.Struct.Bucket.remove_node(node)
       %ExWire.Struct.Bucket{
+         id: 1,
          nodes: [],
          updated_at: 1525704921
        }
@@ -207,7 +214,7 @@ defmodule ExWire.Struct.Bucket do
 
       iex> node2 = ExWire.Struct.Peer.new("13.84.180.140", 30303, "30b7ab30a01c124a6cceca36863ece12c4f5fa68e3ba9b0b51407ccc002eeed3b3102d20a88f1c1d3c3154e2449317b8ef95090e77b312d5cc39354f86d5d606", time: :test)
       iex> node3 = ExWire.Struct.Peer.new("13.84.181.140", 30303, "20c9ad97c081d63397d7b685a412227a40e23c8bdc6688c6f37e97cfbc22d2b4d1db1510d8f61e6a8866ad7f0e17c02b14182d37ea7c3c8b9c2683aeb6b733a1", time: :test)
-      iex> bucket = ExWire.Struct.Bucket.new()
+      iex> bucket = ExWire.Struct.Bucket.new(1)
       ...>   |> ExWire.Struct.Bucket.insert_node(node2)
       ...>   |> ExWire.Struct.Bucket.insert_node(node3)
       iex> head1 = bucket |> ExWire.Struct.Bucket.head()
@@ -229,7 +236,7 @@ defmodule ExWire.Struct.Bucket do
   ## Examples
 
       iex> node = ExWire.Struct.Peer.new("13.84.180.140", 30303, "30b7ab30a01c124a6cceca36863ece12c4f5fa68e3ba9b0b51407ccc002eeed3b3102d20a88f1c1d3c3154e2449317b8ef95090e77b312d5cc39354f86d5d606")
-      iex> bucket = ExWire.Struct.Bucket.new()
+      iex> bucket = ExWire.Struct.Bucket.new(1)
       iex> bucket |> ExWire.Struct.Bucket.member?(node)
       false
       iex> bucket |> ExWire.Struct.Bucket.insert_node(node) |> ExWire.Struct.Bucket.member?(node)
@@ -248,7 +255,7 @@ defmodule ExWire.Struct.Bucket do
 
   ## Examples
 
-      iex> bucket = ExWire.Struct.Bucket.new()
+      iex> bucket = ExWire.Struct.Bucket.new(1)
       iex> bucket |> ExWire.Struct.Bucket.full?()
       false
   """
