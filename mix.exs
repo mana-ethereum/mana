@@ -1,6 +1,6 @@
 defmodule Exthereum.MixProject do
   use Mix.Project
-  @root_path File.cwd!
+  @root_path File.cwd!()
 
   def project do
     [
@@ -12,15 +12,13 @@ defmodule Exthereum.MixProject do
         :ex_rlp,
         :ex_wire,
         :exth_crypto,
-        :hex_prefix,
-        :merkle_patricia_tree,
+        :merkle_patricia_tree
       ],
       start_permanent: Mix.env() == :prod,
       dialyzer: [
         ignore_warnings: ".dialyzer.ignore-warnings",
         excluded_paths: [
           Path.join(@root_path, "_build/test/lib/blockchain/ebin"),
-          Path.join(@root_path, "_build/test/lib/hex_prefix/ebin"),
           Path.join(@root_path, "_build/test/lib/abi/ebin"),
           Path.join(@root_path, "_build/test/lib/exth_crypto/ebin"),
           Path.join(@root_path, "_build/test/lib/ex_wire/ebin")

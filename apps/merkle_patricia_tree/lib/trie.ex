@@ -147,8 +147,8 @@ defmodule MerklePatriciaTree.Trie do
     # We're going to recursively walk toward our key,
     # then we'll add our value (either a new leaf or the value
     # on a branch node), then we'll walk back up the tree and
-    # update all previous ndes. This may require changing the
-    # type of the node.
+    # update all previous nodes.
+    # This may require changing the type of the node.
     trie
     |> Node.decode_trie()
     |> Builder.put_key(Helper.get_nibbles(key), value, trie)

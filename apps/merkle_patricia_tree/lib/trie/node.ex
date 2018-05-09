@@ -20,7 +20,7 @@ defmodule MerklePatriciaTree.Trie.Node do
   Given a node, this function will encode the node
   and put the value to storage (for nodes that are
   greater than 32 bytes encoded). This implements
-  `c(I, i)`, Eq.(179) of the Yellow Paper.
+  `c(I, i)`, Eq.(193) of the Yellow Paper.
 
   ## Examples
 
@@ -48,7 +48,7 @@ defmodule MerklePatriciaTree.Trie.Node do
   end
 
   defp encode_node_type({:leaf, key, value}) do
-    [HexPrefix.encode({key, true}), value]
+    [MerklePatriciaTree.HexPrefix.encode({key, true}), value]
   end
 
   defp encode_node_type({:branch, branches}) when length(branches) == 17 do
@@ -56,7 +56,7 @@ defmodule MerklePatriciaTree.Trie.Node do
   end
 
   defp encode_node_type({:ext, shared_prefix, next_node}) do
-    [HexPrefix.encode({shared_prefix, false}), next_node]
+    [MerklePatriciaTree.HexPrefix.encode({shared_prefix, false}), next_node]
   end
 
   defp encode_node_type(:empty) do
@@ -103,7 +103,7 @@ defmodule MerklePatriciaTree.Trie.Node do
 
       [hp_k, v] ->
         # extension or leaf node
-        {prefix, is_leaf} = HexPrefix.decode(hp_k)
+        {prefix, is_leaf} = MerklePatriciaTree.HexPrefix.decode(hp_k)
 
         if is_leaf do
           {:leaf, prefix, v}
