@@ -4,6 +4,9 @@ defmodule ExWire.Struct.RoutingTable do
   """
 
   alias ExWire.Struct.{Bucket, Peer}
+  alias ExWire.KademliaConfig
+
+  @network Application.fetch_env(:ex_wire, :network_process_name)
 
   defstruct [:current_node, :buckets]
 
@@ -18,29 +21,57 @@ defmodule ExWire.Struct.RoutingTable do
   ## Examples
 
       iex> node = ExWire.Struct.Peer.new("13.84.180.240", 30303, "6ce05930c72abc632c58e2e4324f7c7ea478cec0ed4fa2528982cf34483094e9cbc9216e7aa349691242576d552a2a56aaeae426c5303ded677ce455ba1acd9d", time: :test)
-      iex> node |> ExWire.Struct.RoutingTable.new()
-      %ExWire.Struct.RoutingTable{
-        buckets: [],
-        current_node: %ExWire.Struct.Peer{
-          host: "13.84.180.240",
-          ident: "6ce059...1acd9d",
-          last_seen: 1525704921,
-          port: 30303,
-          remote_id: <<4, 108, 224, 89, 48, 199, 42, 188, 99, 44, 88, 226, 228, 50,
-            79, 124, 126, 164, 120, 206, 192, 237, 79, 162, 82, 137, 130, 207, 52, 72,
-            48, 148, 233, 203, 201, 33, 110, 122, 163, 73, 105, 18, 66, 87, 109, 85,
-            42, 42, 86, 170, 234, 228, 38, 197, 48, 61, 237, 103, 124, 228, 85, 186,
-            26, 205, 157>>
-        }
-      }
-
-
+      iex> table = node |> ExWire.Struct.RoutingTable.new()
+      iex> table.buckets |> Enum.count
+      256
   """
   @spec new(Peer.t()) :: t()
   def new(peer = %Peer{}) do
+    initial_buckets = peer |> initialize_buckets()
+
     %__MODULE__{
       current_node: peer,
-      buckets: []
+      buckets: initial_buckets
     }
+  end
+
+  @doc """
+  Adds node to routing table.
+
+  """
+
+  @spec add_node(t(), Peer.t()) :: t()
+  def add_node(table, node) do
+    bucket_idx = node |> Peer.common_prefix(table.current_node)
+
+    case table.buckets |> Enum.at(bucket_idx) |> Bucket.add_node(node) do
+      {:full_bucket, candidate_for_removal, bucket} ->
+        handle_full_bucket(table, bucket, candidate_for_removal, node)
+        table
+
+      {_descr, _node, bucket} ->
+        replace_bucket(table, bucket_idx, bucket)
+    end
+  end
+
+  @spec replace_bucket(t(), integer(), Bucket.t()) :: t()
+  defp replace_bucket(table, idx, bucket) do
+    buckets =
+      table.buckets
+      |> List.replace_at(idx, bucket)
+
+    %{table | buckets: buckets}
+  end
+
+  defp handle_full_bucket(_table, _bucket, _candidate_for_removal, _candidate_for_insertion) do
+    # TODO
+  end
+
+  @spec initialize_buckets(Peer.t()) :: [Bucket.t()]
+  defp initialize_buckets(peer) do
+    1..KademliaConfig.id_size()
+    |> Enum.map(fn _num ->
+      Bucket.new(peer)
+    end)
   end
 end
