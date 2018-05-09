@@ -775,7 +775,7 @@ defmodule Blockchain.Block do
       ...>         |> Blockchain.Block.add_transactions_to_block([trx], db)
       iex> %{block | header: %{block.header | state_root: <<1,2,3>>, ommers_hash: <<2,3,4>>, transactions_root: <<3,4,5>>, receipts_root: <<4,5,6>>}}
       ...> |> Blockchain.Block.is_holistic_valid?(chain, parent_block, db)
-      {:invalid, [:state_root_mismatch, :ommers_hash_mismatch, :transactions_root_mismatch, :receipts_root_mismatch]}
+      {:invalid, [:receipts_root_mismatch, :transactions_root_mismatch, :ommers_hash_mismatch, :state_root_mismatch]}
   """
   @spec is_holistic_valid?(t, Chain.t(), t | nil, DB.db()) :: :valid | {:invalid, [atom()]}
   def is_holistic_valid?(block, chain, parent_block, db) do
@@ -801,30 +801,49 @@ defmodule Blockchain.Block do
 
     # The following checks Holistic Validity, as defined in Eq.(29)
     errors =
-      [] ++
-        if child_block.header.state_root == block.header.state_root,
-          do: [],
-          else:
-            [:state_root_mismatch] ++
-              if(
-                child_block.header.ommers_hash == block.header.ommers_hash,
-                do: [],
-                else:
-                  [:ommers_hash_mismatch] ++
-                    if(
-                      child_block.header.transactions_root == block.header.transactions_root,
-                      do: [],
-                      else:
-                        [:transactions_root_mismatch] ++
-                          if(
-                            child_block.header.receipts_root == block.header.receipts_root,
-                            do: [],
-                            else: [:receipts_root_mismatch]
-                          )
-                    )
-              )
+      []
+      |> check_state_root_validity(child_block, block)
+      |> check_ommers_hash_validity(child_block, block)
+      |> check_transactions_root_validity(child_block, block)
+      |> check_receipts_root_validity(child_block, block)
 
     if errors == [], do: :valid, else: {:invalid, errors}
+  end
+
+  @spec check_state_root_validity([atom()], t(), t()) :: [atom()]
+  defp check_state_root_validity(errors, child_block, block) do
+    if child_block.header.state_root == block.header.state_root do
+      errors
+    else
+      [:state_root_mismatch | errors]
+    end
+  end
+
+  @spec check_state_root_validity([atom()], t(), t()) :: [atom()]
+  defp check_ommers_hash_validity(errors, child_block, block) do
+    if child_block.header.ommers_hash == block.header.ommers_hash do
+      errors
+    else
+      [:ommers_hash_mismatch | errors]
+    end
+  end
+
+  @spec check_state_root_validity([atom()], t(), t()) :: [atom()]
+  defp check_transactions_root_validity(errors, child_block, block) do
+    if child_block.header.transactions_root == block.header.transactions_root do
+      errors
+    else
+      [:transactions_root_mismatch | errors]
+    end
+  end
+
+  @spec check_state_root_validity([atom()], t(), t()) :: [atom()]
+  defp check_receipts_root_validity(errors, child_block, block) do
+    if child_block.header.receipts_root == block.header.receipts_root do
+      errors
+    else
+      [:receipts_root_mismatch | errors]
+    end
   end
 
   @doc """
