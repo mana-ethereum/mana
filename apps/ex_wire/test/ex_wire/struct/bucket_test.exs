@@ -8,24 +8,9 @@ defmodule ExWire.Struct.BucketTest do
 
   describe "add_node/3" do
     setup do
-      node1 =
-        ExWire.Struct.Peer.new(
-          "13.84.180.240",
-          30303,
-          "6ce05930c72abc632c58e2e4324f7c7ea478cec0ed4fa2528982cf34483094e9cbc9216e7aa349691242576d552a2a56aaeae426c5303ded677ce455ba1acd9d"
-        )
-
-      bucket =
-        node1
-        |> ExWire.Struct.Bucket.new(time: :test)
+      bucket = ExWire.Struct.Bucket.new(time: :test)
 
       [bucket: bucket]
-    end
-
-    test "does not add current_node to bucket", %{bucket: bucket} do
-      current_node = bucket.current_node
-
-      {:current_node, nil, ^bucket} = bucket |> Bucket.add_node(current_node)
     end
 
     test "inserts new node to bucket", %{bucket: bucket} do
