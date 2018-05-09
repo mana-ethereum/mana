@@ -114,6 +114,21 @@ defmodule ExWire.Struct.Peer do
   end
 
   @doc """
+  Calculates common id prefix between two peers..
+
+  ## Examples
+
+      iex> {:ok, peer1} = ExWire.Struct.Peer.from_uri("enode://6ce05930c72abc632c58e2e4324f7c7ea478cec0ed4fa2528982cf34483094e9cbc9216e7aa349691242576d552a2a56aaeae426c5303ded677ce455ba1acd9d@13.84.180.240:30303")
+      iex> {:ok, peer2} = ExWire.Struct.Peer.from_uri("enode://30b7ab30a01c124a6cceca36863ece12c4f5fa68e3ba9b0b51407ccc002eeed3b3102d20a88f1c1d3c3154e2449317b8ef95090e77b312d5cc39354f86d5d606@52.176.7.10:30303")
+      iex> ExWire.Struct.Peer.common_prefix(peer1, peer2)
+      9
+  """
+  @spec common_prefix(Peer.t(), Peer.t()) :: integer()
+  def common_prefix(%Peer{remote_id: remote_id1}, %Peer{remote_id: remote_id2}) do
+    XorDistance.common_prefix(remote_id1, remote_id2)
+  end
+
+  @doc """
   Updates last_seen field.
 
   ## Examples

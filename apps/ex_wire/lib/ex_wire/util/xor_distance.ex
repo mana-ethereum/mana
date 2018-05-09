@@ -30,7 +30,7 @@ defmodule ExWire.Util.XorDistance do
     |> Enum.sum()
   end
 
-    @doc """
+  @doc """
     Calculates common bit prefix between two binaries.
 
     ## Examples
@@ -65,9 +65,11 @@ defmodule ExWire.Util.XorDistance do
   @spec prefix(binary(), binary(), integer()) :: integer()
   defp prefix(bin1, bin2, acc \\ 0)
 
-  defp prefix(<<1::1, tail1::bitstring>>, <<1::1, tail2::bitstring>>, acc), do: prefix(tail1, tail2, acc + 1)
+  defp prefix(<<1::1, tail1::bitstring>>, <<1::1, tail2::bitstring>>, acc),
+    do: prefix(tail1, tail2, acc + 1)
 
-  defp prefix(<<0::1, tail1::bitstring>>, <<0::1, tail2::bitstring>>, acc), do: prefix(tail1, tail2, acc + 1)
+  defp prefix(<<0::1, tail1::bitstring>>, <<0::1, tail2::bitstring>>, acc),
+    do: prefix(tail1, tail2, acc + 1)
 
   defp prefix(_bin1, _bin2, acc), do: acc
 end
