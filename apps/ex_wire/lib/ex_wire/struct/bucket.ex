@@ -103,7 +103,7 @@ defmodule ExWire.Struct.Bucket do
     cond do
       Peer.equal?(current_node, node) -> {:current_node, nil, bucket}
       member?(bucket, node) -> {:reinsert_node, node, reinsert_node(bucket, node, options)}
-      full?(bucket) -> {:full_bucket, head(bucket), bucket}
+      full?(bucket) -> {:full_bucket, tail(bucket), bucket}
       true -> {:insert_node, node, insert_node(bucket, node, options)}
     end
   end
@@ -132,9 +132,35 @@ defmodule ExWire.Struct.Bucket do
       }
   """
   @spec head(t()) :: Peer.t()
-  def head(%Bucket{nodes: nodes}) do
-    nodes |> List.first()
-  end
+  def head(%Bucket{nodes: [node | _nodes_tail]}), do: node
+
+  @doc """
+  Returns bucket's last node.
+
+  ## Examples
+
+      iex> node1 = ExWire.Struct.Peer.new("13.84.180.240", 30303, "6ce05930c72abc632c58e2e4324f7c7ea478cec0ed4fa2528982cf34483094e9cbc9216e7aa349691242576d552a2a56aaeae426c5303ded677ce455ba1acd9d", time: :test)
+      iex> node2 = ExWire.Struct.Peer.new("13.84.180.140", 30303, "30b7ab30a01c124a6cceca36863ece12c4f5fa68e3ba9b0b51407ccc002eeed3b3102d20a88f1c1d3c3154e2449317b8ef95090e77b312d5cc39354f86d5d606", time: :test)
+      iex> node3 = ExWire.Struct.Peer.new("13.84.181.140", 30303, "20c9ad97c081d63397d7b685a412227a40e23c8bdc6688c6f37e97cfbc22d2b4d1db1510d8f61e6a8866ad7f0e17c02b14182d37ea7c3c8b9c2683aeb6b733a1", time: :test)
+      iex> node1
+      ...>   |> ExWire.Struct.Bucket.new(time: :test)
+      ...>   |> ExWire.Struct.Bucket.insert_node(node2, time: :test)
+      ...>   |> ExWire.Struct.Bucket.insert_node(node3, time: :test)
+      ...>   |> ExWire.Struct.Bucket.tail()
+      %ExWire.Struct.Peer{
+        host: "13.84.180.140",
+        ident: "30b7ab...d5d606",
+        last_seen: 1525704921,
+        port: 30303,
+        remote_id: <<4, 48, 183, 171, 48, 160, 28, 18, 74, 108, 206, 202, 54, 134,
+          62, 206, 18, 196, 245, 250, 104, 227, 186, 155, 11, 81, 64, 124, 204, 0,
+          46, 238, 211, 179, 16, 45, 32, 168, 143, 28, 29, 60, 49, 84, 226, 68,
+          147, 23, 184, 239, 149, 9, 14, 119, 179, 18, 213, 204, 57, 53, 79, 134,
+          213, 214, 6>>
+      }
+  """
+  @spec tail(t()) :: Peer.t()
+  def tail(%Bucket{nodes: nodes}), do: nodes |> List.last()
 
   @doc """
   Remove node from bucket.
