@@ -4,6 +4,7 @@ defmodule MerklePatriciaTree.TrieTest do
 
   alias MerklePatriciaTree.Trie
   alias MerklePatriciaTree.Trie.Verifier
+  alias MerklePatriciaTree.HexPrefix
 
   @max_32_bits 4_294_967_296
 
@@ -14,7 +15,7 @@ defmodule MerklePatriciaTree.TrieTest do
   end
 
   def leaf_node(key_end, value) do
-    [MerklePatriciaTree.HexPrefix.encode({key_end, true}), value]
+    [HexPrefix.encode({key_end, true}), value]
   end
 
   def store(node_value, db) do
@@ -25,7 +26,7 @@ defmodule MerklePatriciaTree.TrieTest do
   end
 
   def extension_node(shared_nibbles, node_hash) do
-    [MerklePatriciaTree.HexPrefix.encode({shared_nibbles, false}), node_hash]
+    [HexPrefix.encode({shared_nibbles, false}), node_hash]
   end
 
   def branch_node(branches, value) when length(branches) == 16 do

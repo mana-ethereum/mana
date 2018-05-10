@@ -7,8 +7,8 @@ defmodule MerklePatriciaTree.Trie.Node do
   TODO: Add richer set of tests, esp. in re: storage and branch values.
   """
 
-  alias MerklePatriciaTree.Trie
   alias MerklePatriciaTree.Trie.Storage
+  alias MerklePatriciaTree.{Trie, HexPrefix}
 
   @type trie_node ::
           :empty
@@ -48,7 +48,7 @@ defmodule MerklePatriciaTree.Trie.Node do
   end
 
   defp encode_node_type({:leaf, key, value}) do
-    [MerklePatriciaTree.HexPrefix.encode({key, true}), value]
+    [HexPrefix.encode({key, true}), value]
   end
 
   defp encode_node_type({:branch, branches}) when length(branches) == 17 do
@@ -56,7 +56,7 @@ defmodule MerklePatriciaTree.Trie.Node do
   end
 
   defp encode_node_type({:ext, shared_prefix, next_node}) do
-    [MerklePatriciaTree.HexPrefix.encode({shared_prefix, false}), next_node]
+    [HexPrefix.encode({shared_prefix, false}), next_node]
   end
 
   defp encode_node_type(:empty) do
@@ -103,7 +103,7 @@ defmodule MerklePatriciaTree.Trie.Node do
 
       [hp_k, v] ->
         # extension or leaf node
-        {prefix, is_leaf} = MerklePatriciaTree.HexPrefix.decode(hp_k)
+        {prefix, is_leaf} = HexPrefix.decode(hp_k)
 
         if is_leaf do
           {:leaf, prefix, v}
