@@ -558,7 +558,7 @@ defmodule Blockchain.Account do
     end
   end
 
-  @spec storage_put(DB.db(), EVM.EVM.trie_root(), integer(), integer()) :: EVM.trie_root()
+  @spec storage_put(DB.db(), EVM.EVM.trie_root(), integer(), integer()) :: MerkleParticiaTree.t()
   defp storage_put(db, storage_root, key, value) do
     Trie.new(db, storage_root)
     |> Trie.update(
