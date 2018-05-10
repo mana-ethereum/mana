@@ -34,4 +34,19 @@ defmodule ExWire.KademliaTest do
       assert table |> RoutingTable.member?(node)
     end
   end
+
+  describe "neighbours/2" do
+    test "returns neighbours of specified node" do
+      node =
+        ExWire.Struct.Peer.new(
+          "13.84.180.140",
+          30303,
+          "6ce05930c72abc632c58e2e4324f7c7ea478cec0ed4fa2528982cf34483094e9cbc9216e7aa349691242576d552a2a56aaeae426c5303ded677ce455ba1acd9d"
+        )
+
+      Kademlia.add_node(node)
+
+      [^node] = Kademlia.neighbours(node)
+    end
+  end
 end

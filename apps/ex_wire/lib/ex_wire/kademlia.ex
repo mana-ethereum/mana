@@ -24,6 +24,15 @@ defmodule ExWire.Kademlia do
     |> GenServer.call(:routing_table)
   end
 
+  @doc """
+  Returns neighbours of specified node.
+  """
+  def neighbours(node, opts \\ []) do
+    opts
+    |> process_name()
+    |> GenServer.call({:neighbours, node})
+  end
+
   defp process_name(opts) do
     opts[:process_name] || Server.default_process_name()
   end

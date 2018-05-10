@@ -64,11 +64,11 @@ defmodule ExWire.Struct.RoutingTable do
   @spec neighbours(t(), Peer.t()) :: [Peer.t()]
   def neighbours(%__MODULE__{buckets: buckets}, node = %Peer{}) do
     buckets
-    |> Enum.flat_map(fn(bucket) ->
+    |> Enum.flat_map(fn bucket ->
       bucket.nodes
     end)
     |> Enum.sort_by(&Peer.distance(&1, node))
-    |> Enum.take(KademliaConfig.bucket_size)
+    |> Enum.take(KademliaConfig.bucket_size())
   end
 
   @doc """

@@ -29,6 +29,12 @@ defmodule ExWire.Kademlia.Server do
     {:reply, routing_table, state}
   end
 
+  def handle_call({:neighbours, node}, _from, state = %{routing_table: routing_table}) do
+    neighbours = routing_table |> RoutingTable.neighbours(node)
+
+    {:reply, neighbours, state}
+  end
+
   def default_process_name do
     @default_process_name
   end
