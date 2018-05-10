@@ -37,9 +37,7 @@ defmodule ExWire.Struct.RoutingTable do
 
   @doc """
   Adds node to routing table.
-
   """
-
   @spec add_node(t(), Peer.t()) :: t()
   def add_node(
         table = %__MODULE__{current_node: %Peer{remote_id: current_node_id}},
@@ -47,7 +45,7 @@ defmodule ExWire.Struct.RoutingTable do
       ),
       do: table
 
-  def add_node(table, node) do
+  def add_node(table = %__MODULE__{}, node = %Peer{}) do
     bucket_idx = node |> Peer.common_prefix(table.current_node)
 
     case table.buckets |> Enum.at(bucket_idx) |> Bucket.add_node(node) do
@@ -58,6 +56,14 @@ defmodule ExWire.Struct.RoutingTable do
       {_descr, _node, bucket} ->
         replace_bucket(table, bucket_idx, bucket)
     end
+  end
+
+  @doc """
+  Checks if node exist in routing table.
+  """
+  @spec member?(t(), Peer.t()) :: boolean()
+  def member?(%__MODULE__{buckets: buckets}, peer = %Peer{}) do
+    buckets |> Enum.any?(&Bucket.member?(&1, peer))
   end
 
   @spec replace_bucket(t(), integer(), Bucket.t()) :: t()
