@@ -41,6 +41,12 @@ defmodule ExWire.Struct.RoutingTable do
   """
 
   @spec add_node(t(), Peer.t()) :: t()
+  def add_node(
+        table = %__MODULE__{current_node: %Peer{remote_id: current_node_id}},
+        %Peer{remote_id: current_node_id}
+      ),
+      do: table
+
   def add_node(table, node) do
     bucket_idx = node |> Peer.common_prefix(table.current_node)
 

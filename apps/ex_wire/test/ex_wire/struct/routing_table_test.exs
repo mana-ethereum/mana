@@ -35,5 +35,11 @@ defmodule ExWire.Struct.RoutingTableTest do
 
       assert table.buckets |> Enum.at(bucket_idx) |> Bucket.member?(node)
     end
+
+    test "does not current node to routing table", %{table: table} do
+      table = table |> RoutingTable.add_node(table.current_node)
+
+      assert table.buckets |> Enum.all?(fn bucket -> bucket.nodes |> Enum.empty?() end)
+    end
   end
 end
