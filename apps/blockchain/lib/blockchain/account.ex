@@ -496,8 +496,8 @@ defmodule Blockchain.Account do
 
       code_hash ->
         case MerklePatriciaTree.DB.get(state.db, code_hash) do
-          nil -> :not_found
           {:ok, machine_code} when is_binary(machine_code) -> {:ok, machine_code}
+          _ -> :not_found
         end
     end
   end
