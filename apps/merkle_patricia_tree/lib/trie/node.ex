@@ -7,8 +7,8 @@ defmodule MerklePatriciaTree.Trie.Node do
   TODO: Add richer set of tests, esp. in re: storage and branch values.
   """
 
-  alias MerklePatriciaTree.Trie
   alias MerklePatriciaTree.Trie.Storage
+  alias MerklePatriciaTree.{Trie, HexPrefix}
 
   @type trie_node ::
           :empty
@@ -20,7 +20,7 @@ defmodule MerklePatriciaTree.Trie.Node do
   Given a node, this function will encode the node
   and put the value to storage (for nodes that are
   greater than 32 bytes encoded). This implements
-  `c(I, i)`, Eq.(179) of the Yellow Paper.
+  `c(I, i)`, Eq.(193) of the Yellow Paper.
 
   ## Examples
 

@@ -4,6 +4,7 @@ defmodule MerklePatriciaTree.TrieTest do
 
   alias MerklePatriciaTree.Trie
   alias MerklePatriciaTree.Trie.Verifier
+  alias MerklePatriciaTree.HexPrefix
 
   @max_32_bits 4_294_967_296
 
