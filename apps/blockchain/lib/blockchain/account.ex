@@ -514,7 +514,7 @@ defmodule Blockchain.Account do
       iex> Blockchain.Account.get_storage(updated_state, <<01::160>>, 5)
       {:ok, 9}
   """
-  @spec put_storage(EVM.state(), EVM.address(), integer(), integer()) :: t
+  @spec put_storage(EVM.state(), EVM.address(), integer(), integer()) :: EVM.state | { EVM.state, t, t }
   def put_storage(state, address, key, value) do
     update_account(state, address, fn acct ->
       updated_storage_trie = storage_put(state.db, acct.storage_root, key, value)
