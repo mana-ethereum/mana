@@ -1,19 +1,30 @@
 defmodule ExWire.Kademlia do
-  use GenServer
-
   @moduledoc """
   Handles Kademlia algorithm state.
   """
 
-  alias ExWire.Struct.{Peer, RoutingTable}
+  alias ExWire.Kademlia.Server
+  alias ExWire.Struct.Peer
 
-  def start_link(current_node = %Peer{}) do
-    GenServer.start_link(__MODULE__, current_node, name: ExWire.Kademlia)
+  @doc """
+  Adds new node to routing table.
+  """
+  def add_node(peer = %Peer{}, opts \\ []) do
+    opts
+    |> process_name()
+    |> GenServer.cast({:add_node, peer})
   end
 
-  def init(current_node = %Peer{}) do
-    routing_table = current_node |> RoutingTable.new()
+  @doc """
+  Returns current routing table.
+  """
+  def routing_table(opts \\ []) do
+    opts
+    |> process_name()
+    |> GenServer.call(:routing_table)
+  end
 
-    {:ok, %{routing_table: routing_table}}
+  defp process_name(opts) do
+    opts[:process_name] || Server.default_process_name()
   end
 end

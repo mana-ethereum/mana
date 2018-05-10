@@ -27,7 +27,7 @@ defmodule ExWire.Struct.RoutingTable do
   """
   @spec new(Peer.t()) :: t()
   def new(peer = %Peer{}) do
-    initial_buckets = peer |> initialize_buckets()
+    initial_buckets = initialize_buckets()
 
     %__MODULE__{
       current_node: peer,
@@ -59,7 +59,7 @@ defmodule ExWire.Struct.RoutingTable do
   end
 
   @doc """
-  Checks if node exist in routing table.
+  Checks if node exists in routing table.
   """
   @spec member?(t(), Peer.t()) :: boolean()
   def member?(%__MODULE__{buckets: buckets}, peer = %Peer{}) do
@@ -79,8 +79,8 @@ defmodule ExWire.Struct.RoutingTable do
     # TODO
   end
 
-  @spec initialize_buckets(Peer.t()) :: [Bucket.t()]
-  defp initialize_buckets(peer) do
+  @spec initialize_buckets() :: [Bucket.t()]
+  defp initialize_buckets() do
     1..KademliaConfig.id_size()
     |> Enum.map(fn num ->
       Bucket.new(num)
