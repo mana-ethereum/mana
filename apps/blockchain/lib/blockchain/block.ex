@@ -592,14 +592,11 @@ defmodule Blockchain.Block do
         beneficiary: beneficiary
       }
     }
-    |> identity()
     |> set_block_number(parent_block)
     |> set_block_difficulty(chain, parent_block)
     |> set_block_gas_limit(chain, parent_block, gas_limit)
   end
 
-  @spec identity(t) :: t
-  def identity(block), do: block
 
   @doc """
   Calculates the `number` for a new block. This implements Eq.(38) from
