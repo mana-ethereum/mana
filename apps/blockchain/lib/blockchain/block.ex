@@ -263,7 +263,7 @@ defmodule Blockchain.Block do
     do_get_block_hash_by_steps(curr_block_hash, steps, db)
   end
 
-  @spec get_block_hash_by_steps(EVM.hash(), non_neg_integer(), DB.db()) ::
+  @spec do_get_block_hash_by_steps(EVM.hash(), non_neg_integer(), DB.db()) ::
           {:ok, EVM.hash()} | :not_found
   defp do_get_block_hash_by_steps(block_hash, 0, _db), do: {:ok, block_hash}
 
