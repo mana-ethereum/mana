@@ -36,6 +36,12 @@ defmodule ExWire.Struct.RoutingTable do
   end
 
   @doc """
+  Returns table's buckets.
+  """
+  @spec buckets(t()) :: [Bucket.t()]
+  def buckets(%__MODULE__{buckets: buckets}), do: buckets
+
+  @doc """
   Adds node to routing table.
   """
   @spec add_node(t(), Peer.t()) :: t()
@@ -46,7 +52,7 @@ defmodule ExWire.Struct.RoutingTable do
       do: table
 
   def add_node(table = %__MODULE__{}, node = %Peer{}) do
-    bucket_idx = node |> Peer.common_prefix(table.current_node)
+    bucket_idx = table |> bucket_id(node)
 
     case table.buckets |> Enum.at(bucket_idx) |> Bucket.add_node(node) do
       {:full_bucket, candidate_for_removal, bucket} ->
@@ -62,13 +68,14 @@ defmodule ExWire.Struct.RoutingTable do
   Returns neighbours of a specified node.
   """
   @spec neighbours(t(), Peer.t()) :: [Peer.t()]
-  def neighbours(%__MODULE__{buckets: buckets}, node = %Peer{}) do
-    buckets
-    |> Enum.flat_map(fn bucket ->
-      bucket.nodes
-    end)
+  def neighbours(table = %__MODULE__{}, node = %Peer{}) do
+    bucket_idx = bucket_id(table, node)
+    similar_to_current_node = table |> nodes_at(bucket_idx)
+    found_nodes = traverse(table, bucket_idx) ++ similar_to_current_node
+
+    found_nodes
     |> Enum.sort_by(&Peer.distance(&1, node))
-    |> Enum.take(KademliaConfig.bucket_size())
+    |> Enum.take(bucket_size())
   end
 
   @doc """
@@ -77,6 +84,14 @@ defmodule ExWire.Struct.RoutingTable do
   @spec member?(t(), Peer.t()) :: boolean()
   def member?(%__MODULE__{buckets: buckets}, peer = %Peer{}) do
     buckets |> Enum.any?(&Bucket.member?(&1, peer))
+  end
+
+  @doc """
+  Returns bucket id that node belongs to in routing table.
+  """
+  @spec bucket_id(t(), Peer.t()) :: integer()
+  def bucket_id(%__MODULE__{current_node: current_node}, node = %Peer{}) do
+    node |> Peer.common_prefix(current_node)
   end
 
   @spec replace_bucket(t(), integer(), Bucket.t()) :: t()
@@ -88,15 +103,49 @@ defmodule ExWire.Struct.RoutingTable do
     %{table | buckets: buckets}
   end
 
+  @spec nodes_at(t(), integer()) :: Peer.t()
+  defp nodes_at(table = %__MODULE__{}, bucket_id) do
+    table
+    |> bucket_at(bucket_id)
+    |> Bucket.nodes()
+  end
+
+  @spec bucket_at(t(), integer()) :: Bucket.t()
+  defp bucket_at(%__MODULE__{buckets: buckets}, id) do
+    buckets |> Enum.at(id)
+  end
+
   defp handle_full_bucket(_table, _bucket, _candidate_for_removal, _candidate_for_insertion) do
     # TODO
   end
 
+  @spec traverse(t(), integer(), [Peer.t()], integer()) :: [Peer.t()]
+  defp traverse(table, bucket_id, acc \\ [], step \\ 1) do
+    is_out_of_left_boundary = bucket_id - step < 0
+    is_out_of_right_boundary = bucket_id + step > bucket_size() - 1
+
+    left_nodes = if is_out_of_left_boundary, do: [], else: table |> nodes_at(bucket_id - step)
+    right_nodes = if is_out_of_right_boundary, do: [], else: table |> nodes_at(bucket_id + step)
+
+    acc = acc ++ left_nodes ++ right_nodes
+
+    if (is_out_of_left_boundary && is_out_of_right_boundary) || Enum.count(acc) >= bucket_size() do
+      acc
+    else
+      traverse(table, bucket_id, acc, step + 1)
+    end
+  end
+
   @spec initialize_buckets() :: [Bucket.t()]
   defp initialize_buckets() do
-    1..KademliaConfig.id_size()
+    1..bucket_size()
     |> Enum.map(fn num ->
       Bucket.new(num)
     end)
+  end
+
+  @spec bucket_size() :: integer()
+  defp bucket_size do
+    KademliaConfig.id_size()
   end
 end

@@ -4,6 +4,7 @@ defmodule ExWire.Struct.RoutingTableTest do
   doctest ExWire.Struct.RoutingTable
 
   alias ExWire.Struct.{RoutingTable, Bucket, Peer}
+  alias ExWire.KademliaConfig
 
   setup_all do
     node =
@@ -89,5 +90,54 @@ defmodule ExWire.Struct.RoutingTableTest do
       assert Enum.count(neighbours) == 1
       assert List.first(neighbours) == node
     end
+
+    test "returns neighbours bases on xor distance" do
+      table = random_full_routing_table()
+      node = random_peer()
+
+      naive_neighbours =
+        table.buckets
+        |> Enum.flat_map(&Bucket.nodes/1)
+        |> Enum.sort_by(&Peer.distance(&1, node))
+        |> Enum.take(KademliaConfig.id_size())
+
+      neighbours =
+        table
+        |> RoutingTable.neighbours(node)
+
+      assert Enum.count(neighbours) == Enum.count(naive_neighbours)
+
+      assert Enum.all?(naive_neighbours, fn naive_neighbour ->
+               Enum.any?(neighbours, &Peer.equal?(&1, naive_neighbour))
+             end)
+    end
+  end
+
+  defp random_full_routing_table do
+    table = random_peer() |> RoutingTable.new()
+
+    1..(KademliaConfig.bucket_size() * KademliaConfig.id_size())
+    |> Enum.reduce(table, fn _el, acc ->
+      acc |> RoutingTable.add_node(random_peer())
+    end)
+  end
+
+  defp random_peer do
+    %Peer{
+      host: "1.1.1.1",
+      port: 30303,
+      remote_id: random_id(),
+      ident: "",
+      last_seen: 1
+    }
+  end
+
+  defp random_id do
+    1..64
+    |> Enum.reduce(<<>>, fn _el, acc ->
+      random = :rand.uniform(256)
+
+      acc <> <<random>>
+    end)
   end
 end

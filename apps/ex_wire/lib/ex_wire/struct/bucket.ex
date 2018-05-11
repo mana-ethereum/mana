@@ -37,6 +37,12 @@ defmodule ExWire.Struct.Bucket do
   end
 
   @doc """
+  Returns nodes of a given bucket.
+  """
+  @spec nodes(t()) :: [Peer.t()]
+  def nodes(%__MODULE__{nodes: nodes}), do: nodes
+
+  @doc """
   Adds a node to bucket. Returns tuple with insert result, inserted node and updated bucket.
 
   ## Examples
