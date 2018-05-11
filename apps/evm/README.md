@@ -1,24 +1,6 @@
-# EVM [![CircleCI](https://circleci.com/gh/exthereum/evm.svg?style=svg)](https://circleci.com/gh/exthereum/evm)
+# EVM
 
 The EVM is a fully working Ethereum Virtual Machine. This machine effective encodes Section 9 "Execution Model" of the [Yellow Paper](http://gavwood.com/Paper.pdf).
-
-## Installation
-
-The easiest way to add EVM to your project is by [using Mix](http://elixir-lang.org/getting-started/mix-otp/introduction-to-mix.html).
-
-Add `:evm` as a dependency to your project's `mix.exs`:
-
-```elixir
-defp deps do
-  [
-    {:evm, "~> 0.1.6"}
-  ]
-end
-```
-
-And run:
-
-    $ mix deps.get
 
 # Basics
 

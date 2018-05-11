@@ -1,4 +1,4 @@
-# MerklePatriciaTree [![CircleCI](https://circleci.com/gh/exthereum/merkle_patricia_tree.svg?style=svg)](https://circleci.com/gh/exthereum/merkle_patricia_tree)
+# MerklePatriciaTree
 
 Elixir implementation of Ethereum's Merkle Patricia Tries.
 
@@ -7,24 +7,6 @@ The encoding's specification can be found in [the yellow paper](http://yellowpap
 The modified patricia merkle trie allows arbitrary storage of key, value pairs with the benefits of a merkle trie in O(n*log(n)) time for insert, lookup and delete.
 
 [This diagram](https://i.stack.imgur.com/YZGxe.png) is also very helpful in understanding these tries.
-
-## Installation
-
-The easiest way to add MerklePatriciaTree to your project is by [using Mix](http://elixir-lang.org/getting-started/mix-otp/introduction-to-mix.html).
-
-Add `:merkle_patricia_tree` as a dependency to your project's `mix.exs`:
-
-```elixir
-defp deps do
-  [
-    {:merkle_patricia_tree, "~> 0.2.5"}
-  ]
-end
-```
-
-And run:
-
-    $ mix deps.get
 
 ## Basic Usage
 
