@@ -20,9 +20,7 @@ defmodule MerklePatriciaTree.Trie.Helper do
   [0, 1, 0, 2, 0, 3]
   """
   @spec get_nibbles(binary()) :: [integer()]
-  def get_nibbles(k) do
-    for <<nibble::4 <- k>>, do: nibble
-  end
+  def get_nibbles(k), do: for(<<nibble::4 <- k>>, do: nibble)
 
   @doc """
   Returns the binary of a given a list of nibbles

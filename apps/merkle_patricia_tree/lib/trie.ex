@@ -1,6 +1,7 @@
 defmodule MerklePatriciaTree.Trie do
   @moduledoc File.read!("#{__DIR__}/../README.md")
 
+  alias ExthCrypto.Hash.Keccak
   alias MerklePatriciaTree.Trie.{Helper, Builder, Destroyer, Node, Storage}
   alias MerklePatriciaTree.{DB, ListHelper}
 
@@ -16,7 +17,7 @@ defmodule MerklePatriciaTree.Trie do
   @type key :: binary() | [integer()]
 
   @empty_trie <<>>
-  @empty_trie_root_hash @empty_trie |> ExRLP.encode() |> :keccakf1600.sha3_256()
+  @empty_trie_root_hash @empty_trie |> ExRLP.encode() |> Keccak.kec()
 
   @doc """
   Returns the canonical empty trie.

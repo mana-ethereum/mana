@@ -5,6 +5,7 @@ defmodule MerklePatriciaTree.Trie.Storage do
   Eq.(178) from the Yellow Paper.
   """
 
+  alias ExthCrypto.Hash.Keccak
   alias MerklePatriciaTree.{DB, Trie}
 
   # Maximum RLP length in bytes that is stored as is
@@ -66,7 +67,7 @@ defmodule MerklePatriciaTree.Trie.Storage do
   @spec store(ExRLP.t(), MerklePatriciaTree.DB.db()) :: binary()
   def store(rlp_encoded_node, db) do
     # SHA3
-    node_hash = :keccakf1600.sha3_256(rlp_encoded_node)
+    node_hash = Keccak.kec(rlp_encoded_node)
 
     # Store in db
     DB.put!(db, node_hash, rlp_encoded_node)
