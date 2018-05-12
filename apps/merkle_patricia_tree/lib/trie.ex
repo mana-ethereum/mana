@@ -187,7 +187,8 @@ defmodule MerklePatriciaTree.Trie do
     end
   end
 
-  # Encodes `x` in RLP if its not already encoded.
+  # Encodes `x` in RLP if it isn't already encoded.
+  # And it is definitely not encoded if it is `<<>>` or not a binary (e.g. array).
   defp rlp_encode(x) when not is_binary(x) or x == <<>>, do: ExRLP.encode(x)
   defp rlp_encode(x), do: x
 end
