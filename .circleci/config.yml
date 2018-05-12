@@ -47,7 +47,7 @@ jobs:
           key: v1-build-cache
           paths: "_build"
 
-      - run: elixir --erl "+hmax 33554432" -S mix test --exclude network
+      - run: elixir --erl "+hmax 33554432" -S mix test --exclude network --exclude pending
 
       - restore_cache:
           keys:

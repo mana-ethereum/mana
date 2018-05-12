@@ -5,9 +5,10 @@ defmodule MerklePatriciaTree.Trie.Storage do
   Eq.(178) from the Yellow Paper.
   """
 
-  alias MerklePatriciaTree.DB
-  alias MerklePatriciaTree.Trie
+  alias ExthCrypto.Hash.Keccak
+  alias MerklePatriciaTree.{DB, Trie}
 
+  # Maximum RLP length in bytes that is stored as is
   @max_rlp_len 32
 
   @spec max_rlp_len() :: integer()
@@ -17,9 +18,6 @@ defmodule MerklePatriciaTree.Trie.Storage do
   Takes an RLP-encoded node and pushes it to storage,
   as defined by `n(I, i)` Eq.(178) of the Yellow Paper.
 
-  NOTA BENE: we are forced to deviate from the Yellow Paper as nodes which are
-  smaller than 32 bytes aren't encoded in RLP, as suggested by the equations.
-
   Specifically, Eq.(178) says that the node is encoded as `c(J,i)` in the second
   portion of the definition of `n`. By the definition of `c`, all return values are
   RLP encoded. But, we have found emperically that the `n` does not encode values to
@@ -27,41 +25,54 @@ defmodule MerklePatriciaTree.Trie.Storage do
 
   ## Examples
 
-      iex> trie = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
-      iex> MerklePatriciaTree.Trie.Storage.put_node(<<>>, trie)
-      <<>>
-      iex> MerklePatriciaTree.Trie.Storage.put_node("Hi", trie)
-      "Hi"
-      iex> MerklePatriciaTree.Trie.Storage.put_node(["AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"], trie)
-      <<141, 163, 93, 242, 120, 27, 128, 97, 138, 56, 116, 101, 165, 201,
-             165, 139, 86, 73, 85, 153, 45, 38, 207, 186, 196, 202, 111, 84,
-             214, 26, 122, 164>>
+    iex> trie = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
+    iex> MerklePatriciaTree.Trie.Storage.put_node(<<>>, trie)
+    <<>>
+    iex> MerklePatriciaTree.Trie.Storage.put_node("Hi", trie)
+    "Hi"
+    iex> MerklePatriciaTree.Trie.Storage.put_node(["AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"], trie)
+    <<141, 163, 93, 242, 120, 27, 128, 97, 138, 56, 116, 101, 165, 201,
+           165, 139, 86, 73, 85, 153, 45, 38, 207, 186, 196, 202, 111, 84,
+           214, 26, 122, 164>>
   """
   @spec put_node(ExRLP.t(), Trie.t()) :: binary()
   def put_node(rlp, trie) do
     case ExRLP.encode(rlp) do
-      # store large nodes
+      # Store large nodes
       encoded when byte_size(encoded) >= @max_rlp_len ->
         store(encoded, trie.db)
 
-      # otherwise, return node itself
+      # Otherwise, return node itself
       _ ->
         rlp
     end
   end
 
   @doc """
-  TODO: Doc and test
+  Takes an RLP-encoded node, calculates Keccak-256 hash of it
+  and stores it in the DB.
+
+  ## Examples
+
+    iex> db = MerklePatriciaTree.Test.random_ets_db()
+    iex> empty = ExRLP.encode(<<>>)
+    iex> MerklePatriciaTree.Trie.Storage.store(empty, db)
+    <<86, 232, 31, 23, 27, 204, 85, 166, 255, 131, 69, 230, 146, 192, 248, 110, 91,
+          72, 224, 27, 153, 108, 173, 192, 1, 98, 47, 181, 227, 99, 180, 33>>
+    iex> foo = ExRLP.encode("foo")
+    iex> MerklePatriciaTree.Trie.Storage.store(foo, db)
+    <<16, 192, 48, 154, 15, 115, 25, 200, 123, 147, 225, 105, 27, 181, 190, 134,
+          187, 98, 142, 233, 8, 135, 5, 171, 122, 243, 200, 18, 154, 150, 123, 137>>
   """
   @spec store(ExRLP.t(), MerklePatriciaTree.DB.db()) :: binary()
   def store(rlp_encoded_node, db) do
-    # sha3
-    node_hash = :keccakf1600.sha3_256(rlp_encoded_node)
+    # SHA3
+    node_hash = Keccak.kec(rlp_encoded_node)
 
-    # store in db
+    # Store in db
     DB.put!(db, node_hash, rlp_encoded_node)
 
-    # return hash
+    # Return hash
     node_hash
   end
 
@@ -102,8 +113,8 @@ defmodule MerklePatriciaTree.Trie.Storage do
       x when not is_binary(x) ->
         x
 
+      # stored in db
       h ->
-        # stored in db
         case DB.get(trie.db, h) do
           {:ok, v} -> ExRLP.decode(v)
           :not_found -> :not_found

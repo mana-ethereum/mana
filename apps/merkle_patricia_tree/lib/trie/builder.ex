@@ -10,9 +10,11 @@ defmodule MerklePatriciaTree.Trie.Builder do
   unit tests to this module.
 
   """
+
+  import MerklePatriciaTree.ListHelper, only: [overlap: 2]
+
   alias MerklePatriciaTree.Trie
   alias MerklePatriciaTree.Trie.Node
-  alias MerklePatriciaTree.ListHelper
 
   @empty_branch <<>>
 
@@ -32,7 +34,8 @@ defmodule MerklePatriciaTree.Trie.Builder do
     {:leaf, new_prefix, new_value}
   end
 
-  # Merge leafs that share some prefix, this will cause us to construct an extension followed by a branch
+  # Merge leafs that share some prefix,
+  # this will cause us to construct an extension followed by a branch.
   defp trie_put_key(
          {:leaf, [old_prefix_hd | _old_prefix_tl] = old_prefix, old_value},
          [new_prefix_hd | _new_prefix_tl] = new_prefix,
@@ -40,10 +43,12 @@ defmodule MerklePatriciaTree.Trie.Builder do
          trie
        )
        when old_prefix_hd == new_prefix_hd do
-    {matching_prefix, old_tl, new_tl} = ListHelper.overlap(old_prefix, new_prefix)
+    {matching_prefix, old_tl, new_tl} = overlap(old_prefix, new_prefix)
 
     branch =
-      [{old_tl, old_value}, {new_tl, new_value}] |> build_branch(trie) |> Node.encode_node(trie)
+      [{old_tl, old_value}, {new_tl, new_value}]
+      |> build_branch(trie)
+      |> Node.encode_node(trie)
 
     {:ext, matching_prefix, branch}
   end
@@ -53,88 +58,24 @@ defmodule MerklePatriciaTree.Trie.Builder do
     build_branch([{old_prefix, old_value}, {new_prefix, new_value}], trie)
   end
 
-  # Merge right onto an extension node, we'll need to push this down to our value
-  # TODO: dialyzer found that this method can not succeed and it is true
-  # defp trie_put_key({:ext, shared_prefix, node_hash}, new_prefix, new_value, trie)
-  #      when shared_prefix == new_prefix do
-  #   branch =
-  #     node_hash
-  #     |> Trie.into(trie)
-  #     |> put_key([], new_value, trie)
-  #     |> Node.decode_trie()
-
-  #   {:ext, shared_prefix, branch}
-  # end
-
-  # Merge leafs that share some prefix, this will cause us to construct an extension followed by a branch
-  defp trie_put_key(
-         {:ext, [old_prefix_hd | _old_prefix_tl] = old_prefix, old_value},
-         [new_prefix_hd | _new_prefix_tl] = new_prefix,
-         new_value,
-         trie
-       )
-       when old_prefix_hd == new_prefix_hd do
-    {matching_prefix, old_tl, new_tl} = ListHelper.overlap(old_prefix, new_prefix)
-
-    # TODO: Simplify logic?
-    if old_tl == [] do
-      # We are merging directly into an ext node (frustrating!)
-      # Since ext nodes must be followed by branches, let's just merge
-      # the new value into the branch
-      old_trie = old_value |> Trie.into(trie) |> Node.decode_trie()
-      new_encoded_trie = old_trie |> put_key(new_tl, new_value, trie) |> Node.encode_node(trie)
-
-      {:ext, matching_prefix, new_encoded_trie}
-    else
-      # TODO: Handle when we need to add an extension after this
-      # TODO: Standardize with below
-      first =
-        case old_tl do
-          # [] -> {16, {:encoded, old_value}} # TODO: Is this right?
-          [h | []] ->
-            {h, {:encoded, old_value}}
-
-          [h | t] ->
-            ext_encoded = {:ext, t, old_value} |> Node.encode_node(trie)
-
-            {h, {:encoded, ext_encoded}}
-        end
-
-      branch = [first, {new_tl, new_value}] |> build_branch(trie) |> Node.encode_node(trie)
-      {:ext, matching_prefix, branch}
-    end
-  end
-
-  # Merge into a ext with no matches (i.e. create a branch)
-  defp trie_put_key({:ext, old_prefix, old_value}, new_prefix, new_value, trie) do
-    # TODO: Standardize with above
-    first =
-      case old_prefix do
-        # [] -> {16, {:encoded, old_value}} # TODO: Is this right?
-        [h | []] ->
-          {h, {:encoded, old_value}}
-
-        [h | t] ->
-          ext_encoded = {:ext, t, old_value} |> Node.encode_node(trie)
-          {h, {:encoded, ext_encoded}}
-      end
-
-    build_branch([first, {new_prefix, new_value}], trie)
-  end
-
   # Merge into a branch with empty prefix to store branch value
-  defp trie_put_key({:branch, branches}, [], value, _trie) when length(branches) == 17 do
-    {:branch, List.replace_at(branches, 16, value)}
+  defp trie_put_key({:branch, nodes}, [], value, _trie) when length(nodes) == 17 do
+    {:branch, List.replace_at(nodes, 16, value)}
   end
 
   # Merge down a branch node (recursively)
-  defp trie_put_key({:branch, branches}, [prefix_hd | prefix_tl], value, trie) do
+  defp trie_put_key({:branch, nodes}, [prefix_hd | prefix_tl], value, trie) do
     {:branch,
-     List.update_at(branches, prefix_hd, fn branch ->
-       branch_node = branch |> Trie.into(trie) |> Node.decode_trie()
+     List.update_at(nodes, prefix_hd, fn branch ->
+       node =
+         branch
+         |> Trie.into(trie)
+         |> Node.decode_trie()
 
-       # Maybe this one?
-       branch_node |> put_key(prefix_tl, value, trie) |> Node.encode_node(trie)
+       # Insert the rest
+       node
+       |> put_key(prefix_tl, value, trie)
+       |> Node.encode_node(trie)
      end)}
   end
 
@@ -143,13 +84,108 @@ defmodule MerklePatriciaTree.Trie.Builder do
     {:leaf, prefix, value}
   end
 
-  # Builds a branch node with starter values
-  defp build_branch(branch_options, trie) do
+  # Merge exts that share some prefix,
+  # this will cause us to construct an extension followed by a branch.
+  defp trie_put_key(
+         {:ext, [old_prefix_hd | _old_prefix_tl] = old_prefix, old_value},
+         [new_prefix_hd | _new_prefix_tl] = new_prefix,
+         new_value,
+         trie
+       )
+       when old_prefix_hd == new_prefix_hd do
+    {matching_prefix, old_tl, new_tl} = overlap(old_prefix, new_prefix)
+
+    # We know that current `old_value` is a branch node because
+    # extension nodes are always followed by branch nodes.
+    # Now, lets see which one should go first.
+    if old_tl == [] do
+      # Ok, the `new_prefix` starts with the `old_prefix`.
+      #
+      # For example this could be the case when:
+      # old_prefix = [1, 2]
+      # new_prefix = [1, 2, 3]
+      #
+      # So the old one should go first followed by the new one.
+      # In this case let's just merge the new value into the `old_branch`.
+
+      # This is our decoded old branch trie.
+      old_trie =
+        old_value
+        |> Trie.into(trie)
+        |> Node.decode_trie()
+
+      # Recursively merge the new value into
+      # the old branch trie.
+      new_encoded_trie =
+        old_trie
+        |> put_key(new_tl, new_value, trie)
+        |> Node.encode_node(trie)
+
+      {:ext, matching_prefix, new_encoded_trie}
+    else
+      # If we've got here then we know that
+      # the `new_prefix` isn't prefixed by the `old_prefix`.
+      #
+      # This may happen, for example, when
+      # we "insert" into the middle/beginning of the trie:
+      # old_tl = [3]     <= overlap([1,2,3], [1,2])
+      # old_tl = [1,2,3] <= overlap([1,2,3], [2,3,4])
+      # old_tl = [1,2,3] <= overlap([1,2,3], [])
+      #
+      # So new node should come first followed by the old node,
+      # which (as we already know) is a branch node.
+      # In this case we need to construct a new "empty" branch node,
+      # that may itself be placed "inside" another ext node,
+      # (if there are 2 or more shared nibbles) and then we need to
+      # (recursively) merge the old value into it.
+      first =
+        case old_tl do
+          # No shared nibbles.
+          # We need at least 2 for it to be the extension node.
+          [h | []] ->
+            # Here `h` is the nibble index inside
+            # our new branch node where the `old_value` will be inserted.
+            {h, {:encoded, old_value}}
+
+          # They have some common/shared prefix nibbles.
+          # So we need to "insert" an extension node.
+          [h | t] ->
+            ext_encoded = Node.encode_node({:ext, t, old_value}, trie)
+            {h, {:encoded, ext_encoded}}
+        end
+
+      branch =
+        [first, {new_tl, new_value}]
+        |> build_branch(trie)
+        |> Node.encode_node(trie)
+
+      {:ext, matching_prefix, branch}
+    end
+  end
+
+  # Merge into a ext with no matches (i.e. create a branch).
+  defp trie_put_key({:ext, old_prefix, old_value}, new_prefix, new_value, trie) do
+    first =
+      case old_prefix do
+        [h | []] ->
+          {h, {:encoded, old_value}}
+
+        [h | t] ->
+          ext_encoded = Node.encode_node({:ext, t, old_value}, trie)
+          {h, {:encoded, ext_encoded}}
+      end
+
+    build_branch([first, {new_prefix, new_value}], trie)
+  end
+
+  # Builds a branch node with starter values.
+  defp build_branch(options, trie) do
     base = {:branch, for(_ <- 0..15, do: @empty_branch) ++ [<<>>]}
 
-    Enum.reduce(branch_options, base, fn
-      {prefix, {:encoded, value}}, {:branch, branches} ->
-        {:branch, List.replace_at(branches, prefix, value)}
+    Enum.reduce(options, base, fn
+      {prefix, {:encoded, value}}, {:branch, nodes} ->
+        next_nodes = List.replace_at(nodes, prefix, value)
+        {:branch, next_nodes}
 
       {prefix, value}, acc ->
         put_key(acc, prefix, value, trie)

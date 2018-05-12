@@ -4,8 +4,7 @@ defmodule MerklePatriciaTree.Trie.Inspector do
   of tries.
   """
   alias MerklePatriciaTree.Trie
-  alias MerklePatriciaTree.Trie.Node
-  alias MerklePatriciaTree.Trie.Helper
+  alias MerklePatriciaTree.Trie.{Node, Helper}
   require Logger
 
   @doc """
@@ -95,8 +94,6 @@ defmodule MerklePatriciaTree.Trie.Inspector do
 
   @doc """
   Prints a visual depiction of a trie, returns trie itself.
-
-  TODO: Test, possibly.
   """
   @spec inspect_trie(Trie.t()) :: Trie.t()
   def inspect_trie(trie) do
@@ -132,8 +129,9 @@ defmodule MerklePatriciaTree.Trie.Inspector do
     base = "branch (value: #{branches |> List.last() |> inspect})"
 
     Enum.reduce(0..15, base, fn el, acc ->
-      acc <>
-        "\n" <> do_inspect_trie(%{trie | root_hash: Enum.at(branches, el)}, depth + 1, "[#{el}] ")
+      hash = Enum.at(branches, el)
+      prefix = "[#{el}] "
+      acc <> "\n" <> do_inspect_trie(%{trie | root_hash: hash}, depth + 1, prefix)
     end)
   end
 

@@ -35,7 +35,7 @@ defmodule MerklePatriciaTree.HexPrefix do
     iex> MerklePatriciaTree.HexPrefix.encode({[ 15, 1, 12, 11, 8 ], true})
     <<0x3f, 0x1c, 0xb8>>
   """
-  @spec encode(__MODULE__.t()) :: binary()
+  @spec encode(t()) :: binary()
   def encode({nibbles, terminator}) do
     is_even = rem(length(nibbles), 2) == 0
 
@@ -52,14 +52,15 @@ defmodule MerklePatriciaTree.HexPrefix do
     end)
   end
 
-  # Nibble offset adjustment function, as defined in Eq.(187)
+  # Nibble offset adjustment function,
+  # as defined in Eq.(187) of the Yellow Paper.
   #
   # Terminator value to node type correspondence:
   #
-  # 0. ext. node, even nibbles: `false`
-  # 1. ext. node, odd nibbles:  `true`
-  # 2. leaf node, even nibbles: `true`
-  # 3. leaf node, odd nibbles:  `true`
+  # 0. ext, even: `false`
+  # 1. ext, odd: `true`
+  # 2. leaf, even: `true`
+  # 3. leaf, odd: `true`
   defp f(false), do: 0
   defp f(true), do: 2
 

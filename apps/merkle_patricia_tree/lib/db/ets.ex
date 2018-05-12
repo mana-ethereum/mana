@@ -4,8 +4,7 @@ defmodule MerklePatriciaTree.DB.ETS do
   is backed by :ets.
   """
 
-  alias MerklePatriciaTree.DB
-  alias MerklePatriciaTree.Trie
+  alias MerklePatriciaTree.{DB, Trie}
 
   @behaviour MerklePatriciaTree.DB
 
