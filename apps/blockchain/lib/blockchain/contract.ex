@@ -6,6 +6,7 @@ defmodule Blockchain.Contract do
   in sections 7 and 8 of the Yellow Paper.
   """
 
+  alias ExthCrypto.Hash.Keccak
   alias Blockchain.Account
   alias Block.Header
 
@@ -209,7 +210,7 @@ defmodule Blockchain.Contract do
   def new_contract_address(sender, nonce) do
     [sender, nonce - 1]
     |> ExRLP.encode()
-    |> BitHelper.kec()
+    |> Keccak.kec()
     |> BitHelper.mask_bitstring(160)
   end
 

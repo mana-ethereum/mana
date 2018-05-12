@@ -5,12 +5,11 @@ defmodule Blockchain.Block do
   For more information, see Section 4.4 of the Yellow Paper.
   """
 
+  alias ExthCrypto.Hash.Keccak
   alias Block.Header
-  alias Blockchain.Account
-  alias Blockchain.Transaction
+  alias Blockchain.{Account, Transaction}
   alias Blockchain.Transaction.Receipt
-  alias MerklePatriciaTree.Trie
-  alias MerklePatriciaTree.DB
+  alias MerklePatriciaTree.{Trie, DB}
 
   # Defined in Eq.(18)
   # block_hash: Hash for this block, acts simply as a cache,
@@ -713,7 +712,7 @@ defmodule Blockchain.Block do
   def add_ommers_to_block(block, ommers) do
     total_ommers = block.ommers ++ ommers
     serialized_ommers_list = Enum.map(total_ommers, &Block.Header.serialize/1)
-    new_ommers_hash = BitHelper.kec(serialized_ommers_list |> ExRLP.encode())
+    new_ommers_hash = Keccak.kec(serialized_ommers_list |> ExRLP.encode())
 
     %{block | ommers: total_ommers, header: %{block.header | ommers_hash: new_ommers_hash}}
   end

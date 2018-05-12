@@ -1,6 +1,10 @@
 defmodule Blockchain.AccountTest do
   use ExUnit.Case, async: true
+
   doctest Blockchain.Account
+
+  alias ExthCrypto.Hash.Keccak
+  alias MerklePatriciaTree.Trie
   alias Blockchain.Account
 
   test "serialize and deserialize" do
@@ -12,13 +16,16 @@ defmodule Blockchain.AccountTest do
     }
 
     assert acct ==
-             acct |> Account.serialize() |> ExRLP.encode() |> ExRLP.decode()
+             acct
+             |> Account.serialize()
+             |> ExRLP.encode()
+             |> ExRLP.decode()
              |> Account.deserialize()
   end
 
   test "valid empty state_root" do
     db = MerklePatriciaTree.Test.random_ets_db()
-    state = MerklePatriciaTree.Trie.new(db)
+    state = Trie.new(db)
 
     assert state.root_hash ==
              <<86, 232, 31, 23, 27, 204, 85, 166, 255, 131, 69, 230, 146, 192, 248, 110, 91, 72,
@@ -27,15 +34,15 @@ defmodule Blockchain.AccountTest do
 
   test "valid state_root with one empty account" do
     db = MerklePatriciaTree.Test.random_ets_db()
-    state = MerklePatriciaTree.Trie.new(db)
+    state = Trie.new(db)
 
     state =
       state
-      |> Blockchain.Account.put_account(<<0x01::160>>, %Blockchain.Account{
+      |> Account.put_account(<<0x01::160>>, %Account{
         nonce: 0,
         balance: 0,
-        code_hash: <<>> |> BitHelper.kec(),
-        storage_root: ExRLP.encode(<<>>) |> BitHelper.kec()
+        code_hash: <<>> |> Keccak.kec(),
+        storage_root: Trie.empty_trie_root_hash()
       })
 
     assert state.root_hash ==
@@ -46,17 +53,17 @@ defmodule Blockchain.AccountTest do
   test "valid state root with an updated storage value" do
     db = MerklePatriciaTree.Test.random_ets_db()
     address = <<0x01::160>>
-    state = MerklePatriciaTree.Trie.new(db)
+    state = Trie.new(db)
 
     state =
       state
-      |> Blockchain.Account.put_account(address, %Blockchain.Account{
+      |> Account.put_account(address, %Account{
         nonce: 0,
         balance: 0,
-        code_hash: <<>> |> BitHelper.kec(),
-        storage_root: ExRLP.encode(<<>>) |> BitHelper.kec()
+        code_hash: <<>> |> Keccak.kec(),
+        storage_root: Trie.empty_trie_root_hash()
       })
-      |> Blockchain.Account.put_storage(address, 1, 1)
+      |> Account.put_storage(address, 1, 1)
 
     assert state.root_hash ==
              <<100, 231, 49, 195, 57, 235, 18, 88, 149, 202, 124, 230, 118, 223, 241, 190, 56,
@@ -70,13 +77,13 @@ defmodule Blockchain.AccountTest do
 
     state =
       state
-      |> Blockchain.Account.put_account(address, %Blockchain.Account{
+      |> Account.put_account(address, %Account{
         nonce: 0,
         balance: 0,
-        code_hash: <<>> |> BitHelper.kec(),
-        storage_root: ExRLP.encode(<<>>) |> BitHelper.kec()
+        code_hash: <<>> |> Keccak.kec(),
+        storage_root: Trie.empty_trie_root_hash()
       })
-      |> Blockchain.Account.put_code(address, <<1, 2, 3>>)
+      |> Account.put_code(address, <<1, 2, 3>>)
 
     assert state.root_hash ==
              <<57, 201, 95, 169, 186, 185, 65, 138, 89, 184, 108, 249, 63, 187, 179, 237, 59, 248,
@@ -85,18 +92,18 @@ defmodule Blockchain.AccountTest do
 
   test "valid state root after nonce has been incremented" do
     db = MerklePatriciaTree.Test.random_ets_db()
-    state = MerklePatriciaTree.Trie.new(db)
+    state = Trie.new(db)
     address = <<0x01::160>>
 
     state =
       state
-      |> Blockchain.Account.put_account(address, %Blockchain.Account{
+      |> Account.put_account(address, %Account{
         nonce: 99,
         balance: 0,
-        code_hash: <<>> |> BitHelper.kec(),
-        storage_root: ExRLP.encode(<<>>) |> BitHelper.kec()
+        code_hash: <<>> |> Keccak.kec(),
+        storage_root: Trie.empty_trie_root_hash()
       })
-      |> Blockchain.Account.increment_nonce(address)
+      |> Account.increment_nonce(address)
 
     assert state.root_hash ==
              <<216, 110, 244, 57, 70, 173, 157, 118, 183, 112, 181, 20, 47, 193, 5, 3, 244, 142,
@@ -105,18 +112,18 @@ defmodule Blockchain.AccountTest do
 
   test "valid state root with an account balance set" do
     db = MerklePatriciaTree.Test.random_ets_db()
-    state = MerklePatriciaTree.Trie.new(db)
+    state = Trie.new(db)
     address = <<0x01::160>>
 
     state =
       state
-      |> Blockchain.Account.put_account(address, %Blockchain.Account{
+      |> Account.put_account(address, %Account{
         nonce: 0,
         balance: 10,
-        code_hash: <<>> |> BitHelper.kec(),
-        storage_root: ExRLP.encode(<<>>) |> BitHelper.kec()
+        code_hash: <<>> |> Keccak.kec(),
+        storage_root: Trie.empty_trie_root_hash()
       })
-      |> Blockchain.Account.add_wei(address, 10)
+      |> Account.add_wei(address, 10)
 
     assert state.root_hash ==
              <<192, 238, 234, 193, 139, 21, 7, 152, 194, 188, 80, 192, 211, 109, 186, 215, 229,

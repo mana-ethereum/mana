@@ -5,8 +5,6 @@ defmodule BitHelper do
 
   use Bitwise
 
-  @type keccak_hash :: binary()
-
   @doc """
   Simply returns the rightmost n bits of a binary.
 
@@ -74,26 +72,6 @@ defmodule BitHelper do
     <<_::size(skip_size), included_part::bits>> = b
 
     <<0::size(padding), included_part::bitstring>>
-  end
-
-  @doc """
-  Returns the keccak sha256 of a given input.
-
-  ## Examples
-
-      iex> BitHelper.kec("hello world")
-      <<71, 23, 50, 133, 168, 215, 52, 30, 94, 151, 47, 198, 119, 40, 99,
-             132, 248, 2, 248, 239, 66, 165, 236, 95, 3, 187, 250, 37, 76, 176,
-             31, 173>>
-
-      iex> BitHelper.kec(<<0x01, 0x02, 0x03>>)
-      <<241, 136, 94, 218, 84, 183, 160, 83, 49, 140, 212, 30, 32, 147, 34,
-             13, 171, 21, 214, 83, 129, 177, 21, 122, 54, 51, 168, 59, 253, 92,
-             146, 57>>
-  """
-  @spec kec(binary()) :: keccak_hash
-  def kec(data) do
-    :keccakf1600.sha3_256(data)
   end
 
   @doc """

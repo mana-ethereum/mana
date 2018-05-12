@@ -1,11 +1,11 @@
 defmodule Blockchain.BlockTest do
   use ExUnit.Case, async: true
   use EthCommonTest.Harness
+
   doctest Blockchain.Block
 
   alias Block.Header
-  alias Blockchain.Block
-  alias Blockchain.Transaction
+  alias Blockchain.{Block, Transaction}
 
   define_common_tests("GenesisTests", [], fn _test_name, test_data ->
     for {internal_test_name, test} <- test_data do

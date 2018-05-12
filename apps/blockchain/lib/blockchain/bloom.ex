@@ -1,4 +1,6 @@
 defmodule Blockchain.Bloom do
+  alias ExthCrypto.Hash.Keccak
+
   use Bitwise
 
   @spec create(binary()) :: integer()
@@ -23,15 +25,10 @@ defmodule Blockchain.Bloom do
   defp bloom(number, data) do
     bits =
       data
-      |> sha3_hash
+      |> Keccak.kec()
       |> bit_numbers
 
     number |> add_bits(bits)
-  end
-
-  @spec sha3_hash(binary()) :: binary()
-  defp sha3_hash(data) do
-    data |> :keccakf1600.sha3_256()
   end
 
   @spec add_bits(integer(), [integer()]) :: integer()
