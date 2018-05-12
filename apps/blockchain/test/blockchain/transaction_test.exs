@@ -3,6 +3,7 @@ defmodule Blockchain.TransactionTest do
   use EthCommonTest.Harness
   doctest Blockchain.Transaction
 
+  alias ExthCrypto.Hash.Keccak
   alias Blockchain.Transaction
   alias Blockchain.Transaction.Signature
 
@@ -42,7 +43,7 @@ defmodule Blockchain.TransactionTest do
         for {method, value} <- test do
           case method do
             :hash ->
-              assert BitHelper.kec(parsed_test.rlp) == value
+              assert Keccak.kec(parsed_test.rlp) == value
 
             :sender ->
               assert Signature.sender(parsed_test.transaction, chain_id) == {:ok, value}
@@ -105,14 +106,17 @@ defmodule Blockchain.TransactionTest do
       }
 
       assert trx ==
-               trx |> Transaction.serialize() |> ExRLP.encode() |> ExRLP.decode()
+               trx
+               |> Transaction.serialize()
+               |> ExRLP.encode()
+               |> ExRLP.decode()
                |> Transaction.deserialize()
     end
 
     test "for a transaction with a stop" do
       beneficiary = <<0x05::160>>
       private_key = <<1::256>>
-      # based on simple private key
+      # Based on simple private key.
       sender =
         <<126, 95, 69, 82, 9, 26, 105, 18, 93, 93, 252, 183, 184, 194, 101, 144, 41, 57, 91, 223>>
 

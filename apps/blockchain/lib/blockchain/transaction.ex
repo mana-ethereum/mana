@@ -5,7 +5,7 @@ defmodule Blockchain.Transaction do
   on implementing 𝛶, as defined in Eq.(1).
   """
 
-  alias Blockchain.Account
+  alias Blockchain.{Account, Transaction}
   alias Block.Header
 
   # nonce: Tn, gas_price: Tp, gas_limit: Tg, to: Tt, value: Tv,  v: Tw, r: Tr, s: Ts, init: Ti, data: Td
@@ -26,9 +26,9 @@ defmodule Blockchain.Transaction do
           gas_limit: EVM.val(),
           to: EVM.address() | <<_::0>>,
           value: EVM.val(),
-          v: Blockchain.Transaction.Signature.hash_v(),
-          r: Blockchain.Transaction.Signature.hash_r(),
-          s: Blockchain.Transaction.Signature.hash_s(),
+          v: Transaction.Signature.hash_v(),
+          r: Transaction.Signature.hash_r(),
+          s: Transaction.Signature.hash_s(),
           init: EVM.MachineCode.t(),
           data: binary()
         }
@@ -223,7 +223,7 @@ defmodule Blockchain.Transaction do
     g_0 = intrinsic_gas_cost(trx, block_header)
     v_0 = trx.gas_limit * trx.gas_price + trx.value
 
-    case Blockchain.Transaction.Signature.sender(trx) do
+    case Transaction.Signature.sender(trx) do
       {:error, _reason} ->
         {:invalid, :invalid_sender}
 
@@ -295,7 +295,7 @@ defmodule Blockchain.Transaction do
           {EVM.state(), EVM.Gas.t(), EVM.SubState.logs()}
   def execute_transaction(state, trx, block_header) do
     # TODO: Check transaction validity.
-    {:ok, sender} = Blockchain.Transaction.Signature.sender(trx)
+    {:ok, sender} = Transaction.Signature.sender(trx)
 
     state_0 = begin_transaction(state, sender, trx)
 

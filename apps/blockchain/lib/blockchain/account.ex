@@ -4,10 +4,11 @@ defmodule Blockchain.Account do
   of the Yellow Paper.
   """
 
+  alias ExthCrypto.Hash.Keccak
   alias MerklePatriciaTree.Trie
 
-  @empty_keccak BitHelper.kec(<<>>)
-  @empty_trie MerklePatriciaTree.Trie.empty_trie_root_hash()
+  @empty_keccak Keccak.kec(<<>>)
+  @empty_trie Trie.empty_trie_root_hash()
 
   # State defined in Section 4.1 of the Yellow Paper
   # nonce: σn, balance: σb, storate_root: σs, code_hash: σc
@@ -104,12 +105,12 @@ defmodule Blockchain.Account do
   ## Examples
 
       iex> MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
-      ...> |> MerklePatriciaTree.Trie.update(<<0x01::160>> |> BitHelper.kec, ExRLP.encode([5, 6, <<1>>, <<2>>]))
+      ...> |> MerklePatriciaTree.Trie.update(<<0x01::160>> |> ExthCrypto.Hash.Keccak.kec(), ExRLP.encode([5, 6, <<1>>, <<2>>]))
       ...> |> Blockchain.Account.get_account(<<0x01::160>>)
       %Blockchain.Account{nonce: 5, balance: 6, storage_root: <<0x01>>, code_hash: <<0x02>>}
 
       iex> MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
-      ...> |> MerklePatriciaTree.Trie.update(<<0x01::160>> |> BitHelper.kec, <<>>)
+      ...> |> MerklePatriciaTree.Trie.update(<<0x01::160>> |> ExthCrypto.Hash.Keccak.kec(), <<>>)
       ...> |> Blockchain.Account.get_account(<<0x01::160>>)
       nil
 
@@ -119,7 +120,7 @@ defmodule Blockchain.Account do
   """
   @spec get_account(EVM.state(), EVM.address()) :: t | nil
   def get_account(state, address) do
-    case Trie.get(state, address |> BitHelper.kec()) do
+    case Trie.get(state, address |> Keccak.kec()) do
       nil ->
         nil
 
@@ -139,7 +140,7 @@ defmodule Blockchain.Account do
 
   ## Examples
 
-      iex> state = MerklePatriciaTree.Trie.update(MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db()), <<0x01::160>> |> BitHelper.kec, ExRLP.encode([5, 6, <<1>>, <<2>>]))
+      iex> state = MerklePatriciaTree.Trie.update(MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db()), <<0x01::160>> |> ExthCrypto.Hash.Keccak.kec(), ExRLP.encode([5, 6, <<1>>, <<2>>]))
       iex> Blockchain.Account.get_accounts(state, [<<0x01::160>>, <<0x02::160>>])
       [
         %Blockchain.Account{nonce: 5, balance: 6, storage_root: <<0x01>>, code_hash: <<0x02>>},
@@ -158,7 +159,7 @@ defmodule Blockchain.Account do
   ## Examples
 
       iex> state = Blockchain.Account.put_account(MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db()), <<0x01::160>>, %Blockchain.Account{nonce: 5, balance: 6, storage_root: <<0x01>>, code_hash: <<0x02>>})
-      iex> MerklePatriciaTree.Trie.get(state, <<0x01::160>> |> BitHelper.kec) |> ExRLP.decode
+      iex> MerklePatriciaTree.Trie.get(state, <<0x01::160>> |> ExthCrypto.Hash.Keccak.kec()) |> ExRLP.decode
       [<<5>>, <<6>>, <<0x01>>, <<0x02>>]
   """
   @spec put_account(EVM.state(), EVM.address(), t) :: EVM.state()
@@ -168,7 +169,7 @@ defmodule Blockchain.Account do
       |> serialize()
       |> ExRLP.encode()
 
-    Trie.update(state, address |> BitHelper.kec(), encoded_account)
+    Trie.update(state, address |> Keccak.kec(), encoded_account)
   end
 
   @doc """
@@ -193,7 +194,7 @@ defmodule Blockchain.Account do
   """
   @spec del_account(EVM.state(), EVM.address()) :: EVM.state()
   def del_account(state, address) do
-    Trie.update(state, address |> BitHelper.kec(), <<>>)
+    Trie.update(state, address |> Keccak.kec(), <<>>)
   end
 
   @doc """
@@ -443,12 +444,12 @@ defmodule Blockchain.Account do
       %Blockchain.Account{code_hash: <<241, 136, 94, 218, 84, 183, 160, 83, 49, 140, 212, 30,
                                         32, 147, 34, 13, 171, 21, 214, 83, 129, 177, 21, 122, 54, 51, 168,
                                         59, 253, 92, 146, 57>>}
-      iex> MerklePatriciaTree.DB.get(state.db, BitHelper.kec(<<1, 2, 3>>))
+      iex> MerklePatriciaTree.DB.get(state.db, ExthCrypto.Hash.Keccak.kec(<<1, 2, 3>>))
       {:ok, <<1, 2, 3>>}
   """
   @spec put_code(EVM.state(), EVM.address(), EVM.MachineCode.t()) :: EVM.state()
   def put_code(state, contract_address, machine_code) do
-    kec = BitHelper.kec(machine_code)
+    kec = Keccak.kec(machine_code)
 
     MerklePatriciaTree.DB.put!(state.db, kec, machine_code)
 
@@ -561,7 +562,7 @@ defmodule Blockchain.Account do
   defp storage_put(db, storage_root, key, value) do
     Trie.new(db, storage_root)
     |> Trie.update(
-      key |> :binary.encode_unsigned() |> BitHelper.pad(32) |> BitHelper.kec(),
+      key |> :binary.encode_unsigned() |> BitHelper.pad(32) |> Keccak.kec(),
       value |> ExRLP.encode()
     )
   end
@@ -569,6 +570,6 @@ defmodule Blockchain.Account do
   @spec storage_fetch(DB.db(), EVM.EVM.trie_root(), integer()) :: integer() | nil
   defp storage_fetch(db, storage_root, key) do
     Trie.new(db, storage_root)
-    |> Trie.get(key |> :binary.encode_unsigned() |> BitHelper.pad(32) |> BitHelper.kec())
+    |> Trie.get(key |> :binary.encode_unsigned() |> BitHelper.pad(32) |> Keccak.kec())
   end
 end

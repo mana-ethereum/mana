@@ -4,13 +4,6 @@ defmodule Blockchain.Mixfile do
   def project do
     [
       app: :blockchain,
-      version: "0.1.6",
-      build_path: "../../_build",
-      config_path: "../../config/config.exs",
-      deps_path: "../../deps",
-      lockfile: "../../mix.lock",
-      elixir: "~> 1.4",
-      app: :blockchain,
       version: "0.1.7",
       build_path: "../../_build",
       config_path: "../../config/config.exs",
@@ -52,15 +45,14 @@ defmodule Blockchain.Mixfile do
   # Type "mix help deps" for more examples and options
   defp deps do
     [
-      {:libsecp256k1, "~> 0.1.4"},
-      {:keccakf1600, "~> 2.0.0", hex: :keccakf1600_orig},
       {:credo, "~>  0.9.1", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.16", only: :dev, runtime: false},
-      {:merkle_patricia_tree, in_umbrella: true},
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
       {:ex_rlp, "~> 0.3.0"},
-      {:evm, in_umbrella: true},
-      {:poison, "~> 3.1.0"}
+      {:poison, "~> 3.1.0"},
+      {:exth_crypto, in_umbrella: true},
+      {:merkle_patricia_tree, in_umbrella: true},
+      {:evm, in_umbrella: true}
     ]
   end
 end

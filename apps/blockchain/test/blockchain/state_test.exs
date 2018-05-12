@@ -1,6 +1,6 @@
 defmodule Blockchain.StateTest do
   alias MerklePatriciaTree.Trie
-  alias Blockchain.Account
+  alias Blockchain.{Account, Transaction, Interface}
 
   use EthCommonTest.Harness
   use ExUnit.Case, async: true
@@ -19,19 +19,17 @@ defmodule Blockchain.StateTest do
         state = account_interface(test).state
 
         transaction =
-          %Blockchain.Transaction{
+          %Transaction{
             nonce: load_integer(test["transaction"]["nonce"]),
             gas_price: load_integer(test["transaction"]["gasPrice"]),
             gas_limit: load_integer(List.first(test["transaction"]["gasLimit"])),
             to: maybe_hex(test["transaction"]["to"]),
             value: load_integer(List.first(test["transaction"]["value"]))
           }
-          |> Blockchain.Transaction.Signature.sign_transaction(
-            maybe_hex(test["transaction"]["secretKey"])
-          )
+          |> Transaction.Signature.sign_transaction(maybe_hex(test["transaction"]["secretKey"]))
 
         {state, _, _} =
-          Blockchain.Transaction.execute_transaction(state, transaction, %Block.Header{
+          Transaction.execute_transaction(state, transaction, %Block.Header{
             beneficiary: maybe_hex(test["env"]["currentCoinbase"])
           })
 
@@ -42,11 +40,11 @@ defmodule Blockchain.StateTest do
 
   def dump_state(state) do
     state
-    |> MerklePatriciaTree.Trie.Inspector.all_values()
+    |> Trie.Inspector.all_values()
     |> Enum.map(fn {key, value} ->
       {
         key |> Base.encode16(case: :lower),
-        value |> ExRLP.decode() |> Blockchain.Account.deserialize()
+        value |> ExRLP.decode() |> Account.deserialize()
       }
     end)
     |> Enum.map(fn {address_key, account} ->
@@ -82,7 +80,6 @@ defmodule Blockchain.StateTest do
 
   def account_interface(test) do
     db = MerklePatriciaTree.Test.random_ets_db()
-    empty_root_hash = ExRLP.encode(<<>>) |> BitHelper.kec()
 
     state = %Trie{
       db: db,
@@ -91,7 +88,7 @@ defmodule Blockchain.StateTest do
 
     state =
       Enum.reduce(test["pre"], state, fn {address, account}, state ->
-        storage = %Trie{root_hash: empty_root_hash}
+        storage = %Trie{root_hash: Trie.empty_trie_root_hash()}
 
         storage =
           Enum.reduce(account["storage"], storage, fn {key, value}, trie ->
@@ -100,14 +97,14 @@ defmodule Blockchain.StateTest do
           end)
 
         state
-        |> Account.put_account(maybe_hex(address), %Blockchain.Account{
+        |> Account.put_account(maybe_hex(address), %Account{
           nonce: load_integer(account["nonce"]),
           balance: load_integer(account["balance"]),
           storage_root: storage.root_hash
         })
-        |> Blockchain.Account.put_code(maybe_hex(address), maybe_hex(account["code"]))
+        |> Account.put_code(maybe_hex(address), maybe_hex(account["code"]))
       end)
 
-    Blockchain.Interface.AccountInterface.new(state)
+    Interface.AccountInterface.new(state)
   end
 end

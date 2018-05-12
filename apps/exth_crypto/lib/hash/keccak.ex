@@ -7,7 +7,7 @@ defmodule ExthCrypto.Hash.Keccak do
   been changed prior to adoption by NIST, but after adoption by Ethereum.
   """
 
-  @type keccak_hash :: ExthCrypto.hash
+  @type keccak_hash :: ExthCrypto.hash()
   @type keccak_mac :: {atom(), binary()}
 
   @doc """
@@ -61,8 +61,7 @@ defmodule ExthCrypto.Hash.Keccak do
   end
 
   @doc """
-  Finalizes a given Keccak mac stream to produce the current
-  hash.
+  Finalizes a given Keccak mac stream to produce the current hash.
 
   ## Examples
 
@@ -76,5 +75,4 @@ defmodule ExthCrypto.Hash.Keccak do
   def final_mac(mac) do
     :keccakf1600.final(mac)
   end
-
 end

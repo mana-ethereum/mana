@@ -10,6 +10,8 @@ defmodule Blockchain.Transaction.Signature do
   https://github.com/ethereum/EIPs/blob/master/EIPS/eip-155.md
   """
 
+  alias ExthCrypto.Hash.Keccak
+
   @type public_key :: <<_::512>>
   @type private_key :: <<_::256>>
   @type recovery_id :: <<_::8>>
@@ -66,13 +68,12 @@ defmodule Blockchain.Transaction.Signature do
      56037731387691402801139111075060162264934372456622294904359821823785637523849}
 
     iex> data = "ec098504a817c800825208943535353535353535353535353535353535353535880de0b6b3a764000080018080" |> BitHelper.from_hex
-    iex> hash = data |> BitHelper.kec
+    iex> hash = data |> ExthCrypto.Hash.Keccak.kec()
     iex> private_key = "4646464646464646464646464646464646464646464646464646464646464646" |> BitHelper.from_hex
     iex> Blockchain.Transaction.Signature.sign_hash(hash, private_key, 1)
     { 37, 18515461264373351373200002665853028612451056578545711640558177340181847433846, 46948507304638947509940763649030358759909902576025900602547168820602576006531 }
   """
-  @spec sign_hash(BitHelper.keccak_hash(), private_key, integer() | nil) ::
-          {hash_v, hash_r, hash_s}
+  @spec sign_hash(Keccak.keccak_hash(), private_key, integer() | nil) :: {hash_v, hash_r, hash_s}
   def sign_hash(hash, private_key, chain_id \\ nil) do
     {:ok, <<r::size(256), s::size(256)>>, recovery_id} =
       :libsecp256k1.ecdsa_sign_compact(hash, private_key, :default, <<>>)
@@ -105,7 +106,7 @@ defmodule Blockchain.Transaction.Signature do
     {:error, "Recovery id invalid 0-3"}
 
     iex> data = "ec098504a817c800825208943535353535353535353535353535353535353535880de0b6b3a764000080018080" |> BitHelper.from_hex
-    iex> hash = data |> BitHelper.kec
+    iex> hash = data |> ExthCrypto.Hash.Keccak.kec()
     iex> v = 27
     iex> r = 18515461264373351373200002665853028612451056578545711640558177340181847433846
     iex> s = 46948507304638947509940763649030358759909902576025900602547168820602576006531
@@ -118,14 +119,14 @@ defmodule Blockchain.Transaction.Signature do
 
     iex> { v, r, s } = { 37, 18515461264373351373200002665853028612451056578545711640558177340181847433846, 46948507304638947509940763649030358759909902576025900602547168820602576006531 }
     iex> data = "ec098504a817c800825208943535353535353535353535353535353535353535880de0b6b3a764000080018080" |> BitHelper.from_hex
-    iex> hash = data |> BitHelper.kec
+    iex> hash = data |> ExthCrypto.Hash.Keccak.kec()
     iex> Blockchain.Transaction.Signature.recover_public(hash, v, r, s, 1)
     {:ok, <<75, 194, 163, 18, 101, 21, 63, 7, 231, 14, 11, 171, 8, 114, 78, 107, 133,
             226, 23, 248, 205, 98, 140, 235, 98, 151, 66, 71, 187, 73, 51, 130, 206, 40,
             202, 183, 154, 215, 17, 158, 225, 173, 62, 188, 219, 152, 161, 104, 5, 33,
             21, 48, 236, 198, 207, 239, 161, 184, 142, 109, 255, 153, 35, 42>>}
   """
-  @spec recover_public(BitHelper.keccak_hash(), hash_v, hash_r, hash_s, integer() | nil) ::
+  @spec recover_public(Keccak.keccak_hash(), hash_v, hash_r, hash_s, integer() | nil) ::
           {:ok, public_key} | {:error, String.t()}
   def recover_public(hash, v, r, s, chain_id \\ nil) do
     signature =
@@ -206,13 +207,13 @@ defmodule Blockchain.Transaction.Signature do
       iex> Blockchain.Transaction.Signature.transaction_hash(%Blockchain.Transaction{nonce: 5, gas_price: 6, gas_limit: 7, to: <<1>>, value: 5, data: <<1>>}, 1)
       <<132, 79, 28, 4, 212, 58, 235, 38, 66, 211, 167, 102, 36, 58, 229, 88, 238, 251, 153, 23, 121, 163, 212, 64, 83, 111, 200, 206, 54, 43, 112, 53>>
   """
-  @spec transaction_hash(Blockchain.Transaction.t(), integer() | nil) :: BitHelper.keccak_hash()
+  @spec transaction_hash(Blockchain.Transaction.t(), integer() | nil) :: Keccak.keccak_hash()
   def transaction_hash(trx, chain_id \\ nil) do
     # See EIP-155
     Blockchain.Transaction.serialize(trx, false)
     |> Kernel.++(if chain_id, do: [chain_id |> :binary.encode_unsigned(), <<>>, <<>>], else: [])
     |> ExRLP.encode()
-    |> BitHelper.kec()
+    |> Keccak.kec()
   end
 
   @doc """
@@ -271,7 +272,7 @@ defmodule Blockchain.Transaction.Signature do
   @spec address_from_public(public_key) :: EVM.address()
   def address_from_public(public_key) do
     public_key
-    |> BitHelper.kec()
+    |> Keccak.kec()
     |> BitHelper.mask_bitstring(20 * 8)
   end
 
