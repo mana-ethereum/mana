@@ -43,7 +43,8 @@ defmodule MerklePatriciaTree.ListHelper do
   def get_postfix([], [_ | _]), do: nil
 
   @doc """
-  Returns the overlap of two lists in terms of a shared prefix, then the relative postfixes
+  Returns the overlap of two lists in terms of a shared prefix,
+  then the relative postfixes.
 
   ## Examples
 

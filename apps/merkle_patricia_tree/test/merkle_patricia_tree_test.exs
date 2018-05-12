@@ -28,7 +28,7 @@ defmodule MerklePatriciaTreeTest do
 
         trie =
           Enum.reduce(input, Trie.new(db), fn [k, v], trie ->
-            Trie.update(trie, k |> maybe_hex, v |> maybe_hex)
+            Trie.update(trie, k |> hex, v |> hex)
           end)
 
         # MerklePatriciaTree.Trie.Inspector.inspect_trie(trie)
@@ -47,8 +47,8 @@ defmodule MerklePatriciaTreeTest do
     "#{@ethereum_common_tests_path}/TrieTests/trie#{Atom.to_string(type)}.json"
   end
 
-  def maybe_hex(hex_string = "0x" <> _str), do: hex_to_binary(hex_string)
-  def maybe_hex(x), do: x
+  def hex(hex_string = "0x" <> _str), do: hex_to_binary(hex_string)
+  def hex(x), do: x
 
   def hex_to_binary(string) do
     string

@@ -3,8 +3,6 @@ defmodule MerklePatriciaTree.Trie.Node do
   This module encodes and decodes nodes from a
   trie encoding back into RLP form. We effectively implement
   `c(I, i)` from the Yellow Paper.
-
-  TODO: Add richer set of tests, esp. in re: storage and branch values.
   """
 
   alias MerklePatriciaTree.Trie.Storage
@@ -15,6 +13,8 @@ defmodule MerklePatriciaTree.Trie.Node do
           | {:leaf, [integer()], binary()}
           | {:ext, [integer()], binary()}
           | {:branch, [binary()]}
+
+  defguardp is_branch(nodes) when length(nodes) == 17
 
   @doc """
   Given a node, this function will encode the node
@@ -51,8 +51,8 @@ defmodule MerklePatriciaTree.Trie.Node do
     [HexPrefix.encode({key, true}), value]
   end
 
-  defp encode_node_type({:branch, branches}) when length(branches) == 17 do
-    branches
+  defp encode_node_type({:branch, nodes}) when is_branch(nodes) do
+    nodes
   end
 
   defp encode_node_type({:ext, shared_prefix, next_node}) do
@@ -66,7 +66,7 @@ defmodule MerklePatriciaTree.Trie.Node do
   @doc """
   Decodes the root of a given trie, effectively
   inverting the encoding from `c(I, i)` defined in
-  Eq.(179) fo the Yellow Paper.
+  Eq.(179) of the Yellow Paper.
 
   ## Examples
 
@@ -95,21 +95,26 @@ defmodule MerklePatriciaTree.Trie.Node do
       <<>> ->
         :empty
 
+      # Empty branch node
+      [] ->
+        :empty
+
       :not_found ->
         :empty
 
-      branches when length(branches) == 17 ->
-        {:branch, branches}
-
-      [hp_k, v] ->
-        # extension or leaf node
-        {prefix, is_leaf} = HexPrefix.decode(hp_k)
-
-        if is_leaf do
-          {:leaf, prefix, v}
-        else
-          {:ext, prefix, v}
-        end
+      node ->
+        decode_node(node)
     end
+  end
+
+  defp decode_node(nodes) when is_branch(nodes) do
+    {:branch, nodes}
+  end
+
+  # Extension or leaf node
+  defp decode_node([hp_key, value]) do
+    {prefix, is_leaf} = HexPrefix.decode(hp_key)
+    type = if is_leaf, do: :leaf, else: :ext
+    {type, prefix, value}
   end
 end
