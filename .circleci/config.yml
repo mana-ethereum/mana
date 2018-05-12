@@ -33,7 +33,9 @@ jobs:
             - v1-build-cache-{{ .Branch }}
             - v1-build-cache
 
-      - run: mix do deps.get, compile
+      - run:
+          command: mix do deps.get, compile
+          no_output_timeout: 2400
       - run: cd deps/libsecp256k1 && rebar compile
 
       - save_cache:
