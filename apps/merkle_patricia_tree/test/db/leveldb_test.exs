@@ -1,9 +1,10 @@
 defmodule MerklePatriciaTree.DB.LevelDBTest do
   use ExUnit.Case, async: false
+
   alias MerklePatriciaTree.DB
   alias MerklePatriciaTree.DB.LevelDB
 
-  test "init creates an leveldb table" do
+  test "init creates a leveldb table" do
     db_name = "/tmp/db#{MerklePatriciaTree.Test.random_string(20)}"
 
     {_, db_ref} = LevelDB.init(db_name)
