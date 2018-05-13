@@ -287,54 +287,16 @@ defmodule Block.Header do
       ) do
     parent_gas_limit = if parent_header, do: parent_header.gas_limit, else: nil
 
-    errors = [] ++
-      # Eq.(51)
-      if(
-        header.difficulty ==
-          get_difficulty(
-            header,
-            parent_header,
-            initial_difficulty,
-            minimum_difficulty,
-            difficulty_bound_divisor,
-            homestead_block
-          ),
-        do: [],
-        else: [:invalid_difficulty]
-      ) ++
-      # Eq.(52)
-      if(header.gas_used <= header.gas_limit, do: [], else: [:exceeded_gas_limit]) ++
-      # Eq.(53), Eq.(54) and Eq.(55)
-      if(
-        is_gas_limit_valid?(
-          header.gas_limit,
-          parent_gas_limit,
-          gas_limit_bound_divisor,
-          min_gas_limit
-        ),
-        do: [],
-        else: [:invalid_gas_limit]
-      ) ++
-      # Eq.(56)
-      if(
-        is_nil(parent_header) or header.timestamp > parent_header.timestamp,
-        do: [],
-        else: [:child_timestamp_invalid]
-      ) ++
-      # Eq.(57)
-      if(
-        header.number == 0 or header.number == parent_header.number + 1,
-        do: [],
-        else: [:child_number_invalid]
-      ) ++
-      if byte_size(header.extra_data) <= @max_extra_data_bytes,
-         do: [],
-         else: [:extra_data_too_large]
+    errors =
+      []
+      |> check_difficulty_validity(header, parent_header, initial_difficulty, minimum_difficulty, difficulty_bound_divisor, homestead_block)
+      |> check_gas_limit(header)
+      |> check_gas_limit_validity(header, parent_gas_limit, gas_limit_bound_divisor, min_gas_limit)
+      |> check_child_timestamp_validity(header, parent_header)
+      |> check_child_number_validity(header, parent_header)
+      |> extra_data_validity(header)
 
-    case errors do
-      [] -> :valid
-      _ -> {:invalid, errors}
-    end
+    if errors == [], do: :valid, else: {:invalid, errors}
   end
 
   @doc """
@@ -483,6 +445,76 @@ defmodule Block.Header do
         MathHelper.floor(header.number / 100_000) - 2
       )
     )
+  end
+
+  # Eq.(51)
+  @spec check_difficulty_validity([atom()], t, t | nil, integer(), integer(), integer(), integer()) :: [atom()]
+  defp check_difficulty_validity(errors, header, parent_header, initial_difficulty, minimum_difficulty, difficulty_bound_divisor, homestead_block) do
+    if header.difficulty == get_difficulty(header, parent_header, initial_difficulty, minimum_difficulty, difficulty_bound_divisor, homestead_block) do
+      errors
+    else
+      [:invalid_difficulty | errors]
+    end
+  end
+
+  # Eq.(52)
+  @spec check_gas_limit([atom()], t) :: [atom()]
+  defp check_gas_limit(errors, header) do
+    if header.gas_used <= header.gas_limit do
+      errors
+    else
+      [:exceeded_gas_limit | errors]
+    end
+  end
+
+  # Eq.(53), Eq.(54) and Eq.(55)
+  @spec check_gas_limit_validity([atom()], t, EVM.Gas.t() | nil) :: [atom()]
+  defp check_gas_limit(
+         errors,
+         header,
+         parent_gas_limit,
+         gas_limit_bound_divisor \\ @gas_limit_bound_divisor,
+         min_gas_limit \\ @min_gas_limit
+       ) do
+    if is_gas_limit_valid?(
+         header.gas_limit,
+         parent_gas_limit,
+         gas_limit_bound_divisor,
+         min_gas_limit
+       ) do
+      errors
+    else
+      [:invalid_gas_limit | errors]
+    end
+  end
+
+  # Eq.(56)
+  @spec check_child_timestamp_validity([atom()], t, t | nil) :: [atom()]
+  defp check_child_timestamp_validity(errors, header, parent_header) do
+    if is_nil(parent_header) or header.timestamp > parent_header.timestamp do
+      errors
+    else
+      [:child_timestamp_invalid | errors]
+    end
+  end
+
+  # Eq.(57)
+  @spec check_child_number_validity([atom()], t, t | nil) :: [atom()]
+  defp check_child_number_validity(errors, header, parent_header) do
+    if header.number == 0 or header.number == parent_header.number + 1 do
+      errors
+    else
+      [:child_number_invalid | errors]
+    end
+  end
+
+  @spec extra_data_validity([atom()], t) :: [atom()]
+  defp extra_data_validity(errors, header) do
+    if byte_size(header.extra_data) <= @max_extra_data_bytes do
+      errors
+    else
+      [:extra_data_too_large | errors]
+    end
   end
 
   @doc """
