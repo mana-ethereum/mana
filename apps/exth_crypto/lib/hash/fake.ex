@@ -51,5 +51,4 @@ defmodule ExthCrypto.Hash.Fake do
   def final_mac({:fake_mac, mac}) do
     mac
   end
-
 end
