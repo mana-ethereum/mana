@@ -275,8 +275,7 @@ defmodule Block.Header do
       # TODO: Add tests for setting gas_limit_bound_divisor
       # TODO: Add tests for setting min_gas_limit
   """
-  @spec is_valid?(t, t | nil, integer(), integer(), integer(), integer(), integer(), integer()) ::
-          :valid | {:invalid, [atom()]}
+  @spec is_valid?(t, t | nil, integer(), integer(), integer(), integer(), integer(), integer()) :: :valid | {:invalid, [atom()]}
   def is_valid?(
         header,
         parent_header,
@@ -289,13 +288,9 @@ defmodule Block.Header do
       ) do
     parent_gas_limit = if parent_header, do: parent_header.gas_limit, else: nil
 
-    # Eq.(51)
-    # Eq.(52)
-    # Eq.(53), Eq.(54) and Eq.(55)
-    # Eq.(56)
-    # Eq.(57)
     errors =
       [] ++
+      # Eq.(51)
         if(
           header.difficulty ==
             get_difficulty(
@@ -309,7 +304,9 @@ defmodule Block.Header do
           do: [],
           else: [:invalid_difficulty]
         ) ++
+        # Eq.(52)
         if(header.gas_used <= header.gas_limit, do: [], else: [:exceeded_gas_limit]) ++
+        # Eq.(53), Eq.(54) and Eq.(55)
         if(
           is_gas_limit_valid?(
             header.gas_limit,
@@ -320,11 +317,13 @@ defmodule Block.Header do
           do: [],
           else: [:invalid_gas_limit]
         ) ++
+        # Eq.(56)
         if(
           is_nil(parent_header) or header.timestamp > parent_header.timestamp,
           do: [],
           else: [:child_timestamp_invalid]
         ) ++
+        # Eq.(57)
         if(
           header.number == 0 or header.number == parent_header.number + 1,
           do: [],
