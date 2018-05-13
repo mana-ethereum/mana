@@ -12,7 +12,10 @@ defmodule Blockchain.Transaction.ReceiptTest do
     }
 
     assert receipt ==
-             receipt |> Receipt.serialize() |> ExRLP.encode() |> ExRLP.decode()
+             receipt
+             |> Receipt.serialize()
+             |> ExRLP.encode()
+             |> ExRLP.decode()
              |> Receipt.deserialize()
   end
 end
