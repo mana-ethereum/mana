@@ -38,6 +38,7 @@ defmodule ABI do
   def encode(function_signature, data) when is_binary(function_signature) do
     encode(ABI.Parser.parse!(function_signature), data)
   end
+
   def encode(%ABI.FunctionSelector{} = function_selector, data) do
     ABI.TypeEncoder.encode(data, function_selector)
   end
@@ -69,6 +70,7 @@ defmodule ABI do
   def decode(function_signature, data) when is_binary(function_signature) do
     decode(ABI.Parser.parse!(function_signature), data)
   end
+
   def decode(%ABI.FunctionSelector{} = function_selector, data) do
     ABI.TypeDecoder.decode(data, function_selector)
   end
@@ -125,6 +127,6 @@ defmodule ABI do
   def parse_specification(doc) do
     doc
     |> Enum.map(&ABI.FunctionSelector.parse_specification_item/1)
-    |> Enum.filter(&(&1))
+    |> Enum.filter(& &1)
   end
 end
