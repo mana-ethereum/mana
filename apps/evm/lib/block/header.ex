@@ -289,11 +289,11 @@ defmodule Block.Header do
 
     errors =
       []
-      |> check_gas_limit(header)
-      |> check_gas_limit_validity(header, parent_gas_limit, gas_limit_bound_divisor, min_gas_limit)
-      |> check_child_timestamp_validity(header, parent_header)
-      |> check_child_number_validity(header, parent_header)
       |> extra_data_validity(header)
+      |> check_child_number_validity(header, parent_header)
+      |> check_child_timestamp_validity(header, parent_header)
+      |> check_gas_limit_validity(header, parent_gas_limit, gas_limit_bound_divisor, min_gas_limit)
+      |> check_gas_limit(header)
       |> check_difficulty_validity(header, parent_header, initial_difficulty, minimum_difficulty, difficulty_bound_divisor, homestead_block)
 
     if errors == [], do: :valid, else: {:invalid, errors}
