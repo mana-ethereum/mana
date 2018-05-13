@@ -98,8 +98,7 @@ defmodule ABI.TypeEncoder do
       "000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000110000000000000000000000000000000000000000000000000000000000000001"
   """
   def encode(data, function_selector) do
-    encode_method_id(function_selector) <>
-    encode_raw(data, function_selector.types)
+    encode_method_id(function_selector) <> encode_raw(data, function_selector.types)
   end
 
   @doc """
@@ -120,11 +119,13 @@ defmodule ABI.TypeEncoder do
 
   @spec encode_method_id(%ABI.FunctionSelector{}) :: binary()
   defp encode_method_id(%ABI.FunctionSelector{function: nil}), do: ""
+
   defp encode_method_id(function_selector) do
     # Encode selector e.g. "baz(uint32,bool)" and take keccak
-    kec = function_selector
-    |> ABI.FunctionSelector.encode()
-    |> ExthCrypto.Hash.Keccak.kec()
+    kec =
+      function_selector
+      |> ABI.FunctionSelector.encode()
+      |> ExthCrypto.Hash.Keccak.kec()
 
     # Take first four bytes
     <<init::binary-size(4), _rest::binary>> = kec
@@ -133,65 +134,74 @@ defmodule ABI.TypeEncoder do
     init
   end
 
-  @spec do_encode([ABI.FunctionSelector.type], [any()], [binary()]) :: binary()
+  @spec do_encode([ABI.FunctionSelector.type()], [any()], [binary()]) :: binary()
   defp do_encode([], _, acc), do: :erlang.iolist_to_binary(Enum.reverse(acc))
-  defp do_encode([type|remaining_types], data, acc) do
+
+  defp do_encode([type | remaining_types], data, acc) do
     {encoded, remaining_data} = encode_type(type, data)
 
     do_encode(remaining_types, remaining_data, [encoded | acc])
   end
 
-  @spec encode_type(ABI.FunctionSelector.type, [any()]) :: {binary(), [any()]}
-  defp encode_type({:uint, size}, [data|rest]) do
+  @spec encode_type(ABI.FunctionSelector.type(), [any()]) :: {binary(), [any()]}
+  defp encode_type({:uint, size}, [data | rest]) do
     {encode_uint(data, size), rest}
   end
 
   defp encode_type(:address, data), do: encode_type({:uint, 160}, data)
 
-  defp encode_type(:bool, [data|rest]) do
-    value = case data do
-      true -> encode_uint(1, 8)
-      false -> encode_uint(0, 8)
-      _ -> raise "Invalid data for bool: #{data}"
-    end
+  defp encode_type(:bool, [data | rest]) do
+    value =
+      case data do
+        true -> encode_uint(1, 8)
+        false -> encode_uint(0, 8)
+        _ -> raise "Invalid data for bool: #{data}"
+      end
 
     {value, rest}
   end
 
-  defp encode_type(:string, [data|rest]) do
+  defp encode_type(:string, [data | rest]) do
     {encode_uint(byte_size(data), 256) <> encode_bytes(data), rest}
   end
 
-  defp encode_type(:bytes, [data|rest]) do
+  defp encode_type(:bytes, [data | rest]) do
     {encode_uint(byte_size(data), 256) <> encode_bytes(data), rest}
   end
 
-  defp encode_type({:bytes, size}, [data|rest]) when is_binary(data) and byte_size(data) <= size do
+  defp encode_type({:bytes, size}, [data | rest])
+       when is_binary(data) and byte_size(data) <= size do
     {encode_bytes(data), rest}
   end
-  defp encode_type({:bytes, size}, [data|_]) when is_binary(data) do
+
+  defp encode_type({:bytes, size}, [data | _]) when is_binary(data) do
     raise "size mismatch for bytes#{size}: #{inspect(data)}"
   end
-  defp encode_type({:bytes, size}, [data|_]) do
+
+  defp encode_type({:bytes, size}, [data | _]) do
     raise "wrong datatype for bytes#{size}: #{inspect(data)}"
   end
 
-  defp encode_type({:tuple, types}, [data|rest]) do
+  defp encode_type({:tuple, types}, [data | rest]) do
     # all head items are 32 bytes in length and there will be exactly
     # `count(types)` of them, so the tail starts at `32 * count(types)`.
-    tail_start = ( types |> Enum.count ) * 32
+    tail_start = (types |> Enum.count()) * 32
 
-    {head, tail, [], _} = Enum.reduce(types, {<<>>, <<>>, data |> Tuple.to_list, tail_start}, fn type, {head, tail, data, tail_position} ->
-      {el, rest} = encode_type(type, data)
+    {head, tail, [], _} =
+      Enum.reduce(types, {<<>>, <<>>, data |> Tuple.to_list(), tail_start}, fn type,
+                                                                               {head, tail, data,
+                                                                                tail_position} ->
+        {el, rest} = encode_type(type, data)
 
-      if ABI.FunctionSelector.is_dynamic?(type) do
-        # If we're a dynamic type, just encoded the length to head and the element to body
-        {head <> encode_uint(tail_position, 256), tail <> el, rest, tail_position + byte_size(el)}
-      else
-        # If we're a static type, simply encode the el to the head
-        {head <> el, tail, rest, tail_position}
-      end
-    end)
+        if ABI.FunctionSelector.is_dynamic?(type) do
+          # If we're a dynamic type, just encoded the length to head and the element to body
+          {head <> encode_uint(tail_position, 256), tail <> el, rest,
+           tail_position + byte_size(el)}
+        else
+          # If we're a static type, simply encode the el to the head
+          {head <> el, tail, rest, tail_position}
+        end
+      end)
 
     {head <> tail, rest}
   end
@@ -199,10 +209,10 @@ defmodule ABI.TypeEncoder do
   defp encode_type({:array, type, element_count}, [data | rest]) do
     repeated_type = Enum.map(1..element_count, fn _ -> type end)
 
-    encode_type({:tuple, repeated_type}, [data |> List.to_tuple | rest])
+    encode_type({:tuple, repeated_type}, [data |> List.to_tuple() | rest])
   end
 
-  defp encode_type({:array, type}, [data|_rest]=all_data) do
+  defp encode_type({:array, type}, [data | _rest] = all_data) do
     element_count = Enum.count(data)
 
     encoded_uint = encode_uint(element_count, 256)
@@ -212,7 +222,7 @@ defmodule ABI.TypeEncoder do
   end
 
   defp encode_type(els, _) do
-    raise "Unsupported encoding type: #{inspect els}"
+    raise "Unsupported encoding type: #{inspect(els)}"
   end
 
   def encode_bytes(bytes) do
@@ -222,10 +232,14 @@ defmodule ABI.TypeEncoder do
   # Note, we'll accept a binary or an integer here, so long as the
   # binary is not longer than our allowed data size
   defp encode_uint(data, size_in_bits) when rem(size_in_bits, 8) == 0 do
-    size_in_bytes = ( size_in_bits / 8 ) |> round
+    size_in_bytes = (size_in_bits / 8) |> round
     bin = maybe_encode_unsigned(data)
 
-    if byte_size(bin) > size_in_bytes, do: raise "Data overflow encoding uint, data `#{data}` cannot fit in #{size_in_bytes * 8} bits"
+    if byte_size(bin) > size_in_bytes,
+      do:
+        raise(
+          "Data overflow encoding uint, data `#{data}` cannot fit in #{size_in_bytes * 8} bits"
+        )
 
     bin |> pad(size_in_bytes, :left)
   end
@@ -233,7 +247,7 @@ defmodule ABI.TypeEncoder do
   defp pad(bin, size_in_bytes, direction) do
     # TODO: Create `left_pad` repo, err, add to `ExthCrypto.Math`
     total_size = size_in_bytes + ExthCrypto.Math.mod(32 - size_in_bytes, 32)
-    padding_size_bits = ( total_size - byte_size(bin) ) * 8
+    padding_size_bits = (total_size - byte_size(bin)) * 8
     padding = <<0::size(padding_size_bits)>>
 
     case direction do
@@ -245,5 +259,4 @@ defmodule ABI.TypeEncoder do
   @spec maybe_encode_unsigned(binary() | integer()) :: binary()
   defp maybe_encode_unsigned(bin) when is_binary(bin), do: bin
   defp maybe_encode_unsigned(int) when is_integer(int), do: :binary.encode_unsigned(int)
-
 end

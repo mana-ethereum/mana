@@ -151,16 +151,19 @@ defmodule ABI.TypeDecoder do
     do_decode(types, encoded_data, [])
   end
 
-  @spec do_decode([ABI.FunctionSelector.type], binary(), [any()]) :: [any()]
-  defp do_decode([], bin, _) when byte_size(bin) > 0, do: raise("Found extra binary data: #{inspect bin}")
+  @spec do_decode([ABI.FunctionSelector.type()], binary(), [any()]) :: [any()]
+  defp do_decode([], bin, _) when byte_size(bin) > 0,
+    do: raise("Found extra binary data: #{inspect(bin)}")
+
   defp do_decode([], _, acc), do: Enum.reverse(acc)
-  defp do_decode([type|remaining_types], data, acc) do
+
+  defp do_decode([type | remaining_types], data, acc) do
     {decoded, remaining_data} = decode_type(type, data)
 
     do_decode(remaining_types, remaining_data, [decoded | acc])
   end
 
-  @spec decode_type(ABI.FunctionSelector.type, binary()) :: {any(), binary()}
+  @spec decode_type(ABI.FunctionSelector.type(), binary()) :: {any(), binary()}
   defp decode_type({:uint, size_in_bits}, data) do
     decode_uint(data, size_in_bits)
   end
@@ -170,10 +173,11 @@ defmodule ABI.TypeDecoder do
   defp decode_type(:bool, data) do
     {encoded_value, rest} = decode_uint(data, 8)
 
-    value = case encoded_value do
-      1 -> true
-      0 -> false
-    end
+    value =
+      case encoded_value do
+        1 -> true
+        0 -> false
+      end
 
     {value, rest}
   end
@@ -190,6 +194,7 @@ defmodule ABI.TypeDecoder do
   end
 
   defp decode_type({:bytes, 0}, data), do: {<<>>, data}
+
   defp decode_type({:bytes, size}, data) when size > 0 and size <= 32 do
     decode_bytes(data, size, :right)
   end
@@ -200,45 +205,49 @@ defmodule ABI.TypeDecoder do
   end
 
   defp decode_type({:array, _type, 0}, data), do: {[], data}
+
   defp decode_type({:array, type, element_count}, data) do
     repeated_type = Enum.map(1..element_count, fn _ -> type end)
 
     {tuple, rest} = decode_type({:tuple, repeated_type}, data)
 
-    {tuple |> Tuple.to_list, rest}
+    {tuple |> Tuple.to_list(), rest}
   end
 
   defp decode_type({:tuple, types}, starting_data) do
     # First pass, decode static types
-    {elements, rest} = Enum.reduce(types, {[], starting_data}, fn type, {elements, data} ->
-      if ABI.FunctionSelector.is_dynamic?(type) do
-        {tail_position, rest} = decode_type({:uint, 256}, data)
+    {elements, rest} =
+      Enum.reduce(types, {[], starting_data}, fn type, {elements, data} ->
+        if ABI.FunctionSelector.is_dynamic?(type) do
+          {tail_position, rest} = decode_type({:uint, 256}, data)
 
-        {[{:dynamic, type, tail_position}|elements], rest}
-      else
-        {el, rest} = decode_type(type, data)
-
-        {[el|elements], rest}
-      end
-    end)
-
-    # Second pass, decode dynamic types
-    {elements, rest} = Enum.reduce(elements |> Enum.reverse, {[], rest}, fn el, {elements, data} ->
-      case el do
-        {:dynamic, type, _tail_position} ->
+          {[{:dynamic, type, tail_position} | elements], rest}
+        else
           {el, rest} = decode_type(type, data)
 
-          {[el|elements], rest}
-        _ ->
-          {[el|elements], data}
-      end
-    end)
+          {[el | elements], rest}
+        end
+      end)
 
-    {elements |> Enum.reverse |> List.to_tuple, rest}
+    # Second pass, decode dynamic types
+    {elements, rest} =
+      Enum.reduce(elements |> Enum.reverse(), {[], rest}, fn el, {elements, data} ->
+        case el do
+          {:dynamic, type, _tail_position} ->
+            {el, rest} = decode_type(type, data)
+
+            {[el | elements], rest}
+
+          _ ->
+            {[el | elements], data}
+        end
+      end)
+
+    {elements |> Enum.reverse() |> List.to_tuple(), rest}
   end
 
   defp decode_type(els, _) do
-    raise "Unsupported decoding type: #{inspect els}"
+    raise "Unsupported decoding type: #{inspect(els)}"
   end
 
   @spec decode_uint(binary(), integer()) :: {integer(), binary()}
@@ -259,11 +268,14 @@ defmodule ABI.TypeDecoder do
 
     case padding_direction do
       :left ->
-        <<_padding::binary-size(padding_size_in_bytes), value::binary-size(size_in_bytes), rest::binary()>> = data
+        <<_padding::binary-size(padding_size_in_bytes), value::binary-size(size_in_bytes),
+          rest::binary()>> = data
 
         {value, rest}
+
       :right ->
-        <<value::binary-size(size_in_bytes), _padding::binary-size(padding_size_in_bytes), rest::binary()>> = data
+        <<value::binary-size(size_in_bytes), _padding::binary-size(padding_size_in_bytes),
+          rest::binary()>> = data
 
         {value, rest}
     end

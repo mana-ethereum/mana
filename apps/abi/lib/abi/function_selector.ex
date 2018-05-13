@@ -7,20 +7,20 @@ defmodule ABI.FunctionSelector do
   require Integer
 
   @type type ::
-    {:uint, integer()} |
-    :bool |
-    :bytes |
-    :string |
-    :address |
-    {:array, type} |
-    {:array, type, non_neg_integer} |
-    {:tuple, [type]}
+          {:uint, integer()}
+          | :bool
+          | :bytes
+          | :string
+          | :address
+          | {:array, type}
+          | {:array, type, non_neg_integer}
+          | {:tuple, [type]}
 
   @type t :: %__MODULE__{
-    function: String.t,
-    types: [type],
-    returns: type
-  }
+          function: String.t(),
+          types: [type],
+          returns: type
+        }
 
   defstruct [:function, :types, :returns]
 
@@ -129,6 +129,7 @@ defmodule ABI.FunctionSelector do
       returns: List.first(output_types)
     }
   end
+
   def parse_specification_item(%{"type" => "fallback"}) do
     %ABI.FunctionSelector{
       function: nil,
@@ -136,6 +137,7 @@ defmodule ABI.FunctionSelector do
       returns: nil
     }
   end
+
   def parse_specification_item(_), do: nil
 
   defp parse_specification_type(%{"type" => type}), do: decode_type(type)
@@ -208,15 +210,14 @@ defmodule ABI.FunctionSelector do
     "(#{Enum.join(encoded_types, ",")})"
   end
 
-  defp get_type(els), do: raise "Unsupported type: #{inspect els}"
+  defp get_type(els), do: raise("Unsupported type: #{inspect(els)}")
 
   @doc false
-  @spec is_dynamic?(ABI.FunctionSelector.type) :: boolean
+  @spec is_dynamic?(ABI.FunctionSelector.type()) :: boolean
   def is_dynamic?(:bytes), do: true
   def is_dynamic?(:string), do: true
   def is_dynamic?({:array, _type}), do: true
   def is_dynamic?({:array, type, len}) when len > 0, do: is_dynamic?(type)
   def is_dynamic?({:tuple, types}), do: Enum.any?(types, &is_dynamic?/1)
   def is_dynamic?(_), do: false
-
 end
