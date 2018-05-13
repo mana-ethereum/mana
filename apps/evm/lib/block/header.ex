@@ -469,7 +469,7 @@ defmodule Block.Header do
 
   # Eq.(53), Eq.(54) and Eq.(55)
   @spec check_gas_limit_validity([atom()], t, EVM.Gas.t() | nil) :: [atom()]
-  defp check_gas_limit(
+  defp check_gas_limit_validity(
          errors,
          header,
          parent_gas_limit,
