@@ -64,3 +64,5 @@ jobs:
             - ~/.mix
 
       - run: mix dialyzer --halt-exit-status
+
+      - run: mix format --check-formatted
