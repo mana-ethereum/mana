@@ -8,9 +8,8 @@ defmodule Block.Header do
   @empty_trie MerklePatriciaTree.Trie.empty_trie_root_hash()
   @empty_keccak [] |> ExRLP.encode() |> Keccak.kec()
 
-  defstruct parent_hash: nil,
-
             # Hp P(BH)Hr
+  defstruct parent_hash: nil,
             # Ho KEC(RLP(L∗H(BU)))
             ommers_hash: @empty_keccak,
             # Hc
@@ -288,50 +287,49 @@ defmodule Block.Header do
       ) do
     parent_gas_limit = if parent_header, do: parent_header.gas_limit, else: nil
 
-    errors =
-      [] ++
+    errors = [] ++
       # Eq.(51)
-        if(
-          header.difficulty ==
-            get_difficulty(
-              header,
-              parent_header,
-              initial_difficulty,
-              minimum_difficulty,
-              difficulty_bound_divisor,
-              homestead_block
-            ),
-          do: [],
-          else: [:invalid_difficulty]
-        ) ++
-        # Eq.(52)
-        if(header.gas_used <= header.gas_limit, do: [], else: [:exceeded_gas_limit]) ++
-        # Eq.(53), Eq.(54) and Eq.(55)
-        if(
-          is_gas_limit_valid?(
-            header.gas_limit,
-            parent_gas_limit,
-            gas_limit_bound_divisor,
-            min_gas_limit
+      if(
+        header.difficulty ==
+          get_difficulty(
+            header,
+            parent_header,
+            initial_difficulty,
+            minimum_difficulty,
+            difficulty_bound_divisor,
+            homestead_block
           ),
-          do: [],
-          else: [:invalid_gas_limit]
-        ) ++
-        # Eq.(56)
-        if(
-          is_nil(parent_header) or header.timestamp > parent_header.timestamp,
-          do: [],
-          else: [:child_timestamp_invalid]
-        ) ++
-        # Eq.(57)
-        if(
-          header.number == 0 or header.number == parent_header.number + 1,
-          do: [],
-          else: [:child_number_invalid]
-        ) ++
-        if byte_size(header.extra_data) <= @max_extra_data_bytes,
-          do: [],
-          else: [:extra_data_too_large]
+        do: [],
+        else: [:invalid_difficulty]
+      ) ++
+      # Eq.(52)
+      if(header.gas_used <= header.gas_limit, do: [], else: [:exceeded_gas_limit]) ++
+      # Eq.(53), Eq.(54) and Eq.(55)
+      if(
+        is_gas_limit_valid?(
+          header.gas_limit,
+          parent_gas_limit,
+          gas_limit_bound_divisor,
+          min_gas_limit
+        ),
+        do: [],
+        else: [:invalid_gas_limit]
+      ) ++
+      # Eq.(56)
+      if(
+        is_nil(parent_header) or header.timestamp > parent_header.timestamp,
+        do: [],
+        else: [:child_timestamp_invalid]
+      ) ++
+      # Eq.(57)
+      if(
+        header.number == 0 or header.number == parent_header.number + 1,
+        do: [],
+        else: [:child_number_invalid]
+      ) ++
+      if byte_size(header.extra_data) <= @max_extra_data_bytes,
+         do: [],
+         else: [:extra_data_too_large]
 
     case errors do
       [] -> :valid
