@@ -12,7 +12,7 @@ defmodule EVM.ExecEnv do
   This generally relates to `I` in the Yellow Paper, defined in
   Section 9.3.
   """
-            # a
+  # a
   defstruct address: nil,
             # o
             originator: nil,

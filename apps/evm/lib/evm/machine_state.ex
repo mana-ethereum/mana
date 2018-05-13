@@ -13,7 +13,7 @@ defmodule EVM.MachineState do
   alias EVM.ExecEnv
   alias EVM.Operation.Metadata
 
-            # g
+  # g
   defstruct gas: nil,
             # pc
             program_counter: 0,
