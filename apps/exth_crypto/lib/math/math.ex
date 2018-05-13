@@ -20,8 +20,8 @@ defmodule ExthCrypto.Math do
       iex> ExthCrypto.Math.mod(0, 1337)
       0
   """
-  def mod(x, n) when x > 0, do: rem x, n
-  def mod(x, n) when x < 0, do: rem n + x, n
+  def mod(x, n) when x > 0, do: rem(x, n)
+  def mod(x, n) when x < 0, do: rem(n + x, n)
   def mod(0, _n), do: 0
 
   @doc """
@@ -32,7 +32,7 @@ defmodule ExthCrypto.Math do
       iex> ExthCrypto.Math.hex_to_bin("01020a0d")
       <<0x01, 0x02, 0x0a, 0x0d>>
   """
-  @spec hex_to_bin(String.t) :: binary()
+  @spec hex_to_bin(String.t()) :: binary()
   def hex_to_bin(hex) do
     {:ok, bin} = Base.decode16(hex, case: :lower)
 
@@ -63,7 +63,7 @@ defmodule ExthCrypto.Math do
   """
   @spec pad(binary(), integer()) :: binary()
   def pad(bin, length) do
-    padding_bits = ( length - byte_size(bin) ) * 8
+    padding_bits = (length - byte_size(bin)) * 8
 
     <<0x00::size(padding_bits)>> <> bin
   end
@@ -76,7 +76,7 @@ defmodule ExthCrypto.Math do
       iex> ExthCrypto.Math.bin_to_hex(<<0x01, 0x02, 0x0a, 0x0d>>)
       "01020a0d"
   """
-  @spec bin_to_hex(binary()) :: String.t
+  @spec bin_to_hex(binary()) :: String.t()
   def bin_to_hex(bin), do: Base.encode16(bin, case: :lower)
 
   @doc """
@@ -107,5 +107,4 @@ defmodule ExthCrypto.Math do
   def xor(a, b) when byte_size(a) == byte_size(b) do
     :crypto.exor(a, b)
   end
-
 end

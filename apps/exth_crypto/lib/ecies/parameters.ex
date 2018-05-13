@@ -8,19 +8,17 @@ defmodule ExthCrypto.ECIES.Parameters do
   * ECIES using AES256 and HMAC-SHA-512-64
   """
 
-  defstruct [
-    mac: nil,
-    hasher: nil,
-    cipher: nil,
-    key_len: nil
-  ]
+  defstruct mac: nil,
+            hasher: nil,
+            cipher: nil,
+            key_len: nil
 
   @type t :: %__MODULE__{
-    mac: :crypto.hash_algorithms,
-    hasher: ExthCrypto.hash_type,
-    cipher: ExthCrypto.cipher,
-    key_len: integer()
-  }
+          mac: :crypto.hash_algorithms(),
+          hasher: ExthCrypto.hash_type(),
+          cipher: ExthCrypto.cipher(),
+          key_len: integer()
+        }
 
   @doc """
   Returns curve parameters for ECIES with AES-256 symmetric
@@ -31,8 +29,8 @@ defmodule ExthCrypto.ECIES.Parameters do
     %__MODULE__{
       mac: :sha256,
       hasher: {&ExthCrypto.Hash.SHA.sha256/1, nil, 32},
-      cipher: {ExthCrypto.AES, ExthCrypto.AES.block_size, :ctr},
-      key_len: 16,
+      cipher: {ExthCrypto.AES, ExthCrypto.AES.block_size(), :ctr},
+      key_len: 16
     }
   end
 
@@ -45,8 +43,8 @@ defmodule ExthCrypto.ECIES.Parameters do
     %__MODULE__{
       mac: :sha256,
       hasher: {&ExthCrypto.Hash.SHA.sha256/1, nil, 32},
-      cipher: {ExthCrypto.AES, ExthCrypto.AES.block_size, :ctr},
-      key_len: 32,
+      cipher: {ExthCrypto.AES, ExthCrypto.AES.block_size(), :ctr},
+      key_len: 32
     }
   end
 
@@ -59,8 +57,8 @@ defmodule ExthCrypto.ECIES.Parameters do
     %__MODULE__{
       mac: :sha256,
       hasher: {&ExthCrypto.Hash.SHA.sha384/1, nil, 48},
-      cipher: {ExthCrypto.AES, ExthCrypto.AES.block_size, :ctr},
-      key_len: 32,
+      cipher: {ExthCrypto.AES, ExthCrypto.AES.block_size(), :ctr},
+      key_len: 32
     }
   end
 
@@ -73,8 +71,8 @@ defmodule ExthCrypto.ECIES.Parameters do
     %__MODULE__{
       mac: :sha256,
       hasher: {&ExthCrypto.Hash.SHA.sha512/1, nil, 64},
-      cipher: {ExthCrypto.AES, ExthCrypto.AES.block_size, :ctr},
-      key_len: 32,
+      cipher: {ExthCrypto.AES, ExthCrypto.AES.block_size(), :ctr},
+      key_len: 32
     }
   end
 
