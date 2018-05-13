@@ -8,7 +8,7 @@ defmodule Block.Header do
   @empty_trie MerklePatriciaTree.Trie.empty_trie_root_hash()
   @empty_keccak [] |> ExRLP.encode() |> Keccak.kec()
 
-            # Hp P(BH)Hr
+  # Hp P(BH)Hr
   defstruct parent_hash: nil,
             # Ho KEC(RLP(L∗H(BU)))
             ommers_hash: @empty_keccak,
@@ -274,7 +274,8 @@ defmodule Block.Header do
       # TODO: Add tests for setting gas_limit_bound_divisor
       # TODO: Add tests for setting min_gas_limit
   """
-  @spec is_valid?(t, t | nil, integer(), integer(), integer(), integer(), integer(), integer()) :: :valid | {:invalid, [atom()]}
+  @spec is_valid?(t, t | nil, integer(), integer(), integer(), integer(), integer(), integer()) ::
+          :valid | {:invalid, [atom()]}
   def is_valid?(
         header,
         parent_header,
@@ -292,9 +293,21 @@ defmodule Block.Header do
       |> extra_data_validity(header)
       |> check_child_number_validity(header, parent_header)
       |> check_child_timestamp_validity(header, parent_header)
-      |> check_gas_limit_validity(header, parent_gas_limit, gas_limit_bound_divisor, min_gas_limit)
+      |> check_gas_limit_validity(
+        header,
+        parent_gas_limit,
+        gas_limit_bound_divisor,
+        min_gas_limit
+      )
       |> check_gas_limit(header)
-      |> check_difficulty_validity(header, parent_header, initial_difficulty, minimum_difficulty, difficulty_bound_divisor, homestead_block)
+      |> check_difficulty_validity(
+        header,
+        parent_header,
+        initial_difficulty,
+        minimum_difficulty,
+        difficulty_bound_divisor,
+        homestead_block
+      )
 
     if errors == [], do: :valid, else: {:invalid, errors}
   end
@@ -448,9 +461,33 @@ defmodule Block.Header do
   end
 
   # Eq.(51)
-  @spec check_difficulty_validity([atom()], t, t | nil, integer(), integer(), integer(), integer()) :: [atom()]
-  defp check_difficulty_validity(errors, header, parent_header, initial_difficulty, minimum_difficulty, difficulty_bound_divisor, homestead_block) do
-    if header.difficulty == get_difficulty(header, parent_header, initial_difficulty, minimum_difficulty, difficulty_bound_divisor, homestead_block) do
+  @spec check_difficulty_validity(
+          [atom()],
+          t,
+          t | nil,
+          integer(),
+          integer(),
+          integer(),
+          integer()
+        ) :: [atom()]
+  defp check_difficulty_validity(
+         errors,
+         header,
+         parent_header,
+         initial_difficulty,
+         minimum_difficulty,
+         difficulty_bound_divisor,
+         homestead_block
+       ) do
+    if header.difficulty ==
+         get_difficulty(
+           header,
+           parent_header,
+           initial_difficulty,
+           minimum_difficulty,
+           difficulty_bound_divisor,
+           homestead_block
+         ) do
       errors
     else
       [:invalid_difficulty | errors]
