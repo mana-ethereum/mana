@@ -47,19 +47,9 @@ defmodule ExWire.Util.XorDistance do
     prefix(id1, id2)
   end
 
-  @spec binary_to_bits(binary, [integer()]) :: [integer()]
-  defp binary_to_bits(binary, acc \\ [])
-
-  defp binary_to_bits("", acc), do: acc
-
-  defp binary_to_bits(
-         <<b1::size(1), b2::size(1), b3::size(1), b4::size(1), b5::size(1), b6::size(1),
-           b7::size(1), b8::size(1), tail::binary>>,
-         acc
-       ) do
-    acc = acc ++ [b1, b2, b3, b4, b5, b6, b7, b8]
-
-    binary_to_bits(tail, acc)
+  @spec binary_to_bits(binary) :: [integer()]
+  defp binary_to_bits(binary) do
+    for(<<bit::1 <- binary>>, do: bit)
   end
 
   @spec prefix(binary(), binary(), integer()) :: integer()
