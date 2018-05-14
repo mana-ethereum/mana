@@ -496,8 +496,8 @@ defmodule Blockchain.Account do
 
       code_hash ->
         case MerklePatriciaTree.DB.get(state.db, code_hash) do
-          nil -> :not_found
           {:ok, machine_code} when is_binary(machine_code) -> {:ok, machine_code}
+          _ -> :not_found
         end
     end
   end
@@ -514,7 +514,7 @@ defmodule Blockchain.Account do
       iex> Blockchain.Account.get_storage(updated_state, <<01::160>>, 5)
       {:ok, 9}
   """
-  @spec put_storage(EVM.state(), EVM.address(), integer(), integer()) :: t
+  @spec put_storage(EVM.state(), EVM.address(), integer(), integer()) :: EVM.state()
   def put_storage(state, address, key, value) do
     update_account(state, address, fn acct ->
       updated_storage_trie = storage_put(state.db, acct.storage_root, key, value)
@@ -558,7 +558,7 @@ defmodule Blockchain.Account do
     end
   end
 
-  @spec storage_put(DB.db(), EVM.EVM.trie_root(), integer(), integer()) :: EVM.trie_root()
+  @spec storage_put(DB.db(), EVM.EVM.trie_root(), integer(), integer()) :: MerkleParticiaTree.t()
   defp storage_put(db, storage_root, key, value) do
     Trie.new(db, storage_root)
     |> Trie.update(

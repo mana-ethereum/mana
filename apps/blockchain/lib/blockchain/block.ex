@@ -263,7 +263,7 @@ defmodule Blockchain.Block do
     do_get_block_hash_by_steps(curr_block_hash, steps, db)
   end
 
-  @spec get_block_hash_by_steps(EVM.hash(), non_neg_integer(), DB.db()) ::
+  @spec do_get_block_hash_by_steps(EVM.hash(), non_neg_integer(), DB.db()) ::
           {:ok, EVM.hash()} | :not_found
   defp do_get_block_hash_by_steps(block_hash, 0, _db), do: {:ok, block_hash}
 
@@ -592,14 +592,10 @@ defmodule Blockchain.Block do
         beneficiary: beneficiary
       }
     }
-    |> identity()
     |> set_block_number(parent_block)
     |> set_block_difficulty(chain, parent_block)
     |> set_block_gas_limit(chain, parent_block, gas_limit)
   end
-
-  @spec identity(t) :: t
-  def identity(block), do: block
 
   @doc """
   Calculates the `number` for a new block. This implements Eq.(38) from
