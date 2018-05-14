@@ -3,7 +3,7 @@ defmodule ExWire.Struct.Node do
   Represents a node in Kademlia algorithm; an entity on the network.
   """
   alias ExthCrypto.Hash.Keccak
-  alias ExWire.Util.{Timestamp, XorDistance}
+  alias ExWire.Util.XorDistance
 
   defstruct [
     :public_key,
@@ -11,9 +11,9 @@ defmodule ExWire.Struct.Node do
   ]
 
   @type t :: %__MODULE__{
-    public_key: binary(),
-    key: binary()
-  }
+          public_key: binary(),
+          key: binary()
+        }
 
   @doc """
   Construct a new node.

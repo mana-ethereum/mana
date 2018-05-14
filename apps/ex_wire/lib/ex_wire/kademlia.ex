@@ -4,13 +4,13 @@ defmodule ExWire.Kademlia do
   """
 
   alias ExWire.Kademlia.Server
-  alias ExWire.Struct.{Peer, RoutingTable}
+  alias ExWire.Struct.{Node, RoutingTable}
 
   @doc """
   Adds new node to routing table.
   """
-  @spec refresh_node(Peer.t(), Keyword.t()) :: :ok
-  def refresh_node(peer = %Peer{}, opts \\ []) do
+  @spec refresh_node(Node.t(), Keyword.t()) :: :ok
+  def refresh_node(peer = %Node{}, opts \\ []) do
     opts
     |> process_name()
     |> GenServer.cast({:refresh_node, peer})
@@ -29,7 +29,7 @@ defmodule ExWire.Kademlia do
   @doc """
   Returns neighbours of specified node.
   """
-  @spec neighbours(Peer.t(), Keyword.t()) :: [Peer.t()]
+  @spec neighbours(Node.t(), Keyword.t()) :: [Node.t()]
   def neighbours(node, opts \\ []) do
     opts
     |> process_name()

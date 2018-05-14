@@ -3,7 +3,7 @@ defmodule ExWire.Struct.RoutingTable do
   Module for working with current node's buckets
   """
 
-  alias ExWire.Struct.{Bucket, Peer}
+  alias ExWire.Struct.{Bucket, Node}
   alias ExWire.KademliaConfig
 
   @network Application.fetch_env(:ex_wire, :network_process_name)
@@ -11,7 +11,7 @@ defmodule ExWire.Struct.RoutingTable do
   defstruct [:current_node, :buckets]
 
   @type t :: %__MODULE__{
-          current_node: Peer.t(),
+          current_node: Node.t(),
           buckets: [Bucket.t()]
         }
 
@@ -20,17 +20,25 @@ defmodule ExWire.Struct.RoutingTable do
 
   ## Examples
 
-      iex> node = ExWire.Struct.Peer.new("13.84.180.240", 30303, "6ce05930c72abc632c58e2e4324f7c7ea478cec0ed4fa2528982cf34483094e9cbc9216e7aa349691242576d552a2a56aaeae426c5303ded677ce455ba1acd9d", time: :test)
+      iex> node = %ExWire.Struct.Node{
+      ...>  key: <<115, 3, 97, 5, 230, 214, 202, 188, 202, 118, 204, 177, 15, 72, 13, 68,
+      ...>    134, 100, 145, 57, 13, 239, 13, 175, 42, 38, 147, 127, 31, 18, 27, 226>>,
+      ...>  public_key: <<4, 108, 224, 89, 48, 199, 42, 188, 99, 44, 88, 226, 228, 50, 79,
+      ...>    124, 126, 164, 120, 206, 192, 237, 79, 162, 82, 137, 130, 207, 52, 72, 48,
+      ...>    148, 233, 203, 201, 33, 110, 122, 163, 73, 105, 18, 66, 87, 109, 85, 42, 42,
+      ...>    86, 170, 234, 228, 38, 197, 48, 61, 237, 103, 124, 228, 85, 186, 26, 205,
+      ...>    157>>
+      ...> }
       iex> table = node |> ExWire.Struct.RoutingTable.new()
       iex> table.buckets |> Enum.count
       256
   """
-  @spec new(Peer.t()) :: t()
-  def new(peer = %Peer{}) do
+  @spec new(Node.t()) :: t()
+  def new(node = %Node{}) do
     initial_buckets = initialize_buckets()
 
     %__MODULE__{
-      current_node: peer,
+      current_node: node,
       buckets: initial_buckets
     }
   end
@@ -44,14 +52,14 @@ defmodule ExWire.Struct.RoutingTable do
   @doc """
   Adds node to routing table.
   """
-  @spec refresh_node(t(), Peer.t()) :: t()
+  @spec refresh_node(t(), Node.t()) :: t()
   def refresh_node(
-        table = %__MODULE__{current_node: %Peer{remote_id: current_node_id}},
-        %Peer{remote_id: current_node_id}
+        table = %__MODULE__{current_node: %Node{key: key}},
+        %Node{key: key}
       ),
       do: table
 
-  def refresh_node(table = %__MODULE__{buckets: buckets}, node = %Peer{}) do
+  def refresh_node(table = %__MODULE__{buckets: buckets}, node = %Node{}) do
     bucket_idx = bucket_id(table, node)
 
     refresh_node_result =
@@ -72,31 +80,31 @@ defmodule ExWire.Struct.RoutingTable do
   @doc """
   Returns neighbours of a specified node.
   """
-  @spec neighbours(t(), Peer.t()) :: [Peer.t()]
-  def neighbours(table = %__MODULE__{}, node = %Peer{}) do
+  @spec neighbours(t(), Node.t()) :: [Node.t()]
+  def neighbours(table = %__MODULE__{}, node = %Node{}) do
     bucket_idx = bucket_id(table, node)
     similar_to_current_node = nodes_at(table, bucket_idx)
     found_nodes = traverse(table, bucket_idx) ++ similar_to_current_node
 
     found_nodes
-    |> Enum.sort_by(&Peer.distance(&1, node))
+    |> Enum.sort_by(&Node.distance(&1, node))
     |> Enum.take(bucket_size())
   end
 
   @doc """
   Checks if node exists in routing table.
   """
-  @spec member?(t(), Peer.t()) :: boolean()
-  def member?(%__MODULE__{buckets: buckets}, peer = %Peer{}) do
-    buckets |> Enum.any?(&Bucket.member?(&1, peer))
+  @spec member?(t(), Node.t()) :: boolean()
+  def member?(%__MODULE__{buckets: buckets}, node = %Node{}) do
+    buckets |> Enum.any?(&Bucket.member?(&1, node))
   end
 
   @doc """
   Returns bucket id that node belongs to in routing table.
   """
-  @spec bucket_id(t(), Peer.t()) :: integer()
-  def bucket_id(%__MODULE__{current_node: current_node}, node = %Peer{}) do
-    node |> Peer.common_prefix(current_node)
+  @spec bucket_id(t(), Node.t()) :: integer()
+  def bucket_id(%__MODULE__{current_node: current_node}, node = %Node{}) do
+    node |> Node.common_prefix(current_node)
   end
 
   @spec replace_bucket(t(), integer(), Bucket.t()) :: t()
@@ -108,7 +116,7 @@ defmodule ExWire.Struct.RoutingTable do
     %{table | buckets: buckets}
   end
 
-  @spec nodes_at(t(), integer()) :: Peer.t()
+  @spec nodes_at(t(), integer()) :: Node.t()
   defp nodes_at(table = %__MODULE__{}, bucket_id) do
     table
     |> bucket_at(bucket_id)
@@ -117,14 +125,14 @@ defmodule ExWire.Struct.RoutingTable do
 
   @spec bucket_at(t(), integer()) :: Bucket.t()
   defp bucket_at(%__MODULE__{buckets: buckets}, id) do
-    buckets |> Enum.at(id)
+    Enum.at(buckets, id)
   end
 
   defp handle_full_bucket(_table, _bucket, _candidate_for_removal, _candidate_for_insertion) do
     # TODO
   end
 
-  @spec traverse(t(), integer(), [Peer.t()], integer()) :: [Peer.t()]
+  @spec traverse(t(), integer(), [Node.t()], integer()) :: [Node.t()]
   defp traverse(table, bucket_id, acc \\ [], step \\ 1) do
     is_out_of_left_boundary = bucket_id - step < 0
     is_out_of_right_boundary = bucket_id + step > bucket_size() - 1
