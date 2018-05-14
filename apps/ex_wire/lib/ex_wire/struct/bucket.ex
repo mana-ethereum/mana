@@ -84,7 +84,7 @@ defmodule ExWire.Struct.Bucket do
   def refresh_node(bucket = %Bucket{}, node, options \\ [time: :actual]) do
     cond do
       member?(bucket, node) -> {:reinsert_node, node, reinsert_node(bucket, node, options)}
-      full?(bucket) -> {:full_bucket, tail(bucket), bucket}
+      full?(bucket) -> {:full_bucket, last(bucket), bucket}
       true -> {:insert_node, node, insert_node(bucket, node, options)}
     end
   end
@@ -123,7 +123,7 @@ defmodule ExWire.Struct.Bucket do
       iex> ExWire.Struct.Bucket.new(1, time: :test)
       ...>   |> ExWire.Struct.Bucket.insert_node(node, time: :test)
       ...>   |> ExWire.Struct.Bucket.insert_node(node1, time: :test)
-      ...>   |> ExWire.Struct.Bucket.tail()
+      ...>   |> ExWire.Struct.Bucket.last()
       %ExWire.Struct.Peer{
         host: "13.84.180.140",
         ident: "30b7ab...d5d606",
@@ -136,8 +136,8 @@ defmodule ExWire.Struct.Bucket do
           213, 214, 6>>
       }
   """
-  @spec tail(t()) :: Peer.t()
-  def tail(%Bucket{nodes: nodes}), do: nodes |> List.last()
+  @spec last(t()) :: Peer.t()
+  def last(%Bucket{nodes: nodes}), do: nodes |> List.last()
 
   @doc """
   Inserts node to bucket.
