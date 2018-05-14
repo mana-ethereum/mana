@@ -97,7 +97,7 @@ defmodule ExWire.Kademlia.RoutingTableTest do
 
       neighbours = table |> RoutingTable.neighbours(node)
 
-      assert Enum.count(neighbours) == KademliaConfig.bucket_size
+      assert Enum.count(neighbours) == KademliaConfig.bucket_size()
     end
   end
 
