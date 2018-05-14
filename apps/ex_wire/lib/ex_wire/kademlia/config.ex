@@ -1,4 +1,4 @@
-defmodule ExWire.KademliaConfig do
+defmodule ExWire.Kademlia.Config do
   @moduledoc """
   Contains params related to Kademlia algorithm.
 

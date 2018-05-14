@@ -1,10 +1,10 @@
-defmodule ExWire.Struct.RoutingTableTest do
+defmodule ExWire.Kademlia.RoutingTableTest do
   use ExUnit.Case, async: true
 
-  doctest ExWire.Struct.RoutingTable
+  doctest ExWire.Kademlia.RoutingTable
 
-  alias ExWire.Struct.{RoutingTable, Bucket, Node}
-  alias ExWire.KademliaConfig
+  alias ExWire.Kademlia.{RoutingTable, Bucket, Node}
+  alias ExWire.Kademlia.Config, as: KademliaConfig
 
   setup_all do
     node =
@@ -15,7 +15,7 @@ defmodule ExWire.Struct.RoutingTableTest do
           124, 228, 85, 186, 26, 205, 157>>
       )
 
-    table = ExWire.Struct.RoutingTable.new(node)
+    table = RoutingTable.new(node)
 
     {:ok, %{table: table}}
   end

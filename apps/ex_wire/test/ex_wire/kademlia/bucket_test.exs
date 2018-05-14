@@ -1,14 +1,13 @@
-defmodule ExWire.Struct.BucketTest do
+defmodule ExWire.Kademlia.BucketTest do
   use ExUnit.Case, async: true
 
-  doctest ExWire.Struct.Bucket
+  doctest ExWire.Kademlia.Bucket
 
-  alias ExWire.Struct.{Bucket, Node}
-  alias ExWire.KademliaConfig
+  alias ExWire.Kademlia.{Config, Node, Bucket}
 
   describe "add_node/3" do
     setup do
-      bucket = ExWire.Struct.Bucket.new(time: :test)
+      bucket = Bucket.new(time: :test)
 
       [bucket: bucket]
     end
@@ -64,7 +63,7 @@ defmodule ExWire.Struct.BucketTest do
         )
 
       bucket =
-        1..KademliaConfig.bucket_size()
+        1..Config.bucket_size()
         |> Enum.reduce(bucket, fn _num, acc ->
           acc |> Bucket.insert_node(node1)
         end)

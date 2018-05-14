@@ -1,10 +1,10 @@
-defmodule ExWire.Struct.RoutingTable do
+defmodule ExWire.Kademlia.RoutingTable do
   @moduledoc """
   Module for working with current node's buckets
   """
 
-  alias ExWire.Struct.{Bucket, Node}
-  alias ExWire.KademliaConfig
+  alias ExWire.Kademlia.{Bucket, Node}
+  alias ExWire.Kademlia.Config, as: KademliaConfig
 
   @network Application.fetch_env(:ex_wire, :network_process_name)
 
@@ -20,7 +20,7 @@ defmodule ExWire.Struct.RoutingTable do
 
   ## Examples
 
-      iex> node = %ExWire.Struct.Node{
+      iex> node = %ExWire.Kademlia.Node{
       ...>  key: <<115, 3, 97, 5, 230, 214, 202, 188, 202, 118, 204, 177, 15, 72, 13, 68,
       ...>    134, 100, 145, 57, 13, 239, 13, 175, 42, 38, 147, 127, 31, 18, 27, 226>>,
       ...>  public_key: <<4, 108, 224, 89, 48, 199, 42, 188, 99, 44, 88, 226, 228, 50, 79,
@@ -29,7 +29,7 @@ defmodule ExWire.Struct.RoutingTable do
       ...>    86, 170, 234, 228, 38, 197, 48, 61, 237, 103, 124, 228, 85, 186, 26, 205,
       ...>    157>>
       ...> }
-      iex> table = node |> ExWire.Struct.RoutingTable.new()
+      iex> table = node |> ExWire.Kademlia.RoutingTable.new()
       iex> table.buckets |> Enum.count
       256
   """

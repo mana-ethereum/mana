@@ -5,7 +5,7 @@ defmodule ExWire.Kademlia.Server do
 
   @default_process_name KademliaState
 
-  alias ExWire.Struct.{RoutingTable, Node}
+  alias ExWire.Kademlia.{RoutingTable, Node}
 
   def start_link(current_node = %Node{}, opts \\ []) do
     process_name = opts[:process_name] || @default_process_name

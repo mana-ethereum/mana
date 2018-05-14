@@ -2,8 +2,7 @@ defmodule ExWire.KademliaTest do
   use ExUnit.Case, async: true
 
   alias ExWire.Kademlia
-  alias ExWire.Kademlia.Server
-  alias ExWire.Struct.{RoutingTable, Node}
+  alias ExWire.Kademlia.{Server, RoutingTable, Node}
 
   setup_all do
     node =

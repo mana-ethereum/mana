@@ -3,8 +3,7 @@ defmodule ExWire.Kademlia do
   Handles Kademlia algorithm state.
   """
 
-  alias ExWire.Kademlia.Server
-  alias ExWire.Struct.{Node, RoutingTable}
+  alias ExWire.Kademlia.{Server, Node, RoutingTable}
 
   @doc """
   Adds new node to routing table.
