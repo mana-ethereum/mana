@@ -971,13 +971,13 @@ defmodule Blockchain.Block do
 
   # Updates a block to have a new state root given a state object
   @spec put_state(t, EVM.state()) :: t
-  defp put_state(block = %__MODULE__{header: header}, new_state) do
+  def put_state(block = %__MODULE__{header: header}, new_state) do
     %{block | header: %{header | state_root: new_state.root_hash}}
   end
 
   # Updates a block to have total gas used set in the header
   @spec put_gas_used(t, EVM.Gas.t()) :: t
-  defp put_gas_used(block = %__MODULE__{header: header}, gas_used) do
+  def put_gas_used(block = %__MODULE__{header: header}, gas_used) do
     %{block | header: %{header | gas_used: gas_used}}
   end
 
