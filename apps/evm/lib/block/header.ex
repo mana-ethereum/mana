@@ -43,7 +43,7 @@ defmodule Block.Header do
   @type t :: %__MODULE__{
           parent_hash: EVM.hash(),
           ommers_hash: EVM.trie_root(),
-          beneficiary: EVM.address(),
+          beneficiary: EVM.address() | nil,
           state_root: EVM.trie_root(),
           transactions_root: EVM.trie_root(),
           receipts_root: EVM.trie_root(),
