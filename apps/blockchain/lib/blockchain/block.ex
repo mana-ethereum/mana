@@ -597,7 +597,6 @@ defmodule Blockchain.Block do
     |> set_block_gas_limit(chain, parent_block, gas_limit)
   end
 
-
   @doc """
   Calculates the `number` for a new block. This implements Eq.(38) from
   the Yellow Paper.
