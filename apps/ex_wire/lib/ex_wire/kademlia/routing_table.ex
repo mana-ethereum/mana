@@ -138,7 +138,7 @@ defmodule ExWire.Kademlia.RoutingTable do
     acc = acc ++ left_nodes ++ right_nodes
 
     if (is_out_of_left_boundary && is_out_of_right_boundary) ||
-         Enum.count(acc) >= bucket_capacity() do
+         Enum.count(acc) > bucket_capacity() do
       acc
     else
       traverse(table, bucket_id, acc, step + 1)
