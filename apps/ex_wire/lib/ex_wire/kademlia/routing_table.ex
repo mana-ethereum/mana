@@ -60,11 +60,11 @@ defmodule ExWire.Kademlia.RoutingTable do
       do: table
 
   def refresh_node(table = %__MODULE__{buckets: buckets}, node = %Node{}) do
-    bucket_idx = bucket_id(table, node)
+    node_bucket_id = bucket_id(table, node)
 
     refresh_node_result =
       buckets
-      |> Enum.at(bucket_idx)
+      |> Enum.at(node_bucket_id)
       |> Bucket.refresh_node(node)
 
     case refresh_node_result do
@@ -73,7 +73,7 @@ defmodule ExWire.Kademlia.RoutingTable do
         table
 
       {_descr, _node, bucket} ->
-        replace_bucket(table, bucket_idx, bucket)
+        replace_bucket(table, node_bucket_id, bucket)
     end
   end
 
@@ -83,8 +83,8 @@ defmodule ExWire.Kademlia.RoutingTable do
   @spec neighbours(t(), Node.t()) :: [Node.t()]
   def neighbours(table = %__MODULE__{}, node = %Node{}) do
     bucket_idx = bucket_id(table, node)
-    similar_to_current_node = nodes_at(table, bucket_idx)
-    found_nodes = traverse(table, bucket_idx) ++ similar_to_current_node
+    nearest_neighbors = nodes_at(table, bucket_idx)
+    found_nodes = traverse(table, bucket_idx) ++ nearest_neighbors
 
     found_nodes
     |> Enum.sort_by(&Node.distance(&1, node))
