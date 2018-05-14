@@ -99,7 +99,7 @@ defmodule ExWire.Kademlia.RoutingTableTest do
         table.buckets
         |> Enum.flat_map(&Bucket.nodes/1)
         |> Enum.sort_by(&Node.distance(&1, node))
-        |> Enum.take(KademliaConfig.id_size())
+        |> Enum.take(KademliaConfig.bucket_size())
 
       neighbours =
         table

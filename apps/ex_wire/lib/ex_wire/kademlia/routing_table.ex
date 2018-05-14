@@ -88,7 +88,7 @@ defmodule ExWire.Kademlia.RoutingTable do
 
     found_nodes
     |> Enum.sort_by(&Node.distance(&1, node))
-    |> Enum.take(bucket_size())
+    |> Enum.take(bucket_capacity())
   end
 
   @doc """
@@ -116,13 +116,6 @@ defmodule ExWire.Kademlia.RoutingTable do
     %{table | buckets: buckets}
   end
 
-  @spec nodes_at(t(), integer()) :: Node.t()
-  defp nodes_at(table = %__MODULE__{}, bucket_id) do
-    table
-    |> bucket_at(bucket_id)
-    |> Bucket.nodes()
-  end
-
   @spec bucket_at(t(), integer()) :: Bucket.t()
   defp bucket_at(%__MODULE__{buckets: buckets}, id) do
     Enum.at(buckets, id)
@@ -134,15 +127,18 @@ defmodule ExWire.Kademlia.RoutingTable do
 
   @spec traverse(t(), integer(), [Node.t()], integer()) :: [Node.t()]
   defp traverse(table, bucket_id, acc \\ [], step \\ 1) do
-    is_out_of_left_boundary = bucket_id - step < 0
-    is_out_of_right_boundary = bucket_id + step > bucket_size() - 1
+    left_boundary = bucket_id - step
+    right_boundary = bucket_id + step
+    is_out_of_left_boundary = left_boundary < 0
+    is_out_of_right_boundary = right_boundary > buckets_count() - 1
 
-    left_nodes = if is_out_of_left_boundary, do: [], else: table |> nodes_at(bucket_id - step)
-    right_nodes = if is_out_of_right_boundary, do: [], else: table |> nodes_at(bucket_id + step)
+    left_nodes = if is_out_of_left_boundary, do: [], else: table |> nodes_at(left_boundary)
+    right_nodes = if is_out_of_right_boundary, do: [], else: table |> nodes_at(right_boundary)
 
     acc = acc ++ left_nodes ++ right_nodes
 
-    if (is_out_of_left_boundary && is_out_of_right_boundary) || Enum.count(acc) >= bucket_size() do
+    if (is_out_of_left_boundary && is_out_of_right_boundary) ||
+         Enum.count(acc) >= bucket_capacity() do
       acc
     else
       traverse(table, bucket_id, acc, step + 1)
@@ -151,14 +147,26 @@ defmodule ExWire.Kademlia.RoutingTable do
 
   @spec initialize_buckets() :: [Bucket.t()]
   defp initialize_buckets() do
-    1..bucket_size()
+    1..buckets_count()
     |> Enum.map(fn num ->
       Bucket.new(num)
     end)
   end
 
-  @spec bucket_size() :: integer()
-  defp bucket_size do
+  @spec nodes_at(t(), integer()) :: Node.t()
+  defp nodes_at(table = %__MODULE__{}, bucket_id) do
+    table
+    |> bucket_at(bucket_id)
+    |> Bucket.nodes()
+  end
+
+  @spec buckets_count() :: integer()
+  defp buckets_count do
     KademliaConfig.id_size()
+  end
+
+  @spec bucket_capacity() :: integer()
+  defp bucket_capacity do
+    KademliaConfig.bucket_size()
   end
 end
