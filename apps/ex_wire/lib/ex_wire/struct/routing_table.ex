@@ -44,17 +44,22 @@ defmodule ExWire.Struct.RoutingTable do
   @doc """
   Adds node to routing table.
   """
-  @spec add_node(t(), Peer.t()) :: t()
-  def add_node(
+  @spec refresh_node(t(), Peer.t()) :: t()
+  def refresh_node(
         table = %__MODULE__{current_node: %Peer{remote_id: current_node_id}},
         %Peer{remote_id: current_node_id}
       ),
       do: table
 
-  def add_node(table = %__MODULE__{}, node = %Peer{}) do
-    bucket_idx = table |> bucket_id(node)
+  def refresh_node(table = %__MODULE__{buckets: buckets}, node = %Peer{}) do
+    bucket_idx = bucket_id(table, node)
 
-    case table.buckets |> Enum.at(bucket_idx) |> Bucket.add_node(node) do
+    refresh_node_result =
+      buckets
+      |> Enum.at(bucket_idx)
+      |> Bucket.refresh_node(node)
+
+    case refresh_node_result do
       {:full_bucket, candidate_for_removal, bucket} ->
         handle_full_bucket(table, bucket, candidate_for_removal, node)
         table
@@ -70,7 +75,7 @@ defmodule ExWire.Struct.RoutingTable do
   @spec neighbours(t(), Peer.t()) :: [Peer.t()]
   def neighbours(table = %__MODULE__{}, node = %Peer{}) do
     bucket_idx = bucket_id(table, node)
-    similar_to_current_node = table |> nodes_at(bucket_idx)
+    similar_to_current_node = nodes_at(table, bucket_idx)
     found_nodes = traverse(table, bucket_idx) ++ similar_to_current_node
 
     found_nodes

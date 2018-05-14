@@ -18,7 +18,7 @@ defmodule ExWire.KademliaTest do
     :ok
   end
 
-  describe "add_node/2" do
+  describe "refresh_node/2" do
     test "adds node to routing table" do
       node =
         ExWire.Struct.Peer.new(
@@ -27,7 +27,7 @@ defmodule ExWire.KademliaTest do
           "6ce05930c72abc632c58e2e4324f7c7ea478cec0ed4fa2528982cf34483094e9cbc9216e7aa349691242576d552a2a56aaeae426c5303ded677ce455ba1acd9d"
         )
 
-      Kademlia.add_node(node)
+      Kademlia.refresh_node(node)
 
       table = Kademlia.routing_table()
 
@@ -44,7 +44,7 @@ defmodule ExWire.KademliaTest do
           "6ce05930c72abc632c58e2e4324f7c7ea478cec0ed4fa2528982cf34483094e9cbc9216e7aa349691242576d552a2a56aaeae426c5303ded677ce455ba1acd9d"
         )
 
-      Kademlia.add_node(node)
+      Kademlia.refresh_node(node)
 
       [^node] = Kademlia.neighbours(node)
     end

@@ -14,13 +14,13 @@ defmodule ExWire.Kademlia.Server do
   end
 
   def init(current_node = %Peer{}) do
-    routing_table = current_node |> RoutingTable.new()
+    routing_table = RoutingTable.new(current_node)
 
     {:ok, %{routing_table: routing_table}}
   end
 
-  def handle_cast({:add_node, node}, %{routing_table: table}) do
-    updated_table = table |> RoutingTable.add_node(node)
+  def handle_cast({:refresh_node, node}, %{routing_table: table}) do
+    updated_table = RoutingTable.refresh_node(table, node)
 
     {:noreply, %{routing_table: updated_table}}
   end

@@ -21,7 +21,7 @@ defmodule ExWire.Struct.BucketTest do
           "30b7ab30a01c124a6cceca36863ece12c4f5fa68e3ba9b0b51407ccc002eeed3b3102d20a88f1c1d3c3154e2449317b8ef95090e77b312d5cc39354f86d5d606"
         )
 
-      {:insert_node, ^node, bucket} = bucket |> Bucket.add_node(node)
+      {:insert_node, ^node, bucket} = bucket |> Bucket.refresh_node(node)
 
       assert Bucket.member?(bucket, node)
     end
@@ -34,10 +34,12 @@ defmodule ExWire.Struct.BucketTest do
           "30b7ab30a01c124a6cceca36863ece12c4f5fa68e3ba9b0b51407ccc002eeed3b3102d20a88f1c1d3c3154e2449317b8ef95090e77b312d5cc39354f86d5d606"
         )
 
+      {:insert_node, ^node, bucket} = bucket |> Bucket.refresh_node(node)
+
       {:reinsert_node, ^node, bucket} =
         bucket
         |> Bucket.insert_node(node)
-        |> Bucket.add_node(node)
+        |> Bucket.refresh_node(node)
 
       assert Bucket.member?(bucket, node)
     end
@@ -63,7 +65,7 @@ defmodule ExWire.Struct.BucketTest do
           acc |> Bucket.insert_node(node1)
         end)
 
-      {:full_bucket, ^node1, ^bucket} = bucket |> Bucket.add_node(node2)
+      {:full_bucket, ^node1, ^bucket} = bucket |> Bucket.refresh_node(node2)
     end
   end
 end

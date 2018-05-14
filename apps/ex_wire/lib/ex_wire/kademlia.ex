@@ -9,11 +9,11 @@ defmodule ExWire.Kademlia do
   @doc """
   Adds new node to routing table.
   """
-  @spec add_node(Peer.t(), Keyword.t()) :: :ok
-  def add_node(peer = %Peer{}, opts \\ []) do
+  @spec refresh_node(Peer.t(), Keyword.t()) :: :ok
+  def refresh_node(peer = %Peer{}, opts \\ []) do
     opts
     |> process_name()
-    |> GenServer.cast({:add_node, peer})
+    |> GenServer.cast({:refresh_node, peer})
   end
 
   @doc """

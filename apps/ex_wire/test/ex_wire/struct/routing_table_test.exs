@@ -20,7 +20,7 @@ defmodule ExWire.Struct.RoutingTableTest do
     {:ok, %{table: table}}
   end
 
-  describe "add_node/2" do
+  describe "refresh_node/2" do
     test "adds node to routing table", %{table: table} do
       node =
         ExWire.Struct.Peer.new(
@@ -30,7 +30,7 @@ defmodule ExWire.Struct.RoutingTableTest do
           time: :test
         )
 
-      table = table |> RoutingTable.add_node(node)
+      table = table |> RoutingTable.refresh_node(node)
 
       bucket_idx = node |> Peer.common_prefix(table.current_node)
 
@@ -38,7 +38,7 @@ defmodule ExWire.Struct.RoutingTableTest do
     end
 
     test "does not current node to routing table", %{table: table} do
-      table = table |> RoutingTable.add_node(table.current_node)
+      table = table |> RoutingTable.refresh_node(table.current_node)
 
       assert table.buckets |> Enum.all?(fn bucket -> bucket.nodes |> Enum.empty?() end)
     end
@@ -54,7 +54,7 @@ defmodule ExWire.Struct.RoutingTableTest do
           time: :test
         )
 
-      table = table |> RoutingTable.add_node(node)
+      table = RoutingTable.refresh_node(table, node)
 
       assert RoutingTable.member?(table, node)
     end
@@ -84,7 +84,7 @@ defmodule ExWire.Struct.RoutingTableTest do
 
       neighbours =
         table
-        |> RoutingTable.add_node(node)
+        |> RoutingTable.refresh_node(node)
         |> RoutingTable.neighbours(node)
 
       assert Enum.count(neighbours) == 1
@@ -118,7 +118,7 @@ defmodule ExWire.Struct.RoutingTableTest do
 
     1..(KademliaConfig.bucket_size() * KademliaConfig.id_size())
     |> Enum.reduce(table, fn _el, acc ->
-      acc |> RoutingTable.add_node(random_peer())
+      acc |> RoutingTable.refresh_node(random_peer())
     end)
   end
 

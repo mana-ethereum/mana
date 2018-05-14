@@ -49,7 +49,7 @@ defmodule ExWire.Struct.Bucket do
 
       iex> node = ExWire.Struct.Peer.new("13.84.180.140", 30303, "30b7ab30a01c124a6cceca36863ece12c4f5fa68e3ba9b0b51407ccc002eeed3b3102d20a88f1c1d3c3154e2449317b8ef95090e77b312d5cc39354f86d5d606", time: :test)
       iex> ExWire.Struct.Bucket.new(1, time: :test)
-      ...> |> ExWire.Struct.Bucket.add_node(node, time: :test)
+      ...> |> ExWire.Struct.Bucket.refresh_node(node, time: :test)
       {:insert_node,
        %ExWire.Struct.Peer{
          host: "13.84.180.140",
@@ -80,8 +80,8 @@ defmodule ExWire.Struct.Bucket do
          updated_at: 1525704921
        }}
   """
-  @spec add_node(t(), Peer.t()) :: {atom, t()}
-  def add_node(bucket = %Bucket{}, node, options \\ [time: :actual]) do
+  @spec refresh_node(t(), Peer.t()) :: {atom, t()}
+  def refresh_node(bucket = %Bucket{}, node, options \\ [time: :actual]) do
     cond do
       member?(bucket, node) -> {:reinsert_node, node, reinsert_node(bucket, node, options)}
       full?(bucket) -> {:full_bucket, tail(bucket), bucket}
