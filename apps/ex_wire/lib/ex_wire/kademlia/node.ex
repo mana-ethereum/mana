@@ -3,7 +3,7 @@ defmodule ExWire.Kademlia.Node do
   Represents a node in Kademlia algorithm; an entity on the network.
   """
   alias ExthCrypto.Hash.Keccak
-  alias ExWire.Util.XorDistance
+  alias ExWire.Kademlia.XorDistance
 
   defstruct [
     :public_key,

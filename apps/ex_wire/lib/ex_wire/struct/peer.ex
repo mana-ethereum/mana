@@ -2,24 +2,19 @@ defmodule ExWire.Struct.Peer do
   @moduledoc """
   Represents a Peer for an RLPx / Eth Wire connection.
   """
-  alias ExWire.Struct.Peer
-  alias ExWire.Util.{Timestamp, XorDistance}
-  use Bitwise
 
   defstruct [
     :host,
     :port,
     :remote_id,
-    :ident,
-    :last_seen
+    :ident
   ]
 
   @type t :: %__MODULE__{
           host: String.t(),
           port: integer(),
           remote_id: String.t(),
-          ident: String.t(),
-          last_seen: integer()
+          ident: String.t()
         }
 
   @doc """
@@ -27,21 +22,16 @@ defmodule ExWire.Struct.Peer do
 
   ## Examples
 
-      iex> ExWire.Struct.Peer.new("13.84.180.240", 30303, "6ce05930c72abc632c58e2e4324f7c7ea478cec0ed4fa2528982cf34483094e9cbc9216e7aa349691242576d552a2a56aaeae426c5303ded677ce455ba1acd9d", time: :test)
+      iex> ExWire.Struct.Peer.new("13.84.180.240", 30303, "6ce05930c72abc632c58e2e4324f7c7ea478cec0ed4fa2528982cf34483094e9cbc9216e7aa349691242576d552a2a56aaeae426c5303ded677ce455ba1acd9d")
       %ExWire.Struct.Peer{
         host: "13.84.180.240",
-        ident: "6ce059...1acd9d",
-        last_seen: 1_525_704_921,
         port: 30303,
-        remote_id: <<4, 108, 224, 89, 48, 199, 42, 188, 99, 44, 88, 226, 228, 50, 79,
-          124, 126, 164, 120, 206, 192, 237, 79, 162, 82, 137, 130, 207, 52, 72, 48,
-          148, 233, 203, 201, 33, 110, 122, 163, 73, 105, 18, 66, 87, 109, 85, 42, 42,
-          86, 170, 234, 228, 38, 197, 48, 61, 237, 103, 124, 228, 85, 186, 26, 205,
-          157>>
+        remote_id: <<4, 108, 224, 89, 48, 199, 42, 188, 99, 44, 88, 226, 228, 50, 79, 124, 126, 164, 120, 206, 192, 237, 79, 162, 82, 137, 130, 207, 52, 72, 48, 148, 233, 203, 201, 33, 110, 122, 163, 73, 105, 18, 66, 87, 109, 85, 42, 42, 86, 170, 234, 228, 38, 197, 48, 61, 237, 103, 124, 228, 85, 186, 26, 205, 157>>,
+        ident: "6ce059...1acd9d"
       }
   """
-  @spec new(Sring.t(), integer(), String.t(), keyword()) :: t
-  def new(host, port, remote_id_hex, options \\ [time: :actual]) do
+  @spec new(Sring.t(), integer(), String.t()) :: t
+  def new(host, port, remote_id_hex) do
     remote_id = remote_id_hex |> ExthCrypto.Math.hex_to_bin() |> ExthCrypto.Key.raw_to_der()
     ident = Binary.take(remote_id_hex, 6) <> "..." <> Binary.take(remote_id_hex, -6)
 
@@ -49,8 +39,7 @@ defmodule ExWire.Struct.Peer do
       host: host,
       port: port,
       remote_id: remote_id,
-      ident: ident,
-      last_seen: current_time(options[:time])
+      ident: ident
     }
   end
 
@@ -59,19 +48,13 @@ defmodule ExWire.Struct.Peer do
 
   ## Examples
 
-      iex> ExWire.Struct.Peer.from_uri("enode://6ce05930c72abc632c58e2e4324f7c7ea478cec0ed4fa2528982cf34483094e9cbc9216e7aa349691242576d552a2a56aaeae426c5303ded677ce455ba1acd9d@13.84.180.240:30303", time: :test)
-      {:ok,
-       %ExWire.Struct.Peer{
-         host: "13.84.180.240",
-         ident: "6ce059...1acd9d",
-         last_seen: 1_525_704_921,
-         port: 30303,
-         remote_id: <<4, 108, 224, 89, 48, 199, 42, 188, 99, 44, 88, 226, 228, 50, 79,
-           124, 126, 164, 120, 206, 192, 237, 79, 162, 82, 137, 130, 207, 52, 72, 48,
-           148, 233, 203, 201, 33, 110, 122, 163, 73, 105, 18, 66, 87, 109, 85, 42,
-           42, 86, 170, 234, 228, 38, 197, 48, 61, 237, 103, 124, 228, 85, 186, 26,
-           205, 157>>
-       }}
+      iex> ExWire.Struct.Peer.from_uri("enode://6ce05930c72abc632c58e2e4324f7c7ea478cec0ed4fa2528982cf34483094e9cbc9216e7aa349691242576d552a2a56aaeae426c5303ded677ce455ba1acd9d@13.84.180.240:30303")
+      {:ok, %ExWire.Struct.Peer{
+        host: "13.84.180.240",
+        port: 30303,
+        remote_id: <<4, 108, 224, 89, 48, 199, 42, 188, 99, 44, 88, 226, 228, 50, 79, 124, 126, 164, 120, 206, 192, 237, 79, 162, 82, 137, 130, 207, 52, 72, 48, 148, 233, 203, 201, 33, 110, 122, 163, 73, 105, 18, 66, 87, 109, 85, 42, 42, 86, 170, 234, 228, 38, 197, 48, 61, 237, 103, 124, 228, 85, 186, 26, 205, 157>>,
+        ident: "6ce059...1acd9d"
+      }}
 
       iex> ExWire.Struct.Peer.from_uri("http://id@google.com:30303")
       {:error, "URI scheme must be enode, got http"}
@@ -79,8 +62,8 @@ defmodule ExWire.Struct.Peer do
       iex> ExWire.Struct.Peer.from_uri("abc")
       {:error, "Invalid URI"}
   """
-  @spec from_uri(String.t(), Keyword.t()) :: {:ok, t} | {:error, String.t()}
-  def from_uri(uri, options \\ []) do
+  @spec from_uri(String.t()) :: {:ok, t} | {:error, String.t()}
+  def from_uri(uri) do
     case URI.parse(uri) do
       %URI{
         scheme: "enode",
@@ -88,7 +71,7 @@ defmodule ExWire.Struct.Peer do
         host: host,
         port: port
       } ->
-        {:ok, __MODULE__.new(host, port, remote_id_hex, options)}
+        {:ok, __MODULE__.new(host, port, remote_id_hex)}
 
       %URI{scheme: nil} ->
         {:error, "Invalid URI"}
@@ -96,74 +79,6 @@ defmodule ExWire.Struct.Peer do
       %URI{scheme: scheme} ->
         {:error, "URI scheme must be enode, got #{scheme}"}
     end
-  end
-
-  @doc """
-  Calculates distance between two peers.
-
-  ## Examples
-
-      iex> {:ok, peer1} = ExWire.Struct.Peer.from_uri("enode://6ce05930c72abc632c58e2e4324f7c7ea478cec0ed4fa2528982cf34483094e9cbc9216e7aa349691242576d552a2a56aaeae426c5303ded677ce455ba1acd9d@13.84.180.240:30303")
-      iex> {:ok, peer2} = ExWire.Struct.Peer.from_uri("enode://30b7ab30a01c124a6cceca36863ece12c4f5fa68e3ba9b0b51407ccc002eeed3b3102d20a88f1c1d3c3154e2449317b8ef95090e77b312d5cc39354f86d5d606@52.176.7.10:30303")
-      iex> ExWire.Struct.Peer.distance(peer1, peer2)
-      250
-  """
-  @spec distance(Peer.t(), Peer.t()) :: integer()
-  def distance(%Peer{remote_id: remote_id1}, %Peer{remote_id: remote_id2}) do
-    XorDistance.distance(remote_id1, remote_id2)
-  end
-
-  @doc """
-  Calculates common id prefix between two peers..
-
-  ## Examples
-
-      iex> {:ok, peer1} = ExWire.Struct.Peer.from_uri("enode://6ce05930c72abc632c58e2e4324f7c7ea478cec0ed4fa2528982cf34483094e9cbc9216e7aa349691242576d552a2a56aaeae426c5303ded677ce455ba1acd9d@13.84.180.240:30303")
-      iex> {:ok, peer2} = ExWire.Struct.Peer.from_uri("enode://30b7ab30a01c124a6cceca36863ece12c4f5fa68e3ba9b0b51407ccc002eeed3b3102d20a88f1c1d3c3154e2449317b8ef95090e77b312d5cc39354f86d5d606@52.176.7.10:30303")
-      iex> ExWire.Struct.Peer.common_prefix(peer1, peer2)
-      9
-  """
-  @spec common_prefix(Peer.t(), Peer.t()) :: integer()
-  def common_prefix(%Peer{remote_id: remote_id1}, %Peer{remote_id: remote_id2}) do
-    XorDistance.common_prefix(remote_id1, remote_id2)
-  end
-
-  @doc """
-  Updates last_seen field.
-
-  ## Examples
-
-      iex> {:ok, peer} = ExWire.Struct.Peer.from_uri("enode://6ce05930c72abc632c58e2e4324f7c7ea478cec0ed4fa2528982cf34483094e9cbc9216e7aa349691242576d552a2a56aaeae426c5303ded677ce455ba1acd9d@13.84.180.240:30303", time: :test)
-      iex> updated_peer = peer |> ExWire.Struct.Peer.update_last_seen()
-      iex> peer.last_seen < updated_peer.last_seen
-      true
-  """
-  @spec update_last_seen(Peer.t()) :: Peer.t()
-  def update_last_seen(%Peer{} = peer, options \\ [time: :actual]) do
-    %{peer | last_seen: current_time(options[:time])}
-  end
-
-  @doc """
-  Checks if two peers are equal.
-
-  ## Examples
-
-      iex> {:ok, peer1} = ExWire.Struct.Peer.from_uri("enode://6ce05930c72abc632c58e2e4324f7c7ea478cec0ed4fa2528982cf34483094e9cbc9216e7aa349691242576d552a2a56aaeae426c5303ded677ce455ba1acd9d@13.84.180.240:30303")
-      iex> {:ok, peer2} = ExWire.Struct.Peer.from_uri("enode://6ce05930c72abc632c58e2e4324f7c7ea478cec0ed4fa2528982cf34483094e9cbc9216e7aa349691242576d552a2a56aaeae426c5303ded677ce455ba1acd9d@13.84.180.240:30303")
-      iex> ExWire.Struct.Peer.equal?(peer1, peer2)
-      true
-      iex> {:ok, peer3} = ExWire.Struct.Peer.from_uri("enode://30b7ab30a01c124a6cceca36863ece12c4f5fa68e3ba9b0b51407ccc002eeed3b3102d20a88f1c1d3c3154e2449317b8ef95090e77b312d5cc39354f86d5d606@52.176.7.10:30303")
-      iex> ExWire.Struct.Peer.equal?(peer1, peer3)
-      false
-  """
-  @spec equal?(t(), t()) :: boolean()
-  def equal?(%Peer{} = peer1, %Peer{} = peer2) do
-    peer1.remote_id == peer2.remote_id
-  end
-
-  @spec current_time(atom()) :: integer()
-  defp current_time(type) do
-    type |> Timestamp.now()
   end
 end
 

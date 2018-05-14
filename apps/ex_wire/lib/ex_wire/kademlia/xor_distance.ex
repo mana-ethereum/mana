@@ -1,4 +1,4 @@
-defmodule ExWire.Util.XorDistance do
+defmodule ExWire.Kademlia.XorDistance do
   @moduledoc """
   XOR metric used in Kademlia.
   """
@@ -12,9 +12,9 @@ defmodule ExWire.Util.XorDistance do
 
       iex> {:ok, id1} = "6ce05930c72abc632c58e2e4324f7c7ea478cec0ed4fa2528982cf34483094e9cbc9216e7aa349691242576d552a2a56aaeae426c5303ded677ce455ba1acd9d" |> Base.decode16(case: :lower)
       iex> {:ok, id2} = "30b7ab30a01c124a6cceca36863ece12c4f5fa68e3ba9b0b51407ccc002eeed3b3102d20a88f1c1d3c3154e2449317b8ef95090e77b312d5cc39354f86d5d606" |> Base.decode16(case: :lower)
-      iex> ExWire.Util.XorDistance.distance(id1, id2)
+      iex> ExWire.Kademlia.XorDistance.distance(id1, id2)
       250
-      iex> ExWire.Util.XorDistance.distance(id1, id1)
+      iex> ExWire.Kademlia.XorDistance.distance(id1, id1)
       0
   """
 
@@ -37,9 +37,9 @@ defmodule ExWire.Util.XorDistance do
 
         iex> {:ok, id1} = "6ce05930c72abc632c58e2e4324f7c7ea478cec0ed4fa2528982cf34483094e9cbc9216e7aa349691242576d552a2a56aaeae426c5303ded677ce455ba1acd9d" |> Base.decode16(case: :lower)
         iex> {:ok, id2} = "30b7ab30a01c124a6cceca36863ece12c4f5fa68e3ba9b0b51407ccc002eeed3b3102d20a88f1c1d3c3154e2449317b8ef95090e77b312d5cc39354f86d5d606" |> Base.decode16(case: :lower)
-        iex> ExWire.Util.XorDistance.common_prefix(id1, id2)
+        iex> ExWire.Kademlia.XorDistance.common_prefix(id1, id2)
         1
-        iex> ExWire.Util.XorDistance.common_prefix(id1, id1)
+        iex> ExWire.Kademlia.XorDistance.common_prefix(id1, id1)
         512
   """
   @spec common_prefix(binary(), binary()) :: integer()
