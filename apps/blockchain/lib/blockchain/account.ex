@@ -6,6 +6,7 @@ defmodule Blockchain.Account do
 
   alias ExthCrypto.Hash.Keccak
   alias MerklePatriciaTree.Trie
+  alias MerklePatriciaTree.DB
 
   @empty_keccak Keccak.kec(<<>>)
   @empty_trie Trie.empty_trie_root_hash()
