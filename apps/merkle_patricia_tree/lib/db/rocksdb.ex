@@ -22,20 +22,13 @@ defmodule MerklePatriciaTree.DB.RocksDB do
   Retrieves a key from the database.
   """
   @spec get(DB.db_ref(), Trie.key()) :: {:ok, DB.value()} | :not_found
-  def get(db_ref, key) do
-    case Rox.get(db_ref, key) do
-      {:ok, v} -> {:ok, v}
-      :not_found -> :not_found
-    end
-  end
+  def get(db_ref, key),
+    do: Rox.get(db_ref, key)
 
   @doc """
   Stores a key in the database.
   """
   @spec put!(DB.db_ref(), Trie.key(), DB.value()) :: :ok
-  def put!(db_ref, key, value) do
-    case Rox.put(db_ref, key, value) do
-      :ok -> :ok
-    end
-  end
+  def put!(db_ref, key, value),
+    do: Rox.put(db_ref, key, value)
 end

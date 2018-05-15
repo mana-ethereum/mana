@@ -905,7 +905,7 @@ defmodule Blockchain.Block do
   and Eq.(4) of the Yellow Paper, referred to as Π.
 
   The trie db refers to where we expect our trie to exist, e.g.
-  in `:ets` or `:leveldb`. See `MerklePatriciaTree.DB`.
+  in `:ets` or `:rocksdb`. See `MerklePatriciaTree.DB`.
 
   # TODO: Add a rich set of test cases in `block_test.exs`
 

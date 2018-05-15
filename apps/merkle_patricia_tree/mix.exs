@@ -50,7 +50,6 @@ defmodule MerklePatriciaTree.Mixfile do
       {:ex_doc, "~> 0.16", only: :dev, runtime: false},
       {:ex_rlp, "~> 0.3.0"},
       {:exth_crypto, in_umbrella: true},
-      {:exleveldb, "~> 0.13.1"},
       {:rox, "~> 2.0"},
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false}
     ]
