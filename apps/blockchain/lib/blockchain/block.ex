@@ -814,7 +814,7 @@ defmodule Blockchain.Block do
     end
   end
 
-  @spec check_state_root_validity([atom()], t(), t()) :: [atom()]
+  @spec check_ommers_hash_validity([atom()], t(), t()) :: [atom()]
   defp check_ommers_hash_validity(errors, child_block, block) do
     if child_block.header.ommers_hash == block.header.ommers_hash do
       errors
@@ -823,7 +823,7 @@ defmodule Blockchain.Block do
     end
   end
 
-  @spec check_state_root_validity([atom()], t(), t()) :: [atom()]
+  @spec check_transactions_root_validity([atom()], t(), t()) :: [atom()]
   defp check_transactions_root_validity(errors, child_block, block) do
     if child_block.header.transactions_root == block.header.transactions_root do
       errors
@@ -832,7 +832,7 @@ defmodule Blockchain.Block do
     end
   end
 
-  @spec check_state_root_validity([atom()], t(), t()) :: [atom()]
+  @spec check_receipts_root_validity([atom()], t(), t()) :: [atom()]
   defp check_receipts_root_validity(errors, child_block, block) do
     if child_block.header.receipts_root == block.header.receipts_root do
       errors
@@ -971,13 +971,13 @@ defmodule Blockchain.Block do
 
   # Updates a block to have a new state root given a state object
   @spec put_state(t, EVM.state()) :: t
-  defp put_state(block = %__MODULE__{header: header}, new_state) do
+  def put_state(block = %__MODULE__{header: header}, new_state) do
     %{block | header: %{header | state_root: new_state.root_hash}}
   end
 
   # Updates a block to have total gas used set in the header
   @spec put_gas_used(t, EVM.Gas.t()) :: t
-  defp put_gas_used(block = %__MODULE__{header: header}, gas_used) do
+  def put_gas_used(block = %__MODULE__{header: header}, gas_used) do
     %{block | header: %{header | gas_used: gas_used}}
   end
 
