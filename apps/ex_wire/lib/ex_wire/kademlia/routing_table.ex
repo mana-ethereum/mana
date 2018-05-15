@@ -27,7 +27,12 @@ defmodule ExWire.Kademlia.RoutingTable do
       ...>    124, 126, 164, 120, 206, 192, 237, 79, 162, 82, 137, 130, 207, 52, 72, 48,
       ...>    148, 233, 203, 201, 33, 110, 122, 163, 73, 105, 18, 66, 87, 109, 85, 42, 42,
       ...>    86, 170, 234, 228, 38, 197, 48, 61, 237, 103, 124, 228, 85, 186, 26, 205,
-      ...>    157>>
+      ...>    157>>,
+      ...>  endpoint: %ExWire.Struct.Endpoint{
+      ...>    ip: [1, 2, 3, 4],
+      ...>    tcp_port: 5,
+      ...>    udp_port: nil
+      ...>  }
       ...> }
       iex> table = node |> ExWire.Kademlia.RoutingTable.new()
       iex> table.buckets |> Enum.count

@@ -50,11 +50,16 @@ defmodule ExWire.Kademlia.Bucket do
       ...>      124, 126, 164, 120, 206, 192, 237, 79, 162, 82, 137, 130, 207, 52, 72, 48,
       ...>      148, 233, 203, 201, 33, 110, 122, 163, 73, 105, 18, 66, 87, 109, 85, 42, 42,
       ...>      86, 170, 234, 228, 38, 197, 48, 61, 237, 103, 124, 228, 85, 186, 26, 205,
-      ...>      157>>)
+      ...>      157>>, ExWire.Struct.Endpoint.decode([<<1,2,3,4>>, <<>>, <<5>>]))
       iex> ExWire.Kademlia.Bucket.new(1, time: :test)
       ...> |> ExWire.Kademlia.Bucket.refresh_node(node, time: :test)
       {:insert_node,
       %ExWire.Kademlia.Node{
+        endpoint: %ExWire.Struct.Endpoint{
+          ip: [1, 2, 3, 4],
+          tcp_port: 5,
+          udp_port: nil
+        },
         key: <<115, 3, 97, 5, 230, 214, 202, 188, 202, 118, 204, 177, 15, 72, 13, 68,
           134, 100, 145, 57, 13, 239, 13, 175, 42, 38, 147, 127, 31, 18, 27, 226>>,
         public_key: <<4, 108, 224, 89, 48, 199, 42, 188, 99, 44, 88, 226, 228, 50, 79,
@@ -67,6 +72,11 @@ defmodule ExWire.Kademlia.Bucket do
          id: 1,
          nodes: [
            %ExWire.Kademlia.Node{
+             endpoint: %ExWire.Struct.Endpoint{
+               ip: [1, 2, 3, 4],
+               tcp_port: 5,
+               udp_port: nil
+             },
              key: <<115, 3, 97, 5, 230, 214, 202, 188, 202, 118, 204, 177, 15, 72, 13, 68,
                134, 100, 145, 57, 13, 239, 13, 175, 42, 38, 147, 127, 31, 18, 27, 226>>,
              public_key: <<4, 108, 224, 89, 48, 199, 42, 188, 99, 44, 88, 226, 228, 50, 79,
@@ -97,11 +107,16 @@ defmodule ExWire.Kademlia.Bucket do
       ...>      124, 126, 164, 120, 206, 192, 237, 79, 162, 82, 137, 130, 207, 52, 72, 48,
       ...>      148, 233, 203, 201, 33, 110, 122, 163, 73, 105, 18, 66, 87, 109, 85, 42, 42,
       ...>      86, 170, 234, 228, 38, 197, 48, 61, 237, 103, 124, 228, 85, 186, 26, 205,
-      ...>      157>>)
+      ...>      157>>, ExWire.Struct.Endpoint.decode([<<1,2,3,4>>, <<>>, <<5>>]))
       iex> ExWire.Kademlia.Bucket.new(1, time: :test)
       ...>   |> ExWire.Kademlia.Bucket.insert_node(node, time: :test)
       ...>   |> ExWire.Kademlia.Bucket.head()
       %ExWire.Kademlia.Node{
+        endpoint: %ExWire.Struct.Endpoint{
+          ip: [1, 2, 3, 4],
+          tcp_port: 5,
+          udp_port: nil
+        },
         key: <<115, 3, 97, 5, 230, 214, 202, 188, 202, 118, 204, 177, 15, 72, 13, 68,
           134, 100, 145, 57, 13, 239, 13, 175, 42, 38, 147, 127, 31, 18, 27, 226>>,
         public_key: <<4, 108, 224, 89, 48, 199, 42, 188, 99, 44, 88, 226, 228, 50, 79,
@@ -123,17 +138,22 @@ defmodule ExWire.Kademlia.Bucket do
       ...>      124, 126, 164, 120, 206, 192, 237, 79, 162, 82, 137, 130, 207, 52, 72, 48,
       ...>      148, 233, 203, 201, 33, 110, 122, 163, 73, 105, 18, 66, 87, 109, 85, 42, 42,
       ...>      86, 170, 234, 228, 38, 197, 48, 61, 237, 103, 124, 228, 85, 186, 26, 205,
-      ...>      157>>)
+      ...>      157>>, ExWire.Struct.Endpoint.decode([<<1,2,3,4>>, <<>>, <<5>>]))
       iex> node1 = ExWire.Kademlia.Node.new(<<4, 48, 183, 171, 48, 160, 28, 18, 74, 108, 206, 202, 54, 134,
       ...>       62, 206, 18, 196, 245, 250, 104, 227, 186, 155, 11, 81, 64, 124, 204, 0,
       ...>       46, 238, 211, 179, 16, 45, 32, 168, 143, 28, 29, 60, 49, 84, 226, 68, 147,
       ...>       23, 184, 239, 149, 9, 14, 119, 179, 18, 213, 204, 57, 53, 79, 134, 213,
-      ...>       214, 6>>)
+      ...>       214, 6>>, ExWire.Struct.Endpoint.decode([<<5,6,7,8>>, <<>>, <<5>>]))
       iex> ExWire.Kademlia.Bucket.new(1, time: :test)
       ...>   |> ExWire.Kademlia.Bucket.insert_node(node, time: :test)
       ...>   |> ExWire.Kademlia.Bucket.insert_node(node1, time: :test)
       ...>   |> ExWire.Kademlia.Bucket.last()
       %ExWire.Kademlia.Node{
+        endpoint: %ExWire.Struct.Endpoint{
+          ip: [1, 2, 3, 4],
+          tcp_port: 5,
+          udp_port: nil
+        },
         key: <<115, 3, 97, 5, 230, 214, 202, 188, 202, 118, 204, 177, 15, 72, 13, 68,
           134, 100, 145, 57, 13, 239, 13, 175, 42, 38, 147, 127, 31, 18, 27, 226>>,
         public_key: <<4, 108, 224, 89, 48, 199, 42, 188, 99, 44, 88, 226, 228, 50, 79,
@@ -155,13 +175,18 @@ defmodule ExWire.Kademlia.Bucket do
       ...>      124, 126, 164, 120, 206, 192, 237, 79, 162, 82, 137, 130, 207, 52, 72, 48,
       ...>      148, 233, 203, 201, 33, 110, 122, 163, 73, 105, 18, 66, 87, 109, 85, 42, 42,
       ...>      86, 170, 234, 228, 38, 197, 48, 61, 237, 103, 124, 228, 85, 186, 26, 205,
-      ...>      157>>)
+      ...>      157>>, ExWire.Struct.Endpoint.decode([<<1,2,3,4>>, <<>>, <<5>>]))
       iex> ExWire.Kademlia.Bucket.new(1, time: :test)
       ...> |> ExWire.Kademlia.Bucket.insert_node(node, time: :test)
       %ExWire.Kademlia.Bucket{
         id: 1,
         nodes: [
           %ExWire.Kademlia.Node{
+            endpoint: %ExWire.Struct.Endpoint{
+              ip: [1, 2, 3, 4],
+              tcp_port: 5,
+              udp_port: nil
+            },
             key: <<115, 3, 97, 5, 230, 214, 202, 188, 202, 118, 204, 177, 15, 72, 13, 68,
               134, 100, 145, 57, 13, 239, 13, 175, 42, 38, 147, 127, 31, 18, 27, 226>>,
             public_key: <<4, 108, 224, 89, 48, 199, 42, 188, 99, 44, 88, 226, 228, 50, 79,
@@ -188,13 +213,18 @@ defmodule ExWire.Kademlia.Bucket do
       ...>      124, 126, 164, 120, 206, 192, 237, 79, 162, 82, 137, 130, 207, 52, 72, 48,
       ...>      148, 233, 203, 201, 33, 110, 122, 163, 73, 105, 18, 66, 87, 109, 85, 42, 42,
       ...>      86, 170, 234, 228, 38, 197, 48, 61, 237, 103, 124, 228, 85, 186, 26, 205,
-      ...>      157>>)
+      ...>      157>>, ExWire.Struct.Endpoint.decode([<<1,2,3,4>>, <<>>, <<5>>]))
       iex> bucket = ExWire.Kademlia.Bucket.new(1, time: :test)
       ...>   |> ExWire.Kademlia.Bucket.insert_node(node, time: :test)
       %ExWire.Kademlia.Bucket{
         id: 1,
         nodes: [
           %ExWire.Kademlia.Node{
+            endpoint: %ExWire.Struct.Endpoint{
+              ip: [1, 2, 3, 4],
+              tcp_port: 5,
+              udp_port: nil
+            },
             key: <<115, 3, 97, 5, 230, 214, 202, 188, 202, 118, 204, 177, 15, 72, 13, 68,
               134, 100, 145, 57, 13, 239, 13, 175, 42, 38, 147, 127, 31, 18, 27, 226>>,
             public_key: <<4, 108, 224, 89, 48, 199, 42, 188, 99, 44, 88, 226, 228, 50, 79,
@@ -233,12 +263,12 @@ defmodule ExWire.Kademlia.Bucket do
       ...>       124, 126, 164, 120, 206, 192, 237, 79, 162, 82, 137, 130, 207, 52, 72, 48,
       ...>       148, 233, 203, 201, 33, 110, 122, 163, 73, 105, 18, 66, 87, 109, 85, 42, 42,
       ...>       86, 170, 234, 228, 38, 197, 48, 61, 237, 103, 124, 228, 85, 186, 26, 205,
-      ...>       157>>)
+      ...>       157>>, ExWire.Struct.Endpoint.decode([<<1,2,3,4>>, <<>>, <<5>>]))
       iex> node2 = ExWire.Kademlia.Node.new(<<4, 48, 183, 171, 48, 160, 28, 18, 74, 108, 206, 202, 54, 134,
       ...>       62, 206, 18, 196, 245, 250, 104, 227, 186, 155, 11, 81, 64, 124, 204, 0,
       ...>       46, 238, 211, 179, 16, 45, 32, 168, 143, 28, 29, 60, 49, 84, 226, 68, 147,
       ...>       23, 184, 239, 149, 9, 14, 119, 179, 18, 213, 204, 57, 53, 79, 134, 213,
-      ...>       214, 6>>)
+      ...>       214, 6>>, ExWire.Struct.Endpoint.decode([<<5,6,7,8>>, <<>>, <<5>>]))
       iex> bucket = ExWire.Kademlia.Bucket.new(1)
       ...>   |> ExWire.Kademlia.Bucket.insert_node(node1)
       ...>   |> ExWire.Kademlia.Bucket.insert_node(node2)
@@ -264,7 +294,7 @@ defmodule ExWire.Kademlia.Bucket do
       ...>      124, 126, 164, 120, 206, 192, 237, 79, 162, 82, 137, 130, 207, 52, 72, 48,
       ...>      148, 233, 203, 201, 33, 110, 122, 163, 73, 105, 18, 66, 87, 109, 85, 42, 42,
       ...>      86, 170, 234, 228, 38, 197, 48, 61, 237, 103, 124, 228, 85, 186, 26, 205,
-      ...>      157>>)
+      ...>      157>>, ExWire.Struct.Endpoint.decode([<<1,2,3,4>>, <<>>, <<5>>]))
       iex> bucket = ExWire.Kademlia.Bucket.new(1)
       iex> bucket |> ExWire.Kademlia.Bucket.member?(node)
       false
