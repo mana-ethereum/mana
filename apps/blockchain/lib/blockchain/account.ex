@@ -563,16 +563,14 @@ defmodule Blockchain.Account do
 
   @spec storage_put(DB.db(), EVM.trie_root(), integer(), integer()) :: Trie.t()
   defp storage_put(db, storage_root, key, value) do
-    Trie.new(db, storage_root)
-    |> Trie.update(
-      key |> :binary.encode_unsigned() |> BitHelper.pad(32) |> Keccak.kec(),
-      value |> ExRLP.encode()
-    )
+    k = key |> :binary.encode_unsigned() |> BitHelper.pad(32) |> Keccak.kec()
+    v = if is_nil(value), do: nil, else: ExRLP.encode(value)
+    Trie.new(db, storage_root) |> Trie.update(k, v)
   end
 
   @spec storage_fetch(DB.db(), EVM.trie_root(), integer()) :: integer() | nil
-  defp storage_fetch(db, storage_root, key) do
-    Trie.new(db, storage_root)
-    |> Trie.get(key |> :binary.encode_unsigned() |> BitHelper.pad(32) |> Keccak.kec())
+  def storage_fetch(db, storage_root, key) do
+    k = key |> :binary.encode_unsigned() |> BitHelper.pad(32) |> Keccak.kec()
+    Trie.new(db, storage_root) |> Trie.get(k)
   end
 end
