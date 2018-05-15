@@ -558,7 +558,7 @@ defmodule Blockchain.Account do
     end
   end
 
-  @spec storage_put(DB.db(), EVM.EVM.trie_root(), integer(), integer()) :: MerkleParticiaTree.t()
+  @spec storage_put(DB.db(), EVM.trie_root(), integer(), integer()) :: MerkleParticiaTree.t()
   defp storage_put(db, storage_root, key, value) do
     Trie.new(db, storage_root)
     |> Trie.update(
@@ -567,7 +567,7 @@ defmodule Blockchain.Account do
     )
   end
 
-  @spec storage_fetch(DB.db(), EVM.EVM.trie_root(), integer()) :: integer() | nil
+  @spec storage_fetch(DB.db(), EVM.trie_root(), integer()) :: integer() | nil
   defp storage_fetch(db, storage_root, key) do
     Trie.new(db, storage_root)
     |> Trie.get(key |> :binary.encode_unsigned() |> BitHelper.pad(32) |> Keccak.kec())
