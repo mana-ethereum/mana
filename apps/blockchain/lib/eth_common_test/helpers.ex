@@ -58,7 +58,7 @@ defmodule EthCommonTest.Helpers do
     Poison.decode!(body)
   end
 
-  @spec test_file_name(atom(), atom()) :: String.t()
+  @spec test_file_name(String.t(), String.t()) :: String.t()
   def test_file_name(test_set, test_subset) do
     Path.join(ethereum_common_tests_path(), "#{test_set}/#{to_string(test_subset)}.json")
   end
