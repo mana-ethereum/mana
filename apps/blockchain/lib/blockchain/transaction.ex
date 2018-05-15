@@ -1,14 +1,22 @@
 defmodule Blockchain.Transaction do
   @moduledoc """
-  This module encodes the transaction object, defined in Section 4.3
-  of the Yellow Paper (http://gavwood.com/Paper.pdf). We are focused
-  on implementing 𝛶, as defined in Eq.(1).
+  This module encodes the transaction object, defined in Section 4.2
+  of the Yellow Paper. We are focused on implementing 𝛶, as defined in Eq.(1).
   """
 
   alias Blockchain.{Account, Transaction}
   alias Block.Header
 
-  # nonce: Tn, gas_price: Tp, gas_limit: Tg, to: Tt, value: Tv,  v: Tw, r: Tr, s: Ts, init: Ti, data: Td
+  # nonce: T_n
+  # gas_price: T_p
+  # gas_limit: T_g
+  # to: T_t
+  # value: T_v
+  # v: T_w
+  # r: T_r
+  # s: T_s
+  # init: T_i
+  # data: T_d
   defstruct nonce: 0,
             gas_price: 0,
             gas_limit: 0,
@@ -35,7 +43,7 @@ defmodule Blockchain.Transaction do
 
   @doc """
   Encodes a transaction such that it can be RLP-encoded.
-  This is defined at L_T Eq.(14) in the Yellow Paper.
+  This is defined at L_T Eq.(15) in the Yellow Paper.
 
   ## Examples
 
@@ -77,7 +85,7 @@ defmodule Blockchain.Transaction do
   @doc """
   Decodes a transaction that was previously encoded
   using `Transaction.serialize/1`. Note, this is the
-  inverse of L_T Eq.(14) defined in the Yellow Paper.
+  inverse of L_T Eq.(15) defined in the Yellow Paper.
 
   ## Examples
 
@@ -452,7 +460,7 @@ defmodule Blockchain.Transaction do
   @doc """
   Defines the "intrinsic gas cost," that is the amount of gas
   this transaction requires to be paid prior to execution. This
-  is defined as g_0 in Eq.(62), Eq.(63) and Eq.(64) of the
+  is defined as g_0 in Eq.(54), Eq.(55) and Eq.(56) of the
   Yellow Paper.
 
   ## Examples

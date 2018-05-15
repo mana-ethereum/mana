@@ -11,9 +11,15 @@ defmodule Blockchain.Account do
   @empty_keccak Keccak.kec(<<>>)
   @empty_trie Trie.empty_trie_root_hash()
 
-  # State defined in Section 4.1 of the Yellow Paper
-  # nonce: σn, balance: σb, storate_root: σs, code_hash: σc
-  defstruct nonce: 0, balance: 0, storage_root: @empty_trie, code_hash: @empty_keccak
+  # State defined in Section 4.1 of the Yellow Paper:
+  # nonce: σ_n
+  # balance: σ_b
+  # storate_root: σ_s
+  # code_hash: σ_c
+  defstruct nonce: 0,
+            balance: 0,
+            storage_root: @empty_trie,
+            code_hash: @empty_keccak
 
   # Types defined as Eq.(12) of the Yellow Paper
   @type t :: %__MODULE__{
@@ -24,8 +30,8 @@ defmodule Blockchain.Account do
         }
 
   @doc """
-  Checks whether or not an account is a non-contract account. This is defined in the latter
-  part of Section 4.1 of the Yellow Paper.
+  Checks whether or not an account is a non-contract account.
+  This is defined in the latter part of Section 4.1 of the Yellow Paper.
 
   ## Examples
 
@@ -111,7 +117,7 @@ defmodule Blockchain.Account do
       %Blockchain.Account{nonce: 5, balance: 6, storage_root: <<0x01>>, code_hash: <<0x02>>}
 
       iex> MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
-      ...> |> MerklePatriciaTree.Trie.update(<<0x01::160>> |> ExthCrypto.Hash.Keccak.kec(), <<>>)
+      ...> |> MerklePatriciaTree.Trie.update(<<0x01::160>> |> ExthCrypto.Hash.Keccak.kec(), nil)
       ...> |> Blockchain.Account.get_account(<<0x01::160>>)
       nil
 
@@ -123,10 +129,6 @@ defmodule Blockchain.Account do
   def get_account(state, address) do
     case Trie.get(state, address |> Keccak.kec()) do
       nil ->
-        nil
-
-      # TODO: Is this the same as deleting the account?
-      <<>> ->
         nil
 
       encoded_account ->
@@ -175,7 +177,7 @@ defmodule Blockchain.Account do
 
   @doc """
   Completely removes an account from the world state. This is used,
-  for instance, after a suicide. This is defined from Eq.(77) and
+  for instance, after a suicide. This is defined from Eq.(71) and
   Eq.(78) in the Yellow Paper.
 
   # TODO: Should we delete the storage root trie?
@@ -195,7 +197,7 @@ defmodule Blockchain.Account do
   """
   @spec del_account(EVM.state(), EVM.address()) :: EVM.state()
   def del_account(state, address) do
-    Trie.update(state, address |> Keccak.kec(), <<>>)
+    Trie.update(state, address |> Keccak.kec(), nil)
   end
 
   @doc """

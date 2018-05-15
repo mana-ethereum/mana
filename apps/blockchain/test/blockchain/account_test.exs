@@ -4,7 +4,7 @@ defmodule Blockchain.AccountTest do
   doctest Blockchain.Account
 
   alias ExthCrypto.Hash.Keccak
-  alias MerklePatriciaTree.Trie
+  alias MerklePatriciaTree.{Trie, DB}
   alias Blockchain.Account
 
   test "serialize and deserialize" do
@@ -21,6 +21,41 @@ defmodule Blockchain.AccountTest do
              |> ExRLP.encode()
              |> ExRLP.decode()
              |> Account.deserialize()
+  end
+
+  test "cleans up storage when account is deleted" do
+    db = MerklePatriciaTree.Test.random_ets_db()
+    address = <<0x01::160>>
+
+    account = %Account{
+      nonce: 0,
+      balance: 0,
+      code_hash: Keccak.kec(<<>>),
+      storage_root: Trie.empty_trie_root_hash()
+    }
+
+    state =
+      Trie.new(db)
+      |> Account.put_account(address, account)
+      |> Account.put_storage(address, 42, 24)
+
+    account = Account.get_account(state, address)
+
+    Account.del_account(state, address)
+
+    dump_account_storage(db, account)
+
+    key = 42 |> :binary.encode_unsigned() |> BitHelper.pad(32) |> Keccak.kec()
+    value = Trie.new(db, account.storage_root) |> Trie.get(key)
+
+    assert value == :not_found
+  end
+
+  def dump_account_storage(db, account) do
+    Trie.new(db, account.storage_root)
+    |> Trie.Inspector.all_values()
+    |> Enum.map(fn {_key, value} -> :binary.decode_unsigned(value) end)
+    |> Enum.map(fn value -> IO.puts(value) end)
   end
 
   test "valid empty state_root" do
@@ -41,7 +76,7 @@ defmodule Blockchain.AccountTest do
       |> Account.put_account(<<0x01::160>>, %Account{
         nonce: 0,
         balance: 0,
-        code_hash: <<>> |> Keccak.kec(),
+        code_hash: Keccak.kec(<<>>),
         storage_root: Trie.empty_trie_root_hash()
       })
 
@@ -60,7 +95,7 @@ defmodule Blockchain.AccountTest do
       |> Account.put_account(address, %Account{
         nonce: 0,
         balance: 0,
-        code_hash: <<>> |> Keccak.kec(),
+        code_hash: Keccak.kec(<<>>),
         storage_root: Trie.empty_trie_root_hash()
       })
       |> Account.put_storage(address, 1, 1)
@@ -80,7 +115,7 @@ defmodule Blockchain.AccountTest do
       |> Account.put_account(address, %Account{
         nonce: 0,
         balance: 0,
-        code_hash: <<>> |> Keccak.kec(),
+        code_hash: Keccak.kec(<<>>),
         storage_root: Trie.empty_trie_root_hash()
       })
       |> Account.put_code(address, <<1, 2, 3>>)
@@ -100,7 +135,7 @@ defmodule Blockchain.AccountTest do
       |> Account.put_account(address, %Account{
         nonce: 99,
         balance: 0,
-        code_hash: <<>> |> Keccak.kec(),
+        code_hash: Keccak.kec(<<>>),
         storage_root: Trie.empty_trie_root_hash()
       })
       |> Account.increment_nonce(address)

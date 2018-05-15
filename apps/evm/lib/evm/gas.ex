@@ -3,28 +3,24 @@ defmodule EVM.Gas do
   Functions for interacting wth gas and costs of opscodes.
   """
 
-  alias EVM.MachineState
-  alias EVM.MachineCode
-  alias EVM.Operation
-  alias EVM.Address
-  alias EVM.ExecEnv
+  alias EVM.{MachineState, MachineCode, Operation, Address, ExecEnv}
 
   @type t :: EVM.val()
   @type gas_price :: EVM.Wei.t()
 
-  # Nothing paid for operations of the set Wzero.
+  # Nothing paid for operations of the set W_zero.
   @g_zero 0
-  # Amount of gas to pay for operations of the set Wbase.
+  # Amount of gas to pay for operations of the set W_base.
   @g_base 2
-  # Amount of gas to pay for operations of the set Wverylow.
+  # Amount of gas to pay for operations of the set W_verylow.
   @g_verylow 3
-  # Amount of gas to pay for operations of the set Wlow.
+  # Amount of gas to pay for operations of the set W_low.
   @g_low 5
-  # Amount of gas to pay for operations of the set Wmid.
+  # Amount of gas to pay for operations of the set W_mid.
   @g_mid 8
-  # Amount of gas to pay for operations of the set Whigh.
+  # Amount of gas to pay for operations of the set W_high.
   @g_high 10
-  # Amount of gas to pay for operations of the set Wextcode.
+  # Amount of gas to pay for operations of the set W_extcode.
   @g_extcode 20
   # Amount of gas to pay for a BALANCE operation.
   @g_balance 20
@@ -217,7 +213,7 @@ defmodule EVM.Gas do
     max(out_memory_cost, in_memory_cost)
   end
 
-  # From Eq 220: Cmem(μ′i)−Cmem(μi)
+  # From Eq 220: C_mem(μ′i) − C_mem(μi)
   def memory_expansion_cost(machine_state, offset, length) do
     memory_expansion_value = memory_expansion_value(machine_state.active_words, offset, length)
 
@@ -245,7 +241,7 @@ defmodule EVM.Gas do
     end
   end
 
-  # Eq 222 - Cmem
+  # Eq 222 - C_mem
   def quadratic_memory_cost(a) do
     linear_cost = a * @g_memory
     quadratic_cost = MathHelper.floor(:math.pow(a, 2) / @g_quad_coeff_div)

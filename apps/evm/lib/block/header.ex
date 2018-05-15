@@ -1,6 +1,7 @@
 defmodule Block.Header do
   @moduledoc """
   This structure codifies the header of a block in the blockchain.
+  For more information, see Section 4.3 of the Yellow Paper.
   """
 
   alias ExthCrypto.Hash.Keccak
@@ -16,7 +17,7 @@ defmodule Block.Header do
             beneficiary: nil,
             # Hr TRIE(LS(Π(σ, B)))
             state_root: @empty_trie,
-            # Ht TRIE({∀i < kBTk, i ∈ P : p(i, LT (BT[i]))})
+            # Ht TRIE({∀i < kBTk, i ∈ P : p(i, LT(BT[i]))})
             transactions_root: @empty_trie,
             # He TRIE({∀i < kBRk, i ∈ P : p(i, LR(BR[i]))})
             receipts_root: @empty_trie,
@@ -39,7 +40,7 @@ defmodule Block.Header do
             # Hn
             nonce: nil
 
-  # As defined in Eq.(35)
+  # As defined in section 4.3
   @type t :: %__MODULE__{
           parent_hash: EVM.hash(),
           ommers_hash: EVM.trie_root(),
@@ -60,19 +61,26 @@ defmodule Block.Header do
           nonce: <<_::64>> | nil
         }
 
-  # The start of the Homestead block, as defined in Eq.(13) of the Yellow Paper (N_H)
+  # The start of the Homestead block, as defined in EIP-606:
+  # https://github.com/ethereum/EIPs/blob/master/EIPS/eip-606.md
   @homestead_block 1_150_000
 
-  # d_0 from Eq.(40)
+  # D_0 is the difficulty of the genesis block.
+  # As defined in Eq.(42)
   @initial_difficulty 131_072
-  # Mimics d_0 in Eq.(39), but variable on different chains
+
+  # Mimics d_0 in Eq.(42), but variable on different chains
   @minimum_difficulty @initial_difficulty
+
+  # Eq.(43)
   @difficulty_bound_divisor 2048
-  # Eq.(58)
+
+  # Must be 32 bytes or fewer. See H_e in Eq.(37)
   @max_extra_data_bytes 32
 
-  # Constant from Eq.(45) and Eq.(46)
+  # Constant from Eq.(47)
   @gas_limit_bound_divisor 1024
+
   # Eq.(47)
   @min_gas_limit 125_000
 
@@ -88,7 +96,7 @@ defmodule Block.Header do
 
   @doc """
   This functions encode a header into a value that can
-  be RLP encoded. This is defined as L_H Eq.(32) in the Yellow Paper.
+  be RLP encoded. This is defined as L_H Eq.(34) in the Yellow Paper.
 
   ## Examples
 
@@ -98,27 +106,42 @@ defmodule Block.Header do
   @spec serialize(t) :: ExRLP.t()
   def serialize(h) do
     [
+      # H_p
       h.parent_hash,
+      # H_o
       h.ommers_hash,
+      # H_c
       h.beneficiary,
+      # H_r
       h.state_root,
+      # H_t
       h.transactions_root,
+      # H_e
       h.receipts_root,
+      # H_b
       h.logs_bloom,
+      # H_d
       h.difficulty,
+      # H_i
       if(h.number == 0, do: <<>>, else: h.number),
+      # H_l
       h.gas_limit,
+      # H_g
       if(h.number == 0, do: <<>>, else: h.gas_used),
+      # H_s
       h.timestamp,
+      # H_x
       h.extra_data,
+      # H_m
       h.mix_hash,
+      # H_n
       h.nonce
     ]
   end
 
   @doc """
   Deserializes a block header from an RLP encodable structure.
-  This effectively undoes the encoding defined in L_H Eq.(32) of the
+  This effectively undoes the encoding defined in L_H Eq.(34) of the
   Yellow Paper.
 
   ## Examples
@@ -166,9 +189,10 @@ defmodule Block.Header do
   end
 
   @doc """
-  Computes hash of a block header, which is simply the hash of the serialized block header.
+  Computes hash of a block header,
+  which is simply the hash of the serialized block header.
 
-  This is defined in Eq.(37) of the Yellow Paper.
+  This is defined in Eq.(33) of the Yellow Paper.
 
   ## Examples
 
@@ -182,7 +206,10 @@ defmodule Block.Header do
   """
   @spec hash(t) :: EVM.hash()
   def hash(header) do
-    header |> serialize() |> ExRLP.encode() |> Keccak.kec()
+    header
+    |> serialize()
+    |> ExRLP.encode()
+    |> Keccak.kec()
   end
 
   @doc """
@@ -234,10 +261,9 @@ defmodule Block.Header do
     do: not is_before_homestead?(h, homestead_block)
 
   @doc """
-  Returns true if the block header is valid. This defines
-  Eq.(50), Eq.(51), Eq.(52), Eq.(53), Eq.(54), Eq.(55),
-  Eq.(56), Eq.(57) and Eq.(58) of the Yellow Paper, commonly
-  referred to as V(H).
+  Returns true if the block header is valid.
+  This defines Eq.(50) of the Yellow Paper,
+  commonly referred to as V(H).
 
   # TODO: Add proof of work check
 
@@ -328,8 +354,8 @@ defmodule Block.Header do
   end
 
   @doc """
-  Calculates the difficulty of a new block header. This implements Eq.(39),
-  Eq.(40), Eq.(41), Eq.(42), Eq.(43) and Eq.(44) of the Yellow Paper.
+  Calculates the difficulty of a new block header. This implements Eq.(41),
+  Eq.(42), Eq.(43), Eq.(44), Eq.(45) and Eq.(46) of the Yellow Paper.
 
   ## Examples
 
@@ -505,13 +531,13 @@ defmodule Block.Header do
   end
 
   # Eq.(53), Eq.(54) and Eq.(55)
-  @spec check_gas_limit_validity([atom()], t, EVM.Gas.t() | nil) :: [atom()]
+  @spec check_gas_limit_validity([atom()], t, EVM.Gas.t(), EVM.Gas.t(), EVM.Gas.t()) :: [atom()]
   defp check_gas_limit_validity(
          errors,
          header,
          parent_gas_limit,
-         gas_limit_bound_divisor \\ @gas_limit_bound_divisor,
-         min_gas_limit \\ @min_gas_limit
+         gas_limit_bound_divisor,
+         min_gas_limit
        ) do
     if is_gas_limit_valid?(
          header.gas_limit,

@@ -29,12 +29,12 @@ defmodule Blockchain.Block do
           ommers: [Header.t()]
         }
 
-  # R_b in Eq.(150)
-  @reward_wei 5.0e18 |> round
+  # R_b in Eq.(164)
+  @reward_wei round(5.0e18)
 
   @doc """
   Encodes a block such that it can be represented in
-  RLP encoding. This is defined as `L_B` Eq.(33) in the Yellow Paper.
+  RLP encoding. This is defined as `L_B` Eq.(35) in the Yellow Paper.
 
   ## Examples
 
@@ -75,15 +75,18 @@ defmodule Blockchain.Block do
   @spec serialize(t) :: ExRLP.t()
   def serialize(block) do
     [
+      # L_H(B_H)
       Header.serialize(block.header),
+      # L_T*(B_T)
       Enum.map(block.transactions, &Transaction.serialize/1),
+      # L_H*(B_U)
       Enum.map(block.ommers, &Header.serialize/1)
     ]
   end
 
   @doc """
   Decodes a block from an RLP encoding. Effectively inverts
-  L_B defined in Eq.(33).
+  L_B defined in Eq.(35).
 
   ## Examples
 
@@ -130,9 +133,7 @@ defmodule Blockchain.Block do
       <<218, 225, 46, 241, 196, 160, 136, 96, 109, 216, 73, 167, 92, 174, 91, 228, 85, 112, 234, 129, 99, 200, 158, 61, 223, 166, 165, 132, 187, 24, 142, 193>>
   """
   @spec hash(t) :: EVM.hash()
-  def hash(block) do
-    block.header |> Header.hash()
-  end
+  def hash(block), do: Header.hash(block.header)
 
   @doc """
   Stores a given block in the database and returns the block hash.
@@ -304,7 +305,7 @@ defmodule Blockchain.Block do
   def get_parent_block(block, db) do
     case block.header.number do
       0 -> :genesis
-      _number -> get_block(block.header.parent_hash, db)
+      __ -> get_block(block.header.parent_hash, db)
     end
   end
 
@@ -1035,8 +1036,7 @@ defmodule Blockchain.Block do
 
   @doc """
   Adds the rewards to miners (including for ommers) to a block.
-  This is defined in Section 11.3, Eq.(147), Eq.(148) and Eq.(149)
-  of the Yellow Paper.
+  This is defined in Section 11.3, Eq.(159-163) of the Yellow Paper.
 
   ## Examples
 
