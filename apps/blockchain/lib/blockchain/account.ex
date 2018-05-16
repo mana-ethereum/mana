@@ -180,8 +180,6 @@ defmodule Blockchain.Account do
   for instance, after a suicide. This is defined from Eq.(71) and
   Eq.(78) in the Yellow Paper.
 
-  # TODO: Should we delete the storage root trie?
-
   ## Examples
 
       iex> MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())

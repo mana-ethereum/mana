@@ -4,7 +4,7 @@ defmodule Blockchain.Transaction do
   of the Yellow Paper. We are focused on implementing 𝛶, as defined in Eq.(1).
   """
 
-  alias Blockchain.{Account, Transaction}
+  alias Blockchain.{Account, Transaction, MathHelper}
   alias Block.Header
 
   # nonce: T_n
@@ -355,7 +355,7 @@ defmodule Blockchain.Transaction do
           {state, remaining_gas_, sub_state_}
       end
 
-    refund = calculate_total_refund(trx, remaining_gas, sub_state.refund)
+    refund = MathHelper.calculate_total_refund(trx, remaining_gas, sub_state.refund)
 
     state_after_gas = finalize_transaction_gas(state_p, sender, trx, refund, block_header)
 
@@ -425,36 +425,6 @@ defmodule Blockchain.Transaction do
     state
     |> Account.add_wei(sender, total_refund * trx.gas_price)
     |> Account.add_wei(block_header.beneficiary, (trx.gas_limit - total_refund) * trx.gas_price)
-  end
-
-  @doc """
-  Caluclates the amount which should be refunded based on the current transactions
-  final usage. This includes the remaining gas plus refunds from clearing storage.
-
-  The specs calls for capping the refund at half of the total amount of gas used.
-
-  This function is defined as `g*` in Eq.(72) in the Yellow Paper.
-
-  ## Examples
-
-      iex> Blockchain.Transaction.calculate_total_refund(%Blockchain.Transaction{gas_limit: 100}, 10, 5)
-      15
-
-      iex> Blockchain.Transaction.calculate_total_refund(%Blockchain.Transaction{gas_limit: 100}, 10, 99)
-      55
-
-      iex> Blockchain.Transaction.calculate_total_refund(%Blockchain.Transaction{gas_limit: 100}, 10, 0)
-      10
-
-      iex> Blockchain.Transaction.calculate_total_refund(%Blockchain.Transaction{gas_limit: 100}, 11, 99)
-      55
-  """
-  @spec calculate_total_refund(t, EVM.Gas.t(), EVM.SubState.refund()) :: EVM.Gas.t()
-  def calculate_total_refund(trx, remaining_gas, refund) do
-    # TODO: Add a math helper, finally
-    max_refund = round(:math.floor((trx.gas_limit - remaining_gas) / 2))
-
-    remaining_gas + min(max_refund, refund)
   end
 
   @doc """
