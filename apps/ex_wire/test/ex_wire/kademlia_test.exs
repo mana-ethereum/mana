@@ -2,11 +2,14 @@ defmodule ExWire.KademliaTest do
   use ExUnit.Case, async: true
 
   alias ExWire.{Kademlia, TestHelper}
-  alias ExWire.Kademlia.{Server, RoutingTable, Node}
+  alias ExWire.Kademlia.{Server, RoutingTable}
+  alias ExWire.Adapter.UDP
+  alias ExWire.Network
 
   setup_all do
     node = TestHelper.random_node()
-    {:ok, _} = Server.start_link(node)
+    {:ok, network_client_pid} = UDP.start_link({Network, []}, 35_350)
+    {:ok, _} = Server.start_link({node, network_client_pid})
 
     :ok
   end

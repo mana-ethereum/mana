@@ -6,10 +6,13 @@ defmodule ExWire.Kademlia.RoutingTableTest do
   alias ExWire.Kademlia.{RoutingTable, Bucket, Node}
   alias ExWire.Kademlia.Config, as: KademliaConfig
   alias ExWire.TestHelper
+  alias ExWire.Adapter.UDP
+  alias ExWire.Network
 
   setup_all do
+    {:ok, network_client_pid} = UDP.start_link({Network, []}, 35353)
     node = TestHelper.random_node()
-    table = RoutingTable.new(node)
+    table = RoutingTable.new(node, network_client_pid)
 
     {:ok, %{table: table}}
   end

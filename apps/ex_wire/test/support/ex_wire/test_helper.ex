@@ -5,9 +5,12 @@ defmodule ExWire.TestHelper do
 
   alias ExWire.Kademlia.{Node, RoutingTable}
   alias ExWire.Kademlia.Config, as: KademliaConfig
+  alias ExWire.Adapter.UDP
+  alias ExWire.Network
 
   def random_routing_table do
-    table = random_node() |> RoutingTable.new()
+    {:ok, network_client_pid} = UDP.start_link({Network, []}, 35352)
+    table = random_node() |> RoutingTable.new(network_client_pid)
 
     1..(KademliaConfig.bucket_size() * KademliaConfig.id_size())
     |> Enum.reduce(table, fn _el, acc ->
