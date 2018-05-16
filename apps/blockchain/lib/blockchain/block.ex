@@ -7,6 +7,7 @@ defmodule Blockchain.Block do
 
   alias ExthCrypto.Hash.Keccak
   alias Block.Header
+  alias Blockchain.Chain
   alias Blockchain.{Account, Transaction}
   alias Blockchain.Transaction.Receipt
   alias MerklePatriciaTree.{Trie, DB}

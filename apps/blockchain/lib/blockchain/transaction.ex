@@ -218,7 +218,7 @@ defmodule Blockchain.Transaction do
       ...> |> Blockchain.Transaction.is_valid?(trx, %Block.Header{gas_limit: 500_000, gas_used: 49_999})
       :valid
   """
-  @spec is_valid?(EVM.state(), t, Header.t()) :: :valid | {:invalid, atom()}
+  @spec is_valid?(EVM.state(), t, Block.Header.t()) :: :valid | {:invalid, atom()}
   def is_valid?(state, trx, block_header) do
     g_0 = intrinsic_gas_cost(trx, block_header)
     v_0 = trx.gas_limit * trx.gas_price + trx.value
@@ -472,7 +472,7 @@ defmodule Blockchain.Transaction do
       iex> Blockchain.Transaction.intrinsic_gas_cost(%Blockchain.Transaction{to: <<>>, init: <<1, 2, 0, 3>>, data: <<>>}, %Block.Header{number: 5_000_000})
       3 * 68 + 4 + 32000 + 21000
   """
-  @spec intrinsic_gas_cost(t, Header.t()) :: EVM.Gas.t()
+  @spec intrinsic_gas_cost(t, Block.Header.t()) :: EVM.Gas.t()
   def intrinsic_gas_cost(trx, block_header) do
     EVM.Gas.g_txdata(trx.init) + EVM.Gas.g_txdata(trx.data) +
       if(
