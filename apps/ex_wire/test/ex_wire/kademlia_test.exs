@@ -8,7 +8,7 @@ defmodule ExWire.KademliaTest do
 
   setup_all do
     node = TestHelper.random_node()
-    {:ok, network_client_pid} = UDP.start_link({Network, []}, 35_355)
+    {:ok, network_client_pid} = UDP.start_link({Network, []}, TestHelper.random(9_999))
     {:ok, _} = Server.start_link({node, network_client_pid})
 
     :ok
@@ -32,7 +32,7 @@ defmodule ExWire.KademliaTest do
 
       Kademlia.refresh_node(node)
 
-      [^node] = Kademlia.neighbours(node)
+      assert node |> Kademlia.neighbours() |> Enum.member?(node)
     end
   end
 end
