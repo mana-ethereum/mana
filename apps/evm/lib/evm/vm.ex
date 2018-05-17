@@ -122,16 +122,12 @@ defmodule EVM.VM do
     operation = MachineCode.current_operation(machine_state, exec_env)
     inputs = Operation.inputs(operation, machine_state)
 
-    machine_state =
-      machine_state
-      |> MachineState.subtract_gas(exec_env)
+    machine_state = MachineState.subtract_gas(machine_state, exec_env)
 
     {machine_state, sub_state, exec_env} =
       Operation.run_operation(operation, machine_state, sub_state, exec_env)
 
-    machine_state =
-      machine_state
-      |> MachineState.move_program_counter(operation, inputs)
+    machine_state = MachineState.move_program_counter(machine_state, operation, inputs)
 
     {machine_state, sub_state, exec_env}
   end
