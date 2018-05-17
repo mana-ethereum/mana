@@ -6,7 +6,7 @@ defmodule ExWire.Kademlia.RoutingTable do
   alias ExWire.Kademlia.{Bucket, Node}
   alias ExWire.Kademlia.Config, as: KademliaConfig
   alias ExWire.Message.Ping
-  alias ExWire.Network
+  alias ExWire.{Network, Protocol}
 
   defstruct [:current_node, :buckets, :network_client_pid, :expected_pongs]
 
@@ -144,7 +144,8 @@ defmodule ExWire.Kademlia.RoutingTable do
   end
 
   defp handle_full_bucket(table, candidate_for_removal, candidate_for_insertion) do
-    ping(table, candidate_for_removal)
+    {:sent_message, _, encoded_message} = ping(table, candidate_for_removal)
+    mdc = Protocol.mdc(encoded_message)
 
     table
   end
