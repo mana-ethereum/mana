@@ -23,7 +23,7 @@ defmodule ExWire.TestHelper do
   end
 
   def random_endpoint do
-    ExWire.Struct.Endpoint.decode([random_ip(), random_port(), random_ip()])
+    ExWire.Struct.Endpoint.decode([random_ip(), random_port(), random_port()])
   end
 
   defp public_key do

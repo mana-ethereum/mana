@@ -7,9 +7,8 @@ defmodule ExWire.Network do
 
   require Logger
 
-  alias ExWire.Crypto
-  alias ExWire.Handler
-  alias ExWire.Protocol
+  alias ExWire.{Crypto, Handler, Protocol, Config, Message}
+  alias ExWire.Struct.Endpoint
 
   defmodule InboundMessage do
     @moduledoc """
@@ -24,12 +23,12 @@ defmodule ExWire.Network do
     @type t :: %__MODULE__{
             data: binary(),
             server_pid: pid(),
-            remote_host: ExWire.Struct.Endpoint.t(),
+            remote_host: Endpoint.t(),
             timestamp: integer()
           }
   end
 
-  @type handler_action :: :no_action | {:sent_message, atom()}
+  @type handler_action :: :no_action | {:sent_message, atom(), binary()}
 
   @doc """
   Top-level receiver function to process an incoming message.
@@ -47,7 +46,19 @@ defmodule ExWire.Network do
       ...>   remote_host: nil,
       ...>   timestamp: 123,
       ...> })
-      {:sent_message, ExWire.Message.Pong}
+      {
+        :sent_message,
+        ExWire.Message.Pong,
+        <<11, 46, 99, 201, 31, 40, 192, 172, 205, 181, 103, 70, 170, 96, 36, 149, 232,
+        23, 150, 18, 130, 228, 250, 64, 5, 96, 194, 18, 45, 143, 235, 63, 62, 71, 59,
+        91, 40, 40, 141, 215, 176, 121, 246, 182, 129, 43, 195, 80, 245, 211, 151,
+        59, 218, 228, 173, 17, 184, 160, 76, 117, 58, 60, 101, 111, 12, 97, 242, 81,
+        171, 51, 168, 201, 224, 171, 181, 123, 180, 19, 129, 124, 89, 64, 255, 132,
+        45, 205, 174, 52, 216, 85, 135, 181, 220, 211, 59, 223, 0, 2, 236, 201, 132,
+        1, 2, 3, 4, 128, 130, 0, 5, 160, 21, 96, 138, 2, 65, 173, 135, 69, 74, 35,
+        153, 190, 41, 48, 2, 173, 239, 44, 221, 207, 63, 116, 210, 103, 215, 10, 87,
+        14, 174, 165, 52, 168, 123>>
+       }
 
       iex> ping_data = [1, [<<1,2,3,4>>, <<>>, <<5>>], [<<5,6,7,8>>, <<6>>, <<>>], 4] |> ExRLP.encode
       iex> payload = <<0::512>> <> <<0::8>> <> <<1::8>> <> ping_data
@@ -104,7 +115,17 @@ defmodule ExWire.Network do
       ...>   remote_host: nil,
       ...>   timestamp: 5,
       ...> })
-      {:sent_message, ExWire.Message.Pong}
+      {
+        :sent_message,
+        ExWire.Message.Pong,
+        <<33, 93, 10, 200, 46, 235, 5, 24, 6, 132, 70, 23, 191, 109, 80, 251, 204, 47,
+        68, 228, 124, 54, 165, 107, 90, 131, 63, 232, 26, 189, 4, 169, 39, 92, 92,
+        244, 62, 98, 19, 184, 151, 192, 159, 27, 136, 5, 43, 122, 27, 66, 220, 115,
+        103, 184, 180, 211, 214, 146, 185, 110, 78, 78, 19, 24, 106, 132, 223, 233,
+        255, 54, 51, 212, 128, 127, 12, 13, 120, 127, 234, 54, 114, 17, 244, 45, 23,
+        24, 137, 162, 131, 69, 229, 166, 228, 115, 145, 240, 0, 2, 204, 201, 132, 1,
+        2, 3, 4, 128, 130, 0, 5, 128, 5>>
+      }
 
       iex> ExWire.Network.handle(%ExWire.Network.InboundMessage{
       ...>   data: <<0::256>> <> <<0::512>> <> <<0::8>> <> <<99::8>> <> <<>>,
@@ -164,7 +185,17 @@ defmodule ExWire.Network do
       ...>   timestamp: 3,
       ...> }
       iex> ExWire.Network.send(message, self(), %ExWire.Struct.Endpoint{ip: <<1, 2, 3, 4>>, udp_port: 5})
-      {:sent_message, ExWire.Message.Pong}
+      {
+        :sent_message,
+        ExWire.Message.Pong,
+        <<237, 29, 189, 16, 55, 49, 91, 151, 78, 234, 77, 196, 228, 33, 158, 48, 254,
+         206, 167, 122, 154, 30, 84, 104, 71, 143, 58, 81, 64, 76, 246, 79, 121, 172,
+         184, 160, 58, 90, 92, 96, 90, 238, 168, 181, 121, 50, 213, 131, 209, 241, 51,
+         1, 178, 16, 33, 254, 66, 109, 222, 74, 116, 215, 55, 114, 9, 11, 231, 55,
+         220, 150, 231, 233, 223, 118, 87, 172, 141, 143, 96, 93, 229, 171, 86, 204,
+         22, 3, 56, 0, 45, 122, 141, 213, 246, 179, 139, 241, 1, 2, 204, 201, 132, 1,
+         2, 3, 4, 128, 130, 0, 5, 2, 3>>
+      }
       iex> receive do m -> m end
       {:"$gen_cast",
         {:send,
@@ -178,19 +209,21 @@ defmodule ExWire.Network do
         }
       }
   """
-  @spec send(ExWire.Message.t(), pid(), ExWire.Struct.Endpoint.t()) :: handler_action
+  @spec send(Message.t(), pid(), Endpoint.t()) :: handler_action
   def send(message, server_pid, to) do
+    encoded_message = Protocol.encode(message, Config.private_key())
+
     GenServer.cast(
       server_pid,
       {
         :send,
         %{
           to: to,
-          data: Protocol.encode(message, ExWire.Config.private_key())
+          data: encoded_message
         }
       }
     )
 
-    {:sent_message, message.__struct__}
+    {:sent_message, message.__struct__, encoded_message}
   end
 end

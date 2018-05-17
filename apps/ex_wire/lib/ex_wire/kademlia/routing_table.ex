@@ -126,7 +126,7 @@ defmodule ExWire.Kademlia.RoutingTable do
       ) do
     ping = Ping.new(current_endpoint, remote_endpoint)
 
-    ExWire.Network.send(ping, client_pid, remote_endpoint)
+    Network.send(ping, client_pid, remote_endpoint)
   end
 
   @spec replace_bucket(t(), integer(), Bucket.t()) :: t()
