@@ -10,11 +10,12 @@ defmodule ExWire.Kademlia.RoutingTable do
 
   defstruct [:current_node, :buckets, :network_client_pid, :expected_pongs]
 
+  @type expected_pongs :: %{required(binary()) => {Node.t(), Node.t()}}
   @type t :: %__MODULE__{
           current_node: Node.t(),
           buckets: [Bucket.t()],
           network_client_pid: pid(),
-          expected_pongs: []
+          expected_pongs: expected_pongs()
         }
 
   @doc """
@@ -49,7 +50,7 @@ defmodule ExWire.Kademlia.RoutingTable do
       current_node: node,
       buckets: initial_buckets,
       network_client_pid: client_pid,
-      expected_pongs: []
+      expected_pongs: %{}
     }
   end
 
@@ -78,7 +79,7 @@ defmodule ExWire.Kademlia.RoutingTable do
       |> Bucket.refresh_node(node)
 
     case refresh_node_result do
-      {:full_bucket, candidate_for_removal, bucket} ->
+      {:full_bucket, candidate_for_removal, _bucket} ->
         handle_full_bucket(table, candidate_for_removal, node)
 
       {_descr, _node, bucket} ->
@@ -122,7 +123,7 @@ defmodule ExWire.Kademlia.RoutingTable do
           current_node: %Node{endpoint: current_endpoint},
           network_client_pid: client_pid
         },
-        node = %Node{endpoint: remote_endpoint}
+        %Node{endpoint: remote_endpoint}
       ) do
     ping = Ping.new(current_endpoint, remote_endpoint)
 
@@ -143,11 +144,17 @@ defmodule ExWire.Kademlia.RoutingTable do
     Enum.at(buckets, id)
   end
 
-  defp handle_full_bucket(table, candidate_for_removal, candidate_for_insertion) do
+  @spec handle_full_bucket(t(), Node.t(), Node.t()) :: t()
+  defp handle_full_bucket(
+         table = %__MODULE__{expected_pongs: expected_pongs},
+         candidate_for_removal,
+         candidate_for_insertion
+       ) do
     {:sent_message, _, encoded_message} = ping(table, candidate_for_removal)
-    mdc = Protocol.mdc(encoded_message)
+    mdc = Protocol.message_mdc(encoded_message)
 
-    table
+    updated_pongs = Map.put(expected_pongs, mdc, {candidate_for_removal, candidate_for_insertion})
+    %{table | expected_pongs: updated_pongs}
   end
 
   @spec traverse(t(), integer(), [Node.t()], integer()) :: [Node.t()]

@@ -8,7 +8,7 @@ defmodule ExWire.KademliaTest do
 
   setup_all do
     node = TestHelper.random_node()
-    {:ok, network_client_pid} = UDP.start_link({Network, []}, 35_350)
+    {:ok, network_client_pid} = UDP.start_link({Network, []}, 35_355)
     {:ok, _} = Server.start_link({node, network_client_pid})
 
     :ok

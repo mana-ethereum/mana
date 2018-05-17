@@ -321,6 +321,6 @@ defmodule ExWire.Kademlia.Bucket do
 
   @spec full?(t()) :: boolean()
   def full?(%__MODULE__{nodes: nodes}) do
-    Enum.count(nodes) == Config.bucket_size()
+    Enum.count(nodes) >= Config.bucket_size()
   end
 end

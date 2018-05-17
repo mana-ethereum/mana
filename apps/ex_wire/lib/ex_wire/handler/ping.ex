@@ -4,8 +4,7 @@ defmodule ExWire.Handler.Ping do
   """
 
   alias ExWire.Handler
-  alias ExWire.Message.Pong
-  alias ExWire.Message.Ping
+  alias ExWire.Message.{Pong, Ping}
 
   @doc """
   Handler for a Ping message.

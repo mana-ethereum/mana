@@ -33,7 +33,7 @@ defmodule ExWire.Message.Ping do
     iex> ExWire.Message.Ping.new(
     ...>   %ExWire.Struct.Endpoint{ip: [1, 2, 3, 4], tcp_port: 5, udp_port: nil},
     ...>   %ExWire.Struct.Endpoint{ip: [6, 2, 7, 4], tcp_port: 5, udp_port: nil},
-    ...>   4, ExWire.Util.Timestamp.now(:test))
+    ...>   ExWire.Util.Timestamp.now(:test))
     %ExWire.Message.Ping{
        from: %ExWire.Struct.Endpoint{
          ip: [1, 2, 3, 4],
@@ -54,8 +54,8 @@ defmodule ExWire.Message.Ping do
   def new(
         from = %Endpoint{},
         to = %Endpoint{},
-        version \\ @default_version,
-        timestamp \\ Timestamp.soon()
+        timestamp \\ Timestamp.soon(),
+        version \\ @default_version
       ) do
     %__MODULE__{
       version: version,

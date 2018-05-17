@@ -10,7 +10,7 @@ defmodule ExWire.Kademlia.RoutingTableTest do
   alias ExWire.Network
 
   setup_all do
-    {:ok, network_client_pid} = UDP.start_link({Network, []}, 35353)
+    {:ok, network_client_pid} = UDP.start_link({Network, []}, 35349)
     node = TestHelper.random_node()
     table = RoutingTable.new(node, network_client_pid)
 
@@ -31,6 +31,30 @@ defmodule ExWire.Kademlia.RoutingTableTest do
       table = RoutingTable.refresh_node(table, table.current_node)
 
       assert table.buckets |> Enum.all?(fn bucket -> bucket.nodes |> Enum.empty?() end)
+    end
+
+    test "does add removal-insertion node pairs to expected_pongs if bucket is full", %{
+      table: table
+    } do
+      node = TestHelper.random_node()
+
+      bucket_idx = Node.common_prefix(node, table.current_node)
+      filler_node = TestHelper.random_node()
+      bucket = Enum.at(table.buckets, bucket_idx)
+
+      full_bucket =
+        0..(KademliaConfig.bucket_size() + 1)
+        |> Enum.reduce(bucket, fn _el, acc -> Bucket.insert_node(acc, filler_node) end)
+
+      updated_table = %{table | buckets: List.replace_at(table.buckets, bucket_idx, full_bucket)}
+
+      table = RoutingTable.refresh_node(updated_table, node)
+
+      pongs = table.expected_pongs
+      assert Enum.count(pongs) == 1
+
+      {_mdc, pair} = Enum.at(pongs, 0)
+      assert pair == {filler_node, node}
     end
   end
 
