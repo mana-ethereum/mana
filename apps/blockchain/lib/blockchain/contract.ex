@@ -78,7 +78,7 @@ defmodule Blockchain.Contract do
 
     {state_after_init, remaining_gas, accrued_sub_state, output} =
       EVM.VM.run(available_gas, exec_env)
-      |> interpret_vm_result
+      |> interpret_vm_result()
 
     contract_creation_cost = get_contract_creation_cost(output)
 
@@ -184,7 +184,7 @@ defmodule Blockchain.Contract do
         state_initialized_for_message_call
       )
 
-    exec_fun.(available_gas, exec_env) |> interpret_vm_result
+    exec_fun.(available_gas, exec_env) |> interpret_vm_result()
   end
 
   @doc """

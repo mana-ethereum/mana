@@ -21,7 +21,6 @@ defmodule Blockchain.Account do
             storage_root: @empty_trie,
             code_hash: @empty_keccak
 
-  # Types defined as Eq.(12) of the Yellow Paper
   @type t :: %__MODULE__{
           nonce: integer(),
           balance: EVM.Wei.t(),
@@ -106,8 +105,7 @@ defmodule Blockchain.Account do
   end
 
   @doc """
-  Loads an account from an address, as defined in Eq.(9), Eq.(10), Eq.(11)
-  and Eq.(12) of the Yellow Paper.
+  Loads an account from an address, as defined in Eq.(9), Eq.(10), and Eq.(12) of the Yellow Paper.
 
   ## Examples
 
@@ -172,13 +170,13 @@ defmodule Blockchain.Account do
       |> serialize()
       |> ExRLP.encode()
 
-    Trie.update(state, address |> Keccak.kec(), encoded_account)
+    Trie.update(state, Keccak.kec(address), encoded_account)
   end
 
   @doc """
-  Completely removes an account from the world state. This is used,
-  for instance, after a suicide. This is defined from Eq.(71) and
-  Eq.(78) in the Yellow Paper.
+  Completely removes an account from the world state.
+  This is used, for instance, after a suicide.
+  This is defined from Eq.(71) and Eq.(80) in the Yellow Paper.
 
   ## Examples
 
@@ -195,7 +193,7 @@ defmodule Blockchain.Account do
   """
   @spec del_account(EVM.state(), EVM.address()) :: EVM.state()
   def del_account(state, address) do
-    Trie.update(state, address |> Keccak.kec(), nil)
+    Trie.update(state, Keccak.kec(address), nil)
   end
 
   @doc """
@@ -561,14 +559,32 @@ defmodule Blockchain.Account do
 
   @spec storage_put(DB.db(), EVM.trie_root(), integer(), integer()) :: Trie.t()
   defp storage_put(db, storage_root, key, value) do
-    k = key |> :binary.encode_unsigned() |> BitHelper.pad(32) |> Keccak.kec()
-    v = if is_nil(value), do: nil, else: ExRLP.encode(value)
-    Trie.new(db, storage_root) |> Trie.update(k, v)
+    k = encode_storage_key(key)
+    v = encode_storage_value(value)
+
+    db
+    |> Trie.new(storage_root)
+    |> Trie.update(k, v)
   end
 
   @spec storage_fetch(DB.db(), EVM.trie_root(), integer()) :: integer() | nil
-  def storage_fetch(db, storage_root, key) do
-    k = key |> :binary.encode_unsigned() |> BitHelper.pad(32) |> Keccak.kec()
-    Trie.new(db, storage_root) |> Trie.get(k)
+  defp storage_fetch(db, storage_root, key) do
+    k = encode_storage_key(key)
+
+    db
+    |> Trie.new(storage_root)
+    |> Trie.get(k)
   end
+
+  @spec encode_storage_key(integer()) :: Trie.key()
+  defp encode_storage_key(key) do
+    key
+    |> :binary.encode_unsigned()
+    |> BitHelper.pad(32)
+    |> Keccak.kec()
+  end
+
+  @spec encode_storage_value(any()) :: binary() | nil
+  defp encode_storage_value(nil), do: nil
+  defp encode_storage_value(value), do: ExRLP.encode(value)
 end

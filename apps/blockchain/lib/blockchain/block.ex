@@ -1,8 +1,9 @@
 defmodule Blockchain.Block do
   @moduledoc """
-  This module effective encodes a Block, the heart of the blockchain. A chain is
-  formed when blocks point to previous blocks, either as a parent or an ommer (uncle).
-  For more information, see Section 4.4 of the Yellow Paper.
+  This module effective encodes a Block, the heart of the blockchain.
+  A chain is formed when blocks point to previous blocks,
+  either as a parent or an ommer (uncle).
+  For more information, see Section 4.3 of the Yellow Paper.
   """
 
   alias ExthCrypto.Hash.Keccak
@@ -12,7 +13,7 @@ defmodule Blockchain.Block do
   alias Blockchain.Transaction.Receipt
   alias MerklePatriciaTree.{Trie, DB}
 
-  # Defined in Eq.(18)
+  # Defined in Eq.(19)
   # block_hash: Hash for this block, acts simply as a cache,
   # header: B_H,
   # transactions: B_T,
@@ -77,9 +78,9 @@ defmodule Blockchain.Block do
     [
       # L_H(B_H)
       Header.serialize(block.header),
-      # L_T*(B_T)
+      # L_T(B_T)*
       Enum.map(block.transactions, &Transaction.serialize/1),
-      # L_H*(B_U)
+      # L_H(B_U)*
       Enum.map(block.ommers, &Header.serialize/1)
     ]
   end
@@ -196,8 +197,8 @@ defmodule Blockchain.Block do
   end
 
   @doc """
-  Returns a given block from the database, if the hash
-  exists in the database.
+  Gets a parent of the given block, if the hash exists in the database.
+  Returns the given block itself, if `step` is equal to 0.
 
   See `Blockchain.Block.put_block/2` for details.
 

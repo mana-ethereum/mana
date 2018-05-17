@@ -46,7 +46,16 @@ defmodule Blockchain.AccountTest do
 
     dump_account_storage(db, account.storage_root)
 
-    value = Account.storage_fetch(db, account.storage_root, 42)
+    key =
+      42
+      |> :binary.encode_unsigned()
+      |> BitHelper.pad(32)
+      |> Keccak.kec()
+
+    value =
+      db
+      |> Trie.new(account.storage_root)
+      |> Trie.get(key)
 
     assert value == nil
   end
