@@ -2,7 +2,7 @@
 
 Elixir implementation of Ethereum's Blockchain. This includes functionality to build and verify a chain of Ethereum blocks that may be advertised from any peer. We complete the resultant state of the blocktree and form a canonical blockchain based on difficulty.
 
-Exthereum's blocks are specified in a variety of sections throughout [the yellow paper](http://yellowpaper.io/), but it's best to start looking under Section 4.4.
+Exthereum's blocks are specified in a variety of sections throughout [the yellow paper](https://ethereum.github.io/yellowpaper/paper.pdf), but it's best to start looking under Section 4.4.
 
 ## Installation
 
