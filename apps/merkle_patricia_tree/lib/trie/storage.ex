@@ -5,7 +5,6 @@ defmodule MerklePatriciaTree.Trie.Storage do
   Eq.(178) from the Yellow Paper.
   """
 
-  alias ExthCrypto.Hash.Keccak
   alias MerklePatriciaTree.{DB, Trie}
 
   # Maximum RLP length in bytes that is stored as is

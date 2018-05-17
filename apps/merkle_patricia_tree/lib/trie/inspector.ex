@@ -45,7 +45,6 @@ defmodule MerklePatriciaTree.Trie.Inspector do
         get_trie_value(%{trie | root_hash: v}, merge_prefix(prefix, k))
 
       {:branch, branches} ->
-        # TODO: We need to fix nil branch value!
         branch_value = List.last(branches)
         base = if branch_value != <<>>, do: [{prefix, branch_value}], else: []
 

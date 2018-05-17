@@ -59,7 +59,7 @@ defmodule MerklePatriciaTree.Trie do
   """
   @spec new(DB.db(), root_hash) :: t()
   def new(db = {_, _}, root_hash \\ @empty_trie) do
-    %__MODULE__{db: db, root_hash: root_hash} |> store
+    %__MODULE__{db: db, root_hash: root_hash} |> store()
   end
 
   @doc """
@@ -152,7 +152,7 @@ defmodule MerklePatriciaTree.Trie do
     |> Builder.put_key(key_nibbles, value, trie)
     |> Node.encode_node(trie)
     |> into(trie)
-    |> store
+    |> store()
   end
 
   @doc """
@@ -167,7 +167,7 @@ defmodule MerklePatriciaTree.Trie do
     |> Destroyer.remove_key(key_nibbles, trie)
     |> Node.encode_node(trie)
     |> into(trie)
-    |> store
+    |> store()
   end
 
   def store(trie) do

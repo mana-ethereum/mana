@@ -213,6 +213,24 @@ defmodule MerklePatriciaTree.TrieTest do
       assert Trie.get(trie_2, key) == "grault"
     end
 
+    test "a root of the trie depends only on the data", %{db: db} do
+      trie1 =
+        db
+        |> Trie.new()
+        |> Trie.update(<<4::4, 2::4, 3::4>>, 1)
+        |> Trie.update(<<4::4, 2::4>>, 2)
+        |> Trie.update(<<4::4, 2::4, 3::4, 8::4>>, 3)
+
+      trie2 =
+        db
+        |> Trie.new()
+        |> Trie.update(<<4::4, 2::4>>, 2)
+        |> Trie.update(<<4::4, 2::4, 3::4, 8::4>>, 3)
+        |> Trie.update(<<4::4, 2::4, 3::4>>, 1)
+
+      assert trie2.root_hash == trie1.root_hash
+    end
+
     test "a set of updates", %{db: db} do
       trie =
         db
