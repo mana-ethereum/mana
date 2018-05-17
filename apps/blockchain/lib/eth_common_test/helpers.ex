@@ -12,7 +12,7 @@ defmodule EthCommonTest.Helpers do
   def load_integer("0x" <> data), do: maybe_hex(data, :integer)
   def load_integer(data), do: maybe_dec(data)
 
-  @spec maybe_hex(String.t() | nil) :: binary() | nil
+  @spec maybe_address(String.t() | nil) :: binary() | nil
   def maybe_address(hex_data), do: maybe_hex(hex_data)
 
   @spec maybe_hex(String.t() | nil) :: binary() | nil
@@ -58,7 +58,7 @@ defmodule EthCommonTest.Helpers do
     Poison.decode!(body)
   end
 
-  @spec test_file_name(atom(), atom()) :: String.t()
+  @spec test_file_name(String.t(), String.t()) :: String.t()
   def test_file_name(test_set, test_subset) do
     Path.join(ethereum_common_tests_path(), "#{test_set}/#{to_string(test_subset)}.json")
   end

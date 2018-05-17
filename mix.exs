@@ -18,7 +18,6 @@ defmodule Exthereum.MixProject do
       dialyzer: [
         ignore_warnings: ".dialyzer.ignore-warnings",
         excluded_paths: [
-          Path.join(@root_path, "_build/test/lib/blockchain/ebin"),
           Path.join(@root_path, "_build/test/lib/abi/ebin"),
           Path.join(@root_path, "_build/test/lib/exth_crypto/ebin"),
           Path.join(@root_path, "_build/test/lib/ex_wire/ebin")

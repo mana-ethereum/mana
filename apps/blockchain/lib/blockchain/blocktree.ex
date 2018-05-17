@@ -20,6 +20,7 @@ defmodule Blockchain.Blocktree do
   end
 
   alias Blockchain.Block
+  alias Blockchain.Chain
 
   defstruct block: nil,
             children: [],
