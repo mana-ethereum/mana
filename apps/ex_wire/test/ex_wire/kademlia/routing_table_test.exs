@@ -58,6 +58,18 @@ defmodule ExWire.Kademlia.RoutingTableTest do
     end
   end
 
+  describe "remove_node/2" do
+    test "removes node from routing table", %{table: table} do
+      node = TestHelper.random_node()
+
+      table = RoutingTable.refresh_node(table, node)
+      assert RoutingTable.member?(table, node)
+
+      table = RoutingTable.remove_node(table, node)
+      refute RoutingTable.member?(table, node)
+    end
+  end
+
   describe "member?/2" do
     test "finds node in routing table", %{table: table} do
       node = TestHelper.random_node()
@@ -87,7 +99,7 @@ defmodule ExWire.Kademlia.RoutingTableTest do
     end
 
     test "returns neighbours based on xor distance" do
-      table = TestHelper.random_routing_table()
+      table = TestHelper.random_routing_table(port: TestHelper.random(9_999))
       node = TestHelper.random_node()
 
       neighbours = table |> RoutingTable.neighbours(node)

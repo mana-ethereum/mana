@@ -88,6 +88,21 @@ defmodule ExWire.Kademlia.RoutingTable do
   end
 
   @doc """
+  Removes a node from routing table.
+  """
+  @spec remove_node(t(), Node.t()) :: t()
+  def remove_node(table = %__MODULE__{buckets: buckets}, node = %Node{}) do
+    node_bucket_id = bucket_id(table, node)
+
+    updated_bucket =
+      table
+      |> bucket_at(node_bucket_id)
+      |> Bucket.remove_node(node)
+
+    replace_bucket(table, node_bucket_id, updated_bucket)
+  end
+
+  @doc """
   Returns neighbours of a specified node.
   """
   @spec neighbours(t(), Node.t()) :: [Node.t()]
