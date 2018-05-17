@@ -5,9 +5,11 @@ defmodule ExWire.Kademlia.RoutingTableTest do
 
   alias ExWire.Kademlia.{RoutingTable, Bucket, Node}
   alias ExWire.Kademlia.Config, as: KademliaConfig
+  alias ExWire.Message.Pong
   alias ExWire.TestHelper
   alias ExWire.Adapter.UDP
   alias ExWire.Network
+  alias ExWire.Util.Timestamp
 
   setup_all do
     {:ok, network_client_pid} = UDP.start_link({Network, []}, 35349)
@@ -67,6 +69,15 @@ defmodule ExWire.Kademlia.RoutingTableTest do
 
       table = RoutingTable.remove_node(table, node)
       refute RoutingTable.member?(table, node)
+    end
+  end
+
+  describe "handle_pong/2" do
+    test "does not add node if pong is expired", %{table: table} do
+      pong = %Pong{to: TestHelper.random_endpoint(), timestamp: Timestamp.now() - 5, hash: "hey"}
+      updated_table = RoutingTable.handle_pong(table, pong)
+
+      assert table == updated_table
     end
   end
 

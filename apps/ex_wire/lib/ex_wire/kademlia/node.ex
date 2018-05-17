@@ -19,7 +19,7 @@ defmodule ExWire.Kademlia.Node do
         }
 
   @doc """
-  Construct a new node.
+  Constructs a new node.
 
   ## Examples
 
