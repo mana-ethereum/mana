@@ -161,15 +161,15 @@ defmodule ExWire.Kademlia.RoutingTable do
         %Pong{hash: hash, timestamp: timestamp},
         node \\ nil
       ) do
-    {expected_pong, node_pair} = Map.pop(pongs, hash)
+    {node_pair, updated_pongs} = Map.pop(pongs, hash)
+
+    table = %{table | expected_pongs: updated_pongs}
 
     cond do
-      expected_pong && timestamp > Timestamp.now() ->
-        {removal_candidate, insertion_candidate} = node_pair
+      node_pair && timestamp > Timestamp.now() ->
+        {removal_candidate, _insertion_candidate} = node_pair
 
-        table
-        |> remove_node(removal_candidate)
-        |> refresh_node(insertion_candidate)
+        refresh_node(table, removal_candidate)
 
       node && timestamp > Timestamp.now() ->
         refresh_node(table, node)
@@ -180,7 +180,7 @@ defmodule ExWire.Kademlia.RoutingTable do
   end
 
   @spec replace_bucket(t(), integer(), Bucket.t()) :: t()
-  defp replace_bucket(table, idx, bucket) do
+  def replace_bucket(table, idx, bucket) do
     buckets =
       table.buckets
       |> List.replace_at(idx, bucket)
@@ -235,7 +235,7 @@ defmodule ExWire.Kademlia.RoutingTable do
   end
 
   @spec nodes_at(t(), integer()) :: Node.t()
-  defp nodes_at(table = %__MODULE__{}, bucket_id) do
+  def nodes_at(table = %__MODULE__{}, bucket_id) do
     table
     |> bucket_at(bucket_id)
     |> Bucket.nodes()

@@ -3,7 +3,7 @@ defmodule ExWire.TestHelper do
     Helper methods shared across test files.
   """
 
-  alias ExWire.Kademlia.{Node, RoutingTable}
+  alias ExWire.Kademlia.{Node, RoutingTable, Bucket}
   alias ExWire.Kademlia.Config, as: KademliaConfig
   alias ExWire.Adapter.UDP
   alias ExWire.Network
@@ -26,6 +26,13 @@ defmodule ExWire.TestHelper do
 
   def random_endpoint do
     ExWire.Struct.Endpoint.decode([random_ip(), random_port(), random_port()])
+  end
+
+  def random_bucket(id \\ 1) do
+    1..KademliaConfig.bucket_size()
+    |> Enum.reduce(Bucket.new(id), fn _el, acc ->
+      Bucket.insert_node(acc, random_node())
+    end)
   end
 
   def random(limit) do

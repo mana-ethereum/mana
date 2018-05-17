@@ -45,7 +45,7 @@ defmodule ExWire.Kademlia.RoutingTableTest do
       bucket = Enum.at(table.buckets, bucket_idx)
 
       full_bucket =
-        0..(KademliaConfig.bucket_size() + 1)
+        1..KademliaConfig.bucket_size()
         |> Enum.reduce(bucket, fn _el, acc -> Bucket.insert_node(acc, filler_node) end)
 
       updated_table = %{table | buckets: List.replace_at(table.buckets, bucket_idx, full_bucket)}
@@ -78,6 +78,34 @@ defmodule ExWire.Kademlia.RoutingTableTest do
       updated_table = RoutingTable.handle_pong(table, pong)
 
       assert table == updated_table
+    end
+
+    test "refreshes stale node if expected pong was received", %{table: table} do
+      node = TestHelper.random_node()
+      bucket_idx = RoutingTable.bucket_id(table, node)
+
+      full_bucket = TestHelper.random_bucket(bucket_idx)
+      last_node = full_bucket.nodes |> List.last()
+
+      updated_table =
+        table
+        |> RoutingTable.replace_bucket(bucket_idx, full_bucket)
+        |> RoutingTable.refresh_node(node)
+
+      ping_mdc =
+        updated_table.expected_pongs
+        |> Enum.map(fn {key, _value} -> key end)
+        |> List.first()
+
+      pong = %Pong{
+        to: table.current_node.endpoint,
+        timestamp: Timestamp.now() + 5,
+        hash: ping_mdc
+      }
+
+      updated_table1 = RoutingTable.handle_pong(updated_table, pong)
+
+      [^last_node | _tail] = RoutingTable.nodes_at(updated_table1, bucket_idx)
     end
   end
 
