@@ -5,6 +5,7 @@ defmodule ExWire.Kademlia.Node do
   alias ExthCrypto.Hash.Keccak
   alias ExWire.Kademlia.XorDistance
   alias ExWire.Struct.Endpoint
+  alias ExWire.Handler.Params
 
   defstruct [
     :public_key,
@@ -53,6 +54,37 @@ defmodule ExWire.Kademlia.Node do
       key: key,
       endpoint: endpoint
     }
+  end
+
+  @doc """
+  Creates a new Node struct form ExWire.Handler.Params
+
+  ## Examples
+
+      iex> params = %ExWire.Handler.Params{
+      ...>   remote_host: %ExWire.Struct.Endpoint{ip: [1,2,3,4], udp_port: 55},
+      ...>   signature: <<1>>,
+      ...>   recovery_id: 3,
+      ...>   hash: <<5>>,
+      ...>   data: [1, [<<1,2,3,4>>, <<>>, <<5>>], [<<5,6,7,8>>, <<6>>, <<>>], 4] |> ExRLP.encode(),
+      ...>   timestamp: 123,
+      ...> }
+      iex> ExWire.Kademlia.Node.from_handler_params(params)
+      %ExWire.Kademlia.Node{
+         endpoint: %ExWire.Struct.Endpoint{
+           ip: [1, 2, 3, 4],
+           tcp_port: nil,
+           udp_port: 55
+         },
+         key: <<95, 231, 249, 119, 231, 29, 186, 46, 161, 166, 142, 33, 5, 123, 238,
+           187, 155, 226, 172, 48, 198, 65, 10, 163, 141, 79, 63, 190, 65, 220, 255,
+           210>>,
+         public_key: <<1>>
+       }
+  """
+  @spec from_handler_params(Params.t()) :: t()
+  def from_handler_params(%Params{signature: signature, remote_host: remote_host}) do
+    new(signature, remote_host)
   end
 
   @doc """

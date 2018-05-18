@@ -10,6 +10,7 @@ defmodule ExWire.Kademlia.RoutingTableTest do
   alias ExWire.Adapter.UDP
   alias ExWire.Network
   alias ExWire.Util.Timestamp
+  alias ExWire.Handler.Params
 
   setup_all do
     {:ok, network_client_pid} = UDP.start_link({Network, []}, 35349)
@@ -78,6 +79,25 @@ defmodule ExWire.Kademlia.RoutingTableTest do
       updated_table = RoutingTable.handle_pong(table, pong)
 
       assert table == updated_table
+    end
+
+    test "adds a new node from pong", %{table: table} do
+      pong = %Pong{to: TestHelper.random_endpoint(), timestamp: Timestamp.now() + 5, hash: "hey"}
+
+      params = %Params{
+        remote_host: %ExWire.Struct.Endpoint{ip: [1, 2, 3, 4], udp_port: 55},
+        signature: <<1>>,
+        recovery_id: 3,
+        hash: <<5>>,
+        data:
+          [1, [<<1, 2, 3, 4>>, <<>>, <<5>>], [<<5, 6, 7, 8>>, <<6>>, <<>>], 4] |> ExRLP.encode(),
+        timestamp: 123
+      }
+
+      updated_table = RoutingTable.handle_pong(table, pong, params)
+
+      node = Node.from_handler_params(params)
+      assert RoutingTable.member?(updated_table, node)
     end
 
     test "refreshes stale node if expected pong was received", %{table: table} do

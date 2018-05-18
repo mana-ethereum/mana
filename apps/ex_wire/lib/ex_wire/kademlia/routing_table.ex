@@ -8,6 +8,7 @@ defmodule ExWire.Kademlia.RoutingTable do
   alias ExWire.Message.{Ping, Pong}
   alias ExWire.{Network, Protocol}
   alias ExWire.Util.Timestamp
+  alias ExWire.Handler.Params
 
   defstruct [:current_node, :buckets, :network_client_pid, :expected_pongs]
 
@@ -151,15 +152,15 @@ defmodule ExWire.Kademlia.RoutingTable do
 
    There are three cases:
    - If we were waiting for this pong (it's stored in routing table) and it's not expired,
-       we remove stale node that we saved before and add a fresh one to the routing table.
+       we refresh stale node.
    - If a pong is not expired, we add a node to the routing table.
    - If a pong is expired, we do nothing.
   """
-  @spec handle_pong(t(), Pong.t()) :: t()
+  @spec handle_pong(t(), Pong.t(), Paramt.t()) :: t()
   def handle_pong(
         table = %__MODULE__{expected_pongs: pongs},
         %Pong{hash: hash, timestamp: timestamp},
-        node \\ nil
+        params \\ nil
       ) do
     {node_pair, updated_pongs} = Map.pop(pongs, hash)
 
@@ -171,7 +172,9 @@ defmodule ExWire.Kademlia.RoutingTable do
 
         refresh_node(table, removal_candidate)
 
-      node && timestamp > Timestamp.now() ->
+      params && timestamp > Timestamp.now() ->
+        node = Node.from_handler_params(params)
+
         refresh_node(table, node)
 
       true ->
