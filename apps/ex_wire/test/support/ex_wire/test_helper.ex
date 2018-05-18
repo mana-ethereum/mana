@@ -28,8 +28,11 @@ defmodule ExWire.TestHelper do
     ExWire.Struct.Endpoint.decode([random_ip(), random_port(), random_port()])
   end
 
-  def random_bucket(id \\ 1) do
-    1..KademliaConfig.bucket_size()
+  def random_bucket(opts \\ []) do
+    id = opts[:id] || 1
+    bucket_size = opts[:bucket_size] || KademliaConfig.bucket_size()
+
+    1..bucket_size
     |> Enum.reduce(Bucket.new(id), fn _el, acc ->
       Bucket.insert_node(acc, random_node())
     end)

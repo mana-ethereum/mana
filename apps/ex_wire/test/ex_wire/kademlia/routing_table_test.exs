@@ -81,17 +81,29 @@ defmodule ExWire.Kademlia.RoutingTableTest do
     end
 
     test "refreshes stale node if expected pong was received", %{table: table} do
-      node = TestHelper.random_node()
-      bucket_idx = RoutingTable.bucket_id(table, node)
+      # create stale node that will be the oldest in our bucket
+      stale_node = TestHelper.random_node()
+      bucket_idx = RoutingTable.bucket_id(table, stale_node)
 
-      full_bucket = TestHelper.random_bucket(bucket_idx)
-      last_node = full_bucket.nodes |> List.last()
+      # create bucket with garbage nodes to make it full and insert our stale bucket
+      full_bucket =
+        TestHelper.random_bucket(id: bucket_idx, bucket_size: KademliaConfig.bucket_size() - 1)
 
+      full_bucket = %{
+        full_bucket
+        | nodes: full_bucket.nodes |> List.insert_at(KademliaConfig.bucket_size() - 1, stale_node)
+      }
+
+      # new node that we want to insert.. we're using the same key to make a node go to the same bucket
+      new_node = %{stale_node | key: stale_node.key <> <<1>>}
+
+      # add stale node's pong to expected pong because bucket is full
       updated_table =
         table
         |> RoutingTable.replace_bucket(bucket_idx, full_bucket)
-        |> RoutingTable.refresh_node(node)
+        |> RoutingTable.refresh_node(new_node)
 
+      # table is receiving pong from stale node
       ping_mdc =
         updated_table.expected_pongs
         |> Enum.map(fn {key, _value} -> key end)
@@ -105,7 +117,8 @@ defmodule ExWire.Kademlia.RoutingTableTest do
 
       updated_table1 = RoutingTable.handle_pong(updated_table, pong)
 
-      [^last_node | _tail] = RoutingTable.nodes_at(updated_table1, bucket_idx)
+      # stale node should be be the first in bucket
+      [^stale_node | _tail] = RoutingTable.nodes_at(updated_table1, bucket_idx)
     end
   end
 
