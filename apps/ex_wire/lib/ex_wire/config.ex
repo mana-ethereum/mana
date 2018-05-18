@@ -41,6 +41,11 @@ defmodule ExWire.Config do
     public_key
   end
 
+  @spec public_ip() :: binary()
+  def public_ip do
+    Application.get_env(:ex_wire, :public_ip)
+  end
+
   @spec node_id() :: ExWire.node_id()
   def node_id, do: public_key() |> ExthCrypto.Key.der_to_raw()
 
