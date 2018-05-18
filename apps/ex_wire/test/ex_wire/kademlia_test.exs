@@ -2,9 +2,12 @@ defmodule ExWire.KademliaTest do
   use ExUnit.Case, async: true
 
   alias ExWire.{Kademlia, TestHelper}
-  alias ExWire.Kademlia.{Server, RoutingTable}
+  alias ExWire.Kademlia.{Server, RoutingTable, Node}
   alias ExWire.Adapter.UDP
   alias ExWire.Network
+  alias ExWire.Message.Pong
+  alias ExWire.Handler.Params
+  alias ExWire.Util.Timestamp
 
   setup_all do
     node = TestHelper.random_node()
@@ -22,6 +25,28 @@ defmodule ExWire.KademliaTest do
 
       table = Kademlia.routing_table()
 
+      assert table |> RoutingTable.member?(node)
+    end
+  end
+
+  describe "handle_pong/2" do
+    test "adds a node from pong to routing table" do
+      pong = %Pong{to: TestHelper.random_endpoint(), timestamp: Timestamp.now() + 5, hash: "hey"}
+
+      params = %Params{
+        remote_host: %ExWire.Struct.Endpoint{ip: [1, 2, 3, 4], udp_port: 55},
+        signature: <<1>>,
+        recovery_id: 3,
+        hash: <<5>>,
+        data:
+          [1, [<<1, 2, 3, 4>>, <<>>, <<5>>], [<<5, 6, 7, 8>>, <<6>>, <<>>], 4] |> ExRLP.encode(),
+        timestamp: 123
+      }
+
+      Kademlia.handle_pong(pong, params)
+
+      node = Node.from_handler_params(params)
+      table = Kademlia.routing_table()
       assert table |> RoutingTable.member?(node)
     end
   end

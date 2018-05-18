@@ -4,6 +4,8 @@ defmodule ExWire.Kademlia do
   """
 
   alias ExWire.Kademlia.{Server, Node, RoutingTable}
+  alias ExWire.Message.Pong
+  alias ExWire.Handler.Params
 
   @doc """
   Adds new node to routing table.
@@ -13,6 +15,16 @@ defmodule ExWire.Kademlia do
     opts
     |> process_name()
     |> GenServer.cast({:refresh_node, peer})
+  end
+
+  @doc """
+  Handles pong message (adds a node to routing table etc).
+  """
+  @spec handle_pong(Pong.t(), Params.t()) :: :ok
+  def handle_pong(pong = %Pong{}, params = %Params{}, opts \\ []) do
+    opts
+    |> process_name()
+    |> GenServer.cast({:handle_pong, pong, params})
   end
 
   @doc """
