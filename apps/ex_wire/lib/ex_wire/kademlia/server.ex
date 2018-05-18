@@ -7,14 +7,16 @@ defmodule ExWire.Kademlia.Server do
 
   alias ExWire.Kademlia.{RoutingTable, Node}
 
-  def start_link(state = {%Node{}, _}, opts \\ []) do
-    process_name = opts[:process_name] || @default_process_name
+  def start_link(params) do
+    name = params[:name] || @default_process_name
+    network_client_name = Keyword.fetch!(params, :network_client_name)
+    current_node = Keyword.fetch!(params, :current_node)
 
-    GenServer.start_link(__MODULE__, state, name: process_name)
+    GenServer.start_link(__MODULE__, {current_node, network_client_name}, name: name)
   end
 
-  def init({current_node = %Node{}, client_pid}) do
-    routing_table = RoutingTable.new(current_node, client_pid)
+  def init({current_node = %Node{}, network_client_name}) do
+    routing_table = RoutingTable.new(current_node, network_client_name)
 
     {:ok, %{routing_table: routing_table}}
   end

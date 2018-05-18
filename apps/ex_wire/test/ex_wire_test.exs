@@ -2,7 +2,7 @@ defmodule ExWireTest do
   use ExUnit.Case
   doctest ExWire
 
-  alias ExWire.Protocol
+  alias ExWire.{Protocol, Config}
   alias ExWire.Message.Ping
   alias ExWire.Message.Pong
   alias ExWire.Message.Neighbours
@@ -69,9 +69,10 @@ defmodule ExWireTest do
 
   def fake_send(message, timestamp) do
     encoded_message = Protocol.encode(message, ExWire.Config.private_key())
+    {_, process_name} = Config.udp_network_adapter()
 
     GenServer.cast(
-      :test_network_adapter,
+      process_name,
       {
         :fake_recieve,
         %{

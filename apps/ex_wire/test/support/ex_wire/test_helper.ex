@@ -11,7 +11,9 @@ defmodule ExWire.TestHelper do
   def random_routing_table(opts \\ []) do
     port = opts[:port] || random(9_999)
 
-    {:ok, network_client_pid} = UDP.start_link({Network, []}, port)
+    {:ok, network_client_pid} =
+      UDP.start_link(network_module: {Network, []}, port: port, name: :test)
+
     table = random_node() |> RoutingTable.new(network_client_pid)
 
     1..(KademliaConfig.bucket_size() * KademliaConfig.id_size())

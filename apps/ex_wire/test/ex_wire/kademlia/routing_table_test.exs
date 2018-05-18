@@ -13,7 +13,9 @@ defmodule ExWire.Kademlia.RoutingTableTest do
   alias ExWire.Handler.Params
 
   setup_all do
-    {:ok, network_client_pid} = UDP.start_link({Network, []}, 35349)
+    {:ok, network_client_pid} =
+      UDP.start_link(network_module: {Network, []}, port: 35349, name: :routing_table_test)
+
     node = TestHelper.random_node()
     table = RoutingTable.new(node, network_client_pid)
 

@@ -10,13 +10,13 @@ defmodule ExWire.Kademlia.RoutingTable do
   alias ExWire.Util.Timestamp
   alias ExWire.Handler.Params
 
-  defstruct [:current_node, :buckets, :network_client_pid, :expected_pongs]
+  defstruct [:current_node, :buckets, :network_client_name, :expected_pongs]
 
   @type expected_pongs :: %{required(binary()) => {Node.t(), Node.t()}}
   @type t :: %__MODULE__{
           current_node: Node.t(),
           buckets: [Bucket.t()],
-          network_client_pid: pid(),
+          network_client_name: pid() | atom(),
           expected_pongs: expected_pongs()
         }
 
@@ -39,19 +39,19 @@ defmodule ExWire.Kademlia.RoutingTable do
       ...>    udp_port: nil
       ...>  }
       ...> }
-      iex> {:ok, network_client_pid} = ExWire.Adapter.UDP.start_link({ExWire.Network, []}, 35351)
+      iex> {:ok, network_client_pid} = ExWire.Adapter.UDP.start_link(network_module: {ExWire.Network, []}, port: 35351, name: :doctest)
       iex> table = ExWire.Kademlia.RoutingTable.new(node, network_client_pid)
       iex> table.buckets |> Enum.count
       256
   """
-  @spec new(Node.t(), pid()) :: t()
+  @spec new(Node.t(), pid() | atom()) :: t()
   def new(node = %Node{}, client_pid) do
     initial_buckets = initialize_buckets()
 
     %__MODULE__{
       current_node: node,
       buckets: initial_buckets,
-      network_client_pid: client_pid,
+      network_client_name: client_pid,
       expected_pongs: %{}
     }
   end
@@ -138,13 +138,13 @@ defmodule ExWire.Kademlia.RoutingTable do
   def ping(
         %__MODULE__{
           current_node: %Node{endpoint: current_endpoint},
-          network_client_pid: client_pid
+          network_client_name: network_client_name
         },
         %Node{endpoint: remote_endpoint}
       ) do
     ping = Ping.new(current_endpoint, remote_endpoint)
 
-    Network.send(ping, client_pid, remote_endpoint)
+    Network.send(ping, network_client_name, remote_endpoint)
   end
 
   @doc """
@@ -156,7 +156,7 @@ defmodule ExWire.Kademlia.RoutingTable do
    - If a pong is not expired, we add a node to the routing table.
    - If a pong is expired, we do nothing.
   """
-  @spec handle_pong(t(), Pong.t(), Paramt.t()) :: t()
+  @spec handle_pong(t(), Pong.t(), Params.t()) :: t()
   def handle_pong(
         table = %__MODULE__{expected_pongs: pongs},
         %Pong{hash: hash, timestamp: timestamp},

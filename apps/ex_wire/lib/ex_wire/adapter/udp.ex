@@ -9,11 +9,15 @@ defmodule ExWire.Adapter.UDP do
   When starting a UDP server, we'll store a network to use for all
   message handling.
   """
-  def start_link({network, network_args}, port, opts \\ []) do
+  def start_link(params) do
+    name = Keyword.fetch!(params, :name)
+    {module, args} = Keyword.fetch!(params, :network_module)
+    port = Keyword.fetch!(params, :port)
+
     GenServer.start_link(
       __MODULE__,
-      %{network: network, network_args: network_args, port: port},
-      opts
+      %{network: module, network_args: args, port: port},
+      name: name
     )
   end
 

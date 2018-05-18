@@ -3,7 +3,7 @@ defmodule ExWire.Handler.Pong do
   Module to handle a response to a Pong message, which is to do nothing.
   """
 
-  alias ExWire.Handler
+  alias ExWire.{Handler, Kademlia}
   alias ExWire.Message.Pong
 
   @doc """
@@ -23,9 +23,9 @@ defmodule ExWire.Handler.Pong do
   """
   @spec handle(Handler.Params.t()) :: Handler.handler_response()
   def handle(params) do
-    _pong = Pong.decode(params.data)
+    pong = Pong.decode(params.data)
 
-    # TODO: Add to K-Bucket
+    Kademlia.handle_pong(pong, params)
 
     :no_response
   end

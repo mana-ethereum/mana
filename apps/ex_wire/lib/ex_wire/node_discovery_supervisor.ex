@@ -12,16 +12,18 @@ defmodule ExWire.NodeDiscoverySupervisor do
   alias ExWire.{Network, Config}
   alias ExWire.Struct.Endpoint
 
-  @default_network_adapter Application.get_env(:ex_wire, :network_adapter)
-
   def start_link do
     Supervisor.start_link(__MODULE__, :ok, name: __MODULE__)
   end
 
   def init(_params) do
+    {udp_module, udp_process_name} = Config.udp_network_adapter()
+
     children = [
-      worker(KademliaServer, [{current_node(), 1}]),
-      worker(@default_network_adapter, [{Network, []}, Config.listen_port()])
+      {KademliaServer,
+       [name: KademliaState, current_node: current_node(), network_client_name: NetworkClient]},
+      {udp_module,
+       [name: udp_process_name, network_module: {Network, []}, port: Config.listen_port()]}
     ]
 
     Supervisor.init(children, strategy: :rest_for_one)
