@@ -35,7 +35,10 @@ defmodule EVM.LogEntry do
   """
   @spec new(integer() | binary(), [integer()], binary()) :: t()
   def new(address, topics, data) do
-    address = if is_number(address), do: address |> Address.new(), else: address
+    address =
+      if is_number(address),
+        do: Address.new(address),
+        else: address
 
     %__MODULE__{
       address: address,
@@ -77,9 +80,7 @@ defmodule EVM.LogEntry do
   """
   @spec to_list(t()) :: [binary()]
   def to_list(log) do
-    topics =
-      log.topics
-      |> Enum.map(&Helpers.left_pad_bytes/1)
+    topics = Enum.map(log.topics, &Helpers.left_pad_bytes/1)
 
     [log.address, topics, log.data]
   end

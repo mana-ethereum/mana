@@ -15,9 +15,7 @@ defmodule ExWire.Struct.BlockQueue do
 
   alias Block.Header
   alias ExWire.Struct.Block, as: BlockStruct
-  alias Blockchain.Block
-  alias Blockchain.Blocktree
-  alias Blockchain.Chain
+  alias Blockchain.{Block, Blocktree, Chain}
   alias MerklePatriciaTree.Trie
 
   require Logger
@@ -31,7 +29,7 @@ defmodule ExWire.Struct.BlockQueue do
 
   @type block_item :: %{
           commitments: [binary()],
-          block: Blockchain.Block.t(),
+          block: Block.t(),
           ready: boolean()
         }
 
@@ -248,7 +246,7 @@ defmodule ExWire.Struct.BlockQueue do
 
     block_tree =
       Enum.reduce(blocks, block_tree, fn block, block_tree ->
-        case Blockchain.Blocktree.verify_and_add_block(
+        case Blocktree.verify_and_add_block(
                block_tree,
                chain,
                block,

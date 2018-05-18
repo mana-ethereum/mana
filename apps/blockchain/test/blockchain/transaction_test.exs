@@ -1,11 +1,13 @@
 defmodule Blockchain.TransactionTest do
   use ExUnit.Case, async: true
   use EthCommonTest.Harness
+
   doctest Blockchain.Transaction
 
   alias ExthCrypto.Hash.Keccak
-  alias Blockchain.Transaction
+  alias Blockchain.{Account, Transaction, Contract}
   alias Blockchain.Transaction.Signature
+  alias MerklePatriciaTree.Trie
 
   @forks ~w(
     Byzantium
@@ -92,7 +94,7 @@ defmodule Blockchain.TransactionTest do
 
   describe "when handling transactions" do
     test "serialize and deserialize" do
-      trx = %Transaction{
+      tx = %Transaction{
         nonce: 5,
         gas_price: 6,
         gas_limit: 7,
@@ -104,8 +106,8 @@ defmodule Blockchain.TransactionTest do
         data: "hi"
       }
 
-      assert trx ==
-               trx
+      assert tx ==
+               tx
                |> Transaction.serialize()
                |> ExRLP.encode()
                |> ExRLP.decode()
@@ -113,17 +115,20 @@ defmodule Blockchain.TransactionTest do
     end
 
     test "for a transaction with a stop" do
-      beneficiary = <<0x05::160>>
+      beneficiary_address = <<0x05::160>>
       private_key = <<1::256>>
+
       # Based on simple private key.
-      sender =
+      sender_address =
         <<126, 95, 69, 82, 9, 26, 105, 18, 93, 93, 252, 183, 184, 194, 101, 144, 41, 57, 91, 223>>
 
-      contract_address = Blockchain.Contract.new_contract_address(sender, 6)
+      sender_account = %Account{balance: 400_000, nonce: 5}
+
+      contract_address = Contract.new_contract_address(sender_address, 6)
       machine_code = EVM.MachineCode.compile([:stop])
 
-      trx =
-        %Blockchain.Transaction{
+      tx =
+        %Transaction{
           nonce: 5,
           gas_price: 3,
           gas_limit: 100_000,
@@ -131,22 +136,24 @@ defmodule Blockchain.TransactionTest do
           value: 5,
           init: machine_code
         }
-        |> Blockchain.Transaction.Signature.sign_transaction(private_key)
+        |> Transaction.Signature.sign_transaction(private_key)
 
       {state, gas_used, logs} =
-        MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
-        |> Blockchain.Account.put_account(sender, %Blockchain.Account{balance: 400_000, nonce: 5})
-        |> Blockchain.Transaction.execute_transaction(trx, %Block.Header{beneficiary: beneficiary})
+        MerklePatriciaTree.Test.random_ets_db()
+        |> Trie.new()
+        |> Account.put_account(sender_address, sender_account)
+        |> Transaction.execute_transaction(tx, %Block.Header{beneficiary: beneficiary_address})
+
+      expected_sender = %Account{balance: 240_983, nonce: 6}
+      expected_beneficiary = %Account{balance: 159_012}
+      expected_contract = %Account{balance: 5}
 
       assert gas_used == 53004
       assert logs == []
 
-      assert Blockchain.Account.get_accounts(state, [sender, beneficiary, contract_address]) ==
-               [
-                 %Blockchain.Account{balance: 240_983, nonce: 6},
-                 %Blockchain.Account{balance: 159_012},
-                 %Blockchain.Account{balance: 5}
-               ]
+      assert Account.get_account(state, sender_address) == expected_sender
+      assert Account.get_account(state, beneficiary_address) == expected_beneficiary
+      assert Account.get_account(state, contract_address) == expected_contract
     end
   end
 end

@@ -1,7 +1,7 @@
 defmodule ExWire.Sync do
   @moduledoc """
   This is the heart of our syncing logic. Once we've connected to a number
-  of peers via `ExWire.PeerSup`, we begin to ask for new blocks from those
+  of peers via `ExWire.PeerSupervisor`, we begin to ask for new blocks from those
   peers. As we receive blocks, we add them to our `ExWire.Struct.BlockQueue`.
   If the blocks are confirmed by enough peers, then we verify the block and
   add it to our block tree.

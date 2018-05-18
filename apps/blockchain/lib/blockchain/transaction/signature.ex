@@ -11,6 +11,7 @@ defmodule Blockchain.Transaction.Signature do
   """
 
   alias ExthCrypto.Hash.Keccak
+  alias Blockchain.Transaction
 
   @type public_key :: <<_::512>>
   @type private_key :: <<_::256>>
@@ -53,7 +54,7 @@ defmodule Blockchain.Transaction.Signature do
   @doc """
   Returns a ECDSA signature (v,r,s) for a given hashed value.
 
-  This implementes Eq.(207) of the Yellow Paper.
+  This implementes Eq.(288) of the Yellow Paper.
 
   ## Examples
 
@@ -207,10 +208,10 @@ defmodule Blockchain.Transaction.Signature do
       iex> Blockchain.Transaction.Signature.transaction_hash(%Blockchain.Transaction{nonce: 5, gas_price: 6, gas_limit: 7, to: <<1>>, value: 5, data: <<1>>}, 1)
       <<132, 79, 28, 4, 212, 58, 235, 38, 66, 211, 167, 102, 36, 58, 229, 88, 238, 251, 153, 23, 121, 163, 212, 64, 83, 111, 200, 206, 54, 43, 112, 53>>
   """
-  @spec transaction_hash(Blockchain.Transaction.t(), integer() | nil) :: Keccak.keccak_hash()
-  def transaction_hash(trx, chain_id \\ nil) do
+  @spec transaction_hash(Transaction.t(), integer() | nil) :: Keccak.keccak_hash()
+  def transaction_hash(tx, chain_id \\ nil) do
     # See EIP-155
-    Blockchain.Transaction.serialize(trx, false)
+    Transaction.serialize(tx, false)
     |> Kernel.++(if chain_id, do: [chain_id |> :binary.encode_unsigned(), <<>>, <<>>], else: [])
     |> ExRLP.encode()
     |> Keccak.kec()
@@ -229,15 +230,14 @@ defmodule Blockchain.Transaction.Signature do
       iex> Blockchain.Transaction.Signature.sign_transaction(%Blockchain.Transaction{nonce: 5, gas_price: 6, gas_limit: 7, to: <<>>, value: 5, init: <<1>>}, <<1::256>>, 1)
       %Blockchain.Transaction{data: <<>>, gas_limit: 7, gas_price: 6, init: <<1>>, nonce: 5, r: 25739987953128435966549144317523422635562973654702886626580606913510283002553, s: 41423569377768420285000144846773344478964141018753766296386430811329935846420, to: "", v: 38, value: 5}
   """
-  @spec sign_transaction(Blockchain.Transaction.t(), private_key, integer() | nil) ::
-          Blockchain.Transaction.t()
-  def sign_transaction(trx, private_key, chain_id \\ nil) do
+  @spec sign_transaction(Transaction.t(), private_key, integer() | nil) :: Transaction.t()
+  def sign_transaction(tx, private_key, chain_id \\ nil) do
     {v, r, s} =
-      trx
+      tx
       |> transaction_hash(chain_id)
       |> sign_hash(private_key, chain_id)
 
-    %{trx | v: v, r: r, s: s}
+    %{tx | v: v, r: r, s: s}
   end
 
   @doc """
@@ -260,7 +260,7 @@ defmodule Blockchain.Transaction.Signature do
 
   @doc """
   Given a public key, this will return an associated
-  ethereum address, as defined (in part) in Eq.(213).
+  ethereum address, as defined (in part) in Eq.(284).
 
   This returns the rightmost 160-bits of the Keecak-256 of the public key.
 
@@ -279,7 +279,7 @@ defmodule Blockchain.Transaction.Signature do
   @doc """
   Given a transaction, we will determine the sender of the message.
 
-  This is defined in Eq.(218) of the Yellow Paper, verified by Eq.(219).
+  This is defined in Eq.(291) and Eq.(292) of the Yellow Paper, verified by Eq.(293).
 
   ## Examples
 
@@ -292,14 +292,13 @@ defmodule Blockchain.Transaction.Signature do
       iex> Blockchain.Transaction.Signature.sender(%Blockchain.Transaction{data: nil, gas_limit: 7, gas_price: 6, init: <<1>>, nonce: 5, r: 0, s: 0, to: "", v: 0, value: 5})
       {:error, "Recovery id invalid 0-3"}
   """
-  @spec sender(Blockchain.Transaction.t(), integer() | nil) ::
-          {:ok, EVM.address()} | {:error, String.t()}
-  def sender(trx, chain_id \\ nil) do
+  @spec sender(Transaction.t(), integer() | nil) :: {:ok, EVM.address()} | {:error, String.t()}
+  def sender(tx, chain_id \\ nil) do
     # Ignore chain_id if transaction has a `v` value before EIP-155 minimum
-    chain_id = if not uses_chain_id?(trx.v), do: nil, else: chain_id
+    chain_id = if not uses_chain_id?(tx.v), do: nil, else: chain_id
+    tx_hash = transaction_hash(tx, chain_id)
 
-    with {:ok, public_key} <-
-           recover_public(transaction_hash(trx, chain_id), trx.v, trx.r, trx.s, chain_id) do
+    with {:ok, public_key} <- recover_public(tx_hash, tx.v, tx.r, tx.s, chain_id) do
       {:ok, address_from_public(public_key)}
     end
   end

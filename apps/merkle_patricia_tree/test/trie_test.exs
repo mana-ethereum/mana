@@ -1,5 +1,6 @@
 defmodule MerklePatriciaTree.TrieTest do
   use ExUnit.Case, async: true
+
   doctest MerklePatriciaTree.Trie
 
   import Support.NodeHelpers, only: :functions
@@ -121,7 +122,6 @@ defmodule MerklePatriciaTree.TrieTest do
       trie_1 = Trie.new(db)
       trie_2 = Trie.update(trie_1, <<0x01::4, 0x02::4, 0x03::4>>, "cool")
 
-      assert Trie.get(trie_1, <<0x01::4, 0x02::4, 0x03::4>>) == nil
       assert Trie.get(trie_2, <<0x01::4>>) == nil
       assert Trie.get(trie_2, <<0x01::4, 0x02::4>>) == nil
       assert Trie.get(trie_2, <<0x01::4, 0x02::4, 0x03::4>>) == "cool"
@@ -141,7 +141,6 @@ defmodule MerklePatriciaTree.TrieTest do
       trie_1 = Trie.new(db, leaf_node([0x01, 0x02], "first"))
       trie_2 = Trie.update(trie_1, <<0x01::4, 0x02::4>>, "second")
 
-      assert Trie.get(trie_1, <<0x01::4, 0x02::4>>) == "first"
       assert Trie.get(trie_2, <<0x01::4, 0x02::4>>) == "second"
     end
 
@@ -158,7 +157,6 @@ defmodule MerklePatriciaTree.TrieTest do
       trie_1 = Trie.new(db, root_hash)
       trie_2 = Trie.update(trie_1, <<0x01::4, 0x02::4>>, long_string_2)
 
-      assert Trie.get(trie_1, <<0x01::4, 0x02::4>>) == long_string_1
       assert Trie.get(trie_2, <<0x01::4, 0x02::4>>) == long_string_2
     end
 
@@ -171,7 +169,6 @@ defmodule MerklePatriciaTree.TrieTest do
 
       trie_2 = Trie.update(trie_1, <<0x01::4, 0x02::4, 0x03::4>>, "cooler")
 
-      assert Trie.get(trie_1, <<0x01::4, 0x02::4, 0x03::4>>) == "cool"
       assert Trie.get(trie_2, <<0x01::4>>) == nil
       assert Trie.get(trie_2, <<0x01::4, 0x02::4>>) == "wee"
       assert Trie.get(trie_2, <<0x01::4, 0x02::4, 0x03::4>>) == "cooler"
@@ -206,10 +203,6 @@ defmodule MerklePatriciaTree.TrieTest do
 
       trie_2 = Trie.update(trie_1, key, "grault")
 
-      assert Trie.get(trie_1, <<0x01::4>>) == "foo"
-      assert Trie.get(trie_1, <<0x01::4, 0x01::4>>) == "bar"
-      assert Trie.get(trie_1, <<0x01::4, 0x01::4, 0x01::4, 0x02::4, 0x01::4, 0x03::4>>) == "qux"
-      assert Trie.get(trie_1, key) == "corge"
       assert Trie.get(trie_2, key) == "grault"
     end
 
@@ -326,6 +319,16 @@ defmodule MerklePatriciaTree.TrieTest do
              ) == "c"
     end
 
+    test "remove branch value", %{db: db} do
+      empty_trie = Trie.new(db)
+      trie_1 = Trie.update(empty_trie, <<0x01::4, 0x02::4>>, "foo")
+      trie_2 = Trie.update(trie_1, <<0x01::4, 0x02::4, 0x03::4>>, "bar")
+      trie_3 = Trie.remove(trie_2, <<0x01::4, 0x02::4>>)
+
+      assert Trie.get(trie_3, <<0x01::4, 0x02::4>>) == nil
+      assert Trie.get(trie_3, <<0x01::4, 0x02::4, 0x03::4>>) == "bar"
+    end
+
     test "acceptence testing", %{db: db} do
       {trie, values} =
         Enum.reduce(1..100, {Trie.new(db), []}, fn _, {trie, dict} ->
@@ -336,7 +339,7 @@ defmodule MerklePatriciaTree.TrieTest do
 
           # Verify each key exists in our trie
           for {k, v} <- dict do
-            assert Trie.get(trie, k) == v
+            assert Trie.get(updated_trie, k) == v
           end
 
           {updated_trie, [{key, value} | dict]}

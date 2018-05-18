@@ -6,6 +6,7 @@ defmodule Blockchain.AccountTest do
   alias ExthCrypto.Hash.Keccak
   alias MerklePatriciaTree.Trie
   alias Blockchain.Account
+  alias Blockchain.Account.Storage
 
   test "serialize and deserialize" do
     acct = %Account{
@@ -35,36 +36,16 @@ defmodule Blockchain.AccountTest do
     }
 
     state =
-      Trie.new(db)
+      db
+      |> Trie.new()
       |> Account.put_account(address, account)
       |> Account.put_storage(address, 42, 1)
 
-    # uncomment to fix the test
-    # state = Account.put_storage(state, address, 42, nil)
     account = Account.get_account(state, address)
     Account.del_account(state, address)
-
-    dump_account_storage(db, account.storage_root)
-
-    key =
-      42
-      |> :binary.encode_unsigned()
-      |> BitHelper.pad(32)
-      |> Keccak.kec()
-
-    value =
-      db
-      |> Trie.new(account.storage_root)
-      |> Trie.get(key)
+    value = Storage.fetch(db, account.storage_root, 42)
 
     assert value == nil
-  end
-
-  def dump_account_storage(db, storage_root) do
-    Trie.new(db, storage_root)
-    |> Trie.Inspector.all_values()
-    |> Enum.map(fn {_key, value} -> :binary.decode_unsigned(value) end)
-    |> Enum.map(fn value -> IO.puts(value) end)
   end
 
   test "valid empty state_root" do

@@ -12,6 +12,8 @@ defmodule Blockchain.Chain do
 
   require Integer
 
+  alias Blockchain.Genesis
+
   defstruct name: nil,
             engine: %{},
             params: %{},
@@ -44,16 +46,7 @@ defmodule Blockchain.Chain do
             eip98_transition: integer(),
             eip86_transition: integer()
           },
-          genesis: %{
-            difficulty: integer(),
-            author: EVM.address(),
-            timestamp: integer(),
-            parent_hash: EVM.hash(),
-            extra_data: binary(),
-            gas_limit: EVM.Gas.t(),
-            mix_hash: binary(),
-            nonce: binary()
-          },
+          genesis: Genesis.t(),
           nodes: [String.t()],
           accounts: %{
             EVM.address() => %{
@@ -141,10 +134,15 @@ defmodule Blockchain.Chain do
 
   defp get_accounts(account_map) do
     for {address, account_info} <- account_map do
+      nonce =
+        if account_info["nonce"],
+          do: account_info["nonce"] |> load_hex,
+          else: 0
+
       {load_address(address),
        %{
          balance: account_info["balance"] |> load_decimal,
-         nonce: if(account_info["nonce"], do: account_info["nonce"] |> load_hex, else: 0)
+         nonce: nonce
        }}
     end
     |> Enum.into(%{})

@@ -1,8 +1,9 @@
 defmodule MerklePatriciaTree.Trie.Verifier do
   @moduledoc """
   Function to verify the structure of a trie meets
-  the spec as defined in http://gavwood.com/Paper.pdf.
+  the spec as defined in Appendix D of the Yellow Paper.
   """
+
   alias MerklePatriciaTree.Trie
   alias MerklePatriciaTree.Trie.Node
 
@@ -80,7 +81,8 @@ defmodule MerklePatriciaTree.Trie.Verifier do
     if shared_prefix == [] do
       {:error, "empty shared prefix"}
     else
-      do_verify_trie(node_hash |> Trie.into(trie), dict, values)
+      ext_trie = Trie.into(node_hash, trie)
+      do_verify_trie(ext_trie, dict, values)
 
       # TODO: Check we can't extend the ext?
     end

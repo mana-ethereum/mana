@@ -23,8 +23,8 @@ create an update a trie.
     ...>    |> MerklePatriciaTree.Trie.update(<<0x01::4, 0x02::4>>, "wee")
     ...>    |> MerklePatriciaTree.Trie.update(<<0x01::4, 0x02::4, 0x03::4>>, "cool")
     iex> trie_2 = MerklePatriciaTree.Trie.update(trie, <<0x01::4, 0x02::4, 0x03::4>>, "cooler")
-    iex> MerklePatriciaTree.Trie.get(trie, <<0x01::4, 0x02::4, 0x03::4>>)
-    "cool"
+    iex> MerklePatriciaTree.Trie.get(trie_2, <<0x01::4, 0x02::4, 0x03::4>>)
+    "cooler"
     iex> MerklePatriciaTree.Trie.get(trie_2, <<0x01::4>>)
     nil
     iex> MerklePatriciaTree.Trie.get(trie_2, <<0x01::4, 0x02::4>>)

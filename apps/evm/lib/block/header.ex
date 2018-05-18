@@ -9,35 +9,35 @@ defmodule Block.Header do
   @empty_trie MerklePatriciaTree.Trie.empty_trie_root_hash()
   @empty_keccak [] |> ExRLP.encode() |> Keccak.kec()
 
-  # Hp P(BH)Hr
+  # H_p P(B_H)H_r
   defstruct parent_hash: nil,
-            # Ho KEC(RLP(L∗H(BU)))
+            # H_o KEC(RLP(L∗H(B_U)))
             ommers_hash: @empty_keccak,
-            # Hc
+            # H_c
             beneficiary: nil,
-            # Hr TRIE(LS(Π(σ, B)))
+            # H_r TRIE(LS(Π(σ, B)))
             state_root: @empty_trie,
-            # Ht TRIE({∀i < kBTk, i ∈ P : p(i, LT(BT[i]))})
+            # H_t TRIE({∀i < kBTk, i ∈ P : p(i, LT(B_T[i]))})
             transactions_root: @empty_trie,
-            # He TRIE({∀i < kBRk, i ∈ P : p(i, LR(BR[i]))})
+            # H_e TRIE({∀i < kBRk, i ∈ P : p(i, LR(B_R[i]))})
             receipts_root: @empty_trie,
-            # Hb bloom
+            # H_b bloom
             logs_bloom: <<0::2048>>,
-            # Hd
+            # H_d
             difficulty: nil,
-            # Hi
+            # H_i
             number: nil,
-            # Hl
+            # H_l
             gas_limit: 0,
-            # Hg
+            # H_g
             gas_used: 0,
-            # Hs
+            # H_s
             timestamp: nil,
-            # Hx
+            # H_x
             extra_data: <<>>,
-            # Hm
+            # H_m
             mix_hash: nil,
-            # Hn
+            # H_n
             nonce: nil
 
   # As defined in section 4.3
@@ -269,28 +269,28 @@ defmodule Block.Header do
 
   ## Examples
 
-      iex> Block.Header.is_valid?(%Block.Header{number: 0, difficulty: 131_072, gas_limit: 200_000}, nil)
+      iex> Block.Header.validate(%Block.Header{number: 0, difficulty: 131_072, gas_limit: 200_000}, nil)
       :valid
 
-      iex> Block.Header.is_valid?(%Block.Header{number: 0, difficulty: 5, gas_limit: 5}, nil, true)
+      iex> Block.Header.validate(%Block.Header{number: 0, difficulty: 5, gas_limit: 5}, nil, true)
       {:invalid, [:invalid_difficulty, :invalid_gas_limit]}
 
-      iex> Block.Header.is_valid?(%Block.Header{number: 1, difficulty: 131_136, gas_limit: 200_000, timestamp: 65}, %Block.Header{number: 0, difficulty: 131_072, gas_limit: 200_000, timestamp: 55})
+      iex> Block.Header.validate(%Block.Header{number: 1, difficulty: 131_136, gas_limit: 200_000, timestamp: 65}, %Block.Header{number: 0, difficulty: 131_072, gas_limit: 200_000, timestamp: 55})
       :valid
 
-      iex> Block.Header.is_valid?(%Block.Header{number: 1, difficulty: 131_000, gas_limit: 200_000, timestamp: 65}, %Block.Header{number: 0, difficulty: 131_072, gas_limit: 200_000, timestamp: 55}, true)
+      iex> Block.Header.validate(%Block.Header{number: 1, difficulty: 131_000, gas_limit: 200_000, timestamp: 65}, %Block.Header{number: 0, difficulty: 131_072, gas_limit: 200_000, timestamp: 55}, true)
       {:invalid, [:invalid_difficulty]}
 
-      iex> Block.Header.is_valid?(%Block.Header{number: 1, difficulty: 131_136, gas_limit: 200_000, timestamp: 45}, %Block.Header{number: 0, difficulty: 131_072, gas_limit: 200_000, timestamp: 55})
+      iex> Block.Header.validate(%Block.Header{number: 1, difficulty: 131_136, gas_limit: 200_000, timestamp: 45}, %Block.Header{number: 0, difficulty: 131_072, gas_limit: 200_000, timestamp: 55})
       {:invalid, [:child_timestamp_invalid]}
 
-      iex> Block.Header.is_valid?(%Block.Header{number: 1, difficulty: 131_136, gas_limit: 300_000, timestamp: 65}, %Block.Header{number: 0, difficulty: 131_072, gas_limit: 200_000, timestamp: 55})
+      iex> Block.Header.validate(%Block.Header{number: 1, difficulty: 131_136, gas_limit: 300_000, timestamp: 65}, %Block.Header{number: 0, difficulty: 131_072, gas_limit: 200_000, timestamp: 55})
       {:invalid, [:invalid_gas_limit]}
 
-      iex> Block.Header.is_valid?(%Block.Header{number: 2, difficulty: 131_136, gas_limit: 200_000, timestamp: 65}, %Block.Header{number: 0, difficulty: 131_072, gas_limit: 200_000, timestamp: 55})
+      iex> Block.Header.validate(%Block.Header{number: 2, difficulty: 131_136, gas_limit: 200_000, timestamp: 65}, %Block.Header{number: 0, difficulty: 131_072, gas_limit: 200_000, timestamp: 55})
       {:invalid, [:child_number_invalid]}
 
-      iex> Block.Header.is_valid?(%Block.Header{number: 1, difficulty: 131_136, gas_limit: 200_000, timestamp: 65, extra_data: "0123456789012345678901234567890123456789"}, %Block.Header{number: 0, difficulty: 131_072, gas_limit: 200_000, timestamp: 55})
+      iex> Block.Header.validate(%Block.Header{number: 1, difficulty: 131_136, gas_limit: 200_000, timestamp: 65, extra_data: "0123456789012345678901234567890123456789"}, %Block.Header{number: 0, difficulty: 131_072, gas_limit: 200_000, timestamp: 55})
       {:invalid, [:extra_data_too_large]}
 
       # TODO: Add tests for setting homestead_block
@@ -300,9 +300,9 @@ defmodule Block.Header do
       # TODO: Add tests for setting gas_limit_bound_divisor
       # TODO: Add tests for setting min_gas_limit
   """
-  @spec is_valid?(t, t | nil, integer(), integer(), integer(), integer(), integer(), integer()) ::
+  @spec validate(t, t | nil, integer(), integer(), integer(), integer(), integer(), integer()) ::
           :valid | {:invalid, [atom()]}
-  def is_valid?(
+  def validate(
         header,
         parent_header,
         homestead_block \\ @homestead_block,
@@ -581,11 +581,11 @@ defmodule Block.Header do
   end
 
   @doc """
-  Function to determine if the gas limit set is valid. The miner gets to
-  specify a gas limit, so long as it's in range. This allows about a 0.1% change
-  per block.
+  Function to determine if the gas limit set is valid.
+  The miner gets to specify a gas limit, so long as it's in range.
+  This allows about a 0.1% change per block.
 
-  This function directly implements Eq.(45), Eq.(46) and Eq.(47).
+  This function directly implements Eq.(47).
 
   ## Examples
 

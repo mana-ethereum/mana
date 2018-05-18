@@ -67,8 +67,6 @@ defmodule MerklePatriciaTree.DB do
 
   ## Examples
 
-      ## Examples
-
       iex> db = MerklePatriciaTree.Test.random_ets_db()
       iex> MerklePatriciaTree.DB.put!(db, "name", "bob")
       iex> MerklePatriciaTree.DB.get(db, "name")
@@ -80,5 +78,22 @@ defmodule MerklePatriciaTree.DB do
   @spec put!(db, MerklePatriciaTree.Trie.key(), value) :: :ok
   def put!(_db = {db_mod, db_ref}, key, value) do
     db_mod.put!(db_ref, key, value)
+  end
+
+  @doc """
+  Removes all objects with key from the database.
+
+  ## Examples
+
+      iex> db = MerklePatriciaTree.Test.random_ets_db()
+      iex> MerklePatriciaTree.DB.put!(db, "foo", "bar")
+      iex> MerklePatriciaTree.DB.delete!(db, "foo")
+      iex> MerklePatriciaTree.DB.get(db, "foo")
+      :not_found
+
+  """
+  @spec delete!(DB.db_ref(), Trie.key()) :: :ok
+  def delete!(_db = {db_mod, db_ref}, key) do
+    db_mod.delete!(db_ref, key)
   end
 end

@@ -5,7 +5,7 @@ defmodule Blockchain.BlockTest do
   doctest Blockchain.Block
 
   alias Block.Header
-  alias Blockchain.{Block, Transaction}
+  alias Blockchain.{Block, Transaction, Genesis}
 
   define_common_tests("GenesisTests", [], fn _test_name, test_data ->
     for {internal_test_name, test} <- test_data do
@@ -26,7 +26,7 @@ defmodule Blockchain.BlockTest do
           accounts: get_test_accounts(test["alloc"])
         }
 
-        block = Block.gen_genesis_block(chain, db)
+        block = Genesis.create_block(chain, db)
 
         # Check that our block matches the serialization from common tests
         assert Block.serialize(block) == test["result"] |> maybe_hex |> ExRLP.decode()
@@ -115,10 +115,10 @@ defmodule Blockchain.BlockTest do
     chain = Blockchain.Test.ropsten_chain()
 
     block =
-      Blockchain.Block.gen_genesis_block(chain, db)
-      |> Blockchain.Block.add_rewards_to_block(db)
-      |> Blockchain.Block.put_header(:mix_hash, <<0::256>>)
-      |> Blockchain.Block.put_header(:nonce, <<0x42::64>>)
+      Genesis.create_block(chain, db)
+      |> Block.add_rewards_to_block(db)
+      |> Block.put_header(:mix_hash, <<0::256>>)
+      |> Block.put_header(:nonce, <<0x42::64>>)
 
     block = %{block | block_hash: Block.hash(block)}
 
@@ -165,8 +165,11 @@ defmodule Blockchain.BlockTest do
     db = MerklePatriciaTree.Test.random_ets_db()
     chain = Blockchain.Test.ropsten_chain()
 
-    Blockchain.Block.gen_genesis_block(chain, db)
-    |> Blockchain.Block.add_rewards_to_block(db)
-    |> Blockchain.Block.is_fully_valid?(chain, nil, db)
+    result =
+      Genesis.create_block(chain, db)
+      |> Block.add_rewards_to_block(db)
+      |> Block.validate(chain, nil, db)
+
+    assert result == :valid
   end
 end
