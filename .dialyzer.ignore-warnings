@@ -45,19 +45,25 @@ lib/trie/helper.ex:41: The variable _@1 can never match since previous clauses c
 :0: Unknown type 'Elixir.EVM':state/0
 :0: Unknown type 'Elixir.ExthCrypto':hash/0
 :0: Unknown type 'Elixir.Header':t/0
-apps/blockchain/lib/blockchain/block.ex:581: Function gen_child_block/2 has no local return
-apps/blockchain/lib/blockchain/block.ex:581: Function gen_child_block/3 has no local return
-apps/blockchain/lib/blockchain/block.ex:596: The call 'Elixir.Blockchain.Block':set_block_number(#{'__struct__':='Elixir.Blockchain.Block', 'block_hash':='nil', 'header':=#{'__struct__':='Elixir.Block.Header', 'beneficiary':=_, 'difficulty':='nil', 'extra_data':=_, 'gas_limit':=0, 'gas_used':=0, 'logs_bloom':=<<_:2048>>, 'mix_hash':='nil', 'nonce':='nil', 'number':='nil', 'ommers_hash':=<<_:256>>, 'parent_hash':='nil', 'receipts_root':=<<_:256>>, 'state_root':=_, 'timestamp':=_, 'transactions_root':=<<_:256>>}, 'ommers':=[], 'transactions':=[]},Vparent_block@1::any()) breaks the contract (t(),t()) -> t()
+apps/blockchain/lib/blockchain/block.ex:491: Function gen_child_block/2 has no local return
+apps/blockchain/lib/blockchain/block.ex:491: Function gen_child_block/3 has no local return
+apps/blockchain/lib/blockchain/block.ex:496: The call 'Elixir.Blockchain.Block':set_block_number(#{'__struct__':='Elixir.Blockchain.Block', 'block_hash':='nil', 'header':=#{'__struct__':='Elixir.Block.Header', 'beneficiary':=_, 'difficulty':='nil', 'extra_data':=_, 'gas_limit':=0, 'gas_used':=0, 'logs_bloom':=<<_:2048>>, 'mix_hash':='nil', 'nonce':='nil', 'number':='nil', 'ommers_hash':=<<_:256>>, 'parent_hash':='nil', 'receipts_root':=<<_:256>>, 'state_root':=_, 'timestamp':=_, 'transactions_root':=<<_:256>>}, 'ommers':=[], 'transactions':=[]},Vparent_block@1::any()) breaks the contract (t(),t()) -> t()
+apps/blockchain/lib/blockchain/block.ex:501: Invalid type specification for function 'Elixir.Blockchain.Block':gen_child_header/2. The success typing is (_,'nil' | [{atom(),_}] | map()) -> #{'__struct__':='Elixir.Block.Header', 'beneficiary':=_, 'difficulty':='nil', 'extra_data':=_, 'gas_limit':=0, 'gas_used':=0, 'logs_bloom':=<<_:2048>>, 'mix_hash':='nil', 'nonce':='nil', 'number':='nil', 'ommers_hash':=<<_:256>>, 'parent_hash':='nil', 'receipts_root':=<<_:256>>, 'state_root':=_, 'timestamp':=_, 'transactions_root':=<<_:256>>}
 
 -------------------------------
 # blockchain/chain.ex
 -------------------------------
-apps/blockchain/lib/blockchain/chain.ex:86: Invalid type specification for function 'Elixir.Blockchain.Chain':load_chain/1. The success typing is (atom()) -> #{'__struct__':='Elixir.Blockchain.Chain', 'accounts':=map(), 'engine':=map(), 'genesis':=#{'author':=binary(), 'difficulty':=non_neg_integer(), 'extra_data':=binary(), 'gas_limit':=non_neg_integer(), 'parent_hash':=binary(), 'timestamp':=non_neg_integer()}, 'name':=_, 'nodes':=_, 'params':=#{'account_start_nonce':=non_neg_integer(), 'block_reward':=non_neg_integer(), 'eip155_transition':=_, 'eip86_transition':=non_neg_integer(), 'eip98_transition':=non_neg_integer(), 'gas_limit_bound_divisor':=non_neg_integer(), 'maximum_extra_data_size':=non_neg_integer(), 'min_gas_limit':=non_neg_integer()}}
+apps/blockchain/lib/blockchain/chain.ex:79: Invalid type specification for function 'Elixir.Blockchain.Chain':load_chain/1. The success typing is (atom()) -> #{'__struct__':='Elixir.Blockchain.Chain', 'accounts':=map(), 'engine':=map(), 'genesis':=#{'author':=binary(), 'difficulty':=non_neg_integer(), 'extra_data':=binary(), 'gas_limit':=non_neg_integer(), 'parent_hash':=binary(), 'timestamp':=non_neg_integer()}, 'name':=_, 'nodes':=_, 'params':=#{'account_start_nonce':=non_neg_integer(), 'block_reward':=non_neg_integer(), 'eip155_transition':=_, 'eip86_transition':=non_neg_integer(), 'eip98_transition':=non_neg_integer(), 'gas_limit_bound_divisor':=non_neg_integer(), 'maximum_extra_data_size':=non_neg_integer(), 'min_gas_limit':=non_neg_integer()}}
+
+-------------------------------
+# blockchain/genesis.ex
+-------------------------------
+apps/blockchain/lib/blockchain/genesis.ex
 
 -------------------------------
 # blockchain/transaction.ex
 -------------------------------
-apps/blockchain/lib/blockchain/transaction.ex:296: Function execute_transaction/3 has no local return
+apps/blockchain/lib/blockchain/transaction.ex:306: Function execute_transaction/3 has no local return
 
 -------------------------------
 # blockchain/application.ex

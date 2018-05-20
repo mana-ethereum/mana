@@ -1,5 +1,4 @@
 defmodule Blockchain.MathHelper do
-  alias EVM.EVM
   alias Blockchain.Transaction
 
   @doc """

@@ -50,7 +50,7 @@ defmodule Blockchain.Genesis do
 
       # TODO: Add test case with initial storage
   """
-  @spec create_block(Chain.t(), DB.db()) :: t
+  @spec create_block(Chain.t(), DB.db()) :: Block.t()
   def create_block(chain, db) do
     header = create_header(chain.genesis)
     block = %Block{header: header}

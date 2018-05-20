@@ -4,7 +4,8 @@ defmodule Blockchain.Block.HolisticValidity do
   as defined in Eq.(29) of the Yellow Paper.
   """
 
-  alias Blockchain.{Block, Genesis}
+  alias Blockchain.{Block, Genesis, Chain}
+  alias MerklePatriciaTree.DB
 
   @doc """
   Determines whether or not a block is valid. This is

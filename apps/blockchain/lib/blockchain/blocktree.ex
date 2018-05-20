@@ -19,8 +19,7 @@ defmodule Blockchain.Blocktree do
     defexception [:message]
   end
 
-  alias Blockchain.Block
-  alias Blockchain.Chain
+  alias Blockchain.{Block, Chain}
 
   defstruct block: nil,
             children: [],

@@ -92,7 +92,7 @@ defmodule MerklePatriciaTree.DB do
       :not_found
 
   """
-  @spec delete!(DB.db_ref(), Trie.key()) :: :ok
+  @spec delete!(db_ref(), MerklePatriciaTree.Trie.key()) :: :ok
   def delete!(_db = {db_mod, db_ref}, key) do
     db_mod.delete!(db_ref, key)
   end

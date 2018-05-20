@@ -5,8 +5,7 @@ defmodule Blockchain.Account.Storage do
   """
 
   alias ExthCrypto.Hash.Keccak
-  alias MerklePatriciaTree.Trie
-  alias EVM.EVM
+  alias MerklePatriciaTree.{Trie, DB}
 
   @spec put(DB.db(), EVM.trie_root(), integer(), integer()) :: Trie.t()
   def put(db, root, key, value) do
