@@ -11,7 +11,7 @@ The modified patricia merkle trie allows arbitrary storage of key, value pairs w
 ## Basic Usage
 
 Use the `MerklePatriciaTree` module to create and build merkle patricia tries. You will be required to choose
-a storage database, and we currently support `:ets` and `:leveldb`. The follow example illustrates how to
+a storage database, and we currently support `:ets` and `:rocksdb`. The follow example illustrates how to
 create an update a trie.
 
 ```elixir
