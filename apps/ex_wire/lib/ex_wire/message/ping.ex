@@ -4,9 +4,11 @@ defmodule ExWire.Message.Ping do
   """
 
   alias ExWire.Struct.Endpoint
+  alias ExWire.Util.Timestamp
 
   @behaviour ExWire.Message
   @message_id 0x01
+  @default_version 4
 
   defstruct version: nil,
             from: nil,
@@ -22,6 +24,46 @@ defmodule ExWire.Message.Ping do
 
   @spec message_id() :: ExWire.Message.message_id()
   def message_id, do: @message_id
+
+  @doc """
+  Creates new ping messages struct
+
+  ## Examples
+
+    iex> ExWire.Message.Ping.new(
+    ...>   %ExWire.Struct.Endpoint{ip: [1, 2, 3, 4], tcp_port: 5, udp_port: nil},
+    ...>   %ExWire.Struct.Endpoint{ip: [6, 2, 7, 4], tcp_port: 5, udp_port: nil},
+    ...>   ExWire.Util.Timestamp.now(:test))
+    %ExWire.Message.Ping{
+       from: %ExWire.Struct.Endpoint{
+         ip: [1, 2, 3, 4],
+         tcp_port: 5,
+         udp_port: nil
+       },
+       timestamp: 1525704921,
+       to: %ExWire.Struct.Endpoint{
+         ip: [6, 2, 7, 4],
+         tcp_port: 5,
+         udp_port: nil
+       },
+       version: 4
+     }
+
+  """
+  @spec new(Endpoint.t(), Endpoint.t(), integer(), integer()) :: t()
+  def new(
+        from = %Endpoint{},
+        to = %Endpoint{},
+        timestamp \\ Timestamp.soon(),
+        version \\ @default_version
+      ) do
+    %__MODULE__{
+      version: version,
+      from: from,
+      to: to,
+      timestamp: timestamp
+    }
+  end
 
   @doc """
   Decodes a given message binary, which is assumed

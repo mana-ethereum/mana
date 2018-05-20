@@ -5,14 +5,19 @@ defmodule ExWire.Kademlia.RoutingTable do
 
   alias ExWire.Kademlia.{Bucket, Node}
   alias ExWire.Kademlia.Config, as: KademliaConfig
+  alias ExWire.Message.{Ping, Pong}
+  alias ExWire.{Network, Protocol}
+  alias ExWire.Util.Timestamp
+  alias ExWire.Handler.Params
 
-  @network Application.fetch_env(:ex_wire, :network_process_name)
+  defstruct [:current_node, :buckets, :network_client_name, :expected_pongs]
 
-  defstruct [:current_node, :buckets]
-
+  @type expected_pongs :: %{required(binary()) => {Node.t(), Node.t()}}
   @type t :: %__MODULE__{
           current_node: Node.t(),
-          buckets: [Bucket.t()]
+          buckets: [Bucket.t()],
+          network_client_name: pid() | atom(),
+          expected_pongs: expected_pongs()
         }
 
   @doc """
@@ -27,19 +32,27 @@ defmodule ExWire.Kademlia.RoutingTable do
       ...>    124, 126, 164, 120, 206, 192, 237, 79, 162, 82, 137, 130, 207, 52, 72, 48,
       ...>    148, 233, 203, 201, 33, 110, 122, 163, 73, 105, 18, 66, 87, 109, 85, 42, 42,
       ...>    86, 170, 234, 228, 38, 197, 48, 61, 237, 103, 124, 228, 85, 186, 26, 205,
-      ...>    157>>
+      ...>    157>>,
+      ...>  endpoint: %ExWire.Struct.Endpoint{
+      ...>    ip: [1, 2, 3, 4],
+      ...>    tcp_port: 5,
+      ...>    udp_port: nil
+      ...>  }
       ...> }
-      iex> table = node |> ExWire.Kademlia.RoutingTable.new()
+      iex> {:ok, network_client_pid} = ExWire.Adapter.UDP.start_link(network_module: {ExWire.Network, []}, port: 35351, name: :doctest)
+      iex> table = ExWire.Kademlia.RoutingTable.new(node, network_client_pid)
       iex> table.buckets |> Enum.count
       256
   """
-  @spec new(Node.t()) :: t()
-  def new(node = %Node{}) do
+  @spec new(Node.t(), pid() | atom()) :: t()
+  def new(node = %Node{}, client_pid) do
     initial_buckets = initialize_buckets()
 
     %__MODULE__{
       current_node: node,
-      buckets: initial_buckets
+      buckets: initial_buckets,
+      network_client_name: client_pid,
+      expected_pongs: %{}
     }
   end
 
@@ -68,13 +81,27 @@ defmodule ExWire.Kademlia.RoutingTable do
       |> Bucket.refresh_node(node)
 
     case refresh_node_result do
-      {:full_bucket, candidate_for_removal, bucket} ->
-        handle_full_bucket(table, bucket, candidate_for_removal, node)
-        table
+      {:full_bucket, candidate_for_removal, _bucket} ->
+        handle_full_bucket(table, candidate_for_removal, node)
 
       {_descr, _node, bucket} ->
         replace_bucket(table, node_bucket_id, bucket)
     end
+  end
+
+  @doc """
+  Removes a node from routing table.
+  """
+  @spec remove_node(t(), Node.t()) :: t()
+  def remove_node(table = %__MODULE__{}, node = %Node{}) do
+    node_bucket_id = bucket_id(table, node)
+
+    updated_bucket =
+      table
+      |> bucket_at(node_bucket_id)
+      |> Bucket.remove_node(node)
+
+    replace_bucket(table, node_bucket_id, updated_bucket)
   end
 
   @doc """
@@ -107,8 +134,56 @@ defmodule ExWire.Kademlia.RoutingTable do
     node |> Node.common_prefix(current_node)
   end
 
+  @spec ping(t(), Node.t()) :: Network.handler_action()
+  def ping(
+        %__MODULE__{
+          current_node: %Node{endpoint: current_endpoint},
+          network_client_name: network_client_name
+        },
+        %Node{endpoint: remote_endpoint}
+      ) do
+    ping = Ping.new(current_endpoint, remote_endpoint)
+
+    Network.send(ping, network_client_name, remote_endpoint)
+  end
+
+  @doc """
+   Handles Pong message.
+
+   There are three cases:
+   - If we were waiting for this pong (it's stored in routing table) and it's not expired,
+       we refresh stale node.
+   - If a pong is not expired, we add a node to the routing table.
+   - If a pong is expired, we do nothing.
+  """
+  @spec handle_pong(t(), Pong.t(), Params.t()) :: t()
+  def handle_pong(
+        table = %__MODULE__{expected_pongs: pongs},
+        %Pong{hash: hash, timestamp: timestamp},
+        params \\ nil
+      ) do
+    {node_pair, updated_pongs} = Map.pop(pongs, hash)
+
+    table = %{table | expected_pongs: updated_pongs}
+
+    cond do
+      node_pair && timestamp > Timestamp.now() ->
+        {removal_candidate, _insertion_candidate} = node_pair
+
+        refresh_node(table, removal_candidate)
+
+      params && timestamp > Timestamp.now() ->
+        node = Node.from_handler_params(params)
+
+        refresh_node(table, node)
+
+      true ->
+        table
+    end
+  end
+
   @spec replace_bucket(t(), integer(), Bucket.t()) :: t()
-  defp replace_bucket(table, idx, bucket) do
+  def replace_bucket(table, idx, bucket) do
     buckets =
       table.buckets
       |> List.replace_at(idx, bucket)
@@ -121,8 +196,17 @@ defmodule ExWire.Kademlia.RoutingTable do
     Enum.at(buckets, id)
   end
 
-  defp handle_full_bucket(_table, _bucket, _candidate_for_removal, _candidate_for_insertion) do
-    # TODO
+  @spec handle_full_bucket(t(), Node.t(), Node.t()) :: t()
+  defp handle_full_bucket(
+         table = %__MODULE__{expected_pongs: expected_pongs},
+         candidate_for_removal,
+         candidate_for_insertion
+       ) do
+    {:sent_message, _, encoded_message} = ping(table, candidate_for_removal)
+    mdc = Protocol.message_mdc(encoded_message)
+
+    updated_pongs = Map.put(expected_pongs, mdc, {candidate_for_removal, candidate_for_insertion})
+    %{table | expected_pongs: updated_pongs}
   end
 
   @spec traverse(t(), integer(), [Node.t()], integer()) :: [Node.t()]
@@ -154,7 +238,7 @@ defmodule ExWire.Kademlia.RoutingTable do
   end
 
   @spec nodes_at(t(), integer()) :: Node.t()
-  defp nodes_at(table = %__MODULE__{}, bucket_id) do
+  def nodes_at(table = %__MODULE__{}, bucket_id) do
     table
     |> bucket_at(bucket_id)
     |> Bucket.nodes()

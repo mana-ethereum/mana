@@ -11,13 +11,12 @@ defmodule WireToWireTest do
   @us_port 8888
   @them_port 9999
 
-  setup do
-    server =
-      ExWire.start(
-        nil,
-        network_adapter: ExWire.Adapter.UDP,
+  setup_all do
+    {:ok, server} =
+      ExWire.Adapter.UDP.start_link(
+        network_module: {ExWire.Network, []},
         port: @them_port,
-        name: __MODULE__.Server
+        name: :wire_to_wire_them
       )
 
     remote_host = %ExWire.Struct.Endpoint{
@@ -33,7 +32,12 @@ defmodule WireToWireTest do
   end
 
   test "ping / pong", %{remote_host: remote_host} do
-    {:ok, client_pid} = ExWire.Adapter.UDP.start_link({__MODULE__, [self()]}, @us_port)
+    {:ok, client_pid} =
+      ExWire.Adapter.UDP.start_link(
+        network_module: {__MODULE__, [self()]},
+        port: @us_port,
+        name: :wire_to_wire
+      )
 
     timestamp = ExWire.Util.Timestamp.now()
 

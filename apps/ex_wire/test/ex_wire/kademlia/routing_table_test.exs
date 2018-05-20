@@ -5,31 +5,26 @@ defmodule ExWire.Kademlia.RoutingTableTest do
 
   alias ExWire.Kademlia.{RoutingTable, Bucket, Node}
   alias ExWire.Kademlia.Config, as: KademliaConfig
+  alias ExWire.Message.Pong
+  alias ExWire.TestHelper
+  alias ExWire.Adapter.UDP
+  alias ExWire.Network
+  alias ExWire.Util.Timestamp
+  alias ExWire.Handler.Params
 
   setup_all do
-    node =
-      Node.new(
-        <<4, 108, 224, 89, 48, 199, 42, 188, 99, 44, 88, 226, 228, 50, 79, 124, 126, 164, 120,
-          206, 192, 237, 79, 162, 82, 137, 130, 207, 52, 72, 48, 148, 233, 203, 201, 33, 110, 122,
-          163, 73, 105, 18, 66, 87, 109, 85, 42, 42, 86, 170, 234, 228, 38, 197, 48, 61, 237, 103,
-          124, 228, 85, 186, 26, 205, 157>>
-      )
+    {:ok, network_client_pid} =
+      UDP.start_link(network_module: {Network, []}, port: 35349, name: :routing_table_test)
 
-    table = RoutingTable.new(node)
+    node = TestHelper.random_node()
+    table = RoutingTable.new(node, network_client_pid)
 
     {:ok, %{table: table}}
   end
 
   describe "refresh_node/2" do
     test "adds node to routing table", %{table: table} do
-      node =
-        Node.new(
-          <<4, 48, 183, 171, 48, 160, 28, 18, 74, 108, 206, 202, 54, 134, 62, 206, 18, 196, 245,
-            250, 104, 227, 186, 155, 11, 81, 64, 124, 204, 0, 46, 238, 211, 179, 16, 45, 32, 168,
-            143, 28, 29, 60, 49, 84, 226, 68, 147, 23, 184, 239, 149, 9, 14, 119, 179, 18, 213,
-            204, 57, 53, 79, 134, 213, 214, 6>>
-        )
-
+      node = TestHelper.random_node()
       table = RoutingTable.refresh_node(table, node)
 
       bucket_idx = Node.common_prefix(node, table.current_node)
@@ -42,31 +37,123 @@ defmodule ExWire.Kademlia.RoutingTableTest do
 
       assert table.buckets |> Enum.all?(fn bucket -> bucket.nodes |> Enum.empty?() end)
     end
+
+    test "does add removal-insertion node pairs to expected_pongs if bucket is full", %{
+      table: table
+    } do
+      node = TestHelper.random_node()
+
+      bucket_idx = Node.common_prefix(node, table.current_node)
+      filler_node = TestHelper.random_node()
+      bucket = Enum.at(table.buckets, bucket_idx)
+
+      full_bucket =
+        1..KademliaConfig.bucket_size()
+        |> Enum.reduce(bucket, fn _el, acc -> Bucket.insert_node(acc, filler_node) end)
+
+      updated_table = %{table | buckets: List.replace_at(table.buckets, bucket_idx, full_bucket)}
+
+      table = RoutingTable.refresh_node(updated_table, node)
+
+      pongs = table.expected_pongs
+      assert Enum.count(pongs) == 1
+
+      {_mdc, pair} = Enum.at(pongs, 0)
+      assert pair == {filler_node, node}
+    end
+  end
+
+  describe "remove_node/2" do
+    test "removes node from routing table", %{table: table} do
+      node = TestHelper.random_node()
+
+      table = RoutingTable.refresh_node(table, node)
+      assert RoutingTable.member?(table, node)
+
+      table = RoutingTable.remove_node(table, node)
+      refute RoutingTable.member?(table, node)
+    end
+  end
+
+  describe "handle_pong/2" do
+    test "does not add node if pong is expired", %{table: table} do
+      pong = %Pong{to: TestHelper.random_endpoint(), timestamp: Timestamp.now() - 5, hash: "hey"}
+      updated_table = RoutingTable.handle_pong(table, pong)
+
+      assert table == updated_table
+    end
+
+    test "adds a new node from pong", %{table: table} do
+      pong = %Pong{to: TestHelper.random_endpoint(), timestamp: Timestamp.now() + 5, hash: "hey"}
+
+      params = %Params{
+        remote_host: %ExWire.Struct.Endpoint{ip: [1, 2, 3, 4], udp_port: 55},
+        signature: <<1>>,
+        recovery_id: 3,
+        hash: <<5>>,
+        data:
+          [1, [<<1, 2, 3, 4>>, <<>>, <<5>>], [<<5, 6, 7, 8>>, <<6>>, <<>>], 4] |> ExRLP.encode(),
+        timestamp: 123
+      }
+
+      updated_table = RoutingTable.handle_pong(table, pong, params)
+
+      node = Node.from_handler_params(params)
+      assert RoutingTable.member?(updated_table, node)
+    end
+
+    test "refreshes stale node if expected pong was received", %{table: table} do
+      # create stale node that will be the oldest in our bucket
+      stale_node = TestHelper.random_node()
+      bucket_idx = RoutingTable.bucket_id(table, stale_node)
+
+      # create bucket with garbage nodes to make it full and insert our stale bucket
+      full_bucket =
+        TestHelper.random_bucket(id: bucket_idx, bucket_size: KademliaConfig.bucket_size() - 1)
+
+      full_bucket = %{
+        full_bucket
+        | nodes: full_bucket.nodes |> List.insert_at(KademliaConfig.bucket_size() - 1, stale_node)
+      }
+
+      # new node that we want to insert.. we're using the same key to make a node go to the same bucket
+      new_node = %{stale_node | key: stale_node.key <> <<1>>}
+
+      # add stale node's pong to expected pong because bucket is full
+      updated_table =
+        table
+        |> RoutingTable.replace_bucket(bucket_idx, full_bucket)
+        |> RoutingTable.refresh_node(new_node)
+
+      # table is receiving pong from stale node
+      ping_mdc =
+        updated_table.expected_pongs
+        |> Enum.map(fn {key, _value} -> key end)
+        |> List.first()
+
+      pong = %Pong{
+        to: table.current_node.endpoint,
+        timestamp: Timestamp.now() + 5,
+        hash: ping_mdc
+      }
+
+      updated_table1 = RoutingTable.handle_pong(updated_table, pong)
+
+      # stale node should be be the first in bucket
+      [^stale_node | _tail] = RoutingTable.nodes_at(updated_table1, bucket_idx)
+    end
   end
 
   describe "member?/2" do
     test "finds node in routing table", %{table: table} do
-      node =
-        Node.new(
-          <<4, 48, 183, 171, 48, 160, 28, 18, 74, 108, 206, 202, 54, 134, 62, 206, 18, 196, 245,
-            250, 104, 227, 186, 155, 11, 81, 64, 124, 204, 0, 46, 238, 211, 179, 16, 45, 32, 168,
-            143, 28, 29, 60, 49, 84, 226, 68, 147, 23, 184, 239, 149, 9, 14, 119, 179, 18, 213,
-            204, 57, 53, 79, 134, 213, 214, 6>>
-        )
-
+      node = TestHelper.random_node()
       table = RoutingTable.refresh_node(table, node)
 
       assert RoutingTable.member?(table, node)
     end
 
     test "does not find node in routing table", %{table: table} do
-      node =
-        Node.new(
-          <<4, 48, 183, 171, 48, 160, 28, 18, 74, 108, 206, 202, 54, 134, 62, 206, 18, 196, 245,
-            250, 104, 227, 186, 155, 11, 81, 64, 124, 204, 0, 46, 238, 211, 179, 16, 45, 32, 168,
-            143, 28, 29, 60, 49, 84, 226, 68, 147, 23, 184, 239, 149, 9, 14, 119, 179, 18, 213,
-            204, 57, 53, 79, 134, 213, 214, 6>>
-        )
+      node = TestHelper.random_node()
 
       refute RoutingTable.member?(table, node)
     end
@@ -74,13 +161,7 @@ defmodule ExWire.Kademlia.RoutingTableTest do
 
   describe "neighbours/2" do
     test "returns neighbours when there are not enough nodes", %{table: table} do
-      node =
-        Node.new(
-          <<4, 48, 183, 171, 48, 160, 28, 18, 74, 108, 206, 202, 54, 134, 62, 206, 18, 196, 245,
-            250, 104, 227, 186, 155, 11, 81, 64, 124, 204, 0, 46, 238, 211, 179, 16, 45, 32, 168,
-            143, 28, 29, 60, 49, 84, 226, 68, 147, 23, 184, 239, 149, 9, 14, 119, 179, 18, 213,
-            204, 57, 53, 79, 134, 213, 214, 6>>
-        )
+      node = TestHelper.random_node()
 
       neighbours =
         table
@@ -92,34 +173,12 @@ defmodule ExWire.Kademlia.RoutingTableTest do
     end
 
     test "returns neighbours based on xor distance" do
-      table = random_full_routing_table()
-      node = random_peer()
+      table = TestHelper.random_routing_table(port: TestHelper.random(9_999))
+      node = TestHelper.random_node()
 
       neighbours = table |> RoutingTable.neighbours(node)
 
       assert Enum.count(neighbours) == KademliaConfig.bucket_size()
     end
-  end
-
-  defp random_full_routing_table do
-    table = random_peer() |> RoutingTable.new()
-
-    1..(KademliaConfig.bucket_size() * KademliaConfig.id_size())
-    |> Enum.reduce(table, fn _el, acc ->
-      acc |> RoutingTable.refresh_node(random_peer())
-    end)
-  end
-
-  defp random_peer do
-    Node.new(public_key())
-  end
-
-  defp public_key do
-    1..64
-    |> Enum.reduce(<<>>, fn _el, acc ->
-      random = :rand.uniform(256)
-
-      acc <> <<random>>
-    end)
   end
 end

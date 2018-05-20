@@ -4,28 +4,38 @@ defmodule ExWire.Kademlia.Node do
   """
   alias ExthCrypto.Hash.Keccak
   alias ExWire.Kademlia.XorDistance
+  alias ExWire.Struct.Endpoint
+  alias ExWire.Handler.Params
 
   defstruct [
     :public_key,
-    :key
+    :key,
+    :endpoint
   ]
 
   @type t :: %__MODULE__{
           public_key: binary(),
-          key: binary()
+          key: binary(),
+          endpoint: Endpoint.t()
         }
 
   @doc """
-  Construct a new node.
+  Constructs a new node.
 
   ## Examples
 
+      iex> endpoint = ExWire.Struct.Endpoint.decode([<<1,2,3,4>>, <<>>, <<5>>])
       iex> ExWire.Kademlia.Node.new(<<4, 108, 224, 89, 48, 199, 42, 188, 99, 44, 88, 226, 228, 50, 79,
       ...>      124, 126, 164, 120, 206, 192, 237, 79, 162, 82, 137, 130, 207, 52, 72, 48,
       ...>      148, 233, 203, 201, 33, 110, 122, 163, 73, 105, 18, 66, 87, 109, 85, 42, 42,
-      ...>      86, 170, 234, 228, 38, 197, 48, 61, 237, 103, 124, 228, 85, 186, 26, 205,
-      ...>      157>>)
+      ...>      86, 170, 234, 228, 38, 197, 48, 61, 237, 103, 124, 228, 85, 186, 26, 205, 157>>,
+      ...>      endpoint)
       %ExWire.Kademlia.Node{
+        endpoint: %ExWire.Struct.Endpoint{
+          ip: [1, 2, 3, 4],
+          tcp_port: 5,
+          udp_port: nil
+        },
         key: <<115, 3, 97, 5, 230, 214, 202, 188, 202, 118, 204, 177, 15, 72, 13, 68,
           134, 100, 145, 57, 13, 239, 13, 175, 42, 38, 147, 127, 31, 18, 27, 226>>,
         public_key: <<4, 108, 224, 89, 48, 199, 42, 188, 99, 44, 88, 226, 228, 50, 79,
@@ -35,14 +45,46 @@ defmodule ExWire.Kademlia.Node do
           157>>
       }
   """
-  @spec new(binary()) :: t()
-  def new(public_key) do
+  @spec new(binary(), Endpoint) :: t()
+  def new(public_key, endpoint = %Endpoint{}) do
     key = Keccak.kec(public_key)
 
     %__MODULE__{
       public_key: public_key,
-      key: key
+      key: key,
+      endpoint: endpoint
     }
+  end
+
+  @doc """
+  Creates a new Node struct form ExWire.Handler.Params
+
+  ## Examples
+
+      iex> params = %ExWire.Handler.Params{
+      ...>   remote_host: %ExWire.Struct.Endpoint{ip: [1,2,3,4], udp_port: 55},
+      ...>   signature: <<1>>,
+      ...>   recovery_id: 3,
+      ...>   hash: <<5>>,
+      ...>   data: [1, [<<1,2,3,4>>, <<>>, <<5>>], [<<5,6,7,8>>, <<6>>, <<>>], 4] |> ExRLP.encode(),
+      ...>   timestamp: 123,
+      ...> }
+      iex> ExWire.Kademlia.Node.from_handler_params(params)
+      %ExWire.Kademlia.Node{
+         endpoint: %ExWire.Struct.Endpoint{
+           ip: [1, 2, 3, 4],
+           tcp_port: nil,
+           udp_port: 55
+         },
+         key: <<95, 231, 249, 119, 231, 29, 186, 46, 161, 166, 142, 33, 5, 123, 238,
+           187, 155, 226, 172, 48, 198, 65, 10, 163, 141, 79, 63, 190, 65, 220, 255,
+           210>>,
+         public_key: <<1>>
+       }
+  """
+  @spec from_handler_params(Params.t()) :: t()
+  def from_handler_params(%Params{signature: signature, remote_host: remote_host}) do
+    new(signature, remote_host)
   end
 
   @doc """
@@ -54,12 +96,12 @@ defmodule ExWire.Kademlia.Node do
       ...>       124, 126, 164, 120, 206, 192, 237, 79, 162, 82, 137, 130, 207, 52, 72, 48,
       ...>       148, 233, 203, 201, 33, 110, 122, 163, 73, 105, 18, 66, 87, 109, 85, 42, 42,
       ...>       86, 170, 234, 228, 38, 197, 48, 61, 237, 103, 124, 228, 85, 186, 26, 205,
-      ...>       157>>)
+      ...>       157>>, ExWire.Struct.Endpoint.decode([<<1,2,3,4>>, <<>>, <<5>>]))
       iex> node2 = ExWire.Kademlia.Node.new(<<4, 48, 183, 171, 48, 160, 28, 18, 74, 108, 206, 202, 54, 134,
       ...>       62, 206, 18, 196, 245, 250, 104, 227, 186, 155, 11, 81, 64, 124, 204, 0,
       ...>       46, 238, 211, 179, 16, 45, 32, 168, 143, 28, 29, 60, 49, 84, 226, 68, 147,
       ...>       23, 184, 239, 149, 9, 14, 119, 179, 18, 213, 204, 57, 53, 79, 134, 213,
-      ...>       214, 6>>)
+      ...>       214, 6>>, ExWire.Struct.Endpoint.decode([<<5, 6, 7, 8>>, <<>>, <<5>>]))
       iex> ExWire.Kademlia.Node.distance(node1, node2)
       131
   """
@@ -77,12 +119,12 @@ defmodule ExWire.Kademlia.Node do
       ...>         124, 126, 164, 120, 206, 192, 237, 79, 162, 82, 137, 130, 207, 52, 72, 48,
       ...>         148, 233, 203, 201, 33, 110, 122, 163, 73, 105, 18, 66, 87, 109, 85, 42, 42,
       ...>         86, 170, 234, 228, 38, 197, 48, 61, 237, 103, 124, 228, 85, 186, 26, 205,
-      ...>         157>>)
+      ...>         157>>, ExWire.Struct.Endpoint.decode([<<1,2,3,4>>, <<>>, <<5>>]))
       iex> node2 = ExWire.Kademlia.Node.new(<<4, 48, 183, 171, 48, 160, 28, 18, 74, 108, 206, 202, 54, 134,
       ...>         62, 206, 18, 196, 245, 250, 104, 227, 186, 155, 11, 81, 64, 124, 204, 0,
       ...>         46, 238, 211, 179, 16, 45, 32, 168, 143, 28, 29, 60, 49, 84, 226, 68, 147,
       ...>         23, 184, 239, 149, 9, 14, 119, 179, 18, 213, 204, 57, 53, 79, 134, 213,
-      ...>         214, 6>>)
+      ...>         214, 6>>, ExWire.Struct.Endpoint.decode([<<5, 6, 7, 8>>, <<>>, <<5>>]))
       iex> ExWire.Kademlia.Node.common_prefix(node1, node2)
       0
   """
