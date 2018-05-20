@@ -29,7 +29,6 @@ defmodule Blockchain.TransactionTest do
     [
       ignore: [
         "ttWrongRLP/",
-        "ttData/String10MbData.json",
         "ttSignature/TransactionWithTooFewRLPElements.json",
         "ttSignature/TransactionWithTooManyRLPElements.json"
       ]
