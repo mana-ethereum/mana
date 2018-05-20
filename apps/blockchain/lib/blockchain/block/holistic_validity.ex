@@ -28,8 +28,8 @@ defmodule Blockchain.Block.HolisticValidity do
       ...>         |> Blockchain.Account.put_account(sender, %Blockchain.Account{balance: 400_000, nonce: 5})
       iex> parent_block = %Blockchain.Block{header: %Block.Header{number: 50, state_root: state.root_hash, difficulty: 50_000, timestamp: 9999, gas_limit: 125_001}}
       iex> block = Blockchain.Block.gen_child_block(parent_block, chain, beneficiary: beneficiary, timestamp: 10000, gas_limit: 125_001)
-      ...>         |> Blockchain.Block.add_transactions_to_block([trx], db)
-      ...>         |> Blockchain.Block.add_rewards_to_block(db)
+      ...>         |> Blockchain.Block.add_transactions([trx], db)
+      ...>         |> Blockchain.Block.add_rewards(db)
       iex> Blockchain.Block.HolisticValidity.validate(block, chain, parent_block, db)
       :valid
 
@@ -45,7 +45,7 @@ defmodule Blockchain.Block.HolisticValidity do
       ...>         |> Blockchain.Account.put_account(sender, %Blockchain.Account{balance: 400_000, nonce: 5})
       iex> parent_block = %Blockchain.Block{header: %Block.Header{number: 50, state_root: state.root_hash, difficulty: 50_000, timestamp: 9999, gas_limit: 125_001}}
       iex> block = Blockchain.Block.gen_child_block(parent_block, chain, beneficiary: beneficiary, timestamp: 10000, gas_limit: 125_001)
-      ...>         |> Blockchain.Block.add_transactions_to_block([trx], db)
+      ...>         |> Blockchain.Block.add_transactions([trx], db)
       iex> %{block | header: %{block.header | state_root: <<1,2,3>>, ommers_hash: <<2,3,4>>, transactions_root: <<3,4,5>>, receipts_root: <<4,5,6>>}}
       ...> |> Blockchain.Block.validate(chain, parent_block, db)
       {:invalid, [:receipts_root_mismatch, :transactions_root_mismatch, :ommers_hash_mismatch, :state_root_mismatch]}
@@ -68,9 +68,9 @@ defmodule Blockchain.Block.HolisticValidity do
 
     child_block =
       base_block
-      |> Block.add_transactions_to_block(block.transactions, db)
-      |> Block.add_ommers_to_block(block.ommers)
-      |> Block.add_rewards_to_block(db, chain.params[:block_reward])
+      |> Block.add_transactions(block.transactions, db)
+      |> Block.add_ommers(block.ommers)
+      |> Block.add_rewards(db, chain.params[:block_reward])
 
     # The following checks Holistic Validity,
     # as defined in Eq.(31), section 4.3.2 of Yellow Paper

@@ -141,7 +141,7 @@ defmodule Blockchain.Blocktree do
       iex> parent = Blockchain.Genesis.create_block(chain, trie.db)
       iex> child = Blockchain.Block.gen_child_block(parent, chain)
       iex> block_1 = %Blockchain.Block{header: %Block.Header{number: 0, parent_hash: <<0::256>>, beneficiary: <<2, 3, 4>>, difficulty: 1_048_576, timestamp: 0, gas_limit: 200_000, mix_hash: <<1>>, nonce: <<2>>, state_root: parent.header.state_root}}
-      iex> block_2 = %Blockchain.Block{header: %Block.Header{number: 1, parent_hash: block_1 |> Blockchain.Block.hash, beneficiary: <<2::160>>, difficulty: 997_888, timestamp: 1_479_642_530, gas_limit: 200_000, mix_hash: <<1>>, nonce: <<2>>, state_root: child.header.state_root}} |> Blockchain.Block.add_rewards_to_block(trie.db)
+      iex> block_2 = %Blockchain.Block{header: %Block.Header{number: 1, parent_hash: block_1 |> Blockchain.Block.hash, beneficiary: <<2::160>>, difficulty: 997_888, timestamp: 1_479_642_530, gas_limit: 200_000, mix_hash: <<1>>, nonce: <<2>>, state_root: child.header.state_root}} |> Blockchain.Block.add_rewards(trie.db)
       iex> tree = Blockchain.Blocktree.new_tree()
       iex> {:ok, tree_1} = Blockchain.Blocktree.verify_and_add_block(tree, chain, block_1, trie.db)
       iex> {:ok, tree_2} = Blockchain.Blocktree.verify_and_add_block(tree_1, chain, block_2, trie.db)

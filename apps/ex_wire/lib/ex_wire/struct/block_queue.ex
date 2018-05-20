@@ -54,7 +54,7 @@ defmodule ExWire.Struct.BlockQueue do
       iex> db = MerklePatriciaTree.Test.random_ets_db(:proces_block_queue)
       iex> header = %Block.Header{number: 5, parent_hash: <<0::256>>, beneficiary: <<2, 3, 4>>, difficulty: 100, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>}
       iex> header_hash = <<78, 28, 127, 10, 192, 253, 127, 239, 254, 179, 39, 34, 245, 44, 152, 98, 128, 71, 238, 155, 100, 161, 199, 71, 243, 223, 172, 191, 74, 99, 128, 63>>
-      iex> {block_queue, block_tree, false} = ExWire.Struct.BlockQueue.add_header_to_block_queue(%ExWire.Struct.BlockQueue{do_validation: false}, Blockchain.Blocktree.new_tree(), header, header_hash, "remote_id", chain, db)
+      iex> {block_queue, block_tree, false} = ExWire.Struct.BlockQueue.add_header(%ExWire.Struct.BlockQueue{do_validation: false}, Blockchain.Blocktree.new_tree(), header, header_hash, "remote_id", chain, db)
       iex> block_queue.queue
       %{}
       iex> block_tree.parent_map
@@ -62,7 +62,7 @@ defmodule ExWire.Struct.BlockQueue do
 
       # TODO: Add a second addition example
   """
-  @spec add_header_to_block_queue(
+  @spec add_header(
           t,
           Blocktree.t(),
           Header.t(),
@@ -71,7 +71,7 @@ defmodule ExWire.Struct.BlockQueue do
           Chain.t(),
           MerklePatriciaTree.DB.db()
         ) :: {t, Blocktree.t(), boolean()}
-  def add_header_to_block_queue(
+  def add_header(
         block_queue = %__MODULE__{queue: queue},
         block_tree,
         header,
@@ -125,7 +125,7 @@ defmodule ExWire.Struct.BlockQueue do
   ## Examples
 
       iex> chain = Blockchain.Test.ropsten_chain()
-      iex> db = MerklePatriciaTree.Test.random_ets_db(:add_block_struct_to_block_queue)
+      iex> db = MerklePatriciaTree.Test.random_ets_db(:add_block_struct)
       iex> header = %Block.Header{
       ...>   transactions_root: <<200, 70, 164, 239, 152, 124, 5, 149, 40, 10, 157, 9, 210, 181, 93, 89, 5, 119, 158, 112, 221, 58, 94, 86, 206, 113, 120, 51, 241, 9, 154, 150>>,
       ...>   ommers_hash: <<232, 5, 101, 202, 108, 35, 61, 149, 228, 58, 111, 18, 19, 234, 191, 129, 189, 107, 167, 195, 222, 123, 50, 51, 176, 222, 225, 181, 72, 231, 198, 53>>
@@ -148,7 +148,7 @@ defmodule ExWire.Struct.BlockQueue do
       ...>   },
       ...>   do_validation: false
       ...> }
-      iex> {block_queue, _block_tree} = ExWire.Struct.BlockQueue.add_block_struct_to_block_queue(
+      iex> {block_queue, _block_tree} = ExWire.Struct.BlockQueue.add_block_struct(
       ...>   block_queue,
       ...>   Blockchain.Blocktree.new_tree(),
       ...>   block_struct,
@@ -160,14 +160,14 @@ defmodule ExWire.Struct.BlockQueue do
       iex> block_queue.queue[1][<<1::256>>].block.ommers
       ["ommers"]
   """
-  @spec add_block_struct_to_block_queue(
+  @spec add_block_struct(
           t,
           BlockStruct.t(),
           Blocktree.t(),
           Chain.t(),
           MerklePatriciaTree.DB.db()
         ) :: t
-  def add_block_struct_to_block_queue(
+  def add_block_struct(
         block_queue = %__MODULE__{queue: queue},
         block_tree,
         block_struct,

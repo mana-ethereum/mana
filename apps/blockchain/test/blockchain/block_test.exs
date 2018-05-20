@@ -116,7 +116,7 @@ defmodule Blockchain.BlockTest do
 
     block =
       Genesis.create_block(chain, db)
-      |> Block.add_rewards_to_block(db)
+      |> Block.add_rewards(db)
       |> Block.put_header(:mix_hash, <<0::256>>)
       |> Block.put_header(:nonce, <<0x42::64>>)
 
@@ -167,7 +167,7 @@ defmodule Blockchain.BlockTest do
 
     result =
       Genesis.create_block(chain, db)
-      |> Block.add_rewards_to_block(db)
+      |> Block.add_rewards(db)
       |> Block.validate(chain, nil, db)
 
     assert result == :valid
