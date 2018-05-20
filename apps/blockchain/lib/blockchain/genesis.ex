@@ -119,6 +119,6 @@ defmodule Blockchain.Genesis do
       iex> Blockchain.Genesis.is_genesis_block?(%Blockchain.Block{header: %Block.Header{number: 1}})
       false
   """
-  @spec is_genesis_block?(t) :: boolean()
+  @spec is_genesis_block?(Block.t()) :: boolean()
   def is_genesis_block?(block), do: block.header.number == 0
 end

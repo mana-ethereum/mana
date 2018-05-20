@@ -93,7 +93,7 @@ defmodule Blockchain.Block.HolisticValidity do
     end
   end
 
-  @spec check_state_root_validity([atom()], Block.t(), Block.t()) :: [atom()]
+  @spec check_ommers_hash_validity([atom()], Block.t(), Block.t()) :: [atom()]
   defp check_ommers_hash_validity(errors, child_block, block) do
     if child_block.header.ommers_hash == block.header.ommers_hash do
       errors
@@ -102,7 +102,7 @@ defmodule Blockchain.Block.HolisticValidity do
     end
   end
 
-  @spec check_state_root_validity([atom()], Block.t(), Block.t()) :: [atom()]
+  @spec check_transactions_root_validity([atom()], Block.t(), Block.t()) :: [atom()]
   defp check_transactions_root_validity(errors, child_block, block) do
     if child_block.header.transactions_root == block.header.transactions_root do
       errors
@@ -111,7 +111,7 @@ defmodule Blockchain.Block.HolisticValidity do
     end
   end
 
-  @spec check_state_root_validity([atom()], Block.t(), Block.t()) :: [atom()]
+  @spec check_receipts_root_validity([atom()], Block.t(), Block.t()) :: [atom()]
   defp check_receipts_root_validity(errors, child_block, block) do
     if child_block.header.receipts_root == block.header.receipts_root do
       errors
