@@ -1,8 +1,10 @@
 # Exthereum Blockchain [![CircleCI](https://circleci.com/gh/exthereum/blockchain.svg?style=svg)](https://circleci.com/gh/exthereum/blockchain)
 
-Elixir implementation of Ethereum's Blockchain. This includes functionality to build and verify a chain of Ethereum blocks that may be advertised from any peer. We complete the resultant state of the blocktree and form a canonical blockchain based on difficulty.
+Elixir implementation of Ethereum's Blockchain.
+This includes functionality to build and verify a chain of Ethereum blocks that may be advertised from any peer.
+We complete the resultant state of the blocktree and form a canonical blockchain based on difficulty.
 
-Exthereum's blocks are specified in a variety of sections throughout [the yellow paper](https://ethereum.github.io/yellowpaper/paper.pdf), but it's best to start looking under Section 4.4.
+Exthereum's blocks are specified in a variety of sections throughout [the yellow paper](https://ethereum.github.io/yellowpaper/paper.pdf), but it's best to start looking under Section 4.3.
 
 ## Installation
 
@@ -12,22 +14,10 @@ cd deps/libsecp256k1 && rebar compile
 mix compile
 ```
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `blockchain` to your list of dependencies in `mix.exs`:
-
-```elixir
-def deps do
-  [{:blockchain, "~> 0.1.6"}]
-end
-```
-
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at [https://hexdocs.pm/blockchain](https://hexdocs.pm/blockchain).
-
 ## Debugging
 
-To debug a given run of the blockchain, you can set breakpoints on contract addresses by setting the `BREAKPOINT` environment variable and specifying a contract address to break on. E.g.
+To debug a given run of the blockchain, you can set breakpoints on contract addresses by
+setting the `BREAKPOINT` environment variable and specifying a contract address to break on. E.g.
 
 ```bash
 BREAKPOINT=bc1ffc1620da1468624a596cb841d35e6b2f1fb6 iex -S mix
@@ -74,4 +64,5 @@ Mason Fischer (@masonforest)
 
 ## License
 
-Exthereum's Blockchain is released under the MIT License. See the LICENSE file for further details.
+Exthereum's Blockchain is released under the MIT License.
+See the LICENSE file for further details.
