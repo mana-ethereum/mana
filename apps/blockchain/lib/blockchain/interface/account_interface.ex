@@ -2,7 +2,6 @@ defmodule Blockchain.Interface.AccountInterface do
   @moduledoc """
   Defines an interface for methods to interact with contracts and accounts.
   """
-  alias Block.Header
 
   @type t :: %__MODULE__{
           state: EVM.state()
