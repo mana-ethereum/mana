@@ -13,6 +13,12 @@ config :ex_wire,
   private_key: :random,
   bootnodes: :from_chain,
   # Number of peer advertisements before we trust a block
-  commitment_count: 1
+  commitment_count: 1,
+  node_discovery: [
+    network_adapter: {ExWire.Adapter.UDP, NetworkClient},
+    kademlia_process_name: KademliaState,
+    supervisor_name: ExWire.NodeDiscoverySupervisor,
+    port: 30_304
+  ]
 
 import_config "#{Mix.env()}.exs"

@@ -71,15 +71,15 @@ defmodule ExWire.Handler do
 
       # TODO: Add a `no_response` test case
   """
-  @spec dispatch(integer(), Params.t()) :: handler_response
-  def dispatch(type, params) do
+  @spec dispatch(integer(), Params.t(), Keyword.t()) :: handler_response
+  def dispatch(type, params, options \\ []) do
     case @handlers[type] do
       nil ->
         Logger.warn("Message code `#{inspect(type, base: :hex)}` not implemented")
         :not_implemented
 
       mod when is_atom(mod) ->
-        apply(mod, :handle, [params])
+        apply(mod, :handle, [params, options])
     end
   end
 end

@@ -24,9 +24,9 @@ defmodule ExWire.Config do
     end
   end
 
-  @spec udp_network_adapter() :: atom()
+  @spec udp_network_adapter() :: {atom(), atom()}
   def udp_network_adapter do
-    get_env(:network_adapter)
+    node_discovery_params()[:network_adapter]
   end
 
   @spec public_key() :: binary()
@@ -101,6 +101,11 @@ defmodule ExWire.Config do
 
   @spec commitment_count() :: integer()
   def commitment_count, do: get_env!(:commitment_count)
+
+  @spec node_discovery_params() :: Keyword.t()
+  def node_discovery_params do
+    get_env!(:node_discovery)
+  end
 
   @spec get_env!(atom()) :: any()
   defp get_env!(key) do

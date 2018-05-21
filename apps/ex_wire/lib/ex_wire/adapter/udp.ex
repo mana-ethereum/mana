@@ -51,7 +51,7 @@ defmodule ExWire.Adapter.UDP do
       timestamp: ExWire.Util.Timestamp.soon()
     }
 
-    apply(network, :receive, [inbound_message | network_args])
+    apply(network, :receive, [inbound_message, network_args])
 
     {:noreply, state}
   end

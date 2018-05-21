@@ -71,18 +71,19 @@ defmodule ExWire.Network do
       ...> })
       ** (ExWire.Crypto.HashMismatch) Invalid hash
   """
-  @spec receive(InboundMessage.t()) :: handler_action
+  @spec receive(InboundMessage.t(), Keyword.t()) :: handler_action
   def receive(
         inbound_message = %InboundMessage{
           data: data,
           server_pid: _server_pid,
           remote_host: _remote_host,
           timestamp: _timestamp
-        }
+        },
+        options \\ []
       ) do
     :ok = assert_integrity(data)
 
-    handle(inbound_message)
+    handle(inbound_message, options)
   end
 
   @doc """
@@ -135,29 +136,33 @@ defmodule ExWire.Network do
       ...> })
       :no_action
   """
-  @spec handle(InboundMessage.t()) :: handler_action
-  def handle(%InboundMessage{
-        data: <<
-          hash::size(256),
-          signature::size(512),
-          recovery_id::integer-size(8),
-          type::integer-size(8),
-          data::bitstring
-        >>,
-        server_pid: server_pid,
+  @spec handle(InboundMessage.t(), Keyword.t()) :: handler_action
+  def handle(
+        %InboundMessage{
+          data: <<
+            hash::binary-size(32),
+            signature::binary-size(64),
+            recovery_id::integer-size(8),
+            type::integer-size(8),
+            data::bitstring
+          >>,
+          server_pid: server_pid,
+          remote_host: remote_host,
+          timestamp: timestamp
+        },
+        options \\ []
+      ) do
+    params =
+      %Handler.Params{
         remote_host: remote_host,
+        signature: signature,
+        recovery_id: recovery_id,
+        hash: hash,
+        data: data,
         timestamp: timestamp
-      }) do
-    params = %Handler.Params{
-      remote_host: remote_host,
-      signature: signature,
-      recovery_id: recovery_id,
-      hash: hash,
-      data: data,
-      timestamp: timestamp
-    }
+      }
 
-    case Handler.dispatch(type, params) do
+    case Handler.dispatch(type, params, options) do
       :not_implemented ->
         :no_action
 

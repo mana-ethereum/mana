@@ -6,6 +6,7 @@ defmodule ExWire.Kademlia.Node do
   alias ExWire.Kademlia.XorDistance
   alias ExWire.Struct.Endpoint
   alias ExWire.Handler.Params
+  alias ExthCrypto.Signature
 
   defstruct [
     :public_key,
@@ -83,8 +84,17 @@ defmodule ExWire.Kademlia.Node do
        }
   """
   @spec from_handler_params(Params.t()) :: t()
-  def from_handler_params(%Params{signature: signature, remote_host: remote_host}) do
-    new(signature, remote_host)
+  def from_handler_params(
+        params = %Params{
+          hash: hash,
+          signature: signature,
+          recovery_id: recovery_id,
+          remote_host: remote_host
+        }
+      ) do
+    {:ok, public_key} = Signature.recover(hash, signature, recovery_id)
+
+    new(public_key, remote_host)
   end
 
   @doc """

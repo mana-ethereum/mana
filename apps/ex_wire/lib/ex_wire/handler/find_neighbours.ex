@@ -23,8 +23,8 @@ defmodule ExWire.Handler.FindNeighbours do
         timestamp: 7,
       }
   """
-  @spec handle(Handler.Params.t()) :: Handler.handler_response()
-  def handle(params) do
+  @spec handle(Handler.Params.t(), Keyword.t()) :: Handler.handler_response()
+  def handle(params, options \\ []) do
     %ExWire.Message.Neighbours{
       nodes: [],
       timestamp: params.timestamp

@@ -29,8 +29,8 @@ defmodule ExWire.Handler.Ping do
         }
       }
   """
-  @spec handle(Handler.Params.t()) :: Handler.handler_response()
-  def handle(params) do
+  @spec handle(Handler.Params.t(), Keyword.t()) :: Handler.handler_response()
+  def handle(params, options \\ []) do
     ping = Ping.decode(params.data)
 
     %Pong{
