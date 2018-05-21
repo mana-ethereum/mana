@@ -877,18 +877,23 @@ defmodule Blockchain.Block do
   def add_rewards(block, db, reward_wei \\ @reward_wei) do
     # TODO: Add ommer rewards
 
-    if Genesis.is_genesis_block?(block) do
-      # No rewards for genesis block
-      block
-    else
-      if is_nil(block.header.beneficiary),
-        do: raise("Unable to add block rewards, beneficiary is nil")
+    cond do
+      Genesis.is_genesis_block?(block) ->
+        block
 
-      state = get_state(block, db)
-      new_state = Account.add_wei(state, block.header.beneficiary, reward_wei)
+      is_nil(block.header.beneficiary) ->
+        raise("Unable to add block rewards, beneficiary is nil")
 
-      set_state(block, new_state)
+      true ->
+        do_add_rewards(block, db, reward_wei)
     end
+  end
+
+  @spec do_add_rewards(t, DB.db(), EVM.Wei.t()) :: t
+  defp do_add_rewards(block, db, reward_wei) do
+    state = get_state(block, db)
+    new_state = Account.add_wei(state, block.header.beneficiary, reward_wei)
+    set_state(block, new_state)
   end
 
   @doc """
