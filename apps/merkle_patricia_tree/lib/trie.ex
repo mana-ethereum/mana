@@ -172,11 +172,9 @@ defmodule MerklePatriciaTree.Trie do
       |> into(trie)
       |> store()
 
-    delete(trie)
+    Storage.delete(trie)
     new_trie
   end
-
-  def delete(trie), do: Storage.delete(trie)
 
   def store(trie) do
     rlp = rlp_encode(trie.root_hash)

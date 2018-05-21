@@ -1,7 +1,7 @@
 defmodule Blockchain.Chain do
   @moduledoc """
-  Represents the information about a specific chain. This
-  will either be a current chain (such as homestead), or
+  Represents the information about a specific chain.
+  This will either be a current chain (such as homestead), or
   a test chain (such as ropsten). Different chains have
   different parameters, such as accounts with an initial
   balance and when EIPs are implemented.
@@ -61,8 +61,8 @@ defmodule Blockchain.Chain do
         }
 
   @doc """
-  Loads a given blockchain, such as Homestead or Ropsten. This
-  chain is used to set the genesis block and tweak parameters
+  Loads a given blockchain, such as Homestead or Ropsten.
+  This chain is used to set the genesis block and tweak parameters
   of the Blockchain and EVM.
 
   See the `/chains` directory of this repo for supported

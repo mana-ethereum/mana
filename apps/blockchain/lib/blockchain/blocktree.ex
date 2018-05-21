@@ -56,8 +56,8 @@ defmodule Blockchain.Blocktree do
     }
   end
 
-  # Creates a new trie with a given root. This should be used to
-  # create sub-trees internally.
+  # Creates a new trie with a given root.
+  # This should be used to create sub-trees internally.
   @spec rooted_tree(Block.t()) :: t
   defp rooted_tree(gen_block) do
     %__MODULE__{
@@ -69,8 +69,9 @@ defmodule Blockchain.Blocktree do
   end
 
   @doc """
-  Traverses a tree to find the most canonical block. This decides based on
-  blocks with the highest difficulty recursively walking down the tree.
+  Traverses a tree to find the most canonical block.
+  This decides based on blocks with the highest difficulty recursively walking down the tree.
+  Canonical blockchain is defined in Section 10 of the Yellow Paper.
 
   ## Examples
 
@@ -113,8 +114,8 @@ defmodule Blockchain.Blocktree do
   end
 
   @doc """
-  Verifies a block is valid, and if so, adds it to the block tree. This performs
-  four steps.
+  Verifies a block is valid, and if so, adds it to the block tree.
+  This performs four steps.
 
   1. Find the parent block
   2. Verfiy the block against its parent block

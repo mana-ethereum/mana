@@ -34,8 +34,8 @@ defmodule Blockchain.Block do
   @reward_wei round(5.0e18)
 
   @doc """
-  Encodes a block such that it can be represented in
-  RLP encoding. This is defined as `L_B` Eq.(35) in the Yellow Paper.
+  Encodes a block such that it can be represented in RLP encoding.
+  This is defined as `L_B` Eq.(35) in the Yellow Paper.
 
   ## Examples
 
@@ -306,7 +306,7 @@ defmodule Blockchain.Block do
   def get_parent_block(block, db) do
     case block.header.number do
       0 -> :genesis
-      __ -> get_block(block.header.parent_hash, db)
+      _ -> get_block(block.header.parent_hash, db)
     end
   end
 
