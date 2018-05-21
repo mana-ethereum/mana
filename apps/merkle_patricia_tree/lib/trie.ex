@@ -40,26 +40,26 @@ defmodule MerklePatriciaTree.Trie do
 
   ## Examples
 
-    iex> MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db(:trie_test_1))
-    %MerklePatriciaTree.Trie{db: {MerklePatriciaTree.DB.ETS, :trie_test_1}, root_hash: <<86, 232, 31, 23, 27, 204, 85, 166, 255, 131, 69, 230, 146, 192, 248, 110, 91, 72, 224, 27, 153, 108, 173, 192, 1, 98, 47, 181, 227, 99, 180, 33>>}
+      iex> MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db(:trie_test_1))
+      %MerklePatriciaTree.Trie{db: {MerklePatriciaTree.DB.ETS, :trie_test_1}, root_hash: <<86, 232, 31, 23, 27, 204, 85, 166, 255, 131, 69, 230, 146, 192, 248, 110, 91, 72, 224, 27, 153, 108, 173, 192, 1, 98, 47, 181, 227, 99, 180, 33>>}
 
-    iex> MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db(:trie_test_2), <<1, 2, 3>>)
-    %MerklePatriciaTree.Trie{db: {MerklePatriciaTree.DB.ETS, :trie_test_2}, root_hash: <<241, 136, 94, 218, 84, 183, 160, 83, 49, 140, 212, 30, 32, 147, 34, 13, 171, 21, 214, 83, 129, 177, 21, 122, 54, 51, 168, 59, 253, 92, 146, 57>>}
+      iex> MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db(:trie_test_2), <<1, 2, 3>>)
+      %MerklePatriciaTree.Trie{db: {MerklePatriciaTree.DB.ETS, :trie_test_2}, root_hash: <<241, 136, 94, 218, 84, 183, 160, 83, 49, 140, 212, 30, 32, 147, 34, 13, 171, 21, 214, 83, 129, 177, 21, 122, 54, 51, 168, 59, 253, 92, 146, 57>>}
 
-    iex> trie = MerklePatriciaTree.Trie.new(MerklePatriciaTree.DB.RocksDB.init("/tmp/#{
+      iex> trie = MerklePatriciaTree.Trie.new(MerklePatriciaTree.DB.RocksDB.init("/tmp/#{
     MerklePatriciaTree.Test.random_string(20)
   }"), <<1, 2, 3>>)
-    iex> trie.root_hash
-    <<241, 136, 94, 218, 84, 183, 160, 83, 49, 140, 212, 30, 32, 147, 34,
-      13, 171, 21, 214, 83, 129, 177, 21, 122, 54, 51, 168, 59, 253, 92,
-      146, 57>>
-    iex> {db, _db_ref} = trie.db
-    iex> db
-    MerklePatriciaTree.DB.RocksDB
+      iex> trie.root_hash
+      <<241, 136, 94, 218, 84, 183, 160, 83, 49, 140, 212, 30, 32, 147, 34,
+        13, 171, 21, 214, 83, 129, 177, 21, 122, 54, 51, 168, 59, 253, 92,
+        146, 57>>
+      iex> {db, _db_ref} = trie.db
+      iex> db
+      MerklePatriciaTree.DB.RocksDB
   """
   @spec new(DB.db(), root_hash) :: t()
   def new(db = {_, _}, root_hash \\ @empty_trie) do
-    %__MODULE__{db: db, root_hash: root_hash} |> store
+    %__MODULE__{db: db, root_hash: root_hash} |> store()
   end
 
   @doc """
@@ -123,7 +123,9 @@ defmodule MerklePatriciaTree.Trie do
     case Node.decode_trie(trie) do
       # In branch node value is always the last element
       {:branch, branches} ->
-        List.last(branches)
+        value = List.last(branches)
+        # Decode empty value as nil, see Eq.(194)
+        if value == <<>>, do: nil, else: value
 
       {:leaf, [], v} ->
         v
@@ -134,8 +136,8 @@ defmodule MerklePatriciaTree.Trie do
   end
 
   @doc """
-  Updates a trie by setting key equal to value. If value is nil,
-  we will instead remove `key` from the trie.
+  Updates a trie by setting key equal to value.
+  If value is nil, we will instead remove `key` from the trie.
   """
   @spec update(t(), key(), ExRLP.t() | nil) :: t()
   def update(trie, key, nil), do: remove(trie, key)
@@ -152,7 +154,7 @@ defmodule MerklePatriciaTree.Trie do
     |> Builder.put_key(key_nibbles, value, trie)
     |> Node.encode_node(trie)
     |> into(trie)
-    |> store
+    |> store()
   end
 
   @doc """
@@ -162,12 +164,16 @@ defmodule MerklePatriciaTree.Trie do
   def remove(trie, key) do
     key_nibbles = Helper.get_nibbles(key)
 
-    trie
-    |> Node.decode_trie()
-    |> Destroyer.remove_key(key_nibbles, trie)
-    |> Node.encode_node(trie)
-    |> into(trie)
-    |> store
+    new_trie =
+      trie
+      |> Node.decode_trie()
+      |> Destroyer.remove_key(key_nibbles, trie)
+      |> Node.encode_node(trie)
+      |> into(trie)
+      |> store()
+
+    Storage.delete(trie)
+    new_trie
   end
 
   def store(trie) do

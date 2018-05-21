@@ -11,29 +11,29 @@ defmodule MerklePatriciaTree.HexPrefix do
 
   ## Examples
 
-    iex> MerklePatriciaTree.HexPrefix.encode({[0xa, 0xb, 0xc, 0xd], false})
-    <<0, 171, 205>>
+      iex> MerklePatriciaTree.HexPrefix.encode({[0xa, 0xb, 0xc, 0xd], false})
+      <<0, 171, 205>>
 
-    iex> MerklePatriciaTree.HexPrefix.encode({[0xa, 0xb, 0xc, 0xd], true})
-    <<32, 171, 205>>
+      iex> MerklePatriciaTree.HexPrefix.encode({[0xa, 0xb, 0xc, 0xd], true})
+      <<32, 171, 205>>
 
-    iex> MerklePatriciaTree.HexPrefix.encode({[0x09, 0xa, 0xb, 0xc, 0xd], false})
-    <<25, 171, 205>>
+      iex> MerklePatriciaTree.HexPrefix.encode({[0x09, 0xa, 0xb, 0xc, 0xd], false})
+      <<25, 171, 205>>
 
-    iex> MerklePatriciaTree.HexPrefix.encode({[0x09, 0xa, 0xb, 0xc, 0xd], true})
-    <<57, 171, 205>>
+      iex> MerklePatriciaTree.HexPrefix.encode({[0x09, 0xa, 0xb, 0xc, 0xd], true})
+      <<57, 171, 205>>
 
-    iex> MerklePatriciaTree.HexPrefix.encode({[ 1, 2, 3, 4, 5 ], false})
-    <<0x11, 0x23, 0x45>>
+      iex> MerklePatriciaTree.HexPrefix.encode({[ 1, 2, 3, 4, 5 ], false})
+      <<0x11, 0x23, 0x45>>
 
-    iex> MerklePatriciaTree.HexPrefix.encode({[ 0, 1, 2, 3, 4, 5 ], false})
-    <<0x00, 0x01, 0x23, 0x45>>
+      iex> MerklePatriciaTree.HexPrefix.encode({[ 0, 1, 2, 3, 4, 5 ], false})
+      <<0x00, 0x01, 0x23, 0x45>>
 
-    iex> MerklePatriciaTree.HexPrefix.encode({[ 0, 15, 1, 12, 11, 8 ], true})
-    <<0x20, 0x0f, 0x1c, 0xb8>>
+      iex> MerklePatriciaTree.HexPrefix.encode({[ 0, 15, 1, 12, 11, 8 ], true})
+      <<0x20, 0x0f, 0x1c, 0xb8>>
 
-    iex> MerklePatriciaTree.HexPrefix.encode({[ 15, 1, 12, 11, 8 ], true})
-    <<0x3f, 0x1c, 0xb8>>
+      iex> MerklePatriciaTree.HexPrefix.encode({[ 15, 1, 12, 11, 8 ], true})
+      <<0x3f, 0x1c, 0xb8>>
   """
   @spec encode(t()) :: binary()
   def encode({nibbles, terminator}) do
@@ -69,29 +69,29 @@ defmodule MerklePatriciaTree.HexPrefix do
 
   ## Examples
 
-    iex> MerklePatriciaTree.HexPrefix.decode(<<0, 171, 205>>)
-    {[0xa, 0xb, 0xc, 0xd], false}
+      iex> MerklePatriciaTree.HexPrefix.decode(<<0, 171, 205>>)
+      {[0xa, 0xb, 0xc, 0xd], false}
 
-    iex> MerklePatriciaTree.HexPrefix.decode(<<32, 171, 205>>)
-    {[0xa, 0xb, 0xc, 0xd], true}
+      iex> MerklePatriciaTree.HexPrefix.decode(<<32, 171, 205>>)
+      {[0xa, 0xb, 0xc, 0xd], true}
 
-    iex> MerklePatriciaTree.HexPrefix.decode(<<25, 171, 205>>)
-    {[0x09, 0xa, 0xb, 0xc, 0xd], false}
+      iex> MerklePatriciaTree.HexPrefix.decode(<<25, 171, 205>>)
+      {[0x09, 0xa, 0xb, 0xc, 0xd], false}
 
-    iex> MerklePatriciaTree.HexPrefix.decode(<<57, 171, 205>>)
-    {[0x09, 0xa, 0xb, 0xc, 0xd], true}
+      iex> MerklePatriciaTree.HexPrefix.decode(<<57, 171, 205>>)
+      {[0x09, 0xa, 0xb, 0xc, 0xd], true}
 
-    iex> MerklePatriciaTree.HexPrefix.decode(<<0x11, 0x23, 0x45>>)
-    {[ 1, 2, 3, 4, 5 ], false}
+      iex> MerklePatriciaTree.HexPrefix.decode(<<0x11, 0x23, 0x45>>)
+      {[ 1, 2, 3, 4, 5 ], false}
 
-    iex> MerklePatriciaTree.HexPrefix.decode(<<0x00, 0x01, 0x23, 0x45>>)
-    {[ 0, 1, 2, 3, 4, 5 ], false}
+      iex> MerklePatriciaTree.HexPrefix.decode(<<0x00, 0x01, 0x23, 0x45>>)
+      {[ 0, 1, 2, 3, 4, 5 ], false}
 
-    iex> MerklePatriciaTree.HexPrefix.decode(<<0x20, 0x0f, 0x1c, 0xb8>>)
-    {[ 0, 15, 1, 12, 11, 8 ], true}
+      iex> MerklePatriciaTree.HexPrefix.decode(<<0x20, 0x0f, 0x1c, 0xb8>>)
+      {[ 0, 15, 1, 12, 11, 8 ], true}
 
-    iex> MerklePatriciaTree.HexPrefix.decode(<<0x3f, 0x1c, 0xb8>>)
-    {[ 15, 1, 12, 11, 8 ], true}
+      iex> MerklePatriciaTree.HexPrefix.decode(<<0x3f, 0x1c, 0xb8>>)
+      {[ 15, 1, 12, 11, 8 ], true}
   """
   @spec decode(binary()) :: {[integer()], boolean()}
   def decode(hp) do

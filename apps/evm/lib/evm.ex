@@ -5,13 +5,13 @@ defmodule EVM do
 
   # σ[a]
   @type account :: %{
-          # σ[a]n
+          # σ[a]_n
           nonce: integer(),
-          # σ[a]b
+          # σ[a]_b
           balance: integer(),
-          # σ[a]s
+          # σ[a]_s
           storage: MerklePatriciaTree.Trie.t(),
-          # σ[a]c
+          # σ[a]_c
           code: binary()
         }
   # σ

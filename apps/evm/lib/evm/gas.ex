@@ -3,28 +3,24 @@ defmodule EVM.Gas do
   Functions for interacting wth gas and costs of opscodes.
   """
 
-  alias EVM.MachineState
-  alias EVM.MachineCode
-  alias EVM.Operation
-  alias EVM.Address
-  alias EVM.ExecEnv
+  alias EVM.{MachineState, MachineCode, Operation, Address, ExecEnv}
 
   @type t :: EVM.val()
   @type gas_price :: EVM.Wei.t()
 
-  # Nothing paid for operations of the set Wzero.
+  # Nothing paid for operations of the set W_zero.
   @g_zero 0
-  # Amount of gas to pay for operations of the set Wbase.
+  # Amount of gas to pay for operations of the set W_base.
   @g_base 2
-  # Amount of gas to pay for operations of the set Wverylow.
+  # Amount of gas to pay for operations of the set W_verylow.
   @g_verylow 3
-  # Amount of gas to pay for operations of the set Wlow.
+  # Amount of gas to pay for operations of the set W_low.
   @g_low 5
-  # Amount of gas to pay for operations of the set Wmid.
+  # Amount of gas to pay for operations of the set W_mid.
   @g_mid 8
-  # Amount of gas to pay for operations of the set Whigh.
+  # Amount of gas to pay for operations of the set W_high.
   @g_high 10
-  # Amount of gas to pay for operations of the set Wextcode.
+  # Amount of gas to pay for operations of the set W_extcode.
   @g_extcode 20
   # Amount of gas to pay for a BALANCE operation.
   @g_balance 20
@@ -107,7 +103,6 @@ defmodule EVM.Gas do
   @push_instrs Enum.map(0..32, fn n -> :"push#{n}" end)
   @dup_instrs Enum.map(0..16, fn n -> :"dup#{n}" end)
   @swap_instrs Enum.map(0..16, fn n -> :"swap#{n}" end)
-  @log_instrs Enum.map(0..4, fn n -> :"log#{n}" end)
   @w_very_low_instr [
                       :add,
                       :sub,
@@ -138,7 +133,7 @@ defmodule EVM.Gas do
 
   @doc """
   Returns the cost to execute the given a cycle of the VM. This is defined
-  in Appenix H of the Yellow Paper, Eq.(220) and is denoted `C`.
+  in Appenix H of the Yellow Paper, Eq.(294) and is denoted `C`.
 
   ## Examples
 
@@ -217,7 +212,7 @@ defmodule EVM.Gas do
     max(out_memory_cost, in_memory_cost)
   end
 
-  # From Eq 220: Cmem(μ′i)−Cmem(μi)
+  # From Eq. (294): C_mem(μ′_i) − C_mem(μ_i)
   def memory_expansion_cost(machine_state, offset, length) do
     memory_expansion_value = memory_expansion_value(machine_state.active_words, offset, length)
 
@@ -229,7 +224,7 @@ defmodule EVM.Gas do
     end
   end
 
-  # Eq 223
+  # Eq. (223)
   def memory_expansion_value(
         # s
         active_words,
@@ -245,7 +240,7 @@ defmodule EVM.Gas do
     end
   end
 
-  # Eq 222 - Cmem
+  # Eq. (296)
   def quadratic_memory_cost(a) do
     linear_cost = a * @g_memory
     quadratic_cost = MathHelper.floor(:math.pow(a, 2) / @g_quad_coeff_div)
@@ -254,8 +249,8 @@ defmodule EVM.Gas do
   end
 
   @doc """
-  Returns the operation cost for every possible operation. This is defined
-  in Appendix H of the Yellow Paper.
+  Returns the operation cost for every possible operation.
+  This is defined in Appendix H of the Yellow Paper.
 
   ## Examples
 
@@ -338,8 +333,8 @@ defmodule EVM.Gas do
   end
 
   @doc """
-  Returns the cost of a call to `sstore`. This is defined
-  in Appenfix H.2. of the Yellow Paper under the
+  Returns the cost of a call to `sstore`.
+  This is defined in Appenfix H.2. of the Yellow Paper under the
   definition of SSTORE, referred to as `C_SSTORE`.
 
   ## Examples
@@ -419,7 +414,6 @@ defmodule EVM.Gas do
       operation in @w_mid_instr -> @g_mid
       operation in @w_high_instr -> @g_high
       operation in @w_extcode_instr -> @g_extcode
-      operation in @call_operations -> @g_call
       operation == :create -> @g_create
       operation == :blockhash -> @g_blockhash
       operation == :balance -> @g_balance
@@ -429,13 +423,8 @@ defmodule EVM.Gas do
     end
   end
 
-  defp call_value_cost(value) do
-    if value == 0 do
-      0
-    else
-      @g_callvalue - @g_callstipend
-    end
-  end
+  defp call_value_cost(0), do: 0
+  defp call_value_cost(_), do: @g_callvalue - @g_callstipend
 
   defp new_account_cost(exec_env, address) do
     if exec_env.account_interface

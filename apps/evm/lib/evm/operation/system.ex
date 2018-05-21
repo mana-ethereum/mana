@@ -1,12 +1,6 @@
 defmodule EVM.Operation.System do
-  alias EVM.MachineState
-  alias EVM.ExecEnv
-  alias EVM.Interface.AccountInterface
-  alias EVM.Interface.BlockInterface
-  alias EVM.Helpers
-  alias EVM.Address
-  alias EVM.Stack
-  alias EVM.Operation
+  alias EVM.Interface.{AccountInterface, BlockInterface}
+  alias EVM.{MachineState, ExecEnv, Helpers, Address, Stack, Operation}
 
   @dialyzer {:no_return, callcode: 2}
 
@@ -39,7 +33,7 @@ defmodule EVM.Operation.System do
     is_allowed =
       value <= account_balance and exec_env.stack_depth < EVM.Functions.max_stack_depth()
 
-    {updated_account_interface, n_gas, _n_sub_state} =
+    {updated_account_interface, _n_gas, _n_sub_state} =
       if is_allowed do
         available_gas = Helpers.all_but_one_64th(machine_state.gas)
 
@@ -131,7 +125,7 @@ defmodule EVM.Operation.System do
     machine_code = AccountInterface.get_account_code(exec_env.account_interface, to)
 
     if call_gas <= account_balance && exec_env.stack_depth < EVM.Functions.max_stack_depth() do
-      exec_env = ExecEnv.tranfer_wei_to(exec_env, to, value)
+      exec_env = ExecEnv.transfer_wei_to(exec_env, to, value)
 
       {n_gas, _n_sub_state, n_exec_env, n_output} =
         EVM.VM.run(

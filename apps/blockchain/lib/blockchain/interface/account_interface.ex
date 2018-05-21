@@ -2,7 +2,6 @@ defmodule Blockchain.Interface.AccountInterface do
   @moduledoc """
   Defines an interface for methods to interact with contracts and accounts.
   """
-  alias Block.Header
 
   @type t :: %__MODULE__{
           state: EVM.state()
@@ -35,6 +34,9 @@ defmodule Blockchain.Interface.AccountInterface do
 end
 
 defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterface do
+  alias MerklePatriciaTree.Trie
+  alias Blockchain.{Account, Contract}
+
   @doc """
   Given an account interface and an address, returns the balance at that address.
 
@@ -59,7 +61,7 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
   @spec get_account_balance(EVM.Interface.AccountInterface.t(), EVM.address()) ::
           nil | EVM.Wei.t()
   def get_account_balance(account_interface, address) do
-    case Blockchain.Account.get_account(account_interface.state, address) do
+    case Account.get_account(account_interface.state, address) do
       nil -> nil
       account -> account.balance
     end
@@ -68,7 +70,7 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
   @spec add_wei(EVM.Interface.AccountInterface.t(), EVM.address(), integer()) ::
           EVM.Interface.AccountInterface.t()
   def add_wei(account_interface, address, value) do
-    state = Blockchain.Account.add_wei(account_interface.state, address, value)
+    state = Account.add_wei(account_interface.state, address, value)
 
     Map.put(account_interface, :state, state)
   end
@@ -78,7 +80,7 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
   def transfer(account_interface, from, to, value) do
     {:ok, state} =
       account_interface.state
-      |> Blockchain.Account.transfer(from, to, value)
+      |> Account.transfer(from, to, value)
 
     Map.put(account_interface, :state, state)
   end
@@ -106,7 +108,7 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
   """
   @spec get_account_code(EVM.Interface.AccountInterface.t(), EVM.address()) :: nil | binary()
   def get_account_code(account_interface, address) do
-    case Blockchain.Account.get_machine_code(account_interface.state, address) do
+    case Account.get_machine_code(account_interface.state, address) do
       {:ok, machine_code} -> machine_code
       :not_found -> nil
     end
@@ -133,7 +135,7 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
           {EVM.Interface.AccountInterface.t(), integer()}
   def increment_account_nonce(account_interface, address) do
     {state, before_acct, _after_acct} =
-      Blockchain.Account.increment_nonce(account_interface.state, address, true)
+      Account.increment_nonce(account_interface.state, address, true)
 
     {Map.put(account_interface, :state, state), before_acct.nonce}
   end
@@ -168,12 +170,12 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
   @spec get_storage(EVM.Interface.AccountInterface.t(), EVM.address(), integer()) ::
           {:ok, integer()} | :account_not_found | :key_not_found
   def get_storage(account_interface, address, key) do
-    Blockchain.Account.get_storage(account_interface.state, address, key)
+    Account.get_storage(account_interface.state, address, key)
   end
 
   @spec account_exists?(EVM.Interface.AccountInterface.t(), EVM.address()) :: boolean()
   def account_exists?(account_interface, address) do
-    !!Blockchain.Account.get_account(account_interface.state, address)
+    !!Account.get_account(account_interface.state, address)
   end
 
   @doc """
@@ -206,7 +208,7 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
   @spec put_storage(EVM.Interface.AccountInterface.t(), EVM.address(), integer(), integer()) ::
           EVM.Interface.AccountInterface.t()
   def put_storage(account_interface, address, key, value) do
-    updated_state = Blockchain.Account.put_storage(account_interface.state, address, key, value)
+    updated_state = Account.put_storage(account_interface.state, address, key, value)
 
     %{account_interface | state: updated_state}
   end
@@ -236,7 +238,7 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
   @spec suicide_account(EVM.Interface.AccountInterface.t(), EVM.address()) ::
           EVM.Interface.AccountInterface.t()
   def suicide_account(account_interface, address) do
-    updated_state = Blockchain.Account.del_account(account_interface.state, address)
+    updated_state = Account.del_account(account_interface.state, address)
 
     %{account_interface | state: updated_state}
   end
@@ -256,7 +258,9 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
   """
   @spec dump_storage(EVM.Interface.AccountInterface.t()) :: %{EVM.address() => EVM.val()}
   def dump_storage(account_interface) do
-    MerklePatriciaTree.Trie.Inspector.all_values(account_interface.state) |> Enum.into(%{})
+    account_interface.state
+    |> Trie.Inspector.all_values()
+    |> Enum.into(%{})
   end
 
   @doc """
@@ -304,7 +308,7 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
         block_header
       ) do
     {state, gas, sub_state, output} =
-      Blockchain.Contract.message_call(
+      Contract.message_call(
         account_interface.state,
         sender,
         originator,
@@ -358,7 +362,7 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
         block_header
       ) do
     {state, gas, sub_state} =
-      Blockchain.Contract.create_contract(
+      Contract.create_contract(
         account_interface.state,
         sender,
         originator,
@@ -388,6 +392,6 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
   @spec new_contract_address(EVM.Interface.AccountInterface.t(), EVM.address(), integer()) ::
           EVM.address()
   def new_contract_address(_account_interface, address, nonce) do
-    Blockchain.Contract.new_contract_address(address, nonce)
+    Contract.new_contract_address(address, nonce)
   end
 end

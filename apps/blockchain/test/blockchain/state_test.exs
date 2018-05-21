@@ -1,6 +1,7 @@
 defmodule Blockchain.StateTest do
   alias MerklePatriciaTree.Trie
-  alias Blockchain.{Account, Transaction, Interface}
+  alias Blockchain.{Account, Transaction}
+  alias Blockchain.Interface.AccountInterface
 
   use EthCommonTest.Harness
   use ExUnit.Case, async: true
@@ -42,19 +43,18 @@ defmodule Blockchain.StateTest do
     state
     |> Trie.Inspector.all_values()
     |> Enum.map(fn {key, value} ->
-      {
-        key |> Base.encode16(case: :lower),
-        value |> ExRLP.decode() |> Account.deserialize()
-      }
+      k = Base.encode16(key, case: :lower)
+      v = value |> ExRLP.decode() |> Account.deserialize()
+      {k, v}
     end)
     |> Enum.map(fn {address_key, account} ->
       IO.puts(address_key)
       IO.puts("  Balance: #{account.balance}")
       IO.puts("  Nonce: #{account.nonce}")
       IO.puts("  Storage Root:")
-      IO.puts("  " <> (account.storage_root |> Base.encode16()))
+      IO.puts("  " <> Base.encode16(account.storage_root))
       IO.puts("  Code Hash")
-      IO.puts("  " <> (account.code_hash |> Base.encode16()))
+      IO.puts("  " <> Base.encode16(account.code_hash))
     end)
   end
 
@@ -92,19 +92,20 @@ defmodule Blockchain.StateTest do
 
         storage =
           Enum.reduce(account["storage"], storage, fn {key, value}, trie ->
-            trie
-            |> Trie.update(load_integer(key), load_integer(value))
+            Trie.update(trie, load_integer(key), load_integer(value))
           end)
 
-        state
-        |> Account.put_account(maybe_hex(address), %Account{
+        new_account = %Account{
           nonce: load_integer(account["nonce"]),
           balance: load_integer(account["balance"]),
           storage_root: storage.root_hash
-        })
+        }
+
+        state
+        |> Account.put_account(maybe_hex(address), new_account)
         |> Account.put_code(maybe_hex(address), maybe_hex(account["code"]))
       end)
 
-    Interface.AccountInterface.new(state)
+    AccountInterface.new(state)
   end
 end

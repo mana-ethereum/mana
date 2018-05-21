@@ -31,4 +31,14 @@ defmodule MerklePatriciaTree.DB.RocksDB do
   @spec put!(DB.db_ref(), Trie.key(), DB.value()) :: :ok
   def put!(db_ref, key, value),
     do: Rox.put(db_ref, key, value)
+
+  @doc """
+  Removes all objects with key from the database.
+  """
+  @spec delete!(DB.db_ref(), Trie.key()) :: :ok
+  def delete!(db_ref, key) do
+    case Rox.delete(db_ref, key) do
+      :ok -> :ok
+    end
+  end
 end

@@ -1,7 +1,7 @@
 defmodule ExWire.Sync do
   @moduledoc """
   This is the heart of our syncing logic. Once we've connected to a number
-  of peers via `ExWire.PeerSup`, we begin to ask for new blocks from those
+  of peers via `ExWire.PeerSupervisor`, we begin to ask for new blocks from those
   peers. As we receive blocks, we add them to our `ExWire.Struct.BlockQueue`.
   If the blocks are confirmed by enough peers, then we verify the block and
   add it to our block tree.
@@ -67,7 +67,7 @@ defmodule ExWire.Sync do
           header_hash = header |> Header.hash()
 
           {block_queue, block_tree, should_request_block} =
-            BlockQueue.add_header_to_block_queue(
+            BlockQueue.add_header(
               block_queue,
               block_tree,
               header,
@@ -118,7 +118,7 @@ defmodule ExWire.Sync do
     {next_block_queue, next_block_tree} =
       Enum.reduce(block_bodies.blocks, {block_queue, block_tree}, fn block_body,
                                                                      {block_queue, block_tree} ->
-        BlockQueue.add_block_struct_to_block_queue(block_queue, block_tree, block_body, chain, db)
+        BlockQueue.add_block_struct(block_queue, block_tree, block_body, chain, db)
       end)
 
     # We can make this better, but it's basically "if we change, request another block"

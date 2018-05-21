@@ -23,7 +23,6 @@ defmodule EVM.Address do
   @doc """
   Returns an address given an integer.
   """
-
   @spec new(integer()) :: binary()
   def new(address) when is_number(address) do
     address

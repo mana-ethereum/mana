@@ -2,32 +2,32 @@ defmodule Blockchain.Transaction.Receipt do
   @moduledoc """
   This module specifies functions to create and
   interact with the transaction receipt, defined
-  in Section 4.4.1 of the Yellow Paper.
+  in Section 4.3.1 of the Yellow Paper.
 
   Transaction receipts track incremental state changes
   after each transaction (e.g. how much gas has been
   expended).
   """
 
-  # Defined in Eq.(19)
+  # Defined in Eq.(20)
   defstruct state: <<>>,
             cumulative_gas: 0,
             bloom_filter: <<>>,
             logs: <<>>
 
-  # Types defined in Eq.(20)
+  # Types defined in Eq.(22) and Eq.(23)
   @type t :: %__MODULE__{
           state: EVM.trie_root(),
           # Defined in Eq.(21)
           cumulative_gas: EVM.Gas.t(),
-          # TODO: Bloom filter
+          # Defined in Eq.(26)
           bloom_filter: binary(),
           logs: EVM.SubState.logs()
         }
 
   @doc """
   Encodes a transaction receipt such that it can be
-  RLP encoded. This is defined in Eq.(20) of the Yellow
+  RLP encoded. This is defined in Eq.(21) of the Yellow
   Paper.
 
   ## Examples
@@ -50,7 +50,7 @@ defmodule Blockchain.Transaction.Receipt do
 
   @doc """
   Decodes a transaction receipt based on the serialization format
-  defined in Eq.(20). This is the inverse of `serialize/1`.
+  defined in Eq.(21). This is the inverse of `serialize/1`.
 
   ## Examples
 
