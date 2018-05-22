@@ -33,6 +33,12 @@ defmodule ExWire.Kademlia.Server do
     {:noreply, %{routing_table: updated_table}}
   end
 
+  def handle_cast({:handle_ping, params}, %{routing_table: table}) do
+    updated_table = RoutingTable.handle_ping(table, params)
+
+    {:noreply, %{routing_table: updated_table}}
+  end
+
   def handle_call(:routing_table, _from, state = %{routing_table: routing_table}) do
     {:reply, routing_table, state}
   end

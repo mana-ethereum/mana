@@ -5,6 +5,7 @@ defmodule ExWire.Handler.Ping do
 
   alias ExWire.Handler
   alias ExWire.Message.{Pong, Ping}
+  alias ExWire.Kademlia
 
   @doc """
   Handler for a Ping message.
@@ -32,6 +33,8 @@ defmodule ExWire.Handler.Ping do
   @spec handle(Handler.Params.t(), Keyword.t()) :: Handler.handler_response()
   def handle(params, options \\ []) do
     ping = Ping.decode(params.data)
+
+    Kademlia.handle_ping(params)
 
     %Pong{
       to: ping.from,

@@ -148,7 +148,7 @@ defmodule ExWire.Kademlia.RoutingTable do
   end
 
   @doc """
-   Handles Pong message.
+  Handles Pong message.
 
    There are three cases:
    - If we were waiting for this pong (it's stored in routing table) and it's not expired,
@@ -173,13 +173,16 @@ defmodule ExWire.Kademlia.RoutingTable do
         refresh_node(table, removal_candidate)
 
       params && timestamp > Timestamp.now() ->
-        node = Node.from_handler_params(params)
-
-        refresh_node(table, node)
+        add_node_from_params(table, params)
 
       true ->
         table
     end
+  end
+
+  @spec handle_ping(t(), Params.t()) :: t()
+  def handle_ping(table, params) do
+    add_node_from_params(table, params)
   end
 
   @spec replace_bucket(t(), integer(), Bucket.t()) :: t()
@@ -189,6 +192,13 @@ defmodule ExWire.Kademlia.RoutingTable do
       |> List.replace_at(idx, bucket)
 
     %{table | buckets: buckets}
+  end
+
+  @spec add_node_from_params(t(), Params.t()) :: t()
+  defp add_node_from_params(table, params) do
+    node = Node.from_handler_params(params)
+
+    refresh_node(table, node)
   end
 
   @spec bucket_at(t(), integer()) :: Bucket.t()

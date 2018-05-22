@@ -28,6 +28,16 @@ defmodule ExWire.Kademlia do
   end
 
   @doc """
+  Handles ping message (by adding a node to routing table etc).
+  """
+  @spec handle_pong(Pong.t(), Params.t()) :: :ok
+  def handle_ping(params = %Params{}, opts \\ []) do
+    opts
+    |> process_name()
+    |> GenServer.cast({:handle_ping, params})
+  end
+
+  @doc """
   Returns current routing table.
   """
   @spec routing_table(Keyword.t()) :: RoutingTable.t()
