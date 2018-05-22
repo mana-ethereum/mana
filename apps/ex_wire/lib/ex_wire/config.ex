@@ -4,6 +4,7 @@ defmodule ExWire.Config do
   """
 
   alias Blockchain.Chain
+  alias ExWire.Crypto
   alias ExthCrypto.ECIES.ECDH
   alias ExthCrypto.{Signature, Key}
 
@@ -43,7 +44,7 @@ defmodule ExWire.Config do
 
   @spec node_id() :: ExWire.node_id()
   def node_id do
-    public_key() |> Key.der_to_raw()
+    Crypto.node_id_from_public_key(public_key())
   end
 
   @spec listen_port() :: integer()

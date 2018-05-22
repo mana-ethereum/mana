@@ -116,17 +116,15 @@ defmodule ExWire.Network do
       ...>   remote_host: nil,
       ...>   timestamp: 5,
       ...> })
-      {
-        :sent_message,
-        ExWire.Message.Pong,
-        <<186, 16, 96, 67, 232, 1, 185, 244, 75, 54, 153, 182, 228, 89, 162, 187, 148,
-          83, 107, 72, 174, 178, 39, 188, 53, 79, 237, 46, 23, 83, 128, 30, 132, 89,
-          76, 186, 158, 17, 193, 10, 32, 11, 133, 71, 74, 2, 12, 55, 145, 203, 212,
-          191, 40, 5, 202, 143, 168, 175, 141, 1, 6, 176, 102, 215, 52, 234, 219, 63,
-          177, 207, 23, 172, 231, 255, 172, 206, 244, 19, 12, 70, 21, 204, 252, 193,
-          87, 79, 107, 0, 28, 179, 239, 159, 96, 16, 11, 135, 1, 2, 204, 201, 132, 1,
-          2, 3, 4, 128, 130, 0, 5, 128, 5>>
-      }
+      {:sent_message, ExWire.Message.Pong,
+       <<6, 201, 146, 23, 185, 219, 67, 125, 240, 150, 174, 59, 5, 113, 149, 149, 206,
+         132, 24, 230, 91, 232, 7, 224, 152, 94, 45, 106, 83, 178, 81, 4, 200, 172,
+         196, 17, 39, 192, 210, 70, 127, 212, 138, 153, 164, 108, 0, 123, 115, 39,
+         211, 134, 99, 12, 148, 199, 23, 0, 22, 250, 183, 101, 34, 192, 64, 117, 179,
+         67, 8, 147, 134, 234, 116, 117, 97, 13, 97, 166, 46, 221, 183, 17, 218, 181,
+         189, 111, 138, 199, 134, 3, 202, 73, 111, 149, 22, 109, 0, 2, 236, 201, 132,
+         1, 2, 3, 4, 128, 130, 0, 5, 160, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5>>}
 
       iex> ExWire.Network.handle(%ExWire.Network.InboundMessage{
       ...>   data: <<0::256>> <> <<0::512>> <> <<0::8>> <> <<99::8>> <> <<>>,
@@ -152,17 +150,17 @@ defmodule ExWire.Network do
         },
         options \\ []
       ) do
-    params =
-      %Handler.Params{
-        remote_host: remote_host,
-        signature: signature,
-        recovery_id: recovery_id,
-        hash: hash,
-        data: data,
-        timestamp: timestamp
-      }
+    params = %Handler.Params{
+      remote_host: remote_host,
+      signature: signature,
+      recovery_id: recovery_id,
+      hash: hash,
+      data: data,
+      type: type,
+      timestamp: timestamp
+    }
 
-    case Handler.dispatch(type, params, options) do
+    case Handler.dispatch(params, options) do
       :not_implemented ->
         :no_action
 

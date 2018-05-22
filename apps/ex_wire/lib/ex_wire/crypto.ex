@@ -127,4 +127,9 @@ defmodule ExWire.Crypto do
 
     public_key
   end
+
+  @spec node_id_from_public_key(binary()) :: binary()
+  def node_id_from_public_key(public_key) do
+    Key.der_to_raw(public_key)
+  end
 end

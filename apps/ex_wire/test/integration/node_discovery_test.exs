@@ -18,14 +18,15 @@ defmodule ExWire.NodeDiscoveryTest do
     udp_name = UdpNodeDiscoveryTest
     network_adapter = {UDP, udp_name}
     supervisor_name = NodeDiscoveryTest
-    port = 1119
+    port = 11_117
 
     start_supervised!({
       NodeDiscoverySupervisor,
       [
         kademlia_process_name: kademlia_process_name,
         network_adapter: network_adapter,
-        supervisor_name: supervisor_name
+        supervisor_name: supervisor_name,
+        port: port
       ]
     })
 
@@ -39,18 +40,16 @@ defmodule ExWire.NodeDiscoveryTest do
 
   test "receives pong from remote node and adds it to local routing table", %{
     kademlia_name: kademlia_name,
-    udp_name: udp_name,
-    supervisor_name: supervisor_name
+    udp_name: udp_name
   } do
     remote_endpoint = remote_endpoint()
     current_endpoint = current_endpoint()
     ping = Ping.new(current_endpoint, remote_endpoint)
 
     Network.send(ping, udp_name, remote_endpoint)
-    Process.sleep(1_000)
+    Process.sleep(1000)
 
-    routing_table = Kademlia.routing_table(process_name: kademlia_name) |> IO.inspect()
-    expected_node() |> IO.inspect()
+    routing_table = Kademlia.routing_table(process_name: kademlia_name)
     assert RoutingTable.member?(routing_table, expected_node())
   end
 
@@ -60,23 +59,21 @@ defmodule ExWire.NodeDiscoveryTest do
       userinfo: _remote_id,
       host: remote_host,
       port: remote_peer_port
-    } = remote_uri
+    } = remote_uri()
 
     remote_ip =
       with {:ok, remote_ip} <- :inet.ip(remote_host |> String.to_charlist()) do
         remote_ip |> Tuple.to_list()
       end
 
-    remote_peer = %Endpoint{
+    %Endpoint{
       ip: remote_ip,
       udp_port: remote_peer_port
     }
   end
 
   defp current_endpoint do
-    udp_port = Config.listen_port()
     public_ip = Config.public_ip()
-    public_key = Config.public_key()
 
     %Endpoint{ip: public_ip, udp_port: 11_116, tcp_port: 11_115}
   end
@@ -87,12 +84,9 @@ defmodule ExWire.NodeDiscoveryTest do
       userinfo: remote_id,
       host: _remote_host,
       port: _remote_peer_port
-    } = remote_uri
+    } = remote_uri()
 
-    public_key =
-      remote_id
-      |> ExthCrypto.Math.hex_to_bin()
-      |> ExthCrypto.Key.raw_to_der()
+    public_key = ExthCrypto.Math.hex_to_bin(remote_id)
 
     Node.new(public_key, remote_endpoint())
   end

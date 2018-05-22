@@ -27,7 +27,8 @@ defmodule ExWire.Handler do
               recovery_id: nil,
               hash: nil,
               data: nil,
-              timestamp: nil
+              timestamp: nil,
+              type: nil
 
     @type t :: %__MODULE__{
             remote_host: Endpoint.t(),
@@ -35,7 +36,8 @@ defmodule ExWire.Handler do
             recovery_id: Crypto.recovery_id(),
             hash: Cryto.hash(),
             data: binary(),
-            timestamp: integer()
+            timestamp: integer(),
+            type: integer()
           }
   end
 
@@ -49,13 +51,14 @@ defmodule ExWire.Handler do
 
   ## Examples
 
-      iex> ExWire.Handler.dispatch(0x01, %ExWire.Handler.Params{
+      iex> ExWire.Handler.dispatch(%ExWire.Handler.Params{
       ...>   remote_host: %ExWire.Struct.Endpoint{ip: [1,2,3,4], udp_port: 55},
       ...>   signature: 2,
       ...>   recovery_id: 3,
       ...>   hash: <<5>>,
       ...>   data: [1, [<<1,2,3,4>>, <<>>, <<5>>], [<<5,6,7,8>>, <<6>>, <<>>], 4] |> ExRLP.encode(),
       ...>   timestamp: 123,
+      ...>   type: 1
       ...> })
       %ExWire.Message.Pong{
         hash: <<5>>,
@@ -67,16 +70,16 @@ defmodule ExWire.Handler do
         }
       }
 
-      iex> ExWire.Handler.dispatch(0x99, %ExWire.Handler.Params{})
+      iex> ExWire.Handler.dispatch(%ExWire.Handler.Params{type: 99})
       :not_implemented
 
       # TODO: Add a `no_response` test case
   """
-  @spec dispatch(integer(), Params.t(), Keyword.t()) :: handler_response
-  def dispatch(type, params, options \\ []) do
-    case @handlers[type] do
+  @spec dispatch(Params.t(), Keyword.t()) :: handler_response
+  def dispatch(params, options \\ []) do
+    case @handlers[params.type] do
       nil ->
-        Logger.warn("Message code `#{inspect(type, base: :hex)}` not implemented")
+        Logger.warn("Message code `#{inspect(params.type, base: :hex)}` not implemented")
         :not_implemented
 
       mod when is_atom(mod) ->

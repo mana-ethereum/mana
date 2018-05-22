@@ -41,6 +41,8 @@ defmodule ExWire.Adapter.UDP do
         {:udp, _socket, ip, port, data},
         state = %{network: network, network_args: network_args}
       ) do
+    ip = Tuple.to_list(ip)
+
     inbound_message = %ExWire.Network.InboundMessage{
       data: data,
       server_pid: self(),
@@ -65,7 +67,7 @@ defmodule ExWire.Adapter.UDP do
         state = %{socket: socket}
       )
       when not is_nil(udp_port) do
-    :gen_udp.send(socket, ip |> List.to_tuple(), udp_port, data)
+    :gen_udp.send(socket, List.to_tuple(ip), udp_port, data)
 
     {:noreply, state}
   end

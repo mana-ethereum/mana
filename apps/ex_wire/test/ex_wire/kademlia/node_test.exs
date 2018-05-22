@@ -2,8 +2,8 @@ defmodule ExWire.Kademlia.NodeTest do
   use ExUnit.Case, async: true
   doctest ExWire.Kademlia.Node
 
-  alias ExthCrypto.{Signature, Math, Key}
-  alias ExWire.{Message, Crypto}
+  alias ExthCrypto.{Math, Key}
+  alias ExWire.Message
 
   describe "from_handler_params/1" do
     test "recovers the same public key as from enode uri" do
@@ -31,11 +31,16 @@ defmodule ExWire.Kademlia.NodeTest do
             16, 225, 193, 229, 49, 1, 73, 244, 206, 72, 19, 248, 242, 127, 71, 175, 77, 189, 57,
             252, 157, 18, 164, 186, 166, 160, 0, 64, 8, 246, 32, 106, 130, 127, 189, 97, 62, 29,
             234, 124, 159, 132, 145, 159, 197>>,
-        timestamp: 1_526_992_431
+        timestamp: 1_526_992_431,
+        type: 2
       }
 
       recovered_public_key =
-        Message.recover_public_key(<<2>> <> params.data, params.signature, params.recovery_id)
+        Message.recover_public_key(
+          <<params.type>> <> params.data,
+          params.signature,
+          params.recovery_id
+        )
 
       assert public_key == recovered_public_key
     end

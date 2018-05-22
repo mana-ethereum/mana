@@ -2,11 +2,10 @@ defmodule ExWire.Kademlia.Node do
   @moduledoc """
   Represents a node in Kademlia algorithm; an entity on the network.
   """
-  alias ExthCrypto.Hash.Keccak
   alias ExWire.Kademlia.XorDistance
   alias ExWire.Struct.Endpoint
   alias ExWire.Handler.Params
-  alias ExthCrypto.Signature
+  alias ExWire.{Message, Crypto}
 
   defstruct [
     :public_key,
@@ -48,7 +47,7 @@ defmodule ExWire.Kademlia.Node do
   """
   @spec new(binary(), Endpoint) :: t()
   def new(public_key, endpoint = %Endpoint{}) do
-    key = Keccak.kec(public_key)
+    key = Crypto.hash(public_key)
 
     %__MODULE__{
       public_key: public_key,
@@ -64,37 +63,42 @@ defmodule ExWire.Kademlia.Node do
 
       iex> params = %ExWire.Handler.Params{
       ...>   remote_host: %ExWire.Struct.Endpoint{ip: [1,2,3,4], udp_port: 55},
-      ...>   signature: <<1>>,
-      ...>   recovery_id: 3,
+      ...>   signature: <<193, 30, 149, 122, 226, 192, 230, 158, 118, 204, 173, 80, 63,
+      ...>     232, 67, 152, 216, 249, 89, 52, 162, 92, 233, 201, 177, 108, 63, 120, 152,
+      ...>     134, 149, 220, 73, 198, 29, 93, 218, 123, 50, 70, 8, 202, 17, 171, 67, 245,
+      ...>     70, 235, 163, 158, 201, 246, 223, 114, 168, 7, 7, 95, 9, 53, 165, 8, 177,
+      ...>     13>>,
+      ...>   recovery_id: 1,
       ...>   hash: <<5>>,
       ...>   data: [1, [<<1,2,3,4>>, <<>>, <<5>>], [<<5,6,7,8>>, <<6>>, <<>>], 4] |> ExRLP.encode(),
       ...>   timestamp: 123,
+      ...>   type: 2
       ...> }
       iex> ExWire.Kademlia.Node.from_handler_params(params)
       %ExWire.Kademlia.Node{
-         endpoint: %ExWire.Struct.Endpoint{
-           ip: [1, 2, 3, 4],
-           tcp_port: nil,
-           udp_port: 55
-         },
-         key: <<95, 231, 249, 119, 231, 29, 186, 46, 161, 166, 142, 33, 5, 123, 238,
-           187, 155, 226, 172, 48, 198, 65, 10, 163, 141, 79, 63, 190, 65, 220, 255,
-           210>>,
-         public_key: <<1>>
-       }
+        endpoint: %ExWire.Struct.Endpoint{
+          ip: [1, 2, 3, 4],
+          tcp_port: nil,
+          udp_port: 55
+        },
+        key: <<82, 25, 231, 209, 101, 209, 232, 115, 33, 237, 181, 81, 181, 2, 202,
+          77, 181, 78, 159, 231, 221, 144, 198, 11, 123, 132, 136, 183, 135, 31, 207,
+          141>>,
+        public_key: <<153, 149, 149, 167, 201, 115, 154, 11, 141, 233, 49, 71, 229,
+          202, 25, 84, 59, 111, 153, 217, 57, 132, 148, 55, 195, 58, 42, 211, 227,
+          178, 122, 26, 23, 85, 51, 240, 231, 4, 255, 112, 141, 5, 6, 222, 217, 181,
+          49, 46, 46, 23, 149, 27, 253, 38, 20, 167, 95, 161, 175, 72, 195, 134, 234,
+          158>>
+      }
   """
   @spec from_handler_params(Params.t()) :: t()
-  def from_handler_params(
-        params = %Params{
-          hash: hash,
-          signature: signature,
-          recovery_id: recovery_id,
-          remote_host: remote_host
-        }
-      ) do
-    {:ok, public_key} = Signature.recover(hash, signature, recovery_id)
+  def from_handler_params(params) do
+    public_key =
+      (<<params.type>> <> params.data)
+      |> Message.recover_public_key(params.signature, params.recovery_id)
+      |> Crypto.node_id_from_public_key()
 
-    new(public_key, remote_host)
+    new(public_key, params.remote_host)
   end
 
   @doc """
