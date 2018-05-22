@@ -15,7 +15,7 @@ defmodule ExWire.KademliaTest do
     {:ok, network_client_pid} =
       UDP.start_link(
         network_module: {Network, []},
-        port: TestHelper.random(9_999),
+        port: TestHelper.random_port_number(),
         name: :kademlia_test
       )
 
