@@ -106,15 +106,14 @@ defmodule ExWire.Message do
   """
   @spec recover_public_key(t() | binary(), binary(), integer()) :: binary()
   def recover_public_key(message, signature, recovery_id) when is_binary(message) do
-    Crypto.recover_public_key(message, signature, recovery_id)
+    message
+    |> Crypto.hash()
+    |> Crypto.recover_public_key(signature, recovery_id)
   end
 
   def recover_public_key(message, signature, recovery_id) do
-    hash =
-      message
-      |> encode()
-      |> Crypto.hash()
-
-    recover_public_key(hash, signature, recovery_id)
+    message
+    |> encode()
+    |> recover_public_key(signature, recovery_id)
   end
 end

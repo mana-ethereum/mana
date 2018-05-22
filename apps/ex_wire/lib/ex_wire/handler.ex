@@ -6,16 +6,17 @@ defmodule ExWire.Handler do
   after it has been decoded.
   """
 
-  alias ExWire.Message
-  alias ExWire.Crypto
+  alias ExWire.{Message, Crypto}
+  alias ExWire.Struct.Endpoint
+  alias ExWire.Handler.{Ping, Pong, FindNeighbours, Neighbours}
 
   require Logger
 
   @handlers %{
-    0x01 => ExWire.Handler.Ping,
-    0x02 => ExWire.Handler.Pong,
-    0x03 => ExWire.Handler.FindNeighbours,
-    0x04 => ExWire.Handler.Neighbours
+    0x01 => Ping,
+    0x02 => Pong,
+    0x03 => FindNeighbours,
+    0x04 => Neighbours
   }
 
   defmodule Params do
@@ -29,7 +30,7 @@ defmodule ExWire.Handler do
               timestamp: nil
 
     @type t :: %__MODULE__{
-            remote_host: ExWire.Struct.Endpoint.t(),
+            remote_host: Endpoint.t(),
             signature: Crpyto.signature(),
             recovery_id: Crypto.recovery_id(),
             hash: Cryto.hash(),
