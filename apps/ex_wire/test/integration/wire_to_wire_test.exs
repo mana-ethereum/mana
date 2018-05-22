@@ -3,8 +3,10 @@ defmodule WireToWireTest do
   This test starts a server and connects a peer to it. It
   checks that a PING / PONG can be successfully communicated.
   """
-
   use ExUnit.Case, async: true
+
+  alias ExWire.Kademlia.Server
+  alias ExWire.TestHelper
 
   @moduletag integration: true
   @localhost [127, 0, 0, 1]
@@ -14,9 +16,16 @@ defmodule WireToWireTest do
   setup_all do
     {:ok, server} =
       ExWire.Adapter.UDP.start_link(
-        network_module: {ExWire.Network, []},
+        network_module: {ExWire.Network, [kademlia_process_name: :kademlia_wire_to_wire]},
         port: @them_port,
         name: :wire_to_wire_them
+      )
+
+    {:ok, _} =
+      Server.start_link(
+        current_node: TestHelper.random_node(),
+        network_client_name: server,
+        name: :kademlia_wire_to_wire
       )
 
     remote_host = %ExWire.Struct.Endpoint{
@@ -27,7 +36,7 @@ defmodule WireToWireTest do
     {:ok, %{server: server, remote_host: remote_host}}
   end
 
-  def receive(inbound_message, pid) do
+  def receive(inbound_message, [pid | _]) do
     send(pid, {:inbound_message, inbound_message})
   end
 
