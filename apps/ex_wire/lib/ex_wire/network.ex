@@ -34,42 +34,6 @@ defmodule ExWire.Network do
   Top-level receiver function to process an incoming message.
   We'll first validate the message, and then pass it to
   the appropriate handler.
-
-  ## Examples
-
-      iex> ping_data = [1, [<<1,2,3,4>>, <<>>, <<5>>], [<<5,6,7,8>>, <<6>>, <<>>], 4] |> ExRLP.encode
-      iex> payload = <<0::512>> <> <<0::8>> <> <<1::8>> <> ping_data
-      iex> hash = ExWire.Crypto.hash(payload)
-      iex> ExWire.Network.receive(%ExWire.Network.InboundMessage{
-      ...>   data: hash <> <<0::512>> <> <<0::8>> <> <<1::8>> <> ping_data,
-      ...>   server_pid: self(),
-      ...>   remote_host: nil,
-      ...>   timestamp: 123,
-      ...> })
-      {
-        :sent_message,
-        ExWire.Message.Pong,
-        <<13, 23, 15, 114, 251, 242, 25, 68, 27, 78, 90, 174, 113, 36, 148, 153, 216,
-          148, 187, 100, 15, 207, 119, 208, 4, 207, 139, 124, 116, 223, 190, 119, 253,
-          177, 0, 115, 136, 159, 247, 246, 255, 31, 165, 159, 142, 51, 241, 17, 150,
-          251, 211, 152, 55, 183, 40, 239, 124, 190, 53, 212, 68, 200, 141, 194, 5, 70,
-          187, 184, 56, 127, 78, 182, 140, 7, 9, 0, 149, 238, 13, 117, 233, 210, 130,
-          75, 91, 15, 111, 218, 23, 174, 189, 146, 218, 87, 237, 214, 0, 2, 236, 201,
-          132, 1, 2, 3, 4, 128, 130, 0, 5, 160, 21, 96, 138, 2, 65, 173, 135, 69, 74,
-          35, 153, 190, 41, 48, 2, 173, 239, 44, 221, 207, 63, 116, 210, 103, 215, 10,
-          87, 14, 174, 165, 52, 168, 123>>
-       }
-
-      iex> ping_data = [1, [<<1,2,3,4>>, <<>>, <<5>>], [<<5,6,7,8>>, <<6>>, <<>>], 4] |> ExRLP.encode
-      iex> payload = <<0::512>> <> <<0::8>> <> <<1::8>> <> ping_data
-      iex> hash = ExWire.Crypto.hash("hello")
-      iex> ExWire.Network.receive(%ExWire.Network.InboundMessage{
-      ...>   data: hash <> payload,
-      ...>   server_pid: self(),
-      ...>   remote_host: nil,
-      ...>   timestamp: 123,
-      ...> })
-      ** (ExWire.Crypto.HashMismatch) Invalid hash
   """
   @spec receive(InboundMessage.t(), Keyword.t()) :: handler_action
   def receive(
@@ -106,33 +70,6 @@ defmodule ExWire.Network do
   @doc """
   Function to pass message to the appropriate handler. E.g. for a ping
   we'll pass the decoded message to `ExWire.Handlers.Ping.handle/1`.
-
-  ## Examples
-
-      iex> ping_data = [1, [<<1,2,3,4>>, <<>>, <<5>>], [<<5,6,7,8>>, <<6>>, <<>>], 4] |> ExRLP.encode
-      iex> ExWire.Network.handle(%ExWire.Network.InboundMessage{
-      ...>   data: <<0::256>> <> <<0::512>> <> <<0::8>> <> <<1::8>> <> ping_data,
-      ...>   server_pid: self(),
-      ...>   remote_host: nil,
-      ...>   timestamp: 5,
-      ...> })
-      {:sent_message, ExWire.Message.Pong,
-       <<6, 201, 146, 23, 185, 219, 67, 125, 240, 150, 174, 59, 5, 113, 149, 149, 206,
-         132, 24, 230, 91, 232, 7, 224, 152, 94, 45, 106, 83, 178, 81, 4, 200, 172,
-         196, 17, 39, 192, 210, 70, 127, 212, 138, 153, 164, 108, 0, 123, 115, 39,
-         211, 134, 99, 12, 148, 199, 23, 0, 22, 250, 183, 101, 34, 192, 64, 117, 179,
-         67, 8, 147, 134, 234, 116, 117, 97, 13, 97, 166, 46, 221, 183, 17, 218, 181,
-         189, 111, 138, 199, 134, 3, 202, 73, 111, 149, 22, 109, 0, 2, 236, 201, 132,
-         1, 2, 3, 4, 128, 130, 0, 5, 160, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5>>}
-
-      iex> ExWire.Network.handle(%ExWire.Network.InboundMessage{
-      ...>   data: <<0::256>> <> <<0::512>> <> <<0::8>> <> <<99::8>> <> <<>>,
-      ...>   server_pid: self(),
-      ...>   remote_host: nil,
-      ...>   timestamp: 5,
-      ...> })
-      :no_action
   """
   @spec handle(InboundMessage.t(), Keyword.t()) :: handler_action
   def handle(
