@@ -2,22 +2,22 @@ defmodule ExthCrypto.Mixfile do
   use Mix.Project
 
   def project do
-    [app: :exth_crypto,
-     version: "0.1.4",
-     build_path: "../../_build",
-     config_path: "../../config/config.exs",
-     deps_path: "../../deps",
-     lockfile: "../../mix.lock",
-     elixir: "~> 1.4",
-     description: "Exthereum's Crypto Suite.",
+    [
+      app: :exth_crypto,
+      version: "0.1.4",
+      build_path: "../../_build",
+      config_path: "../../config/config.exs",
+      deps_path: "../../deps",
+      lockfile: "../../mix.lock",
+      elixir: "~> 1.6",
+      description: "Mana's Crypto Suite.",
       package: [
-        maintainers: ["Geoffrey Hayes", "Mason Fischer"],
-        licenses: ["MIT"],
-        links: %{"GitHub" => "https://github.com/exthereum/exth_crypto"}
+        maintainers: ["Geoffrey Hayes", "Mason Fischer"]
       ],
-     build_embedded: Mix.env == :prod,
-     start_permanent: Mix.env == :prod,
-     deps: deps()]
+      build_embedded: Mix.env() == :prod,
+      start_permanent: Mix.env() == :prod,
+      deps: deps()
+    ]
   end
 
   # Configuration for the OTP application
@@ -44,7 +44,7 @@ defmodule ExthCrypto.Mixfile do
       {:credo, "~> 0.8", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.14", only: :dev, runtime: false},
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
-      {:binary, "~> 0.0.4"},
+      {:binary, "~> 0.0.4"}
     ]
   end
 end

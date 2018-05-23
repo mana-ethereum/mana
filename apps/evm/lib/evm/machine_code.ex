@@ -2,10 +2,8 @@ defmodule EVM.MachineCode do
   @moduledoc """
   Functions for helping read a contract's machine code.
   """
+  alias EVM.{Operation, MachineState, ExecEnv}
   alias EVM.Operation.Metadata
-  alias EVM.Operation
-  alias EVM.MachineState
-  alias EVM.ExecEnv
 
   @type t :: binary()
 

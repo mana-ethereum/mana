@@ -1,6 +1,7 @@
 defmodule EvmTest do
   alias MerklePatriciaTree.Trie
   alias ExthCrypto.Hash.Keccak
+
   use ExUnit.Case, async: true
 
   @ethereum_common_tests_path "../../ethereum_common_tests"

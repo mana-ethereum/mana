@@ -1,7 +1,7 @@
 defmodule Blockchain.Chain do
   @moduledoc """
-  Represents the information about a specific chain. This
-  will either be a current chain (such as homestead), or
+  Represents the information about a specific chain.
+  This will either be a current chain (such as homestead), or
   a test chain (such as ropsten). Different chains have
   different parameters, such as accounts with an initial
   balance and when EIPs are implemented.
@@ -11,6 +11,8 @@ defmodule Blockchain.Chain do
   """
 
   require Integer
+
+  alias Blockchain.Genesis
 
   defstruct name: nil,
             engine: %{},
@@ -44,16 +46,7 @@ defmodule Blockchain.Chain do
             eip98_transition: integer(),
             eip86_transition: integer()
           },
-          genesis: %{
-            difficulty: integer(),
-            author: EVM.address(),
-            timestamp: integer(),
-            parent_hash: EVM.hash(),
-            extra_data: binary(),
-            gas_limit: EVM.Gas.t(),
-            mix_hash: binary(),
-            nonce: binary()
-          },
+          genesis: Genesis.t(),
           nodes: [String.t()],
           accounts: %{
             EVM.address() => %{
@@ -68,8 +61,8 @@ defmodule Blockchain.Chain do
         }
 
   @doc """
-  Loads a given blockchain, such as Homestead or Ropsten. This
-  chain is used to set the genesis block and tweak parameters
+  Loads a given blockchain, such as Homestead or Ropsten.
+  This chain is used to set the genesis block and tweak parameters
   of the Blockchain and EVM.
 
   See the `/chains` directory of this repo for supported
@@ -141,10 +134,15 @@ defmodule Blockchain.Chain do
 
   defp get_accounts(account_map) do
     for {address, account_info} <- account_map do
+      nonce =
+        if account_info["nonce"],
+          do: account_info["nonce"] |> load_hex,
+          else: 0
+
       {load_address(address),
        %{
          balance: account_info["balance"] |> load_decimal,
-         nonce: if(account_info["nonce"], do: account_info["nonce"] |> load_hex, else: 0)
+         nonce: nonce
        }}
     end
     |> Enum.into(%{})

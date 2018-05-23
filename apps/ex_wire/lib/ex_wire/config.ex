@@ -9,8 +9,8 @@ defmodule ExWire.Config do
   alias ExthCrypto.{Signature, Key}
 
   @doc """
-  Returns a private key that is generated when a new session is created. It is
-  intended that this key is semi-persisted.
+  Returns a private key that is generated when a new session is created.
+  It is intended that this key is semi-persisted.
   """
   @spec private_key() :: Key.private_key()
   def private_key do

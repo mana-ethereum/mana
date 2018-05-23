@@ -33,8 +33,7 @@ defmodule Blockchain.Bloom do
 
   @spec add_bits(integer(), [integer()]) :: integer()
   defp add_bits(bloom_number, bits) do
-    bits
-    |> Enum.reduce(bloom_number, fn bit_number, bloom ->
+    Enum.reduce(bits, bloom_number, fn bit_number, bloom ->
       bloom ||| 1 <<< bit_number
     end)
   end
@@ -42,8 +41,7 @@ defmodule Blockchain.Bloom do
   @spec bit_numbers(binary()) :: [integer()]
   defp bit_numbers(hash) do
     {result, _} =
-      1..3
-      |> Enum.reduce({[], hash}, fn _, acc ->
+      Enum.reduce(1..3, {[], hash}, fn _, acc ->
         {bits, <<head::integer-size(16), tail::bitstring>>} = acc
         new_bit = head &&& 2047
 

@@ -202,7 +202,7 @@ defmodule ExWire.Kademlia.RoutingTableTest do
     end
 
     test "returns neighbours based on xor distance" do
-      table = TestHelper.random_routing_table(port: TestHelper.random(9_999))
+      table = TestHelper.random_routing_table(port: 35249)
       node = TestHelper.random_node()
 
       neighbours = table |> RoutingTable.neighbours(node)

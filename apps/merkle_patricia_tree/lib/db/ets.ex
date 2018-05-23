@@ -38,4 +38,14 @@ defmodule MerklePatriciaTree.DB.ETS do
       true -> :ok
     end
   end
+
+  @doc """
+  Removes all objects with key from the database.
+  """
+  @spec delete!(DB.db_ref(), Trie.key()) :: :ok
+  def delete!(db_ref, key) do
+    case :ets.delete(db_ref, key) do
+      true -> :ok
+    end
+  end
 end

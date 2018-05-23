@@ -19,8 +19,7 @@ defmodule Blockchain.Blocktree do
     defexception [:message]
   end
 
-  alias Blockchain.Block
-  alias Blockchain.Chain
+  alias Blockchain.{Block, Chain}
 
   defstruct block: nil,
             children: [],
@@ -57,8 +56,8 @@ defmodule Blockchain.Blocktree do
     }
   end
 
-  # Creates a new trie with a given root. This should be used to
-  # create sub-trees internally.
+  # Creates a new trie with a given root.
+  # This should be used to create sub-trees internally.
   @spec rooted_tree(Block.t()) :: t
   defp rooted_tree(gen_block) do
     %__MODULE__{
@@ -70,8 +69,9 @@ defmodule Blockchain.Blocktree do
   end
 
   @doc """
-  Traverses a tree to find the most canonical block. This decides based on
-  blocks with the highest difficulty recursively walking down the tree.
+  Traverses a tree to find the most canonical block.
+  This decides based on blocks with the highest difficulty recursively walking down the tree.
+  Canonical blockchain is defined in Section 10 of the Yellow Paper.
 
   ## Examples
 
@@ -114,8 +114,8 @@ defmodule Blockchain.Blocktree do
   end
 
   @doc """
-  Verifies a block is valid, and if so, adds it to the block tree. This performs
-  four steps.
+  Verifies a block is valid, and if so, adds it to the block tree.
+  This performs four steps.
 
   1. Find the parent block
   2. Verfiy the block against its parent block
@@ -138,10 +138,10 @@ defmodule Blockchain.Blocktree do
       # With a valid block
       iex> trie = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
       iex> chain = Blockchain.Chain.load_chain(:ropsten)
-      iex> parent = Blockchain.Block.gen_genesis_block(chain, trie.db)
+      iex> parent = Blockchain.Genesis.create_block(chain, trie.db)
       iex> child = Blockchain.Block.gen_child_block(parent, chain)
       iex> block_1 = %Blockchain.Block{header: %Block.Header{number: 0, parent_hash: <<0::256>>, beneficiary: <<2, 3, 4>>, difficulty: 1_048_576, timestamp: 0, gas_limit: 200_000, mix_hash: <<1>>, nonce: <<2>>, state_root: parent.header.state_root}}
-      iex> block_2 = %Blockchain.Block{header: %Block.Header{number: 1, parent_hash: block_1 |> Blockchain.Block.hash, beneficiary: <<2::160>>, difficulty: 997_888, timestamp: 1_479_642_530, gas_limit: 200_000, mix_hash: <<1>>, nonce: <<2>>, state_root: child.header.state_root}} |> Blockchain.Block.add_rewards_to_block(trie.db)
+      iex> block_2 = %Blockchain.Block{header: %Block.Header{number: 1, parent_hash: block_1 |> Blockchain.Block.hash, beneficiary: <<2::160>>, difficulty: 997_888, timestamp: 1_479_642_530, gas_limit: 200_000, mix_hash: <<1>>, nonce: <<2>>, state_root: child.header.state_root}} |> Blockchain.Block.add_rewards(trie.db)
       iex> tree = Blockchain.Blocktree.new_tree()
       iex> {:ok, tree_1} = Blockchain.Blocktree.verify_and_add_block(tree, chain, block_1, trie.db)
       iex> {:ok, tree_2} = Blockchain.Blocktree.verify_and_add_block(tree_1, chain, block_2, trie.db)
@@ -159,7 +159,7 @@ defmodule Blockchain.Blocktree do
       # With a invalid block
       iex> trie = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
       iex> chain = Blockchain.Chain.load_chain(:ropsten)
-      iex> parent = Blockchain.Block.gen_genesis_block(chain, trie.db)
+      iex> parent = Blockchain.Genesis.create_block(chain, trie.db)
       iex> block_1 = %Blockchain.Block{header: %Block.Header{number: 0, parent_hash: <<0::256>>, beneficiary: <<2, 3, 4>>, difficulty: 1_048_576, timestamp: 11, gas_limit: 200_000, mix_hash: <<1>>, nonce: <<2>>, state_root: parent.header.state_root}}
       iex> block_2 = %Blockchain.Block{header: %Block.Header{number: 1, parent_hash: block_1 |> Blockchain.Block.hash, beneficiary: <<2, 3, 4>>, difficulty: 110, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>}}
       iex> tree = Blockchain.Blocktree.new_tree()
@@ -171,13 +171,16 @@ defmodule Blockchain.Blocktree do
           {:ok, t} | :parent_not_found | {:invalid, [atom()]}
   def verify_and_add_block(blocktree, chain, block, db, do_validate \\ true) do
     parent =
-      case Blockchain.Block.get_parent_block(block, db) do
+      case Block.get_parent_block(block, db) do
         :genesis -> nil
         {:ok, parent} -> parent
         :not_found -> :parent_not_found
       end
 
-    validation = if do_validate, do: Block.is_fully_valid?(block, chain, parent, db), else: :valid
+    validation =
+      if do_validate,
+        do: Block.validate(block, chain, parent, db),
+        else: :valid
 
     with :valid <- validation do
       {:ok, block_hash} = Block.put_block(block, db)
@@ -371,7 +374,9 @@ defmodule Blockchain.Blocktree do
         block -> {block.header.number, block.block_hash}
       end
 
-    children = for {_, child} <- blocktree.children, do: inspect_tree(child)
+    children =
+      for {_, child} <- blocktree.children,
+          do: inspect_tree(child)
 
     [value | children]
   end

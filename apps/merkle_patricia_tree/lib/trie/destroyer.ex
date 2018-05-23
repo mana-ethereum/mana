@@ -57,23 +57,28 @@ defmodule MerklePatriciaTree.Trie.Destroyer do
           :empty
 
         {:leaf, leaf_prefix, leaf_value} ->
+          # Combine with the node below
           {:leaf, ext_prefix ++ leaf_prefix, leaf_value}
 
         {:ext, new_ext_prefix, new_ext_node_hash} ->
+          # Combine with the node below
           {:ext, ext_prefix ++ new_ext_prefix, new_ext_node_hash}
 
-        els ->
-          {:ext, ext_prefix, els |> Node.encode_node(trie)}
+        elements ->
+          encoded = Node.encode_node(elements, trie)
+          {:ext, ext_prefix, encoded}
       end
     else
-      # Prefix doesn't match ext, do nothing.
+      # Prefix doesn't match ext, do nothing
       {:ext, ext_prefix, node_hash}
     end
   end
 
   # Remove from a branch when directly on value.
   defp trie_remove_key({:branch, branches}, [], _trie) when length(branches) == 17 do
-    {:branch, List.replace_at(branches, 16, nil)}
+    # Use <<>> as a value, otherwise it won't be RLP-serializable
+    children = List.replace_at(branches, 16, <<>>)
+    {:branch, children}
   end
 
   # Remove beneath a branch.

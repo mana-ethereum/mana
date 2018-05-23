@@ -1,21 +1,26 @@
 defmodule Blockchain.Account do
   @moduledoc """
-  Represents the state of an account, as defined in Section 4
-  of the Yellow Paper.
+  Represents the state of an account,
+  as defined in Section 4.1 of the Yellow Paper.
   """
 
   alias ExthCrypto.Hash.Keccak
-  alias MerklePatriciaTree.Trie
-  alias MerklePatriciaTree.DB
+  alias MerklePatriciaTree.{Trie, DB}
+  alias Blockchain.Account.Storage
 
   @empty_keccak Keccak.kec(<<>>)
   @empty_trie Trie.empty_trie_root_hash()
 
-  # State defined in Section 4.1 of the Yellow Paper
-  # nonce: σn, balance: σb, storate_root: σs, code_hash: σc
-  defstruct nonce: 0, balance: 0, storage_root: @empty_trie, code_hash: @empty_keccak
+  # State defined in Section 4.1 of the Yellow Paper:
+  # nonce: σ_n
+  # balance: σ_b
+  # storate_root: σ_s
+  # code_hash: σ_c
+  defstruct nonce: 0,
+            balance: 0,
+            storage_root: @empty_trie,
+            code_hash: @empty_keccak
 
-  # Types defined as Eq.(12) of the Yellow Paper
   @type t :: %__MODULE__{
           nonce: integer(),
           balance: EVM.Wei.t(),
@@ -24,8 +29,8 @@ defmodule Blockchain.Account do
         }
 
   @doc """
-  Checks whether or not an account is a non-contract account. This is defined in the latter
-  part of Section 4.1 of the Yellow Paper.
+  Checks whether or not an account is a non-contract account.
+  This is defined in the latter part of Section 4.1 of the Yellow Paper.
 
   ## Examples
 
@@ -100,8 +105,7 @@ defmodule Blockchain.Account do
   end
 
   @doc """
-  Loads an account from an address, as defined in Eq.(9), Eq.(10), Eq.(11)
-  and Eq.(12) of the Yellow Paper.
+  Loads an account from an address, as defined in Eq.(9), Eq.(10), and Eq.(12) of the Yellow Paper.
 
   ## Examples
 
@@ -111,7 +115,7 @@ defmodule Blockchain.Account do
       %Blockchain.Account{nonce: 5, balance: 6, storage_root: <<0x01>>, code_hash: <<0x02>>}
 
       iex> MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
-      ...> |> MerklePatriciaTree.Trie.update(<<0x01::160>> |> ExthCrypto.Hash.Keccak.kec(), <<>>)
+      ...> |> MerklePatriciaTree.Trie.update(<<0x01::160>> |> ExthCrypto.Hash.Keccak.kec(), nil)
       ...> |> Blockchain.Account.get_account(<<0x01::160>>)
       nil
 
@@ -121,12 +125,10 @@ defmodule Blockchain.Account do
   """
   @spec get_account(EVM.state(), EVM.address()) :: t | nil
   def get_account(state, address) do
-    case Trie.get(state, address |> Keccak.kec()) do
-      nil ->
-        nil
+    trie = Trie.get(state, Keccak.kec(address))
 
-      # TODO: Is this the same as deleting the account?
-      <<>> ->
+    case trie do
+      nil ->
         nil
 
       encoded_account ->
@@ -170,15 +172,13 @@ defmodule Blockchain.Account do
       |> serialize()
       |> ExRLP.encode()
 
-    Trie.update(state, address |> Keccak.kec(), encoded_account)
+    Trie.update(state, Keccak.kec(address), encoded_account)
   end
 
   @doc """
-  Completely removes an account from the world state. This is used,
-  for instance, after a suicide. This is defined from Eq.(77) and
-  Eq.(78) in the Yellow Paper.
-
-  # TODO: Should we delete the storage root trie?
+  Completely removes an account from the world state.
+  This is used, for instance, after a suicide.
+  This is defined from Eq.(71) and Eq.(80) in the Yellow Paper.
 
   ## Examples
 
@@ -195,7 +195,17 @@ defmodule Blockchain.Account do
   """
   @spec del_account(EVM.state(), EVM.address()) :: EVM.state()
   def del_account(state, address) do
-    Trie.update(state, address |> Keccak.kec(), <<>>)
+    account = get_account(state, address)
+
+    case account do
+      nil ->
+        state
+
+      acc ->
+        storage_trie = Trie.new(state.db, acc.storage_root)
+        Trie.Storage.delete(storage_trie)
+        Trie.remove(state, Keccak.kec(address))
+    end
   end
 
   @doc """
@@ -338,12 +348,13 @@ defmodule Blockchain.Account do
       %Blockchain.Account{balance: 13}
   """
   @spec dec_wei(EVM.state(), EVM.address(), EVM.Wei.t()) :: EVM.state()
-  def dec_wei(state, address, delta_wei), do: add_wei(state, address, -1 * delta_wei)
+  def dec_wei(state, address, delta_wei),
+    do: add_wei(state, address, -1 * delta_wei)
 
   @doc """
   Helper function for transferring eth for one account to another.
   This handles the fact that a new account may be shadow-created if
-  it receives eth. See Section 8, Eq.(100), Eq.(101), Eq.(102, Eq.(103),
+  it receives eth. See Section 8, Eq.(100), Eq.(101), Eq.(102), Eq.(103),
   and Eq.(104) of the Yellow Paper.
 
   The Yellow Paper assumes this function will always succeed (as the checks
@@ -424,18 +435,15 @@ defmodule Blockchain.Account do
   end
 
   @doc """
-  Puts code into a given account. Note, this will handle
-  the aspect that we need to store the code_hash outside of the
-  contract itself and only store the KEC of the code_hash.
+  Puts code into a given account.
+  Note, this will handle the aspect that we need to store the
+  `code_hash` outside of the contract itself and
+  only store the KEC of the code_hash.
 
-  This is defined in Eq.(98) and address in Section 4.1 under
-  `codeHash` in the Yellow Paper.
+  This is defined in Section 4.1 under `codeHash` in the Yellow Paper.
 
-  Not sure if this is correct, but I'm going to store the code_hash
-  in state, as well as the link to it in the Account object itself.
-
-  TODO: Verify the above ^^^ is accurate, as it's not spelled out
-        in the Yellow Paper directly.
+  All such code fragments are contained in the
+  state database under their corresponding hashes for later retrieval.
 
   ## Examples
 
@@ -454,8 +462,7 @@ defmodule Blockchain.Account do
 
     MerklePatriciaTree.DB.put!(state.db, kec, machine_code)
 
-    state
-    |> update_account(contract_address, fn acct ->
+    update_account(state, contract_address, fn acct ->
       %{acct | code_hash: kec}
     end)
   end
@@ -518,15 +525,15 @@ defmodule Blockchain.Account do
   @spec put_storage(EVM.state(), EVM.address(), integer(), integer()) :: EVM.state()
   def put_storage(state, address, key, value) do
     update_account(state, address, fn acct ->
-      updated_storage_trie = storage_put(state.db, acct.storage_root, key, value)
+      updated_storage_trie = Storage.put(state.db, acct.storage_root, key, value)
 
       %{acct | storage_root: updated_storage_trie.root_hash}
     end)
   end
 
   @doc """
-  Gets a value from storage root of an account. See Section
-  4.1 under **storageRoot** from the Yellow Paper.
+  Gets a value from storage root of an account.
+  See Section 4.1 under **storageRoot** from the Yellow Paper.
 
   ## Examples
 
@@ -552,25 +559,10 @@ defmodule Blockchain.Account do
         :account_not_found
 
       account ->
-        case storage_fetch(state.db, account.storage_root, key) do
+        case Storage.fetch(state.db, account.storage_root, key) do
           nil -> :key_not_found
           value -> {:ok, value |> :binary.decode_unsigned()}
         end
     end
-  end
-
-  @spec storage_put(DB.db(), EVM.trie_root(), integer(), integer()) :: Trie.t()
-  defp storage_put(db, storage_root, key, value) do
-    Trie.new(db, storage_root)
-    |> Trie.update(
-      key |> :binary.encode_unsigned() |> BitHelper.pad(32) |> Keccak.kec(),
-      value |> ExRLP.encode()
-    )
-  end
-
-  @spec storage_fetch(DB.db(), EVM.trie_root(), integer()) :: integer() | nil
-  defp storage_fetch(db, storage_root, key) do
-    Trie.new(db, storage_root)
-    |> Trie.get(key |> :binary.encode_unsigned() |> BitHelper.pad(32) |> Keccak.kec())
   end
 end

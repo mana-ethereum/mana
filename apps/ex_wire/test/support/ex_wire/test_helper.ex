@@ -9,7 +9,7 @@ defmodule ExWire.TestHelper do
   alias ExWire.Network
 
   def random_routing_table(opts \\ []) do
-    port = opts[:port] || random(9_999)
+    port = opts[:port] || random_port_number()
 
     {:ok, network_client_pid} =
       UDP.start_link(network_module: {Network, []}, port: port, name: :test)
@@ -27,7 +27,7 @@ defmodule ExWire.TestHelper do
   end
 
   def random_endpoint do
-    ExWire.Struct.Endpoint.decode([random_ip(), random_port(), random_port()])
+    ExWire.Struct.Endpoint.decode([random_ip(), random_port_binary(), random_port_binary()])
   end
 
   def random_bucket(opts \\ []) do
@@ -62,7 +62,11 @@ defmodule ExWire.TestHelper do
     end)
   end
 
-  defp random_port do
-    <<random(99_999)>>
+  def random_port_binary do
+    <<random_port_number()>>
+  end
+
+  def random_port_number do
+    Enum.random(49152..65535)
   end
 end

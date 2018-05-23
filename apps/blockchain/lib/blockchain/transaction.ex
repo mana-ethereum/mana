@@ -1,14 +1,24 @@
 defmodule Blockchain.Transaction do
   @moduledoc """
-  This module encodes the transaction object, defined in Section 4.3
-  of the Yellow Paper (http://gavwood.com/Paper.pdf). We are focused
-  on implementing 𝛶, as defined in Eq.(1).
+  This module encodes the transaction object,
+  defined in Section 4.2 of the Yellow Paper.
+  We are focused on implementing 𝛶, as defined in Eq.(1).
   """
 
-  alias Blockchain.{Account, Transaction}
+  alias Blockchain.{Account, Contract, Transaction, MathHelper}
   alias Block.Header
+  alias EVM.Gas
 
-  # nonce: Tn, gas_price: Tp, gas_limit: Tg, to: Tt, value: Tv,  v: Tw, r: Tr, s: Ts, init: Ti, data: Td
+  # nonce: T_n
+  # gas_price: T_p
+  # gas_limit: T_g
+  # to: T_t
+  # value: T_v
+  # v: T_w
+  # r: T_r
+  # s: T_s
+  # init: T_i
+  # data: T_d
   defstruct nonce: 0,
             gas_price: 0,
             gas_limit: 0,
@@ -35,7 +45,7 @@ defmodule Blockchain.Transaction do
 
   @doc """
   Encodes a transaction such that it can be RLP-encoded.
-  This is defined at L_T Eq.(14) in the Yellow Paper.
+  This is defined at L_T Eq.(15) in the Yellow Paper.
 
   ## Examples
 
@@ -52,22 +62,22 @@ defmodule Blockchain.Transaction do
       ["\t", <<4, 168, 23, 200, 0>>, "R\b", "55555555555555555555", <<13, 224, 182, 179, 167, 100, 0, 0>>, "", <<1>>, "", ""]
   """
   @spec serialize(t) :: ExRLP.t()
-  def serialize(trx, include_vrs \\ true) do
+  def serialize(tx, include_vrs \\ true) do
     base = [
-      trx.nonce |> BitHelper.encode_unsigned(),
-      trx.gas_price |> BitHelper.encode_unsigned(),
-      trx.gas_limit |> BitHelper.encode_unsigned(),
-      trx.to,
-      trx.value |> BitHelper.encode_unsigned(),
-      if(trx.to == <<>>, do: trx.init, else: trx.data)
+      tx.nonce |> BitHelper.encode_unsigned(),
+      tx.gas_price |> BitHelper.encode_unsigned(),
+      tx.gas_limit |> BitHelper.encode_unsigned(),
+      tx.to,
+      tx.value |> BitHelper.encode_unsigned(),
+      if(tx.to == <<>>, do: tx.init, else: tx.data)
     ]
 
     if include_vrs do
       base ++
         [
-          trx.v |> BitHelper.encode_unsigned(),
-          trx.r |> BitHelper.encode_unsigned(),
-          trx.s |> BitHelper.encode_unsigned()
+          BitHelper.encode_unsigned(tx.v),
+          BitHelper.encode_unsigned(tx.r),
+          BitHelper.encode_unsigned(tx.s)
         ]
     else
       base
@@ -77,7 +87,7 @@ defmodule Blockchain.Transaction do
   @doc """
   Decodes a transaction that was previously encoded
   using `Transaction.serialize/1`. Note, this is the
-  inverse of L_T Eq.(14) defined in the Yellow Paper.
+  inverse of L_T Eq.(15) defined in the Yellow Paper.
 
   ## Examples
 
@@ -264,11 +274,11 @@ defmodule Blockchain.Transaction do
       iex> sender = <<126, 95, 69, 82, 9, 26, 105, 18, 93, 93, 252, 183, 184, 194, 101, 144, 41, 57, 91, 223>> # based on simple private key
       iex> contract_address = Blockchain.Contract.new_contract_address(sender, 6)
       iex> machine_code = EVM.MachineCode.compile([:push1, 3, :push1, 5, :add, :push1, 0x00, :mstore, :push1, 32, :push1, 0, :return])
-      iex> trx = %Blockchain.Transaction{nonce: 5, gas_price: 3, gas_limit: 100_000, to: <<>>, value: 5, init: machine_code}
+      iex> tx = %Blockchain.Transaction{nonce: 5, gas_price: 3, gas_limit: 100_000, to: <<>>, value: 5, init: machine_code}
       ...>       |> Blockchain.Transaction.Signature.sign_transaction(private_key)
       iex> {state, gas, logs} = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
       ...> |> Blockchain.Account.put_account(sender, %Blockchain.Account{balance: 400_000, nonce: 5})
-      ...> |> Blockchain.Transaction.execute_transaction(trx, %Block.Header{beneficiary: beneficiary})
+      ...> |> Blockchain.Transaction.execute_transaction(tx, %Block.Header{beneficiary: beneficiary})
       iex> {gas, logs}
       {53780, []}
       iex> Blockchain.Account.get_accounts(state, [sender, beneficiary, contract_address])
@@ -280,66 +290,66 @@ defmodule Blockchain.Transaction do
       iex> sender = <<126, 95, 69, 82, 9, 26, 105, 18, 93, 93, 252, 183, 184, 194, 101, 144, 41, 57, 91, 223>> # based on simple private key
       iex> contract_address = Blockchain.Contract.new_contract_address(sender, 6)
       iex> machine_code = EVM.MachineCode.compile([:push1, 3, :push1, 5, :add, :push1, 0x00, :mstore, :push1, 0, :push1, 32, :return])
-      iex> trx = %Blockchain.Transaction{nonce: 5, gas_price: 3, gas_limit: 100_000, to: contract_address, value: 5, init: machine_code}
+      iex> tx = %Blockchain.Transaction{nonce: 5, gas_price: 3, gas_limit: 100_000, to: contract_address, value: 5, init: machine_code}
       ...>       |> Blockchain.Transaction.Signature.sign_transaction(private_key)
       iex> {state, gas, logs} = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
       ...> |> Blockchain.Account.put_account(sender, %Blockchain.Account{balance: 400_000, nonce: 5})
       ...> |> Blockchain.Account.put_code(contract_address, machine_code)
-      ...> |> Blockchain.Transaction.execute_transaction(trx, %Block.Header{beneficiary: beneficiary})
+      ...> |> Blockchain.Transaction.execute_transaction(tx, %Block.Header{beneficiary: beneficiary})
       iex> {gas, logs}
       {21780, []}
       iex> Blockchain.Account.get_accounts(state, [sender, beneficiary, contract_address])
       [%Blockchain.Account{balance: 334655, nonce: 6}, %Blockchain.Account{balance: 65340}, %Blockchain.Account{balance: 5, code_hash: <<216, 114, 80, 103, 17, 50, 164, 75, 162, 123, 123, 99, 162, 105, 226, 15, 215, 200, 136, 216, 29, 106, 193, 119, 1, 173, 138, 37, 219, 39, 23, 231>>}]
   """
   @spec execute_transaction(EVM.state(), t, Header.t()) ::
-          {EVM.state(), EVM.Gas.t(), EVM.SubState.logs()}
-  def execute_transaction(state, trx, block_header) do
+          {EVM.state(), Gas.t(), EVM.SubState.logs()}
+  def execute_transaction(state, tx, block_header) do
     # TODO: Check transaction validity.
-    {:ok, sender} = Transaction.Signature.sender(trx)
+    {:ok, sender} = Transaction.Signature.sender(tx)
 
-    state_0 = begin_transaction(state, sender, trx)
+    state_0 = begin_transaction(state, sender, tx)
 
     # sender and originator are the same for transaction execution
     originator = sender
     # stack depth starts at zero for transaction execution
     stack_depth = 0
     # apparent value is the full value for transaction execution
-    apparent_value = trx.value
+    apparent_value = tx.value
     # gas is equal to what was just subtracted from sender account less intrinsic gas cost
-    gas = trx.gas_limit - intrinsic_gas_cost(trx, block_header)
+    gas = tx.gas_limit - intrinsic_gas_cost(tx, block_header)
 
     # TODO: Sender versus originator?
     {state_p, remaining_gas, sub_state} =
-      case trx.to do
+      case tx.to do
         # Λ
         <<>> ->
-          Blockchain.Contract.create_contract(
+          Contract.create_contract(
             state_0,
             sender,
             originator,
             gas,
-            trx.gas_price,
-            trx.value,
-            trx.init,
+            tx.gas_price,
+            tx.value,
+            tx.init,
             stack_depth,
             block_header
           )
 
         recipient ->
-          # Note, we only want to take the first 3 items from the tuples, as designated Θ_3 in the literature
-          # Θ_3
+          # Note, we only want to take the first 3 items from the tuples,
+          # as designated Θ_3 in the literature Θ_3
           {state, remaining_gas_, sub_state_, _output} =
-            Blockchain.Contract.message_call(
+            Contract.message_call(
               state_0,
               sender,
               originator,
               recipient,
               recipient,
               gas,
-              trx.gas_price,
-              trx.value,
+              tx.gas_price,
+              tx.value,
               apparent_value,
-              trx.data,
+              tx.data,
               stack_depth,
               block_header
             )
@@ -347,16 +357,16 @@ defmodule Blockchain.Transaction do
           {state, remaining_gas_, sub_state_}
       end
 
-    refund = calculate_total_refund(trx, remaining_gas, sub_state.refund)
+    refund = MathHelper.calculate_total_refund(tx, remaining_gas, sub_state.refund)
 
-    state_after_gas = finalize_transaction_gas(state_p, sender, trx, refund, block_header)
+    state_after_gas = finalize_transaction_gas(state_p, sender, tx, refund, block_header)
 
     state_after_suicides =
       Enum.reduce(sub_state.suicide_list, state_after_gas, fn address, state ->
         Account.del_account(state, address)
       end)
 
-    expended_gas = trx.gas_limit - remaining_gas
+    expended_gas = tx.gas_limit - remaining_gas
 
     # { σ', Υ^g, Υ^l }, as defined in Eq.(79) and Eq.(80)
     {state_after_suicides, expended_gas, sub_state.logs}
@@ -409,7 +419,7 @@ defmodule Blockchain.Transaction do
         %Blockchain.Account{balance: 272},
       ]
   """
-  @spec finalize_transaction_gas(EVM.state(), EVM.address(), t, EVM.Gas.t(), Block.Header.t()) ::
+  @spec finalize_transaction_gas(EVM.state(), EVM.address(), t, Gas.t(), Block.Header.t()) ::
           EVM.state()
   def finalize_transaction_gas(state, sender, trx, total_refund, block_header) do
     # Eq.(74)
@@ -420,39 +430,9 @@ defmodule Blockchain.Transaction do
   end
 
   @doc """
-  Caluclates the amount which should be refunded based on the current transactions
-  final usage. This includes the remaining gas plus refunds from clearing storage.
-
-  The specs calls for capping the refund at half of the total amount of gas used.
-
-  This function is defined as `g*` in Eq.(72) in the Yellow Paper.
-
-  ## Examples
-
-      iex> Blockchain.Transaction.calculate_total_refund(%Blockchain.Transaction{gas_limit: 100}, 10, 5)
-      15
-
-      iex> Blockchain.Transaction.calculate_total_refund(%Blockchain.Transaction{gas_limit: 100}, 10, 99)
-      55
-
-      iex> Blockchain.Transaction.calculate_total_refund(%Blockchain.Transaction{gas_limit: 100}, 10, 0)
-      10
-
-      iex> Blockchain.Transaction.calculate_total_refund(%Blockchain.Transaction{gas_limit: 100}, 11, 99)
-      55
-  """
-  @spec calculate_total_refund(t, EVM.Gas.t(), EVM.SubState.refund()) :: EVM.Gas.t()
-  def calculate_total_refund(trx, remaining_gas, refund) do
-    # TODO: Add a math helper, finally
-    max_refund = round(:math.floor((trx.gas_limit - remaining_gas) / 2))
-
-    remaining_gas + min(max_refund, refund)
-  end
-
-  @doc """
   Defines the "intrinsic gas cost," that is the amount of gas
   this transaction requires to be paid prior to execution. This
-  is defined as g_0 in Eq.(62), Eq.(63) and Eq.(64) of the
+  is defined as g_0 in Eq.(54), Eq.(55) and Eq.(56) of the
   Yellow Paper.
 
   ## Examples
@@ -472,13 +452,18 @@ defmodule Blockchain.Transaction do
       iex> Blockchain.Transaction.intrinsic_gas_cost(%Blockchain.Transaction{to: <<>>, init: <<1, 2, 0, 3>>, data: <<>>}, %Block.Header{number: 5_000_000})
       3 * 68 + 4 + 32000 + 21000
   """
-  @spec intrinsic_gas_cost(t, Block.Header.t()) :: EVM.Gas.t()
-  def intrinsic_gas_cost(trx, block_header) do
-    EVM.Gas.g_txdata(trx.init) + EVM.Gas.g_txdata(trx.data) +
-      if(
-        trx.to == <<>> and Header.is_after_homestead?(block_header),
-        do: EVM.Gas.g_txcreate(),
-        else: 0
-      ) + EVM.Gas.g_transaction()
+  @spec intrinsic_gas_cost(t, Header.t()) :: Gas.t()
+  def intrinsic_gas_cost(tx, block_header) do
+    # cost of tx’s associated data and initialisation EVM-code,
+    # depending on whether the transaction is for contract-creation or message-call
+    data_cost = Gas.g_txdata(tx.init) + Gas.g_txdata(tx.data)
+    cc_cost = contract_creation_cost(tx, block_header)
+    data_cost + cc_cost + Gas.g_transaction()
+  end
+
+  defp contract_creation_cost(tx, block_header) do
+    if tx.to == <<>> and Header.is_after_homestead?(block_header),
+      do: Gas.g_txcreate(),
+      else: 0
   end
 end

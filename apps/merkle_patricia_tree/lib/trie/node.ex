@@ -24,21 +24,21 @@ defmodule MerklePatriciaTree.Trie.Node do
 
   ## Examples
 
-  iex> trie = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
-  iex> MerklePatriciaTree.Trie.Node.encode_node(:empty, trie)
-  <<>>
+      iex> trie = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
+      iex> MerklePatriciaTree.Trie.Node.encode_node(:empty, trie)
+      <<>>
 
-  iex> trie = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
-  iex> MerklePatriciaTree.Trie.Node.encode_node({:leaf, [5,6,7], "ok"}, trie)
-  ["5g", "ok"]
+      iex> trie = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
+      iex> MerklePatriciaTree.Trie.Node.encode_node({:leaf, [5,6,7], "ok"}, trie)
+      ["5g", "ok"]
 
-  iex> trie = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
-  iex> MerklePatriciaTree.Trie.Node.encode_node({:branch, [<<>>, <<>>, <<>>, <<>>, <<>>, <<>>, <<>>, <<>>, <<>>, <<>>, <<>>, <<>>, <<>>, <<>>, <<>>, <<>>, <<>>]}, trie)
-  ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""]
+      iex> trie = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
+      iex> MerklePatriciaTree.Trie.Node.encode_node({:branch, [<<>>, <<>>, <<>>, <<>>, <<>>, <<>>, <<>>, <<>>, <<>>, <<>>, <<>>, <<>>, <<>>, <<>>, <<>>, <<>>, <<>>]}, trie)
+      ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""]
 
-  iex> trie = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
-  iex> MerklePatriciaTree.Trie.Node.encode_node({:ext, [1, 2, 3], <<>>}, trie)
-  [<<17, 35>>, ""]
+      iex> trie = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
+      iex> MerklePatriciaTree.Trie.Node.encode_node({:ext, [1, 2, 3], <<>>}, trie)
+      [<<17, 35>>, ""]
   """
   @spec encode_node(trie_node, Trie.t()) :: nil | binary()
   def encode_node(trie_node, trie) do
@@ -70,21 +70,21 @@ defmodule MerklePatriciaTree.Trie.Node do
 
   ## Examples
 
-  iex> MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db(), <<128>>)
-  iex> |> MerklePatriciaTree.Trie.Node.decode_trie()
-  :empty
+      iex> MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db(), <<128>>)
+      iex> |> MerklePatriciaTree.Trie.Node.decode_trie()
+      :empty
 
-  iex> MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db(), <<198, 130, 53, 103, 130, 111, 107>>)
-  iex> |> MerklePatriciaTree.Trie.Node.decode_trie()
-  {:leaf, [5,6,7], "ok"}
+      iex> MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db(), <<198, 130, 53, 103, 130, 111, 107>>)
+      iex> |> MerklePatriciaTree.Trie.Node.decode_trie()
+      {:leaf, [5,6,7], "ok"}
 
-  iex> MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db(), <<209, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128>>)
-  iex> |> MerklePatriciaTree.Trie.Node.decode_trie()
-  {:branch, [<<>>, <<>>, <<>>, <<>>, <<>>, <<>>, <<>>, <<>>, <<>>, <<>>, <<>>, <<>>, <<>>, <<>>, <<>>, <<>>, <<>>]}
+      iex> MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db(), <<209, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128>>)
+      iex> |> MerklePatriciaTree.Trie.Node.decode_trie()
+      {:branch, [<<>>, <<>>, <<>>, <<>>, <<>>, <<>>, <<>>, <<>>, <<>>, <<>>, <<>>, <<>>, <<>>, <<>>, <<>>, <<>>, <<>>]}
 
-  iex> MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db(), <<196, 130, 17, 35, 128>>)
-  iex> |> MerklePatriciaTree.Trie.Node.decode_trie()
-  {:ext, [1, 2, 3], <<>>}
+      iex> MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db(), <<196, 130, 17, 35, 128>>)
+      iex> |> MerklePatriciaTree.Trie.Node.decode_trie()
+      {:ext, [1, 2, 3], <<>>}
   """
   @spec decode_trie(Trie.t()) :: trie_node
   def decode_trie(trie) do

@@ -15,8 +15,7 @@ defmodule ExWire do
 
     sync_children =
       if ExWire.Config.sync() do
-        # TODO: Replace with level db
-        db = MerklePatriciaTree.Test.random_ets_db()
+        db = MerklePatriciaTree.DB.RocksDB.init(db_name())
 
         [
           worker(ExWire.PeerSupervisor, [ExWire.Config.bootnodes()]),
@@ -33,5 +32,10 @@ defmodule ExWire do
 
     opts = [strategy: :one_for_one, name: name]
     Supervisor.start_link(children, opts)
+  end
+
+  defp db_name() do
+    env = Mix.env() |> to_string()
+    "db/mana-" <> env
   end
 end

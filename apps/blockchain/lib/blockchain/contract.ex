@@ -7,6 +7,7 @@ defmodule Blockchain.Contract do
   """
 
   alias ExthCrypto.Hash.Keccak
+  alias Blockchain.Interface.{BlockInterface, AccountInterface}
   alias Blockchain.Account
   alias Block.Header
 
@@ -78,7 +79,7 @@ defmodule Blockchain.Contract do
 
     {state_after_init, remaining_gas, accrued_sub_state, output} =
       EVM.VM.run(available_gas, exec_env)
-      |> interpret_vm_result
+      |> interpret_vm_result()
 
     contract_creation_cost = get_contract_creation_cost(output)
 
@@ -184,16 +185,16 @@ defmodule Blockchain.Contract do
         state_initialized_for_message_call
       )
 
-    exec_fun.(available_gas, exec_env) |> interpret_vm_result
+    exec_fun.(available_gas, exec_env) |> interpret_vm_result()
   end
 
   @doc """
   Determines the address of a new contract based on the sender and
   the sender's current nonce.
 
-  This is defined as Eq.(82) in the Yellow Paper.
+  This is defined as Eq.(77) in the Yellow Paper.
 
-  Note: we should use the pre-incremented nonce when calling this function.
+  Note: Nonce should be already pre-incremented when calling this function.
 
   ## Examples
 
@@ -308,8 +309,8 @@ defmodule Blockchain.Contract do
       value_in_wei: endowment,
       machine_code: init_code,
       stack_depth: stack_depth,
-      block_interface: Blockchain.Interface.BlockInterface.new(block_header, state.db),
-      account_interface: Blockchain.Interface.AccountInterface.new(state)
+      block_interface: BlockInterface.new(block_header, state.db),
+      account_interface: AccountInterface.new(state)
     }
   end
 
@@ -370,8 +371,8 @@ defmodule Blockchain.Contract do
       value_in_wei: apparent_value,
       machine_code: machine_code,
       stack_depth: stack_depth,
-      block_interface: Blockchain.Interface.BlockInterface.new(block_header, state.db),
-      account_interface: Blockchain.Interface.AccountInterface.new(state)
+      block_interface: BlockInterface.new(block_header, state.db),
+      account_interface: AccountInterface.new(state)
     }
   end
 
@@ -383,7 +384,7 @@ defmodule Blockchain.Contract do
   # TODO: Implement and examples
   """
   @spec get_contract_creation_cost(binary()) :: EVM.Wei.t()
-  def get_contract_creation_cost(output) do
+  def get_contract_creation_cost(_output) do
     0
   end
 

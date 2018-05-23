@@ -12,6 +12,14 @@ brew install automake
 brew install autoconf
 ```
 
+Since we are using [RocksDB](https://rocksdb.org/) via
+[rox](https://github.com/urbint/rox), you will need to have the Rust available
+at compile time,
+
+```
+brew install rust
+```
+
 # Installation
 
 * Clone repo with submodules (so you can get the shared tests),
