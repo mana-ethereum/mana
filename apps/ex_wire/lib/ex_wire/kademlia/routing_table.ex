@@ -109,7 +109,11 @@ defmodule ExWire.Kademlia.RoutingTable do
   Returns neighbours of a specified node.
   """
   @spec neighbours(t(), FindNeighbours.t(), Endpoint.t()) :: [Node.t()]
-  def neighbours(table = %__MODULE__{}, %FindNeighbours{target: public_key, timestamp: timestamp}, endpoint) do
+  def neighbours(
+        table = %__MODULE__{},
+        %FindNeighbours{target: public_key, timestamp: timestamp},
+        endpoint
+      ) do
     if timestamp < Timestamp.now() do
       []
     else

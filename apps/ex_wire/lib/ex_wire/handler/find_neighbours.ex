@@ -37,7 +37,7 @@ defmodule ExWire.Handler.FindNeighbours do
     }
   end
 
-  @spec fetch_neighbours(Params.t, Keyword.t()) :: [Neighbour.t()]
+  @spec fetch_neighbours(Params.t(), Keyword.t()) :: [Neighbour.t()]
   defp fetch_neighbours(params, options) do
     params.data
     |> FindNeighbours.decode()

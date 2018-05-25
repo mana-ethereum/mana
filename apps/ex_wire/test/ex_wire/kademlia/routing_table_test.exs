@@ -206,6 +206,7 @@ defmodule ExWire.Kademlia.RoutingTableTest do
       table = TestHelper.random_routing_table(port: 35_249)
       node = TestHelper.random_node()
       find_neighbours = %FindNeighbours{target: node.public_key, timestamp: Timestamp.soon()}
+
       naive_neighbours =
         table.buckets
         |> Enum.flat_map(fn bucket -> bucket.nodes end)
