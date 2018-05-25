@@ -5,12 +5,13 @@ defmodule ExWire.Kademlia.RoutingTableTest do
 
   alias ExWire.Kademlia.{RoutingTable, Bucket, Node}
   alias ExWire.Kademlia.Config, as: KademliaConfig
-  alias ExWire.Message.{Pong, FindNeighbours}
+  alias ExWire.Message.{Pong, FindNeighbours, Neighbours}
   alias ExWire.TestHelper
   alias ExWire.Adapter.UDP
   alias ExWire.Network
   alias ExWire.Util.Timestamp
   alias ExWire.Handler.Params
+  alias ExWire.Struct.Neighbour
 
   setup_all do
     {:ok, network_client_pid} =
@@ -228,6 +229,46 @@ defmodule ExWire.Kademlia.RoutingTableTest do
         |> RoutingTable.neighbours(find_neighbours, node.endpoint)
 
       assert neighbours == []
+    end
+  end
+
+  describe "handle_neighbours/2" do
+    test "pings received neighbours and saves them to expected_pongs", %{table: table} do
+      nodes = 1..5 |> Enum.reduce([], fn _el, acc -> acc ++ [TestHelper.random_node()] end)
+
+      neighbours =
+        Enum.map(nodes, fn node -> %Neighbour{node: node.public_key, endpoint: node.endpoint} end)
+
+      neighbours_message = %Neighbours{nodes: neighbours, timestamp: Timestamp.now() + 5}
+
+      updated_table = RoutingTable.handle_neighbours(table, neighbours_message)
+
+      expected_pong_nodes =
+        updated_table.expected_pongs
+        |> Enum.map(fn {_key, value} ->
+          value
+        end)
+
+      assert nodes |> Enum.all?(fn node -> Enum.member?(expected_pong_nodes, node) end)
+    end
+
+    test "does node pings nodes from expired request", %{table: table} do
+      nodes = 1..5 |> Enum.reduce([], fn _el, acc -> acc ++ [TestHelper.random_node()] end)
+
+      neighbours =
+        Enum.map(nodes, fn node -> %Neighbour{node: node.public_key, endpoint: node.endpoint} end)
+
+      neighbours_message = %Neighbours{nodes: neighbours, timestamp: Timestamp.now() - 5}
+
+      updated_table = RoutingTable.handle_neighbours(table, neighbours_message)
+
+      expected_pong_nodes =
+        updated_table.expected_pongs
+        |> Enum.map(fn {_key, value} ->
+          value
+        end)
+
+      assert Enum.count(expected_pong_nodes) == 0
     end
   end
 end

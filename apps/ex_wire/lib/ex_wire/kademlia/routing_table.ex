@@ -5,7 +5,7 @@ defmodule ExWire.Kademlia.RoutingTable do
 
   alias ExWire.Kademlia.{Bucket, Node}
   alias ExWire.Kademlia.Config, as: KademliaConfig
-  alias ExWire.Message.{Ping, Pong, FindNeighbours}
+  alias ExWire.Message.{Ping, Pong, FindNeighbours, Neighbours}
   alias ExWire.{Network, Protocol}
   alias ExWire.Util.Timestamp
   alias ExWire.Handler.Params
@@ -193,6 +193,26 @@ defmodule ExWire.Kademlia.RoutingTable do
   @spec handle_ping(t(), Params.t()) :: t()
   def handle_ping(table, params) do
     add_node_from_params(table, params)
+  end
+
+  @spec handle_neighbours(t(), Neighbours.t()) :: :ok
+  def handle_neighbours(table, %Neighbours{timestamp: timestamp, nodes: nodes}) do
+    if timestamp > Timestamp.now() do
+      nodes
+      |> Enum.map(fn neighbour ->
+        Node.new(neighbour.node, neighbour.endpoint)
+      end)
+      |> Enum.reject(&member?(table, &1))
+      |> Enum.reduce(table, fn node, acc ->
+        {:sent_message, _, encoded_message} = ping(table, node)
+        mdc = Protocol.message_mdc(encoded_message)
+
+        updated_pongs = Map.put(acc.expected_pongs, mdc, node)
+        %{acc | expected_pongs: updated_pongs}
+      end)
+    else
+      table
+    end
   end
 
   @spec replace_bucket(t(), integer(), Bucket.t()) :: t()
