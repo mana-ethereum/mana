@@ -35,10 +35,15 @@ defmodule ExWire.Handler.FindNeighbours do
       nodes: neighbours,
       timestamp: params.timestamp
     }
+
+    %Neighbours{
+      nodes: neighbours,
+      timestamp: params.timestamp
+    }
   end
 
   @spec fetch_neighbours(Params.t(), Keyword.t()) :: [Neighbour.t()]
-  defp fetch_neighbours(params, options) do
+  def fetch_neighbours(params, options) do
     params.data
     |> FindNeighbours.decode()
     |> Kademlia.neighbours(params.remote_host, process_name: options[:kademlia_process_name])
