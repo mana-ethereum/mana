@@ -4,8 +4,9 @@ defmodule ExWire.Kademlia do
   """
 
   alias ExWire.Kademlia.{Server, Node, RoutingTable}
-  alias ExWire.Message.Pong
+  alias ExWire.Message.{Pong, FindNeighbours}
   alias ExWire.Handler.Params
+  alias ExWire.Struct.Endpoint
 
   @doc """
   Adds new node to routing table.
@@ -50,11 +51,11 @@ defmodule ExWire.Kademlia do
   @doc """
   Returns neighbours of specified node.
   """
-  @spec neighbours(Node.t(), Keyword.t()) :: [Node.t()]
-  def neighbours(node, opts \\ []) do
+  @spec neighbours(FindNeighbours.t(), Endpoint.t(), Keyword.t()) :: [Node.t()]
+  def neighbours(find_neighbours, endpoint, opts \\ []) do
     opts
     |> process_name()
-    |> GenServer.call({:neighbours, node})
+    |> GenServer.call({:neighbours, find_neighbours, endpoint})
   end
 
   @spec process_name(Keyword.t()) :: atom()

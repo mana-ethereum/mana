@@ -5,7 +5,7 @@ defmodule ExWire.KademliaTest do
   alias ExWire.Kademlia.{Server, RoutingTable, Node}
   alias ExWire.Adapter.UDP
   alias ExWire.Network
-  alias ExWire.Message.Pong
+  alias ExWire.Message.{Pong, FindNeighbours}
   alias ExWire.Handler.Params
   alias ExWire.Util.Timestamp
 
@@ -96,10 +96,11 @@ defmodule ExWire.KademliaTest do
   describe "neighbours/2" do
     test "returns neighbours of specified node" do
       node = TestHelper.random_node()
+      find_neighbours = %FindNeighbours{target: node.public_key, timestamp: Timestamp.now() + 5}
 
       Kademlia.refresh_node(node)
 
-      assert node |> Kademlia.neighbours() |> Enum.member?(node)
+      assert find_neighbours |> Kademlia.neighbours(node.endpoint) |> Enum.member?(node)
     end
   end
 end

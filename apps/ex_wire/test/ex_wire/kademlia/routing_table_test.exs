@@ -5,7 +5,7 @@ defmodule ExWire.Kademlia.RoutingTableTest do
 
   alias ExWire.Kademlia.{RoutingTable, Bucket, Node}
   alias ExWire.Kademlia.Config, as: KademliaConfig
-  alias ExWire.Message.Pong
+  alias ExWire.Message.{Pong, FindNeighbours}
   alias ExWire.TestHelper
   alias ExWire.Adapter.UDP
   alias ExWire.Network
@@ -191,28 +191,42 @@ defmodule ExWire.Kademlia.RoutingTableTest do
   describe "neighbours/2" do
     test "returns neighbours when there are not enough nodes", %{table: table} do
       node = TestHelper.random_node()
+      find_neighbours = %FindNeighbours{target: node.public_key, timestamp: Timestamp.soon()}
 
       neighbours =
         table
         |> RoutingTable.refresh_node(node)
-        |> RoutingTable.neighbours(node)
+        |> RoutingTable.neighbours(find_neighbours, node.endpoint)
 
       assert Enum.count(neighbours) == 1
       assert List.first(neighbours) == node
     end
 
     test "returns neighbours based on common_prefix distance" do
-      table = TestHelper.random_routing_table(port: 35249)
+      table = TestHelper.random_routing_table(port: 35_249)
       node = TestHelper.random_node()
+      find_neighbours = %FindNeighbours{target: node.public_key, timestamp: Timestamp.soon()}
       naive_neighbours =
         table.buckets
         |> Enum.flat_map(fn bucket -> bucket.nodes end)
         |> Enum.sort_by(&Node.common_prefix(&1, node), &>=/2)
         |> Enum.take(KademliaConfig.bucket_size())
 
-      neighbours = table |> RoutingTable.neighbours(node)
+      neighbours = RoutingTable.neighbours(table, find_neighbours, node.endpoint)
 
       assert neighbours == naive_neighbours
+    end
+
+    test "returns empty list of request is expired", %{table: table} do
+      node = TestHelper.random_node()
+      find_neighbours = %FindNeighbours{target: node.public_key, timestamp: Timestamp.now() - 5}
+
+      neighbours =
+        table
+        |> RoutingTable.refresh_node(node)
+        |> RoutingTable.neighbours(find_neighbours, node.endpoint)
+
+      assert neighbours == []
     end
   end
 end

@@ -43,8 +43,8 @@ defmodule ExWire.Kademlia.Server do
     {:reply, routing_table, state}
   end
 
-  def handle_call({:neighbours, node}, _from, state = %{routing_table: routing_table}) do
-    neighbours = routing_table |> RoutingTable.neighbours(node)
+  def handle_call({:neighbours, find_neighbours, endpoint}, _from, state = %{routing_table: routing_table}) do
+    neighbours =  RoutingTable.neighbours(routing_table, find_neighbours, endpoint)
 
     {:reply, neighbours, state}
   end

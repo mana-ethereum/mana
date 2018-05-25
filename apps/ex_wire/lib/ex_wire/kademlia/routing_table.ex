@@ -5,10 +5,11 @@ defmodule ExWire.Kademlia.RoutingTable do
 
   alias ExWire.Kademlia.{Bucket, Node}
   alias ExWire.Kademlia.Config, as: KademliaConfig
-  alias ExWire.Message.{Ping, Pong}
+  alias ExWire.Message.{Ping, Pong, FindNeighbours}
   alias ExWire.{Network, Protocol}
   alias ExWire.Util.Timestamp
   alias ExWire.Handler.Params
+  alias ExWire.Struct.Endpoint
 
   defstruct [:current_node, :buckets, :network_client_name, :expected_pongs]
 
@@ -107,15 +108,20 @@ defmodule ExWire.Kademlia.RoutingTable do
   @doc """
   Returns neighbours of a specified node.
   """
-  @spec neighbours(t(), Node.t()) :: [Node.t()]
-  def neighbours(table = %__MODULE__{}, node = %Node{}) do
-    bucket_idx = bucket_id(table, node)
-    nearest_neighbors = nodes_at(table, bucket_idx)
-    found_nodes = traverse(table, bucket_idx) ++ nearest_neighbors
+  @spec neighbours(t(), FindNeighbours.t(), Endpoint.t()) :: [Node.t()]
+  def neighbours(table = %__MODULE__{}, %FindNeighbours{target: public_key, timestamp: timestamp}, endpoint) do
+    if timestamp < Timestamp.now() do
+      []
+    else
+      node = Node.new(public_key, endpoint)
+      bucket_idx = bucket_id(table, node)
+      nearest_neighbors = nodes_at(table, bucket_idx)
+      found_nodes = traverse(table, bucket_idx) ++ nearest_neighbors
 
-    found_nodes
-    |> Enum.sort_by(&Node.common_prefix(&1, node), &>=/2)
-    |> Enum.take(bucket_capacity())
+      found_nodes
+      |> Enum.sort_by(&Node.common_prefix(&1, node), &>=/2)
+      |> Enum.take(bucket_capacity())
+    end
   end
 
   @doc """
