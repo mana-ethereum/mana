@@ -35,11 +35,6 @@ defmodule ExWire.Handler.FindNeighbours do
       nodes: neighbours,
       timestamp: params.timestamp
     }
-
-    %Neighbours{
-      nodes: neighbours,
-      timestamp: params.timestamp
-    }
   end
 
   @spec fetch_neighbours(Params.t(), Keyword.t()) :: [Neighbour.t()]

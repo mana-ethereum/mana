@@ -39,6 +39,12 @@ defmodule ExWire.Kademlia.Server do
     {:noreply, %{routing_table: updated_table}}
   end
 
+  def handle_cast({:handle_neighbours, neighbours}, %{routing_table: table}) do
+    updated_table = RoutingTable.handle_neighbours(table, neighbours)
+
+    {:noreply, %{routing_table: updated_table}}
+  end
+
   def handle_call(:routing_table, _from, state = %{routing_table: routing_table}) do
     {:reply, routing_table, state}
   end

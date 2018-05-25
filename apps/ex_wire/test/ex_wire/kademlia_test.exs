@@ -5,9 +5,10 @@ defmodule ExWire.KademliaTest do
   alias ExWire.Kademlia.{Server, RoutingTable, Node}
   alias ExWire.Adapter.UDP
   alias ExWire.Network
-  alias ExWire.Message.{Pong, FindNeighbours}
+  alias ExWire.Message.{Pong, FindNeighbours, Neighbours}
   alias ExWire.Handler.Params
   alias ExWire.Util.Timestamp
+  alias ExWire.Struct.Neighbour
 
   setup_all do
     node = TestHelper.random_node()
@@ -26,7 +27,7 @@ defmodule ExWire.KademliaTest do
         name: :kademlia
       )
 
-    :ok
+    {:ok, %{kademlia_process_name: :kademlia}}
   end
 
   describe "refresh_node/2" do
@@ -101,6 +102,26 @@ defmodule ExWire.KademliaTest do
       Kademlia.refresh_node(node)
 
       assert find_neighbours |> Kademlia.neighbours(node.endpoint) |> Enum.member?(node)
+    end
+  end
+
+  describe "handle_neighbours/2" do
+    test "pings node from request", %{kademlia_process_name: kademlia_process_name} do
+      node = TestHelper.random_node()
+      neighbour = %Neighbour{node: node.public_key, endpoint: node.endpoint}
+      neighbours_message = %Neighbours{nodes: [neighbour], timestamp: Timestamp.now() + 5}
+
+      Kademlia.handle_neighbours(neighbours_message, process_name: kademlia_process_name)
+
+      table = Kademlia.routing_table(process_name: kademlia_process_name)
+
+      expected_pong_nodes =
+        table.expected_pongs
+        |> Enum.map(fn {_key, value} ->
+          value
+        end)
+
+      assert Enum.member?(expected_pong_nodes, node)
     end
   end
 end

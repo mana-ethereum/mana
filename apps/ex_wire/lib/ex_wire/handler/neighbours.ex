@@ -2,8 +2,6 @@ defmodule ExWire.Handler.Neighbours do
   @moduledoc """
   Module to handle a response to a Neighbours message, which
   should be to add the neighbors to the correct K-Buckets.
-
-  Jim Nabors is way cool.
   """
 
   require Logger
@@ -36,8 +34,7 @@ defmodule ExWire.Handler.Neighbours do
   def handle(params, options \\ []) do
     neighbours = Neighbours.decode(params.data)
 
-    # TODO: Add to buckets
-    Logger.warn("Got neighbours: #{inspect(neighbours.nodes)}")
+    Kademlia.handle_neighbours(neighbours, process_name: options[:kademlia_process_name])
 
     :no_response
   end

@@ -4,7 +4,7 @@ defmodule ExWire.Kademlia do
   """
 
   alias ExWire.Kademlia.{Server, Node, RoutingTable}
-  alias ExWire.Message.{Pong, FindNeighbours}
+  alias ExWire.Message.{Pong, FindNeighbours, Neighbours}
   alias ExWire.Handler.Params
   alias ExWire.Struct.Endpoint
 
@@ -21,7 +21,7 @@ defmodule ExWire.Kademlia do
   @doc """
   Handles pong message (adds a node to routing table etc).
   """
-  @spec handle_pong(Pong.t(), Params.t()) :: :ok
+  @spec handle_pong(Pong.t(), Params.t(), Keyword.t()) :: :ok
   def handle_pong(pong = %Pong{}, params = %Params{}, opts \\ []) do
     opts
     |> process_name()
@@ -31,7 +31,7 @@ defmodule ExWire.Kademlia do
   @doc """
   Handles ping message (by adding a node to routing table etc).
   """
-  @spec handle_pong(Pong.t(), Params.t()) :: :ok
+  @spec handle_ping(Params.t(), Keyword.t()) :: :ok
   def handle_ping(params = %Params{}, opts \\ []) do
     opts
     |> process_name()
@@ -56,6 +56,16 @@ defmodule ExWire.Kademlia do
     opts
     |> process_name()
     |> GenServer.call({:neighbours, find_neighbours, endpoint})
+  end
+
+  @doc """
+  Receives neighbours request and ping each of them if request is not expired.
+  """
+  @spec handle_neighbours(Neighbours.t(), Keyword.t()) :: :ok
+  def handle_neighbours(neighbours, opts \\ []) do
+    opts
+    |> process_name()
+    |> GenServer.cast({:handle_neighbours, neighbours})
   end
 
   @spec process_name(Keyword.t()) :: atom()

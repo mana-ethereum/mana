@@ -268,7 +268,7 @@ defmodule ExWire.Kademlia.RoutingTableTest do
           value
         end)
 
-      assert Enum.count(expected_pong_nodes) == 0
+      assert Enum.empty?(expected_pong_nodes)
     end
   end
 end
