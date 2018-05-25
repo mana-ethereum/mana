@@ -3,9 +3,8 @@ defmodule ExWire.Handler.Ping do
   Module to handle a respond to a Ping message, which generate a Pong response.
   """
 
-  alias ExWire.Handler
+  alias ExWire.{Handler, Kademlia}
   alias ExWire.Message.{Pong, Ping}
-  alias ExWire.Kademlia
 
   @doc """
   Handler for a Ping message.

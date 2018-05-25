@@ -201,13 +201,18 @@ defmodule ExWire.Kademlia.RoutingTableTest do
       assert List.first(neighbours) == node
     end
 
-    test "returns neighbours based on xor distance" do
+    test "returns neighbours based on common_prefix distance" do
       table = TestHelper.random_routing_table(port: 35249)
       node = TestHelper.random_node()
+      naive_neighbours =
+        table.buckets
+        |> Enum.flat_map(fn bucket -> bucket.nodes end)
+        |> Enum.sort_by(&Node.common_prefix(&1, node), &>=/2)
+        |> Enum.take(KademliaConfig.bucket_size())
 
       neighbours = table |> RoutingTable.neighbours(node)
 
-      assert Enum.count(neighbours) == KademliaConfig.bucket_size()
+      assert neighbours == naive_neighbours
     end
   end
 end

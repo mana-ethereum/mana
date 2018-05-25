@@ -114,7 +114,7 @@ defmodule ExWire.Kademlia.RoutingTable do
     found_nodes = traverse(table, bucket_idx) ++ nearest_neighbors
 
     found_nodes
-    |> Enum.sort_by(&Node.distance(&1, node))
+    |> Enum.sort_by(&Node.common_prefix(&1, node), &>=/2)
     |> Enum.take(bucket_capacity())
   end
 
