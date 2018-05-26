@@ -25,7 +25,7 @@ defmodule ExWire.Handler.Pong do
   def handle(params, options \\ []) do
     pong = Pong.decode(params.data)
 
-    Kademlia.handle_pong(pong, params, process_name: options[:kademlia_process_name])
+    Kademlia.handle_pong(pong, process_name: options[:kademlia_process_name])
 
     :no_response
   end

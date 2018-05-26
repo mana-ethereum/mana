@@ -21,11 +21,11 @@ defmodule ExWire.Kademlia do
   @doc """
   Handles pong message (adds a node to routing table etc).
   """
-  @spec handle_pong(Pong.t(), Params.t(), Keyword.t()) :: :ok
-  def handle_pong(pong = %Pong{}, params = %Params{}, opts \\ []) do
+  @spec handle_pong(Pong.t(), Keyword.t()) :: :ok
+  def handle_pong(pong = %Pong{}, opts \\ []) do
     opts
     |> process_name()
-    |> GenServer.cast({:handle_pong, pong, params})
+    |> GenServer.cast({:handle_pong, pong})
   end
 
   @doc """
@@ -36,6 +36,16 @@ defmodule ExWire.Kademlia do
     opts
     |> process_name()
     |> GenServer.cast({:handle_ping, params})
+  end
+
+  @doc """
+  Sends ping to a node saving it to expected pongs.
+  """
+  @spec ping(Node.t(), Keyword.t()) :: :ok
+  def ping(node = %Node{}, opts \\ []) do
+    opts
+    |> process_name()
+    |> GenServer.cast({:ping, node})
   end
 
   @doc """

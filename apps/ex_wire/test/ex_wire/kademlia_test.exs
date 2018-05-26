@@ -43,28 +43,21 @@ defmodule ExWire.KademliaTest do
   end
 
   describe "handle_pong/3" do
-    test "adds a node from pong to routing table" do
-      pong = %Pong{to: TestHelper.random_endpoint(), timestamp: Timestamp.now() + 5, hash: "hey"}
+    test "adds a node from pong to routing table", %{kademlia_process_name: kademlia_process_name} do
+      node = TestHelper.random_node()
+      Kademlia.ping(node, process_name: kademlia_process_name)
+      table = Kademlia.routing_table(process_name: kademlia_process_name)
 
-      params = %Params{
-        remote_host: %ExWire.Struct.Endpoint{ip: [1, 2, 3, 4], udp_port: 55},
-        signature:
-          <<193, 30, 149, 122, 226, 192, 230, 158, 118, 204, 173, 80, 63, 232, 67, 152, 216, 249,
-            89, 52, 162, 92, 233, 201, 177, 108, 63, 120, 152, 134, 149, 220, 73, 198, 29, 93,
-            218, 123, 50, 70, 8, 202, 17, 171, 67, 245, 70, 235, 163, 158, 201, 246, 223, 114,
-            168, 7, 7, 95, 9, 53, 165, 8, 177, 13>>,
-        recovery_id: 1,
-        hash: <<5>>,
-        data:
-          [1, [<<1, 2, 3, 4>>, <<>>, <<5>>], [<<5, 6, 7, 8>>, <<6>>, <<>>], 4] |> ExRLP.encode(),
-        timestamp: 123,
-        type: 2
-      }
+      mdc =
+        table.expected_pongs
+        |> Enum.filter(fn {_key, {value, _}} -> value == node end)
+        |> Enum.map(fn {key, _} -> key end)
+        |> List.first()
 
-      Kademlia.handle_pong(pong, params)
+      pong = %Pong{to: TestHelper.random_endpoint(), timestamp: Timestamp.now() + 5, hash: mdc}
+      Kademlia.handle_pong(pong, process_name: kademlia_process_name)
 
-      node = Node.from_handler_params(params)
-      table = Kademlia.routing_table()
+      table = Kademlia.routing_table(process_name: kademlia_process_name)
       assert table |> RoutingTable.member?(node)
     end
   end
@@ -117,7 +110,7 @@ defmodule ExWire.KademliaTest do
 
       expected_pong_nodes =
         table.expected_pongs
-        |> Enum.map(fn {_key, value} ->
+        |> Enum.map(fn {_key, {value, _}} ->
           value
         end)
 

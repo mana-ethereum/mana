@@ -84,27 +84,18 @@ defmodule ExWire.Kademlia.RoutingTableTest do
       assert table == updated_table
     end
 
-    test "adds a new node from pong", %{table: table} do
-      pong = %Pong{to: TestHelper.random_endpoint(), timestamp: Timestamp.now() + 5, hash: "hey"}
+    test "adds pinged node if pong was received", %{table: table} do
+      node = TestHelper.random_node()
+      table = RoutingTable.ping(table, node)
+      mdc = table.expected_pongs |> Enum.map(fn {key, _value} -> key end) |> List.first()
 
-      params = %Params{
-        remote_host: %ExWire.Struct.Endpoint{ip: [1, 2, 3, 4], udp_port: 55},
-        signature:
-          <<193, 30, 149, 122, 226, 192, 230, 158, 118, 204, 173, 80, 63, 232, 67, 152, 216, 249,
-            89, 52, 162, 92, 233, 201, 177, 108, 63, 120, 152, 134, 149, 220, 73, 198, 29, 93,
-            218, 123, 50, 70, 8, 202, 17, 171, 67, 245, 70, 235, 163, 158, 201, 246, 223, 114,
-            168, 7, 7, 95, 9, 53, 165, 8, 177, 13>>,
-        recovery_id: 1,
-        hash: <<5>>,
-        data:
-          [1, [<<1, 2, 3, 4>>, <<>>, <<5>>], [<<5, 6, 7, 8>>, <<6>>, <<>>], 4] |> ExRLP.encode(),
-        timestamp: 123,
-        type: 1
+      pong = %Pong{
+        to: table.current_node.endpoint,
+        timestamp: Timestamp.now() + 5,
+        hash: mdc
       }
 
-      updated_table = RoutingTable.handle_pong(table, pong, params)
-
-      node = Node.from_handler_params(params)
+      updated_table = RoutingTable.handle_pong(table, pong)
       assert RoutingTable.member?(updated_table, node)
     end
 
@@ -245,7 +236,7 @@ defmodule ExWire.Kademlia.RoutingTableTest do
 
       expected_pong_nodes =
         updated_table.expected_pongs
-        |> Enum.map(fn {_key, value} ->
+        |> Enum.map(fn {_key, {value, _}} ->
           value
         end)
 
