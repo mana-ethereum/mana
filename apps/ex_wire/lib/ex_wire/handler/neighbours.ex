@@ -8,6 +8,7 @@ defmodule ExWire.Handler.Neighbours do
 
   alias ExWire.Handler
   alias ExWire.Message.Neighbours
+  alias ExWire.Kademlia
 
   @doc """
   Handler for a Neighbours message.
