@@ -11,14 +11,15 @@ defmodule ExWire.Kademlia.RoutingTable do
   alias ExWire.Handler.Params
   alias ExWire.Struct.Endpoint
 
-  defstruct [:current_node, :buckets, :network_client_name, :expected_pongs]
+  defstruct [:current_node, :buckets, :network_client_name, :expected_pongs, :discovery_nodes]
 
   @type expected_pongs :: %{required(binary()) => {Node.t(), Node.t()}}
   @type t :: %__MODULE__{
           current_node: Node.t(),
           buckets: [Bucket.t()],
           network_client_name: pid() | atom(),
-          expected_pongs: expected_pongs()
+          expected_pongs: expected_pongs(),
+          discovery_nodes: [Node.t()]
         }
 
   @doc """
@@ -53,7 +54,8 @@ defmodule ExWire.Kademlia.RoutingTable do
       current_node: node,
       buckets: initial_buckets,
       network_client_name: client_pid,
-      expected_pongs: %{}
+      expected_pongs: %{},
+      discovery_nodes: []
     }
   end
 
@@ -129,6 +131,19 @@ defmodule ExWire.Kademlia.RoutingTable do
   end
 
   @doc """
+  Returns current node's discovery nodes. Basically it just finds the closest to current node
+  nodes and filters nodes that were already used for node discovery.
+  """
+  @spec discovery_nodes(t()) :: [Node.t()]
+  def discovery_nodes(table) do
+    table
+    |> traverse(buckets_count() - 1)
+    |> Enum.reject(fn node ->
+      Enum.member?(table.discovery_nodes, node)
+    end)
+  end
+
+  @doc """
   Checks if node exists in routing table.
   """
   @spec member?(t(), Node.t()) :: boolean()
@@ -186,9 +201,6 @@ defmodule ExWire.Kademlia.RoutingTable do
       case node do
         {removal_candidate, _insertion_candidate} ->
           refresh_node(table, removal_candidate)
-
-        pinged_node = %Node{} ->
-          refresh_node(table, pinged_node)
 
         _ ->
           table

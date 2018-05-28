@@ -262,4 +262,17 @@ defmodule ExWire.Kademlia.RoutingTableTest do
       assert Enum.empty?(expected_pong_nodes)
     end
   end
+
+  describe "discovery_nodes/1" do
+    test "returns not used discovery nodes", %{table: table} do
+      node1 = TestHelper.random_node()
+      node2 = TestHelper.random_node()
+      table =
+        %{table | discovery_nodes: [node1]}
+        |> RoutingTable.refresh_node(node1)
+        |> RoutingTable.refresh_node(node2)
+
+      assert [node2] == RoutingTable.discovery_nodes(table)
+    end
+  end
 end
