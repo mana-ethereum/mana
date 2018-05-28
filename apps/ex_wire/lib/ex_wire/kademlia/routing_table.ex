@@ -11,7 +11,14 @@ defmodule ExWire.Kademlia.RoutingTable do
   alias ExWire.Handler.Params
   alias ExWire.Struct.Endpoint
 
-  defstruct [:current_node, :buckets, :network_client_name, :expected_pongs, :discovery_nodes]
+  defstruct [
+    :current_node,
+    :buckets,
+    :network_client_name,
+    :expected_pongs,
+    :discovery_nodes,
+    :discovery_round
+  ]
 
   @type expected_pongs :: %{required(binary()) => {Node.t(), Node.t()}}
   @type t :: %__MODULE__{
@@ -19,7 +26,8 @@ defmodule ExWire.Kademlia.RoutingTable do
           buckets: [Bucket.t()],
           network_client_name: pid() | atom(),
           expected_pongs: expected_pongs(),
-          discovery_nodes: [Node.t()]
+          discovery_nodes: [Node.t()],
+          discovery_round: integer()
         }
 
   @doc """
@@ -55,7 +63,8 @@ defmodule ExWire.Kademlia.RoutingTable do
       buckets: initial_buckets,
       network_client_name: client_pid,
       expected_pongs: %{},
-      discovery_nodes: []
+      discovery_nodes: [],
+      discovery_round: 0
     }
   end
 
@@ -141,6 +150,7 @@ defmodule ExWire.Kademlia.RoutingTable do
     |> Enum.reject(fn node ->
       Enum.member?(table.discovery_nodes, node)
     end)
+    |> Enum.take(KademliaConfig.concurrency())
   end
 
   @doc """

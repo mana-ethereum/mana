@@ -7,18 +7,12 @@ defmodule ExWire.Kademlia.RoutingTableTest do
   alias ExWire.Kademlia.Config, as: KademliaConfig
   alias ExWire.Message.{Pong, FindNeighbours, Neighbours}
   alias ExWire.TestHelper
-  alias ExWire.Adapter.UDP
-  alias ExWire.Network
   alias ExWire.Util.Timestamp
   alias ExWire.Handler.Params
   alias ExWire.Struct.Neighbour
 
   setup_all do
-    {:ok, network_client_pid} =
-      UDP.start_link(network_module: {Network, []}, port: 35349, name: :routing_table_test)
-
-    node = TestHelper.random_node()
-    table = RoutingTable.new(node, network_client_pid)
+    table = TestHelper.random_empty_table()
 
     {:ok, %{table: table}}
   end
@@ -267,6 +261,7 @@ defmodule ExWire.Kademlia.RoutingTableTest do
     test "returns not used discovery nodes", %{table: table} do
       node1 = TestHelper.random_node()
       node2 = TestHelper.random_node()
+
       table =
         %{table | discovery_nodes: [node1]}
         |> RoutingTable.refresh_node(node1)

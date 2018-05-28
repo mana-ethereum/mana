@@ -22,6 +22,17 @@ defmodule ExWire.TestHelper do
     end)
   end
 
+  def random_empty_table do
+    {:ok, network_client_pid} =
+      UDP.start_link(
+        network_module: {Network, []},
+        port: random_port_number(),
+        name: :routing_table_test
+      )
+
+    RoutingTable.new(random_node(), network_client_pid)
+  end
+
   def random_node do
     Node.new(public_key(), random_endpoint())
   end

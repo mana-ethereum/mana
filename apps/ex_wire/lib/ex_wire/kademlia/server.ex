@@ -5,7 +5,7 @@ defmodule ExWire.Kademlia.Server do
 
   @default_process_name KademliaState
 
-  alias ExWire.Kademlia.{RoutingTable, Node}
+  alias ExWire.Kademlia.{RoutingTable, Node, Discovery}
 
   def start_link(params) do
     name = params[:name] || @default_process_name
@@ -16,7 +16,10 @@ defmodule ExWire.Kademlia.Server do
   end
 
   def init({current_node = %Node{}, network_client_name}) do
-    routing_table = RoutingTable.new(current_node, network_client_name)
+    routing_table =
+      current_node
+      |> RoutingTable.new(network_client_name)
+      |> Discovery.start()
 
     {:ok, %{routing_table: routing_table}}
   end
