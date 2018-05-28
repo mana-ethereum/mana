@@ -1,9 +1,7 @@
 defmodule ExWire.NodeDiscoveryTest do
   use ExUnit.Case, async: true
   alias ExWire.NodeDiscoverySupervisor
-  alias ExWire.Message.Ping
   alias ExWire.Struct.Endpoint
-  alias ExWire.{Config, Network}
   alias ExWire.Adapter.UDP
   alias ExWire.Kademlia
   alias ExWire.Kademlia.{Node, RoutingTable}
@@ -33,21 +31,17 @@ defmodule ExWire.NodeDiscoveryTest do
     {:ok,
      %{
        kademlia_name: kademlia_process_name,
-       udp_name: udp_name,
        supervisor_name: supervisor_name
      }}
   end
 
   test "receives pong from remote node and adds it to local routing table", %{
-    kademlia_name: kademlia_name,
-    udp_name: udp_name
+    kademlia_name: kademlia_name
   } do
-    remote_endpoint = remote_endpoint()
-    current_endpoint = current_endpoint()
-    ping = Ping.new(current_endpoint, remote_endpoint)
+    expected_node = expected_node()
+    Kademlia.ping(expected_node, process_name: kademlia_name)
 
-    Network.send(ping, udp_name, remote_endpoint)
-    Process.sleep(1000)
+    Process.sleep(1_000)
 
     routing_table = Kademlia.routing_table(process_name: kademlia_name)
     assert RoutingTable.member?(routing_table, expected_node())
@@ -70,12 +64,6 @@ defmodule ExWire.NodeDiscoveryTest do
       ip: remote_ip,
       udp_port: remote_peer_port
     }
-  end
-
-  defp current_endpoint do
-    public_ip = Config.public_ip()
-
-    %Endpoint{ip: public_ip, udp_port: 11_116, tcp_port: 11_115}
   end
 
   defp expected_node do
