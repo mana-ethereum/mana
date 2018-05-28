@@ -12,18 +12,26 @@ defmodule ExWire.NodeDiscoverySupervisor do
   alias ExWire.{Network, Config}
   alias ExWire.Struct.Endpoint
 
-  def start_link do
-    Supervisor.start_link(__MODULE__, :ok, name: __MODULE__)
+  def start_link(params \\ []) do
+    supervisor_name = discovery_param(params, :supervisor_name)
+
+    Supervisor.start_link(__MODULE__, params, name: supervisor_name)
   end
 
-  def init(_params) do
-    {udp_module, udp_process_name} = Config.udp_network_adapter()
+  def init(params) do
+    {udp_module, udp_process_name} = discovery_param(params, :network_adapter)
+    kademlia_name = discovery_param(params, :kademlia_process_name)
+    port = discovery_param(params, :port)
 
     children = [
       {KademliaServer,
-       [name: KademliaState, current_node: current_node(), network_client_name: NetworkClient]},
+       [name: kademlia_name, current_node: current_node(), network_client_name: udp_process_name]},
       {udp_module,
-       [name: udp_process_name, network_module: {Network, []}, port: Config.listen_port()]}
+       [
+         name: udp_process_name,
+         network_module: {Network, [kademlia_process_name: kademlia_name]},
+         port: port
+       ]}
     ]
 
     Supervisor.init(children, strategy: :rest_for_one)
@@ -36,5 +44,13 @@ defmodule ExWire.NodeDiscoverySupervisor do
     endpoint = %Endpoint{ip: public_ip, udp_port: udp_port}
 
     Node.new(public_key, endpoint)
+  end
+
+  defp discovery_param(params, key) do
+    params[key] || default_discovery_params()[key]
+  end
+
+  defp default_discovery_params do
+    Config.node_discovery_params()
   end
 end

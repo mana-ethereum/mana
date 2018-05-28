@@ -5,10 +5,11 @@ defmodule ExWire.Kademlia.RoutingTable do
 
   alias ExWire.Kademlia.{Bucket, Node}
   alias ExWire.Kademlia.Config, as: KademliaConfig
-  alias ExWire.Message.{Ping, Pong}
+  alias ExWire.Message.{Ping, Pong, FindNeighbours, Neighbours}
   alias ExWire.{Network, Protocol}
   alias ExWire.Util.Timestamp
   alias ExWire.Handler.Params
+  alias ExWire.Struct.Endpoint
 
   defstruct [:current_node, :buckets, :network_client_name, :expected_pongs]
 
@@ -82,7 +83,7 @@ defmodule ExWire.Kademlia.RoutingTable do
 
     case refresh_node_result do
       {:full_bucket, candidate_for_removal, _bucket} ->
-        handle_full_bucket(table, candidate_for_removal, node)
+        ping(table, candidate_for_removal, node)
 
       {_descr, _node, bucket} ->
         replace_bucket(table, node_bucket_id, bucket)
@@ -107,15 +108,24 @@ defmodule ExWire.Kademlia.RoutingTable do
   @doc """
   Returns neighbours of a specified node.
   """
-  @spec neighbours(t(), Node.t()) :: [Node.t()]
-  def neighbours(table = %__MODULE__{}, node = %Node{}) do
-    bucket_idx = bucket_id(table, node)
-    nearest_neighbors = nodes_at(table, bucket_idx)
-    found_nodes = traverse(table, bucket_idx) ++ nearest_neighbors
+  @spec neighbours(t(), FindNeighbours.t(), Endpoint.t()) :: [Node.t()]
+  def neighbours(
+        table = %__MODULE__{},
+        %FindNeighbours{target: public_key, timestamp: timestamp},
+        endpoint
+      ) do
+    if timestamp < Timestamp.now() do
+      []
+    else
+      node = Node.new(public_key, endpoint)
+      bucket_idx = bucket_id(table, node)
+      nearest_neighbors = nodes_at(table, bucket_idx)
+      found_nodes = traverse(table, bucket_idx) ++ nearest_neighbors
 
-    found_nodes
-    |> Enum.sort_by(&Node.distance(&1, node))
-    |> Enum.take(bucket_capacity())
+      found_nodes
+      |> Enum.sort_by(&Node.common_prefix(&1, node), &>=/2)
+      |> Enum.take(bucket_capacity())
+    end
   end
 
   @doc """
@@ -134,51 +144,78 @@ defmodule ExWire.Kademlia.RoutingTable do
     node |> Node.common_prefix(current_node)
   end
 
+  @doc """
+  Pings a node saving it to expected pongs.
+  """
   @spec ping(t(), Node.t()) :: Network.handler_action()
   def ping(
-        %__MODULE__{
+        table = %__MODULE__{
           current_node: %Node{endpoint: current_endpoint},
           network_client_name: network_client_name
         },
-        %Node{endpoint: remote_endpoint}
+        node = %Node{endpoint: remote_endpoint},
+        replace_candidate \\ nil
       ) do
     ping = Ping.new(current_endpoint, remote_endpoint)
+    {:sent_message, _, encoded_message} = Network.send(ping, network_client_name, remote_endpoint)
 
-    Network.send(ping, network_client_name, remote_endpoint)
+    mdc = Protocol.message_mdc(encoded_message)
+    updated_pongs = Map.put(table.expected_pongs, mdc, {node, replace_candidate})
+
+    %{table | expected_pongs: updated_pongs}
   end
 
   @doc """
-   Handles Pong message.
+  Handles Pong message.
 
    There are three cases:
    - If we were waiting for this pong (it's stored in routing table) and it's not expired,
        we refresh stale node.
-   - If a pong is not expired, we add a node to the routing table.
    - If a pong is expired, we do nothing.
   """
-  @spec handle_pong(t(), Pong.t(), Params.t()) :: t()
+  @spec handle_pong(t(), Pong.t()) :: t()
   def handle_pong(
         table = %__MODULE__{expected_pongs: pongs},
-        %Pong{hash: hash, timestamp: timestamp},
-        params \\ nil
+        %Pong{hash: hash, timestamp: timestamp}
       ) do
-    {node_pair, updated_pongs} = Map.pop(pongs, hash)
+    {node, updated_pongs} = Map.pop(pongs, hash)
 
     table = %{table | expected_pongs: updated_pongs}
 
-    cond do
-      node_pair && timestamp > Timestamp.now() ->
-        {removal_candidate, _insertion_candidate} = node_pair
+    if timestamp > Timestamp.now() do
+      case node do
+        {removal_candidate, _insertion_candidate} ->
+          refresh_node(table, removal_candidate)
 
-        refresh_node(table, removal_candidate)
+        pinged_node = %Node{} ->
+          refresh_node(table, pinged_node)
 
-      params && timestamp > Timestamp.now() ->
-        node = Node.from_handler_params(params)
+        _ ->
+          table
+      end
+    else
+      table
+    end
+  end
 
-        refresh_node(table, node)
+  @spec handle_ping(t(), Params.t()) :: t()
+  def handle_ping(table, params) do
+    add_node_from_params(table, params)
+  end
 
-      true ->
-        table
+  @spec handle_neighbours(t(), Neighbours.t()) :: :ok
+  def handle_neighbours(table, %Neighbours{timestamp: timestamp, nodes: nodes}) do
+    if timestamp > Timestamp.now() do
+      nodes
+      |> Enum.map(fn neighbour ->
+        Node.new(neighbour.node, neighbour.endpoint)
+      end)
+      |> Enum.reject(&member?(table, &1))
+      |> Enum.reduce(table, fn node, acc ->
+        ping(acc, node)
+      end)
+    else
+      table
     end
   end
 
@@ -191,22 +228,16 @@ defmodule ExWire.Kademlia.RoutingTable do
     %{table | buckets: buckets}
   end
 
+  @spec add_node_from_params(t(), Params.t()) :: t()
+  defp add_node_from_params(table, params) do
+    node = Node.from_handler_params(params)
+
+    refresh_node(table, node)
+  end
+
   @spec bucket_at(t(), integer()) :: Bucket.t()
   defp bucket_at(%__MODULE__{buckets: buckets}, id) do
     Enum.at(buckets, id)
-  end
-
-  @spec handle_full_bucket(t(), Node.t(), Node.t()) :: t()
-  defp handle_full_bucket(
-         table = %__MODULE__{expected_pongs: expected_pongs},
-         candidate_for_removal,
-         candidate_for_insertion
-       ) do
-    {:sent_message, _, encoded_message} = ping(table, candidate_for_removal)
-    mdc = Protocol.message_mdc(encoded_message)
-
-    updated_pongs = Map.put(expected_pongs, mdc, {candidate_for_removal, candidate_for_insertion})
-    %{table | expected_pongs: updated_pongs}
   end
 
   @spec traverse(t(), integer(), [Node.t()], integer()) :: [Node.t()]

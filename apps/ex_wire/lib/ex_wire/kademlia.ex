@@ -4,8 +4,9 @@ defmodule ExWire.Kademlia do
   """
 
   alias ExWire.Kademlia.{Server, Node, RoutingTable}
-  alias ExWire.Message.Pong
+  alias ExWire.Message.{Pong, FindNeighbours, Neighbours}
   alias ExWire.Handler.Params
+  alias ExWire.Struct.Endpoint
 
   @doc """
   Adds new node to routing table.
@@ -20,11 +21,31 @@ defmodule ExWire.Kademlia do
   @doc """
   Handles pong message (adds a node to routing table etc).
   """
-  @spec handle_pong(Pong.t(), Params.t()) :: :ok
-  def handle_pong(pong = %Pong{}, params = %Params{}, opts \\ []) do
+  @spec handle_pong(Pong.t(), Keyword.t()) :: :ok
+  def handle_pong(pong = %Pong{}, opts \\ []) do
     opts
     |> process_name()
-    |> GenServer.cast({:handle_pong, pong, params})
+    |> GenServer.cast({:handle_pong, pong})
+  end
+
+  @doc """
+  Handles ping message (by adding a node to routing table etc).
+  """
+  @spec handle_ping(Params.t(), Keyword.t()) :: :ok
+  def handle_ping(params = %Params{}, opts \\ []) do
+    opts
+    |> process_name()
+    |> GenServer.cast({:handle_ping, params})
+  end
+
+  @doc """
+  Sends ping to a node saving it to expected pongs.
+  """
+  @spec ping(Node.t(), Keyword.t()) :: :ok
+  def ping(node = %Node{}, opts \\ []) do
+    opts
+    |> process_name()
+    |> GenServer.cast({:ping, node})
   end
 
   @doc """
@@ -40,11 +61,21 @@ defmodule ExWire.Kademlia do
   @doc """
   Returns neighbours of specified node.
   """
-  @spec neighbours(Node.t(), Keyword.t()) :: [Node.t()]
-  def neighbours(node, opts \\ []) do
+  @spec neighbours(FindNeighbours.t(), Endpoint.t(), Keyword.t()) :: [Node.t()]
+  def neighbours(find_neighbours, endpoint, opts \\ []) do
     opts
     |> process_name()
-    |> GenServer.call({:neighbours, node})
+    |> GenServer.call({:neighbours, find_neighbours, endpoint})
+  end
+
+  @doc """
+  Receives neighbours request and ping each of them if request is not expired.
+  """
+  @spec handle_neighbours(Neighbours.t(), Keyword.t()) :: :ok
+  def handle_neighbours(neighbours, opts \\ []) do
+    opts
+    |> process_name()
+    |> GenServer.cast({:handle_neighbours, neighbours})
   end
 
   @spec process_name(Keyword.t()) :: atom()

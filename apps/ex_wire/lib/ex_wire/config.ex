@@ -4,6 +4,7 @@ defmodule ExWire.Config do
   """
 
   alias Blockchain.Chain
+  alias ExWire.Crypto
   alias ExthCrypto.ECIES.ECDH
   alias ExthCrypto.{Signature, Key}
 
@@ -24,9 +25,9 @@ defmodule ExWire.Config do
     end
   end
 
-  @spec udp_network_adapter() :: atom()
+  @spec udp_network_adapter() :: {atom(), atom()}
   def udp_network_adapter do
-    get_env(:network_adapter)
+    node_discovery_params()[:network_adapter]
   end
 
   @spec public_key() :: binary()
@@ -43,7 +44,7 @@ defmodule ExWire.Config do
 
   @spec node_id() :: ExWire.node_id()
   def node_id do
-    public_key() |> Key.der_to_raw()
+    Crypto.node_id_from_public_key(public_key())
   end
 
   @spec listen_port() :: integer()
@@ -101,6 +102,11 @@ defmodule ExWire.Config do
 
   @spec commitment_count() :: integer()
   def commitment_count, do: get_env!(:commitment_count)
+
+  @spec node_discovery_params() :: Keyword.t()
+  def node_discovery_params do
+    get_env!(:node_discovery)
+  end
 
   @spec get_env!(atom()) :: any()
   defp get_env!(key) do

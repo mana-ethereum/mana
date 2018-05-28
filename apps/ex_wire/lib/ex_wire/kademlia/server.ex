@@ -27,8 +27,26 @@ defmodule ExWire.Kademlia.Server do
     {:noreply, %{routing_table: updated_table}}
   end
 
-  def handle_cast({:handle_pong, pong, params}, %{routing_table: table}) do
-    updated_table = RoutingTable.handle_pong(table, pong, params)
+  def handle_cast({:handle_pong, pong}, %{routing_table: table}) do
+    updated_table = RoutingTable.handle_pong(table, pong)
+
+    {:noreply, %{routing_table: updated_table}}
+  end
+
+  def handle_cast({:handle_ping, params}, %{routing_table: table}) do
+    updated_table = RoutingTable.handle_ping(table, params)
+
+    {:noreply, %{routing_table: updated_table}}
+  end
+
+  def handle_cast({:ping, node}, %{routing_table: table}) do
+    updated_table = RoutingTable.ping(table, node)
+
+    {:noreply, %{routing_table: updated_table}}
+  end
+
+  def handle_cast({:handle_neighbours, neighbours}, %{routing_table: table}) do
+    updated_table = RoutingTable.handle_neighbours(table, neighbours)
 
     {:noreply, %{routing_table: updated_table}}
   end
@@ -37,8 +55,12 @@ defmodule ExWire.Kademlia.Server do
     {:reply, routing_table, state}
   end
 
-  def handle_call({:neighbours, node}, _from, state = %{routing_table: routing_table}) do
-    neighbours = routing_table |> RoutingTable.neighbours(node)
+  def handle_call(
+        {:neighbours, find_neighbours, endpoint},
+        _from,
+        state = %{routing_table: routing_table}
+      ) do
+    neighbours = RoutingTable.neighbours(routing_table, find_neighbours, endpoint)
 
     {:reply, neighbours, state}
   end

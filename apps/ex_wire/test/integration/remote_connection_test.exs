@@ -25,7 +25,7 @@ defmodule ExWire.RemoteConnectionTest do
   @local_peer_port 35353
   @local_tcp_port 36363
 
-  def receive(inbound_message, pid) do
+  def receive(inbound_message, [pid | _]) do
     send(pid, {:inbound_message, inbound_message})
   end
 

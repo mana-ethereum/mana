@@ -3,6 +3,9 @@ defmodule ExWire.Crypto do
   Helper functions for cryptographic functions of RLPx.
   """
 
+  alias ExthCrypto.{Signature, Key}
+  alias ExthCrypto.Hash.Keccak
+
   @type hash :: binary()
   @type signature :: binary()
   @type recovery_id :: integer()
@@ -26,10 +29,10 @@ defmodule ExWire.Crypto do
       iex> ExWire.Crypto.node_id(<<1>>)
       {:error, "Private key size not 32 bytes"}
   """
-  @spec node_id(ExthCrypto.Key.private_key()) :: {:ok, ExWire.node_id()} | {:error, String.t()}
+  @spec node_id(Key.private_key()) :: {:ok, ExWire.node_id()} | {:error, String.t()}
   def node_id(private_key) do
-    case ExthCrypto.Signature.get_public_key(private_key) do
-      {:ok, <<public_key::binary()>>} -> {:ok, public_key |> ExthCrypto.Key.der_to_raw()}
+    case Signature.get_public_key(private_key) do
+      {:ok, <<public_key::binary()>>} -> {:ok, public_key |> Key.der_to_raw()}
       {:error, reason} -> {:error, to_string(reason)}
     end
   end
@@ -97,6 +100,36 @@ defmodule ExWire.Crypto do
   """
   @spec hash(binary()) :: hash
   def hash(data) do
-    ExthCrypto.Hash.Keccak.kec(data)
+    Keccak.kec(data)
+  end
+
+  @doc """
+  Recovers a public key from a given signature for a given digest.
+
+  ## Examples
+      iex> message = <<240, 201, 132, 52, 176, 100, 77, 130, 118, 95, 128, 160, 58, 157, 88,
+      ...>  6, 70, 100, 4, 170, 21, 252, 246, 14, 229, 171, 61, 176, 239, 240, 118, 204,
+      ...>  61, 77, 7, 43, 205, 70, 112, 52, 27, 79, 131, 59, 132, 91, 3, 199, 199>>
+      iex> signature = <<193, 30, 149, 122, 226, 192, 230, 158, 118, 204, 173, 80, 63,
+      ...>   232, 67, 152, 216, 249, 89, 52, 162, 92, 233, 201, 177, 108, 63, 120, 152,
+      ...>   134, 149, 220, 73, 198, 29, 93, 218, 123, 50, 70, 8, 202, 17, 171, 67, 245,
+      ...>   70, 235, 163, 158, 201, 246, 223, 114, 168, 7, 7, 95, 9, 53, 165, 8, 177,
+      ...>   13>>
+      iex> ExWire.Crypto.recover_public_key(message, signature, 1)
+      <<4, 89, 43, 26, 95, 28, 0, 213, 63, 213, 214, 141, 7, 112, 103, 70, 144, 161,
+        213, 121, 174, 81, 195, 152, 74, 11, 239, 198, 197, 199, 108, 83, 254, 219,
+        185, 91, 252, 107, 196, 30, 137, 64, 224, 60, 229, 20, 168, 35, 251, 75, 143,
+        85, 130, 147, 90, 33, 104, 100, 96, 18, 220, 253, 58, 85, 207>>
+  """
+  @spec recover_public_key(binary(), binary(), integer()) :: integer()
+  def recover_public_key(message, signature, recovery_id) do
+    {:ok, public_key} = Signature.recover(message, signature, recovery_id)
+
+    public_key
+  end
+
+  @spec node_id_from_public_key(binary()) :: binary()
+  def node_id_from_public_key(public_key) do
+    Key.der_to_raw(public_key)
   end
 end

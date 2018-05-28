@@ -21,11 +21,11 @@ defmodule ExWire.Handler.Pong do
       ...> })
       :no_response
   """
-  @spec handle(Handler.Params.t()) :: Handler.handler_response()
-  def handle(params) do
+  @spec handle(Params.t(), Keyword.t()) :: Handler.handler_response()
+  def handle(params, options \\ []) do
     pong = Pong.decode(params.data)
 
-    Kademlia.handle_pong(pong, params)
+    Kademlia.handle_pong(pong, process_name: options[:kademlia_process_name])
 
     :no_response
   end

@@ -34,55 +34,20 @@ defmodule ExWire.Network do
   Top-level receiver function to process an incoming message.
   We'll first validate the message, and then pass it to
   the appropriate handler.
-
-  ## Examples
-
-      iex> ping_data = [1, [<<1,2,3,4>>, <<>>, <<5>>], [<<5,6,7,8>>, <<6>>, <<>>], 4] |> ExRLP.encode
-      iex> payload = <<0::512>> <> <<0::8>> <> <<1::8>> <> ping_data
-      iex> hash = ExWire.Crypto.hash(payload)
-      iex> ExWire.Network.receive(%ExWire.Network.InboundMessage{
-      ...>   data: hash <> <<0::512>> <> <<0::8>> <> <<1::8>> <> ping_data,
-      ...>   server_pid: self(),
-      ...>   remote_host: nil,
-      ...>   timestamp: 123,
-      ...> })
-      {
-        :sent_message,
-        ExWire.Message.Pong,
-        <<13, 23, 15, 114, 251, 242, 25, 68, 27, 78, 90, 174, 113, 36, 148, 153, 216,
-          148, 187, 100, 15, 207, 119, 208, 4, 207, 139, 124, 116, 223, 190, 119, 253,
-          177, 0, 115, 136, 159, 247, 246, 255, 31, 165, 159, 142, 51, 241, 17, 150,
-          251, 211, 152, 55, 183, 40, 239, 124, 190, 53, 212, 68, 200, 141, 194, 5, 70,
-          187, 184, 56, 127, 78, 182, 140, 7, 9, 0, 149, 238, 13, 117, 233, 210, 130,
-          75, 91, 15, 111, 218, 23, 174, 189, 146, 218, 87, 237, 214, 0, 2, 236, 201,
-          132, 1, 2, 3, 4, 128, 130, 0, 5, 160, 21, 96, 138, 2, 65, 173, 135, 69, 74,
-          35, 153, 190, 41, 48, 2, 173, 239, 44, 221, 207, 63, 116, 210, 103, 215, 10,
-          87, 14, 174, 165, 52, 168, 123>>
-       }
-
-      iex> ping_data = [1, [<<1,2,3,4>>, <<>>, <<5>>], [<<5,6,7,8>>, <<6>>, <<>>], 4] |> ExRLP.encode
-      iex> payload = <<0::512>> <> <<0::8>> <> <<1::8>> <> ping_data
-      iex> hash = ExWire.Crypto.hash("hello")
-      iex> ExWire.Network.receive(%ExWire.Network.InboundMessage{
-      ...>   data: hash <> payload,
-      ...>   server_pid: self(),
-      ...>   remote_host: nil,
-      ...>   timestamp: 123,
-      ...> })
-      ** (ExWire.Crypto.HashMismatch) Invalid hash
   """
-  @spec receive(InboundMessage.t()) :: handler_action
+  @spec receive(InboundMessage.t(), Keyword.t()) :: handler_action
   def receive(
         inbound_message = %InboundMessage{
           data: data,
           server_pid: _server_pid,
           remote_host: _remote_host,
           timestamp: _timestamp
-        }
+        },
+        options \\ []
       ) do
     :ok = assert_integrity(data)
 
-    handle(inbound_message)
+    handle(inbound_message, options)
   end
 
   @doc """
@@ -105,59 +70,34 @@ defmodule ExWire.Network do
   @doc """
   Function to pass message to the appropriate handler. E.g. for a ping
   we'll pass the decoded message to `ExWire.Handlers.Ping.handle/1`.
-
-  ## Examples
-
-      iex> ping_data = [1, [<<1,2,3,4>>, <<>>, <<5>>], [<<5,6,7,8>>, <<6>>, <<>>], 4] |> ExRLP.encode
-      iex> ExWire.Network.handle(%ExWire.Network.InboundMessage{
-      ...>   data: <<0::256>> <> <<0::512>> <> <<0::8>> <> <<1::8>> <> ping_data,
-      ...>   server_pid: self(),
-      ...>   remote_host: nil,
-      ...>   timestamp: 5,
-      ...> })
-      {
-        :sent_message,
-        ExWire.Message.Pong,
-        <<186, 16, 96, 67, 232, 1, 185, 244, 75, 54, 153, 182, 228, 89, 162, 187, 148,
-          83, 107, 72, 174, 178, 39, 188, 53, 79, 237, 46, 23, 83, 128, 30, 132, 89,
-          76, 186, 158, 17, 193, 10, 32, 11, 133, 71, 74, 2, 12, 55, 145, 203, 212,
-          191, 40, 5, 202, 143, 168, 175, 141, 1, 6, 176, 102, 215, 52, 234, 219, 63,
-          177, 207, 23, 172, 231, 255, 172, 206, 244, 19, 12, 70, 21, 204, 252, 193,
-          87, 79, 107, 0, 28, 179, 239, 159, 96, 16, 11, 135, 1, 2, 204, 201, 132, 1,
-          2, 3, 4, 128, 130, 0, 5, 128, 5>>
-      }
-
-      iex> ExWire.Network.handle(%ExWire.Network.InboundMessage{
-      ...>   data: <<0::256>> <> <<0::512>> <> <<0::8>> <> <<99::8>> <> <<>>,
-      ...>   server_pid: self(),
-      ...>   remote_host: nil,
-      ...>   timestamp: 5,
-      ...> })
-      :no_action
   """
-  @spec handle(InboundMessage.t()) :: handler_action
-  def handle(%InboundMessage{
-        data: <<
-          hash::size(256),
-          signature::size(512),
-          recovery_id::integer-size(8),
-          type::integer-size(8),
-          data::bitstring
-        >>,
-        server_pid: server_pid,
-        remote_host: remote_host,
-        timestamp: timestamp
-      }) do
+  @spec handle(InboundMessage.t(), Keyword.t()) :: handler_action
+  def handle(
+        %InboundMessage{
+          data: <<
+            hash::binary-size(32),
+            signature::binary-size(64),
+            recovery_id::integer-size(8),
+            type::integer-size(8),
+            data::bitstring
+          >>,
+          server_pid: server_pid,
+          remote_host: remote_host,
+          timestamp: timestamp
+        },
+        options \\ []
+      ) do
     params = %Handler.Params{
       remote_host: remote_host,
       signature: signature,
       recovery_id: recovery_id,
       hash: hash,
       data: data,
+      type: type,
       timestamp: timestamp
     }
 
-    case Handler.dispatch(type, params) do
+    case Handler.dispatch(params, options) do
       :not_implemented ->
         :no_action
 

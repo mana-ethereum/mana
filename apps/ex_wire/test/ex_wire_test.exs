@@ -7,7 +7,9 @@ defmodule ExWireTest do
   alias ExWire.Message.Pong
   alias ExWire.Message.Neighbours
   alias ExWire.Message.FindNeighbours
+  alias ExWire.Handler.FindNeighbours, as: FindNeighboursHandler
   alias ExWire.Util.Timestamp
+  alias ExWire.Struct.Endpoint
 
   @them %ExWire.Struct.Endpoint{
     ip: [0, 0, 0, 1],
@@ -56,14 +58,20 @@ defmodule ExWireTest do
 
     fake_send(find_neighbours, timestamp + 1)
 
-    assert_receive_message(%Neighbours{
-      nodes: [],
+    params = %{data: FindNeighbours.encode(find_neighbours), remote_host: %Endpoint{}}
+    neighbours = FindNeighboursHandler.fetch_neighbours(params, [])
+
+    response = %Neighbours{
+      nodes: neighbours,
       timestamp: timestamp + 1
-    })
+    }
+
+    assert_receive_message(response)
   end
 
   def assert_receive_message(message) do
     message = message |> Protocol.encode(ExWire.Config.private_key())
+
     assert_receive(%{data: ^message, to: @us})
   end
 
