@@ -7,15 +7,21 @@ defmodule Blockchain.Genesis do
   alias Blockchain.{Block, Account, Chain}
   alias MerklePatriciaTree.{Trie, DB}
 
+  @type seal_config :: %{
+          mix_hash: binary(),
+          nonce: binary()
+        }
+
+  @type seal :: %{String.t() => seal_config()}
+
   @type t :: %{
+          seal: nil | seal(),
           difficulty: integer(),
           author: EVM.address(),
           timestamp: integer(),
           parent_hash: EVM.hash(),
           extra_data: binary(),
-          gas_limit: EVM.Gas.t(),
-          mix_hash: binary(),
-          nonce: binary()
+          gas_limit: EVM.Gas.t()
         }
 
   @doc """
@@ -80,8 +86,8 @@ defmodule Blockchain.Genesis do
       beneficiary: genesis[:author],
       difficulty: genesis[:difficulty],
       gas_limit: genesis[:gas_limit],
-      mix_hash: genesis[:mix_hash],
-      nonce: genesis[:nonce]
+      mix_hash: genesis[:seal][:ethereum][:mix_hash],
+      nonce: genesis[:seal][:ethereum][:nonce]
     }
   end
 
