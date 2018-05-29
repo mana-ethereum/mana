@@ -8,6 +8,8 @@ defmodule ExWire.Message.FindNeighbours do
   @behaviour ExWire.Message
   @message_id 0x03
 
+  alias ExWire.Util.Timestamp
+
   defstruct target: nil,
             timestamp: nil
 
@@ -18,6 +20,16 @@ defmodule ExWire.Message.FindNeighbours do
 
   @spec message_id() :: ExWire.Message.message_id()
   def message_id, do: @message_id
+
+  @doc """
+  Constructs new FindNeighbours message struct
+  """
+  def new(node_id) do
+    %__MODULE__{
+      target: node_id,
+      timestamp: Timestamp.soon()
+    }
+  end
 
   @doc """
   Decodes a given message binary, which is assumed

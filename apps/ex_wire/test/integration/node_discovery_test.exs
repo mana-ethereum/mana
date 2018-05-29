@@ -5,6 +5,8 @@ defmodule ExWire.NodeDiscoveryTest do
   alias ExWire.Adapter.UDP
   alias ExWire.Kademlia
   alias ExWire.Kademlia.{Node, RoutingTable}
+  alias ExWire.Message.FindNeighbours
+  alias ExWire.{Network, Config}
 
   @moduletag integration: true
   @moduletag network: true
@@ -31,7 +33,8 @@ defmodule ExWire.NodeDiscoveryTest do
     {:ok,
      %{
        kademlia_name: kademlia_process_name,
-       supervisor_name: supervisor_name
+       supervisor_name: supervisor_name,
+       udp_name: udp_name
      }}
   end
 
@@ -45,6 +48,22 @@ defmodule ExWire.NodeDiscoveryTest do
 
     routing_table = Kademlia.routing_table(process_name: kademlia_name)
     assert RoutingTable.member?(routing_table, expected_node())
+  end
+
+  test "request neighbours from remote node and pings received nodes", %{
+    kademlia_name: kademlia_name,
+    udp_name: udp_name
+  } do
+    find_neighbours = FindNeighbours.new(Config.node_id())
+
+    Network.send(find_neighbours, udp_name, remote_endpoint())
+
+    Process.sleep(2_000)
+
+    routing_table = Kademlia.routing_table(process_name: kademlia_name)
+    pings_count = routing_table.expected_pongs |> Map.values() |> Enum.count()
+
+    assert pings_count > 0
   end
 
   defp remote_endpoint do
