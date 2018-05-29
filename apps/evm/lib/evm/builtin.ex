@@ -6,8 +6,8 @@ defmodule EVM.Builtin do
 
   TODO: Implement and add doc tests.
   """
-  @rip160 600 + 120
-
+  @g_rip160_base 600
+  @g_rip160_byte 120
   @g_sha256 60 + 12
   @g_identity_base 15
   @g_identity_byte 3
@@ -53,7 +53,7 @@ defmodule EVM.Builtin do
   @spec run_rip160(EVM.Gas.t(), EVM.ExecEnv.t()) ::
           {EVM.Gas.t(), EVM.SubState.t(), EVM.ExecEnv.t(), EVM.VM.output()}
   def run_rip160(gas, exec_env = %EVM.ExecEnv{data: data}) do
-    used_gas = @rip160 * MathHelper.bits_to_words(byte_size(data))
+    used_gas = @g_rip160_base + @g_rip160_byte * MathHelper.bits_to_words(byte_size(data))
 
     if(used_gas < gas) do
       remaining_gas = gas - used_gas
