@@ -4,6 +4,8 @@ defmodule ExWire.Kademlia.Discovery do
   """
 
   alias ExWire.Kademlia.{RoutingTable, Node}
+  alias ExWire.Message.FindNeighbours
+  alias ExWire.Network
 
   @doc """
   Starts discovery round.
@@ -33,8 +35,9 @@ defmodule ExWire.Kademlia.Discovery do
   end
 
   @spec find_neighbours(RoutingTable.t(), Node.t()) :: :ok
-  defp find_neighbours(_table, _node) do
-    # TODO send actual request
-    :ok
+  defp find_neighbours(table, node) do
+    find_neighbours = FindNeighbours.new(table.current_node.public_key)
+
+    Network.send(find_neighbours, table.network_client_name, node.endpoint)
   end
 end

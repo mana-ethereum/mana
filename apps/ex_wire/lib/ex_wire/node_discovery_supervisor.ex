@@ -40,7 +40,7 @@ defmodule ExWire.NodeDiscoverySupervisor do
   def current_node do
     udp_port = Config.listen_port()
     public_ip = Config.public_ip()
-    public_key = Config.public_key()
+    public_key = Config.node_id()
     endpoint = %Endpoint{ip: public_ip, udp_port: udp_port}
 
     Node.new(public_key, endpoint)
