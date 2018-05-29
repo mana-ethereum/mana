@@ -131,7 +131,9 @@ defmodule ExWire.Kademlia.RoutingTable do
       node = Node.new(public_key, endpoint)
       bucket_idx = bucket_id(table, node)
       nearest_neighbors = nodes_at(table, bucket_idx)
-      found_nodes = traverse(table, bucket_idx) ++ nearest_neighbors
+
+      found_nodes =
+        traverse(table, bucket_id: bucket_idx, number: bucket_capacity()) ++ nearest_neighbors
 
       found_nodes
       |> Enum.sort_by(&Node.common_prefix(&1, node), &>=/2)
@@ -145,12 +147,20 @@ defmodule ExWire.Kademlia.RoutingTable do
   """
   @spec discovery_nodes(t()) :: [Node.t()]
   def discovery_nodes(table) do
-    table
-    |> traverse(buckets_count() - 1)
-    |> Enum.reject(fn node ->
-      Enum.member?(table.discovery_nodes, node)
-    end)
-    |> Enum.take(KademliaConfig.concurrency())
+    filter = fn node ->
+      !Enum.member?(table.discovery_nodes, node)
+    end
+
+    nodes_number = KademliaConfig.concurrency()
+    closest_bucket_id = buckets_count() - 1
+    travers_opts = [bucket_id: closest_bucket_id, filter: filter, number: nodes_number]
+
+    nearest_neighbors = nodes_at(table, closest_bucket_id)
+    found_nodes = traverse(table, travers_opts) ++ nearest_neighbors
+
+    found_nodes
+    |> Enum.sort_by(&Node.common_prefix(&1, table.current_node), &>=/2)
+    |> Enum.take(nodes_number)
   end
 
   @doc """
@@ -262,8 +272,14 @@ defmodule ExWire.Kademlia.RoutingTable do
     Enum.at(buckets, id)
   end
 
-  @spec traverse(t(), integer(), [Node.t()], integer()) :: [Node.t()]
-  defp traverse(table, bucket_id, acc \\ [], step \\ 1) do
+  @spec traverse(t(), Keyword.t()) :: [Node.t()]
+  defp traverse(table, opts) do
+    bucket_id = Keyword.fetch!(opts, :bucket_id)
+    acc = opts[:acc] || []
+    step = opts[:step] || 1
+    required_nodes = opts[:number] || bucket_capacity()
+    filter_function = opts[:filter]
+
     left_boundary = bucket_id - step
     right_boundary = bucket_id + step
     is_out_of_left_boundary = left_boundary < 0
@@ -271,14 +287,24 @@ defmodule ExWire.Kademlia.RoutingTable do
 
     left_nodes = if is_out_of_left_boundary, do: [], else: table |> nodes_at(left_boundary)
     right_nodes = if is_out_of_right_boundary, do: [], else: table |> nodes_at(right_boundary)
+    found_nodes = left_nodes ++ right_nodes
 
-    acc = acc ++ left_nodes ++ right_nodes
+    filtered_nodes =
+      if filter_function,
+        do: Enum.filter(found_nodes, fn el -> filter_function.(el) end),
+        else: found_nodes
 
-    if (is_out_of_left_boundary && is_out_of_right_boundary) ||
-         Enum.count(acc) > bucket_capacity() do
+    acc = acc ++ filtered_nodes
+
+    if (is_out_of_left_boundary && is_out_of_right_boundary) || Enum.count(acc) > required_nodes do
       acc
     else
-      traverse(table, bucket_id, acc, step + 1)
+      opts =
+        opts
+        |> Keyword.put(:step, step + 1)
+        |> Keyword.put(:acc, acc)
+
+      traverse(table, opts)
     end
   end
 
