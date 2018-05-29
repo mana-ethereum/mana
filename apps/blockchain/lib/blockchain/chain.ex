@@ -28,23 +28,35 @@ defmodule Blockchain.Chain do
               minimum_difficulty: integer(),
               difficulty_bound_divisor: integer(),
               duration_limit: integer(),
+              block_reward: integer(),
               homestead_transition: integer(),
-              eip150_transition: integer(),
-              eip160_transition: integer(),
-              eip161abc_transition: integer(),
-              eip161d_transition: integer(),
-              max_code_size: integer()
+              eip649_reward: integer(),
+              eip100b_transition: integer(),
+              eip649_transition: integer()
             }
           },
           params: %{
             gas_limit_bound_divisor: integer(),
-            block_reward: integer(),
+            registrar: EVM.address(),
             account_start_nonce: integer(),
             maximum_extra_data_size: integer(),
             min_gas_limit: integer(),
+            network_id: integer(),
+            fork_block: integer(),
+            fork_canonHash: EVM.hash(),
+            max_code_size: integer(),
+            max_code_size_transition: integer(),
+            eip150_transition: integer(),
+            eip160_transition: integer(),
+            eip161abc_transition: integer(),
+            eip161d_transition: integer(),
             eip155_transition: integer(),
             eip98_transition: integer(),
-            eip86_transition: integer()
+            eip86_transition: integer(),
+            eip140_transition: integer(),
+            eip211_transition: integer(),
+            eip214_transition: integer(),
+            eip658_transition: integer()
           },
           genesis: Genesis.t(),
           nodes: [String.t()],
@@ -80,90 +92,121 @@ defmodule Blockchain.Chain do
   def load_chain(chain) do
     chain_data = read_chain!(chain)
 
+    engine =
+      chain_data["engine"]
+      |> Enum.map(&get_engine/1)
+      |> Enum.into(%{})
+
+    accounts =
+      chain_data["accounts"]
+      |> Enum.map(&get_account/1)
+      |> Enum.into(%{})
+
     %__MODULE__{
       name: chain_data["name"],
-      engine: get_engine(chain_data["engine"]),
+      engine: engine,
       params: get_params(chain_data["params"]),
       genesis: get_genesis(chain_data["genesis"]),
       nodes: chain_data["nodes"],
-      accounts: get_accounts(chain_data["accounts"])
+      accounts: accounts
     }
   end
 
-  defp get_engine(engine_map) do
-    for {engine, %{"params" => params}} <- engine_map do
-      {engine,
-       %{
-         minimum_difficulty: params["minimumDifficulty"] |> load_hex,
-         difficulty_bound_divisor: params["difficultyBoundDivisor"] |> load_hex,
-         duration_limit: params["durationLimit"] |> load_hex,
-         homestead_transition: params["homesteadTransition"],
-         eip150_transition: params["eip150Transition"],
-         eip160_transition: params["eip160Transition"],
-         eip161abc_transition: params["eip161abcTransition"],
-         eip161d_transition: params["eip161dTransition"],
-         max_code_size: params["maxCodeSize"]
-       }}
-    end
-    |> Enum.into(%{})
+  defp get_engine({engine, %{"params" => params}}) do
+    config = %{
+      minimum_difficulty: params["minimumDifficulty"] |> load_hex(),
+      difficulty_bound_divisor: params["difficultyBoundDivisor"] |> load_hex(),
+      duration_limit: params["durationLimit"] |> load_hex(),
+      block_reward: params["blockReward"] |> load_hex(),
+      homestead_transition: params["homesteadTransition"] |> load_hex(),
+      eip649_reward: params["eip649Reward"] |> load_hex(),
+      eip100b_transition: params["eip100bTransition"] |> load_hex(),
+      eip649_transition: params["eip649Transition"] |> load_hex()
+    }
+
+    {engine, config}
   end
 
-  defp get_params(params_map) do
+  defp get_params(map) do
     %{
-      gas_limit_bound_divisor: params_map["gasLimitBoundDivisor"] |> load_hex,
-      block_reward: params_map["blockReward"] |> load_hex,
-      account_start_nonce: params_map["accountStartNonce"] |> load_hex,
-      maximum_extra_data_size: params_map["maximumExtraDataSize"] |> load_hex,
-      min_gas_limit: params_map["minGasLimit"] |> load_hex,
-      eip155_transition: params_map["eip155Transition"],
-      eip98_transition: params_map["eip98Transition"] |> load_hex,
-      eip86_transition: params_map["eip86Transition"] |> load_hex
+      gas_limit_bound_divisor: map["gasLimitBoundDivisor"] |> load_hex(),
+      registrar: map["registrar"] |> load_address(),
+      account_start_nonce: map["accountStartNonce"] |> load_hex(),
+      maximum_extra_data_size: map["maximumExtraDataSize"] |> load_hex(),
+      min_gas_limit: map["minGasLimit"] |> load_hex(),
+      network_id: map["networkID"] |> load_hex(),
+      fork_block: map["forkBlock"] |> load_hex(),
+      fork_canon_hash: map["forkCanonHash"] |> load_hex(),
+      max_code_size: map["maxCodeSize"] |> load_hex(),
+      max_code_size_transition: map["maxCodeSizeTransition"] |> load_hex(),
+      eip150_transition: map["eip150Transition"] |> load_hex(),
+      eip160_transition: map["eip160Transition"] |> load_hex(),
+      eip161abc_transition: map["eip161abcTransition"] |> load_hex(),
+      eip161d_transition: map["eip161dTransition"] |> load_hex(),
+      eip155_transition: map["eip155Transition"] |> load_hex(),
+      eip98_transition: map["eip98Transition"] |> load_hex(),
+      eip86_transition: map["eip86Transition"] |> load_hex(),
+      eip140_transition: map["eip140Transition"] |> load_hex(),
+      eip211_transition: map["eip211Transition"] |> load_hex(),
+      eip214_transition: map["eip214Transition"] |> load_hex(),
+      eip658_transition: map["eip658Transition"] |> load_hex()
     }
   end
 
-  defp get_genesis(genesis_map) do
+  defp get_genesis(map) do
     %{
-      difficulty: genesis_map["difficulty"] |> load_hex,
-      author: genesis_map["author"] |> load_address,
-      timestamp: genesis_map["timestamp"] |> load_hex,
-      parent_hash: genesis_map["parentHash"] |> load_raw_hex,
-      extra_data: genesis_map["extraData"] |> load_raw_hex,
-      gas_limit: genesis_map["gasLimit"] |> load_hex
+      seal: get_genesis_seal(map["seal"]),
+      difficulty: map["difficulty"] |> load_hex(),
+      author: map["author"] |> load_address(),
+      timestamp: map["timestamp"] |> load_hex(),
+      parent_hash: map["parentHash"] |> load_raw_hex(),
+      extra_data: map["extraData"] |> load_raw_hex(),
+      gas_limit: map["gasLimit"] |> load_hex()
     }
   end
 
-  defp get_accounts(account_map) do
-    for {address, account_info} <- account_map do
-      nonce =
-        if account_info["nonce"],
-          do: account_info["nonce"] |> load_hex,
-          else: 0
+  defp get_genesis_seal(nil), do: nil
 
-      {load_address(address),
-       %{
-         balance: account_info["balance"] |> load_decimal,
-         nonce: nonce
-       }}
-    end
-    |> Enum.into(%{})
+  defp get_genesis_seal(map) do
+    %{
+      nonce: map["ethereum"]["nonce"] |> load_hex(),
+      mix_hash: map["ethereum"]["mix_hash"] |> load_raw_hex()
+    }
+  end
+
+  defp get_account({raw_address, info}) do
+    nonce =
+      if info["nonce"],
+        do: info["nonce"] |> load_hex(),
+        else: 0
+
+    address = load_address(raw_address)
+
+    account = %{
+      balance: info["balance"] |> load_decimal(),
+      nonce: nonce
+    }
+
+    {address, account}
   end
 
   @spec read_chain!(atom()) :: map()
   defp read_chain!(chain) do
-    {:ok, body} = File.read(chain |> chain_filename)
-
+    filename = chain_filename(chain)
+    {:ok, body} = File.read(filename)
     Poison.decode!(body)
   end
 
   @spec chain_filename(atom()) :: String.t()
   defp chain_filename(chain) do
-    "chains/#{Atom.to_string(chain)}.json"
+    "../../chains/#{Atom.to_string(chain)}.json"
   end
 
   @spec load_address(String.t()) :: binary()
   defp load_address(hex_data), do: load_raw_hex(hex_data)
 
-  @spec load_raw_hex(String.t()) :: binary()
+  @spec load_raw_hex(String.t() | nil) :: binary()
+  defp load_raw_hex(nil), do: nil
   defp load_raw_hex("0x" <> hex_data), do: load_raw_hex(hex_data)
 
   defp load_raw_hex(hex_data) when Integer.is_odd(byte_size(hex_data)),
@@ -174,12 +217,14 @@ defmodule Blockchain.Chain do
   end
 
   @spec load_decimal(String.t()) :: integer()
-  def load_decimal(dec_data) do
+  defp load_decimal(dec_data) do
     {res, ""} = Integer.parse(dec_data)
 
     res
   end
 
-  @spec load_hex(String.t()) :: integer()
-  defp load_hex(hex_data), do: hex_data |> load_raw_hex |> :binary.decode_unsigned()
+  @spec load_hex(String.t() | integer()) :: integer()
+  defp load_hex(nil), do: nil
+  defp load_hex(x) when is_integer(x), do: x
+  defp load_hex(x), do: x |> load_raw_hex |> :binary.decode_unsigned()
 end
