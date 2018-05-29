@@ -1,6 +1,10 @@
 defmodule EvmTest do
+  import ExthCrypto.Math, only: [hex_to_bin: 1, hex_to_int: 1]
+
   alias MerklePatriciaTree.Trie
   alias ExthCrypto.Hash.Keccak
+  alias EVM.Interface.AccountInterface
+  alias EVM.Interface.Mock.{MockAccountInterface, MockBlockInterface}
 
   use ExUnit.Case, async: true
 
@@ -44,19 +48,7 @@ defmodule EvmTest do
   test "Ethereum Common Tests" do
     for {test_group_name, _test_group} <- @passing_tests_by_group do
       for {_test_name, test} <- passing_tests(test_group_name) do
-        {gas, sub_state, exec_env, _} =
-          EVM.VM.run(hex_to_int(test["exec"]["gas"]), %EVM.ExecEnv{
-            account_interface: account_interface(test),
-            address: hex_to_int(test["exec"]["address"]),
-            block_interface: block_interface(test),
-            data: hex_to_binary(test["exec"]["data"]),
-            gas_price: hex_to_binary(test["exec"]["gasPrice"]),
-            machine_code: hex_to_binary(test["exec"]["code"]),
-            originator: hex_to_binary(test["exec"]["origin"]),
-            sender: hex_to_int(test["exec"]["caller"]),
-            value_in_wei: hex_to_binary(test["exec"]["value"])
-          })
-
+        {gas, sub_state, exec_env, _} = run_test(test)
         assert_state(test, exec_env.account_interface)
 
         if test["gas"] do
@@ -64,17 +56,37 @@ defmodule EvmTest do
         end
 
         if test["logs"] do
-          logs_hash = sub_state.logs |> logs_hash
-
-          assert hex_to_binary(test["logs"]) == logs_hash
+          logs_hash = logs_hash(sub_state.logs)
+          assert hex_to_bin(test["logs"]) == logs_hash
         end
       end
     end
   end
 
+  defp run_test(test) do
+    exec_env = get_exec_env(test)
+    EVM.VM.run(hex_to_int(test["exec"]["gas"]), exec_env)
+  end
+
+  defp get_exec_env(test) do
+    %EVM.ExecEnv{
+      account_interface: account_interface(test),
+      address: hex_to_int(test["exec"]["address"]),
+      block_interface: block_interface(test),
+      data: hex_to_bin(test["exec"]["data"]),
+      gas_price: hex_to_bin(test["exec"]["gasPrice"]),
+      machine_code: hex_to_bin(test["exec"]["code"]),
+      originator: hex_to_bin(test["exec"]["origin"]),
+      sender: hex_to_int(test["exec"]["caller"]),
+      value_in_wei: hex_to_bin(test["exec"]["value"])
+    }
+  end
+
   def account_storage(storage, db) do
-    Enum.reduce(storage, Trie.new(db), fn {key, value}, trie ->
-      Trie.update(trie, <<hex_to_int(key)::size(256)>>, <<hex_to_int(value)::size(256)>>)
+    Enum.reduce(storage, Trie.new(db), fn {k, v}, trie ->
+      key = <<hex_to_int(k)::size(256)>>
+      value = <<hex_to_int(v)::size(256)>>
+      Trie.update(trie, key, value)
     end)
   end
 
@@ -82,7 +94,7 @@ defmodule EvmTest do
     account_map = %{
       hex_to_int(test["exec"]["caller"]) => %{
         balance: 0,
-        code: hex_to_binary(test["exec"]["code"]),
+        code: hex_to_bin(test["exec"]["code"]),
         nonce: 0,
         storage: %{}
       }
@@ -99,7 +111,7 @@ defmodule EvmTest do
         Map.merge(address_map, %{
           hex_to_int(address) => %{
             balance: hex_to_int(account["balance"]),
-            code: hex_to_binary(account["code"]),
+            code: hex_to_bin(account["code"]),
             nonce: hex_to_int(account["nonce"]),
             storage: storage
           }
@@ -112,7 +124,7 @@ defmodule EvmTest do
       output: <<>>
     }
 
-    EVM.Interface.Mock.MockAccountInterface.new(
+    MockAccountInterface.new(
       account_map,
       contract_result
     )
@@ -157,7 +169,7 @@ defmodule EvmTest do
       last_block_header.mix_hash => last_block_header
     }
 
-    EVM.Interface.Mock.MockBlockInterface.new(
+    MockBlockInterface.new(
       last_block_header,
       block_map
     )
@@ -200,18 +212,6 @@ defmodule EvmTest do
     "#{@ethereum_common_tests_path}/VMTests/vm#{Macro.camelize(Atom.to_string(group))}/#{name}.json"
   end
 
-  def hex_to_binary(string) do
-    string
-    |> String.slice(2..-1)
-    |> Base.decode16!(case: :mixed)
-  end
-
-  def hex_to_int(string) do
-    string
-    |> hex_to_binary()
-    |> :binary.decode_unsigned()
-  end
-
   def assert_state(test, mock_account_interface) do
     if Map.get(test, "post") do
       assert expected_state(test) == actual_state(mock_account_interface)
@@ -226,7 +226,7 @@ defmodule EvmTest do
 
       storage =
         for {key, value} <- storage, into: %{} do
-          {hex_to_binary(key), hex_to_binary(value)}
+          {hex_to_bin(key), hex_to_bin(value)}
         end
 
       {hex_to_int(address), storage}
@@ -237,7 +237,7 @@ defmodule EvmTest do
 
   def actual_state(mock_account_interface) do
     mock_account_interface
-    |> EVM.Interface.AccountInterface.dump_storage()
+    |> AccountInterface.dump_storage()
     |> Enum.reject(fn {_key, value} -> value == %{} end)
     |> Enum.into(%{}, fn {address, storage} ->
       storage =

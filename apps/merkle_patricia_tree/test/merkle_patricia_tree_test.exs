@@ -1,6 +1,7 @@
 defmodule MerklePatriciaTreeTest do
   use ExUnit.Case
 
+  alias ExthCrypto.Math
   alias MerklePatriciaTree.Trie
 
   @ethereum_common_tests_path "../../ethereum_common_tests"
@@ -28,15 +29,16 @@ defmodule MerklePatriciaTreeTest do
 
         trie =
           Enum.reduce(input, Trie.new(db), fn [k, v], trie ->
-            Trie.update(trie, k |> hex, v |> hex)
+            Trie.update(trie, hex_to_bin(k), hex_to_bin(v))
           end)
 
-        # MerklePatriciaTree.Trie.Inspector.inspect_trie(trie)
-
-        assert trie.root_hash == test["root"] |> hex_to_binary
+        assert trie.root_hash == hex_to_bin(test["root"])
       end
     end
   end
+
+  def hex_to_bin(hex = "0x" <> _str), do: Math.hex_to_bin(hex)
+  def hex_to_bin(x), do: x
 
   def read_test_file(type) do
     {:ok, body} = File.read(test_file_name(type))
@@ -45,20 +47,5 @@ defmodule MerklePatriciaTreeTest do
 
   def test_file_name(type) do
     "#{@ethereum_common_tests_path}/TrieTests/trie#{Atom.to_string(type)}.json"
-  end
-
-  def hex(hex_string = "0x" <> _str), do: hex_to_binary(hex_string)
-  def hex(x), do: x
-
-  def hex_to_binary(string) do
-    string
-    |> String.slice(2..-1)
-    |> Base.decode16!(case: :mixed)
-  end
-
-  def hex_to_int(string) do
-    string
-    |> hex_to_binary()
-    |> :binary.decode_unsigned()
   end
 end
