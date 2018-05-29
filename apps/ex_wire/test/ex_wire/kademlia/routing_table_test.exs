@@ -189,7 +189,7 @@ defmodule ExWire.Kademlia.RoutingTableTest do
     end
 
     test "returns neighbours based on common_prefix distance" do
-      table = TestHelper.random_routing_table(port: 35_249)
+      table = TestHelper.random_routing_table()
       node = TestHelper.random_node()
       find_neighbours = %FindNeighbours{target: node.public_key, timestamp: Timestamp.soon()}
 
