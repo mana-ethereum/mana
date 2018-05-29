@@ -73,7 +73,7 @@ defmodule EVM.MachineState do
   end
 
   @doc """
-  Pops n values off the stack
+  Pops n values off the stack.
 
   ## Examples
 

@@ -35,8 +35,8 @@ defprotocol EVM.Interface.AccountInterface do
   @spec put_storage(t, EVM.address(), integer(), integer()) :: t
   def put_storage(t, address, key, value)
 
-  @spec suicide_account(t, EVM.address()) :: t
-  def suicide_account(t, address)
+  @spec destroy_account(t, EVM.address()) :: t
+  def destroy_account(t, address)
 
   @spec dump_storage(t) :: %{EVM.address() => EVM.val()}
   def dump_storage(t)

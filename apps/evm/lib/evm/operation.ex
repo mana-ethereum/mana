@@ -5,11 +5,7 @@ defmodule EVM.Operation do
   """
 
   alias MathHelper
-  alias EVM.Helpers
-  alias EVM.ExecEnv
-  alias EVM.MachineState
-  alias EVM.Stack
-  alias EVM.SubState
+  alias EVM.{Helpers, ExecEnv, MachineState, Stack, SubState}
   alias EVM.Operation.Metadata.StopAndArithmetic, as: StopAndArithmeticMetadata
   alias EVM.Operation.Metadata.ComparisonAndBitwiseLogic, as: ComparisonAndBitwiseLogicMetadata
   alias EVM.Operation.Metadata.SHA3, as: SHA3Metadata

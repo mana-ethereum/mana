@@ -54,7 +54,7 @@ defmodule EVM.Operation.Metadata.System do
                     %{
                       id: 0xFF,
                       description: "Halt execution and register account for later deletion.",
-                      sym: :suicide,
+                      sym: :selfdestruct,
                       input_count: 1,
                       output_count: 0,
                       group: :system
