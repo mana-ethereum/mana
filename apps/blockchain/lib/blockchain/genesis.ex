@@ -7,21 +7,21 @@ defmodule Blockchain.Genesis do
   alias Blockchain.{Block, Account, Chain}
   alias MerklePatriciaTree.{Trie, DB}
 
-  @type seal :: %{
-          ethereum: %{
-            mix_hash: binary(),
-            nonce: binary()
-          }
+  @type seal_config :: %{
+          mix_hash: binary(),
+          nonce: binary()
         }
 
+  @type seal :: %{String.t() => seal_config()}
+
   @type t :: %{
+          seal: nil | seal(),
           difficulty: integer(),
           author: EVM.address(),
           timestamp: integer(),
           parent_hash: EVM.hash(),
           extra_data: binary(),
-          gas_limit: EVM.Gas.t(),
-          seal: nil | seal()
+          gas_limit: EVM.Gas.t()
         }
 
   @doc """

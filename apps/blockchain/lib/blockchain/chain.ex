@@ -21,55 +21,57 @@ defmodule Blockchain.Chain do
             nodes: [],
             accounts: %{}
 
+  @type engine :: %{
+          minimum_difficulty: integer(),
+          difficulty_bound_divisor: integer(),
+          duration_limit: integer(),
+          block_reward: integer(),
+          homestead_transition: integer(),
+          eip649_reward: integer(),
+          eip100b_transition: integer(),
+          eip649_transition: integer()
+        }
+
+  @type params :: %{
+          gas_limit_bound_divisor: integer(),
+          registrar: EVM.address(),
+          account_start_nonce: integer(),
+          maximum_extra_data_size: integer(),
+          min_gas_limit: integer(),
+          network_id: integer(),
+          fork_block: integer(),
+          fork_canon_hash: EVM.hash(),
+          max_code_size: integer(),
+          max_code_size_transition: integer(),
+          eip150_transition: integer(),
+          eip160_transition: integer(),
+          eip161abc_transition: integer(),
+          eip161d_transition: integer(),
+          eip155_transition: integer(),
+          eip98_transition: integer(),
+          eip86_transition: integer(),
+          eip140_transition: integer(),
+          eip211_transition: integer(),
+          eip214_transition: integer(),
+          eip658_transition: integer()
+        }
+
+  @type account :: %{
+          balance: EVM.Wei.t(),
+          nonce: integer(),
+          storage: %{
+            binary() => binary()
+          }
+          # TODO: Handle built-in
+        }
+
   @type t :: %__MODULE__{
           name: String.t(),
-          engine: %{
-            String.t() => %{
-              minimum_difficulty: integer(),
-              difficulty_bound_divisor: integer(),
-              duration_limit: integer(),
-              block_reward: integer(),
-              homestead_transition: integer(),
-              eip649_reward: integer(),
-              eip100b_transition: integer(),
-              eip649_transition: integer()
-            }
-          },
-          params: %{
-            gas_limit_bound_divisor: integer(),
-            registrar: EVM.address(),
-            account_start_nonce: integer(),
-            maximum_extra_data_size: integer(),
-            min_gas_limit: integer(),
-            network_id: integer(),
-            fork_block: integer(),
-            fork_canonHash: EVM.hash(),
-            max_code_size: integer(),
-            max_code_size_transition: integer(),
-            eip150_transition: integer(),
-            eip160_transition: integer(),
-            eip161abc_transition: integer(),
-            eip161d_transition: integer(),
-            eip155_transition: integer(),
-            eip98_transition: integer(),
-            eip86_transition: integer(),
-            eip140_transition: integer(),
-            eip211_transition: integer(),
-            eip214_transition: integer(),
-            eip658_transition: integer()
-          },
+          engine: %{String.t() => engine()},
+          params: params(),
           genesis: Genesis.t(),
           nodes: [String.t()],
-          accounts: %{
-            EVM.address() => %{
-              balance: EVM.Wei.t(),
-              nonce: integer(),
-              storage: %{
-                binary() => binary()
-              }
-              # TODO: Handle built-in
-            }
-          }
+          accounts: %{EVM.address() => account()}
         }
 
   @doc """
@@ -112,6 +114,7 @@ defmodule Blockchain.Chain do
     }
   end
 
+  @spec get_engine({String.t(), map}) :: {String.t(), engine()}
   defp get_engine({engine, %{"params" => params}}) do
     config = %{
       minimum_difficulty: params["minimumDifficulty"] |> load_hex(),
@@ -127,16 +130,17 @@ defmodule Blockchain.Chain do
     {engine, config}
   end
 
+  @spec get_params(map) :: params()
   defp get_params(map) do
     %{
       gas_limit_bound_divisor: map["gasLimitBoundDivisor"] |> load_hex(),
-      registrar: map["registrar"] |> load_address(),
+      registrar: map["registrar"] |> load_raw_hex(),
       account_start_nonce: map["accountStartNonce"] |> load_hex(),
       maximum_extra_data_size: map["maximumExtraDataSize"] |> load_hex(),
       min_gas_limit: map["minGasLimit"] |> load_hex(),
       network_id: map["networkID"] |> load_hex(),
       fork_block: map["forkBlock"] |> load_hex(),
-      fork_canon_hash: map["forkCanonHash"] |> load_hex(),
+      fork_canon_hash: map["forkCanonHash"] |> load_raw_hex(),
       max_code_size: map["maxCodeSize"] |> load_hex(),
       max_code_size_transition: map["maxCodeSizeTransition"] |> load_hex(),
       eip150_transition: map["eip150Transition"] |> load_hex(),
@@ -153,11 +157,12 @@ defmodule Blockchain.Chain do
     }
   end
 
+  @spec get_genesis(map) :: Genesis.t()
   defp get_genesis(map) do
     %{
       seal: get_genesis_seal(map["seal"]),
       difficulty: map["difficulty"] |> load_hex(),
-      author: map["author"] |> load_address(),
+      author: map["author"] |> load_raw_hex(),
       timestamp: map["timestamp"] |> load_hex(),
       parent_hash: map["parentHash"] |> load_raw_hex(),
       extra_data: map["extraData"] |> load_raw_hex(),
@@ -165,6 +170,7 @@ defmodule Blockchain.Chain do
     }
   end
 
+  @spec get_genesis_seal(map | nil) :: Genesis.seal_config() | nil
   defp get_genesis_seal(nil), do: nil
 
   defp get_genesis_seal(map) do
@@ -180,7 +186,7 @@ defmodule Blockchain.Chain do
         do: info["nonce"] |> load_hex(),
         else: 0
 
-    address = load_address(raw_address)
+    address = load_raw_hex(raw_address)
 
     account = %{
       balance: info["balance"] |> load_decimal(),
@@ -201,9 +207,6 @@ defmodule Blockchain.Chain do
   defp chain_filename(chain) do
     "../../chains/#{Atom.to_string(chain)}.json"
   end
-
-  @spec load_address(String.t()) :: binary()
-  defp load_address(hex_data), do: load_raw_hex(hex_data)
 
   @spec load_raw_hex(String.t() | nil) :: binary()
   defp load_raw_hex(nil), do: nil
