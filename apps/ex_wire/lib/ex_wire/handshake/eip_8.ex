@@ -19,26 +19,22 @@ defmodule ExWire.Handshake.EIP8 do
 
   ## Examples
 
-      iex> {:ok, bin} = ExWire.Handshake.EIP8.wrap_eip_8(["jedi", "knight"], ExthCrypto.Test.public_key, "1.2.3.4", ExthCrypto.Test.key_pair(:key_b), ExthCrypto.Test.init_vector)
+      iex> {:ok, bin} = ExWire.Handshake.EIP8.wrap_eip_8(["jedi", "knight"], ExthCrypto.Test.public_key, ExthCrypto.Test.key_pair(:key_b), ExthCrypto.Test.init_vector)
       iex> bin |> ExthCrypto.Math.bin_to_hex
       "00e6049871eb081567823267592abac8ec9e9fddfdece7901a15f233b53f304d7860686c21601ba1a7f56680e22d0ac03eccd08e496469514c25ae1d5e55f391c1956f0102030405060708090a0b0c0d0e0f102cb1de6abaaa6f731dbe4cd77135af3c6c49a8a065db5017e108aebc6db886a1f242e876982f69985e62412d240107652d4a78e5d7e3989d74fd7f97b3c4a34d2736ee8a912f7ea23c3327f0ed9b9d15b7999644b6e00a440eebc24da9dabb6412f4c6573d2a18c6678ad689e3b1849a33d0fa1c7ffb43a4033428646258196942e611ea2bf31b983e98356f2f57951c4aebb8dd54"
   """
   @spec wrap_eip_8(
           ExRLP.t(),
           ExthCrypto.Key.public_key(),
-          binary(),
           {ExthCrypto.Key.public_key(), ExthCrypto.Key.private_key()} | nil,
           Cipher.init_vector() | nil
         ) :: {:ok, binary()} | {:error, String.t()}
   def wrap_eip_8(
         rlp,
         her_static_public_key,
-        remote_addr,
         my_ephemeral_key_pair \\ nil,
         init_vector \\ nil
       ) do
-    Logger.debug("[Network] Sending EIP8 Handshake to #{remote_addr}")
-
     # According to EIP-8, we add padding to prevent length detection attacks. Thus, it should be
     # acceptable to pad with zero instead of random data. We opt for padding with zeros.
     padding = ExthCrypto.Math.pad(<<>>, 100)
@@ -83,7 +79,7 @@ defmodule ExWire.Handshake.EIP8 do
   ## Examples
 
       iex> "00e6049871eb081567823267592abac8ec9e9fddfdece7901a15f233b53f304d7860686c21601ba1a7f56680e22d0ac03eccd08e496469514c25ae1d5e55f391c1956f0102030405060708090a0b0c0d0e0f102cb1de6abaaa6f731dbe4cd77135af3c6c48aaa361de5610e901a4b761b588aee253fa658c3a7f8f467b5b36381c197a0d6b5ac6f3c6beba5cd455bc9fe98d621707dcb9a51a4895040a1dcbd1a6a32af7d8d407f2a54c0346a28806e597f52b42a59404697f4e913fd38cd2bfecdac553b1987f1b61049f516053a5a1f8cdc9efae57748d98355864f59037e326e7ec9b2d947580" |> ExthCrypto.Math.hex_to_bin
-      ...> |> ExWire.Handshake.EIP8.unwrap_eip_8(ExthCrypto.Test.private_key(:key_a), "1.2.3.4")
+      ...> |> ExWire.Handshake.EIP8.unwrap_eip_8(ExthCrypto.Test.private_key(:key_a))
       {:ok,
        ["jedi", "knight", <<4>>,
         <<1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,
@@ -108,10 +104,9 @@ defmodule ExWire.Handshake.EIP8 do
           152, 53, 88, 100, 245, 144, 55, 227, 38, 231, 236, 155, 45, 148, 117, 128>>,
         ""}
   """
-  @spec unwrap_eip_8(binary(), ExthCrypto.Key.private_key(), binary()) ::
+  @spec unwrap_eip_8(binary(), ExthCrypto.Key.private_key()) ::
           {:ok, RLP.t(), binary(), binary()} | {:error, String.t()}
-  def unwrap_eip_8(encoded_packet, my_static_private_key, remote_addr) do
-    Logger.debug("[Network] Received EIP8 Handshake from #{remote_addr}")
+  def unwrap_eip_8(encoded_packet, my_static_private_key) do
     <<auth_size_int::size(16), _::binary()>> = encoded_packet
 
     case encoded_packet do

@@ -59,10 +59,10 @@ defmodule ExWire.Handshake do
   Note: this will handle pre or post-EIP 8 messages. We take a different approach to other
         implementations and try EIP-8 first, and if that fails, plain.
   """
-  @spec read_auth_msg(binary(), ExthCrypto.Key.private_key(), String.t()) ::
+  @spec read_auth_msg(binary(), ExthCrypto.Key.private_key()) ::
           {:ok, AuthMsgV4.t(), binary()} | {:error, String.t()}
-  def read_auth_msg(encoded_auth, my_static_private_key, remote_addr) do
-    case EIP8.unwrap_eip_8(encoded_auth, my_static_private_key, remote_addr) do
+  def read_auth_msg(encoded_auth, my_static_private_key) do
+    case EIP8.unwrap_eip_8(encoded_auth, my_static_private_key) do
       {:ok, rlp, _bin, frame_rest} ->
         # unwrap eip-8
         auth_msg =
@@ -106,10 +106,10 @@ defmodule ExWire.Handshake do
   Note: this will handle pre- or post-EIP 8 messages. We take a different approach to other
         implementations and try EIP-8 first, and if that fails, plain.
   """
-  @spec read_ack_resp(binary(), ExthCrypto.Key.private_key(), String.t()) ::
+  @spec read_ack_resp(binary(), ExthCrypto.Key.private_key()) ::
           {:ok, AckRespV4.t(), binary(), binary()} | {:error, String.t()}
-  def read_ack_resp(encoded_ack, my_static_private_key, remote_addr) do
-    case EIP8.unwrap_eip_8(encoded_ack, my_static_private_key, remote_addr) do
+  def read_ack_resp(encoded_ack, my_static_private_key) do
+    case EIP8.unwrap_eip_8(encoded_ack, my_static_private_key) do
       {:ok, rlp, ack_resp_bin, frame_rest} ->
         # unwrap eip-8
         ack_resp =
@@ -245,10 +245,10 @@ defmodule ExWire.Handshake do
 
   # TODO: Add examples
   """
-  @spec try_handle_ack(binary(), binary(), ExthCrypto.Key.private_key(), binary(), String.t()) ::
+  @spec try_handle_ack(binary(), binary(), ExthCrypto.Key.private_key(), binary()) ::
           {:ok, Secrets.t(), binary()} | {:invalid, String.t()}
-  def try_handle_ack(ack_data, auth_data, my_ephemeral_private_key, my_nonce, host) do
-    case ExWire.Handshake.read_ack_resp(ack_data, ExWire.Config.private_key(), host) do
+  def try_handle_ack(ack_data, auth_data, my_ephemeral_private_key, my_nonce) do
+    case ExWire.Handshake.read_ack_resp(ack_data, ExWire.Config.private_key()) do
       {:ok,
        %ExWire.Handshake.Struct.AckRespV4{
          remote_ephemeral_public_key: remote_ephemeral_public_key,
@@ -279,16 +279,15 @@ defmodule ExWire.Handshake do
 
   TODO: Add examples
   """
-  @spec try_handle_auth(binary(), ExthCrypto.Key.key_pair(), binary(), binary(), String.t()) ::
+  @spec try_handle_auth(binary(), ExthCrypto.Key.key_pair(), binary(), binary()) ::
           {:ok, binary(), Secrets.t()} | {:invalid, String.t()}
   def try_handle_auth(
         auth_data,
         {my_ephemeral_public_key, my_ephemeral_private_key} = my_ephemeral_key_pair,
         my_nonce,
-        remote_id,
-        host
+        remote_id
       ) do
-    case ExWire.Handshake.read_auth_msg(auth_data, ExWire.Config.private_key(), host) do
+    case ExWire.Handshake.read_auth_msg(auth_data, ExWire.Config.private_key()) do
       {:ok,
        %ExWire.Handshake.Struct.AuthMsgV4{
          signature: _signature,
@@ -308,7 +307,7 @@ defmodule ExWire.Handshake do
         {:ok, encoded_ack_resp} =
           ack_resp
           |> ExWire.Handshake.Struct.AckRespV4.serialize()
-          |> ExWire.Handshake.EIP8.wrap_eip_8(remote_id, host, my_ephemeral_key_pair)
+          |> ExWire.Handshake.EIP8.wrap_eip_8(remote_id, my_ephemeral_key_pair)
 
         # We have the auth, we can derive secrets already
         secrets =
