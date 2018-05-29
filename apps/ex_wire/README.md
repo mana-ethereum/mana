@@ -34,4 +34,5 @@ You can run `iex -S mix` and you should see:
 12:59:24.595 [debug] [Block Queue] Verified block and added to new block tree
 ```
 
-In the future, we will continue to grow and built out a proper syncing ability. It's likely the proper interface (with CLI tools) will not be this module directly, but instead a general CLI which calls into this module.
+In the future, we will continue to grow and built out a proper syncing ability.
+It's likely the proper interface (with CLI tools) will not be this module directly, but instead a general CLI which calls into this module.
