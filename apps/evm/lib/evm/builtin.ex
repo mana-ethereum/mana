@@ -46,14 +46,17 @@ defmodule EVM.Builtin do
   def run_ecrec(gas, exec_env = %EVM.ExecEnv{data: data}) do
     used_gas = 3000
 
-    if(used_gas < gas and byte_size(data) == 128) do
+    if(used_gas < gas) do
+      data = EVM.Helpers.right_pad_bytes(data, 128)
       <<h::binary-size(32), v::binary-size(32), r::binary-size(32), s::binary-size(32)>> = data
       signature = r <> s
 
-      case ExthCrypto.Signature.recover(h, signature, :binary.decode_unsigned(v))  do
+      case ExthCrypto.Signature.recover(h, signature, :binary.decode_unsigned(v)) do
         {:ok, public_key} ->
           remaining_gas = gas - used_gas
+          EVM.Helpers.left_pad_bytes(public_key, 32)
           {remaining_gas, %EVM.SubState{}, exec_env, public_key}
+
         {:error, _} ->
           {gas, %EVM.SubState{}, exec_env, <<>>}
       end
