@@ -153,7 +153,7 @@ defmodule ExWire.Adapter.TCP.Server do
       my_nonce: my_nonce
     } = state
 
-    case Handshake.try_handle_ack(data, auth_data, my_ephemeral_private_key, my_nonce, peer.host) do
+    case Handshake.try_handle_ack(data, auth_data, my_ephemeral_private_key, my_nonce) do
       {:ok, secrets, frame_rest} ->
         Logger.debug("[Network] [#{peer}] Got ack from #{peer.host}, deriving secrets")
 
@@ -187,8 +187,7 @@ defmodule ExWire.Adapter.TCP.Server do
            data,
            my_ephemeral_key_pair,
            my_nonce,
-           peer.remote_id,
-           peer.host
+           peer.remote_id
          ) do
       {:ok, ack_data, secrets} ->
         Logger.debug("[Network] [#{peer}] Received auth from #{peer.host}")
@@ -267,10 +266,12 @@ defmodule ExWire.Adapter.TCP.Server do
         peer.remote_id
       )
 
+    Logger.debug("[Network] Generating EIP8 Handshake for #{peer.host}")
+
     {:ok, encoded_auth_msg} =
       my_auth_msg
       |> ExWire.Handshake.Struct.AuthMsgV4.serialize()
-      |> ExWire.Handshake.EIP8.wrap_eip_8(peer.remote_id, peer.host, my_ephemeral_key_pair)
+      |> ExWire.Handshake.EIP8.wrap_eip_8(peer.remote_id, my_ephemeral_key_pair)
 
     Map.merge(state, %{
       auth_data: encoded_auth_msg,
