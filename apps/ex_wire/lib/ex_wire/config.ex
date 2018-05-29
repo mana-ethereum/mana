@@ -37,6 +37,11 @@ defmodule ExWire.Config do
     public_key
   end
 
+  @spec discovery() :: boolean()
+  def discovery do
+    get_env(:discovery)
+  end
+
   @spec public_ip() :: [integer()]
   def public_ip do
     get_env(:public_ip) || [127, 0, 0, 1]

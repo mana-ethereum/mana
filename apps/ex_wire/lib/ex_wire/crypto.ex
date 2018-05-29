@@ -3,7 +3,7 @@ defmodule ExWire.Crypto do
   Helper functions for cryptographic functions of RLPx.
   """
 
-  alias ExthCrypto.{Signature, Key}
+  alias ExthCrypto.{Signature, Key, Math}
   alias ExthCrypto.Hash.Keccak
 
   @type hash :: binary()
@@ -131,5 +131,15 @@ defmodule ExWire.Crypto do
   @spec node_id_from_public_key(binary()) :: binary()
   def node_id_from_public_key(public_key) do
     Key.der_to_raw(public_key)
+  end
+
+  @spec hex_to_bin(binary()) :: binary()
+  def hex_to_bin(hex_bin) do
+    Math.hex_to_bin(hex_bin)
+  end
+
+  @spec raw_to_der(binary()) :: binary()
+  def raw_to_der(bin) do
+    Key.raw_to_der(bin)
   end
 end

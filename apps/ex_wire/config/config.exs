@@ -14,6 +14,7 @@ config :ex_wire,
   bootnodes: :from_chain,
   # Number of peer advertisements before we trust a block
   commitment_count: 1,
+  discovery: true,
   node_discovery: [
     network_adapter: {ExWire.Adapter.UDP, NetworkClient},
     kademlia_process_name: KademliaState,

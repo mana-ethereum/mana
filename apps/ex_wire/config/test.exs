@@ -9,4 +9,5 @@ config :ex_wire,
     kademlia_process_name: KademliaState,
     supervisor_name: ExWire.NodeDiscoverySupervisor,
     port: 30_304
-  ]
+  ],
+  discovery: true
