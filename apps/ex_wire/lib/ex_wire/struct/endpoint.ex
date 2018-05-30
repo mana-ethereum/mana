@@ -48,7 +48,7 @@ defmodule ExWire.Struct.Endpoint do
       [1, 2, 3, 4]
 
       iex> ExWire.Struct.Endpoint.decode_ip(<<1::128>>)
-      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]
+      [0, 0, 0, 1]
 
       iex> ExWire.Struct.Endpoint.decode_ip(<<0xFF, 0xFF, 0xFF, 0xFF>>)
       [255, 255, 255, 255]
@@ -61,8 +61,7 @@ defmodule ExWire.Struct.Endpoint do
   """
   @spec decode_ip(binary()) :: ip
   def decode_ip(data) do
-    data
-    |> :binary.bin_to_list()
+    data |> :binary.bin_to_list() |> Enum.take(-4)
   end
 
   @doc """
