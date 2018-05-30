@@ -8,11 +8,13 @@ defmodule RopstenTest do
 
   use ExUnit.Case, async: true
 
+  alias Blockchain.Blocktree
+
   @n 11
 
   setup_all do
     blocks =
-      File.read!("test/support/ropsten_blocks.dat")
+      File.read!("test/support/ropsten.dat")
       |> BitHelper.from_hex()
       |> ExRLP.decode()
       |> Enum.map(fn block ->
@@ -20,19 +22,16 @@ defmodule RopstenTest do
       end)
       |> Enum.take(@n)
 
-    {:ok,
-     %{
-       blocks: blocks
-     }}
+    {:ok, %{blocks: blocks}}
   end
 
   test "processing the first #{@n} blocks of the live ropsten block tree", %{blocks: blocks} do
     db = MerklePatriciaTree.Test.random_ets_db()
-    tree = Blockchain.Blocktree.new_tree()
+    tree = Blocktree.new_tree()
     chain = Blockchain.Test.ropsten_chain()
 
     Enum.reduce(blocks, tree, fn block, tree ->
-      {:ok, new_tree} = Blockchain.Blocktree.verify_and_add_block(tree, chain, block, db)
+      {:ok, new_tree} = Blocktree.verify_and_add_block(tree, chain, block, db)
 
       new_tree
     end)

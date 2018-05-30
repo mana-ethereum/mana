@@ -25,18 +25,42 @@ defmodule ExthCrypto.Math do
   def mod(0, _n), do: 0
 
   @doc """
-  Simple wrapper function to convert a hex string to a binary.
+  Converts a hex string to a binary.
 
   ## Examples
 
       iex> ExthCrypto.Math.hex_to_bin("01020a0d")
       <<0x01, 0x02, 0x0a, 0x0d>>
+      iex> ExthCrypto.Math.hex_to_bin("01020a0D")
+      <<0x01, 0x02, 0x0a, 0x0d>>
+      iex> ExthCrypto.Math.hex_to_bin("0x01020a0d")
+      <<0x01, 0x02, 0x0a, 0x0d>>
+      iex> ExthCrypto.Math.hex_to_bin("0x01020A0d")
+      <<0x01, 0x02, 0x0a, 0x0d>>
   """
   @spec hex_to_bin(String.t()) :: binary()
-  def hex_to_bin(hex) do
-    {:ok, bin} = Base.decode16(hex, case: :lower)
+  def hex_to_bin("0x" <> s), do: hex_to_bin(s)
 
-    bin
+  def hex_to_bin(s), do: Base.decode16!(s, case: :mixed)
+
+  @doc """
+  Converts a hex string to an integer.
+
+  ## Examples
+      iex> ExthCrypto.Math.hex_to_int("01020a0d")
+      16910861
+      iex> ExthCrypto.Math.hex_to_int("01020a0D")
+      16910861
+      iex> ExthCrypto.Math.hex_to_int("0x01020a0d")
+      16910861
+      iex> ExthCrypto.Math.hex_to_int("0x01020A0d")
+      16910861
+  """
+  @spec hex_to_int(String.t()) :: integer()
+  def hex_to_int(s) do
+    s
+    |> hex_to_bin()
+    |> :binary.decode_unsigned()
   end
 
   @doc """

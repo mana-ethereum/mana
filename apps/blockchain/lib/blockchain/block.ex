@@ -158,7 +158,7 @@ defmodule Blockchain.Block do
   """
   @spec put_block(t, DB.db()) :: {:ok, EVM.hash()}
   def put_block(block, db) do
-    hash = block |> hash
+    hash = hash(block)
     block_rlp = block |> serialize |> ExRLP.encode()
     :ok = MerklePatriciaTree.DB.put!(db, hash, block_rlp)
 
@@ -669,7 +669,7 @@ defmodule Blockchain.Block do
       iex> parent = Blockchain.Genesis.create_block(chain, db)
       iex> beneficiary = <<0x05::160>>
       iex> child = Blockchain.Block.gen_child_block(parent, chain, beneficiary: beneficiary)
-      ...>         |> Blockchain.Block.add_rewards(db, chain.params[:block_reward])
+      ...>         |> Blockchain.Block.add_rewards(db, chain.engine["Ethash"][:block_reward])
       iex> Blockchain.Block.validate(child, chain, parent, db)
       :valid
   """

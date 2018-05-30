@@ -234,12 +234,9 @@ defmodule Blockchain.Blocktree do
   """
   @spec add_block(t, Block.t()) :: t
   def add_block(blocktree, block) do
-    block_hash = block.block_hash || block |> Block.hash()
-
-    blocktree = %{
-      blocktree
-      | parent_map: Map.put(blocktree.parent_map, block_hash, block.header.parent_hash)
-    }
+    block_hash = block.block_hash || Block.hash(block)
+    parent_map = Map.put(blocktree.parent_map, block_hash, block.header.parent_hash)
+    blocktree = %{blocktree | parent_map: parent_map}
 
     case get_path_to_root(blocktree, block_hash) do
       # TODO: How we can better handle this case?
@@ -259,7 +256,8 @@ defmodule Blockchain.Blocktree do
         tree = rooted_tree(block)
         new_children = Map.put(blocktree.children, block_hash, tree)
 
-        %{blocktree | children: new_children, total_difficulty: max_difficulty(new_children)}
+        total_difficulty = max_difficulty(new_children)
+        %{blocktree | children: new_children, total_difficulty: total_difficulty}
 
       [path_hash | rest] ->
         case blocktree.children[path_hash] do
@@ -364,7 +362,14 @@ defmodule Blockchain.Blocktree do
   recursion, so we need to be careful to not use this for
   excessively large trees.
 
-  # TODO: Add examples
+  ## Examples
+
+      iex> Blockchain.Blocktree.new_tree()
+      ...> |> Blockchain.Blocktree.add_block(%Blockchain.Block{block_hash: <<1>>, header: %Block.Header{number: 0, parent_hash: <<0::256>>, difficulty: 100}})
+      ...> |> Blockchain.Blocktree.add_block(%Blockchain.Block{block_hash: <<2>>, header: %Block.Header{number: 1, parent_hash: <<0::256>>, difficulty: 110}})
+      ...> |> Blockchain.Blocktree.add_block(%Blockchain.Block{block_hash: <<3>>, header: %Block.Header{number: 2, parent_hash: <<0::256>>, difficulty: 120}})
+      ...> |> Blockchain.Blocktree.inspect_tree()
+      [:root, [{0, <<1>>}], [{1, <<2>>}], [{2, <<3>>}]]
   """
   @spec inspect_tree(t) :: [any()]
   def inspect_tree(blocktree) do

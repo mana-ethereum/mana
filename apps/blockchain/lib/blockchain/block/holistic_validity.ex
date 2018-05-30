@@ -67,11 +67,13 @@ defmodule Blockchain.Block.HolisticValidity do
         )
       end
 
+    block_reward = chain.engine["Ethash"][:block_reward]
+
     child_block =
       base_block
       |> Block.add_transactions(block.transactions, db)
       |> Block.add_ommers(block.ommers)
-      |> Block.add_rewards(db, chain.params[:block_reward])
+      |> Block.add_rewards(db, block_reward)
 
     # The following checks Holistic Validity,
     # as defined in Eq.(31), section 4.3.2 of Yellow Paper
