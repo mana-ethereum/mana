@@ -6,7 +6,8 @@ defmodule EVM.Builtin do
 
   TODO: Implement and add doc tests.
   """
-
+  @g_rip160_base 600
+  @g_rip160_byte 120
   @g_sha256 60 + 12
   @g_identity_base 15
   @g_identity_byte 3
@@ -39,9 +40,29 @@ defmodule EVM.Builtin do
     end
   end
 
+  @doc """
+  Runs RIPEMD160 hashing
+
+  ## Examples
+
+      iex> EVM.Builtin.run_rip160(3000,  %EVM.ExecEnv{data: <<1, 2, 3>>})
+      {2280, %EVM.SubState{}, %EVM.ExecEnv{data: <<1, 2, 3>>},<<0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 121, 249, 1, 218, 38, 9, 240, 32, 173, 173, 191, 46, 95,
+        104, 161, 108, 140, 63, 125, 87>>}
+  """
   @spec run_rip160(EVM.Gas.t(), EVM.ExecEnv.t()) ::
           {EVM.Gas.t(), EVM.SubState.t(), EVM.ExecEnv.t(), EVM.VM.output()}
-  def run_rip160(gas, exec_env), do: {gas, %EVM.SubState{}, exec_env, <<>>}
+  def run_rip160(gas, exec_env = %EVM.ExecEnv{data: data}) do
+    used_gas = @g_rip160_base + @g_rip160_byte * MathHelper.bits_to_words(byte_size(data))
+
+    if(used_gas < gas) do
+      remaining_gas = gas - used_gas
+      result = :crypto.hash(:ripemd160, data) |> EVM.Helpers.left_pad_bytes(32)
+      {remaining_gas, %EVM.SubState{}, exec_env, result}
+    else
+      {gas, %EVM.SubState{}, exec_env, <<>>}
+    end
+  end
 
   @doc """
   Identity simply returnes the output as the input
