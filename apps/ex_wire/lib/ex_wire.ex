@@ -8,13 +8,15 @@ defmodule ExWire do
 
   use Application
 
+  alias ExWire.Config
+
   def start(_type, args) do
     import Supervisor.Spec
 
     name = Keyword.get(args, :name, ExWire)
 
     sync_children =
-      if ExWire.Config.sync() do
+      if Config.sync() do
         db = MerklePatriciaTree.DB.RocksDB.init(db_name())
 
         [
@@ -25,10 +27,14 @@ defmodule ExWire do
         []
       end
 
-    children =
-      [
-        worker(ExWire.NodeDiscoverySupervisor, [])
-      ] ++ sync_children
+    node_discovery =
+      if Config.discovery() do
+        [worker(ExWire.NodeDiscoverySupervisor, [])]
+      else
+        []
+      end
+
+    children = sync_children ++ node_discovery
 
     opts = [strategy: :one_for_one, name: name]
     Supervisor.start_link(children, opts)

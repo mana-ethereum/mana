@@ -4,19 +4,28 @@ defmodule ExWire.Kademlia.Server do
   @moduledoc false
 
   @default_process_name KademliaState
+  @max_discovery_rounds 7
+  # 5s
+  @discovery_round_period 5 * 1000
+  # 10s
+  @pong_cleanup_period 10 * 1000
 
-  alias ExWire.Kademlia.{RoutingTable, Node}
+  alias ExWire.Kademlia.{RoutingTable, Node, Discovery}
 
   def start_link(params) do
     name = params[:name] || @default_process_name
     network_client_name = Keyword.fetch!(params, :network_client_name)
     current_node = Keyword.fetch!(params, :current_node)
+    nodes = params[:nodes] || []
 
-    GenServer.start_link(__MODULE__, {current_node, network_client_name}, name: name)
+    GenServer.start_link(__MODULE__, {current_node, network_client_name, nodes}, name: name)
   end
 
-  def init({current_node = %Node{}, network_client_name}) do
+  def init({current_node = %Node{}, network_client_name, nodes}) do
     routing_table = RoutingTable.new(current_node, network_client_name)
+
+    schedule_discovery_round(0, nodes)
+    schedule_pongs_cleanup()
 
     {:ok, %{routing_table: routing_table}}
   end
@@ -63,6 +72,34 @@ defmodule ExWire.Kademlia.Server do
     neighbours = RoutingTable.neighbours(routing_table, find_neighbours, endpoint)
 
     {:reply, neighbours, state}
+  end
+
+  def handle_info({:discovery_round, nodes}, %{routing_table: routing_table}) do
+    updated_table = Discovery.start(routing_table, nodes)
+
+    schedule_discovery_round(updated_table.discovery_round)
+
+    {:noreply, %{routing_table: updated_table}}
+  end
+
+  def handle_info(:remove_expired_nodes, %{routing_table: table}) do
+    updated_table = RoutingTable.remove_expired_pongs(table)
+
+    schedule_pongs_cleanup()
+
+    {:noreply, %{routing_table: updated_table}}
+  end
+
+  defp schedule_discovery_round(round, nodes \\ []) do
+    if round <= @max_discovery_rounds do
+      Process.send_after(self(), {:discovery_round, nodes}, @discovery_round_period)
+    else
+      :ok
+    end
+  end
+
+  defp schedule_pongs_cleanup() do
+    Process.send_after(self(), :remove_expired_nodes, @pong_cleanup_period)
   end
 
   def default_process_name do

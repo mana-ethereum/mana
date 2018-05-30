@@ -11,14 +11,23 @@ defmodule ExWire.Kademlia.RoutingTable do
   alias ExWire.Handler.Params
   alias ExWire.Struct.Endpoint
 
-  defstruct [:current_node, :buckets, :network_client_name, :expected_pongs]
+  defstruct [
+    :current_node,
+    :buckets,
+    :network_client_name,
+    :expected_pongs,
+    :discovery_nodes,
+    :discovery_round
+  ]
 
   @type expected_pongs :: %{required(binary()) => {Node.t(), Node.t()}}
   @type t :: %__MODULE__{
           current_node: Node.t(),
           buckets: [Bucket.t()],
           network_client_name: pid() | atom(),
-          expected_pongs: expected_pongs()
+          expected_pongs: expected_pongs(),
+          discovery_nodes: [Node.t()],
+          discovery_round: integer()
         }
 
   @doc """
@@ -53,7 +62,9 @@ defmodule ExWire.Kademlia.RoutingTable do
       current_node: node,
       buckets: initial_buckets,
       network_client_name: client_pid,
-      expected_pongs: %{}
+      expected_pongs: %{},
+      discovery_nodes: [],
+      discovery_round: 0
     }
   end
 
@@ -120,12 +131,36 @@ defmodule ExWire.Kademlia.RoutingTable do
       node = Node.new(public_key, endpoint)
       bucket_idx = bucket_id(table, node)
       nearest_neighbors = nodes_at(table, bucket_idx)
-      found_nodes = traverse(table, bucket_idx) ++ nearest_neighbors
+
+      found_nodes =
+        traverse(table, bucket_id: bucket_idx, number: bucket_capacity()) ++ nearest_neighbors
 
       found_nodes
       |> Enum.sort_by(&Node.common_prefix(&1, node), &>=/2)
       |> Enum.take(bucket_capacity())
     end
+  end
+
+  @doc """
+  Returns current node's discovery nodes. Basically it just finds the closest to current node
+  nodes and filters nodes that were already used for node discovery.
+  """
+  @spec discovery_nodes(t()) :: [Node.t()]
+  def discovery_nodes(table) do
+    filter = fn node ->
+      !Enum.member?(table.discovery_nodes, node)
+    end
+
+    nodes_number = KademliaConfig.concurrency()
+    closest_bucket_id = buckets_count() - 1
+    travers_opts = [bucket_id: closest_bucket_id, filter: filter, number: nodes_number]
+
+    nearest_neighbors = nodes_at(table, closest_bucket_id)
+    found_nodes = traverse(table, travers_opts) ++ nearest_neighbors
+
+    found_nodes
+    |> Enum.sort_by(&Node.common_prefix(&1, table.current_node), &>=/2)
+    |> Enum.take(nodes_number)
   end
 
   @doc """
@@ -160,7 +195,24 @@ defmodule ExWire.Kademlia.RoutingTable do
     {:sent_message, _, encoded_message} = Network.send(ping, network_client_name, remote_endpoint)
 
     mdc = Protocol.message_mdc(encoded_message)
-    updated_pongs = Map.put(table.expected_pongs, mdc, {node, replace_candidate})
+    updated_pongs = Map.put(table.expected_pongs, mdc, {node, replace_candidate, ping.timestamp})
+
+    %{table | expected_pongs: updated_pongs}
+  end
+
+  @doc """
+  Removes expired pongs.
+  """
+  @spec remove_expired_pongs(t()) :: t()
+  def remove_expired_pongs(table) do
+    now = Timestamp.now()
+
+    updated_pongs =
+      table.expected_pongs
+      |> Enum.reject(fn {_key, {_, _, timestamp}} ->
+        timestamp < now
+      end)
+      |> Map.new()
 
     %{table | expected_pongs: updated_pongs}
   end
@@ -168,7 +220,7 @@ defmodule ExWire.Kademlia.RoutingTable do
   @doc """
   Handles Pong message.
 
-   There are three cases:
+   There are two cases:
    - If we were waiting for this pong (it's stored in routing table) and it's not expired,
        we refresh stale node.
    - If a pong is expired, we do nothing.
@@ -184,11 +236,8 @@ defmodule ExWire.Kademlia.RoutingTable do
 
     if timestamp > Timestamp.now() do
       case node do
-        {removal_candidate, _insertion_candidate} ->
+        {removal_candidate, _insertion_candidate, _} ->
           refresh_node(table, removal_candidate)
-
-        pinged_node = %Node{} ->
-          refresh_node(table, pinged_node)
 
         _ ->
           table
@@ -240,8 +289,14 @@ defmodule ExWire.Kademlia.RoutingTable do
     Enum.at(buckets, id)
   end
 
-  @spec traverse(t(), integer(), [Node.t()], integer()) :: [Node.t()]
-  defp traverse(table, bucket_id, acc \\ [], step \\ 1) do
+  @spec traverse(t(), Keyword.t()) :: [Node.t()]
+  defp traverse(table, opts) do
+    bucket_id = Keyword.fetch!(opts, :bucket_id)
+    acc = opts[:acc] || []
+    step = opts[:step] || 1
+    required_nodes = opts[:number] || bucket_capacity()
+    filter_function = opts[:filter]
+
     left_boundary = bucket_id - step
     right_boundary = bucket_id + step
     is_out_of_left_boundary = left_boundary < 0
@@ -249,14 +304,24 @@ defmodule ExWire.Kademlia.RoutingTable do
 
     left_nodes = if is_out_of_left_boundary, do: [], else: table |> nodes_at(left_boundary)
     right_nodes = if is_out_of_right_boundary, do: [], else: table |> nodes_at(right_boundary)
+    found_nodes = left_nodes ++ right_nodes
 
-    acc = acc ++ left_nodes ++ right_nodes
+    filtered_nodes =
+      if filter_function,
+        do: Enum.filter(found_nodes, fn el -> filter_function.(el) end),
+        else: found_nodes
 
-    if (is_out_of_left_boundary && is_out_of_right_boundary) ||
-         Enum.count(acc) > bucket_capacity() do
+    acc = acc ++ filtered_nodes
+
+    if (is_out_of_left_boundary && is_out_of_right_boundary) || Enum.count(acc) > required_nodes do
       acc
     else
-      traverse(table, bucket_id, acc, step + 1)
+      opts =
+        opts
+        |> Keyword.put(:step, step + 1)
+        |> Keyword.put(:acc, acc)
+
+      traverse(table, opts)
     end
   end
 

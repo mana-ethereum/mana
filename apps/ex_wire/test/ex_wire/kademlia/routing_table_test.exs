@@ -7,18 +7,12 @@ defmodule ExWire.Kademlia.RoutingTableTest do
   alias ExWire.Kademlia.Config, as: KademliaConfig
   alias ExWire.Message.{Pong, FindNeighbours, Neighbours}
   alias ExWire.TestHelper
-  alias ExWire.Adapter.UDP
-  alias ExWire.Network
   alias ExWire.Util.Timestamp
   alias ExWire.Handler.Params
   alias ExWire.Struct.Neighbour
 
   setup_all do
-    {:ok, network_client_pid} =
-      UDP.start_link(network_module: {Network, []}, port: 35349, name: :routing_table_test)
-
-    node = TestHelper.random_node()
-    table = RoutingTable.new(node, network_client_pid)
+    table = TestHelper.random_empty_table()
 
     {:ok, %{table: table}}
   end
@@ -60,7 +54,9 @@ defmodule ExWire.Kademlia.RoutingTableTest do
       assert Enum.count(pongs) == 1
 
       {_mdc, pair} = Enum.at(pongs, 0)
-      assert pair == {filler_node, node}
+      {deletion_candidate, insertion_candidate, _} = pair
+      assert deletion_candidate == filler_node
+      assert insertion_candidate == node
     end
   end
 
@@ -195,7 +191,7 @@ defmodule ExWire.Kademlia.RoutingTableTest do
     end
 
     test "returns neighbours based on common_prefix distance" do
-      table = TestHelper.random_routing_table(port: 35_249)
+      table = TestHelper.random_routing_table()
       node = TestHelper.random_node()
       find_neighbours = %FindNeighbours{target: node.public_key, timestamp: Timestamp.soon()}
 
@@ -236,7 +232,7 @@ defmodule ExWire.Kademlia.RoutingTableTest do
 
       expected_pong_nodes =
         updated_table.expected_pongs
-        |> Enum.map(fn {_key, {value, _}} ->
+        |> Enum.map(fn {_key, {value, _, _}} ->
           value
         end)
 
@@ -260,6 +256,39 @@ defmodule ExWire.Kademlia.RoutingTableTest do
         end)
 
       assert Enum.empty?(expected_pong_nodes)
+    end
+  end
+
+  describe "discovery_nodes/1" do
+    test "returns not used discovery nodes", %{table: table} do
+      node1 = TestHelper.random_node()
+      node2 = TestHelper.random_node()
+
+      table =
+        %{table | discovery_nodes: [node1]}
+        |> RoutingTable.refresh_node(node1)
+        |> RoutingTable.refresh_node(node2)
+
+      assert [node2] == RoutingTable.discovery_nodes(table)
+    end
+  end
+
+  describe "remove_expired_pongs/1" do
+    test "removes expired nodes", %{table: table} do
+      now = Timestamp.now()
+
+      table = %{
+        table
+        | expected_pongs: %{
+            <<1>> => {<<1>>, <<1>>, now - 5},
+            <<2>> => {<<2>>, <<2>>, now - 5},
+            <<3>> => {<<3>>, <<3>>, now + 5}
+          }
+      }
+
+      updated_table = RoutingTable.remove_expired_pongs(table)
+
+      assert updated_table.expected_pongs == %{<<3>> => {<<3>>, <<3>>, now + 5}}
     end
   end
 end

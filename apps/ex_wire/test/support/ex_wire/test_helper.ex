@@ -7,12 +7,17 @@ defmodule ExWire.TestHelper do
   alias ExWire.Kademlia.Config, as: KademliaConfig
   alias ExWire.Adapter.UDP
   alias ExWire.Network
+  alias ExWire.Struct.Endpoint
 
   def random_routing_table(opts \\ []) do
     port = opts[:port] || random_port_number()
 
     {:ok, network_client_pid} =
-      UDP.start_link(network_module: {Network, []}, port: port, name: :test)
+      UDP.start_link(
+        network_module: {Network, []},
+        port: port,
+        name: String.to_atom("test#{random(1_000)}")
+      )
 
     table = random_node() |> RoutingTable.new(network_client_pid)
 
@@ -22,12 +27,27 @@ defmodule ExWire.TestHelper do
     end)
   end
 
+  def random_empty_table do
+    {:ok, network_client_pid} =
+      UDP.start_link(
+        network_module: {Network, []},
+        port: random_port_number(),
+        name: :routing_table_test
+      )
+
+    RoutingTable.new(random_node(), network_client_pid)
+  end
+
   def random_node do
     Node.new(public_key(), random_endpoint())
   end
 
   def random_endpoint do
-    ExWire.Struct.Endpoint.decode([random_ip(), random_port_binary(), random_port_binary()])
+    %Endpoint{
+      ip: random_ip(),
+      udp_port: random_port_number(),
+      tcp_port: random_port_number()
+    }
   end
 
   def random_bucket(opts \\ []) do
@@ -55,15 +75,11 @@ defmodule ExWire.TestHelper do
 
   defp random_ip do
     1..4
-    |> Enum.reduce(<<>>, fn _el, acc ->
+    |> Enum.reduce([], fn _el, acc ->
       random = random(255)
 
-      acc <> <<random>>
+      acc ++ [random]
     end)
-  end
-
-  def random_port_binary do
-    <<random_port_number()>>
   end
 
   def random_port_number do

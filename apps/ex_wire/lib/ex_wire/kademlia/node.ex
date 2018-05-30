@@ -44,6 +44,25 @@ defmodule ExWire.Kademlia.Node do
           86, 170, 234, 228, 38, 197, 48, 61, 237, 103, 124, 228, 85, 186, 26, 205,
           157>>
       }
+
+      iex> address = "enode://20c9ad97c081d63397d7b685a412227a40e23c8bdc6688c6f37e97cfbc22d2b4d1db1510d8f61e6a8866ad7f0e17c02b14182d37ea7c3c8b9c2683aeb6b733a1@52.169.14.227:30303"
+      iex> ExWire.Kademlia.Node.new(address)
+      %ExWire.Kademlia.Node{
+        endpoint: %ExWire.Struct.Endpoint{
+          ip: [52, 169, 14, 227],
+          tcp_port: nil,
+          udp_port: 30303
+        },
+        key: <<202, 107, 222, 100, 235, 37, 246, 148, 81, 241, 131, 186, 231, 136, 53,
+          244, 150, 181, 223, 94, 85, 8, 248, 17, 242, 130, 233, 242, 131, 19, 153,
+          173>>,
+        public_key: <<32, 201, 173, 151, 192, 129, 214, 51, 151, 215, 182, 133, 164,
+          18, 34, 122, 64, 226, 60, 139, 220, 102, 136, 198, 243, 126, 151, 207, 188,
+          34, 210, 180, 209, 219, 21, 16, 216, 246, 30, 106, 136, 102, 173, 127, 14,
+          23, 192, 43, 20, 24, 45, 55, 234, 124, 60, 139, 156, 38, 131, 174, 182, 183,
+          51, 161>>
+       }
+
   """
   @spec new(binary(), Endpoint) :: t()
   def new(public_key, endpoint = %Endpoint{}) do
@@ -54,6 +73,30 @@ defmodule ExWire.Kademlia.Node do
       key: key,
       endpoint: endpoint
     }
+  end
+
+  @spec new(binary()) :: t()
+  def new(enode_address) when is_binary(enode_address) do
+    %URI{
+      scheme: _scheme,
+      userinfo: remote_id,
+      host: remote_host,
+      port: remote_peer_port
+    } = URI.parse(enode_address)
+
+    remote_ip =
+      with {:ok, remote_ip} <- :inet.ip(remote_host |> String.to_charlist()) do
+        remote_ip |> Tuple.to_list()
+      end
+
+    endpoint = %Endpoint{
+      ip: remote_ip,
+      udp_port: remote_peer_port
+    }
+
+    public_key = Crypto.hex_to_bin(remote_id)
+
+    new(public_key, endpoint)
   end
 
   @doc """

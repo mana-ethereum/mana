@@ -12,7 +12,7 @@ defmodule ExWire.Message.PingTest do
 
       expected_result = %ExWire.Message.Ping{
         from: %ExWire.Struct.Endpoint{
-          ip: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+          ip: [0, 0, 0, 0],
           tcp_port: 30303,
           udp_port: 30303
         },

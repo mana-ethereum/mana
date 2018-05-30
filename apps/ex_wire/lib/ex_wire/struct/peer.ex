@@ -10,6 +10,8 @@ defmodule ExWire.Struct.Peer do
     :ident
   ]
 
+  alias ExWire.Crypto
+
   @type t :: %__MODULE__{
           host: String.t(),
           port: integer(),
@@ -32,7 +34,11 @@ defmodule ExWire.Struct.Peer do
   """
   @spec new(Sring.t(), integer(), String.t()) :: t
   def new(host, port, remote_id_hex) do
-    remote_id = remote_id_hex |> ExthCrypto.Math.hex_to_bin() |> ExthCrypto.Key.raw_to_der()
+    remote_id =
+      remote_id_hex
+      |> Crypto.hex_to_bin()
+      |> Crypto.raw_to_der()
+
     ident = Binary.take(remote_id_hex, 6) <> "..." <> Binary.take(remote_id_hex, -6)
 
     %__MODULE__{
