@@ -94,9 +94,8 @@ defmodule ExWire.Config do
       nodes when is_list(nodes) ->
         nodes
 
-      # TODO: Take all
       :from_chain ->
-        chain().nodes |> Enum.take(-1)
+        chain().nodes
     end
   end
 

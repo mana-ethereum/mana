@@ -22,7 +22,7 @@ defmodule ExWire.NodeDiscoverySupervisor do
     {udp_module, udp_process_name} = discovery_param(params, :network_adapter)
     kademlia_name = discovery_param(params, :kademlia_process_name)
     port = discovery_param(params, :port)
-    bootnodes = Config.bootnodes() |> Enum.map(&Node.new/1)
+    bootnodes = params[:nodes] || nodes()
 
     children = [
       {KademliaServer,
@@ -58,5 +58,13 @@ defmodule ExWire.NodeDiscoverySupervisor do
 
   defp default_discovery_params do
     Config.node_discovery_params()
+  end
+
+  defp nodes do
+    if Mix.env() == :test do
+      []
+    else
+      Config.bootnodes() |> Enum.map(&Node.new/1)
+    end
   end
 end
