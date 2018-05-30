@@ -54,7 +54,7 @@ defmodule ExWire.Kademlia.RoutingTableTest do
       assert Enum.count(pongs) == 1
 
       {_mdc, pair} = Enum.at(pongs, 0)
-      assert pair == {filler_node, node}
+      {^filler_node, ^node, _} = pair
     end
   end
 
@@ -230,7 +230,7 @@ defmodule ExWire.Kademlia.RoutingTableTest do
 
       expected_pong_nodes =
         updated_table.expected_pongs
-        |> Enum.map(fn {_key, {value, _}} ->
+        |> Enum.map(fn {_key, {value, _, _}} ->
           value
         end)
 

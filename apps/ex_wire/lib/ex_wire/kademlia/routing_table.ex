@@ -195,7 +195,7 @@ defmodule ExWire.Kademlia.RoutingTable do
     {:sent_message, _, encoded_message} = Network.send(ping, network_client_name, remote_endpoint)
 
     mdc = Protocol.message_mdc(encoded_message)
-    updated_pongs = Map.put(table.expected_pongs, mdc, {node, replace_candidate})
+    updated_pongs = Map.put(table.expected_pongs, mdc, {node, replace_candidate, ping.timestamp})
 
     %{table | expected_pongs: updated_pongs}
   end
@@ -219,7 +219,7 @@ defmodule ExWire.Kademlia.RoutingTable do
 
     if timestamp > Timestamp.now() do
       case node do
-        {removal_candidate, _insertion_candidate} ->
+        {removal_candidate, _insertion_candidate, _} ->
           refresh_node(table, removal_candidate)
 
         _ ->

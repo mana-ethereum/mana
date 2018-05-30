@@ -50,7 +50,7 @@ defmodule ExWire.KademliaTest do
 
       mdc =
         table.expected_pongs
-        |> Enum.filter(fn {_key, {value, _}} -> value == node end)
+        |> Enum.filter(fn {_key, {value, _, _}} -> value == node end)
         |> Enum.map(fn {key, _} -> key end)
         |> List.first()
 
@@ -112,7 +112,7 @@ defmodule ExWire.KademliaTest do
 
       expected_pong_nodes =
         table.expected_pongs
-        |> Enum.map(fn {_key, {value, _}} ->
+        |> Enum.map(fn {_key, {value, _, _}} ->
           value
         end)
 
