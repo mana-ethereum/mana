@@ -72,7 +72,7 @@ defmodule ExWire.Kademlia.Server do
   defp schedule_discovery_round(round, nodes \\ []) do
     cond do
       round == 0 ->
-        Process.send_after(self(), {:discovery_round, nodes}, 1_000)
+        Process.send_after(self(), {:discovery_round, nodes},  @discovery_round_period)
 
       round <= @max_discovery_rounds ->
         Process.send_after(self(), {:discovery_round, nodes}, @discovery_round_period)
