@@ -8,6 +8,8 @@ defmodule EVM.Builtin do
   """
 
   @g_sha256 60 + 12
+  @g_identity_base 15
+  @g_identity_byte 3
 
   @spec run_ecrec(EVM.Gas.t(), EVM.ExecEnv.t()) ::
           {EVM.Gas.t(), EVM.SubState.t(), EVM.ExecEnv.t(), EVM.VM.output()}
@@ -41,7 +43,26 @@ defmodule EVM.Builtin do
           {EVM.Gas.t(), EVM.SubState.t(), EVM.ExecEnv.t(), EVM.VM.output()}
   def run_rip160(gas, exec_env), do: {gas, %EVM.SubState{}, exec_env, <<>>}
 
+  @doc """
+  Identity simply returnes the output as the input
+
+  ## Examples
+
+      iex> EVM.Builtin.run_id(3000,  %EVM.ExecEnv{data: <<1, 2, 3>>})
+      {2982, %EVM.SubState{}, %EVM.ExecEnv{data: <<1, 2, 3>>},  <<1, 2, 3>>}
+  """
+
   @spec run_id(EVM.Gas.t(), EVM.ExecEnv.t()) ::
           {EVM.Gas.t(), EVM.SubState.t(), EVM.ExecEnv.t(), EVM.VM.output()}
-  def run_id(gas, exec_env), do: {gas, %EVM.SubState{}, exec_env, <<>>}
+  def run_id(gas, exec_env) do
+    data = exec_env.data
+    used_gas = @g_identity_base + @g_identity_byte * MathHelper.bits_to_words(byte_size(data))
+
+    if(used_gas < gas) do
+      remaining_gas = gas - used_gas
+      {remaining_gas, %EVM.SubState{}, exec_env, data}
+    else
+      {gas, %EVM.SubState{}, exec_env, <<>>}
+    end
+  end
 end
