@@ -270,4 +270,23 @@ defmodule ExWire.Kademlia.RoutingTableTest do
       assert [node2] == RoutingTable.discovery_nodes(table)
     end
   end
+
+  describe "remove_expired_pongs/1" do
+    test "removes expired nodes", %{table: table} do
+      now = Timestamp.now()
+
+      table = %{
+        table
+        | expected_pongs: %{
+            <<1>> => {<<1>>, <<1>>, now - 5},
+            <<2>> => {<<2>>, <<2>>, now - 5},
+            <<3>> => {<<3>>, <<3>>, now + 5}
+          }
+      }
+
+      updated_table = RoutingTable.remove_expired_pongs(table)
+
+      assert updated_table.expected_pongs == %{<<3>> => {<<3>>, <<3>>, now + 5}}
+    end
+  end
 end

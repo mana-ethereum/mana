@@ -201,6 +201,23 @@ defmodule ExWire.Kademlia.RoutingTable do
   end
 
   @doc """
+  Removes expired pongs.
+  """
+  @spec remove_expired_pongs(t()) :: t()
+  def remove_expired_pongs(table) do
+    now = Timestamp.now()
+
+    updated_pongs =
+      table.expected_pongs
+      |> Enum.reject(fn {_key, {_, _, timestamp}} ->
+        timestamp < now
+      end)
+      |> Map.new()
+
+    %{table | expected_pongs: updated_pongs}
+  end
+
+  @doc """
   Handles Pong message.
 
    There are three cases:

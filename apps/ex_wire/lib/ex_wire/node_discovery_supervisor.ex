@@ -26,7 +26,12 @@ defmodule ExWire.NodeDiscoverySupervisor do
 
     children = [
       {KademliaServer,
-       [name: kademlia_name, current_node: current_node(), network_client_name: udp_process_name, nodes: bootnodes]},
+       [
+         name: kademlia_name,
+         current_node: current_node(),
+         network_client_name: udp_process_name,
+         nodes: bootnodes
+       ]},
       {udp_module,
        [
          name: udp_process_name,
