@@ -11,6 +11,7 @@ defmodule EVM.Builtin do
   @g_sha256 60 + 12
   @g_identity_base 15
   @g_identity_byte 3
+  @g_ecrec 3000
 
   @doc """
   A precompiled contract that recovers a public key from a signed hash
@@ -44,7 +45,7 @@ defmodule EVM.Builtin do
   @spec run_ecrec(EVM.Gas.t(), EVM.ExecEnv.t()) ::
           {EVM.Gas.t(), EVM.SubState.t(), EVM.ExecEnv.t(), EVM.VM.output()}
   def run_ecrec(gas, exec_env = %EVM.ExecEnv{data: data}) do
-    used_gas = 3000
+    used_gas = @g_ecrec
 
     if(used_gas < gas) do
       data = EVM.Helpers.right_pad_bytes(data, 128)
