@@ -54,7 +54,9 @@ defmodule ExWire.Kademlia.RoutingTableTest do
       assert Enum.count(pongs) == 1
 
       {_mdc, pair} = Enum.at(pongs, 0)
-      {^filler_node, ^node, _} = pair
+      {deletion_candidate, insertion_candidate, _} = pair
+      assert deletion_candidate == filler_node
+      assert insertion_candidate == node
     end
   end
 

@@ -220,7 +220,7 @@ defmodule ExWire.Kademlia.RoutingTable do
   @doc """
   Handles Pong message.
 
-   There are three cases:
+   There are two cases:
    - If we were waiting for this pong (it's stored in routing table) and it's not expired,
        we refresh stale node.
    - If a pong is expired, we do nothing.
