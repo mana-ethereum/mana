@@ -78,12 +78,10 @@ defmodule ExWire.Framing.Secrets do
         auth_data,
         ack_data
       ) do
-    remote_ephemeral_public_key_raw = remote_ephemeral_public_key |> ExthCrypto.Key.raw_to_der()
-
     ephemeral_shared_secret =
       ExthCrypto.ECIES.ECDH.generate_shared_secret(
         my_ephemeral_private_key,
-        remote_ephemeral_public_key_raw
+        remote_ephemeral_public_key
       )
 
     # TODO: Nonces will need to be reversed come winter

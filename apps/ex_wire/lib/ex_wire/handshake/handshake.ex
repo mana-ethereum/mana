@@ -194,7 +194,7 @@ defmodule ExWire.Handshake do
     shared_secret = ECDH.generate_shared_secret(my_static_private_key, her_static_public_key)
 
     # Build a nonce unless given
-    nonce = if nonce, do: nonce, else: ExthCrypto.Math.nonce(@nonce_len)
+    nonce = if nonce, do: nonce, else: new_nonce()
 
     # XOR shared-secret and nonce
     shared_secret_xor_nonce = ExthCrypto.Math.xor(shared_secret, nonce)
@@ -230,7 +230,7 @@ defmodule ExWire.Handshake do
   @spec build_ack_resp(ExthCrypto.Key.public_key(), binary() | nil) :: AckRespV4.t()
   def build_ack_resp(remote_ephemeral_public_key, nonce \\ nil) do
     # Generate nonce unless given
-    nonce = if nonce, do: nonce, else: ExthCrypto.Math.nonce(@nonce_len)
+    nonce = if nonce, do: nonce, else: new_nonce()
 
     %AckRespV4{
       remote_nonce: nonce,
@@ -326,5 +326,10 @@ defmodule ExWire.Handshake do
       {:error, reason} ->
         {:invalid, reason}
     end
+  end
+
+  @spec new_nonce() :: binary()
+  def new_nonce do
+    ExthCrypto.Math.nonce(@nonce_len)
   end
 end
