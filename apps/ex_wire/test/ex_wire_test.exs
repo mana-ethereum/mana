@@ -2,14 +2,12 @@ defmodule ExWireTest do
   use ExUnit.Case
   doctest ExWire
 
-  alias ExWire.{Protocol, Config}
-  alias ExWire.Message.Ping
-  alias ExWire.Message.Pong
-  alias ExWire.Message.Neighbours
-  alias ExWire.Message.FindNeighbours
+  alias ExWire.{Protocol, TestHelper, Network}
+  alias ExWire.Message.{Ping, Pong, Neighbours, FindNeighbours}
   alias ExWire.Handler.FindNeighbours, as: FindNeighboursHandler
   alias ExWire.Util.Timestamp
   alias ExWire.Struct.Endpoint
+  alias ExWire.Adapter.Test
 
   @them %ExWire.Struct.Endpoint{
     ip: [0, 0, 0, 1],
@@ -25,6 +23,13 @@ defmodule ExWireTest do
 
   setup do
     Process.register(self(), :test)
+
+    {:ok, _network_client_pid} =
+      Test.start_link(
+        network_module: {Network, []},
+        port: TestHelper.random_port_number(),
+        name: :ex_wire_test
+      )
 
     :ok
   end
@@ -77,10 +82,9 @@ defmodule ExWireTest do
 
   def fake_send(message, timestamp) do
     encoded_message = Protocol.encode(message, ExWire.Config.private_key())
-    {_, process_name} = Config.udp_network_adapter()
 
     GenServer.cast(
-      process_name,
+      :ex_wire_test,
       {
         :fake_recieve,
         %{
