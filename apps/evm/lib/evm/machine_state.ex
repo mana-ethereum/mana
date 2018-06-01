@@ -34,8 +34,8 @@ defmodule EVM.MachineState do
         }
 
   @doc """
-  Returns a new execution environment less the amount
-  of gas specified.
+  Subtracts gas required by the current instruction from the specified machine
+  state.
 
   ## Examples
 

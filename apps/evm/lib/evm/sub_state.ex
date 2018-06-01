@@ -47,4 +47,30 @@ defmodule EVM.SubState do
 
     %{sub_state | logs: new_logs}
   end
+
+  @doc """
+  Adds refunds based on the  current instruction to the specified machine
+  substate.
+
+  ## Examples
+
+      iex> account_interface = EVM.Interface.Mock.MockAccountInterface.new()
+      iex> machine_code = <<EVM.Operation.metadata(:sstore).id>>
+      iex> %EVM.ExecEnv{
+          account_interface: account_interface,
+          machine_code: machine_code,
+        }
+        |> EVM.ExecEnv.put_storage(<<5>>,<<4>>)
+      iex> machine_state = %EVM.MachineState{gas: 10, stack: [5 , 0], program_counter: 0}
+      iex> exec_env = %EVM.ExecEnv{machine_code: <<EVM.Operation.metadata(:sstore).id>>}
+      iex> EVM.MachineState.add_refunds(machine_state, exec_env)
+      %EVM.MachineState{gas: 7, stack: []}
+  """
+  @spec add_refunds(MachineState.t(), ExecEnv.t()) :: MachineState.t()
+  def add_refunds(machine_state, exec_env) do
+    cost = Gas.cost(machine_state, exec_env)
+
+    %{machine_state | gas: machine_state.gas - cost}
+  end
+
 end
