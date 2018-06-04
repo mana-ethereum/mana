@@ -104,6 +104,16 @@ defmodule EVM.Operation.Metadata.EnvironmentalInformation do
                       input_count: 4,
                       output_count: 0,
                       group: :environmental_information
+                    },
+                    %{
+                      id: 0x3D,
+                      description:
+                        "Get size of output data from the previous call from the current
+environment.",
+                      sym: :returndatasize,
+                      input_count: 0,
+                      output_count: 1,
+                      group: :environmental_information
                     }
                   ],
                   do: struct(EVM.Operation.Metadata, operation)

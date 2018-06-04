@@ -226,7 +226,8 @@ defmodule EVM.Operation do
   def run(operation, machine_state, sub_state, exec_env) do
     {args, updated_machine_state} = operation_args(operation, machine_state, sub_state, exec_env)
 
-    apply_to_group_module(operation.sym, args)
+    operation.sym
+    |> apply_to_group_module(args)
     |> normalize_op_result(updated_machine_state.stack)
     |> merge_state(
       operation.sym,
@@ -267,7 +268,9 @@ defmodule EVM.Operation do
           op_result()
   def normalize_op_result(op_result, updated_stack) do
     if is_integer(op_result) || is_list(op_result) || is_binary(op_result) do
-      %{stack: Stack.push(updated_stack, Helpers.encode_val(op_result))}
+      last_return_data = Helpers.encode_val(op_result)
+
+      %{stack: Stack.push(updated_stack, last_return_data), last_return_data: last_return_data}
     else
       op_result
     end
@@ -359,6 +362,11 @@ defmodule EVM.Operation do
       if op_result[:stack],
         do: %{base_machine_state | stack: op_result[:stack]},
         else: base_machine_state
+
+    next_machine_state =
+      if op_result[:last_return_data],
+        do: %{next_machine_state | last_return_data: op_result[:last_return_data]},
+        else: next_machine_state
 
     next_sub_state = op_result[:sub_state] || sub_state
     next_exec_env = op_result[:exec_env] || exec_env

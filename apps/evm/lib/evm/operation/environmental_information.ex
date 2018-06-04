@@ -271,4 +271,27 @@ defmodule EVM.Operation.EnvironmentalInformation do
       %{machine_state: machine_state}
     end
   end
+
+  @doc """
+  Get size of output data from the previous call from the current environment.
+
+  ## Examples
+
+      iex> EVM.Operation.EnvironmentalInformation.returndatasize([], %{exec_env: %EVM.ExecEnv{last_return_data: 55}})
+      1
+      iex> EVM.Operation.EnvironmentalInformation.returndatasize([], %{exec_env: %EVM.ExecEnv{last_return_data: [55, 66]}})
+      2
+      iex> EVM.Operation.EnvironmentalInformation.returndatasize([], %{exec_env: %EVM.ExecEnv{}})
+      0
+  """
+  @spec codesize(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
+  def returndatasize(_args, %{exec_env: env}) do
+    data = env.last_return_data
+
+    cond do
+      is_nil(data) -> 0
+      is_list(data) -> Enum.count(data)
+      true -> 1
+    end
+  end
 end
