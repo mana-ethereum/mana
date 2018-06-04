@@ -35,7 +35,7 @@ defmodule EVM.Refunds do
   end
 
   @doc """
-  SUCICIDE operations produce a refund if the address has not already been suicided.
+  `SUCICIDE` operations produce a refund if the address has not already been suicided.
 
   ## Examples
 
@@ -62,8 +62,8 @@ defmodule EVM.Refunds do
       15000
   """
 
-  def refund(:suicide, _args, _machine_state, sub_state, exec_env) do
-    if exec_env.address not in sub_state.suicide_list do
+  def refund(:selfdestruct, _args, _machine_state, sub_state, exec_env) do
+    if exec_env.address not in sub_state.selfdestruct_list do
       @g_suicide
     end
   end

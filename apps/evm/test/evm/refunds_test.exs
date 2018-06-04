@@ -27,8 +27,6 @@ defmodule EVM.RefundsTest do
       :stop
     ]
 
-    IO.inspect EVM.MachineCode.compile(instructions) |> Base.encode16
-
     exec_env = %EVM.ExecEnv{
       machine_code: EVM.MachineCode.compile(instructions),
       address: address,

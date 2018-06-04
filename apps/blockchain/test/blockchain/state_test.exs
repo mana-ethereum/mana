@@ -27,6 +27,7 @@ defmodule Blockchain.StateTest do
             nonce: load_integer(test["transaction"]["nonce"]),
             gas_price: load_integer(test["transaction"]["gasPrice"]),
             gas_limit: load_integer(List.first(test["transaction"]["gasLimit"])),
+            data: maybe_hex(List.first(test["transaction"]["data"])),
             to: maybe_hex(test["transaction"]["to"]),
             value: load_integer(List.first(test["transaction"]["value"]))
           }
