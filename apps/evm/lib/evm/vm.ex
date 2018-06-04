@@ -119,7 +119,7 @@ defmodule EVM.VM do
     machine_state = MachineState.subtract_gas(machine_state, exec_env)
 
     {machine_state, sub_state, exec_env} =
-      Operation.run_operation(operation, machine_state, sub_state, exec_env)
+      Operation.run(operation, machine_state, sub_state, exec_env)
 
     machine_state = MachineState.move_program_counter(machine_state, operation, inputs)
 

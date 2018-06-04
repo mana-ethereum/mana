@@ -210,20 +210,20 @@ defmodule EVM.Operation do
       # TODO: How to handle trie state in tests?
 
       # Add
-      iex> EVM.Operation.run_operation(EVM.Operation.metadata(:add), %EVM.MachineState{stack: [1, 2]}, %EVM.SubState{}, %EVM.ExecEnv{})
+      iex> EVM.Operation.run(EVM.Operation.metadata(:add), %EVM.MachineState{stack: [1, 2]}, %EVM.SubState{}, %EVM.ExecEnv{})
       {%EVM.MachineState{stack: [3]}, %EVM.SubState{}, %EVM.ExecEnv{}}
 
       # Push
-      iex> EVM.Operation.run_operation(EVM.Operation.metadata(:push1), %EVM.MachineState{stack: [1, 2]}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: <<00, 01>>})
+      iex> EVM.Operation.run(EVM.Operation.metadata(:push1), %EVM.MachineState{stack: [1, 2]}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: <<00, 01>>})
       {%EVM.MachineState{stack: [1, 1, 2]}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: <<0, 1>>}}
 
       # nil
-      iex> EVM.Operation.run_operation(EVM.Operation.metadata(:stop), %EVM.MachineState{stack: [1, 2]}, %EVM.SubState{}, %EVM.ExecEnv{})
+      iex> EVM.Operation.run(EVM.Operation.metadata(:stop), %EVM.MachineState{stack: [1, 2]}, %EVM.SubState{}, %EVM.ExecEnv{})
       {%EVM.MachineState{stack: [1, 2]}, %EVM.SubState{}, %EVM.ExecEnv{}}
   """
-  @spec run_operation(EVM.Operation.Metadata.t(), MachineState.t(), SubState.t(), ExecEnv.t()) ::
+  @spec run(EVM.Operation.Metadata.t(), MachineState.t(), SubState.t(), ExecEnv.t()) ::
           {MachineState.t(), SubState.t(), ExecEnv.t()}
-  def run_operation(operation, machine_state, sub_state, exec_env) do
+  def run(operation, machine_state, sub_state, exec_env) do
     {args, updated_machine_state} = operation_args(operation, machine_state, sub_state, exec_env)
 
     apply_to_group_module(operation.sym, args)
