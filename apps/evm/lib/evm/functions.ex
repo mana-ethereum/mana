@@ -4,12 +4,8 @@ defmodule EVM.Functions do
   fit in other modules.
   """
 
-  alias EVM.ExecEnv
-  alias EVM.MachineCode
-  alias EVM.MachineState
-  alias EVM.Operation
-  alias EVM.Stack
-  alias EVM.Gas
+  alias EVM.{ExecEnv, MachineCode, MachineState, Operation, Stack, Gas}
+  alias EVM.Operation.Metadata
 
   @max_stack 1024
 
@@ -71,7 +67,7 @@ defmodule EVM.Functions do
 
       # TODO: Once we add gas cost, make this more reasonable
       # TODO: How do we pass in state?
-      iex> EVM.Functions.is_exception_halt?(%EVM.MachineState{program_counter: 0, gas: 0xffff}, %EVM.ExecEnv{machine_code: <<0xfe>>})
+      iex> EVM.Functions.is_exception_halt?(%EVM.MachineState{program_counter: 0, gas: 0xffff}, %EVM.ExecEnv{machine_code: <<0xfee>>})
       {:halt, :undefined_instruction}
 
       iex> EVM.Functions.is_exception_halt?(%EVM.MachineState{program_counter: 0, gas: 0xffff, stack: []}, %EVM.ExecEnv{machine_code: <<EVM.Operation.encode(:add)>>})
@@ -94,6 +90,9 @@ defmodule EVM.Functions do
 
       iex> EVM.Functions.is_exception_halt?(%EVM.MachineState{program_counter: 0, gas: 0xffff, stack: (for _ <- 1..1024, do: 0x0)}, %EVM.ExecEnv{machine_code: <<EVM.Operation.encode(:push1)>>})
       {:halt, :stack_overflow}
+
+      iex> EVM.Functions.is_exception_halt?(%EVM.MachineState{program_counter: 0, gas: 0xffff, stack: []}, %EVM.ExecEnv{machine_code: <<EVM.Operation.encode(:invalid)>>})
+      {:halt, :invalid_instruction}
   """
   @spec is_exception_halt?(MachineState.t(), ExecEnv.t()) :: :continue | {:halt, atom()}
   def is_exception_halt?(machine_state, exec_env) do
@@ -110,6 +109,9 @@ defmodule EVM.Functions do
       end
 
     cond do
+      is_invalid_instruction?(operation_metadata) ->
+        {:halt, :invalid_instruction}
+
       is_nil(input_count) ->
         {:halt, :undefined_instruction}
 
@@ -130,11 +132,17 @@ defmodule EVM.Functions do
     end
   end
 
-  defp is_invalid_jump_destination?(%{sym: :jump}, [position], machine_code) do
+  @spec is_invalid_instruction?(Metadata.t()) :: boolean()
+  defp is_invalid_instruction?(%Metadata{sym: :invalid}), do: true
+
+  defp is_invalid_instruction?(_), do: false
+
+  @spec is_invalid_jump_destination?(Metadata.t(), [EVM.val()], MachineCode.t()) :: boolean()
+  defp is_invalid_jump_destination?(%Metadata{sym: :jump}, [position], machine_code) do
     not MachineCode.valid_jump_dest?(position, machine_code)
   end
 
-  defp is_invalid_jump_destination?(%{sym: :jumpi}, [position, condition], machine_code) do
+  defp is_invalid_jump_destination?(%Metadata{sym: :jumpi}, [position, condition], machine_code) do
     condition != 0 && not MachineCode.valid_jump_dest?(position, machine_code)
   end
 

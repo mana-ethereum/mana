@@ -183,7 +183,7 @@ defmodule EVM.Operation do
       iex> EVM.Operation.metadata(:push1)
       %EVM.Operation.Metadata{id: 0x60, sym: :push1, fun: :push_n, args: [1], input_count: 0, output_count: 1, description: "Place 1-byte item on stack", group: :push, machine_code_offset: 1}
 
-      iex> EVM.Operation.metadata(0xfe)
+      iex> EVM.Operation.metadata(0xfee)
       nil
 
       iex> EVM.Operation.metadata(nil)
