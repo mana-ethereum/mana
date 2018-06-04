@@ -2,15 +2,6 @@ defmodule EVM.GasTest do
   use ExUnit.Case, async: true
   doctest EVM.Gas
 
-  setup do
-    account_interface = EVM.Interface.Mock.MockAccountInterface.new()
-
-    {:ok,
-     %{
-       account_interface: account_interface
-     }}
-  end
-
   test "Gas cost: CALL" do
     to_address = 0x0F572E5295C57F15886F9B263E2F6D2D6C7B5EC6
     inputs = [3000, to_address, 0, 0, 32, 32, 32]

@@ -7,9 +7,9 @@ defmodule EVM.Refunds do
     Operation
   }
   # Refund given (added into refund counter) when the storage value is set to zero from non-zero.
-  @g_sclear 15000
-  # Refund given (added into refund counter) for suiciding an account.
-  @g_suicide 24000
+  @storage_refund 15000
+  # Refund given (added into refund counter) for destroying an account.
+  @selfdestruct_refund 24000
 
   @doc """
   Returns the refund amount given a cycle of the VM.
@@ -35,7 +35,7 @@ defmodule EVM.Refunds do
   end
 
   @doc """
-  `SUCICIDE` operations produce a refund if the address has not already been suicided.
+  Returns the refund amount based on current opcode and state or nil if no refund is applicable.
 
   ## Examples
 
@@ -47,7 +47,7 @@ defmodule EVM.Refunds do
       ...> }
       iex> machine_state = %EVM.MachineState{}
       iex> sub_state = %EVM.SubState{}
-      iex> EVM.Refunds.refund(:suicide, [], machine_state, sub_state, exec_env)
+      iex> EVM.Refunds.refund(:selfdestruct, [], machine_state, sub_state, exec_env)
       24000
 
       iex> account_interface = EVM.Interface.Mock.MockAccountInterface.new()
@@ -62,18 +62,19 @@ defmodule EVM.Refunds do
       15000
   """
 
+  # `SELFDESTRUCT` operations produce a refund if the address has not already been suicided.
   def refund(:selfdestruct, _args, _machine_state, sub_state, exec_env) do
     if exec_env.address not in sub_state.selfdestruct_list do
-      @g_suicide
+      @selfdestruct_refund
     end
   end
 
 
-  # SSTORE operations produce a refund when storage is set to zero from some non-zero value.
+  # `SSTORE` operations produce a refund when storage is set to zero from some non-zero value.
   def refund(:sstore, [key, new_value], _machine_state, _sub_state, exec_env) do
     old_value = ExecEnv.get_storage(exec_env, key)
     if new_value == 0 && (old_value not in [:account_not_found, :key_not_found]) do
-      @g_sclear
+      @storage_refund
     end
   end
 

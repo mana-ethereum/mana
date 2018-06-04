@@ -7,14 +7,14 @@ defmodule Blockchain.StateTest do
   use ExUnit.Case, async: true
 
   @passing_tests_by_group %{
+    stExample: [:add11],
+    stCallCodes: [
+      :callcall_00,
+      :callcode_checkPC
+    ],
     stRefundTest: [
       :refund_singleSuicide,
     ],
-    # stExample: [:add11],
-    # stCallCodes: [
-    #   :callcall_00,
-    #   :callcode_checkPC
-    # ]
   }
 
   test "Blockchain state tests" do
@@ -78,8 +78,6 @@ defmodule Blockchain.StateTest do
   end
 
   def state_test_file_name(type, test) do
-    IO.inspect System.cwd() <>
-      "/../../ethereum_common_tests/GeneralStateTests/#{Atom.to_string(type)}/#{test}.json"
     System.cwd() <>
       "/../../ethereum_common_tests/GeneralStateTests/#{Atom.to_string(type)}/#{test}.json"
   end

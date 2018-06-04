@@ -32,10 +32,6 @@ defmodule EVM.Gas do
   @g_sset 20000
   # Paid for an SSTORE operation when the storage value’s zeroness remains unchanged or is set to zero.
   @g_sreset 5000
-  # Refund given (added into refund counter) when the storage value is set to zero from non-zero.
-  @g_sclear 15000
-  # Refund given (added into refund counter) for selfdestructing an account.
-  @r_selfdestruct 24000
   # Amount of gas to pay for a SELFDESTRUCT operation.
   @g_selfdestruct 5000
   # Paid for a CREATE operation.
