@@ -1,9 +1,6 @@
 defmodule EVM.Operation.EnvironmentalInformation do
-  alias EVM.Operation
-  alias EVM.Stack
-  alias EVM.Helpers
+  alias EVM.{Operation, Stack, Helpers}
   alias EVM.Interface.AccountInterface
-  alias MerklePatriciaTree.Trie
 
   @doc """
   Get address of currently executing account.
@@ -104,8 +101,6 @@ defmodule EVM.Operation.EnvironmentalInformation do
   @doc """
   Get input data of current environment.
 
-  TODO: Implement opcode
-
   ## Examples
 
       iex> EVM.Operation.EnvironmentalInformation.calldataload([0], %{exec_env: %{data: (for _ <- 1..50, into: <<>>, do: <<255>>)}})
@@ -119,7 +114,9 @@ defmodule EVM.Operation.EnvironmentalInformation do
   """
   @spec calldataload(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def calldataload([s0], %{exec_env: %{data: data}}) do
-    Helpers.read_zero_padded(data, s0, 32) |> Helpers.decode_signed()
+    data
+    |> Helpers.read_zero_padded(s0, 32)
+    |> Helpers.decode_signed()
   end
 
   @doc """
@@ -138,8 +135,6 @@ defmodule EVM.Operation.EnvironmentalInformation do
 
   @doc """
   Copy input data in current environment to memory.
-
-  TODO: Implement opcode
 
   ## Examples
 
