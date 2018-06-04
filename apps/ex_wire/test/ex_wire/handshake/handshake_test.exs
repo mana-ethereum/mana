@@ -191,6 +191,7 @@ defmodule HandshakeTest do
     assert ack_resp.remote_ephemeral_public_key ==
              "b6d82fa3409da933dbf9cb0140c5dde89f4e64aec88d476af648880f4a10e1e49fe35ef3e69e93dd300b4797765a747c6384a6ecf5db9c2690398607a86181e4"
              |> ExthCrypto.Math.hex_to_bin()
+             |> ExthCrypto.Key.raw_to_der()
 
     assert ack_resp.remote_version == 63
   end
@@ -232,6 +233,7 @@ defmodule HandshakeTest do
     assert ack_resp.remote_ephemeral_public_key ==
              "b6d82fa3409da933dbf9cb0140c5dde89f4e64aec88d476af648880f4a10e1e49fe35ef3e69e93dd300b4797765a747c6384a6ecf5db9c2690398607a86181e4"
              |> ExthCrypto.Math.hex_to_bin()
+             |> ExthCrypto.Key.raw_to_der()
 
     assert ack_resp.remote_version == 4
   end
@@ -273,6 +275,7 @@ defmodule HandshakeTest do
     assert ack_resp.remote_ephemeral_public_key ==
              "b6d82fa3409da933dbf9cb0140c5dde89f4e64aec88d476af648880f4a10e1e49fe35ef3e69e93dd300b4797765a747c6384a6ecf5db9c2690398607a86181e4"
              |> ExthCrypto.Math.hex_to_bin()
+             |> ExthCrypto.Key.raw_to_der()
 
     assert ack_resp.remote_version == 57
   end
