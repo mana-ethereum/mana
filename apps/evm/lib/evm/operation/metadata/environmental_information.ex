@@ -114,6 +114,14 @@ environment.",
                       input_count: 0,
                       output_count: 1,
                       group: :environmental_information
+                    },
+                    %{
+                      id: 0x3E,
+                      description: "Copy output data from the previous call to memory",
+                      sym: :returndatacopy,
+                      input_count: 3,
+                      output_count: 0,
+                      group: :environmental_information
                     }
                   ],
                   do: struct(EVM.Operation.Metadata, operation)
