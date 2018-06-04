@@ -210,23 +210,24 @@ defmodule EVM.Operation do
       # TODO: How to handle trie state in tests?
 
       # Add
-      iex> EVM.Operation.run_operation(EVM.Operation.metadata(:add), %EVM.MachineState{stack: [1, 2]}, %EVM.SubState{}, %EVM.ExecEnv{})
-      {%EVM.MachineState{stack: [3]}, %EVM.SubState{}, %EVM.ExecEnv{}}
+      iex> EVM.Operation.run(EVM.Operation.metadata(:add), %EVM.MachineState{stack: [1, 2]}, %EVM.SubState{}, %EVM.ExecEnv{})
+      {%EVM.MachineState{stack: [3], last_return_data: 3}, %EVM.SubState{}, %EVM.ExecEnv{}}
 
       # Push
-      iex> EVM.Operation.run_operation(EVM.Operation.metadata(:push1), %EVM.MachineState{stack: [1, 2]}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: <<00, 01>>})
-      {%EVM.MachineState{stack: [1, 1, 2]}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: <<0, 1>>}}
+      iex> EVM.Operation.run(EVM.Operation.metadata(:push1), %EVM.MachineState{stack: [1, 2]}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: <<00, 01>>})
+      {%EVM.MachineState{stack: [1, 1, 2], last_return_data: 1}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: <<0, 1>>}}
 
       # nil
-      iex> EVM.Operation.run_operation(EVM.Operation.metadata(:stop), %EVM.MachineState{stack: [1, 2]}, %EVM.SubState{}, %EVM.ExecEnv{})
+      iex> EVM.Operation.run(EVM.Operation.metadata(:stop), %EVM.MachineState{stack: [1, 2]}, %EVM.SubState{}, %EVM.ExecEnv{})
       {%EVM.MachineState{stack: [1, 2]}, %EVM.SubState{}, %EVM.ExecEnv{}}
   """
-  @spec run_operation(EVM.Operation.Metadata.t(), MachineState.t(), SubState.t(), ExecEnv.t()) ::
+  @spec run(EVM.Operation.Metadata.t(), MachineState.t(), SubState.t(), ExecEnv.t()) ::
           {MachineState.t(), SubState.t(), ExecEnv.t()}
-  def run_operation(operation, machine_state, sub_state, exec_env) do
+  def run(operation, machine_state, sub_state, exec_env) do
     {args, updated_machine_state} = operation_args(operation, machine_state, sub_state, exec_env)
 
-    apply_to_group_module(operation.sym, args)
+    operation.sym
+    |> apply_to_group_module(args)
     |> normalize_op_result(updated_machine_state.stack)
     |> merge_state(
       operation.sym,
@@ -258,16 +259,18 @@ defmodule EVM.Operation do
   ## Examples
   #
       iex> EVM.Operation.normalize_op_result(1, [])
-      %{stack: [1]}
+      %{stack: [1], last_return_data: 1}
       iex> EVM.Operation.normalize_op_result([1,2], [])
-      %{stack: [1, 2]}
+      %{stack: [1, 2], last_return_data: [1, 2]}
 
   """
   @spec normalize_op_result(EVM.val() | list(EVM.val()) | op_result(), EVM.Stack.t()) ::
           op_result()
   def normalize_op_result(op_result, updated_stack) do
     if is_integer(op_result) || is_list(op_result) || is_binary(op_result) do
-      %{stack: Stack.push(updated_stack, Helpers.encode_val(op_result))}
+      last_return_data = Helpers.encode_val(op_result)
+
+      %{stack: Stack.push(updated_stack, last_return_data), last_return_data: last_return_data}
     else
       op_result
     end
@@ -359,6 +362,11 @@ defmodule EVM.Operation do
       if op_result[:stack],
         do: %{base_machine_state | stack: op_result[:stack]},
         else: base_machine_state
+
+    next_machine_state =
+      if op_result[:last_return_data],
+        do: %{next_machine_state | last_return_data: op_result[:last_return_data]},
+        else: next_machine_state
 
     next_sub_state = op_result[:sub_state] || sub_state
     next_exec_env = op_result[:exec_env] || exec_env

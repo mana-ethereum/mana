@@ -6,11 +6,7 @@ defmodule EVM.MachineState do
   This is most often seen as µ in the Yellow Paper.
   """
 
-  alias EVM.Gas
-  alias EVM.Stack
-  alias EVM.MachineState
-  alias EVM.ProgramCounter
-  alias EVM.ExecEnv
+  alias EVM.{Gas, Stack, MachineState, ProgramCounter, ExecEnv}
   alias EVM.Operation.Metadata
 
   # g
@@ -23,7 +19,8 @@ defmodule EVM.MachineState do
             active_words: 0,
             previously_active_words: 0,
             # s
-            stack: []
+            stack: [],
+            last_return_data: []
 
   @type program_counter :: integer()
   @type memory :: binary()
@@ -32,7 +29,8 @@ defmodule EVM.MachineState do
           program_counter: program_counter,
           memory: memory,
           active_words: integer(),
-          stack: Stack.t()
+          stack: Stack.t(),
+          last_return_data: [EVM.val()]
         }
 
   @doc """
