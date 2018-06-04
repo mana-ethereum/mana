@@ -117,7 +117,7 @@ defmodule EVM.VM do
     inputs = Operation.inputs(operation, machine_state)
 
     machine_state = MachineState.subtract_gas(machine_state, exec_env)
-    machine_state = MachineState.add_refunds(machine_state, exec_env)
+    sub_state = SubState.add_refund(machine_state, sub_state, exec_env)
 
     {n_machine_state, n_sub_state, n_exec_env} =
       Operation.run(operation, machine_state, sub_state, exec_env)
