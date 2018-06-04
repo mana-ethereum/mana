@@ -29,7 +29,8 @@ defmodule EVM.MachineState do
           program_counter: program_counter,
           memory: memory,
           active_words: integer(),
-          stack: Stack.t()
+          stack: Stack.t(),
+          last_return_data: [EVM.val()]
         }
 
   @doc """

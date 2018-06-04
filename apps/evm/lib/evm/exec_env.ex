@@ -29,8 +29,7 @@ defmodule EVM.ExecEnv do
             stack_depth: 0,
             # I_h (wrapped in interface)
             account_interface: nil,
-            block_interface: nil,
-            last_return_data: []
+            block_interface: nil
 
   @type t :: %__MODULE__{
           address: EVM.address(),
@@ -42,8 +41,7 @@ defmodule EVM.ExecEnv do
           machine_code: EVM.MachineCode.t(),
           stack_depth: integer(),
           block_interface: BlockInterface.t(),
-          account_interface: AccountInterface.t(),
-          last_return_data: [EVM.val()]
+          account_interface: AccountInterface.t()
         }
 
   @spec put_storage(t(), integer(), integer()) :: t()

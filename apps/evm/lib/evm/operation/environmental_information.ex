@@ -277,16 +277,16 @@ defmodule EVM.Operation.EnvironmentalInformation do
 
   ## Examples
 
-      iex> EVM.Operation.EnvironmentalInformation.returndatasize([], %{exec_env: %EVM.ExecEnv{last_return_data: 55}})
+      iex> EVM.Operation.EnvironmentalInformation.returndatasize([], %{machine_state: %EVM.MachineState{last_return_data: 55}})
       1
-      iex> EVM.Operation.EnvironmentalInformation.returndatasize([], %{exec_env: %EVM.ExecEnv{last_return_data: [55, 66]}})
+      iex> EVM.Operation.EnvironmentalInformation.returndatasize([], %{machine_state: %EVM.MachineState{last_return_data: [55, 66]}})
       2
-      iex> EVM.Operation.EnvironmentalInformation.returndatasize([], %{exec_env: %EVM.ExecEnv{}})
+      iex> EVM.Operation.EnvironmentalInformation.returndatasize([], %{machine_state: %EVM.MachineState{}})
       0
   """
-  @spec codesize(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
-  def returndatasize(_args, %{exec_env: env}) do
-    data = env.last_return_data
+  @spec returndatasize(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
+  def returndatasize(_args, %{machine_state: state}) do
+    data = state.last_return_data
 
     cond do
       is_nil(data) -> 0
