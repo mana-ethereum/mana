@@ -214,8 +214,8 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
   end
 
   @doc """
-  Suicides an account (err.. SELFDESTRUCT is the new word). This removes any trace
-  of the account from the system.
+  Destructs an account (SELFDESTRUCT operation in YP).
+  This removes any trace of the account from the system.
 
   ## Examples
 
@@ -223,7 +223,7 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
       ...> |> MerklePatriciaTree.Trie.new()
       ...> |> Blockchain.Account.add_wei(<<1::160>>, 5)
       ...> |> Blockchain.Interface.AccountInterface.new()
-      ...> |> EVM.Interface.AccountInterface.suicide_account(<<1::160>>)
+      ...> |> EVM.Interface.AccountInterface.destroy_account(<<1::160>>)
       ...> |> EVM.Interface.AccountInterface.get_account_balance(<<1::160>>)
       nil
 
@@ -231,13 +231,13 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
       ...> |> MerklePatriciaTree.Trie.new()
       ...> |> Blockchain.Account.add_wei(<<1::160>>, 5)
       ...> |> Blockchain.Interface.AccountInterface.new()
-      ...> |> EVM.Interface.AccountInterface.suicide_account(<<2::160>>)
+      ...> |> EVM.Interface.AccountInterface.destroy_account(<<2::160>>)
       ...> |> EVM.Interface.AccountInterface.get_account_balance(<<1::160>>)
       5
   """
-  @spec suicide_account(EVM.Interface.AccountInterface.t(), EVM.address()) ::
+  @spec destroy_account(EVM.Interface.AccountInterface.t(), EVM.address()) ::
           EVM.Interface.AccountInterface.t()
-  def suicide_account(account_interface, address) do
+  def destroy_account(account_interface, address) do
     updated_state = Account.del_account(account_interface.state, address)
 
     %{account_interface | state: updated_state}

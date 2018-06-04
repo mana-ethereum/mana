@@ -129,9 +129,12 @@ defmodule EVM.Debugger.Breakpoint do
   """
   @spec matches?(t, EVM.MachineState.t(), EVM.SubState.t(), EVM.ExecEnv.t()) :: boolean()
   def matches?(breakpoint, machine_state, _sub_state, exec_env) do
-    breakpoint.enabled and break_on_next_pc?(breakpoint, machine_state.program_counter) and
+    should_break = break_on_next_pc?(breakpoint, machine_state.program_counter)
+
+    breakpoint.enabled and should_break and
       Enum.all?(breakpoint.conditions, fn {condition, condition_val} ->
         case condition do
+          :sender -> exec_env.sender == condition_val
           :address -> exec_env.address == condition_val
         end
       end)
@@ -159,6 +162,7 @@ defmodule EVM.Debugger.Breakpoint do
     conditions =
       for {k, v} <- breakpoint.conditions do
         case k do
+          :sender -> "sender address 0x#{Base.encode16(v, case: :lower)}"
           :address -> "contract address 0x#{Base.encode16(v, case: :lower)}"
         end
       end
@@ -295,7 +299,7 @@ defmodule EVM.Debugger.Breakpoint do
     end
   end
 
-  # Returns true if we should break on the next instruction
+  # Returns true if we should break on the next instruction.
 
   # This is will be true if we're instructed to break on :next or :start, or
   # when the machine's breakpoint's pc matches the machine's pc.

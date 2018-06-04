@@ -60,10 +60,9 @@ defmodule EVM.ExecEnv do
     AccountInterface.get_storage(account_interface, address, key)
   end
 
-  @spec suicide_account(t()) :: t()
-  def suicide_account(exec_env = %{account_interface: account_interface, address: address}) do
-    account_interface = AccountInterface.suicide_account(account_interface, address)
-
+  @spec destroy_account(t()) :: t()
+  def destroy_account(exec_env = %{account_interface: account_interface, address: address}) do
+    account_interface = AccountInterface.destroy_account(account_interface, address)
     Map.put(exec_env, :account_interface, account_interface)
   end
 

@@ -21,7 +21,7 @@ defmodule EVM.Operation.Logging do
       ...>   program_counter: 40,
       ...>   stack: []
       ...> }
-      iex> sub_state = %EVM.SubState{logs: [], refund: 0, suicide_list: []}
+      iex> sub_state = %EVM.SubState{logs: [], refund: 0, selfdestruct_list: []}
       iex> vm_map = %{sub_state: sub_state, exec_env: env, machine_state: machine_state}
       iex> EVM.Operation.Logging.log0([0, 32], vm_map)
       %{
@@ -37,7 +37,7 @@ defmodule EVM.Operation.Logging do
             }
           ],
           refund: 0,
-          suicide_list: []
+          selfdestruct_list: []
         }
       }
   """
@@ -66,7 +66,7 @@ defmodule EVM.Operation.Logging do
       ...>   program_counter: 40,
       ...>   stack: []
       ...> }
-      iex> sub_state = %EVM.SubState{logs: [], refund: 0, suicide_list: []}
+      iex> sub_state = %EVM.SubState{logs: [], refund: 0, selfdestruct_list: []}
       iex> vm_map = %{sub_state: sub_state, exec_env: env, machine_state: machine_state}
       iex> args = [0, 32, 115792089237316195423570985008687907853269984665640564039457584007913129639935]
       iex> EVM.Operation.Logging.log1(args, vm_map)
@@ -83,7 +83,7 @@ defmodule EVM.Operation.Logging do
             }
           ],
           refund: 0,
-          suicide_list: []
+          selfdestruct_list: []
         }
       }
   """
@@ -112,7 +112,7 @@ defmodule EVM.Operation.Logging do
       ...>   program_counter: 40,
       ...>   stack: []
       ...> }
-      iex> sub_state = %EVM.SubState{logs: [], refund: 0, suicide_list: []}
+      iex> sub_state = %EVM.SubState{logs: [], refund: 0, selfdestruct_list: []}
       iex> vm_map = %{sub_state: sub_state, exec_env: env, machine_state: machine_state}
       iex> args = [0, 32,
       ...>   115792089237316195423570985008687907853269984665640564039457584007913129639935,
@@ -132,7 +132,7 @@ defmodule EVM.Operation.Logging do
             }
           ],
           refund: 0,
-          suicide_list: []
+          selfdestruct_list: []
         }
       }
   """
@@ -161,7 +161,7 @@ defmodule EVM.Operation.Logging do
       ...>   program_counter: 40,
       ...>   stack: []
       ...> }
-      iex> sub_state = %EVM.SubState{logs: [], refund: 0, suicide_list: []}
+      iex> sub_state = %EVM.SubState{logs: [], refund: 0, selfdestruct_list: []}
       iex> vm_map = %{sub_state: sub_state, exec_env: env, machine_state: machine_state}
       iex> args = [1, 0, 0, 0, 0]
       iex> EVM.Operation.Logging.log3(args, vm_map)
@@ -176,7 +176,7 @@ defmodule EVM.Operation.Logging do
             }
           ],
           refund: 0,
-          suicide_list: []
+          selfdestruct_list: []
         }
       }
   """
@@ -208,7 +208,7 @@ defmodule EVM.Operation.Logging do
       ...>   program_counter: 40,
       ...>   stack: []
       ...> }
-      iex> sub_state = %EVM.SubState{logs: [], refund: 0, suicide_list: []}
+      iex> sub_state = %EVM.SubState{logs: [], refund: 0, selfdestruct_list: []}
       iex> vm_map = %{sub_state: sub_state, exec_env: env, machine_state: machine_state}
       iex> args = [115792089237316195423570985008687907853269984665640564039457584007913129639935,
       ...>   1, 0, 0, 0, 0]
@@ -224,7 +224,7 @@ defmodule EVM.Operation.Logging do
             }
           ],
           refund: 0,
-          suicide_list: []
+          selfdestruct_list: []
         }
       }
   """

@@ -6,16 +6,16 @@ defmodule EVM.SubState do
 
   alias EVM.{Operation, LogEntry}
 
-  defstruct suicide_list: [],
+  defstruct selfdestruct_list: [],
             logs: [],
             refund: 0
 
-  @type suicide_list :: [EVM.address()]
+  @type selfdestruct_list :: [EVM.address()]
   @type logs :: [LogEntry.t()]
   @type refund :: EVM.Wei.t()
 
   @type t :: %__MODULE__{
-          suicide_list: suicide_list,
+          selfdestruct_list: selfdestruct_list,
           logs: logs,
           refund: refund
         }
@@ -25,7 +25,7 @@ defmodule EVM.SubState do
 
   ## Examples
 
-      iex> sub_state = %EVM.SubState{suicide_list: [], logs: [], refund: 0}
+      iex> sub_state = %EVM.SubState{selfdestruct_list: [], logs: [], refund: 0}
       iex> sub_state |> EVM.SubState.add_log(0, [1, 10, 12], "adsfa")
       %EVM.SubState{
         logs: [
@@ -36,7 +36,7 @@ defmodule EVM.SubState do
           }
         ],
         refund: 0,
-        suicide_list: []
+        selfdestruct_list: []
       }
   """
   @spec add_log(t(), EVM.address(), Operation.stack_args(), binary()) :: t()

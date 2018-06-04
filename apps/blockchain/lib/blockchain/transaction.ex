@@ -361,15 +361,15 @@ defmodule Blockchain.Transaction do
 
     state_after_gas = finalize_transaction_gas(state_p, sender, tx, refund, block_header)
 
-    state_after_suicides =
-      Enum.reduce(sub_state.suicide_list, state_after_gas, fn address, state ->
+    state_after_selfdestruct =
+      Enum.reduce(sub_state.selfdestruct_list, state_after_gas, fn address, state ->
         Account.del_account(state, address)
       end)
 
     expended_gas = tx.gas_limit - remaining_gas
 
     # { σ', Υ^g, Υ^l }, as defined in Eq.(79) and Eq.(80)
-    {state_after_suicides, expended_gas, sub_state.logs}
+    {state_after_selfdestruct, expended_gas, sub_state.logs}
   end
 
   @doc """

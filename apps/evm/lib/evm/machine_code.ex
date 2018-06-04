@@ -130,7 +130,7 @@ defmodule EVM.MachineCode do
       [:push1, 3, :push1, 5, :add, :return]
 
       iex> EVM.MachineCode.decompile(<<97, 0, 4, 128, 97, 0, 14, 96, 0, 57, 97, 0, 18, 86, 96, 0, 53, 255, 91, 96, 0, 243>>)
-      [:push2, 0, 4, :dup1, :push2, 0, 14, :push1, 0, :codecopy, :push2, 0, 18, :jump, :push1, 0, :calldataload, :suicide, :jumpdest, :push1, 0, :return]
+      [:push2, 0, 4, :dup1, :push2, 0, 14, :push1, 0, :codecopy, :push2, 0, 18, :jump, :push1, 0, :calldataload, :selfdestruct, :jumpdest, :push1, 0, :return]
 
       iex> EVM.MachineCode.decompile(<<>>)
       []

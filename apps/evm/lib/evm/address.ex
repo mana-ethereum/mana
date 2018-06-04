@@ -28,7 +28,10 @@ defmodule EVM.Address do
     address
     |> :binary.encode_unsigned()
     |> EVM.Helpers.left_pad_bytes(@size)
+    |> EVM.Helpers.take_n_last_bytes(@size)
   end
+
+  def new(address), do: address
 
   @doc """
   Returns an address given an address and a nonce.
