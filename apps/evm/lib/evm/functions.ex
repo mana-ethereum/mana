@@ -67,7 +67,7 @@ defmodule EVM.Functions do
 
       # TODO: Once we add gas cost, make this more reasonable
       # TODO: How do we pass in state?
-      iex> EVM.Functions.is_exception_halt?(%EVM.MachineState{program_counter: 0, gas: 0xffff}, %EVM.ExecEnv{machine_code: <<0xfe>>})
+      iex> EVM.Functions.is_exception_halt?(%EVM.MachineState{program_counter: 0, gas: 0xffff}, %EVM.ExecEnv{machine_code: <<0xfee>>})
       {:halt, :undefined_instruction}
 
       iex> EVM.Functions.is_exception_halt?(%EVM.MachineState{program_counter: 0, gas: 0xffff, stack: []}, %EVM.ExecEnv{machine_code: <<EVM.Operation.encode(:add)>>})

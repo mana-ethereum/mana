@@ -139,7 +139,10 @@ defmodule EVM.MachineCode do
       [:push9, 0, 41, 0, 0, 0, 0, 0, 0, 0]
 
       iex> EVM.MachineCode.decompile(<<0xfe, 0xf3>>, strict: false)
-      [{:unknown, 254}, :return]
+      [:invalid, :return]
+
+      iex> EVM.MachineCode.decompile(<<0xfee, 0xf3>>, strict: false)
+      [{:unknown, 238}, :return]
   """
   @type decompile_option :: {:strict, true | false}
   @spec decompile(binary(), [decompile_option]) :: [atom() | integer()]
