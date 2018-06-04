@@ -43,7 +43,7 @@ defmodule EVM.Operation.Metadata.System do
                       group: :system
                     },
                     %{
-                      id: 0xFD,
+                      id: 0xFE,
                       description:
                         "Designated invalid instruction.  It can be used to abort the execution.",
                       sym: :invalid,
