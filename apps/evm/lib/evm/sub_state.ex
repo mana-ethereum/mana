@@ -4,7 +4,13 @@ defmodule EVM.SubState do
   between operations in an execution for a contract.
   """
 
-  alias EVM.{Operation, LogEntry, Refunds}
+  alias EVM.{
+    Operation,
+    LogEntry,
+    Refunds,
+    ExecEnv,
+    MachineState,
+  }
 
   defstruct selfdestruct_list: [],
             logs: [],
