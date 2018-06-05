@@ -10,7 +10,7 @@ defmodule EVM.SubState do
     Refunds,
     ExecEnv,
     SubState,
-    MachineState,
+    MachineState
   }
 
   defstruct selfdestruct_list: [],

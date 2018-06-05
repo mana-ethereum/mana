@@ -13,8 +13,8 @@ defmodule Blockchain.StateTest do
       :callcode_checkPC
     ],
     stRefundTest: [
-      :refund_singleSuicide,
-    ],
+      :refund_singleSuicide
+    ]
   }
 
   test "Blockchain state tests" do

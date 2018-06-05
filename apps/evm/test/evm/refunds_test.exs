@@ -13,6 +13,7 @@ defmodule EVM.RefundsTest do
 
   test "Refund: SSTORE", %{account_interface: account_interface} do
     address = 0x0000000000000000000000000000000000000001
+
     instructions = [
       :push1,
       3,
@@ -40,7 +41,7 @@ defmodule EVM.RefundsTest do
         balance: 0,
         nonce: 0,
         storage: %{},
-        code: "",
+        code: ""
       }
     }
 
@@ -50,6 +51,7 @@ defmodule EVM.RefundsTest do
     expected_exec_env = Map.put(exec_env, :account_interface, expected_account_interface)
 
     assert result ==
-             {0, %EVM.SubState{logs: [], refund: 15000, selfdestruct_list: []}, expected_exec_env, ""}
+             {0, %EVM.SubState{logs: [], refund: 15000, selfdestruct_list: []}, expected_exec_env,
+              ""}
   end
 end

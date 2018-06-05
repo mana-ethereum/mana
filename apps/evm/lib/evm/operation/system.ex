@@ -158,7 +158,7 @@ defmodule EVM.Operation.System do
       %{
         machine_state: machine_state,
         exec_env: exec_env,
-        sub_state: n_sub_state,
+        sub_state: n_sub_state
       }
     else
       %{

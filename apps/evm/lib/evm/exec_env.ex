@@ -60,8 +60,10 @@ defmodule EVM.ExecEnv do
     case AccountInterface.get_storage(account_interface, address, key) do
       :account_not_found ->
         0
+
       :key_not_found ->
         0
+
       {:ok, value} ->
         value
     end

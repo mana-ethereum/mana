@@ -5,8 +5,9 @@ defmodule EVM.Refunds do
     MachineCode,
     MachineState,
     Operation,
-    SubState,
+    SubState
   }
+
   # Refund given (added into refund counter) when the storage value is set to zero from non-zero.
   @storage_refund 15000
   # Refund given (added into refund counter) for destroying an account.
@@ -69,7 +70,6 @@ defmodule EVM.Refunds do
       @selfdestruct_refund
     end
   end
-
 
   # `SSTORE` operations produce a refund when storage is set to zero from some non-zero value.
   def refund(:sstore, [key, new_value], _machine_state, _sub_state, exec_env) do
