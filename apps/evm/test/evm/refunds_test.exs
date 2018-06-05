@@ -14,19 +14,7 @@ defmodule EVM.RefundsTest do
   test "Refund: SSTORE", %{account_interface: account_interface} do
     address = 0x0000000000000000000000000000000000000001
 
-    instructions = [
-      :push1,
-      3,
-      :push1,
-      5,
-      :sstore,
-      :push1,
-      0,
-      :push1,
-      5,
-      :sstore,
-      :stop
-    ]
+    instructions = [:push1, 3, :push1, 5, :sstore, :push1, 0, :push1, 5, :sstore, :stop]
 
     exec_env = %EVM.ExecEnv{
       machine_code: EVM.MachineCode.compile(instructions),

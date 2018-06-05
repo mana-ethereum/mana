@@ -33,7 +33,7 @@ defmodule EVM.Refunds do
   def refund(machine_state, sub_state, exec_env) do
     operation = MachineCode.current_operation(machine_state, exec_env)
     inputs = Operation.inputs(operation, machine_state)
-    refund(operation.sym, inputs, machine_state, sub_state, exec_env) || 0
+    refund(operation.sym, inputs, machine_state, sub_state, exec_env)
   end
 
   @doc """
@@ -68,6 +68,8 @@ defmodule EVM.Refunds do
   def refund(:selfdestruct, _args, _machine_state, sub_state, exec_env) do
     if exec_env.address not in sub_state.selfdestruct_list do
       @selfdestruct_refund
+    else
+      0
     end
   end
 
@@ -77,8 +79,10 @@ defmodule EVM.Refunds do
 
     if old_value != 0 && new_value == 0 do
       @storage_refund
+    else
+      0
     end
   end
 
-  def refund(_opcode, _stack, _machine_state, _sub_state, _exec_env), do: nil
+  def refund(_opcode, _stack, _machine_state, _sub_state, _exec_env), do: 0
 end
