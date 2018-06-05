@@ -7,8 +7,6 @@ defmodule EVM.Operation.StackMemoryStorageAndFlow do
   @doc """
   Remove item from stack.
 
-  TODO: Implement opcode
-
   ## Examples
 
       iex> EVM.Operation.StackMemoryStorageAndFlow.pop([55], %{stack: []})
