@@ -11,7 +11,7 @@ defmodule EVM.Operation.StackMemoryStorageAndFlowTest do
       machine_state = %MachineState{program_counter: 0, gas: 24, stack: []}
       substate = %SubState{}
 
-      {updated_machine_state, _, updated_exec_env, _} = VM.exec(machine_state, substate, exec_env)
+      {updated_machine_state, _, _, _} = VM.exec(machine_state, substate, exec_env)
 
       assert updated_machine_state.stack == [3]
     end

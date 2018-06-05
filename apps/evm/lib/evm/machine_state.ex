@@ -30,7 +30,7 @@ defmodule EVM.MachineState do
           memory: memory,
           active_words: integer(),
           stack: Stack.t(),
-          last_return_data: [EVM.val()]
+          last_return_data: [EVM.val()] | []
         }
 
   @doc """
