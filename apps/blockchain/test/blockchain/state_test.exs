@@ -9,7 +9,6 @@ defmodule Blockchain.StateTest do
   @ethereum_common_tests_path "../../ethereum_common_tests"
   @passing_tests_by_group %{
     example: :all,
-
     args_zero_one_balance: [
       # :addNonConst,
       # :addmodNonConst,
@@ -73,7 +72,7 @@ defmodule Blockchain.StateTest do
     call_codes: [
       # :call_OOG_additionalGasCosts1,
       # :call_OOG_additionalGasCosts2,
-      :callcall_00,
+      :callcall_00
       # :callcall_00_OOGE,
       # :callcall_00_OOGE_valueTransfer,
       # :callcall_00_SuicideEnd,
@@ -178,7 +177,7 @@ defmodule Blockchain.StateTest do
       # :callcodeOutput3partialFail,
       # :callcodeWithHighValue,
       # :callcodeWithHighValueAndGasOOG,
-      :createFailBalanceTooLow,
+      :createFailBalanceTooLow
       # :createInitFailBadJumpDestination,
       # :createInitFailStackSizeLargerThan1024,
       # :createInitFailStackUnderflow,
@@ -496,7 +495,7 @@ defmodule Blockchain.StateTest do
       # :TransactionCreateSuicideInInitcode
     ],
     log_tests: [
-      :log0_emptyMem,
+      :log0_emptyMem
 
       # :log0_logMemStartTooHigh,
       # :log0_logMemsizeTooHigh,
@@ -2425,7 +2424,7 @@ defmodule Blockchain.StateTest do
       # :ecmul_1-2_1_28000_96,
       # :ecmul_1-2_2_21000_128,
       # :ecmul_1-2_2_21000_96,
-    ],
+    ]
   }
 
   test "Blockchain state tests" do
