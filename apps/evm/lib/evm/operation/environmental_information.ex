@@ -327,7 +327,7 @@ defmodule EVM.Operation.EnvironmentalInformation do
     end
   end
 
-  @spec read_return_data(MachineState.t(), integer()) :: [EVM.val()]
+  @spec read_return_data(MachineState.t(), integer()) :: binary()
   defp read_return_data(machine_state, length) do
     data = machine_state.last_return_data
 
