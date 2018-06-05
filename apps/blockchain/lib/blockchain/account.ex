@@ -177,7 +177,7 @@ defmodule Blockchain.Account do
 
   @doc """
   Completely removes an account from the world state.
-  This is used, for instance, after a suicide.
+  This is used, for instance, after a selfdestruct.
   This is defined from Eq.(71) and Eq.(80) in the Yellow Paper.
 
   ## Examples
@@ -354,14 +354,13 @@ defmodule Blockchain.Account do
   @doc """
   Helper function for transferring eth for one account to another.
   This handles the fact that a new account may be shadow-created if
-  it receives eth. See Section 8, Eq.(100), Eq.(101), Eq.(102), Eq.(103),
-  and Eq.(104) of the Yellow Paper.
+  it receives eth. See Section 8, Eq.(100-104) of the Yellow Paper.
 
-  The Yellow Paper assumes this function will always succeed (as the checks
-  occur before this function is called), but we'll check just in case
-  this function is not properly called. The only case will be if the
-  sending account is nil or has an insufficient balance, but we add
-  a few extra checks just in case.
+  The Yellow Paper assumes this function will always succeed
+  (as the checks occur before this function is called),
+  but we'll check just in case this function is not properly called.
+  The only case will be if the sending account is nil or has an insufficient balance,
+  but we add a few extra checks just in case.
 
   Note: transferring value to an empty account still adds value to said account,
         even though it's effectively a zombie.

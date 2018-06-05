@@ -8,7 +8,7 @@ As discussed in the paper, we define a few data structures.
 
 * State - The world state of Ethereum, defined as the root hash of a Merkle Patricia Trie containing all account data. See Section 4.1 of the Yellow Paper, or explore the [merkle_patricia_tree](https://github.com/exthereum/merkle_patricia_tree) umbrella project in this repo.
 * The Machine State - This structure effectively encodes the current context of a running VM (e.g. the program counter, the current memory data, etc). This structure is simply used during execution of the program, and thrown away after it completes. Before we finish, we extract the gas used and return value from this object.
-* The Sub State - The sub state tracks the suicide list (contracts to destroy), the logs and the refund (for cleaning up storage) for a contract execution.
+* The Sub State - The sub state tracks the selfdestruct list (contracts to destroy), the logs and the refund (for cleaning up storage) for a contract execution.
 * The Execution Environment - This tracks information about the call into a contract, such as the machine code itself and the value passed to the contract or message call. Other than stack depth, this is generally not mutated during execution of the machine.
 
 # Examples

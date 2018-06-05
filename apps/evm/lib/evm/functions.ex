@@ -25,7 +25,7 @@ defmodule EVM.Functions do
       iex> EVM.Functions.is_normal_halting?(%EVM.MachineState{program_counter: 0}, %EVM.ExecEnv{machine_code: <<EVM.Operation.encode(:stop)>>})
       <<>>
 
-      iex> EVM.Functions.is_normal_halting?(%EVM.MachineState{program_counter: 0}, %EVM.ExecEnv{machine_code: <<EVM.Operation.encode(:suicide)>>})
+      iex> EVM.Functions.is_normal_halting?(%EVM.MachineState{program_counter: 0}, %EVM.ExecEnv{machine_code: <<EVM.Operation.encode(:selfdestruct)>>})
       <<>>
 
       iex> EVM.Functions.is_normal_halting?(%EVM.MachineState{stack: [0, 1], memory: <<0xabcd::16>>}, %EVM.ExecEnv{machine_code: <<EVM.Operation.encode(:return)>>})
@@ -41,7 +41,7 @@ defmodule EVM.Functions do
   def is_normal_halting?(machine_state, exec_env) do
     case MachineCode.current_operation(machine_state, exec_env).sym do
       :return -> h_return(machine_state)
-      x when x == :stop or x == :suicide -> <<>>
+      x when x == :stop or x == :selfdestruct -> <<>>
       _ -> nil
     end
   end

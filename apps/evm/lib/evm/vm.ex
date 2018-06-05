@@ -9,8 +9,8 @@ defmodule EVM.VM do
   @type output :: binary()
 
   @doc """
-  This function computes the Ξ function Eq.(116) of the Section 9.4 of the Yellow Paper. This is the complete
-  result of running a given program in the VM.
+  This function computes the Ξ function Eq.(123) of the Section 9.4 of the Yellow Paper.
+  This is the complete result of running a given program in the VM.
 
   Note: We replace returning state with exec env, which in our implementation contains the world state.
 
@@ -21,8 +21,8 @@ defmodule EVM.VM do
       {0, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:push1, 3, :push1, 5, :add, :push1, 0x00, :mstore, :push1, 32, :push1, 0, :return])}, <<0x08::256>>}
 
       # Program with implicit stop
-      iex> EVM.VM.run(9, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:push1, 3, :push1, 5, :add])})
-      {0, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.     compile([:push1, 3, :push1, 5, :add])}, ""}
+      iex> EVM.VM.run(9, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:push2, 0, 3, :push1, 5, :add])})
+      {0, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:push2, 0, 3, :push1, 5, :add])}, ""}
 
       # Program with explicit stop
       iex> EVM.VM.run(5, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:push1, 3, :stop])})
@@ -102,8 +102,8 @@ defmodule EVM.VM do
   end
 
   @doc """
-  Runs a single cycle of our VM returning the new state, defined as `O`
-  in the Yellow Paper, Eq.(131).
+  Runs a single cycle of our VM returning the new state,
+  defined as `O` in the Yellow Paper, Eq.(143).
 
   ## Examples
 
@@ -117,12 +117,13 @@ defmodule EVM.VM do
     inputs = Operation.inputs(operation, machine_state)
 
     machine_state = MachineState.subtract_gas(machine_state, exec_env)
+    sub_state = SubState.add_refund(machine_state, sub_state, exec_env)
 
-    {machine_state, sub_state, exec_env} =
+    {n_machine_state, n_sub_state, n_exec_env} =
       Operation.run(operation, machine_state, sub_state, exec_env)
 
-    machine_state = MachineState.move_program_counter(machine_state, operation, inputs)
+    final_machine_state = MachineState.move_program_counter(n_machine_state, operation, inputs)
 
-    {machine_state, sub_state, exec_env}
+    {final_machine_state, n_sub_state, n_exec_env}
   end
 end

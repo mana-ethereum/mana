@@ -31,10 +31,13 @@ defmodule ExthCrypto.Math do
 
       iex> ExthCrypto.Math.hex_to_bin("01020a0d")
       <<0x01, 0x02, 0x0a, 0x0d>>
+
       iex> ExthCrypto.Math.hex_to_bin("01020a0D")
       <<0x01, 0x02, 0x0a, 0x0d>>
+
       iex> ExthCrypto.Math.hex_to_bin("0x01020a0d")
       <<0x01, 0x02, 0x0a, 0x0d>>
+
       iex> ExthCrypto.Math.hex_to_bin("0x01020A0d")
       <<0x01, 0x02, 0x0a, 0x0d>>
   """
@@ -49,10 +52,13 @@ defmodule ExthCrypto.Math do
   ## Examples
       iex> ExthCrypto.Math.hex_to_int("01020a0d")
       16910861
+
       iex> ExthCrypto.Math.hex_to_int("01020a0D")
       16910861
+
       iex> ExthCrypto.Math.hex_to_int("0x01020a0d")
       16910861
+
       iex> ExthCrypto.Math.hex_to_int("0x01020A0d")
       16910861
   """

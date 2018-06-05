@@ -103,39 +103,41 @@ defimpl EVM.Interface.AccountInterface, for: EVM.Interface.Mock.MockAccountInter
       if account do
         update_storage(account, key, value)
       else
-        new_account(%{
-          storage: %{key => value}
-        })
+        new_account(%{storage: %{key => value}})
       end
 
     put_account(mock_account_interface, address, account)
   end
 
   defp update_storage(account, key, value) do
-    put_in(account, [:storage, key], value)
+    if value == 0 do
+      {key, value} = pop_in(account, [:storage, key])
+
+      value
+    else
+      put_in(account, [:storage, key], value)
+    end
   end
 
   defp put_account(mock_account_interface, address, account) do
-    %{
-      mock_account_interface
-      | account_map: Map.put(mock_account_interface.account_map, address, account)
-    }
+    account_map = Map.put(mock_account_interface.account_map, address, account)
+    %{mock_account_interface | account_map: account_map}
   end
 
   defp new_account(opts \\ %{}) do
-    Map.merge(
-      %{
-        storage: %{},
-        nonce: 0,
-        balance: 0
-      },
-      opts
-    )
+    account = %{
+      storage: %{},
+      nonce: 0,
+      code: <<>>,
+      balance: 0
+    }
+
+    Map.merge(account, opts)
   end
 
-  @spec suicide_account(EVM.Interface.AccountInterface.t(), EVM.address()) ::
+  @spec destroy_account(EVM.Interface.AccountInterface.t(), EVM.address()) ::
           EVM.Interface.AccountInterface.t()
-  def suicide_account(mock_account_interface, address) do
+  def destroy_account(mock_account_interface, address) do
     account_map =
       mock_account_interface.account_map
       |> Map.delete(address)

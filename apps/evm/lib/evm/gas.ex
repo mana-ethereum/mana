@@ -32,12 +32,8 @@ defmodule EVM.Gas do
   @g_sset 20000
   # Paid for an SSTORE operation when the storage value’s zeroness remains unchanged or is set to zero.
   @g_sreset 5000
-  # Refund given (added into refund counter) when the storage value is set to zero from non-zero.
-  @g_sclear 15000
-  # Refund given (added into refund counter) for suiciding an account.
-  @g_suicide 24000
-  # Amount of gas to pay for a SUICIDE operation.
-  @g_suicide 5000
+  # Amount of gas to pay for a SELFDESTRUCT operation.
+  @g_selfdestruct 5000
   # Paid for a CREATE operation.
   @g_create 32000
   # Paid per byte for a CREATE operation to succeed in placing code into state.
@@ -48,7 +44,7 @@ defmodule EVM.Gas do
   @g_callvalue 9000
   # A stipend for the called contract subtracted from Gcallvalue for a non-zero value transfer.
   @g_callstipend 2300
-  # Paid for a CALL or SUICIDE operation which creates an account.
+  # Paid for a CALL or SELFDESTRUCT operation which creates an account.
   @g_newaccount 25000
   # Partial payment for an EXP operation.
   @g_exp 10
@@ -81,7 +77,7 @@ defmodule EVM.Gas do
   # Payment for BLOCKHASH operation
   @g_blockhash 20
 
-  @w_zero_instr [:stop, :return, :suicide]
+  @w_zero_instr [:stop, :return, :selfdestruct]
   @w_base_instr [
     :address,
     :origin,
@@ -350,18 +346,10 @@ defmodule EVM.Gas do
   def operation_cost(:sstore, [key, new_value], _machine_state, exec_env) do
     old_value = ExecEnv.get_storage(exec_env, key)
 
-    cond do
-      new_value == 0 ->
-        @g_sreset
-
-      old_value == :account_not_found ->
-        @g_sset
-
-      old_value == :key_not_found ->
-        @g_sset
-
-      true ->
-        @g_sreset
+    if old_value == 0 && new_value != 0 do
+      @g_sset
+    else
+      @g_sreset
     end
   end
 
