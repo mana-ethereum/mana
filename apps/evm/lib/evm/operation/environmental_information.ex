@@ -1,5 +1,5 @@
 defmodule EVM.Operation.EnvironmentalInformation do
-  alias EVM.{Operation, Stack, Helpers, Memory, Stack}
+  alias EVM.{Operation, Stack, Helpers, Memory, Stack, MachineState}
   alias EVM.Interface.AccountInterface
 
   @doc """
@@ -232,9 +232,7 @@ defmodule EVM.Operation.EnvironmentalInformation do
 
     machine_state = %{machine_state | stack: Stack.push(machine_state.stack, extcodesize)}
 
-    %{
-      machine_state: machine_state
-    }
+    %{machine_state: machine_state}
   end
 
   @doc """
@@ -289,16 +287,31 @@ defmodule EVM.Operation.EnvironmentalInformation do
 
   @doc """
   Copy output data from the previous call to memory.
+
+  ## Examples
+
+      iex> machine_state = %EVM.MachineState{last_return_data: [1, 2, 3, 4, 5]}
+      iex> EVM.Operation.EnvironmentalInformation.returndatacopy([0, 0, 10], %{machine_state: machine_state})
+      %{
+         machine_state: %EVM.MachineState{
+           active_words: 1,
+           gas: nil,
+           last_return_data: [1, 2, 3, 4, 5],
+           memory: <<1, 2, 3, 4, 5, 0, 0, 0, 0, 0>>,
+           previously_active_words: 0,
+           program_counter: 0,
+           stack: []
+        }
+      }
   """
   @spec returndatacopy(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
-  def returndatacopy([memory_start, return_data_start, length], %{machine_state: machine_state}) do
+  def returndatacopy([memory_start, _return_data_start, length], %{machine_state: machine_state}) do
     return_data_size = return_data_size(machine_state)
-
     available_length = min(return_data_size, length)
-    stack_data = Stack.peek_n(machine_state.stack, available_length)
+    data = read_return_data(machine_state, available_length)
 
     machine_state =
-      Memory.write(machine_state, memory_start, Helpers.right_pad_bytes(stack_data, length))
+      Memory.write(machine_state, memory_start, Helpers.right_pad_bytes(data, length))
 
     %{machine_state: machine_state}
   end
@@ -312,5 +325,23 @@ defmodule EVM.Operation.EnvironmentalInformation do
       is_list(data) -> Enum.count(data)
       true -> 1
     end
+  end
+
+  @spec read_return_data(MachineState.t(), integer()) :: [EVM.val()]
+  defp read_return_data(machine_state, length) do
+    data = machine_state.last_return_data
+
+    normalized_data =
+      cond do
+        is_nil(data) -> []
+        is_list(data) -> data
+        true -> [data]
+      end
+
+    normalized_data
+    |> Enum.take(length)
+    |> Enum.reduce(<<>>, fn el, acc ->
+      acc <> <<el>>
+    end)
   end
 end
