@@ -40,8 +40,8 @@ defmodule Blockchain.StateTest do
   }
 
   test "Blockchain state tests" do
-    for {test_group_name, test_group} <- @passing_tests_by_group do
-      for {_test_name, test} <- passing_tests(test_group_name, test_group) do
+    for test_group_name <- Map.keys(@passing_tests_by_group) do
+      for {_test_name, test} <- passing_tests(test_group_name) do
         state = account_interface(test).state
 
         transaction =
@@ -84,7 +84,7 @@ defmodule Blockchain.StateTest do
     end)
   end
 
-  def passing_tests(test_group_name, test_group) do
+  def passing_tests(test_group_name) do
     tests =
       if Map.get(@passing_tests_by_group, test_group_name) == :all do
         all_tests_of_type(test_group_name)
