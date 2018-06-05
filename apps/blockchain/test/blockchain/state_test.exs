@@ -6,14 +6,36 @@ defmodule Blockchain.StateTest do
   use EthCommonTest.Harness
   use ExUnit.Case, async: true
 
+  @ethereum_common_tests_path "../../ethereum_common_tests"
   @passing_tests_by_group %{
-    stExample: [:add11],
-    stCallCodes: [
+    example: [
+      :add11
+    ],
+    call_codes: [
       :callcall_00,
       :callcode_checkPC
     ],
-    stRefundTest: [
-      :refund_singleSuicide
+    refund_test: [
+      :refund_singleSuicide,
+      :refund_TxToSuicide
+
+      # :refund50_1,
+      # :refund50_2,
+      # :refund50percentCap,
+      # :refund600,
+      # :refundSuicide50procentCap,
+      # :refund_CallA,
+      # :refund_CallA_OOG,
+      # :refund_CallA_notEnoughGasInCall,
+      # :refund_CallToSuicideNoStorage,
+      # :refund_CallToSuicideStorage,
+      # :refund_CallToSuicideTwice,
+      # :refund_NoOOG_1,
+      # :refund_OOG,
+      # :refund_TxToSuicideOOG,
+      # :refund_changeNonZeroStorage,
+      # :refund_getEtherBack,
+      # :refund_multimpleSuicide,
     ]
   }
 
@@ -63,13 +85,31 @@ defmodule Blockchain.StateTest do
   end
 
   def passing_tests(test_group_name, test_group) do
-    test_group
-    |> Enum.filter(fn test_name ->
-      test_group == :all || Enum.member?(test_group, test_name)
-    end)
+    tests =
+      if Map.get(@passing_tests_by_group, test_group_name) == :all do
+        all_tests_of_type(test_group_name)
+      else
+        Map.get(@passing_tests_by_group, test_group_name)
+      end
+
+    tests
     |> Enum.map(fn test_name ->
       {test_name, read_state_test_file(test_group_name, test_name)}
     end)
+  end
+
+  def all_tests_of_type(type) do
+    {:ok, files} = File.ls(test_directory_name(type))
+
+    Enum.map(files, fn file_name ->
+      file_name
+      |> String.replace_suffix(".json", "")
+      |> String.to_atom()
+    end)
+  end
+
+  def test_directory_name(type) do
+    "#{@ethereum_common_tests_path}/GeneralStateTests/st#{Macro.camelize(Atom.to_string(type))}"
   end
 
   def read_state_test_file(type, test_name) do
@@ -79,7 +119,9 @@ defmodule Blockchain.StateTest do
 
   def state_test_file_name(type, test) do
     System.cwd() <>
-      "/../../ethereum_common_tests/GeneralStateTests/#{Atom.to_string(type)}/#{test}.json"
+      "/../../ethereum_common_tests/GeneralStateTests/st#{Macro.camelize(Atom.to_string(type))}/#{
+        test
+      }.json"
   end
 
   def account_interface(test) do
@@ -92,11 +134,14 @@ defmodule Blockchain.StateTest do
 
     state =
       Enum.reduce(test["pre"], state, fn {address, account}, state ->
-        storage = %Trie{root_hash: Trie.empty_trie_root_hash()}
+        storage = %Trie{
+          root_hash: Trie.empty_trie_root_hash(),
+          db: db
+        }
 
         storage =
           Enum.reduce(account["storage"], storage, fn {key, value}, trie ->
-            Trie.update(trie, load_integer(key), load_integer(value))
+            Trie.update(trie, maybe_hex(key), maybe_hex(value))
           end)
 
         new_account = %Account{
