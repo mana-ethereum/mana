@@ -9,6 +9,7 @@ defmodule EVM.SubState do
     LogEntry,
     Refunds,
     ExecEnv,
+    SubState,
     MachineState,
   }
 
@@ -71,7 +72,7 @@ defmodule EVM.SubState do
       iex> EVM.SubState.add_refund(machine_state, sub_state, exec_env)
       %EVM.SubState{refund: 15000}
   """
-  @spec add_refund(MachineState.t(), SubState.t(), ExecEnv.t()) :: MachineState.t()
+  @spec add_refund(MachineState.t(), SubState.t(), ExecEnv.t()) :: SubState.t()
   def add_refund(machine_state, sub_state, exec_env) do
     refund = Refunds.refund(machine_state, sub_state, exec_env)
 

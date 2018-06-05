@@ -1,10 +1,11 @@
 defmodule EVM.Refunds do
   @type t :: EVM.val()
   alias EVM.{
-    MachineState,
     ExecEnv,
     MachineCode,
-    Operation
+    MachineState,
+    Operation,
+    SubState,
   }
   # Refund given (added into refund counter) when the storage value is set to zero from non-zero.
   @storage_refund 15000
@@ -73,7 +74,8 @@ defmodule EVM.Refunds do
   # `SSTORE` operations produce a refund when storage is set to zero from some non-zero value.
   def refund(:sstore, [key, new_value], _machine_state, _sub_state, exec_env) do
     old_value = ExecEnv.get_storage(exec_env, key)
-    if new_value == 0 && (old_value not in [:account_not_found, :key_not_found]) do
+
+    if old_value != 0 && new_value == 0 do
       @storage_refund
     end
   end

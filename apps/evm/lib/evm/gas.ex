@@ -346,18 +346,10 @@ defmodule EVM.Gas do
   def operation_cost(:sstore, [key, new_value], _machine_state, exec_env) do
     old_value = ExecEnv.get_storage(exec_env, key)
 
-    cond do
-      new_value == 0 ->
-        @g_sreset
-
-      old_value == :account_not_found ->
-        @g_sset
-
-      old_value == :key_not_found ->
-        @g_sset
-
-      true ->
-        @g_sreset
+    if old_value == 0  && new_value != 0 do
+      @g_sset
+    else
+      @g_sreset
     end
   end
 
