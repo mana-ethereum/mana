@@ -273,7 +273,7 @@ defmodule EVM.Operation.EnvironmentalInformation do
 
   ## Examples
 
-      iex> EVM.Operation.EnvironmentalInformation.returndatasize([], %{machine_state: %EVM.MachineState{last_return_data: 55}})
+      iex> EVM.Operation.EnvironmentalInformation.returndatasize([], %{machine_state: %EVM.MachineState{last_return_data: [55]}})
       1
       iex> EVM.Operation.EnvironmentalInformation.returndatasize([], %{machine_state: %EVM.MachineState{last_return_data: [55, 66]}})
       2
@@ -320,25 +320,12 @@ defmodule EVM.Operation.EnvironmentalInformation do
   defp return_data_size(machine_state) do
     data = machine_state.last_return_data
 
-    cond do
-      is_nil(data) -> 0
-      is_list(data) -> Enum.count(data)
-      true -> 1
-    end
+    Enum.count(data)
   end
 
   @spec read_return_data(MachineState.t(), integer()) :: binary()
   defp read_return_data(machine_state, length) do
-    data = machine_state.last_return_data
-
-    normalized_data =
-      cond do
-        is_nil(data) -> []
-        is_list(data) -> data
-        true -> [data]
-      end
-
-    normalized_data
+    machine_state.last_return_data
     |> Enum.take(length)
     |> Enum.reduce(<<>>, fn el, acc ->
       acc <> <<el>>
