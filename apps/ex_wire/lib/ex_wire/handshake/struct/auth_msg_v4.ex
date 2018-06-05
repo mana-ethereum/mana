@@ -56,17 +56,18 @@ defmodule ExWire.Handshake.Struct.AuthMsgV4 do
   @doc """
   Sets the remote ephemeral public key for a given auth msg, based on our secret
   and the keys passed from remote.
-
-  # TODO: Test
-  # TODO: Multiple possible values and no recovery key?
   """
   @spec set_remote_ephemeral_public_key(t, ExthCrypto.Key.private_key()) :: t
   def set_remote_ephemeral_public_key(auth_msg, my_static_private_key) do
-    shared_secret = ECDH.generate_shared_secret(my_static_private_key, auth_msg.remote_public_key)
-    shared_secret_xor_nonce = :crypto.exor(shared_secret, auth_msg.remote_nonce)
+    shared_secret_xor_nonce =
+      my_static_private_key
+      |> ECDH.generate_shared_secret(auth_msg.remote_public_key)
+      |> ExthCrypto.Math.xor(auth_msg.remote_nonce)
+
+    {signature, recovery_id} = ExthCrypto.Signature.split_compact_format(auth_msg.signature)
 
     {:ok, remote_ephemeral_public_key} =
-      ExthCrypto.Signature.recover(shared_secret_xor_nonce, auth_msg.signature, 0)
+      ExthCrypto.Signature.recover(shared_secret_xor_nonce, signature, recovery_id)
 
     %{auth_msg | remote_ephemeral_public_key: remote_ephemeral_public_key}
   end
