@@ -214,6 +214,14 @@ defmodule EVM.Operation.System do
   end
 
   @doc """
+  We handle revert op code in Functions.is_normal_halting?/2 method. Here it's noop. We only pay for the memory.
+  """
+  @spec revert(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
+  def revert([_mem_start, mem_end], %{machine_state: machine_state}) do
+    machine_state |> MachineState.maybe_set_active_words(EVM.Memory.get_active_words(mem_end))
+  end
+
+  @doc """
   Halt execution and register account for later deletion.
   Transfers `value` wei from callers account to the "refund account".
   Address of the "refund account" is the first 20 bytes in the stack.

@@ -43,6 +43,15 @@ defmodule EVM.Operation.Metadata.System do
                       group: :system
                     },
                     %{
+                      id: 0xFD,
+                      description:
+                        "Halt execution reverting state changes but returning data and remaining gas.",
+                      sym: :revert,
+                      input_count: 2,
+                      output_count: 0,
+                      group: :system
+                    },
+                    %{
                       id: 0xFE,
                       description:
                         "Designated invalid instruction. It can be used to abort the execution.",

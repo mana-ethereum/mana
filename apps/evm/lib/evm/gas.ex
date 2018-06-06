@@ -77,7 +77,7 @@ defmodule EVM.Gas do
   # Payment for BLOCKHASH operation
   @g_blockhash 20
 
-  @w_zero_instr [:stop, :return, :selfdestruct]
+  @w_zero_instr [:stop, :return, :selfdestruct, :revert]
   @w_base_instr [
     :address,
     :origin,
@@ -192,6 +192,10 @@ defmodule EVM.Gas do
   end
 
   def memory_cost(:return, [offset, length], machine_state) do
+    memory_expansion_cost(machine_state, offset, length)
+  end
+
+  def memory_cost(:revert, [offset, length], machine_state) do
     memory_expansion_cost(machine_state, offset, length)
   end
 
