@@ -23,11 +23,11 @@ defmodule HandshakeTest do
     {:ok, her_auth_msg, <<>>} =
       Handshake.read_auth_msg(encoded_auth_msg, ExthCrypto.Test.private_key(:key_b))
 
-    # Same auth message, except we've added the remote ephemeral public key
-    assert her_auth_msg.remote_ephemeral_public_key != nil
-    assert my_auth_msg == %{her_auth_msg | remote_ephemeral_public_key: nil}
+    # Same auth message, except we've added the initiator ephemeral public key
+    assert her_auth_msg.initiator_ephemeral_public_key != nil
+    assert my_auth_msg == %{her_auth_msg | initiator_ephemeral_public_key: nil}
 
-    my_ack_resp = Handshake.build_ack_resp(her_auth_msg.remote_ephemeral_public_key)
+    my_ack_resp = Handshake.build_ack_resp(her_auth_msg.initiator_ephemeral_public_key)
 
     {:ok, encoded_ack_msg} =
       my_ack_resp
@@ -61,21 +61,21 @@ defmodule HandshakeTest do
 
     {:ok, auth_msg, <<>>} = Handshake.read_auth_msg(auth, secret)
 
-    assert auth_msg.remote_public_key ==
+    assert auth_msg.initiator_public_key ==
              "fda1cff674c90c9a197539fe3dfb53086ace64f83ed7c6eabec741f7f381cc803e52ab2cd55d5569bce4347107a310dfd5f88a010cd2ffd1005ca406f1842877"
              |> ExthCrypto.Math.hex_to_bin()
              |> ExthCrypto.Key.raw_to_der()
 
-    assert auth_msg.remote_nonce ==
+    assert auth_msg.initiator_nonce ==
              "7e968bba13b6c50e2c4cd7f241cc0d64d1ac25c7f5952df231ac6a2bda8ee5d6"
              |> ExthCrypto.Math.hex_to_bin()
 
-    assert auth_msg.remote_ephemeral_public_key ==
+    assert auth_msg.initiator_ephemeral_public_key ==
              "654d1044b69c577a44e5f01a1209523adb4026e70c62d1c13a067acabc09d2667a49821a0ad4b634554d330a15a58fe61f8a8e0544b310c6de7b0c8da7528a8d"
              |> ExthCrypto.Math.hex_to_bin()
              |> ExthCrypto.Key.raw_to_der()
 
-    assert auth_msg.remote_version == 63
+    assert auth_msg.initiator_version == 63
   end
 
   test "handshake auth eip 8" do
@@ -102,21 +102,21 @@ defmodule HandshakeTest do
 
     {:ok, auth_msg, <<>>} = Handshake.read_auth_msg(auth, secret)
 
-    assert auth_msg.remote_public_key ==
+    assert auth_msg.initiator_public_key ==
              "fda1cff674c90c9a197539fe3dfb53086ace64f83ed7c6eabec741f7f381cc803e52ab2cd55d5569bce4347107a310dfd5f88a010cd2ffd1005ca406f1842877"
              |> ExthCrypto.Math.hex_to_bin()
              |> ExthCrypto.Key.raw_to_der()
 
-    assert auth_msg.remote_nonce ==
+    assert auth_msg.initiator_nonce ==
              "7e968bba13b6c50e2c4cd7f241cc0d64d1ac25c7f5952df231ac6a2bda8ee5d6"
              |> ExthCrypto.Math.hex_to_bin()
 
-    assert auth_msg.remote_ephemeral_public_key ==
+    assert auth_msg.initiator_ephemeral_public_key ==
              "654d1044b69c577a44e5f01a1209523adb4026e70c62d1c13a067acabc09d2667a49821a0ad4b634554d330a15a58fe61f8a8e0544b310c6de7b0c8da7528a8d"
              |> ExthCrypto.Math.hex_to_bin()
              |> ExthCrypto.Key.raw_to_der()
 
-    assert auth_msg.remote_version == 4
+    assert auth_msg.initiator_version == 4
   end
 
   test "handshake auth eip 8 - 2" do
@@ -144,25 +144,25 @@ defmodule HandshakeTest do
 
     {:ok, auth_msg, <<>>} = Handshake.read_auth_msg(auth, secret)
 
-    assert auth_msg.remote_public_key ==
+    assert auth_msg.initiator_public_key ==
              "fda1cff674c90c9a197539fe3dfb53086ace64f83ed7c6eabec741f7f381cc803e52ab2cd55d5569bce4347107a310dfd5f88a010cd2ffd1005ca406f1842877"
              |> ExthCrypto.Math.hex_to_bin()
              |> ExthCrypto.Key.raw_to_der()
 
-    assert auth_msg.remote_nonce ==
+    assert auth_msg.initiator_nonce ==
              "7e968bba13b6c50e2c4cd7f241cc0d64d1ac25c7f5952df231ac6a2bda8ee5d6"
              |> ExthCrypto.Math.hex_to_bin()
 
-    assert auth_msg.remote_ephemeral_public_key ==
+    assert auth_msg.initiator_ephemeral_public_key ==
              "654d1044b69c577a44e5f01a1209523adb4026e70c62d1c13a067acabc09d2667a49821a0ad4b634554d330a15a58fe61f8a8e0544b310c6de7b0c8da7528a8d"
              |> ExthCrypto.Math.hex_to_bin()
              |> ExthCrypto.Key.raw_to_der()
 
-    assert auth_msg.remote_version == 56
+    assert auth_msg.initiator_version == 56
   end
 
   test "handshake ack plain" do
-    _remote_public_key =
+    _recipient_public_key =
       "fda1cff674c90c9a197539fe3dfb53086ace64f83ed7c6eabec741f7f381cc803e52ab2cd55d5569bce4347107a310dfd5f88a010cd2ffd1005ca406f1842877"
       |> ExthCrypto.Math.hex_to_bin()
 
@@ -184,20 +184,20 @@ defmodule HandshakeTest do
 
     {:ok, ack_resp, _ack_resp_bin, <<>>} = Handshake.read_ack_resp(ack, secret)
 
-    assert ack_resp.remote_nonce ==
+    assert ack_resp.recipient_nonce ==
              "559aead08264d5795d3909718cdd05abd49572e84fe55590eef31a88a08fdffd"
              |> ExthCrypto.Math.hex_to_bin()
 
-    assert ack_resp.remote_ephemeral_public_key ==
+    assert ack_resp.recipient_ephemeral_public_key ==
              "b6d82fa3409da933dbf9cb0140c5dde89f4e64aec88d476af648880f4a10e1e49fe35ef3e69e93dd300b4797765a747c6384a6ecf5db9c2690398607a86181e4"
              |> ExthCrypto.Math.hex_to_bin()
              |> ExthCrypto.Key.raw_to_der()
 
-    assert ack_resp.remote_version == 63
+    assert ack_resp.recipient_version == 63
   end
 
   test "handshake ack eip 8" do
-    _remote_public_key =
+    _recipient_public_key =
       "fda1cff674c90c9a197539fe3dfb53086ace64f83ed7c6eabec741f7f381cc803e52ab2cd55d5569bce4347107a310dfd5f88a010cd2ffd1005ca406f1842877"
       |> ExthCrypto.Math.hex_to_bin()
 
@@ -226,20 +226,20 @@ defmodule HandshakeTest do
 
     {:ok, ack_resp, _ack_resp_bin, <<>>} = Handshake.read_ack_resp(ack, secret)
 
-    assert ack_resp.remote_nonce ==
+    assert ack_resp.recipient_nonce ==
              "559aead08264d5795d3909718cdd05abd49572e84fe55590eef31a88a08fdffd"
              |> ExthCrypto.Math.hex_to_bin()
 
-    assert ack_resp.remote_ephemeral_public_key ==
+    assert ack_resp.recipient_ephemeral_public_key ==
              "b6d82fa3409da933dbf9cb0140c5dde89f4e64aec88d476af648880f4a10e1e49fe35ef3e69e93dd300b4797765a747c6384a6ecf5db9c2690398607a86181e4"
              |> ExthCrypto.Math.hex_to_bin()
              |> ExthCrypto.Key.raw_to_der()
 
-    assert ack_resp.remote_version == 4
+    assert ack_resp.recipient_version == 4
   end
 
   test "handshake ack eip 8 - 2" do
-    _remote_public_key =
+    _recipient_public_key =
       "fda1cff674c90c9a197539fe3dfb53086ace64f83ed7c6eabec741f7f381cc803e52ab2cd55d5569bce4347107a310dfd5f88a010cd2ffd1005ca406f1842877"
       |> ExthCrypto.Math.hex_to_bin()
 
@@ -268,15 +268,15 @@ defmodule HandshakeTest do
 
     {:ok, ack_resp, _ack_resp_bin, <<>>} = Handshake.read_ack_resp(ack, secret)
 
-    assert ack_resp.remote_nonce ==
+    assert ack_resp.recipient_nonce ==
              "559aead08264d5795d3909718cdd05abd49572e84fe55590eef31a88a08fdffd"
              |> ExthCrypto.Math.hex_to_bin()
 
-    assert ack_resp.remote_ephemeral_public_key ==
+    assert ack_resp.recipient_ephemeral_public_key ==
              "b6d82fa3409da933dbf9cb0140c5dde89f4e64aec88d476af648880f4a10e1e49fe35ef3e69e93dd300b4797765a747c6384a6ecf5db9c2690398607a86181e4"
              |> ExthCrypto.Math.hex_to_bin()
              |> ExthCrypto.Key.raw_to_der()
 
-    assert ack_resp.remote_version == 57
+    assert ack_resp.recipient_version == 57
   end
 end

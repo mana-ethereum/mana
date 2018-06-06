@@ -9,66 +9,66 @@ defmodule ExWire.Handshake.Struct.AuthMsgV4 do
 
   defstruct [
     :signature,
-    :remote_public_key,
-    :remote_nonce,
-    :remote_version,
-    :remote_ephemeral_public_key
+    :initiator_public_key,
+    :initiator_nonce,
+    :initiator_version,
+    :initiator_ephemeral_public_key
   ]
 
   @type t :: %__MODULE__{
           signature: ExthCrypto.signature(),
-          remote_public_key: ExthCrypto.Key.public_key(),
-          remote_nonce: binary(),
-          remote_version: integer(),
-          remote_ephemeral_public_key: ExthCrypto.Key.public_key()
+          initiator_public_key: ExthCrypto.Key.public_key(),
+          initiator_nonce: binary(),
+          initiator_version: integer(),
+          initiator_ephemeral_public_key: ExthCrypto.Key.public_key()
         }
 
   @spec serialize(t) :: ExRLP.t()
   def serialize(auth_msg) do
     [
       auth_msg.signature,
-      auth_msg.remote_public_key |> ExthCrypto.Key.der_to_raw(),
-      auth_msg.remote_nonce,
-      auth_msg.remote_version |> :binary.encode_unsigned()
+      auth_msg.initiator_public_key |> ExthCrypto.Key.der_to_raw(),
+      auth_msg.initiator_nonce,
+      auth_msg.initiator_version |> :binary.encode_unsigned()
     ]
   end
 
   @spec deserialize(ExRLP.t()) :: t
   def deserialize(rlp) do
     [signature | rlp_tail] = rlp
-    [remote_public_key | rlp_tail] = rlp_tail
-    [remote_nonce | rlp_tail] = rlp_tail
-    [remote_version | _tl] = rlp_tail
+    [initiator_public_key | rlp_tail] = rlp_tail
+    [initiator_nonce | rlp_tail] = rlp_tail
+    [initiator_version | _tl] = rlp_tail
 
     %__MODULE__{
       signature: signature,
-      remote_public_key: remote_public_key |> ExthCrypto.Key.raw_to_der(),
-      remote_nonce: remote_nonce,
-      remote_version:
+      initiator_public_key: initiator_public_key |> ExthCrypto.Key.raw_to_der(),
+      initiator_nonce: initiator_nonce,
+      initiator_version:
         if(
-          is_binary(remote_version),
-          do: :binary.decode_unsigned(remote_version),
-          else: remote_version
+          is_binary(initiator_version),
+          do: :binary.decode_unsigned(initiator_version),
+          else: initiator_version
         )
     }
   end
 
   @doc """
-  Sets the remote ephemeral public key for a given auth msg, based on our secret
-  and the keys passed from remote.
+  Sets the initiator ephemeral public key for a given auth msg, based on our secret
+  and the keys passed from initiator.
   """
-  @spec set_remote_ephemeral_public_key(t, ExthCrypto.Key.private_key()) :: t
-  def set_remote_ephemeral_public_key(auth_msg, my_static_private_key) do
+  @spec set_initiator_ephemeral_public_key(t, ExthCrypto.Key.private_key()) :: t
+  def set_initiator_ephemeral_public_key(auth_msg, my_static_private_key) do
     shared_secret_xor_nonce =
       my_static_private_key
-      |> ECDH.generate_shared_secret(auth_msg.remote_public_key)
-      |> ExthCrypto.Math.xor(auth_msg.remote_nonce)
+      |> ECDH.generate_shared_secret(auth_msg.initiator_public_key)
+      |> ExthCrypto.Math.xor(auth_msg.initiator_nonce)
 
     {signature, recovery_id} = ExthCrypto.Signature.split_compact_format(auth_msg.signature)
 
-    {:ok, remote_ephemeral_public_key} =
+    {:ok, initiator_ephemeral_public_key} =
       ExthCrypto.Signature.recover(shared_secret_xor_nonce, signature, recovery_id)
 
-    %{auth_msg | remote_ephemeral_public_key: remote_ephemeral_public_key}
+    %{auth_msg | initiator_ephemeral_public_key: initiator_ephemeral_public_key}
   end
 end
