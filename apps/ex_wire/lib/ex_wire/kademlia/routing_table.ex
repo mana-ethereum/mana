@@ -78,11 +78,7 @@ defmodule ExWire.Kademlia.RoutingTable do
   Adds node to routing table.
   """
   @spec refresh_node(t(), Node.t()) :: t()
-  def refresh_node(
-        table = %__MODULE__{current_node: %Node{key: key}},
-        %Node{key: key}
-      ),
-      do: table
+  def refresh_node(table = %__MODULE__{current_node: %Node{key: key}}, %Node{key: key}), do: table
 
   def refresh_node(table = %__MODULE__{buckets: buckets}, node = %Node{}) do
     node_bucket_id = bucket_id(table, node)
@@ -226,10 +222,10 @@ defmodule ExWire.Kademlia.RoutingTable do
    - If a pong is expired, we do nothing.
   """
   @spec handle_pong(t(), Pong.t()) :: t()
-  def handle_pong(
-        table = %__MODULE__{expected_pongs: pongs},
-        %Pong{hash: hash, timestamp: timestamp}
-      ) do
+  def handle_pong(table = %__MODULE__{expected_pongs: pongs}, %Pong{
+        hash: hash,
+        timestamp: timestamp
+      }) do
     {node, updated_pongs} = Map.pop(pongs, hash)
 
     table = %{table | expected_pongs: updated_pongs}

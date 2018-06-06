@@ -153,16 +153,13 @@ defmodule ExWire.Network do
   def send(message, server_pid, to) do
     encoded_message = Protocol.encode(message, Config.private_key())
 
-    GenServer.cast(
-      server_pid,
-      {
-        :send,
-        %{
-          to: to,
-          data: encoded_message
-        }
+    GenServer.cast(server_pid, {
+      :send,
+      %{
+        to: to,
+        data: encoded_message
       }
-    )
+    })
 
     {:sent_message, message.__struct__, encoded_message}
   end
