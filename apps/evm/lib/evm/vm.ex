@@ -108,12 +108,13 @@ defmodule EVM.VM do
               {original_machine_state, original_sub_state, original_exec_env}
             )
 
+          # revert state and return
+          {:revert, output} ->
+            {n_machine_state, original_sub_state, original_exec_env, output}
+
           # break execution and return
           output ->
             {n_machine_state, n_sub_state, n_exec_env, output}
-
-          {:revert, output} ->
-            {n_machine_state, original_sub_state, original_exec_env, output}
         end
     end
   end
