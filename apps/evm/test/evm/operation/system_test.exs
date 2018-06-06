@@ -2,7 +2,7 @@ defmodule EVM.Operation.SystemTest do
   use ExUnit.Case, async: true
   doctest EVM.Operation.System
 
-  alias EVM.{ExecEnv, Address, Operation}
+  alias EVM.{ExecEnv, Address, Operation, MachineState, SubState, MachineCode, VM}
   alias EVM.Interface.Mock.MockAccountInterface
 
   describe "selfdestruct/2" do
@@ -19,6 +19,34 @@ defmodule EVM.Operation.SystemTest do
       expected_refund_account = %{balance: 5000, code: <<>>, nonce: 0, storage: %{}}
       assert Map.get(accounts, Address.new(refund_address)) == expected_refund_account
       assert Map.get(accounts, selfdestruct_address) == nil
+    end
+  end
+
+  describe "revert" do
+    test "halts execution reverting state changes but returning data and remaining gas" do
+      machine_code = MachineCode.compile([:push1, 3, :push1, 5, :revert, :push1, 10, :pop])
+      exec_env = %ExecEnv{machine_code: machine_code}
+      machine_state = %MachineState{program_counter: 0, gas: 24, stack: []}
+      substate = %SubState{}
+
+      {updated_machine_state, _, updated_exec_env, _} = VM.exec(machine_state, substate, exec_env)
+
+      assert updated_machine_state.gas == 15
+      assert exec_env == updated_exec_env
+    end
+  end
+
+  describe "return" do
+    test "halts execution returning output data" do
+      machine_code = MachineCode.compile([:push1, 3, :push1, 5, :return, :push1, 10, :pop])
+      exec_env = %ExecEnv{machine_code: machine_code}
+      machine_state = %MachineState{program_counter: 0, gas: 24, stack: []}
+      substate = %SubState{}
+
+      {updated_machine_state, _, updated_exec_env, _} = VM.exec(machine_state, substate, exec_env)
+
+      assert updated_machine_state.gas == 15
+      assert exec_env == updated_exec_env
     end
   end
 end
