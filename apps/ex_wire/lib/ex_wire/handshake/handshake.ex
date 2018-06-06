@@ -203,9 +203,11 @@ defmodule ExWire.Handshake do
     {signature, _, _, recovery_id} =
       ExthCrypto.Signature.sign_digest(shared_secret_xor_nonce, my_ephemeral_private_key)
 
+    compact_signature = ExthCrypto.Signature.compact_format(signature, recovery_id)
+
     # Build an auth message to send over the wire
     auth_msg = %AuthMsgV4{
-      signature: signature <> :binary.encode_unsigned(recovery_id),
+      signature: compact_signature,
       remote_public_key: my_static_public_key,
       remote_nonce: nonce,
       remote_version: ExWire.Config.protocol_version()
