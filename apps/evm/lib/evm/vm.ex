@@ -101,7 +101,12 @@ defmodule EVM.VM do
         case Functions.is_normal_halting?(machine_state, exec_env) do
           # continue execution
           nil ->
-            do_exec(n_machine_state, n_sub_state, n_exec_env, original_sub_state)
+            do_exec(
+              n_machine_state,
+              n_sub_state,
+              n_exec_env,
+              {original_machine_state, original_sub_state, original_exec_env}
+            )
 
           # break execution and return
           output ->
