@@ -17,7 +17,7 @@ defmodule ExWire.Handshake.Struct.AuthMsgV4Test do
     {:ok, %{keys: keys}}
   end
 
-  describe "set_remote_ephemeral_public_key/2" do
+  describe "set_initiator_ephemeral_public_key/2" do
     test "recovers and sets initiators ephemeral public key from shared secret", %{keys: keys} do
       initiator_nonce = Handshake.new_nonce()
       {initiator_ephemeral_public_key, initiator_ephemeral_private_key} = ECDH.new_ecdh_keypair()
@@ -28,17 +28,17 @@ defmodule ExWire.Handshake.Struct.AuthMsgV4Test do
       auth_msg = build_auth_msg(signature, recovery_id, initiator_nonce, keys)
 
       new_auth_msg =
-        AuthMsgV4.set_remote_ephemeral_public_key(auth_msg, keys.recipient_static_private_key)
+        AuthMsgV4.set_initiator_ephemeral_public_key(auth_msg, keys.recipient_static_private_key)
 
-      assert new_auth_msg.remote_ephemeral_public_key == initiator_ephemeral_public_key
+      assert new_auth_msg.initiator_ephemeral_public_key == initiator_ephemeral_public_key
     end
   end
 
   def build_auth_msg(signature, recovery_id, initiator_nonce, keys) do
     %AuthMsgV4{
       signature: signature <> :binary.encode_unsigned(recovery_id),
-      remote_public_key: keys.initiator_static_public_key,
-      remote_nonce: initiator_nonce
+      initiator_public_key: keys.initiator_static_public_key,
+      initiator_nonce: initiator_nonce
     }
   end
 
