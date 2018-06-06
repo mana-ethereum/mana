@@ -80,8 +80,7 @@ defmodule MerklePatriciaTree.Trie.Storage do
       when not is_binary(h) or h == <<>>,
       do: trie
 
-  def delete(trie),
-    do: DB.delete!(trie.db, trie.root_hash)
+  def delete(trie), do: DB.delete!(trie.db, trie.root_hash)
 
   @doc """
   Gets the RLP encoded value of a given trie root. Specifically,

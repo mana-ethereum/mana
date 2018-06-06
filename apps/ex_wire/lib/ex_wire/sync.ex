@@ -60,35 +60,32 @@ defmodule ExWire.Sync do
         }
       ) do
     {next_block_queue, next_block_tree} =
-      Enum.reduce(
-        block_headers.headers,
-        {block_queue, block_tree},
-        fn header, {block_queue, block_tree} ->
-          header_hash = header |> Header.hash()
+      Enum.reduce(block_headers.headers, {block_queue, block_tree}, fn header,
+                                                                       {block_queue, block_tree} ->
+        header_hash = header |> Header.hash()
 
-          {block_queue, block_tree, should_request_block} =
-            BlockQueue.add_header(
-              block_queue,
-              block_tree,
-              header,
-              header_hash,
-              peer.remote_id,
-              chain,
-              db
-            )
+        {block_queue, block_tree, should_request_block} =
+          BlockQueue.add_header(
+            block_queue,
+            block_tree,
+            header,
+            header_hash,
+            peer.remote_id,
+            chain,
+            db
+          )
 
-          if should_request_block do
-            Logger.debug("[Sync] Requesting block body #{header.number}")
+        if should_request_block do
+          Logger.debug("[Sync] Requesting block body #{header.number}")
 
-            # TODO: Bulk up these requests?
-            PeerSupervisor.send_packet(PeerSupervisor, %ExWire.Packet.GetBlockBodies{
-              hashes: [header_hash]
-            })
-          end
-
-          {block_queue, block_tree}
+          # TODO: Bulk up these requests?
+          PeerSupervisor.send_packet(PeerSupervisor, %ExWire.Packet.GetBlockBodies{
+            hashes: [header_hash]
+          })
         end
-      )
+
+        {block_queue, block_tree}
+      end)
 
     # We can make this better, but it's basically "if we change, request another block"
     new_last_requested_block =
