@@ -32,10 +32,6 @@ defmodule EVM.Gas do
   @g_sset 20000
   # Paid for an SSTORE operation when the storage value’s zeroness remains unchanged or is set to zero.
   @g_sreset 5000
-  # Refund given (added into refund counter) when the storage value is set to zero from non-zero.
-  @g_sclear 15000
-  # Refund given (added into refund counter) for selfdestructing an account.
-  @r_selfdestruct 24000
   # Amount of gas to pay for a SELFDESTRUCT operation.
   @g_selfdestruct 5000
   # Paid for a CREATE operation.
@@ -354,18 +350,10 @@ defmodule EVM.Gas do
   def operation_cost(:sstore, [key, new_value], _machine_state, exec_env) do
     old_value = ExecEnv.get_storage(exec_env, key)
 
-    cond do
-      new_value == 0 ->
-        @g_sreset
-
-      old_value == :account_not_found ->
-        @g_sset
-
-      old_value == :key_not_found ->
-        @g_sset
-
-      true ->
-        @g_sreset
+    if old_value == 0 && new_value != 0 do
+      @g_sset
+    else
+      @g_sreset
     end
   end
 

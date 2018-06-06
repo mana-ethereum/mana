@@ -1,5 +1,5 @@
 defmodule EVM.Operation.EnvironmentalInformation do
-  alias EVM.{Operation, Stack, Helpers}
+  alias EVM.{Operation, Stack, Helpers, Memory, Stack, MachineState}
   alias EVM.Interface.AccountInterface
 
   @doc """
@@ -47,9 +47,7 @@ defmodule EVM.Operation.EnvironmentalInformation do
 
     machine_state = %{machine_state | stack: Stack.push(machine_state.stack, balance)}
 
-    %{
-      machine_state: machine_state
-    }
+    %{machine_state: machine_state}
   end
 
   @doc """
@@ -148,8 +146,8 @@ defmodule EVM.Operation.EnvironmentalInformation do
         machine_state: machine_state
       }) do
     if length > 0 do
-      data = EVM.Memory.read_zeroed_memory(exec_env.data, call_data_start, length)
-      machine_state = EVM.Memory.write(machine_state, memory_start, Helpers.right_pad_bytes(data))
+      data = Memory.read_zeroed_memory(exec_env.data, call_data_start, length)
+      machine_state = Memory.write(machine_state, memory_start, Helpers.right_pad_bytes(data))
 
       %{machine_state: machine_state}
     else
@@ -187,8 +185,8 @@ defmodule EVM.Operation.EnvironmentalInformation do
     if length == 0 do
       0
     else
-      data = EVM.Memory.read_zeroed_memory(exec_env.machine_code, code_offset, length)
-      machine_state = EVM.Memory.write(machine_state, mem_offset, Helpers.right_pad_bytes(data))
+      data = Memory.read_zeroed_memory(exec_env.machine_code, code_offset, length)
+      machine_state = Memory.write(machine_state, mem_offset, Helpers.right_pad_bytes(data))
 
       %{machine_state: machine_state}
     end
@@ -234,9 +232,7 @@ defmodule EVM.Operation.EnvironmentalInformation do
 
     machine_state = %{machine_state | stack: Stack.push(machine_state.stack, extcodesize)}
 
-    %{
-      machine_state: machine_state
-    }
+    %{machine_state: machine_state}
   end
 
   @doc """
@@ -265,8 +261,8 @@ defmodule EVM.Operation.EnvironmentalInformation do
       account_code =
         AccountInterface.get_account_code(exec_env.account_interface, wrapped_address)
 
-      data = EVM.Memory.read_zeroed_memory(account_code, code_offset, length)
-      machine_state = EVM.Memory.write(machine_state, mem_offset, Helpers.right_pad_bytes(data))
+      data = Memory.read_zeroed_memory(account_code, code_offset, length)
+      machine_state = Memory.write(machine_state, mem_offset, Helpers.right_pad_bytes(data))
 
       %{machine_state: machine_state}
     end
@@ -277,7 +273,7 @@ defmodule EVM.Operation.EnvironmentalInformation do
 
   ## Examples
 
-      iex> EVM.Operation.EnvironmentalInformation.returndatasize([], %{machine_state: %EVM.MachineState{last_return_data: 55}})
+      iex> EVM.Operation.EnvironmentalInformation.returndatasize([], %{machine_state: %EVM.MachineState{last_return_data: [55]}})
       1
       iex> EVM.Operation.EnvironmentalInformation.returndatasize([], %{machine_state: %EVM.MachineState{last_return_data: [55, 66]}})
       2
@@ -286,12 +282,53 @@ defmodule EVM.Operation.EnvironmentalInformation do
   """
   @spec returndatasize(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def returndatasize(_args, %{machine_state: state}) do
-    data = state.last_return_data
+    return_data_size(state)
+  end
 
-    cond do
-      is_nil(data) -> 0
-      is_list(data) -> Enum.count(data)
-      true -> 1
-    end
+  @doc """
+  Copy output data from the previous call to memory.
+
+  ## Examples
+
+      iex> machine_state = %EVM.MachineState{last_return_data: [1, 2, 3, 4, 5]}
+      iex> EVM.Operation.EnvironmentalInformation.returndatacopy([0, 0, 10], %{machine_state: machine_state})
+      %{
+         machine_state: %EVM.MachineState{
+           active_words: 1,
+           gas: nil,
+           last_return_data: [1, 2, 3, 4, 5],
+           memory: <<1, 2, 3, 4, 5, 0, 0, 0, 0, 0>>,
+           previously_active_words: 0,
+           program_counter: 0,
+           stack: []
+        }
+      }
+  """
+  @spec returndatacopy(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
+  def returndatacopy([memory_start, _return_data_start, length], %{machine_state: machine_state}) do
+    return_data_size = return_data_size(machine_state)
+    available_length = min(return_data_size, length)
+    data = read_return_data(machine_state, available_length)
+
+    machine_state =
+      Memory.write(machine_state, memory_start, Helpers.right_pad_bytes(data, length))
+
+    %{machine_state: machine_state}
+  end
+
+  @spec return_data_size(MachineState.t()) :: integer()
+  defp return_data_size(machine_state) do
+    data = machine_state.last_return_data
+
+    Enum.count(data)
+  end
+
+  @spec read_return_data(MachineState.t(), integer()) :: binary()
+  defp read_return_data(machine_state, length) do
+    machine_state.last_return_data
+    |> Enum.take(length)
+    |> Enum.reduce(<<>>, fn el, acc ->
+      acc <> <<el>>
+    end)
   end
 end

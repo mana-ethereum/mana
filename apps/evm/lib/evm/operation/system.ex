@@ -127,7 +127,7 @@ defmodule EVM.Operation.System do
     if call_gas <= account_balance && exec_env.stack_depth < EVM.Functions.max_stack_depth() do
       exec_env = ExecEnv.transfer_wei_to(exec_env, to, value)
 
-      {n_gas, _n_sub_state, n_exec_env, n_output} =
+      {n_gas, n_sub_state, n_exec_env, n_output} =
         EVM.VM.run(
           call_gas,
           Map.merge(exec_env, %{
@@ -157,8 +157,8 @@ defmodule EVM.Operation.System do
 
       %{
         machine_state: machine_state,
-        exec_env: exec_env
-        # TODO: sub_state
+        exec_env: exec_env,
+        sub_state: n_sub_state
       }
     else
       %{

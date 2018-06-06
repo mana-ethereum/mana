@@ -30,12 +30,12 @@ defmodule EVM.MachineState do
           memory: memory,
           active_words: integer(),
           stack: Stack.t(),
-          last_return_data: [EVM.val()]
+          last_return_data: [EVM.val()] | []
         }
 
   @doc """
-  Returns a new execution environment less the amount
-  of gas specified.
+  Subtracts gas required by the current instruction from the specified machine
+  state.
 
   ## Examples
 

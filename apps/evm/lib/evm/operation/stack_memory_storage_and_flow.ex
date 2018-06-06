@@ -96,13 +96,7 @@ defmodule EVM.Operation.StackMemoryStorageAndFlow do
       0x0
   """
   @spec sload(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
-  def sload([key], %{exec_env: exec_env}) do
-    case ExecEnv.get_storage(exec_env, key) do
-      :account_not_found -> 0
-      :key_not_found -> 0
-      {:ok, value} -> value
-    end
-  end
+  def sload([key], %{exec_env: exec_env}), do: ExecEnv.get_storage(exec_env, key)
 
   @doc """
   Save word to storage.

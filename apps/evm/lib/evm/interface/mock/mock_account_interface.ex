@@ -110,7 +110,13 @@ defimpl EVM.Interface.AccountInterface, for: EVM.Interface.Mock.MockAccountInter
   end
 
   defp update_storage(account, key, value) do
-    put_in(account, [:storage, key], value)
+    if value == 0 do
+      {key, value} = pop_in(account, [:storage, key])
+
+      value
+    else
+      put_in(account, [:storage, key], value)
+    end
   end
 
   defp put_account(mock_account_interface, address, account) do
