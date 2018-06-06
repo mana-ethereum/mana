@@ -60,12 +60,21 @@ defmodule EVM.VM do
   @spec exec(MachineState.t(), SubState.t(), ExecEnv.t()) ::
           {MachineState.t(), SubState.t(), ExecEnv.t(), output}
   def exec(machine_state, sub_state, exec_env) do
-    do_exec(machine_state, sub_state, exec_env, sub_state)
+    do_exec(machine_state, sub_state, exec_env, {machine_state, sub_state, exec_env})
   end
 
-  @spec do_exec(MachineState.t(), SubState.t(), ExecEnv.t(), SubState.t()) ::
-          {MachineState.t(), SubState.t(), ExecEnv.t(), output}
-  defp do_exec(machine_state, sub_state, exec_env, original_sub_state) do
+  @spec do_exec(
+          MachineState.t(),
+          SubState.t(),
+          ExecEnv.t(),
+          {MachineState.t(), SubState.t(), ExecEnv.t()}
+        ) :: {MachineState.t(), SubState.t(), ExecEnv.t(), output}
+  defp do_exec(
+         machine_state,
+         sub_state,
+         exec_env,
+         {original_machine_state, original_sub_state, original_exec_env}
+       ) do
     # Debugger generally runs here.
     {machine_state, sub_state, exec_env} =
       if Debugger.is_enabled?() do
@@ -84,7 +93,7 @@ defmodule EVM.VM do
       {:halt, _reason} ->
         # We're exception halting, undo it all.
         # Question: should we return the original sub-state?
-        {machine_state, original_sub_state, exec_env, <<>>}
+        {original_machine_state, original_sub_state, original_exec_env, <<>>}
 
       :continue ->
         {n_machine_state, n_sub_state, n_exec_env} = cycle(machine_state, sub_state, exec_env)
@@ -97,6 +106,9 @@ defmodule EVM.VM do
           # break execution and return
           output ->
             {n_machine_state, n_sub_state, n_exec_env, output}
+
+          {:revert, output} ->
+            {n_machine_state, original_sub_state, original_exec_env, output}
         end
     end
   end

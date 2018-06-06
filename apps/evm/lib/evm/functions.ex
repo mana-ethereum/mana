@@ -41,6 +41,7 @@ defmodule EVM.Functions do
   def is_normal_halting?(machine_state, exec_env) do
     case MachineCode.current_operation(machine_state, exec_env).sym do
       :return -> h_return(machine_state)
+      :revert -> {:revert, h_return(machine_state)}
       x when x == :stop or x == :selfdestruct -> <<>>
       _ -> nil
     end
@@ -61,7 +62,7 @@ defmodule EVM.Functions do
   This may be due to running out of gas, having an invalid instruction, having
   a stack underflow, having an invalid jump destination or having a stack overflow.
 
-  This is defined as `Z` in Eq.(126) of the Yellow Paper.
+  This is defined as `Z` in Eq.(137) of the Yellow Paper.
 
   ## Examples
 
