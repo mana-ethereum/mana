@@ -12,13 +12,20 @@ defmodule ExWire.Adapter.TCP do
   alias ExWire.Packet
 
   @doc """
-  Starts an outbound peer to peer connection.
+  Starts an outbound or inbound peer to peer connection.
   """
   def start_link(:outbound, peer, subscribers \\ []) do
     GenServer.start_link(ExWire.Adapter.TCP.Server, %{
       is_outbound: true,
       peer: peer,
       subscribers: subscribers
+    })
+  end
+
+  def start_link(:inbound) do
+    GenServer.start_link(ExWire.Adapter.TCP.Server, %{
+      is_outbound: false,
+      tcp_port: ExWire.Config.listen_port()
     })
   end
 

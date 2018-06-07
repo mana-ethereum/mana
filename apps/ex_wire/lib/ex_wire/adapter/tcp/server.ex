@@ -27,6 +27,20 @@ defmodule ExWire.Adapter.TCP.Server do
     {:ok, new_state}
   end
 
+  def init(state = %{is_outbound: false}) do
+    new_state =
+      state
+      |> listen_via_tcp()
+
+    accept_tcp_messages()
+
+    {:ok, new_state}
+  end
+
+  def accept_tcp_messages do
+    GenServer.cast(self(), :accept_tcp_messages)
+  end
+
   @doc """
   Sends auth message to a peer
   """
@@ -82,11 +96,7 @@ defmodule ExWire.Adapter.TCP.Server do
     {:noreply, handle_acknowledgement_received(data, state)}
   end
 
-  def handle_info(
-        {:tcp, _socket, data},
-        state = %{is_outbound: false, my_ephemeral_key_pair: _my_ephemeral_key_pair}
-      ) do
-    # TODO: How do we set remote id?
+  def handle_info({:tcp, _socket, data}, state = %{is_outbound: false}) do
     {:noreply, handle_auth_message_received(data, state)}
   end
 
@@ -105,12 +115,16 @@ defmodule ExWire.Adapter.TCP.Server do
   @doc """
   If we receive a `send_unframed_data`, we'll send the data directly over the wire.
   """
-  def handle_cast({:send_unframed_data, data}, state = %{socket: socket, peer: peer}) do
-    Logger.debug(
-      "[Network] [#{peer}] Sending raw data message of length #{byte_size(data)} byte(s) to #{
-        peer.host
-      }"
-    )
+  def handle_cast({:send_unframed_data, data}, state = %{socket: socket}) do
+    message =
+      if state.is_outbound do
+        peer = state.peer
+        "[#{peer}] Sending raw data message of length #{byte_size(data)} byte(s) to #{peer.host}"
+      else
+        "Sending raw data message of length #{byte_size(data)} byte(s)"
+      end
+
+    Logger.debug("[Network]" <> message)
 
     :ok = :gen_tcp.send(socket, data)
 
@@ -122,11 +136,17 @@ defmodule ExWire.Adapter.TCP.Server do
   """
   def handle_cast(
         {:send, %{packet: {packet_mod, packet_type, packet_data}}},
-        state = %{socket: socket, secrets: secrets, peer: peer}
+        state = %{socket: socket, secrets: secrets}
       ) do
-    Logger.info(
-      "[Network] [#{peer}] Sending packet #{Atom.to_string(packet_mod)} to #{peer.host}"
-    )
+    message =
+      if state.is_outbound do
+        peer = state.peer
+        "[#{peer}] Sending packet #{Atom.to_string(packet_mod)} to #{peer.host}"
+      else
+        "Sending packet #{Atom.to_string(packet_mod)}"
+      end
+
+    Logger.info("[Network]" <> message)
 
     {frame, updated_secrets} = Frame.frame(packet_type, packet_data, secrets)
 
@@ -142,6 +162,12 @@ defmodule ExWire.Adapter.TCP.Server do
     :gen_tcp.shutdown(socket, :read_write)
 
     {:noreply, Map.delete(state, :socket)}
+  end
+
+  def handle_cast(:accept_tcp_messages, state = %{listen_socket: listen_socket}) do
+    {:ok, socket} = :gen_tcp.accept(listen_socket)
+
+    {:noreply, Map.put(state, :socket, socket)}
   end
 
   defp handle_acknowledgement_received(data, state) do
@@ -177,34 +203,16 @@ defmodule ExWire.Adapter.TCP.Server do
   end
 
   defp handle_auth_message_received(data, state) do
-    %{
-      peer: peer,
-      my_ephemeral_key_pair: my_ephemeral_key_pair,
-      my_nonce: my_nonce
-    } = state
-
-    case Handshake.try_handle_auth(
-           data,
-           my_ephemeral_key_pair,
-           my_nonce,
-           peer.remote_id
-         ) do
+    case Handshake.try_handle_auth(data, ExWire.Config.private_key()) do
       {:ok, ack_data, secrets} ->
-        Logger.debug("[Network] [#{peer}] Received auth from #{peer.host}")
+        Logger.debug("[Network] Received auth")
 
         send_ack_message(ack_data)
 
-        Map.merge(state, %{
-          secrets: secrets,
-          auth_data: nil,
-          my_ephemeral_key_pair: nil,
-          my_nonce: nil
-        })
+        Map.merge(state, %{secrets: secrets})
 
       {:invalid, reason} ->
-        Logger.warn(
-          "[Network] [#{peer}] Received unknown handshake message when expecting auth - #{reason}"
-        )
+        Logger.warn("[Network] Received unknown handshake message when expecting auth: #{reason}")
 
         state
     end
@@ -259,19 +267,14 @@ defmodule ExWire.Adapter.TCP.Server do
   end
 
   defp generate_auth_credentials(state = %{peer: peer}) do
-    {my_auth_msg, my_ephemeral_key_pair, my_nonce} =
-      ExWire.Handshake.build_auth_msg(
+    Logger.debug("[Network] Generating EIP8 Handshake for #{peer.host}")
+
+    {encoded_auth_msg, my_ephemeral_key_pair, my_nonce} =
+      ExWire.Handshake.build_encoded_auth_msg(
         ExWire.Config.public_key(),
         ExWire.Config.private_key(),
         peer.remote_id
       )
-
-    Logger.debug("[Network] Generating EIP8 Handshake for #{peer.host}")
-
-    {:ok, encoded_auth_msg} =
-      my_auth_msg
-      |> ExWire.Handshake.Struct.AuthMsgV4.serialize()
-      |> ExWire.Handshake.EIP8.wrap_eip_8(peer.remote_id, my_ephemeral_key_pair)
 
     Map.merge(state, %{
       auth_data: encoded_auth_msg,
@@ -288,5 +291,11 @@ defmodule ExWire.Adapter.TCP.Server do
     )
 
     Map.put(state, :socket, socket)
+  end
+
+  defp listen_via_tcp(state) do
+    {:ok, listen_socket} = :gen_tcp.listen(state.tcp_port, [:binary, active: true])
+
+    Map.put(state, :listen_socket, listen_socket)
   end
 end
