@@ -372,7 +372,7 @@ defmodule EVM.Gas do
   end
 
   def operation_cost(
-    :delegatecall,
+        :delegatecall,
         [gas_limit, to_address, value, _in_offset, _in_length, _out_offset, _out_length],
         _machine_state,
         exec_env
