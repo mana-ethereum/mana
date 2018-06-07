@@ -186,7 +186,7 @@ defmodule EVM.Gas do
     call_memory_cost(stack_args, machine_state)
   end
 
-  def memory_cost(:delegatecall, stack_args, machine_state) do
+  def memory_cost(:staticcall, stack_args, machine_state) do
     call_memory_cost(stack_args, machine_state)
   end
 
@@ -372,7 +372,7 @@ defmodule EVM.Gas do
   end
 
   def operation_cost(
-        :delegatecall,
+        :staticcall,
         [gas_limit, to_address, value, _in_offset, _in_length, _out_offset, _out_length],
         _machine_state,
         exec_env
