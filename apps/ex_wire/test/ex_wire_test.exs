@@ -83,17 +83,14 @@ defmodule ExWireTest do
   def fake_send(message, timestamp) do
     encoded_message = Protocol.encode(message, ExWire.Config.private_key())
 
-    GenServer.cast(
-      :ex_wire_test,
-      {
-        :fake_recieve,
-        %{
-          data: encoded_message,
-          remote_host: @us,
-          timestamp: timestamp
-        }
+    GenServer.cast(:ex_wire_test, {
+      :fake_recieve,
+      %{
+        data: encoded_message,
+        remote_host: @us,
+        timestamp: timestamp
       }
-    )
+    })
 
     <<hash::256, _::binary>> = encoded_message
 

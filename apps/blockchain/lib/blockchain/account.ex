@@ -348,8 +348,7 @@ defmodule Blockchain.Account do
       %Blockchain.Account{balance: 13}
   """
   @spec dec_wei(EVM.state(), EVM.address(), EVM.Wei.t()) :: EVM.state()
-  def dec_wei(state, address, delta_wei),
-    do: add_wei(state, address, -1 * delta_wei)
+  def dec_wei(state, address, delta_wei), do: add_wei(state, address, -1 * delta_wei)
 
   @doc """
   Helper function for transferring eth for one account to another.

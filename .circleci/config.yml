@@ -4,7 +4,7 @@ jobs:
     parallelism: 1
     resource_class: large
     docker:
-      - image: circleci/elixir:1.6
+      - image: circleci/elixir:1.6.4
         environment:
           MIX_ENV: test
 
