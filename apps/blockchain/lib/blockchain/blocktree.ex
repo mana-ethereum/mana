@@ -379,9 +379,7 @@ defmodule Blockchain.Blocktree do
         block -> {block.header.number, block.block_hash}
       end
 
-    children =
-      for {_, child} <- blocktree.children,
-          do: inspect_tree(child)
+    children = for {_, child} <- blocktree.children, do: inspect_tree(child)
 
     [value | children]
   end

@@ -6,40 +6,41 @@ defmodule ExWire.Handshake.Struct.AckRespV4 do
   """
 
   defstruct [
-    :remote_ephemeral_public_key,
-    :remote_nonce,
-    :remote_version
+    :recipient_ephemeral_public_key,
+    :recipient_nonce,
+    :recipient_version
   ]
 
   @type t :: %__MODULE__{
-          remote_ephemeral_public_key: ExthCrypto.Key.public_key(),
-          remote_nonce: binary(),
-          remote_version: integer()
+          recipient_ephemeral_public_key: ExthCrypto.Key.public_key(),
+          recipient_nonce: binary(),
+          recipient_version: integer()
         }
 
   @spec serialize(t) :: ExRLP.t()
-  def serialize(auth_resp) do
+  def serialize(ack_resp) do
     [
-      auth_resp.remote_ephemeral_public_key |> ExthCrypto.Key.der_to_raw(),
-      auth_resp.remote_nonce,
-      auth_resp.remote_version |> :binary.encode_unsigned()
+      ack_resp.recipient_ephemeral_public_key |> ExthCrypto.Key.der_to_raw(),
+      ack_resp.recipient_nonce,
+      ack_resp.recipient_version |> :binary.encode_unsigned()
     ]
   end
 
   @spec deserialize(ExRLP.t()) :: t
   def deserialize(rlp) do
-    [remote_ephemeral_public_key | rlp_tail] = rlp
-    [remote_nonce | rlp_tail] = rlp_tail
-    [remote_version | _tl] = rlp_tail
+    [recipient_ephemeral_public_key | rlp_tail] = rlp
+    [recipient_nonce | rlp_tail] = rlp_tail
+    [recipient_version | _tl] = rlp_tail
 
     %__MODULE__{
-      remote_ephemeral_public_key: remote_ephemeral_public_key |> ExthCrypto.Key.raw_to_der(),
-      remote_nonce: remote_nonce,
-      remote_version:
+      recipient_ephemeral_public_key:
+        recipient_ephemeral_public_key |> ExthCrypto.Key.raw_to_der(),
+      recipient_nonce: recipient_nonce,
+      recipient_version:
         if(
-          is_binary(remote_version),
-          do: :binary.decode_unsigned(remote_version),
-          else: remote_version
+          is_binary(recipient_version),
+          do: :binary.decode_unsigned(recipient_version),
+          else: recipient_version
         )
     }
   end

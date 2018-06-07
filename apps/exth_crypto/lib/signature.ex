@@ -8,10 +8,15 @@ defmodule ExthCrypto.Signature do
   functionality.
   """
 
-  @type signature :: binary()
+  # 512 = 64 * 8
+  @type signature :: <<_::512>>
   @type r :: integer()
   @type s :: integer()
-  @type recovery_id :: integer()
+  @type recovery_id :: 0..3
+  # 520 = (64 + 1) * 8
+  @type compact_signature :: <<_::520>>
+
+  @signature_length 64
 
   @doc """
   Given a private key, returns a public key.
@@ -114,5 +119,23 @@ defmodule ExthCrypto.Signature do
       {:ok, public_key} -> {:ok, public_key}
       {:error, reason} -> {:error, to_string(reason)}
     end
+  end
+
+  @doc """
+  Combines a signature (64 bytes) with the recovery id. 
+  """
+  @spec compact_format(signature(), recovery_id()) :: compact_signature()
+  def compact_format(signature, recovery_id) do
+    signature <> :binary.encode_unsigned(recovery_id)
+  end
+
+  @doc """
+  Separates a compact signature (64 bytes + recovery id) into its separate components.
+  """
+  @spec split_compact_format(compact_signature()) :: {signature(), recovery_id()}
+  def split_compact_format(compact_signature) do
+    <<signature::binary-size(@signature_length), recovery_id::binary-size(1)>> = compact_signature
+
+    {signature, :binary.decode_unsigned(recovery_id)}
   end
 end
