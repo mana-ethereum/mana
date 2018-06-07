@@ -43,6 +43,14 @@ defmodule EVM.Operation.Metadata.System do
                       group: :system
                     },
                     %{
+                      id: 0xFA,
+                      description: "Static message-call into an account",
+                      sym: :delegatecall,
+                      input_count: 6,
+                      output_count: 1,
+                      group: :system
+                    },
+                    %{
                       id: 0xFE,
                       description:
                         "Designated invalid instruction. It can be used to abort the execution.",
