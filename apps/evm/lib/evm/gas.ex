@@ -124,7 +124,6 @@ defmodule EVM.Gas do
   @w_mid_instr [:addmod, :mulmod, :jump]
   @w_high_instr [:jumpi]
   @w_extcode_instr [:extcodesize]
-  @call_operations [:call, :callcode, :delegatecall]
   @memory_operations [:mstore, :mstore8, :sha3, :codecopy, :extcodecopy, :calldatacopy, :mload]
 
   @doc """
@@ -184,6 +183,10 @@ defmodule EVM.Gas do
   end
 
   def memory_cost(:callcode, stack_args, machine_state) do
+    call_memory_cost(stack_args, machine_state)
+  end
+
+  def memory_cost(:delegatecall, stack_args, machine_state) do
     call_memory_cost(stack_args, machine_state)
   end
 
@@ -359,6 +362,17 @@ defmodule EVM.Gas do
 
   def operation_cost(
         :call,
+        [gas_limit, to_address, value, _in_offset, _in_length, _out_offset, _out_length],
+        _machine_state,
+        exec_env
+      ) do
+    to_address = Address.new(to_address)
+
+    @g_call + call_value_cost(value) + new_account_cost(exec_env, to_address) + gas_limit
+  end
+
+  def operation_cost(
+        :delegatecall,
         [gas_limit, to_address, value, _in_offset, _in_length, _out_offset, _out_length],
         _machine_state,
         exec_env

@@ -168,7 +168,16 @@ defmodule EVM.Operation.System do
   end
 
   @doc """
-    Exactly equivalent to `call` except  the recipient is in fact the same account as at present, simply that the code is overwritten.
+  Static message-call into an account. Exactly equivalent to CALL except:
+  The argument μs[2] is replaced with 0.
+  """
+  @spec static_call(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
+  def static_call([call_gas, to, in_offset, in_size, out_offset, out_size], vm_map) do
+    call([call_gas, to, 0, in_offset, in_size, out_offset, out_size], vm_map)
+  end
+
+  @doc """
+  Exactly equivalent to `call` except  the recipient is in fact the same account as at present, simply that the code is overwritten.
 
     ## Examples
 
@@ -188,10 +197,7 @@ defmodule EVM.Operation.System do
   @spec callcode(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def callcode(
         [call_gas, _to, value, in_offset, in_size, out_offset, out_size],
-        vm_map = %{
-          exec_env: exec_env,
-          machine_state: _machine_state
-        }
+        vm_map = %{exec_env: exec_env}
       ) do
     call([call_gas, exec_env.address, value, in_offset, in_size, out_offset, out_size], vm_map)
   end
