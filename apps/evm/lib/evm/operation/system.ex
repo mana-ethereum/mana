@@ -168,11 +168,20 @@ defmodule EVM.Operation.System do
   end
 
   @doc """
+  Message-call into this account with an alternative account’s code, but
+  persisting the current values for sender and value.
+  """
+  @spec delegatecall(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
+  def delegatecall([call_gas, to, in_offset, in_size, out_offset, out_size], vm_map) do
+    call([call_gas, to, 0, in_offset, in_size, out_offset, out_size], vm_map)
+  end
+
+  @doc """
   Static message-call into an account. Exactly equivalent to CALL except:
   The argument μs[2] is replaced with 0.
   """
-  @spec static_call(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
-  def static_call([call_gas, to, in_offset, in_size, out_offset, out_size], vm_map) do
+  @spec staticcall(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
+  def staticcall([call_gas, to, in_offset, in_size, out_offset, out_size], vm_map) do
     call([call_gas, to, 0, in_offset, in_size, out_offset, out_size], vm_map)
   end
 

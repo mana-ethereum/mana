@@ -45,7 +45,7 @@ defmodule EVM.Operation.Metadata.System do
                     %{
                       id: 0xFA,
                       description: "Static message-call into an account",
-                      sym: :delegatecall,
+                      sym: :staticcall,
                       input_count: 6,
                       output_count: 1,
                       group: :system
