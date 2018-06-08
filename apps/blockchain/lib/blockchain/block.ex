@@ -710,27 +710,6 @@ defmodule Blockchain.Block do
   ## Examples
 
       # Create a contract
-      iex> db = MerklePatriciaTree.Test.random_ets_db()
-      iex> beneficiary = <<0x05::160>>
-      iex> private_key = <<1::256>>
-      iex> sender = <<126, 95, 69, 82, 9, 26, 105, 18, 93, 93, 252, 183, 184, 194, 101, 144, 41, 57, 91, 223>> # based on simple private key
-      iex> contract_address = Blockchain.Contract.new_contract_address(sender, 6)
-      iex> machine_code = EVM.MachineCode.compile([:push1, 3, :push1, 5, :add, :push1, 0x00, :mstore, :push1, 32, :push1, 0, :return])
-      iex> trx = %Blockchain.Transaction{nonce: 5, gas_price: 3, gas_limit: 100_000, to: <<>>, value: 5, init: machine_code}
-      ...>           |> Blockchain.Transaction.Signature.sign_transaction(private_key)
-      iex> state = MerklePatriciaTree.Trie.new(db)
-      ...>           |> Blockchain.Account.put_account(sender, %Blockchain.Account{balance: 400_000, nonce: 5})
-      iex> block = %Blockchain.Block{header: %Block.Header{state_root: state.root_hash, beneficiary: beneficiary}, transactions: []}
-      ...>           |> Blockchain.Block.add_transactions([trx], db)
-      iex> Enum.count(block.transactions)
-      1
-      iex> Blockchain.Block.get_receipt(block, 0, db)
-      %Blockchain.Transaction.Receipt{bloom_filter: "", cumulative_gas: 53780, logs: [], state: block.header.state_root}
-      iex> Blockchain.Block.get_transaction(block, 0, db)
-      %Blockchain.Transaction{data: "", gas_limit: 100000, gas_price: 3, init: <<96, 3, 96, 5, 1, 96, 0, 82, 96, 32, 96, 0, 243>>, nonce: 5, r: 107081699003708865501096995082166450904153826331883689397382301082384794234940, s: 15578885506929783846367818105804923093083001199223955674477534036059482186127, to: "", v: 27, value: 5}
-      iex> Blockchain.Block.get_state(block, db)
-      ...> |> Blockchain.Account.get_accounts([sender, beneficiary, contract_address])
-      [%Blockchain.Account{balance: 238655, nonce: 6}, %Blockchain.Account{balance: 161340}, %Blockchain.Account{balance: 5, code_hash: <<243, 247, 169, 254, 54, 79, 170, 185, 59, 33, 109, 165, 10, 50, 20, 21, 79, 34, 160, 162, 180, 21, 178, 58, 132, 200, 22, 158, 139, 99, 110, 227>>}]
   """
   @spec add_transactions(t, [Transaction.t()], DB.db()) :: t
   def add_transactions(block, transactions, db) do
@@ -750,7 +729,7 @@ defmodule Blockchain.Block do
        ) do
     state = Trie.new(db, header.state_root)
     # TODO: How do we deal with invalid transactions
-    {new_state, gas_used, logs} = Transaction.execute_transaction(state, trx, header)
+    {new_state, gas_used, logs} = Transaction.execute(state, trx, header)
 
     total_gas_used = block.header.gas_used + gas_used
 

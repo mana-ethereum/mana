@@ -26,7 +26,7 @@ defmodule EVM.Operation do
   @type opcode :: byte()
   @type stack_args :: [EVM.val()]
   @type vm_map :: %{
-          optional(:state) => EVM.world_state(),
+          optional(:state) => EVM.state(),
           optional(:stack) => Stack.t(),
           optional(:machine_state) => MachineState.t(),
           optional(:sub_state) => SubState.t(),

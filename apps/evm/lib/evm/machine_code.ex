@@ -12,7 +12,6 @@ defmodule EVM.MachineCode do
   Yellow Paper, this is often referred to as `w`, and is
   defined in Eq.(125) and again in Eq.(221).
 
-
   ## Examples
 
       iex> EVM.MachineCode.current_operation(%EVM.MachineState{program_counter: 0}, %EVM.ExecEnv{machine_code: <<0x15::8, 0x11::8, 0x12::8>>})

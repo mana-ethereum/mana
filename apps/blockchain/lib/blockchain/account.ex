@@ -5,7 +5,7 @@ defmodule Blockchain.Account do
   """
 
   alias ExthCrypto.Hash.Keccak
-  alias MerklePatriciaTree.{Trie, DB}
+  alias MerklePatriciaTree.Trie
   alias Blockchain.Account.Storage
 
   @empty_keccak Keccak.kec(<<>>)
