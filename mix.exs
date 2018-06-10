@@ -14,6 +14,7 @@ defmodule Exthereum.MixProject do
         :exth_crypto,
         :merkle_patricia_tree
       ],
+      elixir: "~> 1.6.5",
       start_permanent: Mix.env() == :prod,
       dialyzer: [
         ignore_warnings: ".dialyzer.ignore-warnings",
