@@ -84,7 +84,7 @@ defmodule EVM.MessageCall do
 
     # TODO: check if the call was successful https://github.com/poanetwork/mana/issues/155
     updated_stack = Stack.push(machine_state.stack, 1)
-    machine_state = %{machine_state | stack: updated_stack}
+    machine_state = %{machine_state | stack: updated_stack, gas: machine_state.gas + n_gas}
     machine_state = Memory.write(machine_state, out_offset, n_output)
     exec_env = %{exec_env | account_interface: n_exec_env.account_interface}
 
