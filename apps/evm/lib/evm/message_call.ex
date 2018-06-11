@@ -78,7 +78,7 @@ defmodule EVM.MessageCall do
   def update_state({n_gas, n_sub_state, n_exec_env, n_output}, message_call) do
     machine_state = message_call.current_machine_state
     exec_env = message_call.current_exec_env
-    {out_offset, out_size} = message_call.output_params
+    {out_offset, _out_size} = message_call.output_params
 
     # TODO: check if the call was successful https://github.com/poanetwork/mana/issues/155
     updated_stack = Stack.push(machine_state.stack, 1)

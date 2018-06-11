@@ -159,7 +159,7 @@ defmodule EVM.Operation.System do
       code_owner: to,
       gas_price: exec_env.gas_price,
       value: 0,
-      execution_value: exec_env.value,
+      execution_value: exec_env.value_in_wei,
       data: data,
       stack_depth: exec_env.stack_depth + 1
     }
