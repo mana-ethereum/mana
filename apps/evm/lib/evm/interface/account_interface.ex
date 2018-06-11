@@ -25,7 +25,7 @@ defprotocol EVM.Interface.AccountInterface do
   @spec get_account_nonce(EVM.Interface.AccountInterface.t(), EVM.address()) :: integer()
   def get_account_nonce(mock_account_interface, address)
 
-  @spec increment_account_nonce(t, EVM.address()) :: t
+  @spec increment_account_nonce(t, EVM.address()) :: {t(), integer()}
   def increment_account_nonce(t, address)
 
   @spec get_storage(t, EVM.address(), integer()) ::

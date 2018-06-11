@@ -263,47 +263,9 @@ defmodule Blockchain.Transaction do
   sender in the case of a message call or contract creation
   not directly triggered by a transaction but coming from
   the execution of EVM-code.
-
-  # TODO: Add rich examples in `transaction_test.exs`
-
-  ## Examples
-
-      # Create contract
-      iex> beneficiary = <<0x05::160>>
-      iex> private_key = <<1::256>>
-      iex> sender = <<126, 95, 69, 82, 9, 26, 105, 18, 93, 93, 252, 183, 184, 194, 101, 144, 41, 57, 91, 223>> # based on simple private key
-      iex> contract_address = Blockchain.Contract.new_contract_address(sender, 6)
-      iex> machine_code = EVM.MachineCode.compile([:push1, 3, :push1, 5, :add, :push1, 0x00, :mstore, :push1, 32, :push1, 0, :return])
-      iex> tx = %Blockchain.Transaction{nonce: 5, gas_price: 3, gas_limit: 100_000, to: <<>>, value: 5, init: machine_code}
-      ...>       |> Blockchain.Transaction.Signature.sign_transaction(private_key)
-      iex> {state, gas, logs} = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
-      ...> |> Blockchain.Account.put_account(sender, %Blockchain.Account{balance: 400_000, nonce: 5})
-      ...> |> Blockchain.Transaction.execute_transaction(tx, %Block.Header{beneficiary: beneficiary})
-      iex> {gas, logs}
-      {53780, []}
-      iex> Blockchain.Account.get_accounts(state, [sender, beneficiary, contract_address])
-      [%Blockchain.Account{balance: 238655, nonce: 6}, %Blockchain.Account{balance: 161340}, %Blockchain.Account{balance: 5, code_hash: <<243, 247, 169, 254, 54, 79, 170, 185, 59, 33, 109, 165, 10, 50, 20, 21, 79, 34, 160, 162, 180, 21, 178, 58, 132, 200, 22, 158, 139, 99, 110, 227>>}]
-
-      # Message call
-      iex> beneficiary = <<0x05::160>>
-      iex> private_key = <<1::256>>
-      iex> sender = <<126, 95, 69, 82, 9, 26, 105, 18, 93, 93, 252, 183, 184, 194, 101, 144, 41, 57, 91, 223>> # based on simple private key
-      iex> contract_address = Blockchain.Contract.new_contract_address(sender, 6)
-      iex> machine_code = EVM.MachineCode.compile([:push1, 3, :push1, 5, :add, :push1, 0x00, :mstore, :push1, 0, :push1, 32, :return])
-      iex> tx = %Blockchain.Transaction{nonce: 5, gas_price: 3, gas_limit: 100_000, to: contract_address, value: 5, init: machine_code}
-      ...>       |> Blockchain.Transaction.Signature.sign_transaction(private_key)
-      iex> {state, gas, logs} = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
-      ...> |> Blockchain.Account.put_account(sender, %Blockchain.Account{balance: 400_000, nonce: 5})
-      ...> |> Blockchain.Account.put_code(contract_address, machine_code)
-      ...> |> Blockchain.Transaction.execute_transaction(tx, %Block.Header{beneficiary: beneficiary})
-      iex> {gas, logs}
-      {21780, []}
-      iex> Blockchain.Account.get_accounts(state, [sender, beneficiary, contract_address])
-      [%Blockchain.Account{balance: 334655, nonce: 6}, %Blockchain.Account{balance: 65340}, %Blockchain.Account{balance: 5, code_hash: <<216, 114, 80, 103, 17, 50, 164, 75, 162, 123, 123, 99, 162, 105, 226, 15, 215, 200, 136, 216, 29, 106, 193, 119, 1, 173, 138, 37, 219, 39, 23, 231>>}]
   """
-  @spec execute_transaction(EVM.state(), t, Header.t()) ::
-          {EVM.state(), Gas.t(), EVM.SubState.logs()}
-  def execute_transaction(state, tx, block_header) do
+  @spec execute(EVM.state(), t, Header.t()) :: {EVM.state(), Gas.t(), EVM.SubState.logs()}
+  def execute(state, tx, block_header) do
     # TODO: Check transaction validity.
     {:ok, sender} = Transaction.Signature.sender(tx)
 
@@ -323,36 +285,39 @@ defmodule Blockchain.Transaction do
       case tx.to do
         # Λ
         <<>> ->
-          Contract.create_contract(
-            state_0,
-            sender,
-            originator,
-            gas,
-            tx.gas_price,
-            tx.value,
-            tx.init,
-            stack_depth,
-            block_header
-          )
+          params = %Contract.CreateContract{
+            state: state_0,
+            sender: sender,
+            originator: originator,
+            available_gas: gas,
+            gas_price: tx.gas_price,
+            endowment: tx.value,
+            init_code: tx.init,
+            stack_depth: stack_depth,
+            block_header: block_header
+          }
+
+          Contract.create(params)
 
         recipient ->
+          params = %Contract.MessageCall{
+            state: state_0,
+            sender: sender,
+            originator: originator,
+            recipient: recipient,
+            contract: recipient,
+            available_gas: gas,
+            gas_price: tx.gas_price,
+            value: tx.value,
+            apparent_value: apparent_value,
+            data: tx.data,
+            stack_depth: stack_depth,
+            block_header: block_header
+          }
+
           # Note, we only want to take the first 3 items from the tuples,
           # as designated Θ_3 in the literature Θ_3
-          {state, remaining_gas_, sub_state_, _output} =
-            Contract.message_call(
-              state_0,
-              sender,
-              originator,
-              recipient,
-              recipient,
-              gas,
-              tx.gas_price,
-              tx.value,
-              apparent_value,
-              tx.data,
-              stack_depth,
-              block_header
-            )
+          {state, remaining_gas_, sub_state_, _output} = Contract.message_call(params)
 
           {state, remaining_gas_, sub_state_}
       end

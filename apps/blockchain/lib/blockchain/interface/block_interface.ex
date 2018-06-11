@@ -39,7 +39,8 @@ defimpl EVM.Interface.BlockInterface, for: Blockchain.Interface.BlockInterface d
 
   ## Examples
 
-      iex> Blockchain.Interface.BlockInterface.new(%Block.Header{number: 10}, nil)
+      iex> %Block.Header{number: 10}
+      ...> |> Blockchain.Interface.BlockInterface.new(nil)
       ...> |> EVM.Interface.BlockInterface.get_block_header()
       %Block.Header{number: 10}
   """
@@ -89,11 +90,16 @@ defimpl EVM.Interface.BlockInterface, for: Blockchain.Interface.BlockInterface d
   @spec get_block_by_number(EVM.Interface.BlockInterface.t(), non_neg_integer()) ::
           Block.Header.t() | nil
   def get_block_by_number(block_interface, steps) do
-    case Blockchain.Block.get_block_hash_by_steps(
-           block_interface.block_header |> Block.Header.hash(),
-           steps,
-           block_interface.db
-         ) do
+    header_hash = Block.Header.hash(block_interface.block_header)
+
+    result =
+      Blockchain.Block.get_block_hash_by_steps(
+        header_hash,
+        steps,
+        block_interface.db
+      )
+
+    case result do
       {:ok, block_header} -> block_header
       :not_found -> nil
     end
