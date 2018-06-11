@@ -15,9 +15,7 @@ defmodule EVM do
           code: binary()
         }
   # σ
-  @type world_state :: %{
-          address() => account()
-        }
+  @type state :: %{address() => account()}
   @type trie_root :: MerklePatriciaTree.Trie.root_hash()
   @type val :: integer()
   @type address :: <<_::160>>

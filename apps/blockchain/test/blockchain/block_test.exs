@@ -5,14 +5,16 @@ defmodule Blockchain.BlockTest do
   doctest Blockchain.Block
 
   alias Block.Header
-  alias Blockchain.{Block, Transaction, Genesis}
+  alias Blockchain.{Chain, Account, Contract, Block, Transaction, Genesis}
+  alias EVM.MachineCode
+  alias MerklePatriciaTree.Trie
 
   define_common_tests("GenesisTests", [], fn _test_name, test_data ->
     for {internal_test_name, test} <- test_data do
       if Enum.member?(["test2", "test3"], internal_test_name) do
         db = MerklePatriciaTree.Test.random_ets_db()
 
-        chain = %Blockchain.Chain{
+        chain = %Chain{
           genesis: %{
             timestamp: test["timestamp"] |> maybe_hex,
             parent_hash: test["parentHash"] |> maybe_hex,
@@ -175,5 +177,111 @@ defmodule Blockchain.BlockTest do
       |> Block.validate(chain, nil, db)
 
     assert result == :valid
+  end
+
+  describe "add_transactions/3" do
+    test "creates contract account" do
+      db = MerklePatriciaTree.Test.random_ets_db()
+      beneficiary = <<0x05::160>>
+      private_key = <<1::256>>
+      # based on simple private key
+      sender =
+        <<126, 95, 69, 82, 9, 26, 105, 18, 93, 93, 252, 183, 184, 194, 101, 144, 41, 57, 91, 223>>
+
+      contract_address = Contract.Address.new(sender, 6)
+
+      assembly = [
+        :push1,
+        3,
+        :push1,
+        5,
+        :add,
+        :push1,
+        0x00,
+        :mstore,
+        :push1,
+        32,
+        :push1,
+        0,
+        :return
+      ]
+
+      machine_code = MachineCode.compile(assembly)
+
+      trx =
+        %Transaction{
+          nonce: 5,
+          gas_price: 3,
+          gas_limit: 100_000,
+          to: <<>>,
+          value: 5,
+          init: machine_code
+        }
+        |> Transaction.Signature.sign_transaction(private_key)
+
+      account = %Account{balance: 400_000, nonce: 5}
+
+      state =
+        db
+        |> Trie.new()
+        |> Account.put_account(sender, account)
+
+      block_header = %Header{
+        state_root: state.root_hash,
+        beneficiary: beneficiary
+      }
+
+      block = %Block{header: block_header, transactions: []}
+      block = Block.add_transactions(block, [trx], db)
+
+      assert Enum.count(block.transactions) == 1
+
+      expected_receipt = %Transaction.Receipt{
+        bloom_filter: "",
+        cumulative_gas: 53780,
+        logs: [],
+        state: block.header.state_root
+      }
+
+      assert Block.get_receipt(block, 0, db) == expected_receipt
+
+      expected_transaction = %Transaction{
+        data: "",
+        gas_limit: 100_000,
+        gas_price: 3,
+        init: <<96, 3, 96, 5, 1, 96, 0, 82, 96, 32, 96, 0, 243>>,
+        nonce: 5,
+        r:
+          107_081_699_003_708_865_501_096_995_082_166_450_904_153_826_331_883_689_397_382_301_082_384_794_234_940,
+        s:
+          15_578_885_506_929_783_846_367_818_105_804_923_093_083_001_199_223_955_674_477_534_036_059_482_186_127,
+        to: "",
+        v: 27,
+        value: 5
+      }
+
+      assert Block.get_transaction(block, 0, db) == expected_transaction
+
+      addresses = [sender, beneficiary, contract_address]
+
+      actual_accounts =
+        block
+        |> Block.get_state(db)
+        |> Account.get_accounts(addresses)
+
+      expected_accounts = [
+        %Blockchain.Account{balance: 238_655, nonce: 6},
+        %Blockchain.Account{balance: 161_340},
+        %Blockchain.Account{
+          balance: 5,
+          nonce: 1,
+          code_hash:
+            <<243, 247, 169, 254, 54, 79, 170, 185, 59, 33, 109, 165, 10, 50, 20, 21, 79, 34, 160,
+              162, 180, 21, 178, 58, 132, 200, 22, 158, 139, 99, 110, 227>>
+        }
+      ]
+
+      assert actual_accounts == expected_accounts
+    end
   end
 end

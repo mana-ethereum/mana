@@ -2,8 +2,9 @@ defmodule EVM.Operation.SystemTest do
   use ExUnit.Case, async: true
   doctest EVM.Operation.System
 
-  alias EVM.{ExecEnv, Address, Operation, MachineState, SubState, MachineCode, VM}
-  alias EVM.Interface.Mock.MockAccountInterface
+  alias EVM.{ExecEnv, Stack, Address, Operation, MachineState, SubState, MachineCode, VM}
+  alias EVM.Interface.AccountInterface
+  alias EVM.Interface.Mock.{MockAccountInterface, MockBlockInterface}
 
   describe "selfdestruct/2" do
     test "transfers wei to refund account" do
@@ -125,6 +126,70 @@ defmodule EVM.Operation.SystemTest do
              }
 
       assert output == <<0>>
+    end
+  end
+
+  describe "create/2" do
+    test "creates a new account with associated code" do
+      block_interface = MockBlockInterface.new(%Block.Header{})
+      account_map = %{<<100::160>> => %{balance: 5_000, nonce: 5}}
+      contract_result = %{gas: 500, sub_state: nil, output: "output"}
+      account_interface = MockAccountInterface.new(account_map, contract_result)
+
+      exec_env = %ExecEnv{
+        stack_depth: 0,
+        address: <<100::160>>,
+        account_interface: account_interface,
+        block_interface: block_interface
+      }
+
+      machine_state = %MachineState{
+        gas: 300,
+        stack: [1],
+        memory: "________" <> "input"
+      }
+
+      %{machine_state: n_machine_state} =
+        Operation.System.create([1_000, 5, 5], %{exec_env: exec_env, machine_state: machine_state})
+
+      expected_machine_state = %MachineState{
+        gas: 300,
+        stack: [0x601BCC2189B7096D8DFAA6F74EFEEBEF20486D0D, 1],
+        active_words: 1,
+        memory: "________input"
+      }
+
+      assert n_machine_state == expected_machine_state
+    end
+  end
+
+  describe "call/2" do
+    test "Transfers wei from callers account to callees account" do
+      account_map = %{
+        <<0::160>> => %{balance: 100, nonce: 5, code: <<>>},
+        <<1::160>> => %{balance: 100, nonce: 5, code: <<>>},
+        <<2::160>> => %{balance: 100, nonce: 5, code: <<>>}
+      }
+
+      account_interface = MockAccountInterface.new(account_map)
+
+      exec_env = %ExecEnv{
+        account_interface: account_interface,
+        sender: <<0::160>>,
+        address: <<0::160>>
+      }
+
+      machine_state = %MachineState{gas: 1000}
+
+      %{machine_state: machine_state, exec_env: exec_env} =
+        Operation.System.call([10, 1, 1, 0, 0, 0, 0], %{
+          exec_env: exec_env,
+          machine_state: machine_state
+        })
+
+      assert Stack.peek(machine_state.stack) == 1
+      assert AccountInterface.get_account_balance(exec_env.account_interface, <<0::160>>) == 99
+      assert AccountInterface.get_account_balance(exec_env.account_interface, <<1::160>>) == 101
     end
   end
 end

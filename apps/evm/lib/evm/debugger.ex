@@ -423,22 +423,25 @@ defmodule EVM.Debugger do
     size_width =
       if total_size > 0, do: total_size |> :math.log10() |> :math.ceil() |> round, else: 0
 
+    size_unit = if total_size == 1, do: "byte", else: "bytes"
+
     IO.puts("")
-    IO.puts("Memory (#{total_size} #{if total_size == 1, do: "byte", else: "bytes"})")
+    IO.puts("Memory (#{total_size} #{size_unit})")
     IO.puts("")
 
-    for {chunk, n} <-
-          Enum.chunk(memory |> String.codepoints(), @chunk_size, @chunk_size, [])
-          |> Enum.with_index() do
+    codepoints = String.codepoints(memory)
+
+    indexed_chunks =
+      codepoints
+      |> Enum.chunk_every(@chunk_size, @chunk_size, [])
+      |> Enum.with_index()
+
+    for {chunk, n} <- indexed_chunks do
       offset = n * @chunk_size
 
       ascii =
         chunk
-        |> Enum.map(fn codepoint ->
-          if codepoint |> String.to_charlist() |> List.first() |> printable,
-            do: codepoint,
-            else: "."
-        end)
+        |> Enum.map(&to_ascii/1)
         |> Enum.join()
         |> String.pad_leading(@chunk_size)
 
@@ -448,7 +451,12 @@ defmodule EVM.Debugger do
         |> Enum.join(" ")
         |> String.pad_leading(@chunk_size * 3, " ")
 
-      IO.puts("[#{String.pad_leading(offset |> to_string, size_width)}] #{hex} #{ascii}")
+      offset_str =
+        offset
+        |> to_string()
+        |> String.pad_leading(size_width)
+
+      IO.puts("[#{offset_str}] #{hex} #{ascii}")
     end
 
     prompt(breakpoint, machine_state, sub_state, exec_env, input_sequence)
@@ -516,6 +524,17 @@ defmodule EVM.Debugger do
          _input_sequence
        ) do
     {machine_state, sub_state, exec_env}
+  end
+
+  @spec to_ascii(String.t()) :: String.t()
+  defp to_ascii(codepoint) do
+    is_printable =
+      codepoint
+      |> :binary.bin_to_list()
+      |> List.first()
+      |> printable()
+
+    if is_printable, do: codepoint, else: "."
   end
 
   @spec printable(integer()) :: boolean()

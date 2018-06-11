@@ -9,7 +9,6 @@ defmodule ExWire.Mixfile do
       config_path: "../../config/config.exs",
       deps_path: "../../deps",
       lockfile: "../../mix.lock",
-      elixir: "~> 1.6",
       description: "Elixir Client for Ethereum's RLPx, DevP2P and Eth Wire Protocol",
       package: [
         maintainers: ["Mason Fischer", "Geoffrey Hayes", "Ayrat Badykov"],

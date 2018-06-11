@@ -9,7 +9,6 @@ defmodule EVM.Mixfile do
       config_path: "../../config/config.exs",
       deps_path: "../../deps",
       lockfile: "../../mix.lock",
-      elixir: "~> 1.6",
       description: "Ethereum's Virtual Machine, in all its glory.",
       package: [
         maintainers: ["Geoffrey Hayes", "Ayrat Badykov", "Mason Forest"],

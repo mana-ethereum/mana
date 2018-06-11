@@ -28,6 +28,16 @@ defmodule EVM.SubState do
         }
 
   @doc """
+  Returns the canonical empty sub-state.
+  """
+  def empty(), do: %__MODULE__{}
+
+  @doc """
+  Checks whether the given `sub_state` is empty.
+  """
+  def empty?(sub_state), do: sub_state == empty()
+
+  @doc """
   Adds log entry to substate's log entry list.
 
   ## Examples

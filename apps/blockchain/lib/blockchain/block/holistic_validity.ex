@@ -82,7 +82,9 @@ defmodule Blockchain.Block.HolisticValidity do
       |> check_state_root_validity(child_block, block)
       |> check_ommers_hash_validity(child_block, block)
       |> check_transactions_root_validity(child_block, block)
-      |> check_receipts_root_validity(child_block, block)
+
+    # TODO: Check receipts after resolving https://github.com/poanetwork/mana/issues/66
+    # |> check_receipts_root_validity(child_block, block)
 
     if errors == [], do: :valid, else: {:invalid, errors}
   end

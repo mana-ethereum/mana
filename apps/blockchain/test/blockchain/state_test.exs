@@ -9,6 +9,7 @@ defmodule Blockchain.StateTest do
   @ethereum_common_tests_path "../../ethereum_common_tests"
   @passing_tests_by_group %{
     example: :all,
+    # >> Byzantium-only
     args_zero_one_balance: [
       # :addNonConst,
       # :addmodNonConst,
@@ -54,7 +55,7 @@ defmodule Blockchain.StateTest do
       # :smodNonConst,
       # :sstoreNonConst,
       # :subNonConst,
-      # :suicideNonConst,
+      # :suicideNonConst
       # :xorNonConst
     ],
     attack_test: [
@@ -62,11 +63,15 @@ defmodule Blockchain.StateTest do
       # :CrashingTransaction
     ],
     bad_opcode: [
+      # >> Byzantium, EIP158, Homestead
       # :badOpcodes
     ],
     bugs: [
+      # >> Byzantium, EIP150, EIP158, Homestead
       # :evmBytecode,
+      # >> Byzantium, EIP150, EIP158, Homestead
       # :returndatacopyPythonBug_Tue_03_48_41-1432,
+      # >> Byzantium
       # :staticcall_createfails
     ],
     call_codes: [
@@ -2444,11 +2449,17 @@ defmodule Blockchain.StateTest do
           |> Transaction.Signature.sign_transaction(maybe_hex(test["transaction"]["secretKey"]))
 
         {state, _, _} =
-          Transaction.execute_transaction(state, transaction, %Block.Header{
+          Transaction.execute(state, transaction, %Block.Header{
             beneficiary: maybe_hex(test["env"]["currentCoinbase"])
           })
 
-        assert state.root_hash == maybe_hex(List.first(test["post"]["Frontier"])["hash"])
+        expected_hash =
+          test["post"]["Frontier"]
+          |> List.first()
+          |> Map.fetch!("hash")
+          |> maybe_hex()
+
+        assert state.root_hash == expected_hash
       end
     end
   end
@@ -2496,20 +2507,25 @@ defmodule Blockchain.StateTest do
     end)
   end
 
-  def test_directory_name(type) do
-    "#{@ethereum_common_tests_path}/GeneralStateTests/st#{Macro.camelize(Atom.to_string(type))}"
+  def test_directory_name(group) do
+    dir_name = "st#{Macro.camelize(Atom.to_string(group))}"
+    Path.join([@ethereum_common_tests_path, "GeneralStateTests", dir_name])
   end
 
   def read_state_test_file(type, test_name) do
-    {:ok, body} = File.read(state_test_file_name(type, test_name))
+    file_name = state_test_file_name(type, test_name)
+    {:ok, body} = File.read(file_name)
     Poison.decode!(body)[Atom.to_string(test_name)]
   end
 
-  def state_test_file_name(type, test) do
-    System.cwd() <>
-      "/../../ethereum_common_tests/GeneralStateTests/st#{Macro.camelize(Atom.to_string(type))}/#{
-        test
-      }.json"
+  def state_test_file_name(group, test) do
+    group = group |> Atom.to_string() |> Macro.camelize()
+    file_name = Path.join(~w(st#{group} #{test}.json))
+    relative_path = Path.join(~w(.. .. ethereum_common_tests GeneralStateTests #{file_name}))
+
+    System.cwd()
+    |> Path.join(relative_path)
+    |> Path.expand()
   end
 
   def account_interface(test) do

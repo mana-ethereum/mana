@@ -156,7 +156,7 @@ defmodule EVM.Memory do
   """
   def get_active_words(bytes) do
     # note: round has no effect due to ceil, just being used for float to int conversion
-    :math.ceil(bytes / 32) |> round
+    (bytes / 32) |> :math.ceil() |> round()
   end
 
   @doc """
