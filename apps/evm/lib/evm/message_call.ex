@@ -17,8 +17,6 @@ defmodule EVM.MessageCall do
     :recipient,
     # c
     :code_owner,
-    # g
-    :available_gas,
     # p
     :gas_price,
     # v

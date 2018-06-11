@@ -142,8 +142,30 @@ defmodule EVM.Operation.System do
   persisting the current values for sender and value.
   """
   @spec delegatecall(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
-  def delegatecall([call_gas, to, in_offset, in_size, out_offset, out_size], vm_map) do
-    call([call_gas, to, 0, in_offset, in_size, out_offset, out_size], vm_map)
+  def delegatecall([_call_gas, to, in_offset, in_size, out_offset, out_size], %{
+        exec_env: exec_env,
+        machine_state: machine_state
+      }) do
+    to = Address.new(to)
+    {data, machine_state} = EVM.Memory.read(machine_state, in_offset, in_size)
+
+
+    message_call = %MessageCall{
+      current_exec_env: exec_env,
+      current_machine_state: machine_state,
+      output_params: {out_offset, out_size},
+      sender: exec_env.sender,
+      originator: exec_env.originator,
+      recipient: exec_env.address,
+      code_owner: to,
+      gas_price: exec_env.gas_price,
+      value: 0,
+      execution_value: exec_env.value,
+      data: data,
+      stack_depth: exec_env.stack_depth + 1
+    }
+
+    MessageCall.call(message_call)
   end
 
   @doc """
@@ -164,7 +186,7 @@ defmodule EVM.Operation.System do
       output_params: {out_offset, out_size},
       sender: exec_env.address,
       originator: exec_env.originator,
-      recipient: exec_env.address,
+      recipient: to,
       code_owner: to,
       gas_price: exec_env.gas_price,
       value: 0,
