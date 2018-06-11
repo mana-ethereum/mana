@@ -1,6 +1,6 @@
 defmodule EVM.Operation.System do
   alias EVM.Interface.{AccountInterface, BlockInterface}
-  alias EVM.{MachineState, ExecEnv, Helpers, Address, Stack, Operation}
+  alias EVM.{MachineState, ExecEnv, Helpers, Address, Stack, Operation, MessageCall}
 
   @dialyzer {:no_return, callcode: 2}
 
@@ -112,59 +112,29 @@ defmodule EVM.Operation.System do
         101
   """
   @spec call(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
-  def call([call_gas, to, value, in_offset, in_size, out_offset, _out_size], %{
+  def call([call_gas, to, value, in_offset, in_size, out_offset, out_size], %{
         exec_env: exec_env,
         machine_state: machine_state
       }) do
     to = Address.new(to)
     {data, machine_state} = EVM.Memory.read(machine_state, in_offset, in_size)
 
-    account_balance =
-      AccountInterface.get_account_balance(exec_env.account_interface, exec_env.address)
+    message_call = %MessageCall{
+      current_exec_env: exec_env,
+      current_machine_state: machine_state,
+      output_params: {out_offset, out_size},
+      sender: exec_env.address,
+      originator: exec_env.originator,
+      recipient: to,
+      code_owner: to,
+      gas_price: exec_env.gas_price,
+      value: value,
+      execution_value: call_gas,
+      data: data,
+      stack_depth: exec_env.stack_depth + 1
+    }
 
-    machine_code = AccountInterface.get_account_code(exec_env.account_interface, to)
-
-    if call_gas <= account_balance && exec_env.stack_depth < EVM.Functions.max_stack_depth() do
-      exec_env = ExecEnv.transfer_wei_to(exec_env, to, value)
-
-      {n_gas, n_sub_state, n_exec_env, n_output} =
-        EVM.VM.run(
-          call_gas,
-          Map.merge(exec_env, %{
-            # a
-            address: to,
-            # s
-            sender: exec_env.address,
-            # d
-            data: data,
-            # v
-            value_in_wei: value,
-            # b
-            machine_code: machine_code,
-            # e
-            stack_depth: exec_env.stack_depth + 1
-          })
-        )
-
-      exec_env = %{exec_env | account_interface: n_exec_env.account_interface}
-      # TODO: Set n_account_interface
-
-      machine_state = EVM.Memory.write(machine_state, out_offset, n_output)
-      machine_state = %{machine_state | gas: machine_state.gas + n_gas}
-      # Return 1: 1 = success, 0 = failure
-      # TODO Check if the call was actually successful
-      machine_state = %{machine_state | stack: Stack.push(machine_state.stack, 1)}
-
-      %{
-        machine_state: machine_state,
-        exec_env: exec_env,
-        sub_state: n_sub_state
-      }
-    else
-      %{
-        machine_state: %{machine_state | stack: Stack.push(machine_state.stack, 0)}
-      }
-    end
+    MessageCall.call(message_call)
   end
 
   @doc """

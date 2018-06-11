@@ -44,9 +44,12 @@ defmodule EVM.MessageCall do
 
   defp enough_gas?(message_call) do
     sender_balance =
-      AccountInterface.get_account_balance(message_call.account_interface, message_call.sender)
+      AccountInterface.get_account_balance(
+        message_call.current_exec_env.account_interface,
+        message_call.sender
+      )
 
-    sender_balance >= message_call.value
+    sender_balance >= message_call.execution_value
   end
 
   defp valid_stack_depth?(message_call) do
@@ -54,6 +57,7 @@ defmodule EVM.MessageCall do
   end
 
   defp execute(message_call) do
+    # first transitional state
     message_call = transfer_gas_to_recipient(message_call)
 
     message_call
