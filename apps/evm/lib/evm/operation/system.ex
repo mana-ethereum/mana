@@ -86,7 +86,7 @@ defmodule EVM.Operation.System do
         machine_state: machine_state
       }) do
     to = Address.new(to)
-    {data, machine_state} = EVM.Memory.read(machine_state, input_offset, input_size)
+    {data, machine_state} = EVM.Memory.read(machine_state, in_offset, in_size)
 
     message_call = %MessageCall{
       current_exec_env: exec_env,
@@ -132,7 +132,7 @@ defmodule EVM.Operation.System do
       data: data,
       stack_depth: exec_env.stack_depth + 1
     }
-    
+
     MessageCall.call(message_call)
   end
 
