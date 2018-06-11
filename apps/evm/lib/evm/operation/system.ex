@@ -175,10 +175,28 @@ defmodule EVM.Operation.System do
   """
   @spec callcode(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def callcode(
-        [call_gas, _to, value, in_offset, in_size, out_offset, out_size],
-        vm_map = %{exec_env: exec_env}
+        [call_gas, to, value, in_offset, in_size, out_offset, out_size],
+        vm_map = %{exec_env: exec_env, machine_state: machine_state}
       ) do
-    call([call_gas, exec_env.address, value, in_offset, in_size, out_offset, out_size], vm_map)
+    to = Address.new(to)
+    {data, machine_state} = EVM.Memory.read(machine_state, in_offset, in_size)
+
+    message_call = %MessageCall{
+      current_exec_env: exec_env,
+      current_machine_state: machine_state,
+      output_params: {out_offset, out_size},
+      sender: exec_env.address,
+      originator: exec_env.originator,
+      recipient: exec_env.address,
+      code_owner: to,
+      gas_price: exec_env.gas_price,
+      value: value,
+      execution_value: call_gas,
+      data: data,
+      stack_depth: exec_env.stack_depth + 1
+    }
+
+    MessageCall.call(message_call)
   end
 
   @doc """
