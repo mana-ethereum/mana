@@ -149,7 +149,6 @@ defmodule EVM.Operation.System do
     to = Address.new(to)
     {data, machine_state} = EVM.Memory.read(machine_state, in_offset, in_size)
 
-
     message_call = %MessageCall{
       current_exec_env: exec_env,
       current_machine_state: machine_state,
