@@ -78,9 +78,7 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
   @spec transfer(EVM.Interface.AccountInterface.t(), EVM.address(), EVM.address(), integer()) ::
           EVM.Interface.AccountInterface.t()
   def transfer(account_interface, from, to, value) do
-    {:ok, state} =
-      account_interface.state
-      |> Account.transfer(from, to, value)
+    {:ok, state} = Account.transfer(account_interface.state, from, to, value)
 
     Map.put(account_interface, :state, state)
   end
