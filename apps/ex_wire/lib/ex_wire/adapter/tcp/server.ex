@@ -8,8 +8,7 @@ defmodule ExWire.Adapter.TCP.Server do
   require Logger
 
   alias ExWire.Framing.Frame
-  alias ExWire.Handshake
-  alias ExWire.Packet
+  alias ExWire.{Handshake, Packet}
 
   @doc """
   Initialize by opening up a `gen_tcp` connection to given host and port.
@@ -201,7 +200,7 @@ defmodule ExWire.Adapter.TCP.Server do
   end
 
   defp handle_auth_message_received(data, state) do
-    case Handshake.try_handle_auth(data, ExWire.Config.private_key()) do
+    case Handshake.handle_auth(data) do
       {:ok, ack_data, secrets} ->
         Logger.debug("[Network] Received auth")
 
@@ -267,17 +266,14 @@ defmodule ExWire.Adapter.TCP.Server do
   defp generate_auth_credentials(state = %{peer: peer}) do
     Logger.debug("[Network] Generating EIP8 Handshake for #{peer.host}")
 
-    {encoded_auth_msg, my_ephemeral_key_pair, my_nonce} =
-      ExWire.Handshake.build_encoded_auth_msg(
-        ExWire.Config.public_key(),
-        ExWire.Config.private_key(),
-        peer.remote_id
-      )
+    handshake =
+      %Handshake{remote_pub: peer.remote_id}
+      |> Handshake.initiate()
 
     Map.merge(state, %{
-      auth_data: encoded_auth_msg,
-      my_ephemeral_key_pair: my_ephemeral_key_pair,
-      my_nonce: my_nonce
+      auth_data: handshake.encoded_auth_msg,
+      my_ephemeral_key_pair: handshake.random_key_pair,
+      my_nonce: handshake.init_nonce
     })
   end
 
