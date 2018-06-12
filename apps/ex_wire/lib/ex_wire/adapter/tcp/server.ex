@@ -28,9 +28,7 @@ defmodule ExWire.Adapter.TCP.Server do
   end
 
   def init(state = %{is_outbound: false}) do
-    new_state =
-      state
-      |> listen_via_tcp()
+    new_state = listen_via_tcp(state)
 
     accept_tcp_messages()
 
