@@ -1998,7 +1998,7 @@ defmodule Blockchain.StateTest do
       # :extcodecopy,
       :return0,
       :return1,
-      :return2,
+      :return2
       # :suicideAddress,
       # :suicideCaller,
       # :suicideCallerAddresTooBigLeft,
