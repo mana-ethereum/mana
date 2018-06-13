@@ -30,7 +30,7 @@ defmodule EVM.VM do
 
       # Program with exception halt
       iex> EVM.VM.run(5, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:add])})
-      {5, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:add])}, ""}
+      {5, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:add])}, :failed}
   """
   @spec run(Gas.t(), ExecEnv.t()) :: {Gas.t(), SubState.t(), ExecEnv.t(), output}
   def run(gas, exec_env) do
