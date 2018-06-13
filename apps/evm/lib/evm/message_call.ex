@@ -105,8 +105,6 @@ defmodule EVM.MessageCall do
         message_call.code_owner
       )
 
-    IO.inspect(machine_code |> EVM.MachineCode.decompile)
-
     %ExecEnv{
       address: message_call.recipient,
       originator: message_call.originator,

@@ -49,7 +49,7 @@ defmodule EVM.VM do
   ## Examples
 
       iex> EVM.VM.exec(%EVM.MachineState{program_counter: 0, gas: 5, stack: [1, 2]}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:add])})
-      {%EVM.MachineState{program_counter: 2, gas: 2, stack: [3], last_return_data: [3]}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:add])}, <<>>}
+      {%EVM.MachineState{program_counter: 2, gas: 2, stack: [3], last_return_data: [3]}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:add])}, ""}
 
       iex> EVM.VM.exec(%EVM.MachineState{program_counter: 0, gas: 9, stack: []}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:push1, 3, :push1, 5, :add])})
       {%EVM.MachineState{program_counter: 6, gas: 0, last_return_data: [8], stack: [8]}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:push1, 3, :push1, 5, :add])}, ""}
