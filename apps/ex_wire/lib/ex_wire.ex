@@ -34,7 +34,9 @@ defmodule ExWire do
         []
       end
 
-    children = sync_children ++ node_discovery
+    tcp_listening = [ExWire.TCPListeningSupervisor]
+
+    children = sync_children ++ node_discovery ++ tcp_listening
 
     opts = [strategy: :one_for_one, name: name]
     Supervisor.start_link(children, opts)

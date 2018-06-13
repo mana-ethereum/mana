@@ -12,6 +12,22 @@ defmodule ExWire.Adapter.TCP do
   alias ExWire.Packet
 
   @doc """
+  Child spec definition to be used by a supervisor when wanting to supervise an
+  inbound TCP connection.
+
+  Note: We usually get this function for free, but since we have separated the
+  GenServer implementation (and thus the `use GenServer` part), we have to
+  implement this ourselves.
+  """
+  def child_spec([:inbound]) do
+    %{
+      id: ExWire.TCP.Inbound,
+      start: {ExWire.Adapter.TCP, :start_link, [:inbound]},
+      restart: :temporary
+    }
+  end
+
+  @doc """
   Starts an outbound or inbound peer to peer connection.
   """
   def start_link(:outbound, peer, subscribers \\ []) do
@@ -24,8 +40,7 @@ defmodule ExWire.Adapter.TCP do
 
   def start_link(:inbound) do
     GenServer.start_link(ExWire.Adapter.TCP.Server, %{
-      is_outbound: false,
-      tcp_port: ExWire.Config.listen_port()
+      is_outbound: false
     })
   end
 
