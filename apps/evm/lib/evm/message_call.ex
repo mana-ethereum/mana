@@ -33,7 +33,7 @@ defmodule EVM.MessageCall do
   Message call function. Described as Θ in the Eq.(98) of the Yellow Paper
   """
   def call(message_call) do
-    if valid_stack_depth?(message_call) do
+    if valid_stack_depth?(message_call) && enough_gas?(message_call) do
       execute(message_call)
     else
       failed_call(message_call)
