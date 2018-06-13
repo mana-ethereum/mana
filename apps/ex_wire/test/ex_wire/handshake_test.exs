@@ -3,10 +3,81 @@ defmodule HandshakeTest do
   doctest ExWire.Handshake
   alias ExWire.Handshake
 
+  describe "initiate/1" do
+    test "marks the handshake as the initiator" do
+      her_static_public_key = ExthCrypto.Test.public_key(:key_b)
+
+      handshake =
+        %Handshake{remote_pub: her_static_public_key}
+        |> Handshake.initiate()
+
+      assert handshake.initiator == true
+    end
+
+    test "generates a nonce and an ephemeral key pair" do
+      her_static_public_key = ExthCrypto.Test.public_key(:key_b)
+      handshake_nonce_length = 32
+
+      handshake =
+        %Handshake{remote_pub: her_static_public_key}
+        |> Handshake.initiate()
+
+      {public_key, private_key} = handshake.random_key_pair
+      assert {:ok, ^public_key} = ExthCrypto.Signature.get_public_key(private_key)
+      assert byte_size(handshake.init_nonce) == handshake_nonce_length
+    end
+
+    test "generates an encoded AuthMsgV4" do
+      her_static_public_key = ExthCrypto.Test.public_key(:key_b)
+      her_static_private_key = ExthCrypto.Test.private_key(:key_b)
+      my_static_public_key = ExthCrypto.Test.public_key(:key_a)
+      my_static_private_key = ExthCrypto.Test.private_key(:key_a)
+
+      set_environment(my_static_private_key)
+
+      handshake =
+        %Handshake{remote_pub: her_static_public_key}
+        |> Handshake.initiate()
+
+      set_environment(her_static_private_key)
+
+      {:ok, auth_msg, <<>>} =
+        Handshake.read_auth_msg(handshake.encoded_auth_msg, her_static_private_key)
+
+      assert %ExWire.Handshake.Struct.AuthMsgV4{} = auth_msg
+      assert auth_msg.initiator_public_key == my_static_public_key
+    end
+  end
+
+  describe "handle_auth/3" do
+    test "decodes auth, generates ack response, and secrets" do
+      my_static_private_key = ExthCrypto.Test.private_key(:key_a)
+      her_static_public_key = ExthCrypto.Test.public_key(:key_b)
+      her_static_private_key = ExthCrypto.Test.private_key(:key_b)
+
+      set_environment(my_static_private_key)
+
+      handshake =
+        %Handshake{remote_pub: her_static_public_key}
+        |> Handshake.initiate()
+
+      set_environment(her_static_private_key)
+
+      {:ok, ack_resp, secrets} = Handshake.handle_auth(handshake.encoded_auth_msg)
+
+      {:ok, my_decoded_ack_resp, _ack_bin, <<>>} =
+        Handshake.read_ack_resp(ack_resp, my_static_private_key)
+
+      assert %Handshake.Struct.AckRespV4{} = my_decoded_ack_resp
+      assert %ExWire.Framing.Secrets{} = secrets
+    end
+  end
+
   test "handshake build and handle auth msg / ack resp via eip-8" do
     my_static_public_key = ExthCrypto.Test.public_key(:key_a)
     my_static_private_key = ExthCrypto.Test.private_key(:key_a)
     her_static_public_key = ExthCrypto.Test.public_key(:key_b)
+    her_static_private_key = ExthCrypto.Test.private_key(:key_b)
 
     {my_auth_msg, my_ephemeral_key_pair, _nonce} =
       Handshake.build_auth_msg(
@@ -20,24 +91,23 @@ defmodule HandshakeTest do
       |> Handshake.Struct.AuthMsgV4.serialize()
       |> Handshake.EIP8.wrap_eip_8(her_static_public_key, my_ephemeral_key_pair)
 
-    {:ok, her_auth_msg, <<>>} =
-      Handshake.read_auth_msg(encoded_auth_msg, ExthCrypto.Test.private_key(:key_b))
+    {:ok, her_auth_msg, <<>>} = Handshake.read_auth_msg(encoded_auth_msg, her_static_private_key)
 
     # Same auth message, except we've added the initiator ephemeral public key
     assert her_auth_msg.initiator_ephemeral_public_key != nil
     assert my_auth_msg == %{her_auth_msg | initiator_ephemeral_public_key: nil}
 
-    my_ack_resp = Handshake.build_ack_resp(her_auth_msg.initiator_ephemeral_public_key)
+    {her_ack_resp, her_ephemeral_key_pair, _her_nonce} = Handshake.build_ack_resp()
 
     {:ok, encoded_ack_msg} =
-      my_ack_resp
+      her_ack_resp
       |> Handshake.Struct.AckRespV4.serialize()
-      |> Handshake.EIP8.wrap_eip_8(her_static_public_key, my_ephemeral_key_pair)
+      |> Handshake.EIP8.wrap_eip_8(my_static_public_key, her_ephemeral_key_pair)
 
-    {:ok, her_ack_resp, _ack_bin, <<>>} =
-      Handshake.read_ack_resp(encoded_ack_msg, ExthCrypto.Test.private_key(:key_b))
+    {:ok, my_decoded_ack_resp, _ack_bin, <<>>} =
+      Handshake.read_ack_resp(encoded_ack_msg, my_static_private_key)
 
-    assert my_ack_resp == her_ack_resp
+    assert my_decoded_ack_resp == her_ack_resp
   end
 
   test "handshake auth plain" do
@@ -278,5 +348,9 @@ defmodule HandshakeTest do
              |> ExthCrypto.Key.raw_to_der()
 
     assert ack_resp.recipient_version == 57
+  end
+
+  def set_environment(private_key) do
+    Application.put_env(:ex_wire, :private_key, private_key)
   end
 end
