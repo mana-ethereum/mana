@@ -46,7 +46,7 @@ defmodule ExWire.Handshake do
   @nonce_len 32
 
   @doc """
-  Builds an AuthMsgV4 (see build_auth_msg/5), serializes it, and encodes it.
+  Builds an AuthMsgV4 (see build_auth_msg/3), serializes it, and encodes it.
   This message is ready to be sent to a peer to initiate the encrypted handshake.
   """
   @spec initiate(Handshake.t()) :: Handshake.t()
