@@ -93,7 +93,7 @@ defmodule EVM.VM do
       {:halt, _reason} ->
         # We're exception halting, undo it all.
         # Question: should we return the original sub-state?
-        {original_machine_state, original_sub_state, original_exec_env, <<>>}
+        {original_machine_state, original_sub_state, original_exec_env, :failed}
 
       :continue ->
         {n_machine_state, n_sub_state, n_exec_env} = cycle(machine_state, sub_state, exec_env)
