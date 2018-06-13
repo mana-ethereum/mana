@@ -92,11 +92,17 @@ defmodule ExWire.Adapter.TCP.Server do
   @doc """
   Function triggered when tcp closes the connection
   """
-  def handle_info({:tcp_closed, _socket}, state = %{peer: peer}) do
-    message = "[#{peer}] Peer closed connection"
+  def handle_info({:tcp_closed, _socket}, state) do
+    message =
+      if state.is_outbound do
+        "[#{state.peer}] Peer closed connection"
+      else
+        "Peer closed connection"
+      end
+
     Logger.warn("[Network] #{message}")
 
-    Process.exit(self(), message)
+    Process.exit(self(), :normal)
 
     {:noreply, state}
   end
