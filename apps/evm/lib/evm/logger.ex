@@ -10,7 +10,7 @@ defmodule EVM.Logger do
 
   @spec log_state_in_parity_format(EVM.Operation.Metadata.t(), MachineState.t()) :: nil
   def log_state_in_parity_format(operation, machine_state) do
-        operation_string =
+    operation_string =
       Atom.to_string(operation.sym)
       |> String.upcase()
       |> String.pad_leading(8)
