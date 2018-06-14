@@ -7,8 +7,9 @@ defmodule ExWire.Adapter.TCP.Server do
 
   require Logger
 
+  alias ExWire.Adapter.TCP, as: Client
   alias ExWire.Framing.Frame
-  alias ExWire.{Handshake, Packet, TCP}
+  alias ExWire.{Handshake, Packet, TCP, DEVp2p}
   alias ExWire.Struct.Peer
 
   @doc """
@@ -146,7 +147,9 @@ defmodule ExWire.Adapter.TCP.Server do
       {:ok, secrets, frame_rest} ->
         Logger.debug("[Network] [#{peer}] Got ack from #{peer.host}, deriving secrets")
 
-        new_state = Map.merge(state, %{secrets: secrets})
+        session = initiate_dev_p2p_handshake()
+
+        new_state = Map.merge(state, %{secrets: secrets, session: session})
 
         handle_packet_data(frame_rest, new_state)
 
@@ -166,8 +169,9 @@ defmodule ExWire.Adapter.TCP.Server do
         Logger.debug("[Network] Received auth. Sending ack.")
 
         send_unframed_data(ack_data, socket, peer)
+        session = initiate_dev_p2p_handshake()
 
-        Map.merge(state, %{secrets: secrets, peer: peer})
+        Map.merge(state, %{secrets: secrets, peer: peer, session: session})
 
       {:invalid, reason} ->
         Logger.warn("[Network] Received unknown handshake message when expecting auth: #{reason}")
@@ -240,6 +244,15 @@ defmodule ExWire.Adapter.TCP.Server do
     )
 
     TCP.send_data(socket, data)
+  end
+
+  defp initiate_dev_p2p_handshake do
+    session = DEVp2p.init_session()
+    handshake = DEVp2p.generate_handshake()
+
+    Client.send_packet(self(), handshake)
+
+    DEVp2p.handshake_sent(session, handshake)
   end
 
   defp get_peer_info(auth_msg, socket) do
