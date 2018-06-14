@@ -144,41 +144,4 @@ defmodule EVM.VM do
 
     {final_machine_state, n_sub_state, n_exec_env}
   end
-
-  def log(operation, machine_state) do
-    operation_string = Atom.to_string(operation.sym)
-      |> String.upcase()
-      |> String.pad_leading(8)
-
-    opcode_string = operation.id
-      |> :binary.encode_unsigned()
-      |> Base.encode16(case: :lower)
-      |> String.trim_leading("0")
-      |> String.pad_trailing(2)
-
-    program_counter = machine_state.program_counter + 1
-    program_counter_string = program_counter
-      |> :binary.encode_unsigned()
-      |> Base.encode16(case: :lower)
-      |> String.trim_leading("0")
-      |> String.pad_trailing(3)
-
-    IO.puts "[0x#{program_counter_string}][#{operation_string}(0x#{opcode_string}) Gas Left: #{machine_state.gas})"
-    inputs = Operation.inputs(operation, machine_state)
-    if !Enum.empty?(inputs) do
-      inputs
-      |> Enum.reverse
-      |> Stream.with_index
-      |> Enum.each(fn({value, i}) ->
-        value_string = if value == 0,
-        do: "0", else: (
-          value
-                       |> :binary.encode_unsigned()
-                       |> Base.encode16(case: :lower)
-                       |> String.trim_leading("0"))
-
-        IO.inspect "       | #{i}: 0x#{value_string}"
-      end)
-    end
-  end
 end
