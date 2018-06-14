@@ -32,12 +32,21 @@ defmodule ExWire.TCP.Listener do
     {:ok, socket} = TCP.accept_connection(listen_socket)
     {:ok, pid} = TCP.InboundConnectionsSupervisor.new_connection_handler()
 
-    TCP.hand_over_control(socket, pid)
-    TCP.accept_messages(socket)
+    hand_over_control_of_socket(socket, pid)
 
     accept_tcp_connection()
 
     {:noreply, state}
+  end
+
+  defp hand_over_control_of_socket(socket, pid) do
+    case TCP.hand_over_control(socket, pid) do
+      :ok ->
+        TCP.accept_messages(socket)
+
+      {:error, _} ->
+        nil
+    end
   end
 
   defp accept_tcp_connection do
