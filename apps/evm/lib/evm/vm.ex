@@ -142,6 +142,7 @@ defmodule EVM.VM do
 
     final_machine_state = MachineState.move_program_counter(n_machine_state, operation, inputs)
 
+    log(operation, machine_state)
     {final_machine_state, n_sub_state, n_exec_env}
   end
 
@@ -157,13 +158,13 @@ defmodule EVM.VM do
       |> String.pad_trailing(2)
 
     program_counter = machine_state.program_counter + 1
-    program_counter_string = "0x#{program_counter}"
+    program_counter_string = program_counter
       |> :binary.encode_unsigned()
       |> Base.encode16(case: :lower)
       |> String.trim_leading("0")
       |> String.pad_trailing(3)
 
-    IO.puts "[#{program_counter_string}][#{operation_string}(0x#{opcode_string}) Gas Left: #{machine_state.gas})"
+    IO.puts "[0x#{program_counter_string}][#{operation_string}(0x#{opcode_string}) Gas Left: #{machine_state.gas})"
     inputs = Operation.inputs(operation, machine_state)
     if !Enum.empty?(inputs) do
       inputs
@@ -177,7 +178,7 @@ defmodule EVM.VM do
                        |> Base.encode16(case: :lower)
                        |> String.trim_leading("0"))
 
-IO.puts "       | #{i}: 0x#{value_string}"
+        IO.inspect "       | #{i}: 0x#{value_string}"
       end)
     end
   end

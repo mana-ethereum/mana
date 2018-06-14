@@ -47,7 +47,7 @@ defmodule EVM.MessageCall do
         message_call.originator
       )
 
-    sender_balance >= message_call.value
+    originator_balance >= message_call.value
   end
 
   defp valid_stack_depth?(message_call) do
