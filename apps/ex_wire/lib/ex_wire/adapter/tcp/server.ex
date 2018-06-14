@@ -27,15 +27,7 @@ defmodule ExWire.Adapter.TCP.Server do
   end
 
   def init(state = %{is_outbound: false}) do
-    new_state = listen_via_tcp(state)
-
-    accept_tcp_messages()
-
-    {:ok, new_state}
-  end
-
-  def accept_tcp_messages do
-    GenServer.cast(self(), :accept_tcp_messages)
+    {:ok, state}
   end
 
   @doc """
@@ -100,11 +92,17 @@ defmodule ExWire.Adapter.TCP.Server do
   @doc """
   Function triggered when tcp closes the connection
   """
-  def handle_info({:tcp_closed, _socket}, state = %{peer: peer}) do
-    message = "[#{peer}] Peer closed connection"
+  def handle_info({:tcp_closed, _socket}, state) do
+    message =
+      if state.is_outbound do
+        "[#{state.peer}] Peer closed connection"
+      else
+        "Peer closed connection"
+      end
+
     Logger.warn("[Network] #{message}")
 
-    Process.exit(self(), message)
+    Process.exit(self(), :normal)
 
     {:noreply, state}
   end
@@ -285,11 +283,5 @@ defmodule ExWire.Adapter.TCP.Server do
     )
 
     Map.put(state, :socket, socket)
-  end
-
-  defp listen_via_tcp(state) do
-    {:ok, listen_socket} = :gen_tcp.listen(state.tcp_port, [:binary, active: true])
-
-    Map.put(state, :listen_socket, listen_socket)
   end
 end
