@@ -1,6 +1,6 @@
 defmodule EVM.Operation.System do
   alias EVM.Interface.{AccountInterface, BlockInterface}
-  alias EVM.{MachineState, ExecEnv, Helpers, Address, Stack, Operation, MessageCall}
+  alias EVM.{MachineState, ExecEnv, Helpers, Address, Stack, Operation, MessageCall, Gas}
 
   @dialyzer {:no_return, callcode: 2}
 
@@ -87,6 +87,8 @@ defmodule EVM.Operation.System do
       }) do
     to = Address.new(to)
     {data, machine_state} = EVM.Memory.read(machine_state, in_offset, in_size)
+
+    call_gas = if value != 0, do: call_gas + Gas.callstipend(), else: call_gas
 
     message_call = %MessageCall{
       current_exec_env: exec_env,

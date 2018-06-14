@@ -444,6 +444,11 @@ defmodule EVM.Gas do
     end
   end
 
+  @spec callstipend() :: integer()
+  def callstipend do
+    @g_callstipend
+  end
+
   defp call_value_cost(0), do: 0
   defp call_value_cost(_), do: @g_callvalue - @g_callstipend
 
