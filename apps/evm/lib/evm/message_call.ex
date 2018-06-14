@@ -33,7 +33,7 @@ defmodule EVM.MessageCall do
   Message call function. Described as Θ in the Eq.(98) of the Yellow Paper
   """
   def call(message_call) do
-    if enough_gas?(message_call) && valid_stack_depth?(message_call) do
+    if valid_stack_depth?(message_call) && enough_gas?(message_call) do
       execute(message_call)
     else
       failed_call(message_call)
@@ -47,7 +47,7 @@ defmodule EVM.MessageCall do
         message_call.sender
       )
 
-    sender_balance >= message_call.execution_value
+    sender_balance >= message_call.value
   end
 
   defp valid_stack_depth?(message_call) do
@@ -76,22 +76,25 @@ defmodule EVM.MessageCall do
   end
 
   def update_state({n_gas, n_sub_state, n_exec_env, n_output}, message_call) do
-    machine_state = message_call.current_machine_state
-    exec_env = message_call.current_exec_env
-    {out_offset, _out_size} = message_call.output_params
+    if n_output != :failed do
+      machine_state = message_call.current_machine_state
+      exec_env = message_call.current_exec_env
+      {out_offset, _out_size} = message_call.output_params
 
-    # TODO: check if the call was successful https://github.com/poanetwork/mana/issues/155
-    updated_stack = Stack.push(machine_state.stack, 1)
-    machine_state = %{machine_state | stack: updated_stack, gas: machine_state.gas + n_gas}
-    machine_state = Memory.write(machine_state, out_offset, n_output)
-    exec_env = %{exec_env | account_interface: n_exec_env.account_interface}
+      updated_stack = Stack.push(machine_state.stack, 1)
+      machine_state = %{machine_state | stack: updated_stack, gas: machine_state.gas + n_gas}
+      machine_state = Memory.write(machine_state, out_offset, n_output)
+      exec_env = %{exec_env | account_interface: n_exec_env.account_interface}
 
-    %{
-      machine_state: machine_state,
-      exec_env: exec_env,
-      # https://github.com/poanetwork/mana/issues/153
-      sub_state: n_sub_state
-    }
+      %{
+        machine_state: machine_state,
+        exec_env: exec_env,
+        # https://github.com/poanetwork/mana/issues/153
+        sub_state: n_sub_state
+      }
+    else
+      failed_call(message_call)
+    end
   end
 
   defp prepare_call_execution_env(message_call) do

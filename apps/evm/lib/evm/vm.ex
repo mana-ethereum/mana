@@ -30,7 +30,7 @@ defmodule EVM.VM do
 
       # Program with exception halt
       iex> EVM.VM.run(5, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:add])})
-      {5, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:add])}, ""}
+      {5, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:add])}, :failed}
   """
   @spec run(Gas.t(), ExecEnv.t()) :: {Gas.t(), SubState.t(), ExecEnv.t(), output}
   def run(gas, exec_env) do
@@ -49,7 +49,7 @@ defmodule EVM.VM do
   ## Examples
 
       iex> EVM.VM.exec(%EVM.MachineState{program_counter: 0, gas: 5, stack: [1, 2]}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:add])})
-      {%EVM.MachineState{program_counter: 2, gas: 2, stack: [3], last_return_data: [3]}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:add])}, <<>>}
+      {%EVM.MachineState{program_counter: 2, gas: 2, stack: [3], last_return_data: [3]}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:add])}, ""}
 
       iex> EVM.VM.exec(%EVM.MachineState{program_counter: 0, gas: 9, stack: []}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:push1, 3, :push1, 5, :add])})
       {%EVM.MachineState{program_counter: 6, gas: 0, last_return_data: [8], stack: [8]}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:push1, 3, :push1, 5, :add])}, ""}
@@ -93,7 +93,7 @@ defmodule EVM.VM do
       {:halt, _reason} ->
         # We're exception halting, undo it all.
         # Question: should we return the original sub-state?
-        {original_machine_state, original_sub_state, original_exec_env, <<>>}
+        {original_machine_state, original_sub_state, original_exec_env, :failed}
 
       :continue ->
         {n_machine_state, n_sub_state, n_exec_env} = cycle(machine_state, sub_state, exec_env)
