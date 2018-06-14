@@ -1468,7 +1468,7 @@ defmodule Blockchain.StateTest do
       # :recursiveCreateReturnValue
     ],
     refund_test: [
-      :refund_TxToSuicide,
+      :refund_TxToSuicide
       # :refund_singleSuicide
 
       # :refund50_1,
@@ -1942,7 +1942,7 @@ defmodule Blockchain.StateTest do
       # :static_refund_CallToSuicideTwice
     ],
     system_operations_test: [
-      :Call10
+      :Call10,
 
       # :ABAcalls0,
       # :ABAcalls1,
