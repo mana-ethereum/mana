@@ -450,7 +450,7 @@ defmodule EVM.Gas do
   end
 
   defp call_value_cost(0), do: 0
-  defp call_value_cost(_), do: @g_callvalue - @g_callstipend
+  defp call_value_cost(_), do: @g_callvalue
 
   defp new_account_cost(exec_env, address) do
     if exec_env.account_interface
