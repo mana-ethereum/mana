@@ -77,7 +77,7 @@ defmodule Blockchain.StateTest do
     call_codes: [
       # :call_OOG_additionalGasCosts1,
       # :call_OOG_additionalGasCosts2,
-      # :callcall_00
+      :callcall_00
       # :callcall_00_OOGE,
       # :callcall_00_OOGE_valueTransfer,
       # :callcall_00_SuicideEnd,
@@ -1468,8 +1468,8 @@ defmodule Blockchain.StateTest do
       # :recursiveCreateReturnValue
     ],
     refund_test: [
-      :refund_TxToSuicide
-      # :refund_singleSuicide
+      :refund_TxToSuicide,
+      :refund_singleSuicide
 
       # :refund50_1,
       # :refund50_2,

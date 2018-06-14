@@ -41,13 +41,13 @@ defmodule EVM.MessageCall do
   end
 
   defp enough_gas?(message_call) do
-    originator_balance =
+    sender_balance =
       AccountInterface.get_account_balance(
         message_call.current_exec_env.account_interface,
-        message_call.originator
+        message_call.sender
       )
 
-    originator_balance >= message_call.value
+    sender_balance >= message_call.value
   end
 
   defp valid_stack_depth?(message_call) do
