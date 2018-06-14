@@ -8,7 +8,7 @@ defmodule EVM.Logger do
   `cargo test --features "json-tests evm/evm-debug-tests" --release -- BlockchainTests_GeneralStateTest_stSystemOperationsTest --nocapture`
   """
 
-  @spec log_state_in_parity_format(Operation.t(), MachineState.t()) :: nil
+  @spec log_state_in_parity_format(EVM.Operation.Metadata.t(), MachineState.t()) :: nil
   def log_state_in_parity_format(operation, machine_state) do
         operation_string =
       Atom.to_string(operation.sym)
