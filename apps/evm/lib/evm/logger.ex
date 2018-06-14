@@ -8,13 +8,13 @@ defmodule EVM.Logger do
   `cargo test --features "json-tests evm/evm-debug-tests" --release -- BlockchainTests_GeneralStateTest_stSystemOperationsTest --nocapture`
   """
 
-  @spec log_state_in_parity_format(EVM.Operation.Metadata.t(), MachineState.t()) :: nil
-  def log_state_in_parity_format(operation, machine_state) do
-    log_opcode_and_gas_left_in_parity_format(operation, machine_state)
-    log_inputs_in_parity_format(operation, machine_state)
+  @spec log_state(EVM.Operation.Metadata.t(), MachineState.t()) :: nil
+  def log_state(operation, machine_state) do
+    log_opcode_and_gas_left(operation, machine_state)
+    log_inputs(operation, machine_state)
   end
 
-  defp log_opcode_and_gas_left_in_parity_format(operation, machine_state) do
+  defp log_opcode_and_gas_left(operation, machine_state) do
     Logger.debug(
       "[0x#{program_counter_string(machine_state)}][#{operation_string(operation)}(0x#{
         opcode_string(operation)
@@ -22,7 +22,7 @@ defmodule EVM.Logger do
     )
   end
 
-  defp log_inputs_in_parity_format(operation, machine_state) do
+  defp log_inputs(operation, machine_state) do
     inputs = Operation.inputs(operation, machine_state)
 
     if !Enum.empty?(inputs) do
