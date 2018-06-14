@@ -10,33 +10,19 @@ defmodule EVM.Logger do
 
   @spec log_state_in_parity_format(EVM.Operation.Metadata.t(), MachineState.t()) :: nil
   def log_state_in_parity_format(operation, machine_state) do
-    operation_string =
-      Atom.to_string(operation.sym)
-      |> String.upcase()
-      |> String.pad_leading(8)
+    log_opcode_and_gas_left_in_parity_format(operation, machine_state)
+    log_inputs_in_parity_format(operation, machine_state)
+  end
 
-    opcode_string =
-      operation.id
-      |> :binary.encode_unsigned()
-      |> Base.encode16(case: :lower)
-      |> String.trim_leading("0")
-      |> String.pad_trailing(2)
-
-    program_counter = machine_state.program_counter + 1
-
-    program_counter_string =
-      program_counter
-      |> :binary.encode_unsigned()
-      |> Base.encode16(case: :lower)
-      |> String.trim_leading("0")
-      |> String.pad_trailing(3)
-
+  defp log_opcode_and_gas_left_in_parity_format(operation, machine_state) do
     Logger.debug(
-      "[0x#{program_counter_string}][#{operation_string}(0x#{opcode_string}) Gas Left: #{
-        machine_state.gas
-      })"
+      "[0x#{program_counter_string(machine_state)}][#{operation_string(operation)}(0x#{
+        opcode_string(operation)
+      }) Gas Left: #{machine_state.gas})"
     )
+  end
 
+  defp log_inputs_in_parity_format(operation, machine_state) do
     inputs = Operation.inputs(operation, machine_state)
 
     if !Enum.empty?(inputs) do
@@ -56,5 +42,30 @@ defmodule EVM.Logger do
         Logger.debug("       | #{i}: 0x#{value_string}")
       end)
     end
+  end
+
+  defp operation_string(operation),
+    do:
+      Atom.to_string(operation.sym)
+      |> String.upcase()
+      |> String.pad_leading(8)
+
+  defp opcode_string(operation),
+    do:
+      operation.id
+      |> :binary.encode_unsigned()
+      |> Base.encode16(case: :lower)
+      |> String.trim_leading("0")
+      |> String.pad_trailing(2)
+
+  defp program_counter_string(machine_state) do
+    program_counter = machine_state.program_counter + 1
+
+    program_counter_string =
+      program_counter
+      |> :binary.encode_unsigned()
+      |> Base.encode16(case: :lower)
+      |> String.trim_leading("0")
+      |> String.pad_trailing(3)
   end
 end
