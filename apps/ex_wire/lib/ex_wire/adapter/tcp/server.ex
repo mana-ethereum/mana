@@ -8,7 +8,7 @@ defmodule ExWire.Adapter.TCP.Server do
   require Logger
 
   alias ExWire.Framing.Frame
-  alias ExWire.{Handshake, Packet}
+  alias ExWire.{Handshake, Packet, TCP}
 
   @doc """
   Initialize by opening up a `gen_tcp` connection to given host and port.
@@ -16,12 +16,9 @@ defmodule ExWire.Adapter.TCP.Server do
   We'll also prepare and send out an authentication message immediately after connecting.
   """
   def init(state = %{is_outbound: true, peer: _peer}) do
-    new_state =
-      state
-      |> generate_auth_credentials()
-      |> establish_tcp_connection()
+    new_state = establish_tcp_connection(state)
 
-    send_auth_message(new_state.auth_data)
+    send_auth_message()
 
     {:ok, new_state}
   end
@@ -31,17 +28,10 @@ defmodule ExWire.Adapter.TCP.Server do
   end
 
   @doc """
-  Sends auth message to a peer
+  Sends auth message to peer
   """
-  def send_auth_message(auth_data) do
-    GenServer.cast(self(), {:send_unframed_data, auth_data})
-  end
-
-  @doc """
-  Sends acknowledgement message to peer
-  """
-  def send_ack_message(ack_data) do
-    GenServer.cast(self(), {:send_unframed_data, ack_data})
+  def send_auth_message() do
+    GenServer.cast(self(), :send_auth_message)
   end
 
   @doc """
@@ -81,12 +71,14 @@ defmodule ExWire.Adapter.TCP.Server do
     {:noreply, handle_packet_data(data, state)}
   end
 
-  def handle_info({:tcp, _socket, data}, state = %{is_outbound: true, auth_data: _auth_data}) do
+  def handle_info({:tcp, _socket, data}, state = %{is_outbound: true, handshake: _handshake}) do
     {:noreply, handle_acknowledgement_received(data, state)}
   end
 
-  def handle_info({:tcp, _socket, data}, state = %{is_outbound: false}) do
-    {:noreply, handle_auth_message_received(data, state)}
+  def handle_info({:tcp, socket, data}, state = %{is_outbound: false}) do
+    new_state = Map.put(state, :socket, socket)
+
+    {:noreply, handle_auth_message_received(data, new_state)}
   end
 
   @doc """
@@ -108,20 +100,20 @@ defmodule ExWire.Adapter.TCP.Server do
   end
 
   @doc """
-  If we receive a `send_unframed_data`, we'll send the data directly over the wire.
+  Generates encoded auth message and sends it to peer. Stores credentials in
+  state for decoded ack response.
   """
-  def handle_cast({:send_unframed_data, data}, state = %{socket: socket}) do
-    message =
-      if state.is_outbound do
-        peer = state.peer
-        "[#{peer}] Sending raw data message of length #{byte_size(data)} byte(s) to #{peer.host}"
-      else
-        "Sending raw data message of length #{byte_size(data)} byte(s)"
-      end
+  def handle_cast(:send_auth_message, state = %{socket: socket, peer: peer}) do
+    Logger.debug("[Network] Generating EIP8 Handshake for #{peer.host}")
 
-    Logger.debug("[Network]" <> message)
+    handshake =
+      %Handshake{remote_pub: peer.remote_id}
+      |> Handshake.initiate()
 
-    :ok = :gen_tcp.send(socket, data)
+    new_state = Map.merge(state, %{handshake: handshake})
+
+    Logger.debug("[Network] [#{peer}] Sending Handshake to #{peer.host}")
+    send_unframed_data(new_state.auth_data, socket)
 
     {:noreply, state}
   end
@@ -145,7 +137,7 @@ defmodule ExWire.Adapter.TCP.Server do
 
     {frame, updated_secrets} = Frame.frame(packet_type, packet_data, secrets)
 
-    :ok = :gen_tcp.send(socket, frame)
+    TCP.send_data(socket, frame)
 
     {:noreply, Map.merge(state, %{secrets: updated_secrets})}
   end
@@ -154,27 +146,13 @@ defmodule ExWire.Adapter.TCP.Server do
   Server function handling disconnecting from tcp connection. See TCP.disconnect/1
   """
   def handle_cast(:disconnect, state = %{socket: socket}) do
-    :gen_tcp.shutdown(socket, :read_write)
+    TCP.shutdown(socket)
 
     {:noreply, Map.delete(state, :socket)}
   end
 
-  def handle_cast(:accept_tcp_messages, state = %{listen_socket: listen_socket}) do
-    {:ok, socket} = :gen_tcp.accept(listen_socket)
-
-    {:noreply, Map.put(state, :socket, socket)}
-  end
-
-  defp handle_acknowledgement_received(data, state) do
-    %{
-      peer: peer,
-      auth_data: auth_data,
-      my_ephemeral_key_pair:
-        {_my_ephemeral_public_key, my_ephemeral_private_key} = _my_ephemeral_key_pair,
-      my_nonce: my_nonce
-    } = state
-
-    case Handshake.try_handle_ack(data, auth_data, my_ephemeral_private_key, my_nonce) do
+  defp handle_acknowledgement_received(data, state = %{peer: peer, handshake: handshake}) do
+    case Handshake.handle_ack(data, handshake) do
       {:ok, secrets, frame_rest} ->
         Logger.debug("[Network] [#{peer}] Got ack from #{peer.host}, deriving secrets")
 
@@ -197,12 +175,12 @@ defmodule ExWire.Adapter.TCP.Server do
     end
   end
 
-  defp handle_auth_message_received(data, state) do
+  defp handle_auth_message_received(data, state = %{socket: socket}) do
     case Handshake.handle_auth(data) do
       {:ok, ack_data, secrets} ->
-        Logger.debug("[Network] Received auth")
+        Logger.debug("[Network] Received auth. Sending ack.")
 
-        send_ack_message(ack_data)
+        send_unframed_data(ack_data, socket)
 
         Map.merge(state, %{secrets: secrets})
 
@@ -261,27 +239,17 @@ defmodule ExWire.Adapter.TCP.Server do
     end
   end
 
-  defp generate_auth_credentials(state = %{peer: peer}) do
-    Logger.debug("[Network] Generating EIP8 Handshake for #{peer.host}")
-
-    handshake =
-      %Handshake{remote_pub: peer.remote_id}
-      |> Handshake.initiate()
-
-    Map.merge(state, %{
-      auth_data: handshake.encoded_auth_msg,
-      my_ephemeral_key_pair: handshake.random_key_pair,
-      my_nonce: handshake.init_nonce
-    })
-  end
-
   defp establish_tcp_connection(state = %{peer: peer}) do
-    {:ok, socket} = :gen_tcp.connect(peer.host |> String.to_charlist(), peer.port, [:binary])
+    {:ok, socket} = TCP.connect(peer.host, peer.port)
 
-    Logger.debug(
-      "[Network] [#{peer}] Established outbound connection with #{peer.host}, sending auth."
-    )
+    Logger.debug("[Network] [#{peer}] Established outbound connection with #{peer.host}.")
 
     Map.put(state, :socket, socket)
+  end
+
+  defp send_unframed_data(data, socket) do
+    Logger.debug("[Network] Sending raw data message of length #{byte_size(data)} byte(s)")
+
+    TCP.send_data(socket, data)
   end
 end

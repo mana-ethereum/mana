@@ -49,8 +49,8 @@ defmodule HandshakeTest do
     end
   end
 
-  describe "handle_auth/3" do
-    test "decodes auth, generates ack response, and secrets" do
+  describe "handle_auth/1 and handle_ack/2" do
+    test "decode auth/ack and generate secrets" do
       my_static_private_key = ExthCrypto.Test.private_key(:key_a)
       her_static_public_key = ExthCrypto.Test.public_key(:key_b)
       her_static_private_key = ExthCrypto.Test.private_key(:key_b)
@@ -63,13 +63,14 @@ defmodule HandshakeTest do
 
       set_environment(her_static_private_key)
 
-      {:ok, ack_resp, secrets} = Handshake.handle_auth(handshake.encoded_auth_msg)
+      {:ok, ack_resp, her_secrets} = Handshake.handle_auth(handshake.encoded_auth_msg)
 
-      {:ok, my_decoded_ack_resp, _ack_bin, <<>>} =
-        Handshake.read_ack_resp(ack_resp, my_static_private_key)
+      set_environment(my_static_private_key)
 
-      assert %Handshake.Struct.AckRespV4{} = my_decoded_ack_resp
-      assert %ExWire.Framing.Secrets{} = secrets
+      {:ok, my_secrets, _frame_rest} = Handshake.handle_ack(ack_resp, handshake)
+
+      assert %ExWire.Framing.Secrets{} = her_secrets
+      assert %ExWire.Framing.Secrets{} = my_secrets
     end
   end
 
