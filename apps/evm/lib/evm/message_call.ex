@@ -51,7 +51,7 @@ defmodule EVM.MessageCall do
   end
 
   defp valid_stack_depth?(message_call) do
-    message_call.stack_depth < Functions.max_stack_depth() + 1
+    message_call.stack_depth < Functions.max_stack_depth()
   end
 
   defp execute(message_call) do
