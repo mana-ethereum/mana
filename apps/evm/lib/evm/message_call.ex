@@ -3,7 +3,7 @@ defmodule EVM.MessageCall do
   alias EVM.Interface.AccountInterface
 
   @moduledoc """
-  Describes a message call function that used for all call opertations (call, delegatecall, callcode, staticcall).
+  Describes a message call function that used for all call operations (call, delegatecall, callcode, staticcall).
   """
   defstruct [
     :current_exec_env,
@@ -51,7 +51,7 @@ defmodule EVM.MessageCall do
   end
 
   defp valid_stack_depth?(message_call) do
-    message_call.stack_depth < Functions.max_stack_depth()
+    message_call.stack_depth < Functions.max_stack_depth() + 1
   end
 
   defp execute(message_call) do
@@ -112,7 +112,7 @@ defmodule EVM.MessageCall do
       sender: message_call.sender,
       value_in_wei: message_call.value,
       machine_code: machine_code,
-      stack_depth: message_call.stack_depth,
+      stack_depth: message_call.stack_depth + 1,
       account_interface: message_call.current_exec_env.account_interface,
       block_interface: message_call.current_exec_env.block_interface
     }
