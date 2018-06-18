@@ -365,7 +365,7 @@ defmodule EVM.Gas do
         end
 
       {:ok, value} ->
-        if new_value != 0 && new_value != value && value == 0 do
+        if new_value != 0 && value == 0 do
           @g_sset
         else
           @g_sreset
