@@ -3,7 +3,7 @@ defmodule EVM.Gas do
   Functions for interacting wth gas and costs of opscodes.
   """
 
-  alias EVM.{MachineState, MachineCode, Operation, Address, ExecEnv}
+  alias EVM.{MachineState, MachineCode, Operation, Address, ExecEnv, Functions}
 
   @type t :: EVM.val()
   @type gas_price :: EVM.Wei.t()
@@ -351,28 +351,44 @@ defmodule EVM.Gas do
     iex> exec_env = %EVM.ExecEnv{address: address, account_interface: account_interface}
     iex> EVM.Gas.operation_cost(:sstore, [0, 0], %EVM.MachineState{}, exec_env)
     5000
-    iex> EVM.Gas.operation_cost(:sstore, [0, 2], %EVM.MachineState{}, exec_env)
-    20000
   """
-  def operation_cost(:sstore, [key, new_value], _machine_state, exec_env) do
-    old_value = ExecEnv.get_storage(exec_env, key)
+  def operation_cost(:sstore, params = [key, new_value], _machine_state, exec_env) do
+    case ExecEnv.get_storage(exec_env, key) do
+      :account_not_found ->
+        @g_sreset
 
-    if old_value == 0 && new_value != 0 do
-      @g_sset
-    else
-      @g_sreset
+      :key_not_found ->
+        if new_value != 0 do
+          @g_sset
+        else
+          @g_sreset
+        end
+
+      {:ok, value} ->
+        if new_value != 0 && value == 0 do
+          @g_sset
+        else
+          @g_sreset
+        end
     end
   end
 
   def operation_cost(
         :call,
-        [gas_limit, to_address, value, _in_offset, _in_length, _out_offset, _out_length],
-        _machine_state,
+        [call_gas, to_address, value, _in_offset, _in_length, _out_offset, _out_length],
+        machine_state,
         exec_env
       ) do
     to_address = Address.new(to_address)
 
-    @g_call + call_value_cost(value) + new_account_cost(exec_env, to_address) + gas_limit
+    call_gas = if exec_env.stack_depth == Functions.max_stack_depth(), do: 0, else: call_gas
+
+    call_value =
+      if exec_env.stack_depth == Functions.max_stack_depth() && value != 0,
+        do: call_value_cost(value) - @g_callstipend,
+        else: call_value_cost(value)
+
+    @g_call + call_value + new_account_cost(exec_env, to_address) + call_gas
   end
 
   def operation_cost(
@@ -444,8 +460,13 @@ defmodule EVM.Gas do
     end
   end
 
+  @spec callstipend() :: integer()
+  def callstipend do
+    @g_callstipend
+  end
+
   defp call_value_cost(0), do: 0
-  defp call_value_cost(_), do: @g_callvalue - @g_callstipend
+  defp call_value_cost(_), do: @g_callvalue
 
   defp new_account_cost(exec_env, address) do
     if exec_env.account_interface

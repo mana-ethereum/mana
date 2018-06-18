@@ -55,18 +55,9 @@ defmodule EVM.ExecEnv do
     Map.put(exec_env, :account_interface, account_interface)
   end
 
-  @spec get_storage(t(), integer()) :: integer()
+  @spec get_storage(t(), integer()) :: atom() | {:ok, integer()}
   def get_storage(%{account_interface: account_interface, address: address}, key) do
-    case AccountInterface.get_storage(account_interface, address, key) do
-      :account_not_found ->
-        0
-
-      :key_not_found ->
-        0
-
-      {:ok, value} ->
-        value
-    end
+    AccountInterface.get_storage(account_interface, address, key)
   end
 
   @spec destroy_account(t()) :: t()
