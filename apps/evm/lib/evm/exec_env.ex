@@ -55,7 +55,7 @@ defmodule EVM.ExecEnv do
     Map.put(exec_env, :account_interface, account_interface)
   end
 
-  @spec get_storage(t(), integer()) :: integer()
+  @spec get_storage(t(), integer()) :: atom() | {:ok, integer()}
   def get_storage(%{account_interface: account_interface, address: address}, key) do
     AccountInterface.get_storage(account_interface, address, key)
   end
