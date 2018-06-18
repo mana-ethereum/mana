@@ -351,13 +351,11 @@ defmodule EVM.Gas do
     iex> exec_env = %EVM.ExecEnv{address: address, account_interface: account_interface}
     iex> EVM.Gas.operation_cost(:sstore, [0, 0], %EVM.MachineState{}, exec_env)
     5000
-    iex> EVM.Gas.operation_cost(:sstore, [0, 2], %EVM.MachineState{}, exec_env)
-    20000
   """
   def operation_cost(:sstore, params = [key, new_value], _machine_state, exec_env) do
-    case  ExecEnv.get_storage(exec_env, key) |> IO.inspect do
+    case ExecEnv.get_storage(exec_env, key) do
       :account_not_found ->
-          @g_sreset
+        @g_sreset
 
       :key_not_found ->
         if new_value != 0 do
@@ -384,7 +382,11 @@ defmodule EVM.Gas do
     to_address = Address.new(to_address)
 
     gas_limit = if exec_env.stack_depth == 1024, do: 0, else: gas_limit
-    call_value = if exec_env.stack_depth == 1024 && value != 0, do: call_value_cost(value) - @g_callstipend, else: call_value_cost(value)
+
+    call_value =
+      if exec_env.stack_depth == 1024 && value != 0,
+        do: call_value_cost(value) - @g_callstipend,
+        else: call_value_cost(value)
 
     @g_call + call_value + new_account_cost(exec_env, to_address) + gas_limit
   end
