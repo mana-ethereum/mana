@@ -17,7 +17,7 @@ defmodule ExWire.Handshake.Struct.AuthMsgV4 do
 
   @type t :: %__MODULE__{
           signature: ExthCrypto.signature(),
-          initiator_public_key: ExthCrypto.Key.public_key(),
+          initiator_public_key: ExthCrypto.Key.public_key_der(),
           initiator_nonce: binary(),
           initiator_version: integer(),
           initiator_ephemeral_public_key: ExthCrypto.Key.public_key()

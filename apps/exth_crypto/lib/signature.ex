@@ -33,7 +33,7 @@ defmodule ExthCrypto.Signature do
       {:error, "Private key size not 32 bytes"}
   """
   @spec get_public_key(ExthCrypto.Key.private_key()) ::
-          {:ok, ExthCrypto.Key.public_key()} | {:error, String.t()}
+          {:ok, ExthCrypto.Key.public_key_der()} | {:error, String.t()}
   def get_public_key(private_key) do
     case :libsecp256k1.ec_pubkey_create(private_key, :uncompressed) do
       {:ok, public_key} -> {:ok, public_key}
@@ -113,7 +113,7 @@ defmodule ExthCrypto.Signature do
               120, 250, 153, 134, 180, 218, 177, 186, 200, 199, 106, 97, 103, 50, 215, 114>>}
   """
   @spec recover(binary(), signature, recovery_id) ::
-          {:ok, ExthCrypto.Key.public_key()} | {:error, String.t()}
+          {:ok, ExthCrypto.Key.public_key_der()} | {:error, String.t()}
   def recover(digest, signature, recovery_id) do
     case :libsecp256k1.ecdsa_recover_compact(digest, signature, :uncompressed, recovery_id) do
       {:ok, public_key} -> {:ok, public_key}
@@ -122,7 +122,7 @@ defmodule ExthCrypto.Signature do
   end
 
   @doc """
-  Combines a signature (64 bytes) with the recovery id. 
+  Combines a signature (64 bytes) with the recovery id.
   """
   @spec compact_format(signature(), recovery_id()) :: compact_signature()
   def compact_format(signature, recovery_id) do
