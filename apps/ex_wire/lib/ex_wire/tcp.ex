@@ -22,4 +22,19 @@ defmodule ExWire.TCP do
   def accept_messages(socket) do
     :inet.setopts(socket, active: true)
   end
+
+  @spec send_data(port(), binary()) :: :ok | {:error, any()}
+  def send_data(socket, data) do
+    :gen_tcp.send(socket, data)
+  end
+
+  @spec shutdown(port()) :: :ok | {:error, any()}
+  def shutdown(socket) do
+    :gen_tcp.shutdown(socket, :read_write)
+  end
+
+  @spec connect(binary(), integer()) :: {:ok, port()} | {:error, any()}
+  def connect(host, port_number) do
+    :gen_tcp.connect(String.to_charlist(host), port_number, [:binary])
+  end
 end

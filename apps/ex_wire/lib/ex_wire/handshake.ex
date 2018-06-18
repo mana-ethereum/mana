@@ -16,9 +16,9 @@ defmodule ExWire.Handshake do
   require Logger
 
   alias ExthCrypto.ECIES.ECDH
+  alias ExWire.Handshake
   alias ExWire.Handshake.EIP8
-  alias ExWire.Handshake.Struct.AuthMsgV4
-  alias ExWire.Handshake.Struct.AckRespV4
+  alias ExWire.Handshake.Struct.{AuthMsgV4, AckRespV4}
   alias ExWire.Framing.Secrets
 
   defstruct [
@@ -238,15 +238,16 @@ defmodule ExWire.Handshake do
 
   # TODO: Add examples
   """
-  @spec try_handle_ack(binary(), binary(), ExthCrypto.Key.private_key(), nonce()) ::
-          {:ok, Secrets.t(), binary()} | {:invalid, String.t()}
-  def try_handle_ack(ack_data, auth_data, my_ephemeral_private_key, my_nonce) do
+  @spec handle_ack(binary(), t()) :: {:ok, Secrets.t(), binary()} | {:invalid, String.t()}
+  def handle_ack(ack_data, handshake = %Handshake{}) do
     case ExWire.Handshake.read_ack_resp(ack_data, ExWire.Config.private_key()) do
       {:ok,
        %ExWire.Handshake.Struct.AckRespV4{
          recipient_ephemeral_public_key: recipient_ephemeral_public_key,
          recipient_nonce: recipient_nonce
        }, ack_data_limited, frame_rest} ->
+        {_public_key, my_ephemeral_private_key} = handshake.random_key_pair
+
         # We're the initiator, by definition since we got an ack resp.
         secrets =
           ExWire.Framing.Secrets.derive_secrets(
@@ -254,8 +255,8 @@ defmodule ExWire.Handshake do
             my_ephemeral_private_key,
             recipient_ephemeral_public_key,
             recipient_nonce,
-            my_nonce,
-            auth_data,
+            handshake.init_nonce,
+            handshake.encoded_auth_msg,
             ack_data_limited
           )
 

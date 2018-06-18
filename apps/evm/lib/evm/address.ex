@@ -44,4 +44,19 @@ defmodule EVM.Address do
     |> EVM.Helpers.take_n_last_bytes(@size)
     |> :binary.decode_unsigned()
   end
+
+  @doc """
+  Returns an address given a private key
+  ## Examples
+
+  iex> private_key = <<69, 169, 21, 228, 208, 96, 20, 158, 180, 54, 89, 96, 230, 167, 164, 95, 51, 67, 147, 9, 48, 97, 17, 107, 25, 126, 50, 64, 6, 95, 242, 216>>
+  iex> EVM.Address.new_from_private_key(private_key)
+  <<183, 161, 2, 91, 175, 48, 3, 246, 115, 36, 48, 226, 12, 217, 183, 109, 149, 51, 145, 179>>
+  """
+  @spec new_from_private_key(binary()) :: binary()
+  def new_from_private_key(private_key) do
+    ExthCrypto.Signature.get_public_key(private_key)
+    |> elem(1)
+    |> EVM.Helpers.take_n_last_bytes(@size)
+  end
 end
