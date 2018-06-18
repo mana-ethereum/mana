@@ -3,7 +3,7 @@ defmodule EVM.Gas do
   Functions for interacting wth gas and costs of opscodes.
   """
 
-  alias EVM.{MachineState, MachineCode, Operation, Address, ExecEnv}
+  alias EVM.{MachineState, MachineCode, Operation, Address, ExecEnv, Functions}
 
   @type t :: EVM.val()
   @type gas_price :: EVM.Wei.t()
@@ -375,20 +375,20 @@ defmodule EVM.Gas do
 
   def operation_cost(
         :call,
-        [gas_limit, to_address, value, _in_offset, _in_length, _out_offset, _out_length],
+        [call_gas, to_address, value, _in_offset, _in_length, _out_offset, _out_length],
         machine_state,
         exec_env
       ) do
     to_address = Address.new(to_address)
 
-    gas_limit = if exec_env.stack_depth == 1024, do: 0, else: gas_limit
+    call_gas = if exec_env.stack_depth == Functions.max_stack_depth(), do: 0, else: call_gas
 
     call_value =
-      if exec_env.stack_depth == 1024 && value != 0,
+      if exec_env.stack_depth == Functions.max_stack_depth() && value != 0,
         do: call_value_cost(value) - @g_callstipend,
         else: call_value_cost(value)
 
-    @g_call + call_value + new_account_cost(exec_env, to_address) + gas_limit
+    @g_call + call_value + new_account_cost(exec_env, to_address) + call_gas
   end
 
   def operation_cost(
