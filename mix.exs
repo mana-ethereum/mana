@@ -21,7 +21,7 @@ defmodule Exthereum.MixProject do
         excluded_paths: [
           Path.join(@root_path, "_build/test/lib/abi/ebin"),
           Path.join(@root_path, "_build/test/lib/exth_crypto/ebin"),
-          Path.join(@root_path, "_build/test/lib/ex_wire/ebin")
+          Path.join(@root_path, "_build/test/lib/ex_wire/ebin"),
         ]
       ],
       deps: deps()
