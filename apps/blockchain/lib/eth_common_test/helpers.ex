@@ -83,7 +83,7 @@ defmodule EthCommonTest.Helpers do
   end
 
   @spec ethereum_common_tests_path :: String.t()
-  defp ethereum_common_tests_path do
+  def ethereum_common_tests_path do
     "../../ethereum_common_tests/"
   end
 end

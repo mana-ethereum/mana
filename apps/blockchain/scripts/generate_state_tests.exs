@@ -4,9 +4,7 @@ defmodule GenerateStateTests do
   alias Blockchain.Interface.AccountInterface
 
   use EthCommonTest.Harness
-  # use ExUnit.Case, async: true
 
-  @ethereum_common_tests_path "../../ethereum_common_tests"
   @passing_tests_by_group %{
     "ArgsZeroOneBalance" => [
       "addNonConst",
@@ -2433,7 +2431,7 @@ defmodule GenerateStateTests do
     test_counts = :ets.new(:test_counts, [:public])
 
     for test_group_name <- Enum.sort(Map.keys(@passing_tests_by_group)) do
-      if !only_count, do: IO.puts("  \"#{test_group_name}\" => [")
+      if !only_count, do: log_test_group(test_group_name)
 
       for {test_name, test} <- Enum.sort(passing_tests(test_group_name)) do
         try do
@@ -2462,19 +2460,19 @@ defmodule GenerateStateTests do
             |> maybe_hex()
 
           if state.root_hash == expected_hash do
-            if !only_count, do: IO.puts("    \"#{test_name}\",")
+            if !only_count, do: log_test(test_name)
             :ets.update_counter(test_counts, "passing", {2, 1}, {"passing", 0})
           else
             :ets.update_counter(test_counts, "failing", {2, 1}, {"failing", 0})
-            if !only_count, do: IO.puts("    # \"#{test_name}\",")
+            if !only_count, do: log_commented_test(test_name)
           end
         rescue
           _ ->
-            if !only_count, do: IO.puts("    # \"#{test_name}\",")
+            if !only_count, do: log_commented_test(test_name)
         end
       end
 
-      if !only_count, do: IO.puts("  ],")
+      if !only_count, do: log_closing_group
     end
 
     if only_count do
@@ -2487,6 +2485,22 @@ defmodule GenerateStateTests do
         }%"
       )
     end
+  end
+
+  defp log_commented_test(test_name) do
+    IO.puts("    # \"#{test_name}\",")
+  end
+
+  defp log_test(test_name) do
+    IO.puts("  \"#{test_name}\" => [")
+  end
+
+  defp log_test_group(test_group_name) do
+    IO.puts("  \"#{test_group_name}\" => [")
+  end
+
+  defp log_closing_group do
+    IO.puts (" ],")
   end
 
   def passing_tests(test_group_name) do
@@ -2515,7 +2529,7 @@ defmodule GenerateStateTests do
 
   def test_directory_name(group) do
     dir_name = "st#{group}"
-    Path.join([@ethereum_common_tests_path, "GeneralStateTests", dir_name])
+    Path.join([EthCommonTest.Helpers.ethereum_common_tests_path(), "GeneralStateTests", dir_name])
   end
 
   def read_state_test_file(type, test_name) do
@@ -2526,7 +2540,7 @@ defmodule GenerateStateTests do
 
   def state_test_file_name(group, test) do
     file_name = Path.join(~w(st#{group} #{test}.json))
-    relative_path = Path.join(~w(.. .. ethereum_common_tests GeneralStateTests #{file_name}))
+    relative_path = Path.join(~w(#{EthCommonTest.Helpers.ethereum_common_tests_path()} GeneralStateTests #{file_name}))
 
     System.cwd()
     |> Path.join(relative_path)
