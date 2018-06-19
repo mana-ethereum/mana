@@ -276,14 +276,15 @@ defmodule ExWire.Handshake do
   @spec handle_auth(binary()) :: {:ok, binary(), Secrets.t()} | {:invalid, String.t()}
   def handle_auth(auth_data) do
     case ExWire.Handshake.read_auth_msg(auth_data, ExWire.Config.private_key()) do
-      {:ok,
-       %ExWire.Handshake.Struct.AuthMsgV4{
-         signature: _signature,
-         initiator_public_key: initiator_public_key,
-         initiator_nonce: initiator_nonce,
-         initiator_version: _initiator_version,
-         initiator_ephemeral_public_key: initiator_ephemeral_public_key
-       }, <<>>} ->
+      {:ok, auth_msg, <<>>} ->
+        %ExWire.Handshake.Struct.AuthMsgV4{
+          signature: _signature,
+          initiator_public_key: initiator_public_key,
+          initiator_nonce: initiator_nonce,
+          initiator_version: _initiator_version,
+          initiator_ephemeral_public_key: initiator_ephemeral_public_key
+        } = auth_msg
+
         # First, we'll build an ack, which we'll respond with to the initiator
         {ack_resp, recipient_ephemeral_key_pair, recipient_nonce} =
           ExWire.Handshake.build_ack_resp()
@@ -306,7 +307,7 @@ defmodule ExWire.Handshake do
             encoded_ack_resp
           )
 
-        {:ok, encoded_ack_resp, secrets}
+        {:ok, auth_msg, encoded_ack_resp, secrets}
 
       {:error, reason} ->
         {:invalid, reason}

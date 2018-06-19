@@ -63,14 +63,16 @@ defmodule HandshakeTest do
 
       set_environment(her_static_private_key)
 
-      {:ok, ack_resp, her_secrets} = Handshake.handle_auth(handshake.encoded_auth_msg)
+      {:ok, auth_msg, encoded_ack_resp, her_secrets} =
+        Handshake.handle_auth(handshake.encoded_auth_msg)
 
       set_environment(my_static_private_key)
 
-      {:ok, my_secrets, _frame_rest} = Handshake.handle_ack(ack_resp, handshake)
+      {:ok, my_secrets, _frame_rest} = Handshake.handle_ack(encoded_ack_resp, handshake)
 
       assert %ExWire.Framing.Secrets{} = her_secrets
       assert %ExWire.Framing.Secrets{} = my_secrets
+      assert %ExWire.Handshake.Struct.AuthMsgV4{} = auth_msg
     end
   end
 

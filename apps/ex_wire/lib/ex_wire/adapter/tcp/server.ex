@@ -9,6 +9,7 @@ defmodule ExWire.Adapter.TCP.Server do
 
   alias ExWire.Framing.Frame
   alias ExWire.{Handshake, Packet, TCP}
+  alias ExWire.Struct.Peer
 
   @doc """
   Initialize by opening up a `gen_tcp` connection to given host and port.
@@ -67,7 +68,7 @@ defmodule ExWire.Adapter.TCP.Server do
 
   TODO: clients may send an auth before (or as) we do, and we should handle this case without error.
   """
-  def handle_info({:tcp, _socket, data}, state = %{secrets: secrets}) when not is_nil(secrets) do
+  def handle_info({:tcp, _socket, data}, state = %{secrets: _secrets}) do
     {:noreply, handle_packet_data(data, state)}
   end
 
@@ -85,14 +86,9 @@ defmodule ExWire.Adapter.TCP.Server do
   Function triggered when tcp closes the connection
   """
   def handle_info({:tcp_closed, _socket}, state) do
-    message =
-      if state.is_outbound do
-        "[#{state.peer}] Peer closed connection"
-      else
-        "Peer closed connection"
-      end
+    peer = Map.get(state, :peer, :unknown)
 
-    Logger.warn("[Network] #{message}")
+    Logger.warn("[Network] [#{peer}] Peer closed connection")
 
     Process.exit(self(), :normal)
 
@@ -113,27 +109,21 @@ defmodule ExWire.Adapter.TCP.Server do
     new_state = Map.merge(state, %{handshake: handshake})
 
     Logger.debug("[Network] [#{peer}] Sending Handshake to #{peer.host}")
-    send_unframed_data(new_state.auth_data, socket)
+    send_unframed_data(handshake.encoded_auth_msg, socket, peer)
 
-    {:noreply, state}
+    {:noreply, new_state}
   end
 
   @doc """
   If we receive a `send` and we have secrets set, we'll send the message as a framed Eth packet.
   """
-  def handle_cast(
-        {:send, %{packet: {packet_mod, packet_type, packet_data}}},
-        state = %{socket: socket, secrets: secrets}
-      ) do
-    message =
-      if state.is_outbound do
-        peer = state.peer
-        "[#{peer}] Sending packet #{Atom.to_string(packet_mod)} to #{peer.host}"
-      else
-        "Sending packet #{Atom.to_string(packet_mod)}"
-      end
+  def handle_cast({:send, %{packet: packet_data}}, state) do
+    {packet_mod, packet_type, packet_data} = packet_data
+    %{socket: socket, secrets: secrets, peer: peer} = state
 
-    Logger.info("[Network]" <> message)
+    Logger.info(
+      "[Network] [#{peer}] Sending packet #{Atom.to_string(packet_mod)} to #{peer.host}"
+    )
 
     {frame, updated_secrets} = Frame.frame(packet_type, packet_data, secrets)
 
@@ -156,15 +146,9 @@ defmodule ExWire.Adapter.TCP.Server do
       {:ok, secrets, frame_rest} ->
         Logger.debug("[Network] [#{peer}] Got ack from #{peer.host}, deriving secrets")
 
-        updated_state =
-          Map.merge(state, %{
-            secrets: secrets,
-            auth_data: nil,
-            my_ephemeral_key_pair: nil,
-            my_nonce: nil
-          })
+        new_state = Map.merge(state, %{secrets: secrets})
 
-        handle_packet_data(frame_rest, updated_state)
+        handle_packet_data(frame_rest, new_state)
 
       {:invalid, reason} ->
         Logger.warn(
@@ -177,12 +161,13 @@ defmodule ExWire.Adapter.TCP.Server do
 
   defp handle_auth_message_received(data, state = %{socket: socket}) do
     case Handshake.handle_auth(data) do
-      {:ok, ack_data, secrets} ->
+      {:ok, auth_msg, ack_data, secrets} ->
+        peer = get_peer_info(auth_msg, socket)
         Logger.debug("[Network] Received auth. Sending ack.")
 
-        send_unframed_data(ack_data, socket)
+        send_unframed_data(ack_data, socket, peer)
 
-        Map.merge(state, %{secrets: secrets})
+        Map.merge(state, %{secrets: secrets, peer: peer})
 
       {:invalid, reason} ->
         Logger.warn("[Network] Received unknown handshake message when expecting auth: #{reason}")
@@ -247,9 +232,20 @@ defmodule ExWire.Adapter.TCP.Server do
     Map.put(state, :socket, socket)
   end
 
-  defp send_unframed_data(data, socket) do
-    Logger.debug("[Network] Sending raw data message of length #{byte_size(data)} byte(s)")
+  defp send_unframed_data(data, socket, peer) do
+    Logger.debug(
+      "[Network] [#{peer}] Sending raw data message of length #{byte_size(data)} byte(s) to #{
+        peer.host
+      }"
+    )
 
     TCP.send_data(socket, data)
+  end
+
+  defp get_peer_info(auth_msg, socket) do
+    {host, port} = TCP.peer_info(socket)
+    remote_id = Peer.hex_node_id(auth_msg.initiator_public_key)
+
+    Peer.new(host, port, remote_id)
   end
 end

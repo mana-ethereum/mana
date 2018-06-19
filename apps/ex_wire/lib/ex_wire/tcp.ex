@@ -37,4 +37,12 @@ defmodule ExWire.TCP do
   def connect(host, port_number) do
     :gen_tcp.connect(String.to_charlist(host), port_number, [:binary])
   end
+
+  @spec peer_info(port()) :: {binary(), integer()}
+  def peer_info(socket) do
+    {:ok, {host_tuple, port}} = :inet.peername(socket)
+    host = host_tuple |> :inet.ntoa() |> to_string()
+
+    {host, port}
+  end
 end

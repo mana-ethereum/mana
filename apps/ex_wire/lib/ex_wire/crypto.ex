@@ -14,6 +14,11 @@ defmodule ExWire.Crypto do
     defexception [:message]
   end
 
+  defdelegate der_to_raw(der_bin), to: Key
+  defdelegate raw_to_der(bin), to: Key
+  defdelegate hex_to_bin(hex_bin), to: Math
+  defdelegate bin_to_hex(bin), to: Math
+
   @doc """
   Returns a node_id based on a given private key.
 
@@ -131,15 +136,5 @@ defmodule ExWire.Crypto do
   @spec node_id_from_public_key(binary()) :: binary()
   def node_id_from_public_key(public_key) do
     Key.der_to_raw(public_key)
-  end
-
-  @spec hex_to_bin(binary()) :: binary()
-  def hex_to_bin(hex_bin) do
-    Math.hex_to_bin(hex_bin)
-  end
-
-  @spec raw_to_der(binary()) :: binary()
-  def raw_to_der(bin) do
-    Key.raw_to_der(bin)
   end
 end
