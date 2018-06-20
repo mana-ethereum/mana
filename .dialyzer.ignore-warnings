@@ -83,3 +83,8 @@ apps/blockchain/lib/blockchain/contract.ex
 apps/blockchain/lib/blockchain/contract/create_contract.ex
 apps/blockchain/lib/blockchain/contract/message_call.ex
 apps/blockchain/lib/blockchain/interface/account_interface.ex
+
+-------------------------------
+# Ignores state test generation script
+-------------------------------
+apps/blockchain/scripts/generate_state_tests.ex
