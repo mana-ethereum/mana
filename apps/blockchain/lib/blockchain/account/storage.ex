@@ -21,9 +21,12 @@ defmodule Blockchain.Account.Storage do
   def fetch(db, root, key) do
     k = encode_key(key)
 
-    db
-    |> Trie.new(root)
-    |> Trie.get(k)
+    result =
+      db
+      |> Trie.new(root)
+      |> Trie.get(k)
+
+    if is_nil(result), do: nil, else: ExRLP.decode(result)
   end
 
   @spec encode_key(integer()) :: Trie.key()
