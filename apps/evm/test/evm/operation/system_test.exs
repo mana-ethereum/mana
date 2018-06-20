@@ -5,6 +5,7 @@ defmodule EVM.Operation.SystemTest do
   alias EVM.{ExecEnv, Stack, Address, Operation, MachineState, SubState, MachineCode, VM}
   alias EVM.Interface.AccountInterface
   alias EVM.Interface.Mock.{MockAccountInterface, MockBlockInterface}
+  alias EthCore.Block.Header
 
   describe "selfdestruct/2" do
     test "transfers wei to refund account" do
@@ -131,7 +132,7 @@ defmodule EVM.Operation.SystemTest do
 
   describe "create/2" do
     test "creates a new account with associated code" do
-      block_interface = MockBlockInterface.new(%Block.Header{})
+      block_interface = MockBlockInterface.new(%Header{})
       account_map = %{<<100::160>> => %{balance: 5_000, nonce: 5}}
       contract_result = %{gas: 500, sub_state: nil, output: "output"}
       account_interface = MockAccountInterface.new(account_map, contract_result)

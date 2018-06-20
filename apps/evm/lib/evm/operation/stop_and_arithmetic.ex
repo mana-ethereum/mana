@@ -1,8 +1,8 @@
 defmodule EVM.Operation.StopAndArithmetic do
-  alias EVM.Helpers
-  alias EVM.Operation
-  alias MathHelper
   use Bitwise
+
+  alias EthCore.{Config, Math}
+  alias EVM.{Helpers, Operation}
 
   @doc """
   Halts execution.
@@ -99,7 +99,7 @@ defmodule EVM.Operation.StopAndArithmetic do
         0 - Helpers.decode_signed(s0)
 
       _ ->
-        MathHelper.round_int(Helpers.decode_signed(s0) / Helpers.decode_signed(s1))
+        Math.round_int(Helpers.decode_signed(s0) / Helpers.decode_signed(s1))
     end
   end
 
@@ -143,7 +143,7 @@ defmodule EVM.Operation.StopAndArithmetic do
   """
   @spec exp(Operation.stack_args(), Operation.vm_map()) :: EVM.val()
   def exp([s0, s1], _) do
-    :crypto.mod_pow(s0, s1, EVM.max_int())
+    :crypto.mod_pow(s0, s1, Config.max_int())
     |> :binary.decode_unsigned()
   end
 
@@ -155,7 +155,7 @@ defmodule EVM.Operation.StopAndArithmetic do
 
   def signextend([s0, s1], _) do
     if Helpers.bit_at(s1, Helpers.bit_position(s0)) == 1 do
-      bor(s1, EVM.max_int() - (1 <<< Helpers.bit_position(s0)))
+      bor(s1, Config.max_int() - (1 <<< Helpers.bit_position(s0)))
     else
       band(s1, (1 <<< Helpers.bit_position(s0)) - 1)
     end

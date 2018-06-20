@@ -7,8 +7,9 @@ defmodule Blockchain.Block do
   """
 
   alias ExthCrypto.Hash.Keccak
-  alias Block.Header
-  alias Blockchain.{Account, Transaction, Chain, Genesis}
+  alias EthCore.Block.Header
+  alias EthCore.Block.Header.Difficulty
+  alias Blockchain.{Account, Transaction, Chain}
   alias Blockchain.Block.HolisticValidity
   alias Blockchain.Transaction.Receipt
   alias MerklePatriciaTree.{Trie, DB}
@@ -36,42 +37,6 @@ defmodule Blockchain.Block do
   @doc """
   Encodes a block such that it can be represented in RLP encoding.
   This is defined as `L_B` Eq.(35) in the Yellow Paper.
-
-  ## Examples
-
-    iex> Blockchain.Block.serialize(%Blockchain.Block{
-    ...>   header: %Block.Header{parent_hash: <<1::256>>, ommers_hash: <<2::256>>, beneficiary: <<3::160>>, state_root: <<4::256>>, transactions_root: <<5::256>>, receipts_root: <<6::256>>, logs_bloom: <<>>, difficulty: 5, number: 1, gas_limit: 5, gas_used: 3, timestamp: 6, extra_data: "Hi mom", mix_hash: <<7::256>>, nonce: <<8::64>>},
-    ...>   transactions: [%Blockchain.Transaction{nonce: 5, gas_price: 6, gas_limit: 7, to: <<1::160>>, value: 8, v: 27, r: 9, s: 10, data: "hi"}],
-    ...>   ommers: [%Block.Header{parent_hash: <<11::256>>, ommers_hash: <<12::256>>, beneficiary: <<13::160>>, state_root: <<14::256>>, transactions_root: <<15::256>>, receipts_root: <<16::256>>, logs_bloom: <<>>, difficulty: 5, number: 1, gas_limit: 5, gas_used: 3, timestamp: 6, extra_data: "Hi mom", mix_hash: <<17::256>>, nonce: <<18::64>>}]
-    ...> })
-    [
-      [<<1::256>>, <<2::256>>, <<3::160>>, <<4::256>>, <<5::256>>, <<6::256>>, <<>>, 5, 1, 5, 3, 6, "Hi mom", <<7::256>>, <<8::64>>],
-      [[<<5>>, <<6>>, <<7>>, <<1::160>>, <<8>>, "hi", <<27>>, <<9>>, <<10>>]],
-      [[<<11::256>>, <<12::256>>, <<13::160>>, <<14::256>>, <<15::256>>, <<16::256>>, <<>>, 5, 1, 5, 3, 6, "Hi mom", <<17::256>>, <<18::64>>]]
-    ]
-
-    iex> Blockchain.Block.serialize(%Blockchain.Block{})
-    [
-      [
-        nil,
-        <<29, 204, 77, 232, 222, 199, 93, 122, 171, 133, 181, 103, 182, 204, 212, 26, 211, 18, 69, 27, 148, 138, 116, 19, 240, 161, 66, 253, 64, 212, 147, 71>>,
-        nil,
-        <<86, 232, 31, 23, 27, 204, 85, 166, 255, 131, 69, 230, 146, 192, 248, 110, 91, 72, 224, 27, 153, 108, 173, 192, 1, 98, 47, 181, 227, 99, 180, 33>>,
-        <<86, 232, 31, 23, 27, 204, 85, 166, 255, 131, 69, 230, 146, 192, 248, 110, 91, 72, 224, 27, 153, 108, 173, 192, 1, 98, 47, 181, 227, 99, 180, 33>>,
-        <<86, 232, 31, 23, 27, 204, 85, 166, 255, 131, 69, 230, 146, 192, 248, 110, 91, 72, 224, 27, 153, 108, 173, 192, 1, 98, 47, 181, 227, 99, 180, 33>>,
-        <<0::2048>>,
-        nil,
-        nil,
-        0,
-        0,
-        nil,
-        "",
-        nil,
-        nil
-      ],
-      [],
-      []
-    ]
   """
   @spec serialize(t) :: ExRLP.t()
   def serialize(block) do
@@ -86,29 +51,12 @@ defmodule Blockchain.Block do
   end
 
   @doc """
-  Decodes a block from an RLP encoding. Effectively inverts
-  L_B defined in Eq.(35).
-
-  ## Examples
-
-      iex> Blockchain.Block.deserialize([
-      ...>   [<<1::256>>, <<2::256>>, <<3::160>>, <<4::256>>, <<5::256>>, <<6::256>>, <<>>, <<5>>, <<1>>, <<5>>, <<3>>, <<6>>, "Hi mom", <<7::256>>, <<8::64>>],
-      ...>   [[<<5>>, <<6>>, <<7>>, <<1::160>>, <<8>>, "hi", <<27>>, <<9>>, <<10>>]],
-      ...>   [[<<11::256>>, <<12::256>>, <<13::160>>, <<14::256>>, <<15::256>>, <<16::256>>, <<>>, <<5>>, <<1>>, <<5>>, <<3>>, <<6>>, "Hi mom", <<17::256>>, <<18::64>>]]
-      ...> ])
-      %Blockchain.Block{
-        header: %Block.Header{parent_hash: <<1::256>>, ommers_hash: <<2::256>>, beneficiary: <<3::160>>, state_root: <<4::256>>, transactions_root: <<5::256>>, receipts_root: <<6::256>>, logs_bloom: <<>>, difficulty: 5, number: 1, gas_limit: 5, gas_used: 3, timestamp: 6, extra_data: "Hi mom", mix_hash: <<7::256>>, nonce: <<8::64>>},
-        transactions: [%Blockchain.Transaction{nonce: 5, gas_price: 6, gas_limit: 7, to: <<1::160>>, value: 8, v: 27, r: 9, s: 10, data: "hi"}],
-        ommers: [%Block.Header{parent_hash: <<11::256>>, ommers_hash: <<12::256>>, beneficiary: <<13::160>>, state_root: <<14::256>>, transactions_root: <<15::256>>, receipts_root: <<16::256>>, logs_bloom: <<>>, difficulty: 5, number: 1, gas_limit: 5, gas_used: 3, timestamp: 6, extra_data: "Hi mom", mix_hash: <<17::256>>, nonce: <<18::64>>}]
-      }
+  Decodes a block from an RLP encoding.
+  Effectively inverts L_B defined in Eq.(35).
   """
   @spec deserialize(ExRLP.t()) :: t
   def deserialize(rlp) do
-    [
-      header,
-      transactions,
-      ommers
-    ] = rlp
+    [header, transactions, ommers] = rlp
 
     %__MODULE__{
       header: Header.deserialize(header),
@@ -118,29 +66,15 @@ defmodule Blockchain.Block do
   end
 
   @doc """
-  Computes hash of a block, which is simply the hash of the serialized
-  block after applying RLP encoding.
-
-  This is defined in Eq.(37) of the Yellow Paper.
-
-  ## Examples
-
-      iex> %Blockchain.Block{header: %Block.Header{number: 5, parent_hash: <<1, 2, 3>>, beneficiary: <<2, 3, 4>>, difficulty: 100, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>}}
-      ...> |> Blockchain.Block.hash()
-      <<78, 28, 127, 10, 192, 253, 127, 239, 254, 179, 39, 34, 245, 44, 152, 98, 128, 71, 238, 155, 100, 161, 199, 71, 243, 223, 172, 191, 74, 99, 128, 63>>
-
-      iex> %Blockchain.Block{header: %Block.Header{number: 0, parent_hash: <<1, 2, 3>>, beneficiary: <<2, 3, 4>>, difficulty: 100, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>}}
-      ...> |> Blockchain.Block.hash()
-      <<218, 225, 46, 241, 196, 160, 136, 96, 109, 216, 73, 167, 92, 174, 91, 228, 85, 112, 234, 129, 99, 200, 158, 61, 223, 166, 165, 132, 187, 24, 142, 193>>
+  Computes hash of a block (header).
+  This is defined in Eq.(33) of the Yellow Paper.
   """
   @spec hash(t) :: EVM.hash()
   def hash(block), do: Header.hash(block.header)
 
   @doc """
   Stores a given block in the database and returns the block hash.
-
-  This should be used if we ever want to retrieve that block in
-  the future.
+  This should be used if we ever want to retrieve that block in the future.
 
   Note: Blocks are identified by a hash of the block header,
         thus we will only get the same block back if the header
@@ -149,12 +83,12 @@ defmodule Blockchain.Block do
   ## Examples
 
       iex> db = MerklePatriciaTree.Test.random_ets_db()
-      iex> block = %Blockchain.Block{header: %Block.Header{number: 5, parent_hash: <<1, 2, 3>>, beneficiary: <<2, 3, 4>>, difficulty: 100, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>}}
+      iex> block = %Blockchain.Block{header: %EthCore.Block.Header{number: 5, parent_hash: <<1, 2, 3>>, beneficiary: <<2, 3, 4>>, difficulty: 100, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>}}
       iex> Blockchain.Block.put_block(block, db)
       {:ok, <<78, 28, 127, 10, 192, 253, 127, 239, 254, 179, 39, 34, 245, 44, 152, 98, 128, 71, 238, 155, 100, 161, 199, 71, 243, 223, 172, 191, 74, 99, 128, 63>>}
       iex> {:ok, serialized_block} = MerklePatriciaTree.DB.get(db, block |> Blockchain.Block.hash)
       iex> serialized_block |> ExRLP.decode |> Blockchain.Block.deserialize()
-      %Blockchain.Block{header: %Block.Header{number: 5, parent_hash: <<1, 2, 3>>, beneficiary: <<2, 3, 4>>, difficulty: 100, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>}}
+      %Blockchain.Block{header: %EthCore.Block.Header{number: 5, parent_hash: <<1, 2, 3>>, beneficiary: <<2, 3, 4>>, difficulty: 100, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>}}
   """
   @spec put_block(t, DB.db()) :: {:ok, EVM.hash()}
   def put_block(block, db) do
@@ -180,13 +114,13 @@ defmodule Blockchain.Block do
       iex> db = MerklePatriciaTree.Test.random_ets_db()
       iex> block = %Blockchain.Block{
       ...>   transactions: [%Blockchain.Transaction{nonce: 5, gas_price: 6, gas_limit: 7, to: <<1::160>>, value: 8, v: 27, r: 9, s: 10, data: "hi"}],
-      ...>   header: %Block.Header{number: 5, parent_hash: <<1, 2, 3>>, beneficiary: <<2, 3, 4>>, difficulty: 100, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>}
+      ...>   header: %EthCore.Block.Header{number: 5, parent_hash: <<1, 2, 3>>, beneficiary: <<2, 3, 4>>, difficulty: 100, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>}
       ...> }
       iex> Blockchain.Block.put_block(block, db)
       iex> Blockchain.Block.get_block(block |> Blockchain.Block.hash, db)
       {:ok, %Blockchain.Block{
         transactions: [%Blockchain.Transaction{nonce: 5, gas_price: 6, gas_limit: 7, to: <<1::160>>, value: 8, v: 27, r: 9, s: 10, data: "hi"}],
-        header: %Block.Header{number: 5, parent_hash: <<1, 2, 3>>, beneficiary: <<2, 3, 4>>, difficulty: 100, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>}
+        header: %EthCore.Block.Header{number: 5, parent_hash: <<1, 2, 3>>, beneficiary: <<2, 3, 4>>, difficulty: 100, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>}
       }}
   """
   @spec get_block(EVM.hash(), DB.db()) :: {:ok, t} | :not_found
@@ -209,7 +143,7 @@ defmodule Blockchain.Block do
       iex> db = MerklePatriciaTree.Test.random_ets_db()
       iex> block = %Blockchain.Block{
       ...>   transactions: [%Blockchain.Transaction{nonce: 5, gas_price: 6, gas_limit: 7, to: <<1::160>>, value: 8, v: 27, r: 9, s: 10, data: "hi"}],
-      ...>   header: %Block.Header{number: 5, parent_hash: <<1, 2, 3>>, beneficiary: <<2, 3, 4>>, difficulty: 100, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>}
+      ...>   header: %EthCore.Block.Header{number: 5, parent_hash: <<1, 2, 3>>, beneficiary: <<2, 3, 4>>, difficulty: 100, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>}
       ...> }
       iex> Blockchain.Block.put_block(block, db)
       iex> Blockchain.Block.get_block_hash_by_steps(block |> Blockchain.Block.hash, 0, db)
@@ -221,7 +155,7 @@ defmodule Blockchain.Block do
       iex> db = MerklePatriciaTree.Test.random_ets_db()
       iex> block = %Blockchain.Block{
       ...>   transactions: [%Blockchain.Transaction{nonce: 5, gas_price: 6, gas_limit: 7, to: <<1::160>>, value: 8, v: 27, r: 9, s: 10, data: "hi"}],
-      ...>   header: %Block.Header{number: 5, parent_hash: <<1, 2, 3>>, beneficiary: <<2, 3, 4>>, difficulty: 100, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>}
+      ...>   header: %EthCore.Block.Header{number: 5, parent_hash: <<1, 2, 3>>, beneficiary: <<2, 3, 4>>, difficulty: 100, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>}
       ...> }
       iex> Blockchain.Block.put_block(block, db)
       iex> Blockchain.Block.get_block_hash_by_steps(block |> Blockchain.Block.hash, -1, db)
@@ -231,7 +165,7 @@ defmodule Blockchain.Block do
       iex> db = MerklePatriciaTree.Test.random_ets_db()
       iex> block = %Blockchain.Block{
       ...>   transactions: [%Blockchain.Transaction{nonce: 5, gas_price: 6, gas_limit: 7, to: <<1::160>>, value: 8, v: 27, r: 9, s: 10, data: "hi"}],
-      ...>   header: %Block.Header{number: 5, parent_hash: <<1, 2, 3>>, beneficiary: <<2, 3, 4>>, difficulty: 100, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>}
+      ...>   header: %EthCore.Block.Header{number: 5, parent_hash: <<1, 2, 3>>, beneficiary: <<2, 3, 4>>, difficulty: 100, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>}
       ...> }
       iex> Blockchain.Block.put_block(block, db)
       iex> Blockchain.Block.get_block_hash_by_steps(block |> Blockchain.Block.hash, 6, db)
@@ -244,12 +178,12 @@ defmodule Blockchain.Block do
       iex> db = MerklePatriciaTree.Test.random_ets_db()
       iex> block_1 = %Blockchain.Block{
       ...>   transactions: [%Blockchain.Transaction{nonce: 5, gas_price: 6, gas_limit: 7, to: <<1::160>>, value: 8, v: 27, r: 9, s: 10, data: "hi"}],
-      ...>   header: %Block.Header{number: 5, parent_hash: <<1, 2, 3>>, beneficiary: <<2, 3, 4>>, difficulty: 100, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>}
+      ...>   header: %EthCore.Block.Header{number: 5, parent_hash: <<1, 2, 3>>, beneficiary: <<2, 3, 4>>, difficulty: 100, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>}
       ...> }
       iex> {:ok, block_1_hash} = Blockchain.Block.put_block(block_1, db)
       iex> block_2 = %Blockchain.Block{
       ...>   transactions: [%Blockchain.Transaction{nonce: 5, gas_price: 6, gas_limit: 7, to: <<1::160>>, value: 8, v: 27, r: 9, s: 10, data: "hi"}],
-      ...>   header: %Block.Header{number: 6, parent_hash: block_1_hash, beneficiary: <<2, 3, 4>>, difficulty: 100, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>}
+      ...>   header: %EthCore.Block.Header{number: 6, parent_hash: block_1_hash, beneficiary: <<2, 3, 4>>, difficulty: 100, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>}
       ...> }
       iex> Blockchain.Block.put_block(block_2, db)
       iex> Blockchain.Block.get_block_hash_by_steps(block_2 |> Blockchain.Block.hash, 0, db)
@@ -288,18 +222,18 @@ defmodule Blockchain.Block do
 
   ## Examples
 
-      iex> Blockchain.Block.get_parent_block(%Blockchain.Block{header: %Block.Header{number: 0}}, nil)
+      iex> Blockchain.Block.get_parent_block(%Blockchain.Block{header: %EthCore.Block.Header{number: 0}}, nil)
       :genesis
 
       iex> db = MerklePatriciaTree.Test.random_ets_db()
-      iex> block = %Blockchain.Block{header: %Block.Header{number: 5, parent_hash: <<1, 2, 3>>, beneficiary: <<2, 3, 4>>, difficulty: 100, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>}}
+      iex> block = %Blockchain.Block{header: %EthCore.Block.Header{number: 5, parent_hash: <<1, 2, 3>>, beneficiary: <<2, 3, 4>>, difficulty: 100, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>}}
       iex> Blockchain.Block.put_block(block, db)
-      iex> Blockchain.Block.get_parent_block(%Blockchain.Block{header: %Block.Header{parent_hash: block |> Blockchain.Block.hash}}, db)
-      {:ok, %Blockchain.Block{header: %Block.Header{number: 5, parent_hash: <<1, 2, 3>>, beneficiary: <<2, 3, 4>>, difficulty: 100, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>}}}
+      iex> Blockchain.Block.get_parent_block(%Blockchain.Block{header: %EthCore.Block.Header{parent_hash: block |> Blockchain.Block.hash}}, db)
+      {:ok, %Blockchain.Block{header: %EthCore.Block.Header{number: 5, parent_hash: <<1, 2, 3>>, beneficiary: <<2, 3, 4>>, difficulty: 100, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>}}}
 
       iex> db = MerklePatriciaTree.Test.random_ets_db()
-      iex> block = %Blockchain.Block{header: %Block.Header{number: 5, parent_hash: <<1, 2, 3>>, beneficiary: <<2, 3, 4>>, difficulty: 100, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>}}
-      iex> Blockchain.Block.get_parent_block(%Blockchain.Block{header: %Block.Header{parent_hash: block |> Blockchain.Block.hash}}, db)
+      iex> block = %Blockchain.Block{header: %EthCore.Block.Header{number: 5, parent_hash: <<1, 2, 3>>, beneficiary: <<2, 3, 4>>, difficulty: 100, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>}}
+      iex> Blockchain.Block.get_parent_block(%Blockchain.Block{header: %EthCore.Block.Header{parent_hash: block |> Blockchain.Block.hash}}, db)
       :not_found
   """
   @spec get_parent_block(t, DB.db()) :: {:ok, t} | :genesis | :not_found
@@ -345,13 +279,19 @@ defmodule Blockchain.Block do
   """
   @spec get_receipt(t, integer(), DB.db()) :: Receipt.t() | nil
   def get_receipt(block, i, db) do
-    serialized_receipt =
-      Trie.new(db, block.header.receipts_root)
-      |> Trie.get(i |> ExRLP.encode())
+    rlp =
+      db
+      |> Trie.new(block.header.receipts_root)
+      |> Trie.get(ExRLP.encode(i))
 
-    case serialized_receipt do
-      nil -> nil
-      _ -> Receipt.deserialize(serialized_receipt |> ExRLP.decode())
+    case rlp do
+      nil ->
+        nil
+
+      _ ->
+        rlp
+        |> ExRLP.decode()
+        |> Receipt.deserialize()
     end
   end
 
@@ -459,10 +399,10 @@ defmodule Blockchain.Block do
 
   ## Examples
 
-      iex> %Blockchain.Block{header: %Block.Header{state_root: <<1::256>>, number: 100_000, difficulty: 15_500_0000, timestamp: 5_000_000, gas_limit: 500_000}}
-      ...> |> Blockchain.Block.gen_child_block(Blockchain.Test.ropsten_chain(), timestamp: 5010000, extra_data: "hi", beneficiary: <<5::160>>)
+      iex> %Blockchain.Block{header: %EthCore.Block.Header{state_root: <<1::256>>, number: 100_000, difficulty: 15_500_0000, timestamp: 5_000_000, gas_limit: 500_000}}
+      ...> |> Blockchain.Block.new_child(Blockchain.Chain.load_chain(:ropsten), timestamp: 5010000, extra_data: "hi", beneficiary: <<5::160>>)
       %Blockchain.Block{
-        header: %Block.Header{
+        header: %EthCore.Block.Header{
           state_root: <<1::256>>,
           beneficiary: <<5::160>>,
           number: 100_001,
@@ -473,10 +413,10 @@ defmodule Blockchain.Block do
         }
       }
 
-      iex> %Blockchain.Block{header: %Block.Header{state_root: <<1::256>>, number: 100_000, difficulty: 1_500_0000, timestamp: 5000, gas_limit: 500_000}}
-      ...> |> Blockchain.Block.gen_child_block(Blockchain.Test.ropsten_chain(), state_root: <<2::256>>, timestamp: 6010, extra_data: "hi", beneficiary: <<5::160>>)
+      iex> %Blockchain.Block{header: %EthCore.Block.Header{state_root: <<1::256>>, number: 100_000, difficulty: 1_500_0000, timestamp: 5000, gas_limit: 500_000}}
+      ...> |> Blockchain.Block.new_child(Blockchain.Chain.load_chain(:ropsten), state_root: <<2::256>>, timestamp: 6010, extra_data: "hi", beneficiary: <<5::160>>)
       %Blockchain.Block{
-        header: %Block.Header{
+        header: %EthCore.Block.Header{
           state_root: <<2::256>>,
           beneficiary: <<5::160>>,
           number: 100_001,
@@ -487,30 +427,15 @@ defmodule Blockchain.Block do
         }
       }
   """
-  @spec gen_child_block(t, Chain.t(), keyword()) :: t
-  def gen_child_block(parent_block, chain, opts \\ []) do
+  @spec new_child(t, Chain.t(), keyword()) :: t
+  def new_child(parent_block, chain, opts \\ []) do
     gas_limit = opts[:gas_limit] || parent_block.header.gas_limit
-    header = gen_child_header(parent_block, opts)
+    header = Header.new_child(parent_block.header, opts)
 
     %__MODULE__{header: header}
     |> set_block_number(parent_block)
     |> set_block_difficulty(chain, parent_block)
     |> set_block_gas_limit(chain, parent_block, gas_limit)
-  end
-
-  @spec gen_child_header(t, keyword()) :: Header.t()
-  defp gen_child_header(parent_block, opts) do
-    timestamp = opts[:timestamp] || System.system_time(:second)
-    beneficiary = opts[:beneficiary] || nil
-    extra_data = opts[:extra_data] || <<>>
-    state_root = opts[:state_root] || parent_block.header.state_root
-
-    %Header{
-      state_root: state_root,
-      timestamp: timestamp,
-      extra_data: extra_data,
-      beneficiary: beneficiary
-    }
   end
 
   @doc """
@@ -519,8 +444,8 @@ defmodule Blockchain.Block do
 
   ## Examples
 
-      iex> Blockchain.Block.set_block_number(%Blockchain.Block{header: %Block.Header{extra_data: "hello"}}, %Blockchain.Block{header: %Block.Header{number: 32}})
-      %Blockchain.Block{header: %Block.Header{number: 33, extra_data: "hello"}}
+      iex> Blockchain.Block.set_block_number(%Blockchain.Block{header: %EthCore.Block.Header{extra_data: "hello"}}, %Blockchain.Block{header: %EthCore.Block.Header{number: 32}})
+      %Blockchain.Block{header: %EthCore.Block.Header{number: 33, extra_data: "hello"}}
   """
   @spec set_block_number(t, t) :: t
   def set_block_number(block, parent_block) do
@@ -531,31 +456,31 @@ defmodule Blockchain.Block do
 
   @doc """
   Set the difficulty of a new block based on Eq.(39), better defined
-  in Block.Header`.
+  in `EthCore.Block.Header`.
 
   # TODO: Validate these results
 
   ## Examples
 
       iex> Blockchain.Block.set_block_difficulty(
-      ...>   %Blockchain.Block{header: %Block.Header{number: 0, timestamp: 0}},
-      ...>   Blockchain.Test.ropsten_chain(),
+      ...>   %Blockchain.Block{header: %EthCore.Block.Header{number: 0, timestamp: 0}},
+      ...>   Blockchain.Chain.load_chain(:ropsten),
       ...>   nil
       ...> )
-      %Blockchain.Block{header: %Block.Header{number: 0, timestamp: 0, difficulty: 1_048_576}}
+      %Blockchain.Block{header: %EthCore.Block.Header{number: 0, timestamp: 0, difficulty: 1_048_576}}
 
       iex> Blockchain.Block.set_block_difficulty(
-      ...>   %Blockchain.Block{header: %Block.Header{number: 1, timestamp: 1_479_642_530}},
-      ...>   Blockchain.Test.ropsten_chain(),
-      ...>   %Blockchain.Block{header: %Block.Header{number: 0, timestamp: 0, difficulty: 1_048_576}}
+      ...>   %Blockchain.Block{header: %EthCore.Block.Header{number: 1, timestamp: 1_479_642_530}},
+      ...>   Blockchain.Chain.load_chain(:ropsten),
+      ...>   %Blockchain.Block{header: %EthCore.Block.Header{number: 0, timestamp: 0, difficulty: 1_048_576}}
       ...> )
-      %Blockchain.Block{header: %Block.Header{number: 1, timestamp: 1_479_642_530, difficulty: 997_888}}
+      %Blockchain.Block{header: %EthCore.Block.Header{number: 1, timestamp: 1_479_642_530, difficulty: 997_888}}
   """
   @spec set_block_difficulty(t, Chain.t(), t) :: t
   def set_block_difficulty(block, chain, parent_block) do
     # TODO: Incorporate more of chain
     difficulty =
-      Header.get_difficulty(
+      Difficulty.calc(
         block.header,
         if(parent_block, do: parent_block.header, else: nil),
         chain.genesis[:difficulty],
@@ -576,24 +501,24 @@ defmodule Blockchain.Block do
   ## Examples
 
       iex> Blockchain.Block.set_block_gas_limit(
-      ...>   %Blockchain.Block{header: %Block.Header{}},
-      ...>   Blockchain.Test.ropsten_chain(),
-      ...>   %Blockchain.Block{header: %Block.Header{gas_limit: 1_000_000}},
+      ...>   %Blockchain.Block{header: %EthCore.Block.Header{}},
+      ...>   Blockchain.Chain.load_chain(:ropsten),
+      ...>   %Blockchain.Block{header: %EthCore.Block.Header{gas_limit: 1_000_000}},
       ...>   1_000_500
       ...> )
-      %Blockchain.Block{header: %Block.Header{gas_limit: 1_000_500}}
+      %Blockchain.Block{header: %EthCore.Block.Header{gas_limit: 1_000_500}}
 
       iex> Blockchain.Block.set_block_gas_limit(
-      ...>   %Blockchain.Block{header: %Block.Header{}},
-      ...>   Blockchain.Test.ropsten_chain(),
-      ...>   %Blockchain.Block{header: %Block.Header{gas_limit: 1_000_000}},
+      ...>   %Blockchain.Block{header: %EthCore.Block.Header{}},
+      ...>   Blockchain.Chain.load_chain(:ropsten),
+      ...>   %Blockchain.Block{header: %EthCore.Block.Header{gas_limit: 1_000_000}},
       ...>   2_000_000
       ...> )
       ** (RuntimeError) Block gas limit not valid
   """
   @spec set_block_gas_limit(t, Chain.t(), t, EVM.Gas.t()) :: t
   def set_block_gas_limit(block, chain, parent_block, gas_limit) do
-    if not Header.is_gas_limit_valid?(
+    if not Header.Validation.valid_gas_limit?(
          gas_limit,
          parent_block.header.gas_limit,
          chain.params[:gas_limit_bound_divisor],
@@ -609,12 +534,12 @@ defmodule Blockchain.Block do
 
   ## Examples
 
-      iex> Blockchain.Block.add_ommers(%Blockchain.Block{}, [%Block.Header{parent_hash: <<1::256>>, ommers_hash: <<2::256>>, beneficiary: <<3::160>>, state_root: <<4::256>>, transactions_root: <<5::256>>, receipts_root: <<6::256>>, logs_bloom: <<>>, difficulty: 5, number: 1, gas_limit: 5, gas_used: 3, timestamp: 6, extra_data: "Hi mom", mix_hash: <<7::256>>, nonce: <<8::64>>}])
+      iex> Blockchain.Block.add_ommers(%Blockchain.Block{}, [%EthCore.Block.Header{parent_hash: <<1::256>>, ommers_hash: <<2::256>>, beneficiary: <<3::160>>, state_root: <<4::256>>, transactions_root: <<5::256>>, receipts_root: <<6::256>>, logs_bloom: <<>>, difficulty: 5, number: 1, gas_limit: 5, gas_used: 3, timestamp: 6, extra_data: "Hi mom", mix_hash: <<7::256>>, nonce: <<8::64>>}])
       %Blockchain.Block{
         ommers: [
-          %Block.Header{parent_hash: <<1::256>>, ommers_hash: <<2::256>>, beneficiary: <<3::160>>, state_root: <<4::256>>, transactions_root: <<5::256>>, receipts_root: <<6::256>>, logs_bloom: <<>>, difficulty: 5, number: 1, gas_limit: 5, gas_used: 3, timestamp: 6, extra_data: "Hi mom", mix_hash: <<7::256>>, nonce: <<8::64>>}
+          %EthCore.Block.Header{parent_hash: <<1::256>>, ommers_hash: <<2::256>>, beneficiary: <<3::160>>, state_root: <<4::256>>, transactions_root: <<5::256>>, receipts_root: <<6::256>>, logs_bloom: <<>>, difficulty: 5, number: 1, gas_limit: 5, gas_used: 3, timestamp: 6, extra_data: "Hi mom", mix_hash: <<7::256>>, nonce: <<8::64>>}
         ],
-        header: %Block.Header{
+        header: %EthCore.Block.Header{
           ommers_hash: <<59, 196, 156, 242, 196, 38, 21, 97, 112, 6, 73, 111, 12, 88, 35, 155, 72, 175, 82, 0, 163, 128, 115, 236, 45, 99, 88, 62, 88, 80, 122, 96>>
         }
       }
@@ -622,7 +547,7 @@ defmodule Blockchain.Block do
   @spec add_ommers(t, [Header.t()]) :: t
   def add_ommers(block, ommers) do
     total_ommers = block.ommers ++ ommers
-    serialized_ommers_list = Enum.map(total_ommers, &Block.Header.serialize/1)
+    serialized_ommers_list = Enum.map(total_ommers, &Header.serialize/1)
     new_ommers_hash = serialized_ommers_list |> ExRLP.encode() |> Keccak.kec()
 
     %{block | ommers: total_ommers, header: %{block.header | ommers_hash: new_ommers_hash}}
@@ -634,9 +559,9 @@ defmodule Blockchain.Block do
   ## Examples
 
       iex> %Blockchain.Block{}
-      ...> |> Blockchain.Block.add_ommers([%Block.Header{parent_hash: <<1::256>>, ommers_hash: <<2::256>>, beneficiary: <<3::160>>, state_root: <<4::256>>, transactions_root: <<5::256>>, receipts_root: <<6::256>>, logs_bloom: <<>>, difficulty: 5, number: 1, gas_limit: 5, gas_used: 3, timestamp: 6, extra_data: "Hi mom", mix_hash: <<7::256>>, nonce: <<8::64>>}])
+      ...> |> Blockchain.Block.add_ommers([%EthCore.Block.Header{parent_hash: <<1::256>>, ommers_hash: <<2::256>>, beneficiary: <<3::160>>, state_root: <<4::256>>, transactions_root: <<5::256>>, receipts_root: <<6::256>>, logs_bloom: <<>>, difficulty: 5, number: 1, gas_limit: 5, gas_used: 3, timestamp: 6, extra_data: "Hi mom", mix_hash: <<7::256>>, nonce: <<8::64>>}])
       ...> |> Blockchain.Block.get_ommer(0)
-      %Block.Header{parent_hash: <<1::256>>, ommers_hash: <<2::256>>, beneficiary: <<3::160>>, state_root: <<4::256>>, transactions_root: <<5::256>>, receipts_root: <<6::256>>, logs_bloom: <<>>, difficulty: 5, number: 1, gas_limit: 5, gas_used: 3, timestamp: 6, extra_data: "Hi mom", mix_hash: <<7::256>>, nonce: <<8::64>>}
+      %EthCore.Block.Header{parent_hash: <<1::256>>, ommers_hash: <<2::256>>, beneficiary: <<3::160>>, state_root: <<4::256>>, transactions_root: <<5::256>>, receipts_root: <<6::256>>, logs_bloom: <<>>, difficulty: 5, number: 1, gas_limit: 5, gas_used: 3, timestamp: 6, extra_data: "Hi mom", mix_hash: <<7::256>>, nonce: <<8::64>>}
   """
   @spec get_ommer(t, integer()) :: Header.t()
   def get_ommer(block, i) do
@@ -651,24 +576,24 @@ defmodule Blockchain.Block do
   ## Examples
 
       iex> db = MerklePatriciaTree.Test.random_ets_db()
-      iex> chain = Blockchain.Test.ropsten_chain()
-      iex> Blockchain.Genesis.create_block(chain, db)
+      iex> chain = Blockchain.Chain.load_chain(:ropsten)
+      iex> Blockchain.Genesis.new_block(chain, db)
       ...> |> Blockchain.Block.add_rewards(db)
       ...> |> Blockchain.Block.validate(chain, nil, db)
       :valid
 
       iex> db = MerklePatriciaTree.Test.random_ets_db()
-      iex> chain = Blockchain.Test.ropsten_chain()
-      iex> parent = Blockchain.Genesis.create_block(chain, db)
-      ...> child = Blockchain.Block.gen_child_block(parent, chain)
+      iex> chain = Blockchain.Chain.load_chain(:ropsten)
+      iex> parent = Blockchain.Genesis.new_block(chain, db)
+      ...> child = Blockchain.Block.new_child(parent, chain)
       ...> Blockchain.Block.validate(child, chain, nil, db)
       {:errors, [:non_genesis_block_requires_parent]}
 
       iex> db = MerklePatriciaTree.Test.random_ets_db()
-      iex> chain = Blockchain.Test.ropsten_chain()
-      iex> parent = Blockchain.Genesis.create_block(chain, db)
+      iex> chain = Blockchain.Chain.load_chain(:ropsten)
+      iex> parent = Blockchain.Genesis.new_block(chain, db)
       iex> beneficiary = <<0x05::160>>
-      iex> child = Blockchain.Block.gen_child_block(parent, chain, beneficiary: beneficiary)
+      iex> child = Blockchain.Block.new_child(parent, chain, beneficiary: beneficiary)
       ...>         |> Blockchain.Block.add_rewards(db, chain.engine["Ethash"][:block_reward])
       iex> Blockchain.Block.validate(child, chain, parent, db)
       :valid
@@ -752,14 +677,16 @@ defmodule Blockchain.Block do
 
   # Updates a block to have a new state root given a state object
   @spec put_state(t, EVM.state()) :: t
-  def put_state(block = %__MODULE__{header: header}, new_state) do
-    %{block | header: %{header | state_root: new_state.root_hash}}
+  def put_state(block, new_state) do
+    header = %{block.header | state_root: new_state.root_hash}
+    %{block | header: header}
   end
 
   # Updates a block to have total gas used set in the header
   @spec put_gas_used(t, EVM.Gas.t()) :: t
-  def put_gas_used(block = %__MODULE__{header: header}, gas_used) do
-    %{block | header: %{header | gas_used: gas_used}}
+  def put_gas_used(block, gas_used) do
+    header = %{block.header | gas_used: gas_used}
+    %{block | header: header}
   end
 
   @doc """
@@ -776,17 +703,24 @@ defmodule Blockchain.Block do
   """
   @spec put_receipt(t, integer(), Receipt.t(), DB.db()) :: t
   def put_receipt(block, i, receipt, db) do
-    updated_receipts_root =
-      Trie.new(db, block.header.receipts_root)
-      |> Trie.update(ExRLP.encode(i), Receipt.serialize(receipt) |> ExRLP.encode())
+    receipt_rlp =
+      receipt
+      |> Receipt.serialize()
+      |> ExRLP.encode()
 
-    %{block | header: %{block.header | receipts_root: updated_receipts_root.root_hash}}
+    receipts_root =
+      db
+      |> Trie.new(block.header.receipts_root)
+      |> Trie.update(ExRLP.encode(i), receipt_rlp)
+
+    header = %{block.header | receipts_root: receipts_root.root_hash}
+    %{block | header: header}
   end
 
   @doc """
   Updates a block by adding a transaction to the list of transactions
   and updating the transactions_root in the header at position `i`, which
-  should be equilvant to the current number of transactions.
+  should be equivalent to the current number of transactions.
 
   ## Examples
 
@@ -798,66 +732,30 @@ defmodule Blockchain.Block do
       ...> |> MerklePatriciaTree.Trie.Inspector.all_values()
       [{<<0x80>>, <<201, 1, 128, 128, 128, 128, 128, 2, 3, 4>>}]
   """
-  @spec put_transaction(t, integer(), Transaction.t(), DB.db()) :: t
-  def put_transaction(block, i, trx, db) do
-    total_transactions = block.transactions ++ [trx]
+  @spec put_transaction(t(), integer(), Transaction.t(), DB.db()) :: t()
+  def put_transaction(block, i, tx, db) do
+    total_transactions = block.transactions ++ [tx]
+    tx_rlp = tx |> Transaction.serialize() |> ExRLP.encode()
 
-    updated_transactions_root =
-      Trie.new(db, block.header.transactions_root)
-      |> Trie.update(ExRLP.encode(i), Transaction.serialize(trx) |> ExRLP.encode())
+    transactions_root =
+      db
+      |> Trie.new(block.header.transactions_root)
+      |> Trie.update(ExRLP.encode(i), tx_rlp)
 
-    %{
-      block
-      | transactions: total_transactions,
-        header: %{block.header | transactions_root: updated_transactions_root.root_hash}
-    }
+    header = %{block.header | transactions_root: transactions_root.root_hash}
+    %{block | transactions: total_transactions, header: header}
   end
 
   @doc """
   Adds the rewards to miners (including for ommers) to a block.
   This is defined in Section 11.3, Eq.(159-163) of the Yellow Paper.
-
-  ## Examples
-
-      iex> db = MerklePatriciaTree.Test.random_ets_db()
-      iex> miner = <<0x05::160>>
-      iex> state = MerklePatriciaTree.Trie.new(db)
-      ...>         |> Blockchain.Account.put_account(miner, %Blockchain.Account{balance: 400_000})
-      iex> block = %Blockchain.Block{header: %Block.Header{number: 0, state_root: state.root_hash, beneficiary: miner}}
-      iex> block
-      ...> |> Blockchain.Block.add_rewards(db)
-      ...> |> Blockchain.Block.get_state(db)
-      ...> |> Blockchain.Account.get_accounts([miner])
-      [%Blockchain.Account{balance: 400_000}]
-
-      iex> db = MerklePatriciaTree.Test.random_ets_db()
-      iex> miner = <<0x05::160>>
-      iex> state = MerklePatriciaTree.Trie.new(db)
-      ...>         |> Blockchain.Account.put_account(miner, %Blockchain.Account{balance: 400_000})
-      iex> block = %Blockchain.Block{header: %Block.Header{state_root: state.root_hash, beneficiary: miner}}
-      iex> block
-      ...> |> Blockchain.Block.add_rewards(db)
-      ...> |> Blockchain.Block.get_state(db)
-      ...> |> Blockchain.Account.get_accounts([miner])
-      [%Blockchain.Account{balance: 5000000000000400000}]
-
-      iex> db = MerklePatriciaTree.Test.random_ets_db()
-      iex> miner = <<0x05::160>>
-      iex> state = MerklePatriciaTree.Trie.new(db)
-      ...>         |> Blockchain.Account.put_account(miner, %Blockchain.Account{balance: 400_000})
-      iex> block = %Blockchain.Block{header: %Block.Header{state_root: state.root_hash, beneficiary: miner}}
-      iex> block
-      ...> |> Blockchain.Block.add_rewards(db, 100)
-      ...> |> Blockchain.Block.get_state(db)
-      ...> |> Blockchain.Account.get_accounts([miner])
-      [%Blockchain.Account{balance: 400100}]
   """
   @spec add_rewards(t, DB.db(), EVM.Wei.t()) :: t
   def add_rewards(block, db, reward_wei \\ @reward_wei) do
     # TODO: Add ommer rewards
 
     cond do
-      Genesis.is_genesis_block?(block) ->
+      genesis?(block) ->
         block
 
       is_nil(block.header.beneficiary) ->
@@ -884,7 +782,7 @@ defmodule Blockchain.Block do
       iex> %Blockchain.Block{}
       ...> |> Blockchain.Block.put_header(:number, 5)
       %Blockchain.Block{
-        header: %Block.Header{
+        header: %EthCore.Block.Header{
           number: 5
         }
       }
@@ -901,7 +799,7 @@ defmodule Blockchain.Block do
   ## Examples
 
       iex> db = MerklePatriciaTree.Test.random_ets_db(:get_state)
-      iex> Blockchain.Block.get_state(%Blockchain.Block{header: %Block.Header{state_root: <<5::256>>}}, db)
+      iex> Blockchain.Block.get_state(%Blockchain.Block{header: %EthCore.Block.Header{state_root: <<5::256>>}}, db)
       %MerklePatriciaTree.Trie{root_hash: <<5::256>>, db: {MerklePatriciaTree.DB.ETS, :get_state}}
   """
   @spec get_state(t, DB.db()) :: Trie.t()
@@ -913,12 +811,19 @@ defmodule Blockchain.Block do
   Sets the state_root of a given block from a trie.
 
   ## Examples
+
       iex> trie = %MerklePatriciaTree.Trie{root_hash: <<5::256>>, db: {MerklePatriciaTree.DB.ETS, :get_state}}
       iex> Blockchain.Block.set_state(%Blockchain.Block{}, trie)
-      %Blockchain.Block{header: %Block.Header{state_root: <<5::256>>}}
+      %Blockchain.Block{header: %EthCore.Block.Header{state_root: <<5::256>>}}
   """
   @spec set_state(t, Trie.t()) :: t
   def set_state(block, trie) do
     put_header(block, :state_root, trie.root_hash)
   end
+
+  @doc """
+  Returns whether or not a block is a genesis block, based on block number.
+  """
+  @spec genesis?(t()) :: boolean()
+  def genesis?(block), do: block.header.number == 0
 end

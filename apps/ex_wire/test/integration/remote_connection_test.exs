@@ -15,11 +15,12 @@ defmodule ExWire.RemoteConnectionTest do
 
   require Logger
 
+  alias EthCore.Block.Header
   alias ExWire.Packet
   alias ExWire.Adapter.TCP
 
-  @moduletag integration: true
-  @moduletag network: true
+  @moduletag :integration
+  @moduletag :network
 
   @local_peer [127, 0, 0, 1]
   @local_peer_port 35353
@@ -182,7 +183,7 @@ defmodule ExWire.RemoteConnectionTest do
     receive do
       {:incoming_packet, _packet = %Packet.BlockHeaders{headers: [header]}} ->
         ExWire.Adapter.TCP.send_packet(client_pid, %ExWire.Packet.GetBlockBodies{
-          hashes: [header |> Block.Header.hash()]
+          hashes: [header |> Header.hash()]
         })
 
         receive_block_bodies(client_pid)

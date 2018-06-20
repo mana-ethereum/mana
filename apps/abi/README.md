@@ -16,7 +16,6 @@ iex> ABI.encode("baz(uint,address)", [50, <<1::160>> |> :binary.decode_unsigned]
 Then, you can construct an Ethereum transaction with that data, e.g.
 
 ```elixir
-# Blockchain comes from `Exthereum.Blockchain`, see below.
 iex> %Blockchain.Transaction{
 ...> # ...
 ...> data: <<162, 145, 173, 214, 0, 0, 0, 0, 0, 0, 0, 0, ...>
@@ -59,7 +58,7 @@ Currently supports:
 * [Solidity ABI](https://solidity.readthedocs.io/en/develop/abi-spec.html)
 * [Solidity Docs](https://solidity.readthedocs.io/)
 * [Solidity Grammar](https://github.com/ethereum/solidity/blob/develop/docs/grammar.txt)
-* [Exthereum Blockchain](https://github.com/exthereum/blockchain)
+* [Mana blockchain](https://github.com/poanetwork/mana/apps/blockchain)
 
 # Collaboration
 

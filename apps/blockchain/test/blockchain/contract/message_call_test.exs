@@ -2,6 +2,7 @@ defmodule Blockchain.Contract.MessageCallTest do
   use ExUnit.Case
   doctest Blockchain.Contract.MessageCall
 
+  alias EthCore.Block.Header
   alias Blockchain.{Account, Contract}
   alias EVM.{SubState, MachineCode}
   alias MerklePatriciaTree.{Trie, DB}
@@ -49,7 +50,7 @@ defmodule Blockchain.Contract.MessageCallTest do
         apparent_value: 5,
         data: <<1, 2, 3>>,
         stack_depth: 5,
-        block_header: %Block.Header{nonce: 1}
+        block_header: %Header{nonce: 1}
       }
 
       {state, gas, sub_state, output} = Contract.message_call(params)

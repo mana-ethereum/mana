@@ -1,5 +1,5 @@
 defprotocol EVM.Interface.AccountInterface do
-  alias Block.Header
+  alias EthCore.Block.Header
 
   @moduledoc """
   Interface for interacting with accounts.

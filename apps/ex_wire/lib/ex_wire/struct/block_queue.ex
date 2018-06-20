@@ -13,7 +13,7 @@ defmodule ExWire.Struct.BlockQueue do
      to our block tree.
   """
 
-  alias Block.Header
+  alias EthCore.Block.Header
   alias ExWire.Struct.Block, as: BlockStruct
   alias Blockchain.{Block, Blocktree, Chain}
   alias MerklePatriciaTree.Trie
@@ -50,11 +50,11 @@ defmodule ExWire.Struct.BlockQueue do
 
   ## Examples
 
-      iex> chain = Blockchain.Test.ropsten_chain()
+      iex> chain = Blockchain.Chain.load_chain(:ropsten)
       iex> db = MerklePatriciaTree.Test.random_ets_db(:proces_block_queue)
-      iex> header = %Block.Header{number: 5, parent_hash: <<0::256>>, beneficiary: <<2, 3, 4>>, difficulty: 100, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>}
+      iex> header = %EthCore.Block.Header{number: 5, parent_hash: <<0::256>>, beneficiary: <<2, 3, 4>>, difficulty: 100, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>}
       iex> header_hash = <<78, 28, 127, 10, 192, 253, 127, 239, 254, 179, 39, 34, 245, 44, 152, 98, 128, 71, 238, 155, 100, 161, 199, 71, 243, 223, 172, 191, 74, 99, 128, 63>>
-      iex> {block_queue, block_tree, false} = ExWire.Struct.BlockQueue.add_header(%ExWire.Struct.BlockQueue{do_validation: false}, Blockchain.Blocktree.new_tree(), header, header_hash, "remote_id", chain, db)
+      iex> {block_queue, block_tree, false} = ExWire.Struct.BlockQueue.add_header(%ExWire.Struct.BlockQueue{do_validation: false}, Blockchain.Blocktree.new(), header, header_hash, "remote_id", chain, db)
       iex> block_queue.queue
       %{}
       iex> block_tree.parent_map
@@ -124,9 +124,9 @@ defmodule ExWire.Struct.BlockQueue do
 
   ## Examples
 
-      iex> chain = Blockchain.Test.ropsten_chain()
+      iex> chain = Blockchain.Chain.load_chain(:ropsten)
       iex> db = MerklePatriciaTree.Test.random_ets_db(:add_block_struct)
-      iex> header = %Block.Header{
+      iex> header = %EthCore.Block.Header{
       ...>   transactions_root: <<200, 70, 164, 239, 152, 124, 5, 149, 40, 10, 157, 9, 210, 181, 93, 89, 5, 119, 158, 112, 221, 58, 94, 86, 206, 113, 120, 51, 241, 9, 154, 150>>,
       ...>   ommers_hash: <<232, 5, 101, 202, 108, 35, 61, 149, 228, 58, 111, 18, 19, 234, 191, 129, 189, 107, 167, 195, 222, 123, 50, 51, 176, 222, 225, 181, 72, 231, 198, 53>>
       ...> }
@@ -150,7 +150,7 @@ defmodule ExWire.Struct.BlockQueue do
       ...> }
       iex> {block_queue, _block_tree} = ExWire.Struct.BlockQueue.add_block_struct(
       ...>   block_queue,
-      ...>   Blockchain.Blocktree.new_tree(),
+      ...>   Blockchain.Blocktree.new(),
       ...>   block_struct,
       ...>   chain,
       ...>   db
@@ -210,9 +210,9 @@ defmodule ExWire.Struct.BlockQueue do
 
   ## Examples
 
-      iex> chain = Blockchain.Test.ropsten_chain()
+      iex> chain = Blockchain.Chain.load_chain(:ropsten)
       iex> db = MerklePatriciaTree.Test.random_ets_db(:process_block_queue)
-      iex> header = %Block.Header{number: 1, parent_hash: <<0::256>>, beneficiary: <<2, 3, 4>>, difficulty: 100, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>}
+      iex> header = %EthCore.Block.Header{number: 1, parent_hash: <<0::256>>, beneficiary: <<2, 3, 4>>, difficulty: 100, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>}
       iex> {block_queue, block_tree} = %ExWire.Struct.BlockQueue{
       ...>   queue: %{
       ...>     1 => %{
@@ -226,7 +226,7 @@ defmodule ExWire.Struct.BlockQueue do
       ...>   },
       ...>   do_validation: false
       ...> }
-      ...> |> ExWire.Struct.BlockQueue.process_block_queue(Blockchain.Blocktree.new_tree(), chain, db)
+      ...> |> ExWire.Struct.BlockQueue.process_block_queue(Blockchain.Blocktree.new(), chain, db)
       iex> block_tree.parent_map
       %{<<226, 210, 216, 149, 139, 194, 100, 151, 35, 86, 131, 75, 10, 203, 201, 20, 232, 134, 23, 195, 24, 34, 181, 6, 142, 4, 57, 85, 121, 223, 246, 87>> => <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0>>}
       iex> block_queue.queue
@@ -285,25 +285,25 @@ defmodule ExWire.Struct.BlockQueue do
       ...>     5 => %{
       ...>       <<1::256>> => %{
       ...>         commitments: MapSet.new([1, 2]),
-      ...>         header: %Block.Header{number: 5},
+      ...>         header: %EthCore.Block.Header{number: 5},
       ...>         block: %Blockchain.Block{block_hash: <<1::256>>},
       ...>         ready: true,
       ...>       },
       ...>       <<2::256>> => %{
       ...>         commitments: MapSet.new([]),
-      ...>         header: %Block.Header{number: 5},
+      ...>         header: %EthCore.Block.Header{number: 5},
       ...>         block: %Blockchain.Block{block_hash: <<2::256>>},
       ...>         ready: true,
       ...>       },
       ...>       <<3::256>> => %{
       ...>         commitments: MapSet.new([1, 2]),
-      ...>         header: %Block.Header{number: 5, gas_used: 5},
+      ...>         header: %EthCore.Block.Header{number: 5, gas_used: 5},
       ...>         block: %Blockchain.Block{block_hash: <<3::256>>},
       ...>         ready: false,
       ...>       },
       ...>       <<4::256>> => %{
       ...>         commitments: MapSet.new([1, 2]),
-      ...>         header: %Block.Header{number: 5, ommers_hash: <<5::256>>},
+      ...>         header: %EthCore.Block.Header{number: 5, ommers_hash: <<5::256>>},
       ...>         block: %Blockchain.Block{block_hash: <<4::256>>},
       ...>         ready: false,
       ...>       }
@@ -311,7 +311,7 @@ defmodule ExWire.Struct.BlockQueue do
       ...>     6 => %{
       ...>       <<5::256>> => %{
       ...>         commitments: MapSet.new([1, 2]),
-      ...>         header: %Block.Header{number: 6},
+      ...>         header: %EthCore.Block.Header{number: 6},
       ...>         block: %Blockchain.Block{block_hash: <<5::256>>},
       ...>         ready: true,
       ...>       }
@@ -325,19 +325,19 @@ defmodule ExWire.Struct.BlockQueue do
             5 => %{
               <<2::256>> => %{
                 commitments: MapSet.new([]),
-                header: %Block.Header{number: 5},
+                header: %EthCore.Block.Header{number: 5},
                 block: %Blockchain.Block{block_hash: <<2::256>>},
                 ready: true
               },
               <<3::256>> => %{
                 commitments: MapSet.new([1, 2]),
-                header: %Block.Header{number: 5, gas_used: 5},
+                header: %EthCore.Block.Header{number: 5, gas_used: 5},
                 block: %Blockchain.Block{block_hash: <<3::256>>},
                 ready: false
               },
               <<4::256>> => %{
                 commitments: MapSet.new([1, 2]),
-                header: %Block.Header{number: 5, ommers_hash: <<5::256>>},
+                header: %EthCore.Block.Header{number: 5, ommers_hash: <<5::256>>},
                 block: %Blockchain.Block{block_hash: <<4::256>>},
                 ready: false
               }
@@ -382,21 +382,21 @@ defmodule ExWire.Struct.BlockQueue do
 
   ## Examples
 
-      iex> %Block.Header{
+      iex> %EthCore.Block.Header{
       ...>   transactions_root: MerklePatriciaTree.Trie.empty_trie_root_hash(),
       ...>   ommers_hash: <<29, 204, 77, 232, 222, 199, 93, 122, 171, 133, 181, 103, 182, 204, 212, 26, 211, 18, 69, 27, 148, 138, 116, 19, 240, 161, 66, 253, 64, 212, 147, 71>>
       ...> }
       ...> |> ExWire.Struct.BlockQueue.is_block_empty?
       true
 
-      iex> %Block.Header{
+      iex> %EthCore.Block.Header{
       ...>   transactions_root: MerklePatriciaTree.Trie.empty_trie_root_hash(),
       ...>   ommers_hash: <<1>>
       ...> }
       ...> |> ExWire.Struct.BlockQueue.is_block_empty?
       false
 
-      iex> %Block.Header{
+      iex> %EthCore.Block.Header{
       ...>   transactions_root: <<1>>,
       ...>   ommers_hash: <<29, 204, 77, 232, 222, 199, 93, 122, 171, 133, 181, 103, 182, 204, 212, 26, 211, 18, 69, 27, 148, 138, 116, 19, 240, 161, 66, 253, 64, 212, 147, 71>>
       ...> }

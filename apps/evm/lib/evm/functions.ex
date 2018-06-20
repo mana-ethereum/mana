@@ -116,7 +116,7 @@ defmodule EVM.Functions do
       is_nil(input_count) ->
         {:halt, :undefined_instruction}
 
-      length(machine_state.stack) < input_count ->
+      Stack.length(machine_state.stack) < input_count ->
         {:halt, :stack_underflow}
 
       Gas.cost(machine_state, exec_env) > machine_state.gas ->

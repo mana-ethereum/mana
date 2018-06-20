@@ -1,4 +1,5 @@
 defmodule Blockchain.StateTest do
+  alias EthCore.Block.Header
   alias MerklePatriciaTree.Trie
   alias Blockchain.{Account, Transaction}
   alias Blockchain.Interface.AccountInterface
@@ -2445,7 +2446,7 @@ defmodule Blockchain.StateTest do
           |> Transaction.Signature.sign_transaction(maybe_hex(test["transaction"]["secretKey"]))
 
         {state, _, _} =
-          Transaction.execute(state, transaction, %Block.Header{
+          Transaction.execute(state, transaction, %Header{
             beneficiary: maybe_hex(test["env"]["currentCoinbase"])
           })
 

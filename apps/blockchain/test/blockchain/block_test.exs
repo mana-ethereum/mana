@@ -4,7 +4,7 @@ defmodule Blockchain.BlockTest do
 
   doctest Blockchain.Block
 
-  alias Block.Header
+  alias EthCore.Block.Header
   alias Blockchain.{Chain, Account, Contract, Block, Transaction, Genesis}
   alias EVM.MachineCode
   alias MerklePatriciaTree.Trie
@@ -32,7 +32,7 @@ defmodule Blockchain.BlockTest do
           accounts: get_test_accounts(test["alloc"])
         }
 
-        block = Genesis.create_block(chain, db)
+        block = Genesis.new_block(chain, db)
 
         # Check that our block matches the serialization from common tests
         assert Block.serialize(block) == test["result"] |> maybe_hex |> ExRLP.decode()
@@ -118,10 +118,10 @@ defmodule Blockchain.BlockTest do
 
   test "match genesis block on ropsten" do
     db = MerklePatriciaTree.Test.random_ets_db()
-    chain = Blockchain.Test.ropsten_chain()
+    chain = Blockchain.Chain.load_chain(:ropsten)
 
     block =
-      Genesis.create_block(chain, db)
+      Genesis.new_block(chain, db)
       |> Block.add_rewards(db)
       |> Block.put_header(:mix_hash, <<0::256>>)
       |> Block.put_header(:nonce, <<0x42::64>>)
@@ -169,10 +169,10 @@ defmodule Blockchain.BlockTest do
 
   test "assert fully valid genesis block on ropsten" do
     db = MerklePatriciaTree.Test.random_ets_db()
-    chain = Blockchain.Test.ropsten_chain()
+    chain = Blockchain.Chain.load_chain(:ropsten)
 
     result =
-      Genesis.create_block(chain, db)
+      Genesis.new_block(chain, db)
       |> Block.add_rewards(db)
       |> Block.validate(chain, nil, db)
 
@@ -282,6 +282,335 @@ defmodule Blockchain.BlockTest do
       ]
 
       assert actual_accounts == expected_accounts
+    end
+  end
+
+  describe "add_rewards/3" do
+    test "does not add rewards for genesis block" do
+      db = MerklePatriciaTree.Test.random_ets_db()
+      miner = <<0x05::160>>
+
+      state =
+        db
+        |> MerklePatriciaTree.Trie.new()
+        |> Account.put_account(miner, %Account{balance: 400_000})
+
+      block = %Block{
+        header: %Header{
+          number: 0,
+          state_root: state.root_hash,
+          beneficiary: miner
+        }
+      }
+
+      expected = [%Account{balance: 400_000}]
+
+      accounts =
+        block
+        |> Block.add_rewards(db)
+        |> Block.get_state(db)
+        |> Account.get_accounts([miner])
+
+      assert accounts == expected
+    end
+
+    test "adds a regular reward" do
+      db = MerklePatriciaTree.Test.random_ets_db()
+      miner = <<0x05::160>>
+
+      state =
+        db
+        |> MerklePatriciaTree.Trie.new()
+        |> Account.put_account(miner, %Account{balance: 400_000})
+
+      block = %Block{
+        header: %Header{
+          state_root: state.root_hash,
+          beneficiary: miner
+        }
+      }
+
+      expected = [%Account{balance: 5_000_000_000_000_400_000}]
+
+      accounts =
+        block
+        |> Block.add_rewards(db)
+        |> Block.get_state(db)
+        |> Account.get_accounts([miner])
+
+      assert accounts == expected
+    end
+
+    test "adds an explicit reward" do
+      db = MerklePatriciaTree.Test.random_ets_db()
+      miner = <<0x05::160>>
+
+      state =
+        db
+        |> MerklePatriciaTree.Trie.new()
+        |> Account.put_account(miner, %Account{balance: 400_000})
+
+      block = %Block{
+        header: %Header{
+          state_root: state.root_hash,
+          beneficiary: miner
+        }
+      }
+
+      expected = [%Account{balance: 400_100}]
+
+      accounts =
+        block
+        |> Block.add_rewards(db, 100)
+        |> Block.get_state(db)
+        |> Account.get_accounts([miner])
+
+      assert accounts == expected
+    end
+  end
+
+  describe "serialize/1" do
+    test "serializes a non-empty block" do
+      header = %Header{
+        parent_hash: <<1::256>>,
+        ommers_hash: <<2::256>>,
+        beneficiary: <<3::160>>,
+        state_root: <<4::256>>,
+        transactions_root: <<5::256>>,
+        receipts_root: <<6::256>>,
+        logs_bloom: <<>>,
+        difficulty: 5,
+        number: 1,
+        gas_limit: 5,
+        gas_used: 3,
+        timestamp: 6,
+        extra_data: "Hi mom",
+        mix_hash: <<7::256>>,
+        nonce: <<8::64>>
+      }
+
+      tx = %Transaction{
+        nonce: 5,
+        gas_price: 6,
+        gas_limit: 7,
+        to: <<1::160>>,
+        value: 8,
+        v: 27,
+        r: 9,
+        s: 10,
+        data: "hi"
+      }
+
+      ommer_header = %Header{
+        parent_hash: <<11::256>>,
+        ommers_hash: <<12::256>>,
+        beneficiary: <<13::160>>,
+        state_root: <<14::256>>,
+        transactions_root: <<15::256>>,
+        receipts_root: <<16::256>>,
+        logs_bloom: <<>>,
+        difficulty: 5,
+        number: 1,
+        gas_limit: 5,
+        gas_used: 3,
+        timestamp: 6,
+        extra_data: "Hi mom",
+        mix_hash: <<17::256>>,
+        nonce: <<18::64>>
+      }
+
+      block = %Block{
+        header: header,
+        transactions: [tx],
+        ommers: [ommer_header]
+      }
+
+      expected_header = [
+        <<1::256>>,
+        <<2::256>>,
+        <<3::160>>,
+        <<4::256>>,
+        <<5::256>>,
+        <<6::256>>,
+        <<>>,
+        5,
+        1,
+        5,
+        3,
+        6,
+        "Hi mom",
+        <<7::256>>,
+        <<8::64>>
+      ]
+
+      expected_txs = [
+        [<<5>>, <<6>>, <<7>>, <<1::160>>, <<8>>, "hi", <<27>>, <<9>>, <<10>>]
+      ]
+
+      expected_ommer_headers = [
+        [
+          <<11::256>>,
+          <<12::256>>,
+          <<13::160>>,
+          <<14::256>>,
+          <<15::256>>,
+          <<16::256>>,
+          <<>>,
+          5,
+          1,
+          5,
+          3,
+          6,
+          "Hi mom",
+          <<17::256>>,
+          <<18::64>>
+        ]
+      ]
+
+      expected = [
+        expected_header,
+        expected_txs,
+        expected_ommer_headers
+      ]
+
+      assert Block.serialize(block) == expected
+    end
+
+    test "serializes an empty block" do
+      expected = [
+        [
+          nil,
+          <<29, 204, 77, 232, 222, 199, 93, 122, 171, 133, 181, 103, 182, 204, 212, 26, 211, 18,
+            69, 27, 148, 138, 116, 19, 240, 161, 66, 253, 64, 212, 147, 71>>,
+          nil,
+          <<86, 232, 31, 23, 27, 204, 85, 166, 255, 131, 69, 230, 146, 192, 248, 110, 91, 72, 224,
+            27, 153, 108, 173, 192, 1, 98, 47, 181, 227, 99, 180, 33>>,
+          <<86, 232, 31, 23, 27, 204, 85, 166, 255, 131, 69, 230, 146, 192, 248, 110, 91, 72, 224,
+            27, 153, 108, 173, 192, 1, 98, 47, 181, 227, 99, 180, 33>>,
+          <<86, 232, 31, 23, 27, 204, 85, 166, 255, 131, 69, 230, 146, 192, 248, 110, 91, 72, 224,
+            27, 153, 108, 173, 192, 1, 98, 47, 181, 227, 99, 180, 33>>,
+          <<0::2048>>,
+          nil,
+          nil,
+          0,
+          0,
+          nil,
+          "",
+          nil,
+          nil
+        ],
+        [],
+        []
+      ]
+
+      assert Block.serialize(%Block{}) == expected
+    end
+  end
+
+  describe "deserialize/1" do
+    test "deserializes an RLP-encoded block" do
+      header_rlp = [
+        <<1::256>>,
+        <<2::256>>,
+        <<3::160>>,
+        <<4::256>>,
+        <<5::256>>,
+        <<6::256>>,
+        <<>>,
+        <<5>>,
+        <<1>>,
+        <<5>>,
+        <<3>>,
+        <<6>>,
+        "Hi mom",
+        <<7::256>>,
+        <<8::64>>
+      ]
+
+      txs_rlp = [[<<5>>, <<6>>, <<7>>, <<1::160>>, <<8>>, "hi", <<27>>, <<9>>, <<10>>]]
+
+      ommer_headers_rlp = [
+        [
+          <<11::256>>,
+          <<12::256>>,
+          <<13::160>>,
+          <<14::256>>,
+          <<15::256>>,
+          <<16::256>>,
+          <<>>,
+          <<5>>,
+          <<1>>,
+          <<5>>,
+          <<3>>,
+          <<6>>,
+          "Hi mom",
+          <<17::256>>,
+          <<18::64>>
+        ]
+      ]
+
+      expected_header = %Header{
+        parent_hash: <<1::256>>,
+        ommers_hash: <<2::256>>,
+        beneficiary: <<3::160>>,
+        state_root: <<4::256>>,
+        transactions_root: <<5::256>>,
+        receipts_root: <<6::256>>,
+        logs_bloom: <<>>,
+        difficulty: 5,
+        number: 1,
+        gas_limit: 5,
+        gas_used: 3,
+        timestamp: 6,
+        extra_data: "Hi mom",
+        mix_hash: <<7::256>>,
+        nonce: <<8::64>>
+      }
+
+      expected_tx = %Transaction{
+        nonce: 5,
+        gas_price: 6,
+        gas_limit: 7,
+        to: <<1::160>>,
+        value: 8,
+        v: 27,
+        r: 9,
+        s: 10,
+        data: "hi"
+      }
+
+      expected_ommer_header = %Header{
+        parent_hash: <<11::256>>,
+        ommers_hash: <<12::256>>,
+        beneficiary: <<13::160>>,
+        state_root: <<14::256>>,
+        transactions_root: <<15::256>>,
+        receipts_root: <<16::256>>,
+        logs_bloom: <<>>,
+        difficulty: 5,
+        number: 1,
+        gas_limit: 5,
+        gas_used: 3,
+        timestamp: 6,
+        extra_data: "Hi mom",
+        mix_hash: <<17::256>>,
+        nonce: <<18::64>>
+      }
+
+      expected = %Block{
+        header: expected_header,
+        transactions: [expected_tx],
+        ommers: [expected_ommer_header]
+      }
+
+      block =
+        Block.deserialize([
+          header_rlp,
+          txs_rlp,
+          ommer_headers_rlp
+        ])
+
+      assert block == expected
     end
   end
 end

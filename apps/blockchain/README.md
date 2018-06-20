@@ -1,10 +1,10 @@
-# Exthereum Blockchain [![CircleCI](https://circleci.com/gh/exthereum/blockchain.svg?style=svg)](https://circleci.com/gh/exthereum/blockchain)
+# Mana blockchain
 
-Elixir implementation of Ethereum's Blockchain.
+Elixir implementation of Ethereum's blockchain.
 This includes functionality to build and verify a chain of Ethereum blocks that may be advertised from any peer.
 We complete the resultant state of the blocktree and form a canonical blockchain based on difficulty.
 
-Exthereum's blocks are specified in a variety of sections throughout [the yellow paper](https://ethereum.github.io/yellowpaper/paper.pdf),
+Mana blocks are specified in a variety of sections throughout [the yellow paper](https://ethereum.github.io/yellowpaper/paper.pdf),
 but it's best to start looking under Section 4.3.
 
 ## Installation
@@ -51,7 +51,7 @@ Enter a debug command or type `h` for help.
 
 ## Contributing
 
-1. [Fork it!](https://github.com/exthereum/blockchain/fork)
+1. [Fork it!](https://github.com/poanetwork/mana/blockchain/fork)
 2. Create your feature branch (`git checkout -b my-new-feature`)
 3. Commit your changes (`git commit -am 'Add some feature'`)
 4. Push to the branch (`git push origin my-new-feature`)
@@ -62,8 +62,10 @@ Enter a debug command or type `h` for help.
 Geoffrey Hayes (@hayesgm)
 Ayrat Badykov (@ayrat555)
 Mason Fischer (@masonforest)
+Vasiliy Yorkin (@vyorkin)
 
 ## License
 
-Exthereum's Blockchain is released under the MIT License.
+Mana blockchain is released under the MIT License.
+Feel free to submit issues, pull requests or fork the code as you wish.
 See the LICENSE file for further details.

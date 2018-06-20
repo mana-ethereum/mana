@@ -9,9 +9,11 @@ defmodule ExthCrypto.Mixfile do
       config_path: "../../config/config.exs",
       deps_path: "../../deps",
       lockfile: "../../mix.lock",
-      description: "Mana's Crypto Suite.",
+      description: "Ethereum's crypto suite",
       package: [
-        maintainers: ["Geoffrey Hayes", "Mason Fischer"]
+        maintainers: ["Geoffrey Hayes", "Ayrat Badykov", "Mason Forest", "Vasiliy Yorkin"],
+        licenses: ["MIT"],
+        links: %{"GitHub" => "https://github.com/poanetwork/mana/apps/exth_crypto"}
       ],
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,

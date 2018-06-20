@@ -4,9 +4,11 @@ defmodule EVM.VM do
   opcodes of a contract during a transfer or message call.
   """
 
+  require Logger
+
   alias EVM.{SubState, MachineCode, MachineState, ExecEnv, Functions, Gas, Operation, Debugger}
 
-  @type output :: binary()
+  @type output :: binary() | :failed
 
   @doc """
   This function computes the Ξ function Eq.(123) of the Section 9.4 of the Yellow Paper.
@@ -90,7 +92,8 @@ defmodule EVM.VM do
       end
 
     case Functions.is_exception_halt?(machine_state, exec_env) do
-      {:halt, _reason} ->
+      {:halt, reason} ->
+        Logger.debug "[EVM] Exceptional halt: #{reason}"
         # We're exception halting, undo it all.
         # Question: should we return the original sub-state?
         {original_machine_state, original_sub_state, original_exec_env, :failed}

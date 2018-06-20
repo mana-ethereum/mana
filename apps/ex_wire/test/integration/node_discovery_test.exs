@@ -8,8 +8,8 @@ defmodule ExWire.NodeDiscoveryTest do
   alias ExWire.Message.FindNeighbours
   alias ExWire.{Network, Config}
 
-  @moduletag integration: true
-  @moduletag network: true
+  @moduletag :integration
+  @moduletag :network
 
   @remote_address System.get_env("REMOTE_TEST_PEER") || ExWire.Config.chain().nodes |> List.last()
   @bootnodes [

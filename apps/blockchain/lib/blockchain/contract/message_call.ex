@@ -5,7 +5,7 @@ defmodule Blockchain.Contract.MessageCall do
   """
 
   alias Blockchain.Interface.{BlockInterface, AccountInterface}
-  alias Block.Header
+  alias EthCore.Block.Header
   alias Blockchain.Account
 
   # σ

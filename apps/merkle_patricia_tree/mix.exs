@@ -11,9 +11,9 @@ defmodule MerklePatriciaTree.Mixfile do
       lockfile: "../../mix.lock",
       description: "Ethereum's Merkle Patricia Trie data structure",
       package: [
-        maintainers: ["Geoffrey Hayes", "Ayrat Badykov", "Mason Forest"],
+        maintainers: ["Geoffrey Hayes", "Ayrat Badykov", "Mason Forest", "Vasiliy Yorkin"],
         licenses: ["MIT"],
-        links: %{"GitHub" => "https://github.com/exthereum/merkle_patricia_tree"}
+        links: %{"GitHub" => "https://github.com/poanetwork/mana/apps/merkle_patricia_tree"}
       ],
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,

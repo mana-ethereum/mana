@@ -3,6 +3,7 @@ defmodule EVM.Gas do
   Functions for interacting wth gas and costs of opscodes.
   """
 
+  alias EthCore.{Config, Math}
   alias EVM.{MachineState, MachineCode, Operation, Address, ExecEnv, Functions}
 
   @type t :: EVM.val()
@@ -151,7 +152,7 @@ defmodule EVM.Gas do
   end
 
   def memory_cost(:extcodecopy, [_address, _code_offset, memory_offset, length], machine_state) do
-    if memory_offset + length > EVM.max_int() do
+    if memory_offset + length > Config.max_int() do
       0
     else
       memory_expansion_cost(machine_state, memory_offset, length)
@@ -250,7 +251,7 @@ defmodule EVM.Gas do
   # Eq. (296)
   def quadratic_memory_cost(a) do
     linear_cost = a * @g_memory
-    quadratic_cost = MathHelper.floor(:math.pow(a, 2) / @g_quad_coeff_div)
+    quadratic_cost = Math.floor(:math.pow(a, 2) / @g_quad_coeff_div)
 
     linear_cost + quadratic_cost
   end
@@ -310,11 +311,11 @@ defmodule EVM.Gas do
   def operation_cost(operation \\ nil, inputs \\ nil, machine_state \\ nil, exec_env \\ nil)
 
   def operation_cost(:exp, [_base, exponent], _machine_state, _exec_env) do
-    @g_exp + @g_expbyte * MathHelper.integer_byte_size(exponent)
+    @g_exp + @g_expbyte * Math.integer_byte_size(exponent)
   end
 
   def operation_cost(:codecopy, [_memory_offset, _code_offset, length], _machine_state, _exec_env) do
-    @g_verylow + @g_copy * MathHelper.bits_to_words(length)
+    @g_verylow + @g_copy * Math.bits_to_words(length)
   end
 
   def operation_cost(
@@ -323,7 +324,7 @@ defmodule EVM.Gas do
         _machine_state,
         _exec_env
       ) do
-    @g_verylow + @g_copy * MathHelper.bits_to_words(length)
+    @g_verylow + @g_copy * Math.bits_to_words(length)
   end
 
   def operation_cost(
@@ -332,11 +333,11 @@ defmodule EVM.Gas do
         _machine_state,
         _exec_env
       ) do
-    @g_extcode + @g_copy * MathHelper.bits_to_words(length)
+    @g_extcode + @g_copy * Math.bits_to_words(length)
   end
 
   def operation_cost(:sha3, [_length, offset], _machine_state, _exec_env) do
-    @g_sha3 + @g_sha3word * MathHelper.bits_to_words(offset)
+    @g_sha3 + @g_sha3word * Math.bits_to_words(offset)
   end
 
   @doc """

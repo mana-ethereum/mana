@@ -5,6 +5,8 @@ defmodule EVM.Helpers do
 
   require Logger
   use Bitwise
+
+  alias EthCore.Config
   alias EVM.Address
 
   @doc """
@@ -47,11 +49,11 @@ defmodule EVM.Helpers do
       iex> EVM.Helpers.wrap_int(1)
       1
 
-      iex> EVM.Helpers.wrap_int(EVM.max_int() + 1)
+      iex> EVM.Helpers.wrap_int(EthCore.Config.max_int() + 1)
       1
   """
   @spec wrap_int(integer()) :: EVM.val()
-  def wrap_int(n) when n > 0, do: band(n, EVM.max_int() - 1)
+  def wrap_int(n) when n > 0, do: band(n, Config.max_int() - 1)
   def wrap_int(n), do: n
 
   @doc """
@@ -87,10 +89,10 @@ defmodule EVM.Helpers do
       1
 
       iex> EVM.Helpers.encode_signed(-1)
-      EVM.max_int() - 1
+      EthCore.Config.max_int() - 1
   """
   @spec encode_signed(integer()) :: EVM.val()
-  def encode_signed(n) when n < 0, do: EVM.max_int() - abs(n)
+  def encode_signed(n) when n < 0, do: Config.max_int() - abs(n)
   def encode_signed(n), do: n
 
   @spec decode_signed(integer() | nil) :: EVM.val() | nil
@@ -106,7 +108,7 @@ defmodule EVM.Helpers do
     if sign == 0 do
       :binary.decode_unsigned(n)
     else
-      :binary.decode_unsigned(n) - EVM.max_int()
+      :binary.decode_unsigned(n) - Config.max_int()
     end
   end
 
@@ -180,7 +182,7 @@ defmodule EVM.Helpers do
       <<1, 2, 3>>
   """
   @spec left_pad_bytes(binary() | integer(), integer()) :: binary()
-  def left_pad_bytes(n, size \\ EVM.word_size())
+  def left_pad_bytes(n, size \\ Config.word_size())
 
   def left_pad_bytes(n, size) when is_integer(n),
     do: left_pad_bytes(:binary.encode_unsigned(n), size)
@@ -188,7 +190,7 @@ defmodule EVM.Helpers do
   def left_pad_bytes(n, size) when size < byte_size(n), do: n
 
   def left_pad_bytes(n, size) do
-    padding_size = (size - byte_size(n)) * EVM.byte_size()
+    padding_size = (size - byte_size(n)) * Config.byte_size()
     <<0::size(padding_size)>> <> n
   end
 
@@ -205,7 +207,7 @@ defmodule EVM.Helpers do
       <<1, 2, 3>>
   """
   @spec right_pad_bytes(binary() | integer(), integer()) :: binary()
-  def right_pad_bytes(n, size \\ EVM.word_size())
+  def right_pad_bytes(n, size \\ Config.word_size())
 
   def right_pad_bytes(n, size) when is_integer(n),
     do: right_pad_bytes(:binary.encode_unsigned(n), size)
@@ -213,7 +215,7 @@ defmodule EVM.Helpers do
   def right_pad_bytes(n, size) when size < byte_size(n), do: n
 
   def right_pad_bytes(n, size) do
-    padding_size = (size - byte_size(n)) * EVM.byte_size()
+    padding_size = (size - byte_size(n)) * Config.byte_size()
     n <> <<0::size(padding_size)>>
   end
 

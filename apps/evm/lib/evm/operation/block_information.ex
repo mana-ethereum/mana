@@ -9,9 +9,9 @@ defmodule EVM.Operation.BlockInformation do
 
   ## Examples
 
-      iex> block_b = %Block.Header{number: 2, mix_hash: "block_b"}
-      iex> block_a = %Block.Header{number: 1, mix_hash: "block_a"}
-      iex> genesis_block = %Block.Header{number: 0, mix_hash: <<0x00::256>>}
+      iex> block_b = %EthCore.Block.Header{number: 2, mix_hash: "block_b"}
+      iex> block_a = %EthCore.Block.Header{number: 1, mix_hash: "block_a"}
+      iex> genesis_block = %EthCore.Block.Header{number: 0, mix_hash: <<0x00::256>>}
       iex> block_map = %{<<0x00::256>> => genesis_block, "block_a" => block_a, "block_b" => block_b}
       iex> block_interface = EVM.Interface.Mock.MockBlockInterface.new(block_b, block_map)
       iex> exec_env = %EVM.ExecEnv{block_interface: block_interface}
@@ -43,7 +43,7 @@ defmodule EVM.Operation.BlockInformation do
 
   ## Examples
 
-      iex> block_interface = EVM.Interface.Mock.MockBlockInterface.new(%Block.Header{beneficiary: <<0x55::160>>})
+      iex> block_interface = EVM.Interface.Mock.MockBlockInterface.new(%EthCore.Block.Header{beneficiary: <<0x55::160>>})
       iex> exec_env = %EVM.ExecEnv{block_interface: block_interface}
       iex> EVM.Operation.BlockInformation.coinbase([], %{exec_env: exec_env})
       <<0x55::160>>
@@ -60,7 +60,7 @@ defmodule EVM.Operation.BlockInformation do
 
   ## Examples
 
-      iex> block_interface = EVM.Interface.Mock.MockBlockInterface.new(%Block.Header{timestamp: 1_000_000})
+      iex> block_interface = EVM.Interface.Mock.MockBlockInterface.new(%EthCore.Block.Header{timestamp: 1_000_000})
       iex> exec_env = %EVM.ExecEnv{block_interface: block_interface}
       iex> EVM.Operation.BlockInformation.timestamp([], %{exec_env: exec_env})
       1_000_000
@@ -77,7 +77,7 @@ defmodule EVM.Operation.BlockInformation do
 
   ## Examples
 
-      iex> block_interface = EVM.Interface.Mock.MockBlockInterface.new(%Block.Header{number: 1_500_000})
+      iex> block_interface = EVM.Interface.Mock.MockBlockInterface.new(%EthCore.Block.Header{number: 1_500_000})
       iex> exec_env = %EVM.ExecEnv{block_interface: block_interface}
       iex> EVM.Operation.BlockInformation.number([], %{exec_env: exec_env})
       1_500_000
@@ -94,7 +94,7 @@ defmodule EVM.Operation.BlockInformation do
 
   ## Examples
 
-      iex> block_interface = EVM.Interface.Mock.MockBlockInterface.new(%Block.Header{difficulty: 2_000_000})
+      iex> block_interface = EVM.Interface.Mock.MockBlockInterface.new(%EthCore.Block.Header{difficulty: 2_000_000})
       iex> exec_env = %EVM.ExecEnv{block_interface: block_interface}
       iex> EVM.Operation.BlockInformation.difficulty([], %{exec_env: exec_env})
       2_000_000
@@ -111,7 +111,7 @@ defmodule EVM.Operation.BlockInformation do
 
   ## Examples
 
-      iex> block_interface = EVM.Interface.Mock.MockBlockInterface.new(%Block.Header{gas_limit: 3_000_000})
+      iex> block_interface = EVM.Interface.Mock.MockBlockInterface.new(%EthCore.Block.Header{gas_limit: 3_000_000})
       iex> exec_env = %EVM.ExecEnv{block_interface: block_interface}
       iex> EVM.Operation.BlockInformation.gaslimit([], %{exec_env: exec_env})
       3_000_000

@@ -2,7 +2,7 @@ defmodule EVM.Operation.Push do
   alias EVM.Operation
 
   @doc """
-  Place n-byte item on stack
+  Place n-byte item on stack.
 
   ## Examples
 

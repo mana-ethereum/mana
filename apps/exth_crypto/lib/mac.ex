@@ -1,7 +1,7 @@
 defmodule ExthCrypto.MAC do
   @moduledoc """
   Wrapper for erlang's built-in HMAC (Hash-based Message Authentication Code)
-  and CMAC (Cipher-based Message Authentication Code) routines, to be used for Exthereum.
+  and CMAC (Cipher-based Message Authentication Code) routines.
   """
 
   alias ExthCrypto.Hash

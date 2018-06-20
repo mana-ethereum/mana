@@ -4,7 +4,11 @@ defmodule EVM.Operation do
   operations from opcodes.
   """
 
-  alias MathHelper
+  use Bitwise
+
+  require Logger
+
+  alias EthCore.Math
   alias EVM.{Helpers, ExecEnv, MachineState, Stack, SubState}
   alias EVM.Operation.Metadata.StopAndArithmetic, as: StopAndArithmeticMetadata
   alias EVM.Operation.Metadata.ComparisonAndBitwiseLogic, as: ComparisonAndBitwiseLogicMetadata
@@ -17,10 +21,6 @@ defmodule EVM.Operation do
   alias EVM.Operation.Metadata.Exchange, as: ExchangeMetadata
   alias EVM.Operation.Metadata.Logging, as: LoggingMetadata
   alias EVM.Operation.Metadata.System, as: SystemMetadata
-
-  use Bitwise
-
-  require Logger
 
   @type operation :: atom()
   @type opcode :: byte()

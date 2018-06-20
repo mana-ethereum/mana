@@ -9,11 +9,11 @@ defmodule EVM.Mixfile do
       config_path: "../../config/config.exs",
       deps_path: "../../deps",
       lockfile: "../../mix.lock",
-      description: "Ethereum's Virtual Machine, in all its glory.",
+      description: "Ethereum's virtual machine, in all its glory",
       package: [
-        maintainers: ["Geoffrey Hayes", "Ayrat Badykov", "Mason Forest"],
+        maintainers: ["Geoffrey Hayes", "Ayrat Badykov", "Mason Forest", "Vasiliy Yorkin"],
         licenses: ["MIT"],
-        links: %{"GitHub" => "https://github.com/exthereum/evm"}
+        links: %{"GitHub" => "https://github.com/poanetwork/mana/apps/evm"}
       ],
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
@@ -49,6 +49,7 @@ defmodule EVM.Mixfile do
       {:poison, "~> 3.1.0", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.14", only: :dev, runtime: false},
       {:merkle_patricia_tree, in_umbrella: true},
+      {:eth_core, in_umbrella: true},
       {:exth_crypto, in_umbrella: true},
       {:ex_rlp, "~> 0.3.0"},
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false}
