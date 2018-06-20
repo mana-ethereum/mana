@@ -28,7 +28,7 @@ defmodule EVM.RefundsTest do
       address => %{
         balance: 0,
         nonce: 0,
-        storage: %{},
+        storage: %{5 => 3},
         code: ""
       }
     }

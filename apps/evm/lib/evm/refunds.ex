@@ -75,12 +75,16 @@ defmodule EVM.Refunds do
 
   # `SSTORE` operations produce a refund when storage is set to zero from some non-zero value.
   def refund(:sstore, [key, new_value], _machine_state, _sub_state, exec_env) do
-    old_value = ExecEnv.get_storage(exec_env, key)
+    case ExecEnv.get_storage(exec_env, key) do
+      {:ok, value} ->
+        if value != 0 && new_value == 0 do
+          @storage_refund
+        else
+          0
+        end
 
-    if old_value != 0 && new_value == 0 do
-      @storage_refund
-    else
-      0
+      _ ->
+        0
     end
   end
 
