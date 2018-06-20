@@ -205,7 +205,7 @@ defmodule Blockchain.Chain do
 
   @spec chain_filename(atom()) :: String.t()
   defp chain_filename(chain) do
-    "../../chains/#{Atom.to_string(chain)}.json"
+    Path.expand("../../../../chains/#{Atom.to_string(chain)}.json", __DIR__)
   end
 
   @spec load_raw_hex(String.t() | nil) :: binary()
