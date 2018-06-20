@@ -136,9 +136,13 @@ defmodule EVM.Operation.StackMemoryStorageAndFlow do
   """
   @spec sstore(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def sstore([key, value], %{exec_env: exec_env}) do
-    exec_env = ExecEnv.put_storage(exec_env, key, value)
+    if value == 0 do
+      %{exec_env: exec_env}
+    else
+      exec_env = ExecEnv.put_storage(exec_env, key, value)
 
-    %{exec_env: exec_env}
+      %{exec_env: exec_env}
+    end
   end
 
   @doc """
