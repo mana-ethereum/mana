@@ -131,7 +131,7 @@ defmodule EVM.Operation.StackMemoryStorageAndFlow do
       iex> address = 0x0000000000000000000000000000000000000001
       iex> account_interface = EVM.Interface.Mock.MockAccountInterface.new()
       iex> EVM.Operation.StackMemoryStorageAndFlow.sstore([0x0, 0x0], %{exec_env: %EVM.ExecEnv{address: address, account_interface: account_interface}})[:exec_env].account_interface |> EVM.Interface.AccountInterface.dump_storage()
-      %{1 => %{}}
+      %{}
 
   """
   @spec sstore(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
