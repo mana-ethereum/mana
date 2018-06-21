@@ -2431,7 +2431,8 @@ defmodule Blockchain.StateTest do
 
   test "Blockchain state tests" do
     for test_group_name <- Map.keys(@passing_tests_by_group) do
-      for {_test_name, test} <- passing_tests(test_group_name) do
+      for {test_name, test} <- passing_tests(test_group_name) do
+        IO.puts "\n#{test_group_name}, #{test_name}\n"
         state = account_interface(test).state
 
         transaction =
@@ -2445,10 +2446,14 @@ defmodule Blockchain.StateTest do
           }
           |> Transaction.Signature.sign_transaction(maybe_hex(test["transaction"]["secretKey"]))
 
+        header = %Header{
+          beneficiary: maybe_hex(test["env"]["currentCoinbase"]),
+          number: load_integer(test["env"]["currentNumber"]),
+          gas_limit: load_integer(test["env"]["currentGasLimit"])
+        }
+
         {state, _, _} =
-          Transaction.execute(state, transaction, %Header{
-            beneficiary: maybe_hex(test["env"]["currentCoinbase"])
-          })
+          Transaction.execute(state, transaction, header)
 
         expected_hash =
           test["post"]["Frontier"]

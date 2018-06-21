@@ -34,11 +34,22 @@ defmodule Blockchain.Transaction.Validation do
     v_0 = tx.gas_limit * tx.gas_price + tx.value
 
     cond do
-      sender.nonce != tx.nonce -> {:invalid, :nonce_mismatch}
-      g_0 > tx.gas_limit -> {:invalid, :insufficient_intrinsic_gas}
-      v_0 > sender.balance -> {:invalid, :insufficient_balance}
-      tx.gas_limit > Header.available_gas(header) -> {:invalid, :over_gas_limit}
-      true -> :valid
+      sender.nonce != tx.nonce ->
+        {:invalid, :nonce_mismatch}
+
+      g_0 > tx.gas_limit ->
+        {:invalid, :insufficient_intrinsic_gas}
+
+      v_0 > sender.balance ->
+        {:invalid, :insufficient_balance}
+
+      tx.gas_limit > Header.available_gas(header) ->
+        IO.puts "gas limit: #{tx.gas_limit}"
+        IO.puts "available gas: #{Header.available_gas(header)}"
+        {:invalid, :over_gas_limit}
+
+      true ->
+        :valid
     end
   end
 end

@@ -118,7 +118,7 @@ defmodule Blockchain.BlockTest do
 
   test "match genesis block on ropsten" do
     db = MerklePatriciaTree.Test.random_ets_db()
-    chain = Blockchain.Chain.load_chain(:ropsten)
+    chain = Chain.load_chain(:ropsten)
 
     block =
       Genesis.new_block(chain, db)
@@ -129,7 +129,7 @@ defmodule Blockchain.BlockTest do
     block = %{block | block_hash: Block.hash(block)}
 
     assert block ==
-             %Blockchain.Block{
+             %Block{
                block_hash:
                  <<65, 148, 16, 35, 104, 9, 35, 224, 254, 77, 116, 163, 75, 218, 200, 20, 31, 37,
                    64, 227, 174, 144, 98, 55, 24, 228, 125, 102, 209, 202, 74, 45>>,
@@ -169,7 +169,7 @@ defmodule Blockchain.BlockTest do
 
   test "assert fully valid genesis block on ropsten" do
     db = MerklePatriciaTree.Test.random_ets_db()
-    chain = Blockchain.Chain.load_chain(:ropsten)
+    chain = Chain.load_chain(:ropsten)
 
     result =
       Genesis.new_block(chain, db)
@@ -228,7 +228,8 @@ defmodule Blockchain.BlockTest do
 
       block_header = %Header{
         state_root: state.root_hash,
-        beneficiary: beneficiary
+        beneficiary: beneficiary,
+        gas_limit: 100_000
       }
 
       block = %Block{header: block_header, transactions: []}
@@ -270,9 +271,9 @@ defmodule Blockchain.BlockTest do
         |> Account.get_accounts(addresses)
 
       expected_accounts = [
-        %Blockchain.Account{balance: 238_655, nonce: 6},
-        %Blockchain.Account{balance: 161_340},
-        %Blockchain.Account{
+        %Account{balance: 238_655, nonce: 6},
+        %Account{balance: 161_340},
+        %Account{
           balance: 5,
           nonce: 1,
           code_hash:

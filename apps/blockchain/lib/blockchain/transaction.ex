@@ -120,14 +120,14 @@ defmodule Blockchain.Transaction do
   """
   @spec execute(EVM.state(), t, Header.t()) :: {EVM.state(), Gas.t(), EVM.SubState.logs()}
   def execute(state, tx, header) do
-    # case Validation.validate(state, tx, header) do
-    #   :valid ->
-    do_execute(state, tx, header)
+    case Validation.validate(state, tx, header) do
+      :valid ->
+        do_execute(state, tx, header)
 
-    #   {:invalid, error} ->
-    #     Logger.debug("Invalid transaction: #{error}")
-    #    {state, 0, []}
-    # end
+      {:invalid, error} ->
+        Logger.debug("Invalid transaction: #{error}")
+       {state, 0, []}
+    end
   end
 
   defp do_execute(state, tx, header) do

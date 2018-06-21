@@ -123,7 +123,7 @@ defmodule Blockchain.TransactionTest do
         MerklePatriciaTree.Test.random_ets_db()
         |> Trie.new()
         |> Account.put_account(sender_address, sender_account)
-        |> Transaction.execute(tx, %Header{beneficiary: beneficiary_address})
+        |> Transaction.execute(tx, %Header{beneficiary: beneficiary_address, gas_limit: 100_000})
 
       expected_sender = %Account{balance: 240_983, nonce: 6}
       expected_beneficiary = %Account{balance: 159_012}
@@ -259,7 +259,7 @@ defmodule Blockchain.TransactionTest do
       {state, gas, logs} =
         Trie.new(MerklePatriciaTree.Test.random_ets_db())
         |> Account.put_account(sender, %Account{balance: 400_000, nonce: 5})
-        |> Transaction.execute(tx, %Header{beneficiary: beneficiary})
+        |> Transaction.execute(tx, %Header{beneficiary: beneficiary, gas_limit: 100_000})
 
       assert gas == 53780
       assert logs == []
@@ -327,7 +327,7 @@ defmodule Blockchain.TransactionTest do
         |> Trie.new()
         |> Account.put_account(sender, %Account{balance: 400_000, nonce: 5})
         |> Account.put_code(contract_address, machine_code)
-        |> Transaction.execute(tx, %Header{beneficiary: beneficiary})
+        |> Transaction.execute(tx, %Header{beneficiary: beneficiary, gas_limit: 100_000})
 
       assert gas == 21780
       assert logs == []
