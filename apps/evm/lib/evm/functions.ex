@@ -120,10 +120,7 @@ defmodule EVM.Functions do
       length(machine_state.stack) < input_count ->
         {:halt, :stack_underflow}
 
-      nested_operation_gas_overflow?(operation_metadata.sym, Gas.cost(machine_state, exec_env), inputs) ->
-        {:halt, :out_of_gas}
-
-      Gas.cost(machine_state, exec_env) > machine_state.gas ->
+      not_enough_gas?(machine_state, exec_env, operation_metadata, inputs) ->
         {:halt, :out_of_gas}
 
       Stack.length(machine_state.stack) - input_count + output_count > @max_stack ->
@@ -135,6 +132,13 @@ defmodule EVM.Functions do
       true ->
         :continue
     end
+  end
+
+  @spec not_enough_gas?(MachineState.t(), ExecEnv.t(), Metadata.t(), [EVM.val()]) :: boolean()
+  defp not_enough_gas?(machine_state, exec_env, metadata, inputs) do
+    cost = Gas.cost(machine_state, exec_env)
+
+    cost > machine_state.gas || nested_operation_gas_overflow?(metadata.sym, cost, inputs)
   end
 
   @spec nested_operation_gas_overflow?(atom(), integer(), [EVM.val()]) :: boolean()
