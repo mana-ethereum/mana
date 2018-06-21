@@ -1948,7 +1948,7 @@ defmodule Blockchain.StateTest do
       "CallRecursiveBomb0",
       "CallRecursiveBomb0_OOG_atMaxCallDepth",
       "CallRecursiveBomb1",
-      # "CallRecursiveBomb2",
+      "CallRecursiveBomb2",
       # "CallRecursiveBomb3",
       "CallRecursiveBombLog",
       "CallRecursiveBombLog2",
