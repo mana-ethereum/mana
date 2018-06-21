@@ -36,7 +36,7 @@ defmodule EVM.Operation.StopAndArithmetic do
       0
   """
   @spec add(Operation.stack_args(), Operation.vm_map()) :: EVM.val()
-  def add([s0, s1], _), do: s0 + s1
+  def add([s0, s1], _), do: MathHelper.handle_overflow(s0 + s1)
 
   @doc """
   Multiplication operation.
@@ -50,7 +50,7 @@ defmodule EVM.Operation.StopAndArithmetic do
       -10
   """
   @spec mul(Operation.stack_args(), Operation.vm_map()) :: EVM.val()
-  def mul([s0, s1], _), do: s0 * s1
+  def mul([s0, s1], _), do: MathHelper.handle_overflow(s0 * s1)
 
   @doc """
   Subtraction operation.
@@ -64,7 +64,7 @@ defmodule EVM.Operation.StopAndArithmetic do
       -6
   """
   @spec sub(Operation.stack_args(), Operation.vm_map()) :: EVM.val()
-  def sub([s0, s1], _), do: s0 - s1
+  def sub([s0, s1], _), do: MathHelper.handle_overflow(s0 - s1)
 
   @doc """
   Integer division operation.

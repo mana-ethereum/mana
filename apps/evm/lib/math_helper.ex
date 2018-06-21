@@ -4,6 +4,8 @@ defmodule MathHelper do
   math functions.
   """
 
+  @max_int (2 |> :math.pow(256) |> round) - 1
+
   @doc """
   Simple floor function that makes sure
   we return an integer type.
@@ -96,4 +98,19 @@ defmodule MathHelper do
   """
   @spec bits_to_words(number()) :: number()
   def bits_to_words(n), do: round(:math.ceil(n / EVM.word_size()))
+
+  @doc """
+  Returns by max int modulus.
+
+  ## Examples
+
+      iex> MathHelper.handle_overflow(1)
+      1
+
+      iex> number = :math.pow(2, 256) |> round
+      iex> MathHelper.handle_overflow(number)
+      1
+  """
+  @spec handle_overflow(integer()) :: integer()
+  def handle_overflow(number), do: rem(number, @max_int)
 end
