@@ -110,8 +110,6 @@ defmodule EVM.Functions do
         Operation.inputs(operation_metadata, machine_state)
       end
 
-    cost = Gas.cost(machine_state, exec_env)
-
     cond do
       is_invalid_instruction?(operation_metadata) ->
         {:halt, :invalid_instruction}
@@ -122,10 +120,10 @@ defmodule EVM.Functions do
       length(machine_state.stack) < input_count ->
         {:halt, :stack_underflow}
 
-      nested_operation_gas_overflow?(operation_metadata.sym, cost, inputs) ->
+      nested_operation_gas_overflow?(operation_metadata.sym, Gas.cost(machine_state, exec_env), inputs) ->
         {:halt, :out_of_gas}
 
-      cost > machine_state.gas ->
+      Gas.cost(machine_state, exec_env) > machine_state.gas ->
         {:halt, :out_of_gas}
 
       Stack.length(machine_state.stack) - input_count + output_count > @max_stack ->
