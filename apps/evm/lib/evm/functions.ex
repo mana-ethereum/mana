@@ -8,6 +8,7 @@ defmodule EVM.Functions do
   alias EVM.Operation.Metadata
 
   @max_stack 1024
+  @max_int (2 |> :math.pow(256) |> round) - 1
 
   def max_stack_depth, do: @max_stack
 
@@ -109,6 +110,8 @@ defmodule EVM.Functions do
         Operation.inputs(operation_metadata, machine_state)
       end
 
+    cost = Gas.cost(machine_state, exec_env)
+
     cond do
       is_invalid_instruction?(operation_metadata) ->
         {:halt, :invalid_instruction}
@@ -119,7 +122,10 @@ defmodule EVM.Functions do
       length(machine_state.stack) < input_count ->
         {:halt, :stack_underflow}
 
-      Gas.cost(machine_state, exec_env) > machine_state.gas ->
+      nested_operation_gas_overflow?(operation_metadata.sym, cost, inputs) ->
+        {:halt, :out_of_gas}
+
+      cost > machine_state.gas ->
         {:halt, :out_of_gas}
 
       Stack.length(machine_state.stack) - input_count + output_count > @max_stack ->
@@ -131,6 +137,19 @@ defmodule EVM.Functions do
       true ->
         :continue
     end
+  end
+
+  @spec nested_operation_gas_overflow?(atom(), integer(), [EVM.val()]) :: boolean()
+  defp nested_operation_gas_overflow?(:call, cost, [call_gas, _, _, _, _, _, _]) do
+    call_gas + cost > @max_int
+  end
+
+  defp nested_operation_gas_overflow?(:callcode, cost, [call_gas, _, _, _, _, _, _]) do
+    call_gas + cost > @max_int
+  end
+
+  defp nested_operation_gas_overflow?(_, _, _) do
+    false
   end
 
   @spec is_invalid_instruction?(Metadata.t()) :: boolean()
