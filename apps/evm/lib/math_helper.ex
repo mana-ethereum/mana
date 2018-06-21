@@ -4,6 +4,8 @@ defmodule MathHelper do
   math functions.
   """
 
+  use Bitwise
+
   @max_int (2 |> :math.pow(256) |> round) - 1
 
   @doc """
@@ -112,5 +114,5 @@ defmodule MathHelper do
       1
   """
   @spec handle_overflow(integer()) :: integer()
-  def handle_overflow(number), do: rem(number, @max_int)
+  def handle_overflow(number), do: number &&& @max_int
 end
