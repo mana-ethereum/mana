@@ -41,12 +41,16 @@ defmodule Blockchain.Account.Storage do
   def encode_value(nil), do: nil
   def encode_value(value), do: ExRLP.encode(value)
 
-  def dump(db, root) do
-    Trie.new(db, root)
+  def dump(state) do
+    state
     |> Trie.Inspector.all_values()
-    |> Enum.map(fn {k, v} ->
-      {BitHelper.decode_unsigned(k), BitHelper.decode_unsigned(v)}
+    |> Enum.map(fn {key, value} ->
+      k = BitHelper.decode_unsigned(key)
+      v = BitHelper.decode_unsigned(value)
+      {k, v}
     end)
-    |> Enum.into(%{})
+    |> Enum.each(fn {key, value} ->
+      IO.puts("#{key}: #{value}")
+    end)
   end
 end

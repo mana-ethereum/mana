@@ -210,8 +210,7 @@ defmodule EthCore.Block.Header do
 
   @doc """
   Returns true if the block header is valid.
-  This defines Eq.(50) of the Yellow Paper,
-  commonly referred to as V(H).
+  This defines Eq.(50) of the Yellow Paper, commonly referred to as V(H).
 
   # TODO: Add proof of work check
 
@@ -266,9 +265,8 @@ defmodule EthCore.Block.Header do
   end
 
   @doc """
-  Returns the total available gas left for all transactions in
-  this block. This is the total gas limit minus the gas used
-  in transactions.
+  Returns the total available gas left for all transactions in this block.
+  This is the total gas limit minus the gas used in transactions.
 
   ## Examples
 

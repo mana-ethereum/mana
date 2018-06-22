@@ -258,10 +258,9 @@ defmodule Blockchain.Transaction do
   end
 
   @doc """
-  Defines the "intrinsic gas cost," that is the amount of gas
-  this transaction requires to be paid prior to execution. This
-  is defined as g_0 in Eq.(54), Eq.(55) and Eq.(56) of the
-  Yellow Paper.
+  Defines the "intrinsic gas cost" that is the amount of gas
+  this transaction requires to be paid prior to execution.
+  This is defined as g_0 in Eq.(54), Eq.(55) and Eq.(56) of the Yellow Paper.
 
   ## Examples
 
