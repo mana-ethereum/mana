@@ -355,7 +355,7 @@ defmodule EVM.Gas do
   def operation_cost(:sstore, params = [key, new_value], _machine_state, exec_env) do
     case ExecEnv.get_storage(exec_env, key) do
       :account_not_found ->
-        @g_sreset
+        @g_sset
 
       :key_not_found ->
         if new_value != 0 do

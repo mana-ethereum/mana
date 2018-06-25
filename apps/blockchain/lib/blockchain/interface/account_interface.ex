@@ -206,9 +206,13 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
   @spec put_storage(EVM.Interface.AccountInterface.t(), EVM.address(), integer(), integer()) ::
           EVM.Interface.AccountInterface.t()
   def put_storage(account_interface, address, key, value) do
-    updated_state = Account.put_storage(account_interface.state, address, key, value)
+    if Account.get_account(account_interface.state, address) do
+      updated_state = Account.put_storage(account_interface.state, address, key, value)
 
-    %{account_interface | state: updated_state}
+      %{account_interface | state: updated_state}
+    else
+      account_interface
+    end
   end
 
   @doc """
