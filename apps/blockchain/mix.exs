@@ -9,11 +9,11 @@ defmodule Blockchain.Mixfile do
       config_path: "../../config/config.exs",
       deps_path: "../../deps",
       lockfile: "../../mix.lock",
-      description: "Ethereum's Blockchain Manager",
+      description: "Ethereum's blockchain manager",
       package: [
-        maintainers: ["Geoffrey Hayes", "Ayrat Badykov", "Mason Forest"],
+        maintainers: ["Geoffrey Hayes", "Ayrat Badykov", "Mason Forest", "Vasiliy Yorkin"],
         licenses: ["MIT"],
-        links: %{"GitHub" => "https://github.com/exthereum/blockchain"}
+        links: %{"GitHub" => "https://github.com/poanetwork/mana/apps/blockchain"}
       ],
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
@@ -51,6 +51,7 @@ defmodule Blockchain.Mixfile do
       {:poison, "~> 3.1.0"},
       {:exth_crypto, in_umbrella: true},
       {:merkle_patricia_tree, in_umbrella: true},
+      {:eth_core, in_umbrella: true},
       {:evm, in_umbrella: true}
     ]
   end

@@ -2,6 +2,7 @@ defmodule EvmTest do
   import ExthCrypto.Math, only: [hex_to_bin: 1, hex_to_int: 1]
 
   alias ExthCrypto.Hash.Keccak
+  alias EthCore.Block.Header
   alias EVM.Interface.Mock.{MockAccountInterface, MockBlockInterface}
 
   use ExUnit.Case, async: true
@@ -132,27 +133,20 @@ defmodule EvmTest do
   end
 
   def block_interface(test) do
-    genisis_block_header = %Block.Header{
-      number: 0,
-      mix_hash: 0
-    }
-
-    first_block_header = %Block.Header{
+    genisis_block_header = %Header{number: 0, mix_hash: 0}
+    first_block_header = %Header{
       number: 1,
       mix_hash: 0xC89EFDAA54C0F20C7ADF612882DF0950F5A951637E0307CDCB4C672F298B8BC6
     }
-
-    second_block_header = %Block.Header{
+    second_block_header = %Header{
       number: 2,
       mix_hash: 0xAD7C5BEF027816A800DA1736444FB58A807EF4C9603B7848673F7E3A68EB14A5
     }
-
-    parent_block_header = %Block.Header{
+    parent_block_header = %Header{
       number: hex_to_int(test["env"]["currentNumber"]) - 1,
       mix_hash: 0x6CA54DA2C4784EA43FD88B3402DE07AE4BCED597CBB19F323B7595857A6720AE
     }
-
-    last_block_header = %Block.Header{
+    last_block_header = %Header{
       number: hex_to_int(test["env"]["currentNumber"]),
       timestamp: hex_to_int(test["env"]["currentTimestamp"]),
       beneficiary: hex_to_bin(test["env"]["currentCoinbase"]),
@@ -170,10 +164,7 @@ defmodule EvmTest do
       last_block_header.mix_hash => last_block_header
     }
 
-    MockBlockInterface.new(
-      last_block_header,
-      block_map
-    )
+    MockBlockInterface.new(last_block_header, block_map)
   end
 
   def passing_tests(test_group_name) do

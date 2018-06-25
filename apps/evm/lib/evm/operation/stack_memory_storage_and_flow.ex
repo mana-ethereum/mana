@@ -1,8 +1,8 @@
 defmodule EVM.Operation.StackMemoryStorageAndFlow do
-  alias EVM.{Helpers, Memory, Stack, ExecEnv, Operation}
-  alias MathHelper
-
   use Bitwise
+
+  alias EthCore.Config
+  alias EVM.{Helpers, Memory, Stack, ExecEnv, Operation}
 
   @doc """
   Remove item from stack.
@@ -34,7 +34,7 @@ defmodule EVM.Operation.StackMemoryStorageAndFlow do
   """
   @spec mload(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def mload([offset], %{machine_state: machine_state}) do
-    {value, machine_state} = EVM.Memory.read(machine_state, offset, 32)
+    {value, machine_state} = Memory.read(machine_state, offset, 32)
 
     %{machine_state | stack: Stack.push(machine_state.stack, :binary.decode_unsigned(value))}
   end
@@ -55,7 +55,7 @@ defmodule EVM.Operation.StackMemoryStorageAndFlow do
   """
   @spec mstore(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def mstore([offset, value], %{machine_state: machine_state}) do
-    machine_state = EVM.Memory.write(machine_state, offset, Helpers.left_pad_bytes(value))
+    machine_state = Memory.write(machine_state, offset, Helpers.left_pad_bytes(value))
 
     %{machine_state: machine_state}
   end
@@ -65,7 +65,7 @@ defmodule EVM.Operation.StackMemoryStorageAndFlow do
   """
   @spec mstore8(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def mstore8([offset, value], %{machine_state: machine_state}) do
-    machine_state = Memory.write(machine_state, offset, value, EVM.byte_size())
+    machine_state = Memory.write(machine_state, offset, value, Config.byte_size())
 
     %{machine_state: machine_state}
   end
@@ -119,7 +119,6 @@ defmodule EVM.Operation.StackMemoryStorageAndFlow do
 
   ## Examples
 
-
       iex> address = 0x0000000000000000000000000000000000000001
       iex> key = 0x11223344556677889900
       iex> value = 0x111222333444555
@@ -132,7 +131,6 @@ defmodule EVM.Operation.StackMemoryStorageAndFlow do
       iex> account_interface = EVM.Interface.Mock.MockAccountInterface.new()
       iex> EVM.Operation.StackMemoryStorageAndFlow.sstore([0x0, 0x0], %{exec_env: %EVM.ExecEnv{address: address, account_interface: account_interface}})[:exec_env].account_interface |> EVM.Interface.AccountInterface.dump_storage()
       %{}
-
   """
   @spec sstore(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def sstore([key, value], %{exec_env: exec_env}) do
@@ -147,7 +145,6 @@ defmodule EVM.Operation.StackMemoryStorageAndFlow do
 
   @doc """
   Jumps are handled by `EVM.ProgramCounter.next`. This is a noop.
-
   """
   @spec jump(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def jump(_args, _vm_map) do
@@ -156,7 +153,6 @@ defmodule EVM.Operation.StackMemoryStorageAndFlow do
 
   @doc """
   Jumps are handled by `EVM.ProgramCounter.next`. This is a noop.
-
   """
   @spec jumpi(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def jumpi(_args, _vm_map) do
@@ -165,7 +161,6 @@ defmodule EVM.Operation.StackMemoryStorageAndFlow do
 
   @doc """
   Get the value of the program counter prior to the increment corresponding to this instruction.
-
 
   ## Examples
 
@@ -187,7 +182,7 @@ defmodule EVM.Operation.StackMemoryStorageAndFlow do
   """
   @spec msize(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def msize(_args, %{machine_state: %{active_words: active_words}}) do
-    active_words * EVM.word_size()
+    active_words * Config.word_size()
   end
 
   @doc """
@@ -214,7 +209,5 @@ defmodule EVM.Operation.StackMemoryStorageAndFlow do
       :noop
   """
   @spec jumpdest(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
-  def jumpdest(_args, %{}) do
-    :noop
-  end
+  def jumpdest(_args, %{}), do: :noop
 end

@@ -14,15 +14,13 @@ defmodule ExWire.Packet.BlockHeaders do
 
   require Logger
 
+  alias EthCore.Block.Header
+
   @behaviour ExWire.Packet
 
-  @type t :: %__MODULE__{
-          headers: [Block.Header.t()]
-        }
+  @type t :: %__MODULE__{headers: [Header.t()]}
 
-  defstruct [
-    :headers
-  ]
+  defstruct [:headers]
 
   @doc """
   Given a BlockHeaders packet, serializes for transport over Eth Wire Protocol.
@@ -31,7 +29,7 @@ defmodule ExWire.Packet.BlockHeaders do
 
       iex> %ExWire.Packet.BlockHeaders{
       ...>   headers: [
-      ...>     %Block.Header{parent_hash: <<1::256>>, ommers_hash: <<2::256>>, beneficiary: <<3::160>>, state_root: <<4::256>>, transactions_root: <<5::256>>, receipts_root: <<6::256>>, logs_bloom: <<>>, difficulty: 5, number: 1, gas_limit: 5, gas_used: 3, timestamp: 6, extra_data: "Hi mom", mix_hash: <<7::256>>, nonce: <<8::64>>}
+      ...>     %EthCore.Block.Header{parent_hash: <<1::256>>, ommers_hash: <<2::256>>, beneficiary: <<3::160>>, state_root: <<4::256>>, transactions_root: <<5::256>>, receipts_root: <<6::256>>, logs_bloom: <<>>, difficulty: 5, number: 1, gas_limit: 5, gas_used: 3, timestamp: 6, extra_data: "Hi mom", mix_hash: <<7::256>>, nonce: <<8::64>>}
       ...>   ]
       ...> }
       ...> |> ExWire.Packet.BlockHeaders.serialize
@@ -39,7 +37,7 @@ defmodule ExWire.Packet.BlockHeaders do
   """
   @spec serialize(t) :: ExRLP.t()
   def serialize(packet = %__MODULE__{}) do
-    for header <- packet.headers, do: Block.Header.serialize(header)
+    for header <- packet.headers, do: Header.serialize(header)
   end
 
   @doc """
@@ -51,13 +49,13 @@ defmodule ExWire.Packet.BlockHeaders do
       iex> ExWire.Packet.BlockHeaders.deserialize([ [<<1::256>>, <<2::256>>, <<3::160>>, <<4::256>>, <<5::256>>, <<6::256>>, <<>>, <<5>>, <<1>>, <<5>>, <<3>>, <<6>>, "Hi mom", <<7::256>>, <<8::64>>] ])
       %ExWire.Packet.BlockHeaders{
         headers: [
-          %Block.Header{parent_hash: <<1::256>>, ommers_hash: <<2::256>>, beneficiary: <<3::160>>, state_root: <<4::256>>, transactions_root: <<5::256>>, receipts_root: <<6::256>>, logs_bloom: <<>>, difficulty: 5, number: 1, gas_limit: 5, gas_used: 3, timestamp: 6, extra_data: "Hi mom", mix_hash: <<7::256>>, nonce: <<8::64>>},
+          %EthCore.Block.Header{parent_hash: <<1::256>>, ommers_hash: <<2::256>>, beneficiary: <<3::160>>, state_root: <<4::256>>, transactions_root: <<5::256>>, receipts_root: <<6::256>>, logs_bloom: <<>>, difficulty: 5, number: 1, gas_limit: 5, gas_used: 3, timestamp: 6, extra_data: "Hi mom", mix_hash: <<7::256>>, nonce: <<8::64>>},
         ]
       }
   """
   @spec deserialize(ExRLP.t()) :: t
   def deserialize(rlp) do
-    headers = for header <- rlp, do: Block.Header.deserialize(header)
+    headers = for header <- rlp, do: Header.deserialize(header)
 
     %__MODULE__{
       headers: headers
@@ -70,7 +68,7 @@ defmodule ExWire.Packet.BlockHeaders do
 
   ## Examples
 
-      iex> %ExWire.Packet.BlockHeaders{headers: [ %Block.Header{parent_hash: <<1::256>>, ommers_hash: <<2::256>>, beneficiary: <<3::160>>, state_root: <<4::256>>, transactions_root: <<5::256>>, receipts_root: <<6::256>>, logs_bloom: <<>>, difficulty: 5, number: 1, gas_limit: 5, gas_used: 3, timestamp: 6, extra_data: "Hi mom", mix_hash: <<7::256>>, nonce: <<8::64>>} ]}
+      iex> %ExWire.Packet.BlockHeaders{headers: [%EthCore.Block.Header{parent_hash: <<1::256>>, ommers_hash: <<2::256>>, beneficiary: <<3::160>>, state_root: <<4::256>>, transactions_root: <<5::256>>, receipts_root: <<6::256>>, logs_bloom: <<>>, difficulty: 5, number: 1, gas_limit: 5, gas_used: 3, timestamp: 6, extra_data: "Hi mom", mix_hash: <<7::256>>, nonce: <<8::64>>}]}
       ...> |> ExWire.Packet.BlockHeaders.handle()
       :ok
   """

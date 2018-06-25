@@ -13,7 +13,7 @@ defmodule ExWire.Sync do
 
   require Logger
 
-  alias Block.Header
+  alias EthCore.Block.Header
   alias ExWire.Struct.BlockQueue
   alias ExWire.Packet.BlockHeaders
   alias ExWire.Packet.BlockBodies
@@ -33,7 +33,7 @@ defmodule ExWire.Sync do
         We will need to add some "restore state" logic.
   """
   def init(db) do
-    block_tree = Blockchain.Blocktree.new_tree()
+    block_tree = Blockchain.Blocktree.new()
 
     {:ok,
      %{
@@ -143,7 +143,7 @@ defmodule ExWire.Sync do
     next_number =
       case Blockchain.Blocktree.get_canonical_block(block_tree) do
         :root -> 0
-        %Blockchain.Block{header: %Block.Header{number: number}} -> number + 1
+        %Blockchain.Block{header: %Header{number: number}} -> number + 1
       end
 
     Logger.debug("[Sync] Requesting block #{next_number}")

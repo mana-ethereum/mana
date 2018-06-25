@@ -4,9 +4,10 @@ defmodule EVM.Address do
   """
 
   alias ExthCrypto.Hash.Keccak
+  alias EthCore.Config
 
   @size 20
-  @max round(:math.pow(2, @size * EVM.byte_size()))
+  @max round(:math.pow(2, @size * Config.byte_size()))
 
   @doc """
   Returns the maximum allowed address size.

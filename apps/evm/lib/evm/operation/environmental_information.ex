@@ -1,4 +1,5 @@
 defmodule EVM.Operation.EnvironmentalInformation do
+  alias EthCore.Config
   alias EVM.{Operation, Stack, Helpers, Memory, Stack, MachineState}
   alias EVM.Interface.AccountInterface
 
@@ -253,7 +254,7 @@ defmodule EVM.Operation.EnvironmentalInformation do
         machine_state: machine_state,
         exec_env: exec_env
       }) do
-    if length == 0 || length + mem_offset > EVM.max_int() do
+    if length == 0 || length + mem_offset > Config.max_int() do
       0
     else
       wrapped_address = Helpers.wrap_address(address)

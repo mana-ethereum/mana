@@ -5,6 +5,7 @@ defmodule Blockchain.Contract.CreateContractTest do
   alias Blockchain.{Account, Contract}
   alias EVM.{SubState, MachineCode}
   alias MerklePatriciaTree.{Trie, DB}
+  alias EthCore.Block.Header
 
   # TODO: Add rich tests for contract creation
 
@@ -49,7 +50,7 @@ defmodule Blockchain.Contract.CreateContractTest do
         endowment: 5,
         init_code: init_code,
         stack_depth: 5,
-        block_header: %Block.Header{nonce: 1}
+        block_header: %Header{nonce: 1}
       }
 
       {state, gas, sub_state} = Contract.create(params)

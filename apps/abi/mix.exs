@@ -8,15 +8,15 @@ defmodule ABI.Mixfile do
      config_path: "../../config/config.exs",
      deps_path: "../../deps",
      lockfile: "../../mix.lock",
-      description: "Ethereum's ABI Interface",
-      package: [
-        maintainers: ["Geoffrey Hayes", "Mason Fischer"],
-        licenses: ["MIT"],
-        links: %{"GitHub" => "https://github.com/exthereum/abi"}
-      ],
-      build_embedded: Mix.env == :prod,
-      start_permanent: Mix.env == :prod,
-      deps: deps()]
+     description: "Ethereum's ABI interface",
+     package: [
+       maintainers: ["Geoffrey Hayes", "Ayrat Badykov", "Mason Forest", "Vasiliy Yorkin"],
+       licenses: ["MIT"],
+       links: %{"GitHub" => "https://github.com/poanetwork/mana/apps/abi"}
+     ],
+     build_embedded: Mix.env == :prod,
+     start_permanent: Mix.env == :prod,
+     deps: deps()]
   end
 
   # Run "mix help compile.app" to learn about applications.

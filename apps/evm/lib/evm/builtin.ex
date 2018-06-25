@@ -6,6 +6,9 @@ defmodule EVM.Builtin do
 
   TODO: Implement and add doc tests.
   """
+
+  alias EthCore.Math
+
   @g_rip160_base 600
   @g_rip160_byte 120
   @g_sha256 60 + 12
@@ -79,7 +82,7 @@ defmodule EVM.Builtin do
   @spec run_sha256(EVM.Gas.t(), EVM.ExecEnv.t()) ::
           {EVM.Gas.t(), EVM.SubState.t(), EVM.ExecEnv.t(), EVM.VM.output()}
   def run_sha256(gas, exec_env = %EVM.ExecEnv{data: data}) do
-    used_gas = @g_sha256 * MathHelper.bits_to_words(byte_size(data))
+    used_gas = @g_sha256 * Math.bits_to_words(byte_size(data))
 
     if(used_gas < gas) do
       remaining_gas = gas - used_gas
@@ -103,7 +106,7 @@ defmodule EVM.Builtin do
   @spec run_rip160(EVM.Gas.t(), EVM.ExecEnv.t()) ::
           {EVM.Gas.t(), EVM.SubState.t(), EVM.ExecEnv.t(), EVM.VM.output()}
   def run_rip160(gas, exec_env = %EVM.ExecEnv{data: data}) do
-    used_gas = @g_rip160_base + @g_rip160_byte * MathHelper.bits_to_words(byte_size(data))
+    used_gas = @g_rip160_base + @g_rip160_byte * Math.bits_to_words(byte_size(data))
 
     if(used_gas < gas) do
       remaining_gas = gas - used_gas
@@ -127,7 +130,7 @@ defmodule EVM.Builtin do
           {EVM.Gas.t(), EVM.SubState.t(), EVM.ExecEnv.t(), EVM.VM.output()}
   def run_id(gas, exec_env) do
     data = exec_env.data
-    used_gas = @g_identity_base + @g_identity_byte * MathHelper.bits_to_words(byte_size(data))
+    used_gas = @g_identity_base + @g_identity_byte * Math.bits_to_words(byte_size(data))
 
     if(used_gas < gas) do
       remaining_gas = gas - used_gas

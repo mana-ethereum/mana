@@ -5,7 +5,7 @@ defmodule Blockchain.Contract.CreateContract do
   """
 
   alias Blockchain.Interface.{BlockInterface, AccountInterface}
-  alias Block.Header
+  alias EthCore.Block.Header
   alias Blockchain.Contract.Address
   alias Blockchain.{Account, Contract}
 
@@ -54,52 +54,43 @@ defmodule Blockchain.Contract.CreateContract do
         params.endowment
       )
 
-    # Create an execution environment for a create contract call.
-    # This is defined in Eq.(88), Eq.(89), Eq.(90), Eq.(91), Eq.(92),
-    # Eq.(93), Eq.(94) and Eq.(95) of the Yellow Paper.
-    exec_env = %EVM.ExecEnv{
-      address: contract_address,
-      originator: params.originator,
-      gas_price: params.gas_price,
-      data: <<>>,
-      sender: params.sender,
-      value_in_wei: params.endowment,
-      machine_code: params.init_code,
-      stack_depth: params.stack_depth,
-      block_interface: BlockInterface.new(params.block_header, state_with_blank_contract.db),
-      account_interface: AccountInterface.new(state_with_blank_contract)
-    }
+    exec_env = prepare_exec_env(contract_address, params, state_with_blank_contract)
 
     {remaining_gas, accrued_sub_state, exec_env, output} =
       EVM.VM.run(params.available_gas, exec_env)
 
     state_after_init = exec_env.account_interface.state
 
-    contract_creation_cost = creation_cost(output)
+    if output != :failed do
+      contract_creation_cost = creation_cost(output)
 
-    insufficient_gas_before_homestead =
-      remaining_gas < contract_creation_cost and Header.is_before_homestead?(params.block_header)
+      insufficient_gas_before_homestead =
+        remaining_gas < contract_creation_cost and
+          params.block_header.number < Header.homestead()
 
-    resultant_gas =
-      cond do
-        state_after_init == nil -> 0
-        insufficient_gas_before_homestead -> remaining_gas
-        true -> remaining_gas - contract_creation_cost
-      end
+      resultant_gas =
+        cond do
+          state_after_init == nil -> 0
+          insufficient_gas_before_homestead -> remaining_gas
+          true -> remaining_gas - contract_creation_cost
+        end
 
-    resultant_state =
-      cond do
-        state_after_init == nil ->
-          params.state
+      resultant_state =
+        cond do
+          state_after_init == nil ->
+            params.state
 
-        insufficient_gas_before_homestead ->
-          state_after_init
+          insufficient_gas_before_homestead ->
+            state_after_init
 
-        true ->
-          Account.put_code(state_after_init, contract_address, output)
-      end
+          true ->
+            Account.put_code(state_after_init, contract_address, output)
+        end
 
-    {resultant_state, resultant_gas, accrued_sub_state}
+      {resultant_state, resultant_gas, accrued_sub_state}
+    else
+      {params.state, params.available_gas, %EVM.SubState{}}
+    end
   end
 
   @doc """
@@ -111,4 +102,22 @@ defmodule Blockchain.Contract.CreateContract do
   """
   @spec creation_cost(binary()) :: EVM.Wei.t()
   def creation_cost(_output), do: 0
+
+  # Create an execution environment for a create contract call.
+  # This is defined in Eq.(88), Eq.(89), Eq.(90), Eq.(91), Eq.(92),
+  # Eq.(93), Eq.(94) and Eq.(95) of the Yellow Paper.
+  defp prepare_exec_env(contract_address, params, state) do
+    %EVM.ExecEnv{
+      address: contract_address,
+      originator: params.originator,
+      gas_price: params.gas_price,
+      data: <<>>,
+      sender: params.sender,
+      value_in_wei: params.endowment,
+      machine_code: params.init_code,
+      stack_depth: params.stack_depth,
+      block_interface: BlockInterface.new(params.block_header, state.db),
+      account_interface: AccountInterface.new(state)
+    }
+  end
 end

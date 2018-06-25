@@ -1,18 +1,16 @@
 # MerklePatriciaTree
 
-Elixir implementation of Ethereum's Merkle Patricia Tries.
-
+Elixir implementation of Ethereum's Merkle Patricia Trie.
 The encoding's specification can be found in [the yellow paper](http://yellowpaper.io/) or in the [ethereum wiki](https://github.com/ethereum/wiki/wiki/RLP) under Appendix D.
-
-The modified patricia merkle trie allows arbitrary storage of key, value pairs with the benefits of a merkle trie in O(n*log(n)) time for insert, lookup and delete.
+The modified merkle patricia trie allows arbitrary storage of key, value pairs with the benefits of a merkle trie in `O(n*log(n))` time for insert, lookup and delete.
 
 [This diagram](https://i.stack.imgur.com/YZGxe.png) is also very helpful in understanding these tries.
 
 ## Basic Usage
 
 Use the `MerklePatriciaTree` module to create and build merkle patricia tries. You will be required to choose
-a storage database, and we currently support `:ets` and `:rocksdb`. The follow example illustrates how to
-create an update a trie.
+a storage database, and we currently support `:ets` and `:rocksdb`.
+The follow example illustrates how to create an update a trie.
 
 ```elixir
   ## Examples
@@ -37,7 +35,7 @@ create an update a trie.
 
 ## Contributing
 
-1. [Fork it!](https://github.com/exthereum/merkle_patricia_trie/fork)
+1. [Fork it!](https://github.com/mana/apps/merkle_patricia_trie/fork)
 2. Create your feature branch (`git checkout -b my-new-feature`)
 3. Commit your changes (`git commit -am 'Add some feature'`)
 4. Push to the branch (`git push origin my-new-feature`)

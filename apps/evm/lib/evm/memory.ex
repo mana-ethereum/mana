@@ -4,6 +4,7 @@ defmodule EVM.Memory do
   in the MachineState of the VM.
   """
 
+  alias EthCore.Config
   alias EVM.MachineState
 
   @type t :: binary()
@@ -13,6 +14,9 @@ defmodule EVM.Memory do
   we should increment number of active words in our machine state.
 
   ## Examples
+
+      iex> EVM.Memory.read(%EVM.MachineState{memory: <<>>, active_words: 0}, 0)
+      {<<0::256>>, %EVM.MachineState{memory: <<>>, active_words: 1}}
 
       iex> EVM.Memory.read(%EVM.MachineState{memory: <<1::256, 2::256, 3::256, 4::256>>, active_words: 0}, 0, 0)
       {<<>>, %EVM.MachineState{memory: <<1::256, 2::256, 3::256, 4::256>>, active_words: 0}}
@@ -30,7 +34,7 @@ defmodule EVM.Memory do
       {<<1::256, 0::24>>, %EVM.MachineState{memory: <<1::256>>, active_words: 2}}
   """
   @spec read(MachineState.t(), EVM.val(), EVM.val()) :: {binary(), MachineState.t()}
-  def read(machine_state, offset, bytes \\ EVM.word_size()) do
+  def read(machine_state, offset, bytes \\ Config.word_size()) do
     data = read_zeroed_memory(machine_state.memory, offset, bytes)
 
     active_words = if data == <<>>, do: 0, else: get_active_words(offset + bytes)
@@ -79,7 +83,7 @@ defmodule EVM.Memory do
       if size do
         original_data
         |> :binary.decode_unsigned()
-        |> rem(size * EVM.word_size())
+        |> rem(size * Config.word_size())
         |> :binary.encode_unsigned()
       else
         original_data

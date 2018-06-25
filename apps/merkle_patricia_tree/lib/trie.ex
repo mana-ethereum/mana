@@ -58,7 +58,7 @@ defmodule MerklePatriciaTree.Trie do
       MerklePatriciaTree.DB.RocksDB
   """
   @spec new(DB.db(), root_hash) :: t()
-  def new(db = {_, _}, root_hash \\ @empty_trie) do
+  def new(db, root_hash \\ @empty_trie) do
     %__MODULE__{db: db, root_hash: root_hash} |> store()
   end
 

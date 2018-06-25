@@ -1,6 +1,7 @@
 defmodule Blockchain.StateTest do
+  alias EthCore.Block.Header
   alias MerklePatriciaTree.Trie
-  alias Blockchain.{Account, Transaction}
+  alias Blockchain.{Account, Transaction, WorldState}
   alias Blockchain.Interface.AccountInterface
 
   use EthCommonTest.Harness
@@ -8,6 +9,7 @@ defmodule Blockchain.StateTest do
 
   @ethereum_common_tests_path "../../ethereum_common_tests"
   @passing_tests_by_group %{
+    # >= Byzantium
     "ArgsZeroOneBalance" => [
       # "addNonConst",
       # "addmodNonConst",
@@ -60,9 +62,11 @@ defmodule Blockchain.StateTest do
       # "ContractCreationSpam",
       # "CrashingTransaction",
     ],
+    # >= Homestead
     "BadOpcode" => [
       # "badOpcodes",
     ],
+    # >= Homestead
     "Bugs" => [
       # "evmBytecode",
       # "returndatacopyPythonBug_Tue_03_48_41-1432",
@@ -190,6 +194,7 @@ defmodule Blockchain.StateTest do
       # "createNameRegistratorPreStore1NotEnoughGas",
       "createNameRegistratorendowmentTooHigh"
     ],
+    # >= Homestead
     "CallDelegateCodesCallCodeHomestead" => [
       # "callcallcallcode_001",
       # "callcallcallcode_001_OOGE",
@@ -250,6 +255,7 @@ defmodule Blockchain.StateTest do
       # "callcodecallcodecallcode_111_SuicideMiddle",
       # "callcodecallcodecallcode_ABCB_RECURSIVE",
     ],
+    # >= Homestead
     "CallDelegateCodesHomestead" => [
       # "callcallcallcode_001",
       # "callcallcallcode_001_OOGE",
@@ -310,6 +316,7 @@ defmodule Blockchain.StateTest do
       # "callcodecallcodecallcode_111_SuicideMiddle",
       # "callcodecallcodecallcode_ABCB_RECURSIVE",
     ],
+    # >= EIP150
     "ChangedEIP150" => [
       # "Call1024BalanceTooLow",
       # "Call1024PreCalls",
@@ -342,6 +349,7 @@ defmodule Blockchain.StateTest do
       # "contractCreationMakeCallThatAskMoreGasThenTransactionProvided",
       # "createInitFail_OOGduringInit",
     ],
+    # >= Homestead
     "CodeCopyTest" => [
       # "ExtCodeCopyTests",
     ],
@@ -375,6 +383,7 @@ defmodule Blockchain.StateTest do
       # "TransactionCollisionToEmptyButCode",
       # "TransactionCollisionToEmptyButNonce",
     ],
+    # >= Homestead
     "DelegatecallTestHomestead" => [
       # "Call1024BalanceTooLow",
       # "Call1024OOG",
@@ -411,6 +420,7 @@ defmodule Blockchain.StateTest do
       # "delegatecodeDynamicCode",
       # "delegatecodeDynamicCode2SelfCall",
     ],
+    # >= EIP150
     "EIP150Specific" => [
       # "CallAndCallcodeConsumeMoreGasThenTransactionHas",
       # "CallAskMoreGasOnDepth2ThenTransactionHas",
@@ -426,6 +436,7 @@ defmodule Blockchain.StateTest do
       # "Transaction64Rule_d64m1",
       # "Transaction64Rule_d64p1",
     ],
+    # >= EIP150
     "EIP150singleCodeGasPrices" => [
       # "RawBalanceGas",
       "RawCallCodeGas"
@@ -458,6 +469,7 @@ defmodule Blockchain.StateTest do
       # "RawExtCodeCopyMemoryGas",
       # "RawExtCodeSizeGas",
     ],
+    # >= EIP158
     "EIP158Specific" => [
       # "CALL_OneVCallSuicide",
       # "CALL_ZeroVCallSuicide",
@@ -470,6 +482,7 @@ defmodule Blockchain.StateTest do
     "Example" => [
       "add11"
     ],
+    # >= Homestead
     "HomesteadSpecific" => [
       # "contractCreationOOGdontLeaveEmptyContract",
       # "contractCreationOOGdontLeaveEmptyContractViaTransaction",
@@ -1642,6 +1655,7 @@ defmodule Blockchain.StateTest do
       # "txCost-sec73",
       # "tx_e1c174e2",
     ],
+    # >= Homestead
     "StackTests" => [
       # "shallowStack",
       # "stackOverflow",
@@ -1651,6 +1665,7 @@ defmodule Blockchain.StateTest do
       # "stackOverflowM1PUSH",
       # "stackOverflowPUSH",
     ],
+    # >= Byzantium
     "StaticCall" => [
       # "static_ABAcalls0",
       # "static_ABAcalls1",
@@ -2430,24 +2445,20 @@ defmodule Blockchain.StateTest do
 
   test "Blockchain state tests" do
     for test_group_name <- Map.keys(@passing_tests_by_group) do
-      for {_test_name, test} <- passing_tests(test_group_name) do
+      for {test_name, test} <- passing_tests(test_group_name) do
+        IO.puts("\n#{test_group_name}, #{test_name}\n")
         state = account_interface(test).state
 
-        transaction =
-          %Transaction{
-            nonce: load_integer(test["transaction"]["nonce"]),
-            gas_price: load_integer(test["transaction"]["gasPrice"]),
-            gas_limit: load_integer(List.first(test["transaction"]["gasLimit"])),
-            data: maybe_hex(List.first(test["transaction"]["data"])),
-            to: maybe_hex(test["transaction"]["to"]),
-            value: load_integer(List.first(test["transaction"]["value"]))
-          }
-          |> Transaction.Signature.sign_transaction(maybe_hex(test["transaction"]["secretKey"]))
+        secret_key = maybe_hex(test["transaction"]["secretKey"])
 
-        {state, _, _} =
-          Transaction.execute(state, transaction, %Block.Header{
-            beneficiary: maybe_hex(test["env"]["currentCoinbase"])
-          })
+        tx =
+          test
+          |> read_transaction()
+          |> Transaction.Signature.sign_transaction(secret_key)
+
+        header = read_block_header(test)
+
+        {state, _, _} = Transaction.execute(state, tx, header)
 
         expected_hash =
           test["post"]["Frontier"]
@@ -2455,28 +2466,35 @@ defmodule Blockchain.StateTest do
           |> Map.fetch!("hash")
           |> maybe_hex()
 
+        if state.root_hash != expected_hash do
+          WorldState.dump(state, true)
+        end
+
         assert state.root_hash == expected_hash
       end
     end
   end
 
-  def dump_state(state) do
-    state
-    |> Trie.Inspector.all_values()
-    |> Enum.map(fn {key, value} ->
-      k = Base.encode16(key, case: :lower)
-      v = value |> ExRLP.decode() |> Account.deserialize()
-      {k, v}
-    end)
-    |> Enum.map(fn {address_key, account} ->
-      IO.puts(address_key)
-      IO.puts("  Balance: #{account.balance}")
-      IO.puts("  Nonce: #{account.nonce}")
-      IO.puts("  Storage Root:")
-      IO.puts("  " <> Base.encode16(account.storage_root))
-      IO.puts("  Code Hash")
-      IO.puts("  " <> Base.encode16(account.code_hash))
-    end)
+  defp read_transaction(test) do
+    %Transaction{
+      nonce: load_integer(test["transaction"]["nonce"]),
+      gas_price: load_integer(test["transaction"]["gasPrice"]),
+      gas_limit: load_integer(List.first(test["transaction"]["gasLimit"])),
+      data: maybe_hex(List.first(test["transaction"]["data"])),
+      to: maybe_hex(test["transaction"]["to"]),
+      value: load_integer(List.first(test["transaction"]["value"]))
+    }
+  end
+
+  defp read_block_header(test) do
+    %Header{
+      parent_hash: maybe_hex(test["env"]["previousHash"]),
+      beneficiary: maybe_hex(test["env"]["currentCoinbase"]),
+      number: load_integer(test["env"]["currentNumber"]),
+      gas_limit: load_integer(test["env"]["currentGasLimit"]),
+      difficulty: load_integer(test["env"]["currentDifficulty"]),
+      timestamp: load_integer(test["env"]["currentTimestamp"])
+    }
   end
 
   def passing_tests(test_group_name) do

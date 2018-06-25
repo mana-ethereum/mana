@@ -3,7 +3,7 @@ defmodule Blockchain.Genesis do
   Defines functions for genesis block generation.
   """
 
-  alias Block.Header
+  alias EthCore.Block.Header
   alias Blockchain.{Block, Account, Chain}
   alias MerklePatriciaTree.{Trie, DB}
 
@@ -27,37 +27,11 @@ defmodule Blockchain.Genesis do
   @doc """
   Creates a genesis block for a given chain.
 
-  The genesis block is specified by parameters in the
-  chain itself. Thus, this function takes no additional
-  parameters.
-
-  ## Examples
-
-      iex> db = MerklePatriciaTree.Test.random_ets_db()
-      iex> chain = Blockchain.Chain.load_chain(:ropsten)
-      iex> Blockchain.Genesis.create_block(chain, db)
-      %Blockchain.Block{
-        header: %Block.Header{
-          number: 0,
-          timestamp: 0,
-          beneficiary: <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0>>,
-          difficulty: 1048576,
-          extra_data: "55555555555555555555555555555555",
-          gas_limit: 16777216,
-          parent_hash: <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0>>,
-          state_root: <<33, 123, 11, 188, 251, 114, 226, 213, 126, 40, 243, 60, 179, 97, 185, 152, 53, 19, 23, 119, 85, 220, 63, 51, 206, 62, 112, 34, 237, 98, 183, 123>>,
-          transactions_root: <<86, 232, 31, 23, 27, 204, 85, 166, 255, 131, 69, 230, 146, 192, 248, 110, 91, 72, 224, 27, 153, 108, 173, 192, 1, 98, 47, 181, 227, 99, 180, 33>>,
-          receipts_root: <<86, 232, 31, 23, 27, 204, 85, 166, 255, 131, 69, 230, 146, 192, 248, 110, 91, 72, 224, 27, 153, 108, 173, 192, 1, 98, 47, 181, 227, 99, 180, 33>>,
-          ommers_hash: <<29, 204, 77, 232, 222, 199, 93, 122, 171, 133, 181, 103, 182, 204, 212, 26, 211, 18, 69, 27, 148, 138, 116, 19, 240, 161, 66, 253, 64, 212, 147, 71>>,
-        },
-        ommers: [],
-        transactions: []
-      }
-
-      # TODO: Add test case with initial storage
+  The genesis block is specified by parameters in the chain itself.
+  Thus, this function takes no additional parameters.
   """
-  @spec create_block(Chain.t(), DB.db()) :: Block.t()
-  def create_block(chain, db) do
+  @spec new_block(Chain.t(), DB.db()) :: Block.t()
+  def new_block(chain, db) do
     header = create_header(chain.genesis)
     block = %Block{header: header}
     accounts = Enum.into(chain.accounts, [])
@@ -113,18 +87,4 @@ defmodule Blockchain.Genesis do
       storage_root: storage.root_hash
     }
   end
-
-  @doc """
-  Returns whether or not a block is a genesis block, based on block number.
-
-  ## Examples
-
-      iex> Blockchain.Genesis.is_genesis_block?(%Blockchain.Block{header: %Block.Header{number: 0}})
-      true
-
-      iex> Blockchain.Genesis.is_genesis_block?(%Blockchain.Block{header: %Block.Header{number: 1}})
-      false
-  """
-  @spec is_genesis_block?(Block.t()) :: boolean()
-  def is_genesis_block?(block), do: block.header.number == 0
 end

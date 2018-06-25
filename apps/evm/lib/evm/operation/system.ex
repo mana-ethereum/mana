@@ -1,6 +1,6 @@
 defmodule EVM.Operation.System do
   alias EVM.Interface.{AccountInterface, BlockInterface}
-  alias EVM.{MachineState, ExecEnv, Helpers, Address, Stack, Operation, MessageCall, Gas}
+  alias EVM.{MachineState, ExecEnv, Helpers, Address, Stack, Memory, Gas, Operation, MessageCall}
 
   @dialyzer {:no_return, callcode: 2}
 
@@ -12,7 +12,7 @@ defmodule EVM.Operation.System do
         exec_env: exec_env,
         machine_state: machine_state
       }) do
-    {data, machine_state} = EVM.Memory.read(machine_state, input_offset, input_size)
+    {data, machine_state} = Memory.read(machine_state, input_offset, input_size)
 
     account_balance =
       AccountInterface.get_account_balance(exec_env.account_interface, exec_env.address)
@@ -86,7 +86,7 @@ defmodule EVM.Operation.System do
         machine_state: machine_state
       }) do
     to = Address.new(to)
-    {data, machine_state} = EVM.Memory.read(machine_state, in_offset, in_size)
+    {data, machine_state} = Memory.read(machine_state, in_offset, in_size)
 
     call_gas = if value != 0, do: call_gas + Gas.callstipend(), else: call_gas
 
@@ -118,7 +118,7 @@ defmodule EVM.Operation.System do
         machine_state: machine_state
       }) do
     to = Address.new(to)
-    {data, machine_state} = EVM.Memory.read(machine_state, in_offset, in_size)
+    {data, machine_state} = Memory.read(machine_state, in_offset, in_size)
 
     message_call = %MessageCall{
       current_exec_env: exec_env,
@@ -148,7 +148,7 @@ defmodule EVM.Operation.System do
         machine_state: machine_state
       }) do
     to = Address.new(to)
-    {data, machine_state} = EVM.Memory.read(machine_state, in_offset, in_size)
+    {data, machine_state} = Memory.read(machine_state, in_offset, in_size)
 
     message_call = %MessageCall{
       current_exec_env: exec_env,
@@ -192,7 +192,7 @@ defmodule EVM.Operation.System do
         %{exec_env: exec_env, machine_state: machine_state}
       ) do
     to = Address.new(to)
-    {data, machine_state} = EVM.Memory.read(machine_state, in_offset, in_size)
+    {data, machine_state} = Memory.read(machine_state, in_offset, in_size)
 
     call_gas = if value != 0, do: call_gas + Gas.callstipend(), else: call_gas
 
@@ -228,7 +228,7 @@ defmodule EVM.Operation.System do
   @spec return(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def return([_mem_start, mem_end], %{machine_state: machine_state}) do
     # We may have to bump up number of active words
-    machine_state |> MachineState.maybe_set_active_words(EVM.Memory.get_active_words(mem_end))
+    machine_state |> MachineState.maybe_set_active_words(Memory.get_active_words(mem_end))
   end
 
   @doc """
@@ -236,7 +236,7 @@ defmodule EVM.Operation.System do
   """
   @spec revert(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def revert([_mem_start, mem_end], %{machine_state: machine_state}) do
-    machine_state |> MachineState.maybe_set_active_words(EVM.Memory.get_active_words(mem_end))
+    machine_state |> MachineState.maybe_set_active_words(Memory.get_active_words(mem_end))
   end
 
   @doc """

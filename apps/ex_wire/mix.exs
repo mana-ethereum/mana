@@ -9,11 +9,11 @@ defmodule ExWire.Mixfile do
       config_path: "../../config/config.exs",
       deps_path: "../../deps",
       lockfile: "../../mix.lock",
-      description: "Elixir Client for Ethereum's RLPx, DevP2P and Eth Wire Protocol",
+      description: "Elixir client for Ethereum's RLPx, DevP2P and Eth Wire protocol",
       package: [
-        maintainers: ["Mason Fischer", "Geoffrey Hayes", "Ayrat Badykov"],
+        maintainers: ["Mason Fischer", "Geoffrey Hayes", "Ayrat Badykov", "Vasiliy Yorkin"],
         licenses: ["MIT"],
-        links: %{"GitHub" => "https://github.com/exthereum/ex_wire"}
+        links: %{"GitHub" => "https://github.com/poanetwork/apps/ex_wire"}
       ],
       elixirc_paths: elixirc_paths(Mix.env()),
       build_embedded: Mix.env() == :prod,

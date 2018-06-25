@@ -9,6 +9,7 @@ defmodule Blockchain.TransactionTest do
   alias Blockchain.Transaction.Signature
   alias MerklePatriciaTree.Trie
   alias EVM.MachineCode
+  alias EthCore.Block.Header
 
   @forks ~w(
     Byzantium
@@ -94,29 +95,6 @@ defmodule Blockchain.TransactionTest do
   end
 
   describe "when handling transactions" do
-    test "serialize and deserialize" do
-      tx = %Transaction{
-        nonce: 5,
-        gas_price: 6,
-        gas_limit: 7,
-        to: <<1::160>>,
-        value: 8,
-        v: 27,
-        r: 9,
-        s: 10,
-        data: "hi"
-      }
-
-      expected_tx =
-        tx
-        |> Transaction.serialize()
-        |> ExRLP.encode()
-        |> ExRLP.decode()
-        |> Transaction.deserialize()
-
-      assert tx == expected_tx
-    end
-
     test "for a transaction with a stop" do
       beneficiary_address = <<0x05::160>>
       private_key = <<1::256>>
@@ -145,7 +123,7 @@ defmodule Blockchain.TransactionTest do
         MerklePatriciaTree.Test.random_ets_db()
         |> Trie.new()
         |> Account.put_account(sender_address, sender_account)
-        |> Transaction.execute(tx, %Block.Header{beneficiary: beneficiary_address})
+        |> Transaction.execute(tx, %Header{beneficiary: beneficiary_address, gas_limit: 100_000})
 
       expected_sender = %Account{balance: 240_983, nonce: 6}
       expected_beneficiary = %Account{balance: 159_012}
@@ -157,6 +135,85 @@ defmodule Blockchain.TransactionTest do
       assert Account.get_account(state, sender_address) == expected_sender
       assert Account.get_account(state, beneficiary_address) == expected_beneficiary
       assert Account.get_account(state, contract_address) == expected_contract
+    end
+  end
+
+  test "serialize and deserialize" do
+    tx = %Transaction{
+      nonce: 5,
+      gas_price: 6,
+      gas_limit: 7,
+      to: <<1::160>>,
+      value: 8,
+      v: 27,
+      r: 9,
+      s: 10,
+      data: "hi"
+    }
+
+    roundtrip =
+      tx
+      |> Transaction.serialize()
+      |> ExRLP.encode()
+      |> ExRLP.decode()
+      |> Transaction.deserialize()
+
+    assert tx == roundtrip
+  end
+
+  describe "serialize/2" do
+    test "serializes transaction" do
+      tx1 = %Transaction{nonce: 5, gas_price: 6, gas_limit: 7, to: <<1::160>>, value: 8, v: 27, r: 9, s: 10, data: "hi"}
+      tx1_rlp = [<<5>>, <<6>>, <<7>>, <<1::160>>, <<8>>, "hi", <<27>>, <<9>>, <<10>>]
+
+      assert Transaction.serialize(tx1) == tx1_rlp
+
+      tx2 = %Transaction{nonce: 5, gas_price: 6, gas_limit: 7, to: <<>>, value: 8, v: 27, r: 9, s: 10, init: <<1, 2, 3>>}
+      tx2_rlp = [<<5>>, <<6>>, <<7>>, <<>>, <<8>>, <<1, 2, 3>>, <<27>>, <<9>>, <<10>>]
+
+      assert Transaction.serialize(tx2) == tx2_rlp
+
+      tx3 = %Transaction{data: "", gas_limit: 21000, gas_price: 20000000000, init: "", nonce: 9, r: 0, s: 0, to: "55555555555555555555", v: 1, value: 1000000000000000000}
+      tx3_rlp = ["\t", <<4, 168, 23, 200, 0>>, "R\b", "55555555555555555555", <<13, 224, 182, 179, 167, 100, 0, 0>>, "", <<1>>, "", ""]
+
+      assert Transaction.serialize(tx3) == tx3_rlp
+    end
+
+    test "serializes transaction without vrs" do
+      tx = %Transaction{nonce: 5, gas_price: 6, gas_limit: 7, to: <<>>, value: 8, v: 27, r: 9, s: 10, init: <<1, 2, 3>>}
+      tx_rlp = [<<5>>, <<6>>, <<7>>, <<>>, <<8>>, <<1, 2, 3>>]
+
+      assert Transaction.serialize(tx, false) == tx_rlp
+    end
+  end
+
+  describe "deserialize/1" do
+    test "deserializes an RLP-encoded transaction" do
+      tx1_rlp = [<<5>>, <<6>>, <<7>>, <<1::160>>, <<8>>, "hi", <<27>>, <<9>>, <<10>>]
+      tx1 = %Transaction{nonce: 5, gas_price: 6, gas_limit: 7, to: <<1::160>>, value: 8, v: 27, r: 9, s: 10, data: "hi"}
+
+      assert Transaction.deserialize(tx1_rlp) == tx1
+
+      tx2_rlp = [<<5>>, <<6>>, <<7>>, <<>>, <<8>>, <<1, 2, 3>>, <<27>>, <<9>>, <<10>>]
+      tx2 = %Transaction{nonce: 5, gas_price: 6, gas_limit: 7, to: <<>>, value: 8, v: 27, r: 9, s: 10, init: <<1, 2, 3>>}
+
+      assert Transaction.deserialize(tx2_rlp) == tx2
+
+      tx3_rlp = ["\t", <<4, 168, 23, 200, 0>>, "R\b", "55555555555555555555", <<13, 224, 182, 179, 167, 100, 0, 0>>, "", <<1>>, "", ""]
+      tx3 = %Transaction{
+        data: "",
+        gas_limit: 21000,
+        gas_price: 20000000000,
+        init: "",
+        nonce: 9,
+        r: 0,
+        s: 0,
+        to: "55555555555555555555",
+        v: 1,
+        value: 1000000000000000000
+      }
+
+      assert Transaction.deserialize(tx3_rlp) == tx3
     end
   end
 
@@ -202,7 +259,7 @@ defmodule Blockchain.TransactionTest do
       {state, gas, logs} =
         Trie.new(MerklePatriciaTree.Test.random_ets_db())
         |> Account.put_account(sender, %Account{balance: 400_000, nonce: 5})
-        |> Transaction.execute(tx, %Block.Header{beneficiary: beneficiary})
+        |> Transaction.execute(tx, %Header{beneficiary: beneficiary, gas_limit: 100_000})
 
       assert gas == 53780
       assert logs == []
@@ -270,7 +327,7 @@ defmodule Blockchain.TransactionTest do
         |> Trie.new()
         |> Account.put_account(sender, %Account{balance: 400_000, nonce: 5})
         |> Account.put_code(contract_address, machine_code)
-        |> Transaction.execute(tx, %Block.Header{beneficiary: beneficiary})
+        |> Transaction.execute(tx, %Header{beneficiary: beneficiary, gas_limit: 100_000})
 
       assert gas == 21780
       assert logs == []

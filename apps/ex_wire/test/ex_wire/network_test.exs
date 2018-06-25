@@ -7,6 +7,8 @@ defmodule ExWire.NetworkTest do
   alias ExWire.Network.InboundMessage
   alias ExWire.Message.Pong
 
+  @moduletag :network
+
   describe "receive/2" do
     test "fails to receive message" do
       ping_data =
