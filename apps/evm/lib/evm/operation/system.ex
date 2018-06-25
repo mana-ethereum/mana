@@ -108,9 +108,7 @@ defmodule EVM.Operation.System do
       stack_depth: exec_env.stack_depth
     }
 
-    res = MessageCall.call(message_call)
-
-    res
+    MessageCall.call(message_call)
   end
 
   @doc """
