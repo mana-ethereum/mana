@@ -1963,7 +1963,7 @@ defmodule Blockchain.StateTest do
       "CallToNameRegistratorTooMuchMemory1",
       "CallToNameRegistratorTooMuchMemory2",
       "CallToNameRegistratorZeorSizeMemExpansion",
-      # "CallToReturn1",
+      "CallToReturn1",
       "CallToReturn1ForDynamicJump0",
       "CallToReturn1ForDynamicJump1",
       "CalltoReturn2",

@@ -1,6 +1,6 @@
 defmodule EVM.Operation.System do
   alias EVM.Interface.{AccountInterface, BlockInterface}
-  alias EVM.{MachineState, ExecEnv, Helpers, Address, Stack, Operation, MessageCall, Gas}
+  alias EVM.{MachineState, ExecEnv, Helpers, Address, Stack, Operation, MessageCall, Gas, Memory}
 
   @dialyzer {:no_return, callcode: 2}
 
@@ -84,15 +84,18 @@ defmodule EVM.Operation.System do
   def call([call_gas, to, value, in_offset, in_size, out_offset, out_size], %{
         exec_env: exec_env,
         machine_state: machine_state
-      }) do
+           }) do
     to = Address.new(to)
     {data, machine_state} = EVM.Memory.read(machine_state, in_offset, in_size)
 
     call_gas = if value != 0, do: call_gas + Gas.callstipend(), else: call_gas
 
+    words = Memory.get_active_words(out_offset + out_size)
+    updated_machine_state = MachineState.maybe_set_active_words(machine_state, words)
+
     message_call = %MessageCall{
       current_exec_env: exec_env,
-      current_machine_state: machine_state,
+      current_machine_state: updated_machine_state,
       output_params: {out_offset, out_size},
       sender: exec_env.address,
       originator: exec_env.originator,
@@ -105,7 +108,9 @@ defmodule EVM.Operation.System do
       stack_depth: exec_env.stack_depth
     }
 
-    MessageCall.call(message_call)
+    res = MessageCall.call(message_call)
+
+    res
   end
 
   @doc """
@@ -228,7 +233,10 @@ defmodule EVM.Operation.System do
   @spec return(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def return([_mem_start, mem_end], %{machine_state: machine_state}) do
     # We may have to bump up number of active words
-    machine_state |> MachineState.maybe_set_active_words(EVM.Memory.get_active_words(mem_end))
+
+    words = EVM.Memory.get_active_words(mem_end)
+
+    MachineState.maybe_set_active_words(machine_state, words)
   end
 
   @doc """
@@ -236,7 +244,11 @@ defmodule EVM.Operation.System do
   """
   @spec revert(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def revert([_mem_start, mem_end], %{machine_state: machine_state}) do
-    machine_state |> MachineState.maybe_set_active_words(EVM.Memory.get_active_words(mem_end))
+    # We may have to bump up number of active words
+
+    words = EVM.Memory.get_active_words(mem_end)
+
+    MachineState.maybe_set_active_words(machine_state, words)
   end
 
   @doc """
