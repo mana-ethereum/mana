@@ -187,20 +187,6 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
       ...> |> Blockchain.Interface.AccountInterface.new()
       ...> |> EVM.Interface.AccountInterface.put_storage(<<1::160>>, 5, 6)
       ...> |> EVM.Interface.AccountInterface.get_storage(<<1::160>>, 5)
-      {:ok, 6}
-
-      iex> MerklePatriciaTree.Test.random_ets_db()
-      ...> |> MerklePatriciaTree.Trie.new()
-      ...> |> Blockchain.Interface.AccountInterface.new()
-      ...> |> EVM.Interface.AccountInterface.put_storage(<<1::160>>, 5, 6)
-      ...> |> EVM.Interface.AccountInterface.get_storage(<<1::160>>, 6)
-      :key_not_found
-
-      iex> MerklePatriciaTree.Test.random_ets_db()
-      ...> |> MerklePatriciaTree.Trie.new()
-      ...> |> Blockchain.Interface.AccountInterface.new()
-      ...> |> EVM.Interface.AccountInterface.put_storage(<<1::160>>, 5, 6)
-      ...> |> EVM.Interface.AccountInterface.get_storage(<<2::160>>, 5)
       :account_not_found
   """
   @spec put_storage(EVM.Interface.AccountInterface.t(), EVM.address(), integer(), integer()) ::
