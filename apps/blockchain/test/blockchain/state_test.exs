@@ -2291,7 +2291,7 @@ defmodule Blockchain.StateTest do
       # "pairingTest",
       # "pointAdd",
       # "pointAddTrunc",
-      # "pointMulAdd",
+      "pointMulAdd"
       # "pointMulAdd2",
     ],
     "ZeroKnowledge2" => [

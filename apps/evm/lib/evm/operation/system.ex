@@ -90,12 +90,9 @@ defmodule EVM.Operation.System do
 
     call_gas = if value != 0, do: call_gas + Gas.callstipend(), else: call_gas
 
-    words = Memory.get_active_words(out_offset + out_size)
-    updated_machine_state = MachineState.maybe_set_active_words(machine_state, words)
-
     message_call = %MessageCall{
       current_exec_env: exec_env,
-      current_machine_state: updated_machine_state,
+      current_machine_state: machine_state,
       output_params: {out_offset, out_size},
       sender: exec_env.address,
       originator: exec_env.originator,
