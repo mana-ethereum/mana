@@ -7,6 +7,7 @@ defmodule Blockchain.Contract.MessageCall do
   alias Blockchain.Interface.{BlockInterface, AccountInterface}
   alias Block.Header
   alias Blockchain.Account
+  alias EVM.SubState
 
   # σ
   defstruct state: %{},
@@ -62,6 +63,8 @@ defmodule Blockchain.Contract.MessageCall do
 
     # Initiates message call by transfering balance from sender to receiver.
     # This covers Eq.(101), Eq.(102), Eq.(103) and Eq.(104) of the Yellow Paper.
+    # TODO: make copy of original state or use cache for making changes
+    original_sender = params.sender
     state = Account.transfer!(params.state, params.sender, params.recipient, params.value)
 
     # Create an execution environment for a message call.
@@ -81,7 +84,18 @@ defmodule Blockchain.Contract.MessageCall do
     }
 
     {gas, sub_state, exec_env, output} = fun.(params.available_gas, exec_env)
-    {exec_env.account_interface.state, gas, sub_state, output}
+
+    # From the Yellow Paper:
+    # if the execution halts in an exceptional fashion
+    # (i.e.  due to an exhausted gas supply, stack underflow, in-
+    # valid jump destination or invalid instruction), then no gas
+    # is refunded to the caller and the state is reverted to the
+    # point immediately prior to balance transfe
+    if output == :failed do
+      {params.state, 0, SubState.empty(), :failed}
+    else
+      {exec_env.account_interface.state, gas, sub_state, output}
+    end
   end
 
   @doc """
