@@ -8,6 +8,7 @@ defmodule Blockchain.Contract.CreateContract do
   alias Block.Header
   alias Blockchain.Contract.Address
   alias Blockchain.{Account, Contract}
+  alias EVM.SubState
 
   # σ
   defstruct state: %{},
@@ -73,33 +74,44 @@ defmodule Blockchain.Contract.CreateContract do
     {remaining_gas, accrued_sub_state, exec_env, output} =
       EVM.VM.run(params.available_gas, exec_env)
 
-    state_after_init = exec_env.account_interface.state
+    # From the Yellow Paper:
+    # if the execution halts in an exceptional fashion
+    # (i.e.  due to an exhausted gas supply, stack underflow, in-
+    # valid jump destination or invalid instruction), then no gas
+    # is refunded to the caller and the state is reverted to the
+    # point immediately prior to balance transfer.
+    if output == :failed do
+      {params.state, 0, SubState.empty()}
+    else
+      state_after_init = exec_env.account_interface.state
 
-    contract_creation_cost = creation_cost(output)
+      contract_creation_cost = creation_cost(output)
 
-    insufficient_gas_before_homestead =
-      remaining_gas < contract_creation_cost and Header.is_before_homestead?(params.block_header)
+      insufficient_gas_before_homestead =
+        remaining_gas < contract_creation_cost and
+          Header.is_before_homestead?(params.block_header)
 
-    resultant_gas =
-      cond do
-        state_after_init == nil -> 0
-        insufficient_gas_before_homestead -> remaining_gas
-        true -> remaining_gas - contract_creation_cost
-      end
+      resultant_gas =
+        cond do
+          state_after_init == nil -> 0
+          insufficient_gas_before_homestead -> remaining_gas
+          true -> remaining_gas - contract_creation_cost
+        end
 
-    resultant_state =
-      cond do
-        state_after_init == nil ->
-          params.state
+      resultant_state =
+        cond do
+          state_after_init == nil ->
+            params.state
 
-        insufficient_gas_before_homestead ->
-          state_after_init
+          insufficient_gas_before_homestead ->
+            state_after_init
 
-        true ->
-          Account.put_code(state_after_init, contract_address, output)
-      end
+          true ->
+            Account.put_code(state_after_init, contract_address, output)
+        end
 
-    {resultant_state, resultant_gas, accrued_sub_state}
+      {resultant_state, resultant_gas, accrued_sub_state}
+    end
   end
 
   @doc """
