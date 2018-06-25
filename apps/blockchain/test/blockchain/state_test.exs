@@ -487,8 +487,8 @@ defmodule Blockchain.StateTest do
       # "CallRecursiveContract",
       # "CallTheContractToCreateEmptyContract",
       # "NotEnoughCashContractCreation",
-      # "OutOfGasContractCreation",
-      # "OutOfGasPrefundedContractCreation",
+      "OutOfGasContractCreation",
+      "OutOfGasPrefundedContractCreation",
       "ReturnTest",
       "ReturnTest2"
       # "StackUnderFlowContractCreation",
