@@ -89,7 +89,7 @@ defmodule Blockchain.Contract.MessageCall do
     # (i.e.  due to an exhausted gas supply, stack underflow, in-
     # valid jump destination or invalid instruction), then no gas
     # is refunded to the caller and the state is reverted to the
-    # point immediately prior to balance transfe
+    # point immediately prior to balance transfer.
     if output == :failed do
       {params.state, 0, SubState.empty(), :failed}
     else
