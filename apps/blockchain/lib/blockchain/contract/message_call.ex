@@ -64,7 +64,6 @@ defmodule Blockchain.Contract.MessageCall do
     # Initiates message call by transfering balance from sender to receiver.
     # This covers Eq.(101), Eq.(102), Eq.(103) and Eq.(104) of the Yellow Paper.
     # TODO: make copy of original state or use cache for making changes
-    original_sender = params.sender
     state = Account.transfer!(params.state, params.sender, params.recipient, params.value)
 
     # Create an execution environment for a message call.
