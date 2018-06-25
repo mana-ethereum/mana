@@ -84,7 +84,7 @@ defmodule EVM.Operation.System do
   def call([call_gas, to, value, in_offset, in_size, out_offset, out_size], %{
         exec_env: exec_env,
         machine_state: machine_state
-           }) do
+      }) do
     to = Address.new(to)
     {data, machine_state} = EVM.Memory.read(machine_state, in_offset, in_size)
 

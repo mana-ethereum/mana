@@ -35,7 +35,10 @@ defmodule EVM.MessageCall do
   def call(message_call) do
     {out_offset, out_size} = message_call.output_params
     words = Memory.get_active_words(out_offset + out_size)
-    updated_machine_state = MachineState.maybe_set_active_words(message_call.current_machine_state, words)
+
+    updated_machine_state =
+      MachineState.maybe_set_active_words(message_call.current_machine_state, words)
+
     message_call = %{message_call | current_machine_state: updated_machine_state}
 
     if valid_stack_depth?(message_call) && enough_gas?(message_call) do
