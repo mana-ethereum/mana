@@ -69,7 +69,7 @@ defmodule EVM.VMTest do
     expected_exec_env = Map.put(exec_env, :account_interface, expected_account_interface)
     expected_sub_state = %SubState{logs: [], refund: 0, selfdestruct_list: []}
 
-    expected = {20_000, expected_sub_state, expected_exec_env, ""}
+    expected = {0, expected_sub_state, expected_exec_env, ""}
     assert result == expected
   end
 end
