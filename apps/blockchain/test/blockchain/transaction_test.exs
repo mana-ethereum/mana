@@ -149,7 +149,7 @@ defmodule Blockchain.TransactionTest do
 
       expected_sender = %Account{balance: 240_983, nonce: 6}
       expected_beneficiary = %Account{balance: 159_012}
-      expected_contract = %Account{balance: 5, nonce: 1}
+      expected_contract = %Account{balance: 5, nonce: 0}
 
       assert gas_used == 53004
       assert logs == []
@@ -215,7 +215,7 @@ defmodule Blockchain.TransactionTest do
         %Account{balance: 161_340},
         %Account{
           balance: 5,
-          nonce: 1,
+          nonce: 0,
           code_hash:
             <<243, 247, 169, 254, 54, 79, 170, 185, 59, 33, 109, 165, 10, 50, 20, 21, 79, 34, 160,
               162, 180, 21, 178, 58, 132, 200, 22, 158, 139, 99, 110, 227>>

@@ -35,7 +35,7 @@ defmodule Blockchain.Contract do
   @spec create_blank(EVM.state(), EVM.address(), EVM.address(), EVM.Wei.t()) :: EVM.state()
   def create_blank(state, contract_address, sender_address, endowment) do
     state
-    |> Account.put_account(contract_address, %Account{nonce: 1})
+    |> Account.put_account(contract_address, %Account{nonce: 0})
     |> Account.transfer!(sender_address, contract_address, endowment)
   end
 end

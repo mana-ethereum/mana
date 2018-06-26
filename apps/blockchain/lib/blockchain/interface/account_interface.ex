@@ -349,7 +349,7 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
       ...> |> Blockchain.Interface.AccountInterface.new()
       ...> |> EVM.Interface.AccountInterface.create_contract(<<0x10::160>>, <<0x10::160>>, 1000, 1, 5, EVM.MachineCode.compile([:push1, 3, :push1, 5, :add, :push1, 0x00, :mstore, :push1, 32, :push1, 0, :return]), 5, %Block.Header{nonce: 1})
       iex> account_interface.state.root_hash
-      <<118, 141, 248, 163, 131, 53, 35, 217, 52, 119, 112, 222, 52, 83, 19, 139, 167, 201, 222, 169, 179, 183, 141, 85, 212, 0, 169, 59, 19, 88, 229, 99>>
+      <<9, 235, 32, 146, 153, 242, 209, 192, 224, 61, 214, 174, 48, 24, 148, 28, 51, 254, 7, 82, 58, 82, 220, 157, 29, 159, 203, 51, 52, 240, 37, 122>>
   """
   @spec create_contract(
           EVM.Interface.AccountInterface.t(),
