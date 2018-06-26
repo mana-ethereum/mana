@@ -4,9 +4,11 @@ defmodule ExWire.Framing.Secrets do
   and outgoing peer to peer messages.
   """
 
+  alias ExWire.Handshake
   alias ExthCrypto.AES
   alias ExthCrypto.MAC
   alias ExthCrypto.Hash.Keccak
+  alias ExthCrypto.ECIES.ECDH
 
   @type t :: %__MODULE__{
           egress_mac: MAC.mac_inst(),
@@ -55,67 +57,80 @@ defmodule ExWire.Framing.Secrets do
   @doc """
   After a handshake has been completed (i.e. auth and ack have been exchanged),
   we're ready to derive the secrets to be used to encrypt frames. This function
-  performs the required computation.
+  performs the required computation. The token created as part of these secrets
+  can be used to resume a connection with a minimal handshake.
 
-  # TODO: Add examples
-  # TODO: Clean up API interface
+  From RLPx documentation (https://github.com/ethereum/devp2p/blob/master/rlpx.md),
+
+  ```
+  ephemeral-shared-secret = ecdh.agree(ephemeral-privkey, remote-ephemeral-pubk)
+  shared-secret = sha3(ephemeral-shared-secret || sha3(nonce || initiator-nonce))
+  token = sha3(shared-secret)
+  aes-secret = sha3(ephemeral-shared-secret || shared-secret)
+  # destroy shared-secret
+  mac-secret = sha3(ephemeral-shared-secret || aes-secret)
+  # destroy ephemeral-shared-secret
+
+  Initiator:
+  egress-mac = sha3.update(mac-secret ^ recipient-nonce || auth-sent-init)
+  # destroy nonce
+  ingress-mac = sha3.update(mac-secret ^ initiator-nonce || auth-recvd-ack)
+  # destroy remote-nonce
+
+  Recipient:
+  egress-mac = sha3.update(mac-secret ^ initiator-nonce || auth-sent-ack)
+  # destroy nonce
+  ingress-mac = sha3.update(mac-secret ^ recipient-nonce || auth-recvd-init)
+  # destroy remote-nonce
+  ```
   """
-  @spec derive_secrets(
-          boolean(),
-          ExthCrypto.Key.private_key(),
-          ExthCrypto.Key.public_key(),
-          binary(),
-          binary(),
-          binary(),
-          binary()
-        ) :: t
-  def derive_secrets(
-        is_initiator,
-        my_ephemeral_private_key,
-        remote_ephemeral_public_key,
-        remote_nonce,
-        my_nonce,
-        auth_data,
-        ack_data
-      ) do
+
+  def derive_secrets(handshake = %Handshake{}) do
+    {_public, private_key} = handshake.random_key_pair
+
     ephemeral_shared_secret =
-      ExthCrypto.ECIES.ECDH.generate_shared_secret(
-        my_ephemeral_private_key,
-        remote_ephemeral_public_key
+      ECDH.generate_shared_secret(private_key, handshake.remote_random_pub)
+
+    shared_secret =
+      Keccak.kec(
+        ephemeral_shared_secret <> Keccak.kec(handshake.resp_nonce <> handshake.init_nonce)
       )
 
-    # TODO: Nonces will need to be reversed come winter
-    shared_secret = Keccak.kec(ephemeral_shared_secret <> Keccak.kec(remote_nonce <> my_nonce))
-
-    # `token` can be used to resume a connection with a minimal handshake
     token = Keccak.kec(shared_secret)
 
     aes_secret = Keccak.kec(ephemeral_shared_secret <> shared_secret)
     mac_secret = Keccak.kec(ephemeral_shared_secret <> aes_secret)
 
-    mac_1 =
+    {egress_mac, ingress_mac} = derive_ingress_egress(handshake, mac_secret)
+
+    new(egress_mac, ingress_mac, mac_secret, aes_secret, token)
+  end
+
+  def derive_ingress_egress(handshake = %Handshake{initiator: true}, mac_secret) do
+    egress_mac =
       MAC.init(:kec)
-      |> MAC.update(ExthCrypto.Math.xor(mac_secret, remote_nonce))
-      |> MAC.update(auth_data)
+      |> MAC.update(ExthCrypto.Math.xor(mac_secret, handshake.resp_nonce))
+      |> MAC.update(handshake.encoded_auth_msg)
 
-    mac_2 =
+    ingress_mac =
       MAC.init(:kec)
-      |> MAC.update(ExthCrypto.Math.xor(mac_secret, my_nonce))
-      |> MAC.update(ack_data)
+      |> MAC.update(ExthCrypto.Math.xor(mac_secret, handshake.init_nonce))
+      |> MAC.update(handshake.encoded_ack_resp)
 
-    {egress_mac, ingress_mac} =
-      if is_initiator do
-        {mac_1, mac_2}
-      else
-        {mac_2, mac_1}
-      end
+    {egress_mac, ingress_mac}
+  end
 
-    __MODULE__.new(
-      egress_mac,
-      ingress_mac,
-      mac_secret,
-      aes_secret,
-      token
-    )
+  def derive_ingress_egress(handshake = %Handshake{initiator: false}, mac_secret) do
+    egress_mac =
+      MAC.init(:kec)
+      |> MAC.update(ExthCrypto.Math.xor(mac_secret, handshake.init_nonce))
+      |> MAC.update(handshake.encoded_ack_resp)
+
+    ingress_mac =
+      MAC.init(:kec)
+      |> MAC.update(ExthCrypto.Math.xor(mac_secret, handshake.resp_nonce))
+      |> MAC.update(handshake.encoded_auth_msg)
+
+    {egress_mac, ingress_mac}
   end
 end

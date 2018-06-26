@@ -28,7 +28,8 @@ defmodule ExWire.Handshake do
     :resp_nonce,
     :random_key_pair,
     :remote_random_pub,
-    :encoded_auth_msg
+    :encoded_auth_msg,
+    :encoded_ack_resp
   ]
 
   @type token :: binary()
@@ -40,7 +41,8 @@ defmodule ExWire.Handshake do
           resp_nonce: nonce(),
           random_key_pair: ExthCrypto.Key.key_pair(),
           remote_random_pub: ExthCrypto.Key.pubic_key(),
-          encoded_auth_msg: binary()
+          encoded_auth_msg: binary(),
+          encoded_ack_resp: binary()
         }
 
   @nonce_len 32
@@ -49,7 +51,7 @@ defmodule ExWire.Handshake do
   Builds an AuthMsgV4 (see build_auth_msg/3), serializes it, and encodes it.
   This message is ready to be sent to a peer to initiate the encrypted handshake.
   """
-  @spec initiate(Handshake.t()) :: Handshake.t()
+  @spec initiate(t()) :: t()
   def initiate(handshake) do
     {auth_msg, initiator_ephemeral_key_pair, initiator_nonce} =
       build_auth_msg(
@@ -240,31 +242,32 @@ defmodule ExWire.Handshake do
   """
   @spec handle_ack(binary(), t()) :: {:ok, Secrets.t(), binary()} | {:invalid, String.t()}
   def handle_ack(ack_data, handshake = %Handshake{}) do
-    case ExWire.Handshake.read_ack_resp(ack_data, ExWire.Config.private_key()) do
-      {:ok,
-       %ExWire.Handshake.Struct.AckRespV4{
-         recipient_ephemeral_public_key: recipient_ephemeral_public_key,
-         recipient_nonce: recipient_nonce
-       }, ack_data_limited, frame_rest} ->
-        {_public_key, my_ephemeral_private_key} = handshake.random_key_pair
+    case read_ack_resp(ack_data, ExWire.Config.private_key()) do
+      {:ok, ack_resp, _ack_resp_bin, frame_rest} ->
+        updated_handshake = accept_ack_handshake(handshake, ack_resp, ack_data)
 
-        # We're the initiator, by definition since we got an ack resp.
-        secrets =
-          ExWire.Framing.Secrets.derive_secrets(
-            true,
-            my_ephemeral_private_key,
-            recipient_ephemeral_public_key,
-            recipient_nonce,
-            handshake.init_nonce,
-            handshake.encoded_auth_msg,
-            ack_data_limited
-          )
+        secrets = ExWire.Framing.Secrets.derive_secrets(updated_handshake)
 
         {:ok, secrets, frame_rest}
 
       {:error, reason} ->
         {:invalid, reason}
     end
+  end
+
+  @spec accept_ack_handshake(t(), Handshake.Struct.AckRespV4.t(), binary()) :: t()
+  def accept_ack_handshake(handshake, ack_resp, encoded_ack_resp) do
+    %Handshake.Struct.AckRespV4{
+      recipient_ephemeral_public_key: recipient_ephemeral_public_key,
+      recipient_nonce: recipient_nonce
+    } = ack_resp
+
+    %{
+      handshake
+      | resp_nonce: recipient_nonce,
+        remote_random_pub: recipient_ephemeral_public_key,
+        encoded_ack_resp: encoded_ack_resp
+    }
   end
 
   @doc """
@@ -275,43 +278,53 @@ defmodule ExWire.Handshake do
   """
   @spec handle_auth(binary()) :: {:ok, binary(), Secrets.t()} | {:invalid, String.t()}
   def handle_auth(auth_data) do
-    case ExWire.Handshake.read_auth_msg(auth_data, ExWire.Config.private_key()) do
+    case read_auth_msg(auth_data, ExWire.Config.private_key()) do
       {:ok, auth_msg, <<>>} ->
-        %ExWire.Handshake.Struct.AuthMsgV4{
-          signature: _signature,
-          initiator_public_key: initiator_public_key,
-          initiator_nonce: initiator_nonce,
-          initiator_version: _initiator_version,
-          initiator_ephemeral_public_key: initiator_ephemeral_public_key
-        } = auth_msg
+        resp_handshake =
+          init_resp_handshake(auth_msg, auth_data)
+          |> prepare_resp_handshake()
 
-        # First, we'll build an ack, which we'll respond with to the initiator
-        {ack_resp, recipient_ephemeral_key_pair, recipient_nonce} =
-          ExWire.Handshake.build_ack_resp()
+        secrets = ExWire.Framing.Secrets.derive_secrets(resp_handshake)
 
-        {:ok, encoded_ack_resp} =
-          ack_resp
-          |> ExWire.Handshake.Struct.AckRespV4.serialize()
-          |> ExWire.Handshake.EIP8.wrap_eip_8(initiator_public_key, recipient_ephemeral_key_pair)
-
-        {_public_key, recipient_ephemeral_private_key} = recipient_ephemeral_key_pair
-        # We have the auth, we can derive secrets already
-        secrets =
-          ExWire.Framing.Secrets.derive_secrets(
-            false,
-            recipient_ephemeral_private_key,
-            initiator_ephemeral_public_key,
-            initiator_nonce,
-            recipient_nonce,
-            auth_data,
-            encoded_ack_resp
-          )
-
-        {:ok, auth_msg, encoded_ack_resp, secrets}
+        {:ok, auth_msg, resp_handshake.encoded_ack_resp, secrets}
 
       {:error, reason} ->
         {:invalid, reason}
     end
+  end
+
+  @spec init_resp_handshake(Handshake.Struct.AuthMsgV4.t(), binary()) :: t()
+  def init_resp_handshake(auth_msg = %Handshake.Struct.AuthMsgV4{}, encoded_auth_data) do
+    %Handshake.Struct.AuthMsgV4{
+      initiator_public_key: initiator_public_key,
+      initiator_nonce: initiator_nonce,
+      initiator_ephemeral_public_key: initiator_ephemeral_public_key
+    } = auth_msg
+
+    %Handshake{
+      initiator: false,
+      remote_pub: initiator_public_key,
+      init_nonce: initiator_nonce,
+      remote_random_pub: initiator_ephemeral_public_key,
+      encoded_auth_msg: encoded_auth_data
+    }
+  end
+
+  @spec prepare_resp_handshake(t()) :: t()
+  def prepare_resp_handshake(handshake) do
+    {ack_resp, recipient_ephemeral_key_pair, recipient_nonce} = build_ack_resp()
+
+    {:ok, encoded_ack_resp} =
+      ack_resp
+      |> Handshake.Struct.AckRespV4.serialize()
+      |> Handshake.EIP8.wrap_eip_8(handshake.remote_pub, recipient_ephemeral_key_pair)
+
+    %{
+      handshake
+      | encoded_ack_resp: encoded_ack_resp,
+        random_key_pair: recipient_ephemeral_key_pair,
+        resp_nonce: recipient_nonce
+    }
   end
 
   @spec new_nonce() :: nonce()
