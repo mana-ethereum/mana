@@ -156,7 +156,7 @@ defmodule Blockchain.StateTest do
       "CallLoseGasOOG",
       "CallRecursiveBombPreCall",
       "Callcode1024BalanceTooLow",
-      # "Callcode1024OOG",
+      "Callcode1024OOG",
       "CallcodeLoseGasOOG",
       "callOutput1",
       "callOutput2",
