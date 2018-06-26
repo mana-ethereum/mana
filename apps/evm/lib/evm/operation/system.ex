@@ -24,7 +24,7 @@ defmodule EVM.Operation.System do
 
     {updated_account_interface, _n_gas, _n_sub_state} =
       if is_allowed do
-        available_gas = Helpers.all_but_one_64th(machine_state.gas)
+        available_gas = machine_state.gas
 
         {account_interface, _nonce} =
           AccountInterface.increment_account_nonce(exec_env.account_interface, exec_env.address)
