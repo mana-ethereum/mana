@@ -25,7 +25,7 @@ defmodule Blockchain.ContractTest do
 
       expected_accounts = [
         %Account{balance: sender_account.balance - endowment},
-        %Account{balance: endowment, nonce: 1}
+        %Account{balance: endowment, nonce: 0}
       ]
 
       assert accounts == expected_accounts

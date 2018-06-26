@@ -274,7 +274,7 @@ defmodule Blockchain.BlockTest do
         %Blockchain.Account{balance: 161_340},
         %Blockchain.Account{
           balance: 5,
-          nonce: 1,
+          nonce: 0,
           code_hash:
             <<243, 247, 169, 254, 54, 79, 170, 185, 59, 33, 109, 165, 10, 50, 20, 21, 79, 34, 160,
               162, 180, 21, 178, 58, 132, 200, 22, 158, 139, 99, 110, 227>>

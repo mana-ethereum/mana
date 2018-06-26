@@ -55,8 +55,8 @@ defmodule Blockchain.Contract.CreateContractTest do
       {state, gas, sub_state} = Contract.create(params)
 
       expected_root_hash =
-        <<118, 141, 248, 163, 131, 53, 35, 217, 52, 119, 112, 222, 52, 83, 19, 139, 167, 201, 222,
-          169, 179, 183, 141, 85, 212, 0, 169, 59, 19, 88, 229, 99>>
+        <<9, 235, 32, 146, 153, 242, 209, 192, 224, 61, 214, 174, 48, 24, 148, 28, 51, 254, 7, 82,
+          58, 82, 220, 157, 29, 159, 203, 51, 52, 240, 37, 122>>
 
       assert state == %Trie{db: {DB.ETS, :contract_test}, root_hash: expected_root_hash}
       assert gas == 976
