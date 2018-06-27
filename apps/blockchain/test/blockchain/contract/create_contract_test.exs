@@ -44,7 +44,7 @@ defmodule Blockchain.Contract.CreateContractTest do
         state: state,
         sender: <<0x10::160>>,
         originator: <<0x10::160>>,
-        available_gas: 1000,
+        available_gas: 100_000_000,
         gas_price: 1,
         endowment: 5,
         init_code: init_code,
@@ -59,7 +59,7 @@ defmodule Blockchain.Contract.CreateContractTest do
           58, 82, 220, 157, 29, 159, 203, 51, 52, 240, 37, 122>>
 
       assert state == %Trie{db: {DB.ETS, :contract_test}, root_hash: expected_root_hash}
-      assert gas == 976
+      assert gas == 99_993_576
       assert SubState.empty?(sub_state)
 
       addresses = [<<0x10::160>>, Contract.Address.new(<<0x10::160>>, 5)]

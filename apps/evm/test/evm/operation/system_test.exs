@@ -153,7 +153,7 @@ defmodule EVM.Operation.SystemTest do
         Operation.System.create([1_000, 5, 5], %{exec_env: exec_env, machine_state: machine_state})
 
       expected_machine_state = %MachineState{
-        gas: 300,
+        gas: 500,
         stack: [0x601BCC2189B7096D8DFAA6F74EFEEBEF20486D0D, 1],
         active_words: 1,
         memory: "________input"
