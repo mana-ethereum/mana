@@ -422,23 +422,23 @@ defmodule EVM.Gas do
     @g_call + call_value_cost(value) + gas_limit
   end
 
-  def operation_cost(:log0, [_offset, size | _], _machine_state, _exec_end) do
+  def operation_cost(:log0, [_offset, size | _], _machine_state, _exec_env) do
     @g_log + @g_logdata * size
   end
 
-  def operation_cost(:log1, [_offset, size | _], _machine_state, _exec_end) do
+  def operation_cost(:log1, [_offset, size | _], _machine_state, _exec_env) do
     @g_log + @g_logdata * size + @g_logtopic
   end
 
-  def operation_cost(:log2, [_offset, size | _], _machine_state, _exec_end) do
+  def operation_cost(:log2, [_offset, size | _], _machine_state, _exec_env) do
     @g_log + @g_logdata * size + @g_logtopic * 2
   end
 
-  def operation_cost(:log3, [_offset, size | _], _machine_state, _exec_end) do
+  def operation_cost(:log3, [_offset, size | _], _machine_state, _exec_env) do
     @g_log + @g_logdata * size + @g_logtopic * 3
   end
 
-  def operation_cost(:log4, [_offset, size | _], _machine_state, _exec_end) do
+  def operation_cost(:log4, [_offset, size | _], _machine_state, _exec_env) do
     @g_log + @g_logdata * size + @g_logtopic * 4
   end
 
@@ -463,6 +463,11 @@ defmodule EVM.Gas do
   @spec callstipend() :: integer()
   def callstipend do
     @g_callstipend
+  end
+
+  @spec codedeposit_cost() :: integer()
+  def codedeposit_cost do
+    @g_codedeposit
   end
 
   defp call_value_cost(0), do: 0

@@ -8,7 +8,7 @@ defmodule Blockchain.Contract.CreateContract do
   alias Block.Header
   alias Blockchain.Contract.Address
   alias Blockchain.{Account, Contract}
-  alias EVM.SubState
+  alias EVM.{SubState, Gas}
 
   # σ
   defstruct state: %{},
@@ -118,9 +118,14 @@ defmodule Blockchain.Contract.CreateContract do
   Returns the additional cost after creating a new contract.
 
   This is defined as Eq.(96) of the Yellow Paper.
-
-  # TODO: Implement and examples
   """
   @spec creation_cost(binary()) :: EVM.Wei.t()
-  def creation_cost(_output), do: 0
+  def creation_cost(output) do
+    data_size =
+      output
+      |> :binary.bin_to_list()
+      |> Enum.count()
+
+    data_size * Gas.codedeposit_cost()
+  end
 end
