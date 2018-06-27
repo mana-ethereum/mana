@@ -3,7 +3,7 @@ defmodule EVM.Gas do
   Functions for interacting wth gas and costs of opscodes.
   """
 
-  alias EVM.{MachineState, MachineCode, Operation, Address, ExecEnv, Functions}
+  alias EVM.{MachineState, MachineCode, Operation, Address, ExecEnv}
 
   @type t :: EVM.val()
   @type gas_price :: EVM.Wei.t()
@@ -352,7 +352,7 @@ defmodule EVM.Gas do
     iex> EVM.Gas.operation_cost(:sstore, [0, 0], %EVM.MachineState{}, exec_env)
     20000
   """
-  def operation_cost(:sstore, params = [key, new_value], _machine_state, exec_env) do
+  def operation_cost(:sstore, [key, new_value], _machine_state, exec_env) do
     case ExecEnv.get_storage(exec_env, key) do
       :account_not_found ->
         @g_sset
@@ -376,7 +376,7 @@ defmodule EVM.Gas do
   def operation_cost(
         :call,
         [call_gas, to_address, value, _in_offset, _in_length, _out_offset, _out_length],
-        machine_state,
+        _machine_state,
         exec_env
       ) do
     to_address = Address.new(to_address)

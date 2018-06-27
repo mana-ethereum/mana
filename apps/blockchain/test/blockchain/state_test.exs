@@ -487,8 +487,8 @@ defmodule Blockchain.StateTest do
       "CallRecursiveContract",
       "CallTheContractToCreateEmptyContract",
       # "NotEnoughCashContractCreation",
-      "OutOfGasContractCreation",
-      "OutOfGasPrefundedContractCreation",
+      # "OutOfGasContractCreation",
+      # "OutOfGasPrefundedContractCreation",
       "ReturnTest",
       "ReturnTest2"
       # "StackUnderFlowContractCreation",
@@ -571,7 +571,7 @@ defmodule Blockchain.StateTest do
       # "DELEGATECALL_Bounds2",
       # "DELEGATECALL_Bounds3",
       # "DUP_Bounds",
-      # "FillStack",
+      "FillStack",
       # "JUMPI_Bounds",
       # "JUMP_Bounds",
       # "JUMP_Bounds2",
@@ -1987,7 +1987,7 @@ defmodule Blockchain.StateTest do
       "createNameRegistratorZeroMem",
       "createNameRegistratorZeroMem2",
       "createNameRegistratorZeroMemExpansion",
-      # "createWithInvalidOpcode",
+      "createWithInvalidOpcode",
       "currentAccountBalance",
       # "doubleSelfdestructTest",
       # "doubleSelfdestructTest2",
@@ -2003,8 +2003,8 @@ defmodule Blockchain.StateTest do
       "suicideNotExistingAccount",
       "suicideOrigin",
       # "suicideSendEtherPostDeath",
-      "suicideSendEtherToMe"
-      # "testRandomTest",
+      "suicideSendEtherToMe",
+      "testRandomTest"
     ],
     "TransactionTest" => [
       # "ContractStoreClearsOOG",
@@ -2015,14 +2015,14 @@ defmodule Blockchain.StateTest do
       # "CreateTransactionSuccess",
       # "EmptyTransaction",
       "EmptyTransaction2",
-      # "EmptyTransaction3",
+      "EmptyTransaction3",
       "HighGasLimit",
       "InternalCallHittingGasLimit",
       "InternalCallHittingGasLimit2",
       "InternalCallHittingGasLimitSuccess",
       # "InternlCallStoreClearsOOG",
       # "InternlCallStoreClearsSucces",
-      # "Opcodes_TransactionInit",
+      "Opcodes_TransactionInit",
       # "OverflowGasRequire",
       "OverflowGasRequire2",
       # "RefundOverflow",
@@ -2043,7 +2043,7 @@ defmodule Blockchain.StateTest do
       # "TransactionFromCoinbaseNotEnoughFounds",
       # "TransactionNonceCheck",
       # "TransactionNonceCheck2",
-      # "TransactionSendingToEmpty",
+      "TransactionSendingToEmpty",
       "TransactionSendingToZero",
       "TransactionToAddressh160minusOne",
       "TransactionToItself",
@@ -2446,7 +2446,11 @@ defmodule Blockchain.StateTest do
 
         {state, _, _} =
           Transaction.execute(state, transaction, %Block.Header{
-            beneficiary: maybe_hex(test["env"]["currentCoinbase"])
+            beneficiary: maybe_hex(test["env"]["currentCoinbase"]),
+            difficulty: load_integer(test["env"]["currentDifficulty"]),
+            timestamp: load_integer(test["env"]["currentTimestamp"]),
+            number: load_integer(test["env"]["currentNumber"]),
+            gas_limit: load_integer(test["env"]["currentGasLimit"])
           })
 
         expected_hash =

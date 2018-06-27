@@ -2450,7 +2450,11 @@ defmodule GenerateStateTests do
 
           {state, _, _} =
             Transaction.execute(state, transaction, %Block.Header{
-              beneficiary: maybe_hex(test["env"]["currentCoinbase"])
+                  beneficiary: maybe_hex(test["env"]["currentCoinbase"]),
+                  difficulty: load_integer(test["env"]["currentDifficulty"]),
+                  timestamp: load_integer(test["env"]["currentTimestamp"]),
+                  number: load_integer(test["env"]["currentNumber"]),
+                  gas_limit: load_integer(test["env"]["currentGasLimit"])
             })
 
           expected_hash =
