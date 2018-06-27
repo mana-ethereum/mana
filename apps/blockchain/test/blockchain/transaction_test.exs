@@ -204,15 +204,15 @@ defmodule Blockchain.TransactionTest do
         |> Account.put_account(sender, %Account{balance: 400_000, nonce: 5})
         |> Transaction.execute(tx, %Block.Header{beneficiary: beneficiary})
 
-      assert gas == 53780
+      assert gas == 60180
       assert logs == []
 
       addresses = [sender, beneficiary, contract_address]
       actual_accounts = Account.get_accounts(state, addresses)
 
       expected_accounts = [
-        %Account{balance: 238_655, nonce: 6},
-        %Account{balance: 161_340},
+        %Account{balance: 219_455, nonce: 6},
+        %Account{balance: 180_540},
         %Account{
           balance: 5,
           nonce: 0,

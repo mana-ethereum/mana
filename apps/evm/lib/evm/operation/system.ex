@@ -22,7 +22,7 @@ defmodule EVM.Operation.System do
     is_allowed =
       value <= account_balance and exec_env.stack_depth < EVM.Functions.max_stack_depth()
 
-    {updated_account_interface, _n_gas, _n_sub_state} =
+    {updated_account_interface, n_gas, _n_sub_state} =
       if is_allowed do
         available_gas = machine_state.gas
 
@@ -66,7 +66,7 @@ defmodule EVM.Operation.System do
         0
       end
 
-    machine_state = %{machine_state | stack: Stack.push(machine_state.stack, result)}
+    machine_state = %{machine_state | stack: Stack.push(machine_state.stack, result), gas: n_gas}
     exec_env = %{exec_env | account_interface: updated_account_interface}
 
     %{
