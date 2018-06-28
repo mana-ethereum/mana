@@ -44,7 +44,7 @@ defmodule EVM.MessageCall do
     if valid_stack_depth?(message_call) && enough_gas?(message_call) do
       execute(message_call)
     else
-      failed_call(message_call)
+      failed_call(message_call, message_call.execution_value)
     end
   end
 
@@ -64,7 +64,7 @@ defmodule EVM.MessageCall do
 
   defp execute(message_call) do
     # first transitional state
-    message_call = transfer_gas_to_recipient(message_call)
+    message_call = transfer_value_to_recipient(message_call)
 
     message_call
     |> prepare_call_execution_env()
@@ -72,7 +72,7 @@ defmodule EVM.MessageCall do
     |> update_state(message_call)
   end
 
-  def transfer_gas_to_recipient(message_call) do
+  def transfer_value_to_recipient(message_call) do
     exec_env =
       ExecEnv.transfer_wei_to(
         message_call.current_exec_env,
@@ -130,10 +130,15 @@ defmodule EVM.MessageCall do
     VM.run(message_call.execution_value, call_exec_env)
   end
 
-  defp failed_call(message_call) do
+  defp failed_call(message_call, remaining_gas \\ 0) do
     machine_state = message_call.current_machine_state
     updated_stack = Stack.push(machine_state.stack, 0)
-    updated_machine_state = %{machine_state | stack: updated_stack}
+
+    updated_machine_state = %{
+      machine_state
+      | stack: updated_stack,
+        gas: machine_state.gas + remaining_gas
+    }
 
     %{machine_state: updated_machine_state}
   end

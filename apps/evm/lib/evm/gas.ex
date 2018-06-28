@@ -381,14 +381,7 @@ defmodule EVM.Gas do
       ) do
     to_address = Address.new(to_address)
 
-    call_gas = if exec_env.stack_depth == Functions.max_stack_depth(), do: 0, else: call_gas
-
-    call_value =
-      if exec_env.stack_depth == Functions.max_stack_depth() && value != 0,
-        do: call_value_cost(value) - @g_callstipend,
-        else: call_value_cost(value)
-
-    @g_call + call_value + new_account_cost(exec_env, to_address) + call_gas
+    @g_call + call_value_cost(value) + new_account_cost(exec_env, to_address) + call_gas
   end
 
   def operation_cost(
