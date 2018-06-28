@@ -370,9 +370,9 @@ defmodule Blockchain.StateTest do
       "CREATE_EmptyContractWithStorageAndCallIt_0wei",
       "CREATE_EmptyContractWithStorageAndCallIt_1wei",
       "CREATE_empty000CreateinInitCode_Transaction",
-      # "CreateCollisionToEmpty",
-      # "TransactionCollisionToEmpty",
-      "TransactionCollisionToEmptyButCode",
+      "CreateCollisionToEmpty",
+      "TransactionCollisionToEmpty",
+      # "TransactionCollisionToEmptyButCode",
       "TransactionCollisionToEmptyButNonce"
     ],
     "DelegatecallTestHomestead" => [
@@ -1556,7 +1556,7 @@ defmodule Blockchain.StateTest do
       # "RevertPrefound",
       "RevertPrefoundCall",
       # "RevertPrefoundCallOOG",
-      # "RevertPrefoundEmpty",
+      "RevertPrefoundEmpty",
       "RevertPrefoundEmptyCall",
       # "RevertPrefoundEmptyCallOOG",
       # "RevertPrefoundEmptyOOG",

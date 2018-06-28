@@ -3,7 +3,7 @@ defmodule EVM.Gas do
   Functions for interacting wth gas and costs of opscodes.
   """
 
-  alias EVM.{MachineState, MachineCode, Operation, Address, ExecEnv, Functions}
+  alias EVM.{MachineState, MachineCode, Operation, Address, ExecEnv}
 
   @type t :: EVM.val()
   @type gas_price :: EVM.Wei.t()

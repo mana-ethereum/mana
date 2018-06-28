@@ -67,9 +67,9 @@ defmodule Blockchain.Contract.CreateContract do
 
   @spec account_exists?(t(), EVM.address()) :: boolean()
   defp account_exists?(params, address) do
-    params.state
-    |> AccountInterface.new()
-    |> EVM.Interface.AccountInterface.account_exists?(address)
+    account = Account.get_account(params.state, address)
+
+    !(is_nil(account) || Account.empty?(account))
   end
 
   @spec create(t(), EVM.address()) :: {EVM.state(), EVM.Gas.t(), EVM.SubState.t()}
