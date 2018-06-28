@@ -13,7 +13,7 @@ defmodule EVM.Operation.SystemTest do
       account_map = %{selfdestruct_address => %{balance: 5_000, nonce: 5}}
       account_interface = MockAccountInterface.new(account_map)
       exec_env = %ExecEnv{address: selfdestruct_address, account_interface: account_interface}
-      vm_opts = %{stack: [], exec_env: exec_env}
+      vm_opts = %{stack: [], exec_env: exec_env, sub_state: SubState.empty()}
       new_exec_env = Operation.System.selfdestruct([refund_address], vm_opts)[:exec_env]
       accounts = new_exec_env.account_interface.account_map
 

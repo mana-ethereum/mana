@@ -254,7 +254,7 @@ defmodule EVM.Operation.System do
   Defined as SELFDESTRUCT in the Yellow Paper.
   """
   @spec selfdestruct(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
-  def selfdestruct([refund_address], %{exec_env: exec_env}) do
+  def selfdestruct([refund_address], %{exec_env: exec_env, sub_state: sub_state}) do
     to = Address.new(refund_address)
     balance = AccountInterface.get_account_balance(exec_env.account_interface, exec_env.address)
 
@@ -263,6 +263,11 @@ defmodule EVM.Operation.System do
       |> ExecEnv.transfer_wei_to(to, balance)
       |> ExecEnv.destroy_account()
 
-    %{exec_env: new_exec_env}
+    new_substate = %{
+      sub_state
+      | selfdestruct_list: sub_state.selfdestruct_list ++ [exec_env.address]
+    }
+
+    %{exec_env: new_exec_env, sub_state: new_substate}
   end
 end
