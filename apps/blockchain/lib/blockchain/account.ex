@@ -125,6 +125,7 @@ defmodule Blockchain.Account do
   """
   @spec get_account(EVM.state(), EVM.address()) :: t | nil
   def get_account(state, address) do
+    address = if is_binary(address), do: address, else: :binary.encode_unsigned(address)
     trie = Trie.get(state, Keccak.kec(address))
 
     case trie do

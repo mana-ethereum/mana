@@ -238,7 +238,7 @@ defmodule Blockchain.BlockTest do
 
       expected_receipt = %Transaction.Receipt{
         bloom_filter: "",
-        cumulative_gas: 60180,
+        cumulative_gas: 53756,
         logs: [],
         state: block.header.state_root
       }
@@ -270,14 +270,14 @@ defmodule Blockchain.BlockTest do
         |> Account.get_accounts(addresses)
 
       expected_accounts = [
-        %Blockchain.Account{balance: 219_455, nonce: 6},
-        %Blockchain.Account{balance: 180_540},
+        %Blockchain.Account{balance: 238_727, nonce: 6},
+        %Blockchain.Account{balance: 161_268},
         %Blockchain.Account{
           balance: 5,
           nonce: 0,
           code_hash:
-            <<243, 247, 169, 254, 54, 79, 170, 185, 59, 33, 109, 165, 10, 50, 20, 21, 79, 34, 160,
-              162, 180, 21, 178, 58, 132, 200, 22, 158, 139, 99, 110, 227>>
+            <<197, 210, 70, 1, 134, 247, 35, 60, 146, 126, 125, 178, 220, 199, 3, 192, 229, 0,
+              182, 83, 202, 130, 39, 59, 123, 250, 216, 4, 93, 133, 164, 112>>
         }
       ]
 
