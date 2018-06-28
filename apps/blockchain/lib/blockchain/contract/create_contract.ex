@@ -41,16 +41,43 @@ defmodule Blockchain.Contract.CreateContract do
         }
 
   # TODO: Block header? "I_H has no special treatment and is determined from the blockchain"
-  # TODO: Do we need to break this function up further?
   @spec execute(t()) :: {EVM.state(), EVM.Gas.t(), EVM.SubState.t()}
   def execute(params) do
     sender_account = Account.get_account(params.state, params.sender)
     contract_address = Address.new(params.sender, sender_account.nonce)
 
+    if account_exists?(params, contract_address) do
+      failed_create(params)
+    else
+      result = {_, _, _, output} = create(params, contract_address)
+
+      # From the Yellow Paper:
+      # if the execution halts in an exceptional fashion
+      # (i.e.  due to an exhausted gas supply, stack underflow, in-
+      # valid jump destination or invalid instruction), then no gas
+      # is refunded to the caller and the state is reverted to the
+      # point immediately prior to balance transfer.
+      if output == :failed do
+        failed_create(params)
+      else
+        finalize(result, params, contract_address)
+      end
+    end
+  end
+
+  @spec account_exists?(t(), EVM.address()) :: boolean()
+  defp account_exists?(params, address) do
+    account = Account.get_account(params.state, address)
+
+    !(is_nil(account) || Account.empty?(account))
+  end
+
+  @spec create(t(), EVM.address()) :: {EVM.state(), EVM.Gas.t(), EVM.SubState.t()}
+  defp create(params, address) do
     state_with_blank_contract =
       Contract.create_blank(
         params.state,
-        contract_address,
+        address,
         params.sender,
         params.endowment
       )
@@ -59,7 +86,7 @@ defmodule Blockchain.Contract.CreateContract do
     # This is defined in Eq.(88), Eq.(89), Eq.(90), Eq.(91), Eq.(92),
     # Eq.(93), Eq.(94) and Eq.(95) of the Yellow Paper.
     exec_env = %EVM.ExecEnv{
-      address: contract_address,
+      address: address,
       originator: params.originator,
       gas_price: params.gas_price,
       data: <<>>,
@@ -71,56 +98,53 @@ defmodule Blockchain.Contract.CreateContract do
       account_interface: AccountInterface.new(state_with_blank_contract)
     }
 
-    {remaining_gas, accrued_sub_state, exec_env, output} =
-      EVM.VM.run(params.available_gas, exec_env)
-
-    # From the Yellow Paper:
-    # if the execution halts in an exceptional fashion
-    # (i.e.  due to an exhausted gas supply, stack underflow, in-
-    # valid jump destination or invalid instruction), then no gas
-    # is refunded to the caller and the state is reverted to the
-    # point immediately prior to balance transfer.
-    if output == :failed do
-      {params.state, 0, SubState.empty()}
-    else
-      state_after_init = exec_env.account_interface.state
-
-      contract_creation_cost = creation_cost(output)
-
-      insufficient_gas_before_homestead =
-        remaining_gas < contract_creation_cost and
-          Header.is_before_homestead?(params.block_header)
-
-      resultant_gas =
-        cond do
-          state_after_init == nil -> 0
-          insufficient_gas_before_homestead -> remaining_gas
-          true -> remaining_gas - contract_creation_cost
-        end
-
-      resultant_state =
-        cond do
-          state_after_init == nil ->
-            params.state
-
-          insufficient_gas_before_homestead ->
-            state_after_init
-
-          true ->
-            Account.put_code(state_after_init, contract_address, output)
-        end
-
-      {resultant_state, resultant_gas, accrued_sub_state}
-    end
+    EVM.VM.run(params.available_gas, exec_env)
   end
 
-  @doc """
-  Returns the additional cost after creating a new contract.
+  @spec failed_create(t()) :: {EVM.Gas.t(), EVM.SubState.t(), EVM.ExecEnv.t(), EVM.VM.output()}
+  defp failed_create(params) do
+    {params.state, 0, SubState.empty()}
+  end
 
-  This is defined as Eq.(96) of the Yellow Paper.
-  """
+  @spec finalize(
+          {EVM.Gas.t(), EVM.SubState.t(), EVM.ExecEnv.t(), EVM.VM.output()},
+          t(),
+          EVM.address()
+        ) :: {EVM.state(), EVM.Gas.t(), EVM.SubState.t()}
+  defp finalize({remaining_gas, accrued_sub_state, exec_env, output}, params, address) do
+    state_after_init = exec_env.account_interface.state
+
+    contract_creation_cost = creation_cost(output)
+
+    insufficient_gas_before_homestead =
+      remaining_gas < contract_creation_cost and Header.is_before_homestead?(params.block_header)
+
+    resultant_gas =
+      cond do
+        state_after_init == nil -> 0
+        insufficient_gas_before_homestead -> remaining_gas
+        true -> remaining_gas - contract_creation_cost
+      end
+
+    resultant_state =
+      cond do
+        state_after_init == nil ->
+          params.state
+
+        insufficient_gas_before_homestead ->
+          state_after_init
+
+        true ->
+          Account.put_code(state_after_init, address, output)
+      end
+
+    {resultant_state, resultant_gas, accrued_sub_state}
+  end
+
+  # Returns the additional cost after creating a new contract.
+  # This is defined as Eq.(96) of the Yellow Paper.
   @spec creation_cost(binary()) :: EVM.Wei.t()
-  def creation_cost(output) do
+  defp creation_cost(output) do
     data_size =
       output
       |> :binary.bin_to_list()

@@ -371,9 +371,9 @@ defmodule Blockchain.StateTest do
       "CREATE_EmptyContractWithStorageAndCallIt_1wei",
       "CREATE_empty000CreateinInitCode_Transaction",
       "CreateCollisionToEmpty",
-      "TransactionCollisionToEmpty"
+      "TransactionCollisionToEmpty",
       # "TransactionCollisionToEmptyButCode",
-      # "TransactionCollisionToEmptyButNonce",
+      "TransactionCollisionToEmptyButNonce"
     ],
     "DelegatecallTestHomestead" => [
       # "Call1024BalanceTooLow",
@@ -1967,7 +1967,7 @@ defmodule Blockchain.StateTest do
       "CallToReturn1ForDynamicJump0",
       "CallToReturn1ForDynamicJump1",
       "CalltoReturn2",
-      # "CreateHashCollision",
+      "CreateHashCollision",
       "PostToReturn1",
       "TestNameRegistrator",
       "balanceInputAddressTooBig",

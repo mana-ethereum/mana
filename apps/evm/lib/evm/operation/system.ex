@@ -1,6 +1,6 @@
 defmodule EVM.Operation.System do
   alias EVM.Interface.{AccountInterface, BlockInterface}
-  alias EVM.{MachineState, ExecEnv, Helpers, Address, Stack, Operation, MessageCall, Gas, Memory}
+  alias EVM.{MachineState, ExecEnv, Address, Stack, Operation, MessageCall, Gas, Memory}
 
   @dialyzer {:no_return, callcode: 2}
 
