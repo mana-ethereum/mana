@@ -142,7 +142,7 @@ defmodule Blockchain.Account do
   @doc """
   Checks if an account is empty.
   """
-  @spec empty?(Account.t()) :: boolean()
+  @spec empty?(t()) :: boolean()
   def empty?(account) do
     account.nonce == 0 && account.balance == 0 &&
       account.storage_root == Trie.empty_trie_root_hash()
