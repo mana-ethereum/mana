@@ -346,7 +346,7 @@ defmodule Blockchain.StateTest do
       # "ExtCodeCopyTests",
     ],
     "CodeSizeLimit" => [
-      # "codesizeInit",
+      "codesizeInit",
       "codesizeOOGInvalidSize",
       "codesizeValid"
     ],
@@ -1557,12 +1557,12 @@ defmodule Blockchain.StateTest do
       "RevertPrefoundCall",
       # "RevertPrefoundCallOOG",
       "RevertPrefoundEmpty",
-      "RevertPrefoundEmptyCall"
+      "RevertPrefoundEmptyCall",
       # "RevertPrefoundEmptyCallOOG",
       # "RevertPrefoundEmptyOOG",
       # "RevertPrefoundOOG",
-      # "RevertRemoteSubCallStorageOOG",
-      # "RevertRemoteSubCallStorageOOG2",
+      "RevertRemoteSubCallStorageOOG",
+      "RevertRemoteSubCallStorageOOG2"
       # "RevertSubCallStorageOOG",
       # "RevertSubCallStorageOOG2",
       # "TouchToEmptyAccountRevert",
@@ -1989,9 +1989,9 @@ defmodule Blockchain.StateTest do
       "createNameRegistratorZeroMemExpansion",
       "createWithInvalidOpcode",
       "currentAccountBalance",
-      # "doubleSelfdestructTest",
-      # "doubleSelfdestructTest2",
-      # "extcodecopy",
+      "doubleSelfdestructTest",
+      "doubleSelfdestructTest2",
+      "extcodecopy",
       "return0",
       "return1",
       "return2",

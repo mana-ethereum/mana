@@ -27,13 +27,17 @@ defmodule EVM.Operation.EnvironmentalInformation do
       iex> exec_env = %EVM.ExecEnv{account_interface: account_interface}
       iex> EVM.Operation.EnvironmentalInformation.balance([123], %{state: state, exec_env: exec_env, machine_state: %EVM.MachineState{}}).machine_state.stack
       [0]
+
+      iex> db = MerklePatriciaTree.Test.random_ets_db()
+      iex> state = MerklePatriciaTree.Trie.new(db)
+      iex> account_interface = EVM.Interface.Mock.MockAccountInterface.new(%{123 => %{balance: 500}})
+      iex> exec_env = %EVM.ExecEnv{account_interface: account_interface}
+      iex> EVM.Operation.EnvironmentalInformation.balance([123], %{state: state, exec_env: exec_env, machine_state: %EVM.MachineState{}}).machine_state.stack
+      [500]
   """
   @spec balance(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def balance([address], %{exec_env: exec_env, machine_state: machine_state}) do
-    wrapped_address =
-      address
-      |> Helpers.wrap_address()
-      |> :binary.encode_unsigned()
+    wrapped_address = Helpers.wrap_address(address)
 
     balance =
       case AccountInterface.get_account_balance(exec_env.account_interface, wrapped_address) do
