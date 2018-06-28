@@ -292,7 +292,7 @@ defmodule Blockchain.Transaction do
             available_gas: gas,
             gas_price: tx.gas_price,
             endowment: tx.value,
-            init_code: tx.init,
+            init_code: tx.data,
             stack_depth: stack_depth,
             block_header: block_header
           }
