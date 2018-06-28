@@ -6,7 +6,7 @@ defmodule EVM.VM do
 
   alias EVM.{SubState, MachineCode, MachineState, ExecEnv, Functions, Gas, Operation, Debugger}
 
-  @type output :: binary()
+  @type output :: binary() | atom()
 
   @doc """
   This function computes the Ξ function Eq.(123) of the Section 9.4 of the Yellow Paper.
