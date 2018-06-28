@@ -372,7 +372,7 @@ defmodule Blockchain.StateTest do
       "CREATE_empty000CreateinInitCode_Transaction",
       "CreateCollisionToEmpty",
       "TransactionCollisionToEmpty",
-      # "TransactionCollisionToEmptyButCode",
+      "TransactionCollisionToEmptyButCode",
       "TransactionCollisionToEmptyButNonce"
     ],
     "DelegatecallTestHomestead" => [
