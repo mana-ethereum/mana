@@ -145,7 +145,7 @@ defmodule Blockchain.Account do
   @spec empty?(t()) :: boolean()
   def empty?(account) do
     account.nonce == 0 && account.balance == 0 &&
-      account.storage_root == Trie.empty_trie_root_hash()
+      (account.code_hash == Trie.empty_trie_root_hash() || is_simple_account?(account))
   end
 
   @doc """
