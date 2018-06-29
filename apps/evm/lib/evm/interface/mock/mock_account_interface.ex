@@ -208,7 +208,7 @@ defimpl EVM.Interface.AccountInterface, for: EVM.Interface.Mock.MockAccountInter
           EVM.MachineCode.t(),
           integer(),
           Header.t()
-        ) :: {EVM.Gas.t(), EVM.Interface.AccountInterface.t(), EVM.SubState.t()}
+        ) :: {:ok | :error, {EVM.Gas.t(), EVM.Interface.AccountInterface.t(), EVM.SubState.t()}}
   def create_contract(
         mock_account_interface,
         _sender,
@@ -220,11 +220,12 @@ defimpl EVM.Interface.AccountInterface, for: EVM.Interface.Mock.MockAccountInter
         _stack_depth,
         _block_header
       ) do
-    {
-      mock_account_interface,
-      mock_account_interface.contract_result[:gas],
-      mock_account_interface.contract_result[:sub_state]
-    }
+    {:ok,
+     {
+       mock_account_interface,
+       mock_account_interface.contract_result[:gas],
+       mock_account_interface.contract_result[:sub_state]
+     }}
   end
 
   @spec new_contract_address(EVM.Interface.AccountInterface.t(), EVM.address(), integer()) ::

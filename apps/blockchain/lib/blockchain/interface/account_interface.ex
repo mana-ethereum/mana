@@ -343,7 +343,7 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
 
   ## Examples
 
-      iex> {account_interface, _gas, _sub_state} = MerklePatriciaTree.Test.random_ets_db()
+      iex> {:ok, {account_interface, _gas, _sub_state}} = MerklePatriciaTree.Test.random_ets_db()
       ...> |> MerklePatriciaTree.Trie.new()
       ...> |> Blockchain.Account.put_account(<<0x10::160>>, %Blockchain.Account{balance: 11, nonce: 5})
       ...> |> Blockchain.Interface.AccountInterface.new()
@@ -361,7 +361,7 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
           EVM.MachineCode.t(),
           integer(),
           Header.t()
-        ) :: {EVM.Interface.AccountInterface.t(), EVM.Gas.t(), EVM.SubState.t()}
+        ) :: {:ok | :error, {EVM.Interface.AccountInterface.t(), EVM.Gas.t(), EVM.SubState.t()}}
   def create_contract(
         account_interface,
         sender,
