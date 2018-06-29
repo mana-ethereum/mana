@@ -657,11 +657,11 @@ defmodule Blockchain.StateTest do
       "stackLimitGas_1023",
       "stackLimitGas_1024",
       "stackLimitGas_1025",
-      # "stackLimitPush31_1023",
-      # "stackLimitPush31_1024",
+      "stackLimitPush31_1023",
+      "stackLimitPush31_1024",
       "stackLimitPush31_1025",
-      # "stackLimitPush32_1023",
-      # "stackLimitPush32_1024",
+      "stackLimitPush32_1023",
+      "stackLimitPush32_1024",
       "stackLimitPush32_1025"
     ],
     "NonZeroCallsTest" => [
