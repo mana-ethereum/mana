@@ -297,7 +297,8 @@ defmodule Blockchain.Transaction do
             block_header: block_header
           }
 
-          Contract.create(params)
+          {_, result} = Contract.create(params)
+          result
 
         recipient ->
           params = %Contract.MessageCall{

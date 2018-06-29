@@ -47,7 +47,7 @@ defmodule Blockchain.Contract.CreateContract do
     contract_address = Address.new(params.sender, sender_account.nonce)
 
     if account_exists?(params, contract_address) do
-      failed_create(params)
+      {:ok, failed_create(params)}
     else
       result = {_, _, _, output} = create(params, contract_address)
 
@@ -58,9 +58,9 @@ defmodule Blockchain.Contract.CreateContract do
       # is refunded to the caller and the state is reverted to the
       # point immediately prior to balance transfer.
       if output == :failed do
-        failed_create(params)
+        {:error, failed_create(params)}
       else
-        finalize(result, params, contract_address)
+        {:ok, finalize(result, params, contract_address)}
       end
     end
   end

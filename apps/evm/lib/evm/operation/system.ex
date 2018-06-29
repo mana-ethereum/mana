@@ -22,7 +22,7 @@ defmodule EVM.Operation.System do
     is_allowed =
       value <= account_balance and exec_env.stack_depth < EVM.Functions.max_stack_depth()
 
-    {updated_account_interface, n_gas, _n_sub_state} =
+    {status, {updated_account_interface, n_gas, _n_sub_state}} =
       if is_allowed do
         available_gas = machine_state.gas
 
@@ -51,12 +51,12 @@ defmodule EVM.Operation.System do
           block_header
         )
       else
-        {exec_env.account_interface, machine_state.gas, nil}
+        {:error, {exec_env.account_interface, machine_state.gas, nil}}
       end
 
     # Note if was exception halt or other failure on stack
     result =
-      if is_allowed do
+      if status == :ok do
         nonce =
           exec_env.account_interface
           |> AccountInterface.get_account_nonce(exec_env.address)

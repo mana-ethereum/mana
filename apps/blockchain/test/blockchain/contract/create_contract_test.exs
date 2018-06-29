@@ -52,7 +52,7 @@ defmodule Blockchain.Contract.CreateContractTest do
         block_header: %Block.Header{nonce: 1}
       }
 
-      {state, gas, sub_state} = Contract.create(params)
+      {_, {state, gas, sub_state}} = Contract.create(params)
 
       expected_root_hash =
         <<9, 235, 32, 146, 153, 242, 209, 192, 224, 61, 214, 174, 48, 24, 148, 28, 51, 254, 7, 82,
