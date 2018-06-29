@@ -385,10 +385,10 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
       block_header: block_header
     }
 
-    {state, gas, sub_state} = Contract.create(params)
+    {status, {state, gas, sub_state}} = Contract.create(params)
 
     n_account_interface = Map.put(account_interface, :state, state)
-    {n_account_interface, gas, sub_state}
+    {status, {n_account_interface, gas, sub_state}}
   end
 
   @doc """
