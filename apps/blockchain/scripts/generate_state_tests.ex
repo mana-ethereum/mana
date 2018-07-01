@@ -2,6 +2,7 @@ defmodule GenerateStateTests do
   alias MerklePatriciaTree.Trie
   alias Blockchain.{Account, Transaction}
   alias Blockchain.Interface.AccountInterface
+  alias Blockchain.Account.Storage
 
   use EthCommonTest.Harness
 
@@ -2568,7 +2569,7 @@ defmodule GenerateStateTests do
 
         storage =
           Enum.reduce(account["storage"], storage, fn {key, value}, trie ->
-            Trie.update(trie, maybe_hex(key), maybe_hex(value))
+            Storage.put(trie.db, trie.root_hash, load_integer(key), load_integer(value))
           end)
 
         new_account = %Account{
