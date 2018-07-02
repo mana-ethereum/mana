@@ -43,14 +43,14 @@ defmodule EVM.Operation.Metadata.System do
                     #   output_count: 1,
                     #   group: :system
                     # },
-                    %{
-                      id: 0xFA,
-                      description: "Static message-call into an account",
-                      sym: :staticcall,
-                      input_count: 6,
-                      output_count: 1,
-                      group: :system
-                    },
+                    # %{
+                    #   id: 0xFA,
+                    #   description: "Static message-call into an account",
+                    #   sym: :staticcall,
+                    #   input_count: 6,
+                    #   output_count: 1,
+                    #   group: :system
+                    # },
                     %{
                       id: 0xFD,
                       description:
