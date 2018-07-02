@@ -1,5 +1,5 @@
 defmodule EVM.MessageCall do
-  alias EVM.{ExecEnv, Memory, VM, Functions, Stack, MachineState}
+  alias EVM.{ExecEnv, Memory, Builtin, VM, Functions, Stack, MachineState}
   alias EVM.Interface.AccountInterface
 
   @moduledoc """
@@ -127,7 +127,46 @@ defmodule EVM.MessageCall do
   end
 
   defp execute_call(call_exec_env, message_call) do
-    VM.run(message_call.execution_value, call_exec_env)
+    run = get_run_function(message_call.code_owner)
+    run.(message_call.execution_value, call_exec_env)
+  end
+
+  @doc """
+  Returns the given function to run given a contract address.
+  This covers selecting a pre-defined function if specified.
+  This is defined in Eq.(119) of the Yellow Paper.
+
+  ## Examples
+
+      iex> EVM.MessageCall.get_run_function(<<1::160>>)
+      &EVM.Builtin.run_ecrec/2
+
+      iex> EVM.MessageCall.get_run_function(<<2::160>>)
+      &EVM.Builtin.run_sha256/2
+
+      iex> EVM.MessageCall.get_run_function(<<3::160>>)
+      &EVM.Builtin.run_rip160/2
+
+      iex> EVM.MessageCall.get_run_function(<<4::160>>)
+      &EVM.Builtin.run_id/2
+
+      iex> EVM.MessageCall.get_run_function(<<5::160>>)
+      &EVM.VM.run/2
+
+      iex> EVM.MessageCall.get_run_function(<<6::160>>)
+      &EVM.VM.run/2
+  """
+  @spec get_run_function(EVM.address()) ::
+          (EVM.Gas.t(), EVM.ExecEnv.t() ->
+             {EVM.state(), EVM.Gas.t(), EVM.SubState.t(), EVM.VM.output()})
+  def get_run_function(code_owner) do
+    case :binary.decode_unsigned(code_owner) do
+      1 -> &Builtin.run_ecrec/2
+      2 -> &Builtin.run_sha256/2
+      3 -> &Builtin.run_rip160/2
+      4 -> &Builtin.run_id/2
+      _ -> &VM.run/2
+    end
   end
 
   defp failed_call(message_call, remaining_gas \\ 0) do

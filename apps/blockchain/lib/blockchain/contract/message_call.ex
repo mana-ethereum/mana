@@ -8,6 +8,7 @@ defmodule Blockchain.Contract.MessageCall do
   alias Block.Header
   alias Blockchain.Account
   alias EVM.SubState
+  alias EVM.MessageCall
 
   # σ
   defstruct state: %{},
@@ -56,7 +57,7 @@ defmodule Blockchain.Contract.MessageCall do
   """
   @spec execute(t()) :: {EVM.state(), EVM.Gas.t(), EVM.SubState.t(), EVM.VM.output()}
   def execute(params) do
-    fun = get_fun(params.recipient)
+    run = EVM.MessageCall.get_run_function(params.recipient)
 
     # Note, this could fail if machine code is not in state
     {:ok, machine_code} = Account.get_machine_code(params.state, params.contract)
@@ -82,7 +83,7 @@ defmodule Blockchain.Contract.MessageCall do
       account_interface: AccountInterface.new(state)
     }
 
-    {gas, sub_state, exec_env, output} = fun.(params.available_gas, exec_env)
+    {gas, sub_state, exec_env, output} = run.(params.available_gas, exec_env)
 
     # From the Yellow Paper:
     # if the execution halts in an exceptional fashion
@@ -94,44 +95,6 @@ defmodule Blockchain.Contract.MessageCall do
       {params.state, 0, SubState.empty(), :failed}
     else
       {exec_env.account_interface.state, gas, sub_state, output}
-    end
-  end
-
-  @doc """
-  Returns the given function to run given a contract address.
-  This covers selecting a pre-defined function if specified.
-  This is defined in Eq.(119) of the Yellow Paper.
-
-  ## Examples
-
-      iex> Blockchain.Contract.MessageCall.get_fun(<<1::160>>)
-      &EVM.Builtin.run_ecrec/2
-
-      iex> Blockchain.Contract.MessageCall.get_fun(<<2::160>>)
-      &EVM.Builtin.run_sha256/2
-
-      iex> Blockchain.Contract.MessageCall.get_fun(<<3::160>>)
-      &EVM.Builtin.run_rip160/2
-
-      iex> Blockchain.Contract.MessageCall.get_fun(<<4::160>>)
-      &EVM.Builtin.run_id/2
-
-      iex> Blockchain.Contract.MessageCall.get_fun(<<5::160>>)
-      &EVM.VM.run/2
-
-      iex> Blockchain.Contract.MessageCall.get_fun(<<6::160>>)
-      &EVM.VM.run/2
-  """
-  @spec get_fun(EVM.address()) ::
-          (EVM.Gas.t(), EVM.ExecEnv.t() ->
-             {EVM.state(), EVM.Gas.t(), EVM.SubState.t(), EVM.VM.output()})
-  def get_fun(recipient) do
-    case :binary.decode_unsigned(recipient) do
-      1 -> &EVM.Builtin.run_ecrec/2
-      2 -> &EVM.Builtin.run_sha256/2
-      3 -> &EVM.Builtin.run_rip160/2
-      4 -> &EVM.Builtin.run_id/2
-      _ -> &EVM.VM.run/2
     end
   end
 end
