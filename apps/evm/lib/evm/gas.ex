@@ -150,11 +150,13 @@ defmodule EVM.Gas do
     memory_expansion_cost(machine_state, memory_offset, length)
   end
 
-  def memory_cost(:extcodecopy, [_address, _code_offset, memory_offset, length], machine_state) do
-    if memory_offset + length > EVM.max_int() do
+  def memory_cost(:extcodecopy, [_address, code_offset, memory_offset, length], machine_state) do
+    offset = max(code_offset, memory_offset)
+
+    if offset + length > EVM.max_int() do
       0
     else
-      memory_expansion_cost(machine_state, memory_offset, length)
+      memory_expansion_cost(machine_state, offset, length)
     end
   end
 
@@ -203,6 +205,26 @@ defmodule EVM.Gas do
   end
 
   def memory_cost(:revert, [offset, length], machine_state) do
+    memory_expansion_cost(machine_state, offset, length)
+  end
+
+  def memory_cost(:log0, [offset, length | _], machine_state) do
+    memory_expansion_cost(machine_state, offset, length)
+  end
+
+  def memory_cost(:log1, [offset, length | _], machine_state) do
+    memory_expansion_cost(machine_state, offset, length)
+  end
+
+  def memory_cost(:log2, [offset, length | _], machine_state) do
+    memory_expansion_cost(machine_state, offset, length)
+  end
+
+  def memory_cost(:log3, [offset, length | _], machine_state) do
+    memory_expansion_cost(machine_state, offset, length)
+  end
+
+  def memory_cost(:log4, [offset, length | _], machine_state) do
     memory_expansion_cost(machine_state, offset, length)
   end
 
