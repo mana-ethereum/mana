@@ -2473,7 +2473,7 @@ defmodule GenerateStateTests do
               if !only_count, do: log_commented_test(test_name)
             end
           else
-            :ets.update_counter(test_counts, "skipped", {2, 1}, {"skipped", 0})
+            :ets.update_counter(test_counts, "post_frontier", {2, 1}, {"post_frontier", 0})
             if !only_count, do: log_test(test_name)
           end
         rescue
@@ -2488,12 +2488,14 @@ defmodule GenerateStateTests do
     if only_count do
       [{"passing", passing_tests}] = :ets.lookup(test_counts, "passing")
       [{"failing", failing_tests}] = :ets.lookup(test_counts, "failing")
-      [{"skipped", skipped_tests}] = :ets.lookup(test_counts, "skipped")
-      total_tests = passing_tests + failing_tests + skipped_tests
+      [{"post_frontier", post_frontier_tests}] = :ets.lookup(test_counts, "post_frontier")
+      total_tests = passing_tests + failing_tests
 
       log_test_percentage("Passing", passing_tests, total_tests)
       log_test_percentage("Failing", failing_tests, total_tests)
-      log_test_percentage("Skipped", skipped_tests, total_tests)
+      IO.puts(
+        "Post Frontier tests: #{post_frontier_tests}"
+      )
     end
   end
 
