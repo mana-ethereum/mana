@@ -2478,6 +2478,7 @@ defmodule GenerateStateTests do
           end
         rescue
           _ ->
+            :ets.update_counter(test_counts, "failing", {2, 1}, {"failing", 0})
             if !only_count, do: log_commented_test(test_name)
         end
       end
