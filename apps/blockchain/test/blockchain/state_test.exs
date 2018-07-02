@@ -603,7 +603,7 @@ defmodule Blockchain.StateTest do
       "codeCopyOffset",
       "codecopy_dejavu",
       "codecopy_dejavu2",
-      # "extcodecopy_dejavu",
+      "extcodecopy_dejavu",
       # "log1_dejavu",
       "log2_dejavu",
       # "log3_dejavu",
