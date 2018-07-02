@@ -104,26 +104,26 @@ defmodule EVM.Operation.Metadata.EnvironmentalInformation do
                       input_count: 4,
                       output_count: 0,
                       group: :environmental_information
-                    },
-                   # https://github.com/poanetwork/mana/issues/190
-                   #  %{
-#                       id: 0x3D,
-#                       description:
-#                         "Get size of output data from the previous call from the current
-# environment.",
-#                       sym: :returndatasize,
-#                       input_count: 0,
-#                       output_count: 1,
-#                       group: :environmental_information
-#                     },
-#                     %{
-#                       id: 0x3E,
-#                       description: "Copy output data from the previous call to memory",
-#                       sym: :returndatacopy,
-#                       input_count: 3,
-#                       output_count: 0,
-#                       group: :environmental_information
-#                     }
+                    }
+                    # https://github.com/poanetwork/mana/issues/190
+                    #  %{
+                    #                       id: 0x3D,
+                    #                       description:
+                    #                         "Get size of output data from the previous call from the current
+                    # environment.",
+                    #                       sym: :returndatasize,
+                    #                       input_count: 0,
+                    #                       output_count: 1,
+                    #                       group: :environmental_information
+                    #                     },
+                    #                     %{
+                    #                       id: 0x3E,
+                    #                       description: "Copy output data from the previous call to memory",
+                    #                       sym: :returndatacopy,
+                    #                       input_count: 3,
+                    #                       output_count: 0,
+                    #                       group: :environmental_information
+                    #                     }
                   ],
                   do: struct(EVM.Operation.Metadata, operation)
 
