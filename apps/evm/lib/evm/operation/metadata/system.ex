@@ -51,15 +51,15 @@ defmodule EVM.Operation.Metadata.System do
                     #   output_count: 1,
                     #   group: :system
                     # },
-                    %{
-                      id: 0xFD,
-                      description:
-                        "Halt execution reverting state changes but returning data and remaining gas.",
-                      sym: :revert,
-                      input_count: 2,
-                      output_count: 0,
-                      group: :system
-                    },
+                    # %{
+                    #   id: 0xFD,
+                    #   description:
+                    #     "Halt execution reverting state changes but returning data and remaining gas.",
+                    #   sym: :revert,
+                    #   input_count: 2,
+                    #   output_count: 0,
+                    #   group: :system
+                    # },
                     %{
                       id: 0xFE,
                       description:
