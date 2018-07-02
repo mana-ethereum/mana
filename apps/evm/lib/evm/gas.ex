@@ -208,6 +208,26 @@ defmodule EVM.Gas do
     memory_expansion_cost(machine_state, offset, length)
   end
 
+  def memory_cost(:log0, [offset, length | _], machine_state) do
+    memory_expansion_cost(machine_state, offset, length)
+  end
+
+  def memory_cost(:log1, [offset, length | _], machine_state) do
+    memory_expansion_cost(machine_state, offset, length)
+  end
+
+  def memory_cost(:log2, [offset, length | _], machine_state) do
+    memory_expansion_cost(machine_state, offset, length)
+  end
+
+  def memory_cost(:log3, [offset, length | _], machine_state) do
+    memory_expansion_cost(machine_state, offset, length)
+  end
+
+  def memory_cost(:log4, [offset, length | _], machine_state) do
+    memory_expansion_cost(machine_state, offset, length)
+  end
+
   def memory_cost(_operation, _inputs, _machine_state), do: 0
 
   @spec call_memory_cost(Operation.stack_args(), MachineState.t()) :: t
