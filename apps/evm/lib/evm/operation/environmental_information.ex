@@ -147,7 +147,7 @@ defmodule EVM.Operation.EnvironmentalInformation do
       }) do
     if length > 0 do
       data = Memory.read_zeroed_memory(exec_env.data, call_data_start, length)
-      machine_state = Memory.write(machine_state, memory_start, Helpers.right_pad_bytes(data))
+      machine_state = Memory.write(machine_state, memory_start, data)
 
       %{machine_state: machine_state}
     else
@@ -186,7 +186,7 @@ defmodule EVM.Operation.EnvironmentalInformation do
       0
     else
       data = Memory.read_zeroed_memory(exec_env.machine_code, code_offset, length)
-      machine_state = Memory.write(machine_state, mem_offset, Helpers.right_pad_bytes(data))
+      machine_state = Memory.write(machine_state, mem_offset, data)
 
       %{machine_state: machine_state}
     end
@@ -262,7 +262,7 @@ defmodule EVM.Operation.EnvironmentalInformation do
         AccountInterface.get_account_code(exec_env.account_interface, wrapped_address)
 
       data = Memory.read_zeroed_memory(account_code, code_offset, length)
-      machine_state = Memory.write(machine_state, mem_offset, Helpers.right_pad_bytes(data))
+      machine_state = Memory.write(machine_state, mem_offset, data)
 
       %{machine_state: machine_state}
     end
