@@ -597,10 +597,10 @@ defmodule Blockchain.StateTest do
       # "static_CALL_Bounds3",
     ],
     "MemoryTest" => [
-      # "callDataCopyOffset",
+      "callDataCopyOffset",
       "calldatacopy_dejavu",
       "calldatacopy_dejavu2",
-      # "codeCopyOffset",
+      "codeCopyOffset",
       "codecopy_dejavu",
       "codecopy_dejavu2",
       # "extcodecopy_dejavu",

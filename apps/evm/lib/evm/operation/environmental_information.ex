@@ -138,7 +138,19 @@ defmodule EVM.Operation.EnvironmentalInformation do
 
       iex> code = <<54>>
       iex> EVM.Operation.EnvironmentalInformation.calldatacopy([0, 0, 1], %{exec_env: %EVM.ExecEnv{data: code}, machine_state: %EVM.MachineState{}})
-      %{machine_state: %EVM.MachineState{active_words: 1, gas: nil, memory: <<54>> <> <<0::248>>, program_counter: 0, previously_active_words: 0, stack: []}}
+      %{
+        machine_state:
+          %EVM.MachineState{
+            active_words: 1,
+            gas: nil,
+            last_return_data: [],
+            memory: "6",
+            previously_active_words: 0,
+            program_counter: 0,
+            stack: []
+         }
+       }
+
   """
   @spec calldatacopy(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def calldatacopy([memory_start, call_data_start, length], %{
@@ -147,7 +159,7 @@ defmodule EVM.Operation.EnvironmentalInformation do
       }) do
     if length > 0 do
       data = Memory.read_zeroed_memory(exec_env.data, call_data_start, length)
-      machine_state = Memory.write(machine_state, memory_start, Helpers.right_pad_bytes(data))
+      machine_state = Memory.write(machine_state, memory_start, data)
 
       %{machine_state: machine_state}
     else
@@ -175,7 +187,18 @@ defmodule EVM.Operation.EnvironmentalInformation do
 
       iex> code = <<54>>
       iex> EVM.Operation.EnvironmentalInformation.codecopy([0, 0, 1], %{exec_env: %EVM.ExecEnv{machine_code: code}, machine_state: %EVM.MachineState{}})
-      %{machine_state: %EVM.MachineState{active_words: 1, gas: nil, memory: <<54>> <> <<0::248>>, program_counter: 0, previously_active_words: 0, stack: []}}
+      %{
+        machine_state:
+          %EVM.MachineState{
+            active_words: 1,
+            gas: nil,
+            last_return_data: [],
+            memory: "6",
+            previously_active_words: 0,
+            program_counter: 0,
+            stack: []
+         }
+       }
   """
   @spec codecopy(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def codecopy([mem_offset, code_offset, length], %{
@@ -186,7 +209,7 @@ defmodule EVM.Operation.EnvironmentalInformation do
       0
     else
       data = Memory.read_zeroed_memory(exec_env.machine_code, code_offset, length)
-      machine_state = Memory.write(machine_state, mem_offset, Helpers.right_pad_bytes(data))
+      machine_state = Memory.write(machine_state, mem_offset, data)
 
       %{machine_state: machine_state}
     end
@@ -245,8 +268,19 @@ defmodule EVM.Operation.EnvironmentalInformation do
       iex> code = <<54>>
       iex> account_map = %{<<0::160>> => %{code: code}}
       iex> account_interface = EVM.Interface.Mock.MockAccountInterface.new(account_map)
-      iex> EVM.Operation.EnvironmentalInformation.extcodecopy([<<0::160>>, 0, 0, 1], %{exec_env: %EVM.ExecEnv{account_interface: account_interface}, machine_state: %EVM.MachineState{}, state: state})[:machine_state]
-      %EVM.MachineState{active_words: 1, gas: nil, memory: <<54>> <> <<0::248>>, program_counter: 0, previously_active_words: 0, stack: []}
+      iex> EVM.Operation.EnvironmentalInformation.extcodecopy([<<0::160>>, 0, 0, 1], %{exec_env: %EVM.ExecEnv{account_interface: account_interface}, machine_state: %EVM.MachineState{}, state: state})
+      %{
+        machine_state:
+          %EVM.MachineState{
+            active_words: 1,
+            gas: nil,
+            last_return_data: [],
+            memory: "6",
+            previously_active_words: 0,
+            program_counter: 0,
+            stack: []
+         }
+       }
   """
   @spec extcodecopy(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def extcodecopy([address, code_offset, mem_offset, length], %{
@@ -262,7 +296,7 @@ defmodule EVM.Operation.EnvironmentalInformation do
         AccountInterface.get_account_code(exec_env.account_interface, wrapped_address)
 
       data = Memory.read_zeroed_memory(account_code, code_offset, length)
-      machine_state = Memory.write(machine_state, mem_offset, Helpers.right_pad_bytes(data))
+      machine_state = Memory.write(machine_state, mem_offset, data)
 
       %{machine_state: machine_state}
     end
