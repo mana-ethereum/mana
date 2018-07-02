@@ -33,15 +33,16 @@ defmodule EVM.Operation.Metadata.System do
                       output_count: 0,
                       group: :system
                     },
-                    %{
-                      id: 0xF4,
-                      description:
-                        "Message-call into this account with an alternative account’s code, but persisting the current values for sender and value.",
-                      sym: :delegatecall,
-                      input_count: 6,
-                      output_count: 1,
-                      group: :system
-                    },
+                    # https://github.com/poanetwork/mana/issues/190
+                    # %{
+                    #   id: 0xF4,
+                    #   description:
+                    #     "Message-call into this account with an alternative account’s code, but persisting the current values for sender and value.",
+                    #   sym: :delegatecall,
+                    #   input_count: 6,
+                    #   output_count: 1,
+                    #   group: :system
+                    # },
                     %{
                       id: 0xFA,
                       description: "Static message-call into an account",
