@@ -2458,18 +2458,23 @@ defmodule GenerateStateTests do
                   gas_limit: load_integer(test["env"]["currentGasLimit"])
             })
 
-          expected_hash =
-            test["post"]["Frontier"]
-            |> List.first()
-            |> Map.fetch!("hash")
-            |> maybe_hex()
+          if(Map.has_key?(test["post"], "Frontier")) do
+            expected_hash =
+              test["post"]["Frontier"]
+              |> List.first()
+              |> Map.fetch!("hash")
+              |> maybe_hex()
 
-          if state.root_hash == expected_hash do
-            if !only_count, do: log_test(test_name)
-            :ets.update_counter(test_counts, "passing", {2, 1}, {"passing", 0})
+            if state.root_hash == expected_hash do
+              if !only_count, do: log_test(test_name)
+              :ets.update_counter(test_counts, "passing", {2, 1}, {"passing", 0})
+            else
+              :ets.update_counter(test_counts, "failing", {2, 1}, {"failing", 0})
+              if !only_count, do: log_commented_test(test_name)
+            end
           else
-            :ets.update_counter(test_counts, "failing", {2, 1}, {"failing", 0})
-            if !only_count, do: log_commented_test(test_name)
+            :ets.update_counter(test_counts, "skipped", {2, 1}, {"skipped", 0})
+            if !only_count, do: log_test(test_name)
           end
         rescue
           _ ->
@@ -2477,19 +2482,27 @@ defmodule GenerateStateTests do
         end
       end
 
-      if !only_count, do: log_closing_group
+      if !only_count, do: log_closing_group()
     end
 
     if only_count do
       [{"passing", passing_tests}] = :ets.lookup(test_counts, "passing")
       [{"failing", failing_tests}] = :ets.lookup(test_counts, "failing")
+      [{"skipped", skipped_tests}] = :ets.lookup(test_counts, "skipped")
+      total_tests = passing_tests + failing_tests + skipped_tests
 
-      IO.puts(
-        "Passing tests: #{passing_tests}/#{passing_tests + failing_tests} = #{
-          trunc(Float.round(passing_tests / (passing_tests + failing_tests), 2) * 100)
-        }%"
-      )
+      log_test_percentage("Passing", passing_tests, total_tests)
+      log_test_percentage("Failing", failing_tests, total_tests)
+      log_test_percentage("Skipped", skipped_tests, total_tests)
     end
+  end
+
+  defp log_test_percentage(test_type, test_count, total_tests) do
+    IO.puts(
+      "#{test_type} tests: #{test_count}/#{total_tests} = #{
+        trunc(Float.round(test_count / (total_tests), 2) * 100)
+      }%"
+    )
   end
 
   defp log_commented_test(test_name) do
@@ -2497,15 +2510,15 @@ defmodule GenerateStateTests do
   end
 
   defp log_test(test_name) do
-    IO.puts("  \"#{test_name}\" => [")
+    IO.puts("      \"#{test_name}\",")
   end
 
   defp log_test_group(test_group_name) do
-    IO.puts("  \"#{test_group_name}\" => [")
+    IO.puts("    \"#{test_group_name}\" => [")
   end
 
   defp log_closing_group do
-    IO.puts (" ],")
+    IO.puts ("    ],")
   end
 
   def passing_tests(test_group_name) do
