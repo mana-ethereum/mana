@@ -66,8 +66,8 @@ defmodule Blockchain.Block do
         0,
         nil,
         "",
-        nil,
-        nil
+        "",
+        0
       ],
       [],
       []
