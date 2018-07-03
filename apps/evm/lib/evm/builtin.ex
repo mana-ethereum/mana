@@ -47,7 +47,7 @@ defmodule EVM.Builtin do
   def run_ecrec(gas, exec_env = %EVM.ExecEnv{data: data}) do
     used_gas = @g_ecrec
 
-    if(used_gas < gas) do
+    if used_gas < gas do
       data = EVM.Helpers.right_pad_bytes(data, 128)
       <<h::binary-size(32), v::binary-size(32), r::binary-size(32), s::binary-size(32)>> = data
       signature = r <> s
@@ -59,10 +59,10 @@ defmodule EVM.Builtin do
           {remaining_gas, %EVM.SubState{}, exec_env, public_key}
 
         {:error, _} ->
-          {gas, %EVM.SubState{}, exec_env, <<>>}
+          {0, %EVM.SubState{}, exec_env, <<>>}
       end
     else
-      {gas, %EVM.SubState{}, exec_env, <<>>}
+      {0, %EVM.SubState{}, exec_env, <<>>}
     end
   end
 
@@ -81,12 +81,12 @@ defmodule EVM.Builtin do
   def run_sha256(gas, exec_env = %EVM.ExecEnv{data: data}) do
     used_gas = @g_sha256 * MathHelper.bits_to_words(byte_size(data))
 
-    if(used_gas < gas) do
+    if used_gas < gas do
       remaining_gas = gas - used_gas
       result = :crypto.hash(:sha256, data)
       {remaining_gas, %EVM.SubState{}, exec_env, result}
     else
-      {gas, %EVM.SubState{}, exec_env, <<>>}
+      {0, %EVM.SubState{}, exec_env, <<>>}
     end
   end
 
@@ -105,12 +105,12 @@ defmodule EVM.Builtin do
   def run_rip160(gas, exec_env = %EVM.ExecEnv{data: data}) do
     used_gas = @g_rip160_base + @g_rip160_byte * MathHelper.bits_to_words(byte_size(data))
 
-    if(used_gas < gas) do
+    if used_gas < gas do
       remaining_gas = gas - used_gas
       result = :crypto.hash(:ripemd160, data) |> EVM.Helpers.left_pad_bytes(32)
       {remaining_gas, %EVM.SubState{}, exec_env, result}
     else
-      {gas, %EVM.SubState{}, exec_env, <<>>}
+      {0, %EVM.SubState{}, exec_env, <<>>}
     end
   end
 

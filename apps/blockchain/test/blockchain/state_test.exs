@@ -815,7 +815,7 @@ defmodule Blockchain.StateTest do
       # "CALLCODEIdentity_4_gas17",
       "CALLCODEIdentity_4_gas18",
       # "CALLCODEIdentity_5",
-      # "CALLCODERipemd160_0",
+      "CALLCODERipemd160_0",
       # "CALLCODERipemd160_1",
       "CALLCODERipemd160_2",
       "CALLCODERipemd160_3",
