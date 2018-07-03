@@ -129,11 +129,12 @@ defmodule EVM.Builtin do
     data = exec_env.data
     used_gas = @g_identity_base + @g_identity_byte * MathHelper.bits_to_words(byte_size(data))
 
-    if(used_gas < gas) do
+    if used_gas < gas do
       remaining_gas = gas - used_gas
+
       {remaining_gas, %EVM.SubState{}, exec_env, data}
     else
-      {gas, %EVM.SubState{}, exec_env, <<>>}
+      {0, %EVM.SubState{}, exec_env, <<>>}
     end
   end
 end
