@@ -59,10 +59,10 @@ defmodule EVM.Builtin do
           {remaining_gas, %EVM.SubState{}, exec_env, public_key}
 
         {:error, _} ->
-          {0, %EVM.SubState{}, exec_env, <<>>}
+          {0, %EVM.SubState{}, exec_env, :failed}
       end
     else
-      {0, %EVM.SubState{}, exec_env, <<>>}
+      {0, %EVM.SubState{}, exec_env, :failed}
     end
   end
 
@@ -86,7 +86,7 @@ defmodule EVM.Builtin do
       result = :crypto.hash(:sha256, data)
       {remaining_gas, %EVM.SubState{}, exec_env, result}
     else
-      {0, %EVM.SubState{}, exec_env, <<>>}
+      {0, %EVM.SubState{}, exec_env, :failed}
     end
   end
 
@@ -110,7 +110,7 @@ defmodule EVM.Builtin do
       result = :crypto.hash(:ripemd160, data) |> EVM.Helpers.left_pad_bytes(32)
       {remaining_gas, %EVM.SubState{}, exec_env, result}
     else
-      {0, %EVM.SubState{}, exec_env, <<>>}
+      {0, %EVM.SubState{}, exec_env, :failed}
     end
   end
 
@@ -134,7 +134,7 @@ defmodule EVM.Builtin do
 
       {remaining_gas, %EVM.SubState{}, exec_env, data}
     else
-      {0, %EVM.SubState{}, exec_env, <<>>}
+      {0, %EVM.SubState{}, exec_env, :failed}
     end
   end
 end
