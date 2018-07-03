@@ -1369,7 +1369,7 @@ defmodule Blockchain.StateTest do
       "randomStatetest535",
       "randomStatetest536",
       "randomStatetest537",
-      # "randomStatetest538",
+      "randomStatetest538",
       "randomStatetest539",
       "randomStatetest541",
       "randomStatetest542",
@@ -1398,7 +1398,7 @@ defmodule Blockchain.StateTest do
       "randomStatetest569",
       "randomStatetest571",
       "randomStatetest572",
-      # "randomStatetest573",
+      "randomStatetest573",
       "randomStatetest574",
       "randomStatetest575",
       "randomStatetest576",
@@ -2451,7 +2451,8 @@ defmodule Blockchain.StateTest do
             difficulty: load_integer(test["env"]["currentDifficulty"]),
             timestamp: load_integer(test["env"]["currentTimestamp"]),
             number: load_integer(test["env"]["currentNumber"]),
-            gas_limit: load_integer(test["env"]["currentGasLimit"])
+            gas_limit: load_integer(test["env"]["currentGasLimit"]),
+            parent_hash: maybe_hex(test["env"]["previousHash"])
           })
 
         if(Map.has_key?(test["post"], "Frontier")) do

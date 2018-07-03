@@ -2451,14 +2451,15 @@ defmodule GenerateStateTests do
 
           {state, _, _} =
             Transaction.execute(state, transaction, %Block.Header{
-                  beneficiary: maybe_hex(test["env"]["currentCoinbase"]),
-                  difficulty: load_integer(test["env"]["currentDifficulty"]),
-                  timestamp: load_integer(test["env"]["currentTimestamp"]),
-                  number: load_integer(test["env"]["currentNumber"]),
-                  gas_limit: load_integer(test["env"]["currentGasLimit"])
+              beneficiary: maybe_hex(test["env"]["currentCoinbase"]),
+              difficulty: load_integer(test["env"]["currentDifficulty"]),
+              timestamp: load_integer(test["env"]["currentTimestamp"]),
+              number: load_integer(test["env"]["currentNumber"]),
+              gas_limit: load_integer(test["env"]["currentGasLimit"]),
+              parent_hash: maybe_hex(test["env"]["previousHash"])
             })
 
-          if(Map.has_key?(test["post"], "Frontier")) do
+          if Map.has_key?(test["post"], "Frontier") do
             expected_hash =
               test["post"]["Frontier"]
               |> List.first()
