@@ -8,7 +8,8 @@ defmodule EVM.Builtin do
   """
   @g_rip160_base 600
   @g_rip160_byte 120
-  @g_sha256 60 + 12
+  @g_sha256 60
+  @g_256_byte 12
   @g_identity_base 15
   @g_identity_byte 3
   @g_ecrec 3000
@@ -79,7 +80,7 @@ defmodule EVM.Builtin do
   @spec run_sha256(EVM.Gas.t(), EVM.ExecEnv.t()) ::
           {EVM.Gas.t(), EVM.SubState.t(), EVM.ExecEnv.t(), EVM.VM.output()}
   def run_sha256(gas, exec_env = %EVM.ExecEnv{data: data}) do
-    used_gas = @g_sha256 * MathHelper.bits_to_words(byte_size(data))
+    used_gas = @g_sha256 + @g_256_byte * MathHelper.bits_to_words(byte_size(data))
 
     if used_gas <= gas do
       remaining_gas = gas - used_gas
