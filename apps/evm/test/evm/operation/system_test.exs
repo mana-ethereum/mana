@@ -165,7 +165,7 @@ defmodule EVM.Operation.SystemTest do
   end
 
   describe "call/2" do
-    test "Transfers wei from callers account to callees account" do
+    test "failes to Transfer wei from callers account to callees account" do
       account_map = %{
         <<0::160>> => %{balance: 100, nonce: 5, code: <<>>},
         <<1::160>> => %{balance: 100, nonce: 5, code: <<>>},
@@ -180,17 +180,17 @@ defmodule EVM.Operation.SystemTest do
         address: <<0::160>>
       }
 
-      machine_state = %MachineState{gas: 1000}
+      machine_state = %MachineState{gas: 1_000_000}
 
-      %{machine_state: machine_state, exec_env: exec_env} =
+      %{machine_state: machine_state} =
         Operation.System.call([10, 1, 1, 0, 0, 0, 0], %{
           exec_env: exec_env,
           machine_state: machine_state
         })
 
-      assert Stack.peek(machine_state.stack) == 1
-      assert AccountInterface.get_account_balance(exec_env.account_interface, <<0::160>>) == 99
-      assert AccountInterface.get_account_balance(exec_env.account_interface, <<1::160>>) == 101
+      assert Stack.peek(machine_state.stack) == 0
+      assert AccountInterface.get_account_balance(exec_env.account_interface, <<0::160>>) == 100
+      assert AccountInterface.get_account_balance(exec_env.account_interface, <<1::160>>) == 100
     end
   end
 end
