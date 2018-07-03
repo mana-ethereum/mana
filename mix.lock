@@ -10,5 +10,5 @@
   "libsecp256k1": {:hex, :libsecp256k1, "0.1.4", "42b7f76d8e32f85f578ccda0abfdb1afa0c5c231d1fd8aeab9cda352731a2d83", [:rebar3], [], "hexpm"},
   "poison": {:hex, :poison, "3.1.0", "d9eb636610e096f86f25d9a46f35a9facac35609a7591b3be3326e99a0484665", [:mix], [], "hexpm"},
   "rox": {:hex, :rox, "2.2.1", "847593765a119b48b1de381a874b692eac5375c79a6fd82b4c6353b98b7d9fdb", [:mix], [{:rustler, "~> 0.10", [hex: :rustler, repo: "hexpm", optional: false]}], "hexpm"},
-  "rustler": {:hex, :rustler, "0.16.0", "9b04237d2e7b30fcae40a28edb56f59aad8f4e3c8790f4996b5f200f649964be", [:mix], [], "hexpm"},
+  "rustler": {:hex, :rustler, "0.17.1", "2b4f120daf411b4eebd8cad6cb68f7d519dc409ca9e70daa8856d1d37b13e203", [:mix], [], "hexpm"},
 }

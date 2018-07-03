@@ -36,9 +36,9 @@ defmodule Block.Header do
             # H_x
             extra_data: <<>>,
             # H_m
-            mix_hash: nil,
+            mix_hash: "",
             # H_n
-            nonce: nil
+            nonce: 0
 
   # As defined in section 4.3
   @type t :: %__MODULE__{
