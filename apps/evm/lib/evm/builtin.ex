@@ -1,5 +1,6 @@
 defmodule EVM.Builtin do
   alias ExthCrypto.{Signature, Key}
+  alias EVM.Helpers
 
   @moduledoc """
   Implements the built-in functions as defined in Appendix E
@@ -43,7 +44,12 @@ defmodule EVM.Builtin do
     used_gas = @g_ecrec
 
     if used_gas <= gas do
-      data = EVM.Helpers.right_pad_bytes(data, 128)
+      data =
+        data
+        |> Helpers.right_pad_bytes(128)
+        |> :binary.bin_to_list
+        |> Enum.take(128)
+        |> :binary.list_to_bin
 
       <<h::binary-size(32), v_with_version::binary-size(32), r::binary-size(32),
         s::binary-size(32)>> = data
