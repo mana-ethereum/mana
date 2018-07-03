@@ -32,6 +32,10 @@ lib/evm/interface/mock/mock_account_interface
 lib/evm/interface/mock/mock_block_interface
 lib/evm/machine_code
 
+-------------------------------
+# apps/evm/lib/evm/builtin.ex warnings
+-------------------------------
+apps/evm/lib/evm/builtin.ex:52: Call to missing or unexported function 'Elixir.ExthCrypto.Signature':version/0
 
 -------------------------------
 # Introduced by Elixir 1.6.4 https://github.com/elixir-lang/elixir/issues/7508

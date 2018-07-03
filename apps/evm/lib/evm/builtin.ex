@@ -1,4 +1,6 @@
 defmodule EVM.Builtin do
+  alias ExthCrypto.{Signature, Key}
+
   @moduledoc """
   Implements the built-in functions as defined in Appendix E
   of the Yellow Paper. These are contract functions that
@@ -21,25 +23,17 @@ defmodule EVM.Builtin do
   ## Examples
 
       iex> private_key = ExthCrypto.Test.private_key(:key_a)
-      iex> public_key = ExthCrypto.Signature.get_public_key(private_key)
+      iex> {:ok, public_key} = ExthCrypto.Signature.get_public_key(private_key)
       iex> message = EVM.Helpers.left_pad_bytes("hello")
       iex> {signature, _r, _s, v} = ExthCrypto.Signature.sign_digest(message, private_key)
-      iex> data = message <>  EVM.Helpers.left_pad_bytes(:binary.encode_unsigned(v)) <> EVM.Helpers.left_pad_bytes(signature)
-      iex> ecrec = EVM.Builtin.run_ecrec(4000,  %EVM.ExecEnv{data: data})
-      {1000, %EVM.SubState{}, %EVM.ExecEnv{data: <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 104, 101, 108, 108, 111,
-      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0, 0, 0, 0, 0, 0, 0, 0, 0,
-      0, 0, 0, 0, 0, 0, 157, 88, 212, 26, 211, 54, 10,135, 39, 216, 45, 18, 56,
-      139, 206, 1, 202, 210, 233, 112, 182, 237, 152, 142,71, 252, 20, 42, 181,
-      196, 121, 188, 66, 40, 156, 155, 181, 241, 89, 27, 137,161, 53, 118, 139,
-      69, 170, 196, 68, 105, 219, 150, 55, 123, 44, 129, 192,236, 10, 217, 165,
-      239, 137, 223>>}, <<4, 54, 241, 224, 126, 85, 135, 69, 213, 129, 115, 3, 41,
-      161, 217, 87, 215,159, 64, 17, 167, 128, 113, 172, 232, 46, 34, 145, 136,
-      72, 160, 207, 161,171, 255, 26, 163, 160, 158, 227, 196, 92, 62, 119, 84,
-      156, 99, 224, 155,120, 250, 153, 134, 180, 218, 177, 186, 200, 199, 106,
-      97, 103, 50, 215, 114>>}
-      iex> {_, _, _, result} = ecrec
-      iex> {:ok, result} == public_key
+      iex> data = message <>  EVM.Helpers.left_pad_bytes(:binary.encode_unsigned(v + ExthCrypto.Signature.version())) <> EVM.Helpers.left_pad_bytes(signature)
+      iex> {remaining_gas, _sub_state, _exec_env, result} = EVM.Builtin.run_ecrec(4000,  %EVM.ExecEnv{data: data})
+      iex> remaining_gas
+      1000
+      iex> result == public_key
+      ...>   |> ExthCrypto.Key.der_to_raw()
+      ...>   |> EVM.Address.new_from_public_key()
+      ...>   |> EVM.Helpers.left_pad_bytes()
       true
   """
 
@@ -50,14 +44,24 @@ defmodule EVM.Builtin do
 
     if used_gas <= gas do
       data = EVM.Helpers.right_pad_bytes(data, 128)
-      <<h::binary-size(32), v::binary-size(32), r::binary-size(32), s::binary-size(32)>> = data
-      signature = r <> s
 
-      case ExthCrypto.Signature.recover(h, signature, :binary.decode_unsigned(v)) do
+      <<h::binary-size(32), v_with_version::binary-size(32), r::binary-size(32),
+        s::binary-size(32)>> = data
+
+      signature = r <> s
+      v = :binary.decode_unsigned(v_with_version) - Signature.version()
+
+      case Signature.recover(h, signature, v) do
         {:ok, public_key} ->
+          padded_address =
+            public_key
+            |> Key.der_to_raw()
+            |> EVM.Address.new_from_public_key()
+            |> EVM.Helpers.left_pad_bytes()
+
           remaining_gas = gas - used_gas
-          EVM.Helpers.left_pad_bytes(public_key, 32)
-          {remaining_gas, %EVM.SubState{}, exec_env, public_key}
+
+          {remaining_gas, %EVM.SubState{}, exec_env, padded_address}
 
         {:error, _} ->
           {0, %EVM.SubState{}, exec_env, :failed}
