@@ -539,7 +539,7 @@ defmodule Blockchain.Account do
     end)
   end
 
-  @spec put_storage(EVM.state(), EVM.address(), integer(), integer()) :: EVM.state()
+  @spec remove_storage(EVM.state(), EVM.address(), integer()) :: EVM.state()
   def remove_storage(state, address, key) do
     update_account(state, address, fn acct ->
       updated_storage_trie = Storage.remove(state.db, acct.storage_root, key)
