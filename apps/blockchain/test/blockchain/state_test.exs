@@ -2436,7 +2436,7 @@ defmodule Blockchain.StateTest do
 
         if Map.has_key?(test["post"], "Frontier") do
           test["post"]["Frontier"]
-          |> Enum.with_index
+          |> Enum.with_index()
           |> Enum.each(fn {post, index} ->
             indexes = post["indexes"]
             gas_limit_index = indexes["gas"]

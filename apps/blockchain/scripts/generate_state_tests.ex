@@ -2437,14 +2437,14 @@ defmodule GenerateStateTests do
       for {test_name, test} <- Enum.sort(passing_tests(test_group_name)) do
         try do
           if Map.has_key?(test["post"], "Frontier") do
-            res =
+            all_posts_match =
               test["post"]["Frontier"]
               |> Enum.with_index()
               |> Enum.all?(fn indexed_post ->
                 run_test(test, indexed_post)
               end)
 
-            if res do
+            if all_posts_match do
               if !only_count, do: log_test(test_name)
               :ets.update_counter(test_counts, "passing", {2, 1}, {"passing", 0})
             else
