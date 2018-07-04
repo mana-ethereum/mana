@@ -2436,37 +2436,46 @@ defmodule GenerateStateTests do
 
       for {test_name, test} <- Enum.sort(passing_tests(test_group_name)) do
         try do
-          state = account_interface(test).state
-
-          transaction =
-            %Transaction{
-              nonce: load_integer(test["transaction"]["nonce"]),
-              gas_price: load_integer(test["transaction"]["gasPrice"]),
-              gas_limit: load_integer(List.first(test["transaction"]["gasLimit"])),
-              data: maybe_hex(List.first(test["transaction"]["data"])),
-              to: maybe_hex(test["transaction"]["to"]),
-              value: load_integer(List.first(test["transaction"]["value"]))
-            }
-            |> Transaction.Signature.sign_transaction(maybe_hex(test["transaction"]["secretKey"]))
-
-          {state, _, _} =
-            Transaction.execute(state, transaction, %Block.Header{
-              beneficiary: maybe_hex(test["env"]["currentCoinbase"]),
-              difficulty: load_integer(test["env"]["currentDifficulty"]),
-              timestamp: load_integer(test["env"]["currentTimestamp"]),
-              number: load_integer(test["env"]["currentNumber"]),
-              gas_limit: load_integer(test["env"]["currentGasLimit"]),
-              parent_hash: maybe_hex(test["env"]["previousHash"])
-            })
-
           if Map.has_key?(test["post"], "Frontier") do
-            expected_hash =
-              test["post"]["Frontier"]
-              |> List.first()
-              |> Map.fetch!("hash")
-              |> maybe_hex()
+            state = account_interface(test).state
 
-            if state.root_hash == expected_hash do
+            res = Enum.all?(test["post"]["Frontier"], fn post ->
+              indexes = post["indexes"]
+              gas_limit_index = indexes["gas"]
+              value_index = indexes["value"]
+              data_index = indexes["data"]
+
+              transaction =
+                %Transaction{
+                  nonce: load_integer(test["transaction"]["nonce"]),
+                  gas_price: load_integer(test["transaction"]["gasPrice"]),
+                  gas_limit: load_integer(Enum.at(test["transaction"]["gasLimit"], gas_limit_index)),
+                  data: maybe_hex(Enum.at(test["transaction"]["data"], data_index)),
+                  to: maybe_hex(test["transaction"]["to"]),
+                  value: load_integer(Enum.at(test["transaction"]["value"], value_index))
+                }
+                |> Transaction.Signature.sign_transaction(maybe_hex(test["transaction"]["secretKey"]))
+
+              {state, _, _} =
+                Transaction.execute(state, transaction, %Block.Header{
+                      beneficiary: maybe_hex(test["env"]["currentCoinbase"]),
+                      difficulty: load_integer(test["env"]["currentDifficulty"]),
+                      timestamp: load_integer(test["env"]["currentTimestamp"]),
+                      number: load_integer(test["env"]["currentNumber"]),
+                      gas_limit: load_integer(test["env"]["currentGasLimit"]),
+                      parent_hash: maybe_hex(test["env"]["previousHash"])
+                })
+
+              expected_hash =
+                test["post"]["Frontier"]
+                |> List.first()
+                |> Map.fetch!("hash")
+                |> maybe_hex()
+
+              state.root_hash == expected_hash
+            end)
+
+            if res do
               if !only_count, do: log_test(test_name)
               :ets.update_counter(test_counts, "passing", {2, 1}, {"passing", 0})
             else
