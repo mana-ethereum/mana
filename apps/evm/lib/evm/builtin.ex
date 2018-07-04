@@ -51,6 +51,8 @@ defmodule EVM.Builtin do
         |> Enum.take(128)
         |> :binary.list_to_bin()
 
+      remaining_gas = gas - used_gas
+
       <<h::binary-size(32), v_with_version::binary-size(32), r::binary-size(32),
         s::binary-size(32)>> = data
 
@@ -65,12 +67,10 @@ defmodule EVM.Builtin do
             |> EVM.Address.new_from_public_key()
             |> EVM.Helpers.left_pad_bytes()
 
-          remaining_gas = gas - used_gas
-
           {remaining_gas, %EVM.SubState{}, exec_env, padded_address}
 
         {:error, _} ->
-          {0, %EVM.SubState{}, exec_env, :failed}
+          {remaining_gas, %EVM.SubState{}, exec_env, :invalid_input}
       end
     else
       {0, %EVM.SubState{}, exec_env, :failed}

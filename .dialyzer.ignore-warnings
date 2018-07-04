@@ -35,7 +35,7 @@ lib/evm/machine_code
 -------------------------------
 # apps/evm/lib/evm/builtin.ex warnings
 -------------------------------
-apps/evm/lib/evm/builtin.ex:58: Call to missing or unexported function 'Elixir.ExthCrypto.Signature':version/0
+apps/evm/lib/evm/builtin.ex:60: Call to missing or unexported function 'Elixir.ExthCrypto.Signature':version/0
 
 -------------------------------
 # Introduced by Elixir 1.6.4 https://github.com/elixir-lang/elixir/issues/7508

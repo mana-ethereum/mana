@@ -83,25 +83,33 @@ defmodule EVM.MessageCall do
     %{message_call | current_exec_env: exec_env}
   end
 
-  def update_state({n_gas, n_sub_state, n_exec_env, n_output}, message_call) do
-    if n_output != :failed do
-      machine_state = message_call.current_machine_state
-      exec_env = message_call.current_exec_env
+  def update_state({gas_remaining, n_sub_state, n_exec_env, output}, message_call) do
+    if output == :failed do
+      failed_call(message_call)
+    else
       {out_offset, _out_size} = message_call.output_params
 
-      updated_stack = Stack.push(machine_state.stack, 1)
-      machine_state = %{machine_state | stack: updated_stack, gas: machine_state.gas + n_gas}
-      machine_state = Memory.write(machine_state, out_offset, n_output)
-      exec_env = %{exec_env | account_interface: n_exec_env.account_interface}
+      machine_state =
+        message_call.current_machine_state
+        |> MachineState.push(1)
+        |> MachineState.refund_gas(gas_remaining)
+
+      machine_state =
+        if output == :invalid_input do
+          machine_state
+        else
+          Memory.write(machine_state, out_offset, output)
+        end
+
+      exec_env =
+        message_call.current_exec_env
+        |> Map.put(:account_interface, n_exec_env.account_interface)
 
       %{
         machine_state: machine_state,
         exec_env: exec_env,
-        # https://github.com/poanetwork/mana/issues/153
         sub_state: n_sub_state
       }
-    else
-      failed_call(message_call)
     end
   end
 

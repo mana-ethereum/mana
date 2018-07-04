@@ -52,6 +52,20 @@ defmodule EVM.MachineState do
   end
 
   @doc """
+  Refunds gas in the machine state
+
+  ## Examples
+
+      iex> machine_state = %EVM.MachineState{gas: 5}
+      iex> EVM.MachineState.refund_gas(machine_state, 5)
+      %EVM.MachineState{gas: 10}
+  """
+  @spec refund_gas(MachineState.t(), integer()) :: MachineState.t()
+  def refund_gas(machine_state, amount) do
+    %{machine_state | gas: machine_state.gas + amount}
+  end
+
+  @doc """
   After a memory operation, we may have incremented the total number
   of active words. This function takes a memory offset accessed and
   updates the machine state accordingly.
