@@ -908,7 +908,7 @@ defmodule Blockchain.StateTest do
       "randomStatetest1",
       "randomStatetest10",
       "randomStatetest100",
-      # "randomStatetest101",
+      "randomStatetest101",
       "randomStatetest102",
       "randomStatetest103",
       "randomStatetest104",
@@ -1141,7 +1141,7 @@ defmodule Blockchain.StateTest do
       "randomStatetest343",
       "randomStatetest345",
       "randomStatetest346",
-      # "randomStatetest347",
+      "randomStatetest347",
       "randomStatetest348",
       "randomStatetest349",
       "randomStatetest350",
@@ -1632,7 +1632,7 @@ defmodule Blockchain.StateTest do
       "FailedCreateRevertsDeletion",
       "JUMPDEST_Attack",
       "JUMPDEST_AttackwithJump",
-      # "OverflowGasMakeMoney",
+      "OverflowGasMakeMoney",
       "StackDepthLimitSEC",
       "block504980",
       "deploymentError",
@@ -2434,35 +2434,47 @@ defmodule Blockchain.StateTest do
       for {_test_name, test} <- passing_tests(test_group_name) do
         state = account_interface(test).state
 
-        transaction =
-          %Transaction{
-            nonce: load_integer(test["transaction"]["nonce"]),
-            gas_price: load_integer(test["transaction"]["gasPrice"]),
-            gas_limit: load_integer(List.first(test["transaction"]["gasLimit"])),
-            data: maybe_hex(List.first(test["transaction"]["data"])),
-            to: maybe_hex(test["transaction"]["to"]),
-            value: load_integer(List.first(test["transaction"]["value"]))
-          }
-          |> Transaction.Signature.sign_transaction(maybe_hex(test["transaction"]["secretKey"]))
+        if Map.has_key?(test["post"], "Frontier") do
+          test["post"]["Frontier"]
+          |> Enum.with_index()
+          |> Enum.each(fn {post, index} ->
+            indexes = post["indexes"]
+            gas_limit_index = indexes["gas"]
+            value_index = indexes["value"]
+            data_index = indexes["data"]
 
-        {state, _, _} =
-          Transaction.execute(state, transaction, %Block.Header{
-            beneficiary: maybe_hex(test["env"]["currentCoinbase"]),
-            difficulty: load_integer(test["env"]["currentDifficulty"]),
-            timestamp: load_integer(test["env"]["currentTimestamp"]),
-            number: load_integer(test["env"]["currentNumber"]),
-            gas_limit: load_integer(test["env"]["currentGasLimit"]),
-            parent_hash: maybe_hex(test["env"]["previousHash"])
-          })
+            transaction =
+              %Transaction{
+                nonce: load_integer(test["transaction"]["nonce"]),
+                gas_price: load_integer(test["transaction"]["gasPrice"]),
+                gas_limit:
+                  load_integer(Enum.at(test["transaction"]["gasLimit"], gas_limit_index)),
+                data: maybe_hex(Enum.at(test["transaction"]["data"], data_index)),
+                to: maybe_hex(test["transaction"]["to"]),
+                value: load_integer(Enum.at(test["transaction"]["value"], value_index))
+              }
+              |> Transaction.Signature.sign_transaction(
+                maybe_hex(test["transaction"]["secretKey"])
+              )
 
-        if(Map.has_key?(test["post"], "Frontier")) do
-          expected_hash =
-            test["post"]["Frontier"]
-            |> List.first()
-            |> Map.fetch!("hash")
-            |> maybe_hex()
+            {state, _, _} =
+              Transaction.execute(state, transaction, %Block.Header{
+                beneficiary: maybe_hex(test["env"]["currentCoinbase"]),
+                difficulty: load_integer(test["env"]["currentDifficulty"]),
+                timestamp: load_integer(test["env"]["currentTimestamp"]),
+                number: load_integer(test["env"]["currentNumber"]),
+                gas_limit: load_integer(test["env"]["currentGasLimit"]),
+                parent_hash: maybe_hex(test["env"]["previousHash"])
+              })
 
-          assert state.root_hash == expected_hash
+            expected_hash =
+              test["post"]["Frontier"]
+              |> Enum.at(index)
+              |> Map.fetch!("hash")
+              |> maybe_hex()
+
+            assert state.root_hash == expected_hash
+          end)
         end
       end
     end

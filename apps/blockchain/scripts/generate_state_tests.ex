@@ -2436,37 +2436,15 @@ defmodule GenerateStateTests do
 
       for {test_name, test} <- Enum.sort(passing_tests(test_group_name)) do
         try do
-          state = account_interface(test).state
-
-          transaction =
-            %Transaction{
-              nonce: load_integer(test["transaction"]["nonce"]),
-              gas_price: load_integer(test["transaction"]["gasPrice"]),
-              gas_limit: load_integer(List.first(test["transaction"]["gasLimit"])),
-              data: maybe_hex(List.first(test["transaction"]["data"])),
-              to: maybe_hex(test["transaction"]["to"]),
-              value: load_integer(List.first(test["transaction"]["value"]))
-            }
-            |> Transaction.Signature.sign_transaction(maybe_hex(test["transaction"]["secretKey"]))
-
-          {state, _, _} =
-            Transaction.execute(state, transaction, %Block.Header{
-              beneficiary: maybe_hex(test["env"]["currentCoinbase"]),
-              difficulty: load_integer(test["env"]["currentDifficulty"]),
-              timestamp: load_integer(test["env"]["currentTimestamp"]),
-              number: load_integer(test["env"]["currentNumber"]),
-              gas_limit: load_integer(test["env"]["currentGasLimit"]),
-              parent_hash: maybe_hex(test["env"]["previousHash"])
-            })
-
           if Map.has_key?(test["post"], "Frontier") do
-            expected_hash =
+            all_posts_match =
               test["post"]["Frontier"]
-              |> List.first()
-              |> Map.fetch!("hash")
-              |> maybe_hex()
+              |> Enum.with_index()
+              |> Enum.all?(fn indexed_post ->
+                run_test(test, indexed_post)
+              end)
 
-            if state.root_hash == expected_hash do
+            if all_posts_match do
               if !only_count, do: log_test(test_name)
               :ets.update_counter(test_counts, "passing", {2, 1}, {"passing", 0})
             else
@@ -2495,16 +2473,52 @@ defmodule GenerateStateTests do
 
       log_test_percentage("Passing", passing_tests, total_tests)
       log_test_percentage("Failing", failing_tests, total_tests)
-      IO.puts(
-        "Post Frontier tests: #{post_frontier_tests}"
-      )
+      IO.puts("Post Frontier tests: #{post_frontier_tests}")
     end
+  end
+
+  defp run_test(test, {post, index}) do
+    state = account_interface(test).state
+
+    indexes = post["indexes"]
+    gas_limit_index = indexes["gas"]
+    value_index = indexes["value"]
+    data_index = indexes["data"]
+
+    transaction =
+      %Transaction{
+        nonce: load_integer(test["transaction"]["nonce"]),
+        gas_price: load_integer(test["transaction"]["gasPrice"]),
+        gas_limit: load_integer(Enum.at(test["transaction"]["gasLimit"], gas_limit_index)),
+        data: maybe_hex(Enum.at(test["transaction"]["data"], data_index)),
+        to: maybe_hex(test["transaction"]["to"]),
+        value: load_integer(Enum.at(test["transaction"]["value"], value_index))
+      }
+      |> Transaction.Signature.sign_transaction(maybe_hex(test["transaction"]["secretKey"]))
+
+    {state, _, _} =
+      Transaction.execute(state, transaction, %Block.Header{
+        beneficiary: maybe_hex(test["env"]["currentCoinbase"]),
+        difficulty: load_integer(test["env"]["currentDifficulty"]),
+        timestamp: load_integer(test["env"]["currentTimestamp"]),
+        number: load_integer(test["env"]["currentNumber"]),
+        gas_limit: load_integer(test["env"]["currentGasLimit"]),
+        parent_hash: maybe_hex(test["env"]["previousHash"])
+      })
+
+    expected_hash =
+      test["post"]["Frontier"]
+      |> Enum.at(index)
+      |> Map.fetch!("hash")
+      |> maybe_hex()
+
+    state.root_hash == expected_hash
   end
 
   defp log_test_percentage(test_type, test_count, total_tests) do
     IO.puts(
       "#{test_type} tests: #{test_count}/#{total_tests} = #{
-        trunc(Float.round(test_count / (total_tests), 2) * 100)
+        trunc(Float.round(test_count / total_tests, 2) * 100)
       }%"
     )
   end
@@ -2522,7 +2536,7 @@ defmodule GenerateStateTests do
   end
 
   defp log_closing_group do
-    IO.puts ("    ],")
+    IO.puts("    ],")
   end
 
   def passing_tests(test_group_name) do
@@ -2562,7 +2576,11 @@ defmodule GenerateStateTests do
 
   def state_test_file_name(group, test) do
     file_name = Path.join(~w(st#{group} #{test}.json))
-    relative_path = Path.join(~w(#{EthCommonTest.Helpers.ethereum_common_tests_path()} GeneralStateTests #{file_name}))
+
+    relative_path =
+      Path.join(
+        ~w(#{EthCommonTest.Helpers.ethereum_common_tests_path()} GeneralStateTests #{file_name})
+      )
 
     System.cwd()
     |> Path.join(relative_path)
