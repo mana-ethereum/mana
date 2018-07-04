@@ -340,7 +340,7 @@ defmodule Blockchain.StateTest do
       "callcodecallcodecallcode_111_OOGMAfter_1",
       "callcodecallcodecallcode_111_OOGMAfter_2",
       "callcodecallcodecallcode_111_OOGMAfter_3",
-      # "contractCreationMakeCallThatAskMoreGasThenTransactionProvided",
+      "contractCreationMakeCallThatAskMoreGasThenTransactionProvided",
       "createInitFail_OOGduringInit"
     ],
     "CodeCopyTest" => [
@@ -353,14 +353,14 @@ defmodule Blockchain.StateTest do
     ],
     "CreateTest" => [
       # "CREATE_AcreateB_BSuicide_BStore",
-      # "CREATE_ContractRETURNBigOffset",
+      "CREATE_ContractRETURNBigOffset",
       "CREATE_ContractSSTOREDuringInit",
       "CREATE_ContractSuicideDuringInit",
       "CREATE_ContractSuicideDuringInit_ThenStoreThenReturn",
       "CREATE_ContractSuicideDuringInit_WithValue",
       "CREATE_ContractSuicideDuringInit_WithValueToItself",
       "CREATE_EContractCreateEContractInInit_Tr",
-      # "CREATE_EContractCreateNEContractInInitOOG_Tr",
+      "CREATE_EContractCreateNEContractInInitOOG_Tr",
       "CREATE_EContractCreateNEContractInInit_Tr",
       "CREATE_EContract_ThenCALLToNonExistentAcc",
       "CREATE_EmptyContract",
@@ -370,11 +370,11 @@ defmodule Blockchain.StateTest do
       "CREATE_EmptyContractWithStorage",
       "CREATE_EmptyContractWithStorageAndCallIt_0wei",
       "CREATE_EmptyContractWithStorageAndCallIt_1wei",
-      "CREATE_empty000CreateinInitCode_Transaction"
-      # "CreateCollisionToEmpty",
-      # "TransactionCollisionToEmpty",
-      # "TransactionCollisionToEmptyButCode",
-      # "TransactionCollisionToEmptyButNonce",
+      "CREATE_empty000CreateinInitCode_Transaction",
+      "CreateCollisionToEmpty",
+      "TransactionCollisionToEmpty",
+      "TransactionCollisionToEmptyButCode",
+      "TransactionCollisionToEmptyButNonce"
     ],
     "DelegatecallTestHomestead" => [
       "Call1024BalanceTooLow",
@@ -488,7 +488,7 @@ defmodule Blockchain.StateTest do
       "CallRecursiveContract",
       "CallTheContractToCreateEmptyContract",
       # "NotEnoughCashContractCreation",
-      # "OutOfGasContractCreation",
+      "OutOfGasContractCreation",
       "OutOfGasPrefundedContractCreation",
       "ReturnTest",
       "ReturnTest2",
@@ -572,7 +572,7 @@ defmodule Blockchain.StateTest do
       "DELEGATECALL_Bounds2",
       "DELEGATECALL_Bounds3",
       "DUP_Bounds",
-      # "FillStack",
+      "FillStack",
       "JUMPI_Bounds",
       "JUMP_Bounds",
       "JUMP_Bounds2",
@@ -583,14 +583,14 @@ defmodule Blockchain.StateTest do
       "MSTORE_Bounds2",
       "MSTORE_Bounds2a",
       "POP_Bounds",
-      # "RETURN_Bounds",
+      "RETURN_Bounds",
       "SLOAD_Bounds",
       "SSTORE_Bounds",
       "mload32bitBound",
-      # "mload32bitBound2",
+      "mload32bitBound2",
       "mload32bitBound_Msize",
-      # "mload32bitBound_return",
-      # "mload32bitBound_return2",
+      "mload32bitBound_return",
+      "mload32bitBound_return2",
       "static_CALL_Bounds",
       "static_CALL_Bounds2",
       "static_CALL_Bounds2a",
@@ -1474,7 +1474,7 @@ defmodule Blockchain.StateTest do
       # "refund_CallA",
       "refund_CallA_OOG",
       "refund_CallA_notEnoughGasInCall",
-      # "refund_CallToSuicideNoStorage",
+      "refund_CallToSuicideNoStorage",
       # "refund_CallToSuicideStorage",
       # "refund_CallToSuicideTwice",
       # "refund_NoOOG_1",
@@ -1534,23 +1534,23 @@ defmodule Blockchain.StateTest do
       "NashatyrevSuicideRevert",
       "PythonRevertTestTue201814-1430",
       "RevertDepth2",
-      # "RevertDepthCreateAddressCollision",
-      # "RevertDepthCreateOOG",
+      "RevertDepthCreateAddressCollision",
+      "RevertDepthCreateOOG",
       "RevertInCallCode",
       "RevertInCreateInInit",
       "RevertInDelegateCall",
       "RevertInStaticCall",
       "RevertOnEmptyStack",
-      # "RevertOpcode",
+      "RevertOpcode",
       "RevertOpcodeCalls",
-      # "RevertOpcodeCreate",
-      # "RevertOpcodeDirectCall",
+      "RevertOpcodeCreate",
+      "RevertOpcodeDirectCall",
       # "RevertOpcodeInCallsOnNonEmptyReturnData",
       "RevertOpcodeInCreateReturns",
-      # "RevertOpcodeInInit",
-      # "RevertOpcodeMultipleSubCalls",
-      # "RevertOpcodeReturn",
-      # "RevertOpcodeWithBigOutputInInit",
+      "RevertOpcodeInInit",
+      "RevertOpcodeMultipleSubCalls",
+      "RevertOpcodeReturn",
+      "RevertOpcodeWithBigOutputInInit",
       "RevertPrecompiledTouch",
       "RevertPrecompiledTouchCC",
       "RevertPrecompiledTouchDC",
@@ -1562,8 +1562,8 @@ defmodule Blockchain.StateTest do
       "RevertPrefoundEmptyCallOOG",
       "RevertPrefoundEmptyOOG",
       "RevertPrefoundOOG",
-      # "RevertRemoteSubCallStorageOOG",
-      # "RevertRemoteSubCallStorageOOG2",
+      "RevertRemoteSubCallStorageOOG",
+      "RevertRemoteSubCallStorageOOG2",
       "RevertSubCallStorageOOG",
       "RevertSubCallStorageOOG2",
       "TouchToEmptyAccountRevert",
@@ -1944,7 +1944,7 @@ defmodule Blockchain.StateTest do
       "ABAcalls2",
       "ABAcalls3",
       "ABAcallsSuicide0",
-      # "ABAcallsSuicide1",
+      "ABAcallsSuicide1",
       "Call10",
       "CallRecursiveBomb0",
       "CallRecursiveBomb0_OOG_atMaxCallDepth",
@@ -2023,7 +2023,7 @@ defmodule Blockchain.StateTest do
       "InternalCallHittingGasLimitSuccess",
       "InternlCallStoreClearsOOG",
       # "InternlCallStoreClearsSucces",
-      # "Opcodes_TransactionInit",
+      "Opcodes_TransactionInit",
       # "OverflowGasRequire",
       "OverflowGasRequire2",
       # "RefundOverflow",
@@ -2095,7 +2095,7 @@ defmodule Blockchain.StateTest do
       "walletChangeRequirementRemovePendingTransaction",
       "walletConfirm",
       "walletConstruction",
-      # "walletConstructionOOG",
+      "walletConstructionOOG",
       "walletConstructionPartial",
       "walletDefault",
       "walletDefaultWithOutValue",
@@ -2292,7 +2292,7 @@ defmodule Blockchain.StateTest do
       "pairingTest",
       "pointAdd",
       "pointAddTrunc",
-      # "pointMulAdd",
+      "pointMulAdd",
       "pointMulAdd2"
     ],
     "ZeroKnowledge2" => [
@@ -2435,7 +2435,9 @@ defmodule Blockchain.StateTest do
         state = account_interface(test).state
 
         if Map.has_key?(test["post"], "Frontier") do
-          Enum.each(test["post"]["Frontier"], fn post ->
+          test["post"]["Frontier"]
+          |> Enum.with_index
+          |> Enum.each(fn {post, index} ->
             indexes = post["indexes"]
             gas_limit_index = indexes["gas"]
             value_index = indexes["value"]
@@ -2467,7 +2469,7 @@ defmodule Blockchain.StateTest do
 
             expected_hash =
               test["post"]["Frontier"]
-              |> List.first()
+              |> Enum.at(index)
               |> Map.fetch!("hash")
               |> maybe_hex()
 
