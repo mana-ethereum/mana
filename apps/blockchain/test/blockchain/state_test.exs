@@ -2432,12 +2432,12 @@ defmodule Blockchain.StateTest do
   test "Blockchain state tests" do
     for test_group_name <- Map.keys(@passing_tests_by_group) do
       for {_test_name, test} <- passing_tests(test_group_name) do
-        state = account_interface(test).state
-
         if Map.has_key?(test["post"], "Frontier") do
           test["post"]["Frontier"]
           |> Enum.with_index()
           |> Enum.each(fn {post, index} ->
+            state = account_interface(test).state
+
             indexes = post["indexes"]
             gas_limit_index = indexes["gas"]
             value_index = indexes["value"]
