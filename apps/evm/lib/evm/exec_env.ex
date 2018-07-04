@@ -60,6 +60,13 @@ defmodule EVM.ExecEnv do
     AccountInterface.get_storage(account_interface, address, key)
   end
 
+  @spec remove_storage(t(), integer()) :: t()
+  def remove_storage(exec_env = %{account_interface: account_interface, address: address}, key) do
+    account_interface = AccountInterface.remove_storage(account_interface, address, key)
+
+    Map.put(exec_env, :account_interface, account_interface)
+  end
+
   @spec destroy_account(t()) :: t()
   def destroy_account(exec_env = %{account_interface: account_interface, address: address}) do
     account_interface = AccountInterface.destroy_account(account_interface, address)

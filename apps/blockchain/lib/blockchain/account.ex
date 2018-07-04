@@ -539,6 +539,15 @@ defmodule Blockchain.Account do
     end)
   end
 
+  @spec remove_storage(EVM.state(), EVM.address(), integer()) :: EVM.state()
+  def remove_storage(state, address, key) do
+    update_account(state, address, fn acct ->
+      updated_storage_trie = Storage.remove(state.db, acct.storage_root, key)
+
+      %{acct | storage_root: updated_storage_trie.root_hash}
+    end)
+  end
+
   @doc """
   Gets a value from storage root of an account.
   See Section 4.1 under **storageRoot** from the Yellow Paper.
