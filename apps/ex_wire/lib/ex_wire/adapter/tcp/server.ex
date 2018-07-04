@@ -11,6 +11,7 @@ defmodule ExWire.Adapter.TCP.Server do
   alias ExWire.Framing.Frame
   alias ExWire.{Handshake, Packet, TCP, DEVp2p}
   alias ExWire.Struct.Peer
+  alias ExWire.DEVp2p.Session
 
   @doc """
   Initialize by opening up a `gen_tcp` connection to given host and port.
@@ -67,10 +68,36 @@ defmodule ExWire.Adapter.TCP.Server do
   auth message, then we'll look for an ack. If we listened for a connection,
   we'll await an auth message.
 
+  If we completed the handshake we need to check if the peer has compatible
+  capabilities. We do that by comparing our devp2p handshake with the peer's.
+  If they are compatible, the session is set to active and
+  we can start exchanging packets.
+
   TODO: clients may send an auth before (or as) we do, and we should handle this case without error.
   """
-  def handle_info({:tcp, _socket, data}, state = %{secrets: _secrets}) do
-    {:noreply, handle_packet_data(data, state)}
+  def handle_info(
+        {:tcp, socket, data},
+        state = %{
+          secrets: _secrets,
+          session: %{handshake_sent: _handshake, handshake_received: false}
+        }
+      ) do
+    {:noreply, handle_session_activation(data, socket, state)}
+  end
+
+  def handle_info(
+        {:tcp, socket, data},
+        state = %{peer: peer, secrets: _secrets, session: session}
+      ) do
+    if Session.active?(session) do
+      {:noreply, handle_packet_data(data, state)}
+    else
+      Logger.warn("[Network] [#{peer}] Incompatible peer #{peer.host})")
+
+      TCP.shutdown(socket)
+
+      {:noreply, state}
+    end
   end
 
   def handle_info({:tcp, _socket, data}, state = %{is_outbound: true, handshake: _handshake}) do
@@ -207,6 +234,37 @@ defmodule ExWire.Adapter.TCP.Server do
     end
   end
 
+  defp handle_session_activation(
+         data,
+         socket,
+         state = %{peer: peer, secrets: secrets, session: session}
+       ) do
+    case Frame.unframe(data, secrets) do
+      {:ok, packet_type, packet_data, frame_rest, updated_secrets} ->
+        Logger.debug("[Network] [#{peer}] Got packet `#{inspect(packet_type)}` from #{peer.host}")
+
+        packet = get_packet(packet_type, packet_data)
+        session = DEVp2p.handshake_received(session, packet)
+
+        if Session.active?(session) do
+          Logger.debug("[Network] [#{peer}] Compatible peer, session active with #{peer.host})")
+
+          notify_subscribers(packet, state)
+          updated_state = Map.merge(state, %{secrets: updated_secrets, session: session})
+          handle_packet_data(frame_rest, updated_state)
+        else
+          handle_disconnect(state, session, packet, socket)
+        end
+
+      {:error, reason} ->
+        Logger.error(
+          "[Network] [#{peer}] Failed to read incoming packet from #{peer.host} `#{reason}`)"
+        )
+
+        state
+    end
+  end
+
   defp get_packet(packet_type, packet_data) do
     case Packet.get_packet_mod(packet_type) do
       {:ok, packet_mod} ->
@@ -253,6 +311,22 @@ defmodule ExWire.Adapter.TCP.Server do
     Client.send_packet(self(), handshake)
 
     DEVp2p.handshake_sent(session, handshake)
+  end
+
+  defp handle_disconnect(state = %{peer: peer}, session, packet, socket) do
+    Logger.error("[Network] [#{peer}] Incompatible peer #{peer.host}")
+    session = Session.disconnect(session)
+    send_dev_p2p_disconnect_packet(packet)
+    TCP.shutdown(socket)
+
+    Map.put(state, :session, session)
+  end
+
+  # Generate and send DevP2P Disconnect packet when the protocols are incompatible
+  defp send_dev_p2p_disconnect_packet(disconnect_packet) do
+    disconnect_packet = %ExWire.Packet.Disconnect{reason: :incompatible_p2p_protcol_version}
+
+    Client.send_packet(self(), disconnect_packet)
   end
 
   defp get_peer_info(auth_msg, socket) do
