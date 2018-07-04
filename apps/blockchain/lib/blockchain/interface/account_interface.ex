@@ -201,6 +201,18 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
     end
   end
 
+  @spec remove_storage(EVM.Interface.AccountInterface.t(), EVM.address(), integer()) ::
+          EVM.Interface.AccountInterface.t()
+  def remove_storage(account_interface, address, key) do
+    if Account.get_account(account_interface.state, address) do
+      updated_state = Account.remove_storage(account_interface.state, address, key)
+
+      %{account_interface | state: updated_state}
+    else
+      account_interface
+    end
+  end
+
   @doc """
   Destructs an account (SELFDESTRUCT operation in YP).
   This removes any trace of the account from the system.

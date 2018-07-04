@@ -109,6 +109,19 @@ defimpl EVM.Interface.AccountInterface, for: EVM.Interface.Mock.MockAccountInter
     put_account(mock_account_interface, address, account)
   end
 
+  @spec remove_storage(EVM.Interface.AccountInterface.t(), EVM.address(), integer()) ::
+          EVM.Interface.AccountInterface.t()
+  def remove_storage(mock_account_interface, address, key) do
+    account = get_account(mock_account_interface, address)
+
+    if account do
+      account = update_storage(account, key, 0)
+      put_account(mock_account_interface, address, account)
+    else
+      mock_account_interface
+    end
+  end
+
   defp update_storage(account, key, value) do
     if value == 0 do
       {_key, value} = pop_in(account, [:storage, key])

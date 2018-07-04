@@ -17,6 +17,15 @@ defmodule Blockchain.Account.Storage do
     |> Trie.update(k, v)
   end
 
+  @spec remove(DB.db(), EVM.trie_root(), integer()) :: Trie.t()
+  def remove(db, root, key) do
+    k = encode_key(key)
+
+    db
+    |> Trie.new(root)
+    |> Trie.remove(k)
+  end
+
   @spec fetch(DB.db(), EVM.trie_root(), integer()) :: integer() | nil
   def fetch(db, root, key) do
     k = encode_key(key)
