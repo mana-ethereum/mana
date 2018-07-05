@@ -58,7 +58,7 @@ defmodule Blockchain.StateTest do
       "xorNonConst"
     ],
     "AttackTest" => [
-      # "ContractCreationSpam",
+      "ContractCreationSpam"
       # "CrashingTransaction",
     ],
     "BadOpcode" => [
@@ -1475,15 +1475,15 @@ defmodule Blockchain.StateTest do
       "refund_CallA_OOG",
       "refund_CallA_notEnoughGasInCall",
       "refund_CallToSuicideNoStorage",
-      # "refund_CallToSuicideStorage",
-      # "refund_CallToSuicideTwice",
+      "refund_CallToSuicideStorage",
+      "refund_CallToSuicideTwice",
       "refund_NoOOG_1",
       "refund_OOG",
       "refund_TxToSuicide",
       "refund_TxToSuicideOOG",
       "refund_changeNonZeroStorage",
       "refund_getEtherBack",
-      # "refund_multimpleSuicide",
+      "refund_multimpleSuicide",
       "refund_singleSuicide"
     ],
     "ReturnDataTest" => [

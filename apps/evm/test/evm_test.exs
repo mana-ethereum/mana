@@ -51,6 +51,7 @@ defmodule EvmTest do
         context = %{
           test_name: test_name,
           account_interface: exec_env.account_interface,
+          sub_state: sub_state,
           addresses: %{
             pre: get_addresses(test, "pre"),
             post: get_addresses(test, "post")
@@ -249,6 +250,9 @@ defmodule EvmTest do
     # exclude caller's account from the actual state
     # if it isn't in the "pre" or "post" addresses
     context.account_interface.account_map
+    |> Enum.reject(fn {address, _} ->
+      Enum.member?(context.sub_state.selfdestruct_list, address)
+    end)
     |> Enum.reject(fn {address, _} ->
       address == caller && !Enum.member?(context.addresses.pre, address) &&
         !Enum.member?(context.addresses.post, address)
