@@ -261,7 +261,6 @@ defmodule EVM.Operation.System do
     new_exec_env =
       exec_env
       |> ExecEnv.transfer_wei_to(to, balance)
-      |> ExecEnv.destroy_account()
 
     new_substate = %{
       sub_state
