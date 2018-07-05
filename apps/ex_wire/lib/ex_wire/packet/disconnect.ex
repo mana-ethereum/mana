@@ -148,9 +148,9 @@ defmodule ExWire.Packet.Disconnect do
 
   ## Examples
 
-      iex> %ExWire.Packet.GetBlockBodies{hashes: [<<5>>, <<6>>]}
-      ...> |> ExWire.Packet.GetBlockBodies.handle()
-      :ok
+      iex> %ExWire.Packet.Disconnect{}
+      ...> |> ExWire.Packet.Disconnect.handle()
+      :peer_disconnect
   """
   @spec handle(ExWire.Packet.packet()) :: ExWire.Packet.handle_response()
   def handle(packet = %__MODULE__{}) do
