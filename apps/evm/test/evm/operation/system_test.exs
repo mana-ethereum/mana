@@ -19,7 +19,7 @@ defmodule EVM.Operation.SystemTest do
 
       expected_refund_account = %{balance: 5000, code: <<>>, nonce: 0, storage: %{}}
       assert Map.get(accounts, Address.new(refund_address)) == expected_refund_account
-      assert Map.get(accounts, selfdestruct_address) == nil
+      assert Map.get(accounts, selfdestruct_address) == %{balance: 0, nonce: 5}
     end
   end
 
