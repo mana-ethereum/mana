@@ -84,7 +84,7 @@ defmodule ExWire.DEVp2pTest do
       ping = %Packet.Ping{}
 
       {:ok, instructions, _session} =
-        active_session()
+        init_session()
         |> handle_message(ping)
 
       assert {:send, %Packet.Pong{}} = instructions
@@ -97,15 +97,19 @@ defmodule ExWire.DEVp2pTest do
         active_session()
         |> handle_message(disconnect)
 
-      assert :peer_disconnect = instructions
+      assert instructions == :peer_disconnect
       refute session_active?(session)
     end
 
-    test "returns error if handshake is not complete" do
-      ping = %Packet.Ping{}
-      session = init_session()
+    test "hello message updates session" do
+      hello = generate_handshake()
 
-      assert {:error, :handshake_incomplete, ^session} = handle_message(session, ping)
+      {:ok, instructions, new_session} =
+        init_session()
+        |> handle_message(hello)
+
+      assert instructions == :activate
+      assert new_session.handshake_received == hello
     end
   end
 

@@ -7,6 +7,7 @@ defmodule ExWire.DEVp2p do
   """
 
   alias ExWire.{Config, Packet}
+  alias ExWire.Packet.{Hello, Disconnect, Ping}
 
   defmodule Session do
     @moduledoc """
@@ -79,9 +80,9 @@ defmodule ExWire.DEVp2p do
   Function to create a DEVp2p struct needed for a protocol handshake. This
   should be an `ExWire.Packet.Hello` struct with the appropriate values filled in.
   """
-  @spec generate_handshake :: Packet.Hello.t()
+  @spec generate_handshake :: Hello.t()
   def generate_handshake do
-    %Packet.Hello{
+    %Hello{
       p2p_version: Config.p2p_version(),
       client_id: Config.client_id(),
       caps: Config.caps(),
@@ -94,8 +95,8 @@ defmodule ExWire.DEVp2p do
   Function to update `ExWire.DEVp2p.Session` when a handshake is sent. The
   handshake should be an `ExWire.Packet.Hello` that we have sent to a peer.
   """
-  @spec handshake_sent(Session.t(), Packet.Hello.t()) :: Session.t()
-  def handshake_sent(session, hello = %Packet.Hello{}) do
+  @spec handshake_sent(Session.t(), Hello.t()) :: Session.t()
+  def handshake_sent(session, hello = %Hello{}) do
     %{session | handshake_sent: hello}
   end
 
@@ -103,8 +104,8 @@ defmodule ExWire.DEVp2p do
   Function to update `ExWire.DEVp2p.Session` when a handshake is received. The
   handshake should be an `ExWire.Packet.Hello` that we have received from a peer.
   """
-  @spec handshake_received(Session.t(), Packet.Hello.t()) :: Session.t()
-  def handshake_received(session, hello = %Packet.Hello{}) do
+  @spec handshake_received(Session.t(), Hello.t()) :: Session.t()
+  def handshake_received(session, hello = %Hello{}) do
     %{session | handshake_received: hello}
   end
 
@@ -119,36 +120,27 @@ defmodule ExWire.DEVp2p do
   def session_compatible?(session), do: Session.compatible_capabilities?(session)
 
   @doc """
-  Function to handles other messages related to the DEVp2p protocol that a peer
-  sends. The messages could be `ExWire.Packet.Disconnect`, `ExWire.Packet.Ping`,
-  or `ExWire.Packet.Pong`.
+  Function to handle messages related to the DEVp2p protocol that a peer sends.
+  The messages could be `ExWire.Packet.Hello`, `ExWire.Packet.Disconnect`,
+  `ExWire.Packet.Ping`, or `ExWire.Packet.Pong`.
 
   An `ExWire.DEVp2p.Session` is required as the first argument in order to
   properly update the session based on the message received.
   """
-  @spec handle_message(Session.t(), struct()) ::
-          {:error, :handshake_incomplete, Session.t()}
-          | {:ok, ExWire.Packet.handle_response(), Session.t()}
+  @spec handle_message(Session.t(), struct()) :: {:ok, Packet.handle_response(), Session.t()}
   def handle_message(session, message) do
-    if session_active?(session) do
-      response = generate_response(message)
-      new_session = update_session(session, message)
-      {:ok, response, new_session}
-    else
-      {:error, :handshake_incomplete, session}
-    end
+    response = generate_response(message)
+    new_session = update_session(session, message)
+    {:ok, response, new_session}
   end
 
   @spec update_session(Session.t(), struct()) :: Session.t()
-  defp update_session(session, %Packet.Disconnect{}) do
-    Session.disconnect(session)
-  end
-
+  defp update_session(session, %Hello{} = packet), do: handshake_received(session, packet)
+  defp update_session(session, %Disconnect{}), do: Session.disconnect(session)
   defp update_session(session, _message), do: session
 
-  @spec generate_response(struct()) :: ExWire.Packet.handle_response()
-  defp generate_response(%Packet.Ping{} = ping), do: Packet.Ping.handle(ping)
-
-  defp generate_response(%Packet.Disconnect{} = disconnect),
-    do: Packet.Disconnect.handle(disconnect)
+  @spec generate_response(struct()) :: Packet.handle_response()
+  defp generate_response(%Hello{} = hello), do: Hello.handle(hello)
+  defp generate_response(%Disconnect{} = disconnect), do: Disconnect.handle(disconnect)
+  defp generate_response(%Ping{} = ping), do: Ping.handle(ping)
 end

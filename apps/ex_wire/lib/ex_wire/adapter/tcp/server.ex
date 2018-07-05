@@ -182,16 +182,20 @@ defmodule ExWire.Adapter.TCP.Server do
 
   defp handle_packet_data(data, state) when byte_size(data) == 0, do: state
 
-  defp handle_packet_data(data, state = %{peer: peer, secrets: secrets}) do
+  defp handle_packet_data(data, state) do
+    %{peer: peer, secrets: secrets, session: session} = state
+
     total_data = Map.get(state, :queued_data, <<>>) <> data
 
     case Frame.unframe(total_data, secrets) do
       {:ok, packet_type, packet_data, frame_rest, updated_secrets} ->
         Logger.debug("[Network] [#{peer}] Got packet `#{inspect(packet_type)}` from #{peer.host}")
 
-        get_packet(packet_type, packet_data) |> notify_subscribers(state)
+        packet = get_packet(packet_type, packet_data)
+        {:ok, _response, new_session} = DEVp2p.handle_message(session, packet)
 
-        updated_state = Map.merge(state, %{secrets: updated_secrets, queued_data: <<>>})
+        updated_state =
+          Map.merge(state, %{secrets: updated_secrets, queued_data: <<>>, session: new_session})
 
         handle_packet_data(frame_rest, updated_state)
 
@@ -214,17 +218,6 @@ defmodule ExWire.Adapter.TCP.Server do
 
       :unknown_packet_type ->
         :unknown_packet_type
-    end
-  end
-
-  defp notify_subscribers(:unknown_packet_type, _state), do: :noop
-
-  defp notify_subscribers(packet, state) do
-    for subscriber <- Map.get(state, :subscribers, []) do
-      case subscriber do
-        {module, function, args} -> apply(module, function, [packet | args])
-        {:server, server} -> send(server, {:packet, packet, state.peer})
-      end
     end
   end
 
