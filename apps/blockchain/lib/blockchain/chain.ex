@@ -101,6 +101,7 @@ defmodule Blockchain.Chain do
 
     accounts =
       chain_data["accounts"]
+      |> Enum.filter(&include_in_genisis?/1)
       |> Enum.map(&get_account/1)
       |> Enum.into(%{})
 
@@ -178,6 +179,16 @@ defmodule Blockchain.Chain do
       nonce: map["ethereum"]["nonce"] |> load_hex(),
       mix_hash: map["ethereum"]["mix_hash"] |> load_raw_hex()
     }
+  end
+
+  @doc """
+  Checks if this account should be included in the genisis block
+
+  Note: Ropsten's builtin accounts have balances
+  # https://github.com/poanetwork/mana/blob/master/chains/ropsten.json#L1583
+  """
+  defp include_in_genisis?({raw_address, info}) do
+    !Map.has_key?(info, "builtin") || Map.has_key?(info, "balance")
   end
 
   defp get_account({raw_address, info}) do

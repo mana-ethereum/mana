@@ -26,7 +26,11 @@ defmodule Blockchain.Mixfile do
   # Type "mix help compile.app" for more information
   def application do
     # Specify extra applications you'll use from Erlang/Elixir
-    [extra_applications: [:logger], mod: {Blockchain.Application, []}]
+    [
+      applications: [:ethereumex],
+      extra_applications: [:logger],
+      mod: {Blockchain.Application, []}
+    ]
   end
 
   # Dependencies can be Hex packages:
@@ -45,13 +49,14 @@ defmodule Blockchain.Mixfile do
   defp deps do
     [
       {:credo, "~>  0.9.1", only: [:dev, :test], runtime: false},
-      {:ex_doc, "~> 0.16", only: :dev, runtime: false},
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
+      {:ethereumex, "~> 0.3.2"},
+      {:evm, in_umbrella: true},
+      {:ex_doc, "~> 0.16", only: :dev, runtime: false},
       {:ex_rlp, "~> 0.3.0"},
-      {:poison, "~> 3.1.0"},
       {:exth_crypto, in_umbrella: true},
       {:merkle_patricia_tree, in_umbrella: true},
-      {:evm, in_umbrella: true}
+      {:poison, "~> 3.1.0"}
     ]
   end
 end

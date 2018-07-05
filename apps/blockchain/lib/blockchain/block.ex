@@ -31,7 +31,9 @@ defmodule Blockchain.Block do
         }
 
   # R_b in Eq.(164)
-  @reward_wei round(5.0e18)
+  @base_reward round(5.0e18)
+  @block_reward_ommer_divisor 32
+  @block_reward_ommer_offset 8
 
   @doc """
   Encodes a block such that it can be represented in RLP encoding.
@@ -853,26 +855,46 @@ defmodule Blockchain.Block do
       [%Blockchain.Account{balance: 400100}]
   """
   @spec add_rewards(t, DB.db(), EVM.Wei.t()) :: t
-  def add_rewards(block, db, reward_wei \\ @reward_wei) do
-    # TODO: Add ommer rewards
+  def add_rewards(block, db, base_reward \\ @base_reward)
 
-    cond do
-      Genesis.is_genesis_block?(block) ->
-        block
+  def add_rewards(block = %{header: %{beneficiary: beneficiary}}, db, base_reward)
+      when is_nil(beneficiary),
+      do: raise("Unable to add block rewards, beneficiary is nil")
 
-      is_nil(block.header.beneficiary) ->
-        raise("Unable to add block rewards, beneficiary is nil")
+  def add_rewards(block = %{header: %{number: number}}, db, base_reward)
+      when number == 0,
+      do: block
 
-      true ->
-        do_add_rewards(block, db, reward_wei)
-    end
+  def add_rewards(block, db, base_reward) do
+    state =
+      get_state(block, db)
+      |> add_miner_reward(block, base_reward)
+      |> add_ommer_rewards(block, base_reward)
+
+    set_state(block, state)
   end
 
-  @spec do_add_rewards(t, DB.db(), EVM.Wei.t()) :: t
-  defp do_add_rewards(block, db, reward_wei) do
-    state = get_state(block, db)
-    new_state = Account.add_wei(state, block.header.beneficiary, reward_wei)
-    set_state(block, new_state)
+  defp add_miner_reward(state, block, base_reward) do
+    ommer_reward = round(base_reward * length(block.ommers) / @block_reward_ommer_divisor)
+    reward = ommer_reward + base_reward
+
+    state
+    |> Account.add_wei(block.header.beneficiary, reward)
+  end
+
+  defp add_ommer_rewards(state, block, base_reward) do
+    Enum.reduce(block.ommers, state, fn ommer, state ->
+      height_difference = block.header.number - ommer.number
+
+      reward =
+        round(
+          (@block_reward_ommer_offset - height_difference) *
+            (base_reward / @block_reward_ommer_offset)
+        )
+
+      state
+      |> Account.add_wei(ommer.beneficiary, reward)
+    end)
   end
 
   @doc """
