@@ -172,7 +172,9 @@ defmodule MerklePatriciaTree.Trie do
       |> into(trie)
       |> store()
 
-    Storage.delete(trie)
+    # TODO: https://github.com/poanetwork/mana/issues/229
+    # Storage.delete(trie)
+
     new_trie
   end
 

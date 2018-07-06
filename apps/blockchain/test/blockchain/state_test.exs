@@ -1471,7 +1471,7 @@ defmodule Blockchain.StateTest do
       "refund50percentCap",
       "refund600",
       "refundSuicide50procentCap",
-      # "refund_CallA",
+      "refund_CallA",
       "refund_CallA_OOG",
       "refund_CallA_notEnoughGasInCall",
       "refund_CallToSuicideNoStorage",
