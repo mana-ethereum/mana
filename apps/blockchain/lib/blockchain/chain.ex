@@ -19,7 +19,8 @@ defmodule Blockchain.Chain do
             params: %{},
             genesis: %{},
             nodes: [],
-            accounts: %{}
+            accounts: %{},
+            builtin_accounts: %{}
 
   @type engine :: %{
           minimum_difficulty: integer(),
@@ -62,7 +63,16 @@ defmodule Blockchain.Chain do
           storage: %{
             binary() => binary()
           }
-          # TODO: Handle built-in
+        }
+
+  @type builtin_account :: %{
+          name: String.t(),
+          pricing: %{
+            linear: %{
+              base: integer(),
+              word: integer()
+            }
+          }
         }
 
   @type t :: %__MODULE__{
@@ -71,7 +81,8 @@ defmodule Blockchain.Chain do
           params: params(),
           genesis: Genesis.t(),
           nodes: [String.t()],
-          accounts: %{EVM.address() => account()}
+          accounts: %{EVM.address() => account()},
+          builtin_accounts: %{EVM.address() => builtin_account()}
         }
 
   @doc """
@@ -101,8 +112,7 @@ defmodule Blockchain.Chain do
 
     accounts =
       chain_data["accounts"]
-      |> Enum.map(&get_account/1)
-      |> Enum.into(%{})
+      |> get_accounts()
 
     %__MODULE__{
       name: chain_data["name"],
@@ -110,7 +120,8 @@ defmodule Blockchain.Chain do
       params: get_params(chain_data["params"]),
       genesis: get_genesis(chain_data["genesis"]),
       nodes: chain_data["nodes"],
-      accounts: accounts
+      accounts: accounts["accounts"],
+      builtin_accounts: accounts["builtin_accouts"]
     }
   end
 
@@ -180,6 +191,30 @@ defmodule Blockchain.Chain do
     }
   end
 
+  defp get_accounts(json_accounts) do
+    {accounts, builtin_accounts} =
+      Enum.reduce(json_accounts, {[], []}, fn json_account = {address, info},
+                                              {accounts_acc, builtin_accounts_acc} ->
+        if is_nil(info["builtin"]) do
+          account = get_account(json_account)
+
+          {accounts_acc ++ [account], builtin_accounts_acc}
+        else
+          account = get_builtin_account(json_account)
+
+          {accounts_acc, builtin_accounts_acc ++ [account]}
+        end
+      end)
+
+    accounts = Enum.into(accounts, %{})
+    builtin_accounts = Enum.into(builtin_accounts, %{})
+
+    %{
+      accounts: accounts,
+      builtin_accounts: builtin_accounts
+    }
+  end
+
   defp get_account({raw_address, info}) do
     nonce =
       if info["nonce"],
@@ -194,6 +229,22 @@ defmodule Blockchain.Chain do
     }
 
     {address, account}
+  end
+
+  defp get_builtin_account({raw_address, info}) do
+    address = load_raw_hex(raw_address)
+
+    builtin_account = %{
+      name: info["name"],
+      pricing: %{
+        linear: %{
+          base: info["pricing"]["linear"]["base"],
+          word: info["pricing"]["linear"]["word"]
+        }
+      }
+    }
+
+    {address, builtin_account}
   end
 
   @spec read_chain!(atom()) :: map()
