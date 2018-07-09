@@ -59,6 +59,44 @@ defmodule Blockchain.BlockTest do
     |> Enum.into(%{})
   end
 
+  test "rewards the miner and ommers" do
+    db = MerklePatriciaTree.Test.random_ets_db()
+    miner = <<0x05::160>>
+    ommer = <<0x06::160>>
+    state = MerklePatriciaTree.Trie.new(db)
+
+    block = %Blockchain.Block{
+      header: %Header{
+        number: 3,
+        state_root: state.root_hash,
+        beneficiary: miner
+      },
+      ommers: [
+        %Header{
+          number: 1,
+          beneficiary: ommer
+        }
+      ]
+    }
+
+    block = Blockchain.Block.add_rewards(block, db, 500_000)
+
+    miner_balance =
+      block
+      |> Blockchain.Block.get_state(db)
+      |> Blockchain.Account.get_account(miner)
+      |> Map.get(:balance)
+
+    ommer_balance =
+      block
+      |> Blockchain.Block.get_state(db)
+      |> Blockchain.Account.get_account(ommer)
+      |> Map.get(:balance)
+
+    assert miner_balance == 515_625
+    assert ommer_balance == 375_000
+  end
+
   test "serialize and deserialize a block is lossless" do
     block = %Block{
       header: %Header{

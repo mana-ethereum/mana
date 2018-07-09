@@ -628,12 +628,12 @@ defmodule Block.Header do
       # It's not entirely clear from the Yellow Paper
       # whether a genesis block should have any limits
       # on gas limit, other than min gas limit.
-      gas_limit > min_gas_limit
+      gas_limit >= min_gas_limit
     else
       max_delta = MathHelper.floor(parent_gas_limit / gas_limit_bound_divisor)
 
       gas_limit < parent_gas_limit + max_delta and gas_limit > parent_gas_limit - max_delta and
-        gas_limit > min_gas_limit
+        gas_limit >= min_gas_limit
     end
   end
 end
