@@ -326,14 +326,15 @@ defmodule Block.Header do
         min_gas_limit
       )
       |> check_gas_limit(header)
-      |> check_difficulty_validity(
-        header,
-        parent_header,
-        initial_difficulty,
-        minimum_difficulty,
-        difficulty_bound_divisor,
-        homestead_block
-      )
+
+    # |> check_difficulty_validity(
+    #   header,
+    #   parent_header,
+    #   initial_difficulty,
+    #   minimum_difficulty,
+    #   difficulty_bound_divisor,
+    #   homestead_block
+    # ) |> IO.inspect
 
     if errors == [], do: :valid, else: {:invalid, errors}
   end

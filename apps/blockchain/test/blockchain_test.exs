@@ -16,8 +16,6 @@ defmodule BlockchainTest do
     @test
     |> read_test()
     |> run_test()
-
-    # |> assert_state()
   end
 
   defp read_test(relative_path) do
@@ -36,26 +34,33 @@ defmodule BlockchainTest do
     blocktree =
       create_blocktree()
       |> add_genesis_block(json_test, state, chain)
+      |> add_blocks(json_test, state, chain)
 
-    # add_blocks(json_test, blocktree, state, chain)
+    canonical_block = Blocktree.get_canonical_block(blocktree)
+    best_block_hash = maybe_hex(json_test["lastblockhash"])
+
+    assert canonical_block.block_hash == best_block_hash
   end
 
   defp add_genesis_block(blocktree, json_test, state, chain) do
     genesis_block = block_from_json(json_test["genesisRLP"], json_test["genesisBlockHeader"])
+    {:ok, blocktree} = Blocktree.verify_and_add_block(blocktree, chain, genesis_block, state.db)
 
-    Blocktree.verify_and_add_block(blocktree, chain, genesis_block, state.db)
+    blocktree
   end
 
   defp create_blocktree do
     Blocktree.new_tree()
   end
 
-  defp add_blocks(json_test, blocktree, state, chain) do
+  defp add_blocks(blocktree, json_test, state, chain) do
     Enum.reduce(json_test["blocks"], blocktree, fn json_block, acc ->
       block =
         block_from_json(json_block["rlp"], json_block["blockHeader"], json_block["transactions"])
 
-      Blocktree.verify_and_add_block(acc, chain, block, state.db)
+      {:ok, blocktree} = Blocktree.verify_and_add_block(acc, chain, block, state.db)
+
+      blocktree
     end)
   end
 
@@ -102,9 +107,9 @@ defmodule BlockchainTest do
         gas_limit: load_integer(json_transaction["gasLimit"]),
         to: maybe_hex(json_transaction["to"]),
         value: load_integer(json_transaction["value"]),
-        v: maybe_hex(json_transaction["v"]),
-        r: maybe_hex(json_transaction["r"]),
-        s: maybe_hex(json_transaction["s"]),
+        v: load_integer(json_transaction["v"]),
+        r: load_integer(json_transaction["r"]),
+        s: load_integer(json_transaction["s"]),
         data: maybe_hex(json_transaction["data"])
       }
 
