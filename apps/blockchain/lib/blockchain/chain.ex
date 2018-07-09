@@ -19,8 +19,7 @@ defmodule Blockchain.Chain do
             params: %{},
             genesis: %{},
             nodes: [],
-            accounts: %{},
-            builtin_accounts: %{}
+            accounts: %{}
 
   @type engine :: %{
           minimum_difficulty: integer(),
@@ -67,6 +66,8 @@ defmodule Blockchain.Chain do
 
   @type builtin_account :: %{
           name: String.t(),
+          balance: integer(),
+          nonce: integer(),
           pricing: %{
             linear: %{
               base: integer(),
@@ -81,8 +82,7 @@ defmodule Blockchain.Chain do
           params: params(),
           genesis: Genesis.t(),
           nodes: [String.t()],
-          accounts: %{EVM.address() => account()},
-          builtin_accounts: %{EVM.address() => builtin_account()}
+          accounts: %{EVM.address() => account() | builtin_account()}
         }
 
   @doc """
@@ -120,8 +120,7 @@ defmodule Blockchain.Chain do
       params: get_params(chain_data["params"]),
       genesis: get_genesis(chain_data["genesis"]),
       nodes: chain_data["nodes"],
-      accounts: accounts["accounts"],
-      builtin_accounts: accounts["builtin_accouts"]
+      accounts: accounts
     }
   end
 
@@ -192,27 +191,19 @@ defmodule Blockchain.Chain do
   end
 
   defp get_accounts(json_accounts) do
-    {accounts, builtin_accounts} =
-      Enum.reduce(json_accounts, {[], []}, fn json_account = {address, info},
-                                              {accounts_acc, builtin_accounts_acc} ->
-        if is_nil(info["builtin"]) do
-          account = get_account(json_account)
+    accounts =
+      Enum.reduce(json_accounts, [], fn json_account = {_address, info}, acc ->
+        account =
+          if is_nil(info["builtin"]) do
+            get_account(json_account)
+          else
+            get_builtin_account(json_account)
+          end
 
-          {accounts_acc ++ [account], builtin_accounts_acc}
-        else
-          account = get_builtin_account(json_account)
-
-          {accounts_acc, builtin_accounts_acc ++ [account]}
-        end
+        acc ++ [account]
       end)
 
-    accounts = Enum.into(accounts, %{})
-    builtin_accounts = Enum.into(builtin_accounts, %{})
-
-    %{
-      accounts: accounts,
-      builtin_accounts: builtin_accounts
-    }
+    Enum.into(accounts, %{})
   end
 
   defp get_account({raw_address, info}) do
@@ -234,14 +225,23 @@ defmodule Blockchain.Chain do
   defp get_builtin_account({raw_address, info}) do
     address = load_raw_hex(raw_address)
 
+    balance = if info["balance"], do: load_decimal(info["balance"]), else: 0
+
+    nonce =
+      if info["nonce"],
+        do: load_hex(info["nonce"]),
+        else: 0
+
     builtin_account = %{
-      name: info["name"],
+      name: info["builtin"]["name"],
       pricing: %{
         linear: %{
-          base: info["pricing"]["linear"]["base"],
-          word: info["pricing"]["linear"]["word"]
+          base: info["builtin"]["pricing"]["linear"]["base"],
+          word: info["builtin"]["pricing"]["linear"]["word"]
         }
-      }
+      },
+      balance: balance,
+      nonce: nonce
     }
 
     {address, builtin_account}
