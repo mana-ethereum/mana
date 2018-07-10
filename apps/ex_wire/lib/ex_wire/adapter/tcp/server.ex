@@ -104,7 +104,8 @@ defmodule ExWire.Adapter.TCP.Server do
     Logger.debug("[Network] Generating EIP8 Handshake for #{peer.host}")
 
     handshake =
-      Handshake.new(peer.remote_id)
+      peer.remote_id
+      |> Handshake.new()
       |> Handshake.generate_auth()
 
     Logger.debug("[Network] [#{peer}] Sending Handshake to #{peer.host}")
