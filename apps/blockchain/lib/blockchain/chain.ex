@@ -200,7 +200,7 @@ defmodule Blockchain.Chain do
             get_builtin_account(json_account)
           end
 
-        acc ++ [account]
+        [account | acc]
       end)
 
     Enum.into(accounts, %{})
