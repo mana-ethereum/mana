@@ -30,7 +30,7 @@ defmodule ExWire.TCP.Listener do
   """
   def handle_cast(:accept_tcp_connection, state = %{listen_socket: listen_socket}) do
     {:ok, socket} = TCP.accept_connection(listen_socket)
-    {:ok, pid} = TCP.InboundConnectionsSupervisor.new_connection_handler()
+    {:ok, pid} = TCP.InboundConnectionsSupervisor.new_connection_handler(socket)
 
     hand_over_control_of_socket(socket, pid)
 
