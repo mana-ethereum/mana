@@ -4,6 +4,7 @@
 erl_crash.dump
 *.ez
 *.beam
+apps/*/config/dev.exs
 
 /db
 

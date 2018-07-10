@@ -1,8 +1,10 @@
+require Logger
+
 defmodule SyncWithInfura do
   require Logger
 
   def setup() do
-    db = MerklePatriciaTree.Test.random_ets_db()
+    db = MerklePatriciaTree.DB.RocksDB.init(db_name())
     tree = Blockchain.Blocktree.new_tree()
     chain = Blockchain.Chain.load_chain(:foundation)
 
@@ -13,6 +15,7 @@ defmodule SyncWithInfura do
     next_block = get_block(n)
     {:ok, next_tree} = Blockchain.Blocktree.verify_and_add_block(tree, chain, next_block, db)
     Logger.info("Verfied Block #{n}")
+    MerklePatriciaTree.DB.put!(db, "current_block_hash", Blockchain.Block.hash(next_block))
     add_block_to_tree(db, chain, next_tree, n + 1)
   end
 
@@ -106,7 +109,32 @@ defmodule SyncWithInfura do
       "0x#{String.trim_leading(Base.encode16(:binary.encode_unsigned(n)), "0")}"
     end
   end
+
+  defp db_name() do
+    env = Mix.env() |> to_string()
+    "db/mana-" <> env
+  end
+
+  def get_parents(block, db, parents) do
+    case Blockchain.Block.get_parent_block(block, db) do
+      :genesis -> parents
+      {:ok, parent} -> get_parents(parent, db, [parent | parents])
+    end
+  end
 end
 
-{db, tree, chain} = SyncWithInfura.setup()
-SyncWithInfura.add_block_to_tree(db, chain, tree, 0)
+{db, empty_tree, chain} = SyncWithInfura.setup()
+current_block = case MerklePatriciaTree.DB.get(db, "current_block_hash") do
+  {:ok, current_block_hash} ->
+    {:ok, current_block} = Blockchain.Block.get_block(current_block_hash, db)
+    current_block
+  _ -> Blockchain.Genesis.create_block(chain, db)
+end
+parents = SyncWithInfura.get_parents(current_block, db, [])
+tree = Enum.reduce(parents, empty_tree, fn(block, tree) ->
+  {:ok, tree} = Blockchain.Blocktree.verify_and_add_block(tree, chain, block, db)
+    Logger.info("Verfied Saved Block #{block.header.number}")
+  tree
+end)
+
+SyncWithInfura.add_block_to_tree(db, chain, tree, current_block.header.number)
