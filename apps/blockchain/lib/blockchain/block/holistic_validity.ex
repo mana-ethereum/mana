@@ -79,7 +79,7 @@ defmodule Blockchain.Block.HolisticValidity do
     # as defined in Eq.(31), section 4.3.2 of Yellow Paper
     errors =
       []
-      # |> check_state_root_validity(child_block, block)
+      |> check_state_root_validity(child_block, block)
       |> check_ommers_hash_validity(child_block, block)
       |> check_transactions_root_validity(child_block, block)
 

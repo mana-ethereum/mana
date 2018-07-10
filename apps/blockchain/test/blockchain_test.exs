@@ -44,7 +44,7 @@ defmodule BlockchainTest do
 
   defp add_genesis_block(blocktree, json_test, state, chain) do
     genesis_block = block_from_json(json_test["genesisRLP"], json_test["genesisBlockHeader"])
-    {:ok, blocktree} = Blocktree.verify_and_add_block(blocktree, chain, genesis_block, state.db)
+    {:ok, blocktree} = Blocktree.verify_and_add_block(blocktree, chain, genesis_block, state.db, false)
 
     blocktree
   end
