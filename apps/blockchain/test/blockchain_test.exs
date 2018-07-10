@@ -1330,7 +1330,7 @@ defmodule BlockchainTest do
     "./bcValidBlockTest/timeDiff13.json",
     "./bcValidBlockTest/timeDiff14.json",
     "./bcValidBlockTest/txEqualValue.json",
-    "./bcValidBlockTest/txOrder.json",
+    "./bcValidBlockTest/txOrder.json"
     # "./bcWalletTest/wallet2outOf3txs.json",
     # "./bcWalletTest/wallet2outOf3txs2.json",
     # "./bcWalletTest/wallet2outOf3txsRevoke.json",
@@ -1340,17 +1340,15 @@ defmodule BlockchainTest do
 
   test "runs blockchain  tests" do
     Enum.each(@tests, fn json_test_path ->
-      if String.ends_with?(json_test_path, ".json") do
-        json_test_path
-        |> read_test()
-        |> Enum.filter(fn {_name, test} ->
-          test["network"] == "Frontier"
-        end)
-        |> Enum.map(fn {_name, test} -> test end)
-        |> Enum.each(fn test ->
-          run_test(test)
-        end)
-      end
+      json_test_path
+      |> read_test()
+      |> Enum.filter(fn {_name, test} ->
+        test["network"] == "Frontier"
+      end)
+      |> Enum.map(fn {_name, test} -> test end)
+      |> Enum.each(fn test ->
+        run_test(test)
+      end)
     end)
   end
 
