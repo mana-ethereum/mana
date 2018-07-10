@@ -62,7 +62,18 @@ defmodule Blockchain.Chain do
           storage: %{
             binary() => binary()
           }
-          # TODO: Handle built-in
+        }
+
+  @type builtin_account :: %{
+          name: String.t(),
+          balance: integer(),
+          nonce: integer(),
+          pricing: %{
+            linear: %{
+              base: integer(),
+              word: integer()
+            }
+          }
         }
 
   @type t :: %__MODULE__{
@@ -71,7 +82,7 @@ defmodule Blockchain.Chain do
           params: params(),
           genesis: Genesis.t(),
           nodes: [String.t()],
-          accounts: %{EVM.address() => account()}
+          accounts: %{EVM.address() => account() | builtin_account()}
         }
 
   @doc """
@@ -101,9 +112,7 @@ defmodule Blockchain.Chain do
 
     accounts =
       chain_data["accounts"]
-      |> Enum.filter(&include_in_genisis?/1)
-      |> Enum.map(&get_account/1)
-      |> Enum.into(%{})
+      |> get_accounts()
 
     %__MODULE__{
       name: chain_data["name"],
@@ -181,14 +190,20 @@ defmodule Blockchain.Chain do
     }
   end
 
-  @doc """
-  Checks if this account should be included in the genisis block
+  defp get_accounts(json_accounts) do
+    accounts =
+      Enum.reduce(json_accounts, [], fn json_account = {_address, info}, acc ->
+        account =
+          if is_nil(info["builtin"]) do
+            get_account(json_account)
+          else
+            get_builtin_account(json_account)
+          end
 
-  Note: Ropsten's builtin accounts have balances
-  # https://github.com/poanetwork/mana/blob/master/chains/ropsten.json#L1583
-  """
-  defp include_in_genisis?({raw_address, info}) do
-    !Map.has_key?(info, "builtin") || Map.has_key?(info, "balance")
+        [account | acc]
+      end)
+
+    Enum.into(accounts, %{})
   end
 
   defp get_account({raw_address, info}) do
@@ -205,6 +220,31 @@ defmodule Blockchain.Chain do
     }
 
     {address, account}
+  end
+
+  defp get_builtin_account({raw_address, info}) do
+    address = load_raw_hex(raw_address)
+
+    balance = if info["balance"], do: load_decimal(info["balance"]), else: 0
+
+    nonce =
+      if info["nonce"],
+        do: load_hex(info["nonce"]),
+        else: 0
+
+    builtin_account = %{
+      name: info["builtin"]["name"],
+      pricing: %{
+        linear: %{
+          base: info["builtin"]["pricing"]["linear"]["base"],
+          word: info["builtin"]["pricing"]["linear"]["word"]
+        }
+      },
+      balance: balance,
+      nonce: nonce
+    }
+
+    {address, builtin_account}
   end
 
   @spec read_chain!(atom()) :: map()
