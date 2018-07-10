@@ -32,7 +32,7 @@ defmodule ExWire.Adapter.TCP.Server do
   @doc """
   Sends auth message to peer
   """
-  def send_auth_message() do
+  def send_auth_message do
     GenServer.cast(self(), :send_auth_message)
   end
 
@@ -104,15 +104,14 @@ defmodule ExWire.Adapter.TCP.Server do
     Logger.debug("[Network] Generating EIP8 Handshake for #{peer.host}")
 
     handshake =
-      %Handshake{remote_pub: peer.remote_id}
-      |> Handshake.initiate()
-
-    new_state = Map.merge(state, %{handshake: handshake})
+      peer.remote_id
+      |> Handshake.new()
+      |> Handshake.generate_auth()
 
     Logger.debug("[Network] [#{peer}] Sending Handshake to #{peer.host}")
     send_unframed_data(handshake.encoded_auth_msg, socket, peer)
 
-    {:noreply, new_state}
+    {:noreply, Map.merge(state, %{handshake: handshake})}
   end
 
   @doc """
@@ -143,15 +142,13 @@ defmodule ExWire.Adapter.TCP.Server do
   end
 
   defp handle_acknowledgement_received(data, state = %{peer: peer, handshake: handshake}) do
-    case Handshake.handle_ack(data, handshake) do
-      {:ok, secrets, frame_rest} ->
+    case Handshake.handle_ack(handshake, data) do
+      {:ok, updated_handshake, secrets} ->
         Logger.debug("[Network] [#{peer}] Got ack from #{peer.host}, deriving secrets")
 
         session = initiate_dev_p2p_handshake()
 
-        new_state = Map.merge(state, %{secrets: secrets, session: session})
-
-        handle_packet_data(frame_rest, new_state)
+        Map.merge(state, %{handshake: updated_handshake, secrets: secrets, session: session})
 
       {:invalid, reason} ->
         Logger.warn(
@@ -163,15 +160,15 @@ defmodule ExWire.Adapter.TCP.Server do
   end
 
   defp handle_auth_message_received(data, state = %{socket: socket}) do
-    case Handshake.handle_auth(data) do
-      {:ok, auth_msg, ack_data, secrets} ->
-        peer = get_peer_info(auth_msg, socket)
+    case Handshake.handle_auth(Handshake.new_response(), data) do
+      {:ok, handshake, secrets} ->
+        peer = get_peer_info(handshake.auth_msg, socket)
         Logger.debug("[Network] Received auth. Sending ack.")
 
-        send_unframed_data(ack_data, socket, peer)
+        send_unframed_data(handshake.encoded_ack_resp, socket, peer)
         session = initiate_dev_p2p_handshake()
 
-        Map.merge(state, %{secrets: secrets, peer: peer, session: session})
+        Map.merge(state, %{handshake: handshake, secrets: secrets, peer: peer, session: session})
 
       {:invalid, reason} ->
         Logger.warn("[Network] Received unknown handshake message when expecting auth: #{reason}")
