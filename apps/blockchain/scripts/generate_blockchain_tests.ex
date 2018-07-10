@@ -9,24 +9,46 @@ defmodule GenerateBlockchainTests do
   @base_path System.cwd() <> "/../../ethereum_common_tests/BlockchainTests/"
 
   def run() do
-    Enum.each(tests(), fn json_test_path ->
-      json_test_path
-      |> read_test()
-      |> Enum.filter(fn {_name, test} ->
-        test["network"] == "Frontier"
-      end)
-      |> Enum.map(fn {_name, test} -> test end)
-      |> Enum.each(fn test ->
-        relative_path = String.trim(json_test_path, @base_path)
+    {passing_count, failing_count} =
+      Enum.reduce(tests(), {0, 0}, fn json_test_path, {pass_acc, fail_acc} ->
+        {passing, failing} =
+          json_test_path
+          |> read_test()
+          |> Enum.filter(fn {_name, test} ->
+            test["network"] == "Frontier"
+          end)
+          |> Enum.map(fn {_name, test} -> test end)
+          |> Enum.reduce({0, 0}, fn test, {pass_count, fail_count} ->
+            relative_path = String.trim(json_test_path, @base_path)
 
-        try do
-          run_test(test)
-          log_test(relative_path)
-        rescue
-          _ -> log_commented_test(relative_path)
-        end
+            try do
+              run_test(test)
+              log_test(relative_path)
+
+              {pass_count + 1, fail_count}
+            rescue
+              _ ->
+                log_commented_test(relative_path)
+                {pass_count, fail_count + 1}
+            end
+          end)
+
+        {pass_acc + passing, fail_acc + failing}
       end)
-    end)
+
+    all_frontier_tests = passing_count + failing_count
+
+    IO.puts(
+      "Passing Frontier tests: #{passing_count}/#{all_frontier_tests} = #{
+        trunc(Float.round(passing_count / all_frontier_tests, 2) * 100)
+      }%"
+    )
+
+    IO.puts(
+      "Failing Frontier tests: #{failing_count}/#{all_frontier_tests} = #{
+        trunc(Float.round(failing_count / all_frontier_tests, 2) * 100)
+      }%"
+    )
   end
 
   defp tests do
