@@ -103,17 +103,9 @@ defmodule EVM.MessageCall do
         end
 
       exec_env =
-        message_call.current_exec_env
-        |> Map.put(:account_interface, n_exec_env.account_interface)
+        Map.put(message_call.current_exec_env, :account_interface, n_exec_env.account_interface)
 
-      refund = n_sub_state.refund + message_call.current_sub_state.refund
-
-      sub_state = %SubState{
-        refund: n_sub_state.refund + message_call.current_sub_state.refund,
-        selfdestruct_list:
-          n_sub_state.selfdestruct_list ++ message_call.current_sub_state.selfdestruct_list,
-        logs: message_call.current_sub_state.logs
-      }
+      sub_state = SubState.merge(n_sub_state, message_call.current_sub_state)
 
       %{
         machine_state: machine_state,

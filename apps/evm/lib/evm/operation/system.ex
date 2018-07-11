@@ -70,11 +70,7 @@ defmodule EVM.Operation.System do
     machine_state = %{machine_state | stack: Stack.push(machine_state.stack, result), gas: n_gas}
     exec_env = %{exec_env | account_interface: updated_account_interface}
 
-    sub_state = %SubState{
-      refund: n_sub_state.refund + sub_state.refund,
-      selfdestruct_list: n_sub_state.selfdestruct_list ++ sub_state.selfdestruct_list,
-      logs: sub_state.logs
-    }
+    sub_state = SubState.merge(n_sub_state, sub_state)
 
     %{
       machine_state: machine_state,
@@ -195,7 +191,7 @@ defmodule EVM.Operation.System do
         iex> machine_state = %EVM.MachineState{gas: 100000}
         iex> %{machine_state: machine_state} =
         ...> EVM.Operation.System.callcode([10, 1, 1, 0, 0, 0, 0],
-        ...>   %{exec_env: exec_env, machine_state: machine_state})
+        ...>   %{exec_env: exec_env, machine_state: machine_state, sub_state: EVM.SubState.empty()})
         iex> EVM.Stack.peek(machine_state.stack)
         0
   """
