@@ -151,7 +151,11 @@ defmodule EVM.Operation.SystemTest do
       }
 
       %{machine_state: n_machine_state} =
-        Operation.System.create([1_000, 5, 5], %{exec_env: exec_env, machine_state: machine_state})
+        Operation.System.create([1_000, 5, 5], %{
+          exec_env: exec_env,
+          machine_state: machine_state,
+          sub_state: SubState.empty()
+        })
 
       expected_machine_state = %MachineState{
         gas: 500,
@@ -185,7 +189,8 @@ defmodule EVM.Operation.SystemTest do
       %{machine_state: machine_state} =
         Operation.System.call([10, 1, 1, 0, 0, 0, 0], %{
           exec_env: exec_env,
-          machine_state: machine_state
+          machine_state: machine_state,
+          sub_state: SubState.empty()
         })
 
       assert Stack.peek(machine_state.stack) == 0

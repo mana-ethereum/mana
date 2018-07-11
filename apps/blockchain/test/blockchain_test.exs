@@ -11,7 +11,7 @@ defmodule BlockchainTest do
 
   @ethereum_common_tests_path "/../../ethereum_common_tests/BlockchainTests/"
   @tests [
-    "GeneralStateTests/stAttackTest/ContractCreationSpam_d0g0v0.json",
+    # "GeneralStateTests/stAttackTest/ContractCreationSpam_d0g0v0.json",
     # "GeneralStateTests/stAttackTest/CrashingTransaction_d0g0v0.json",
     "GeneralStateTests/stCallCodes/call_OOG_additionalGasCosts1_d0g0v0.json",
     "GeneralStateTests/stCallCodes/call_OOG_additionalGasCosts2_d0g0v0.json",
@@ -197,7 +197,7 @@ defmodule BlockchainTest do
     # "GeneralStateTests/stChangedEIP150/contractCreationMakeCallThatAskMoreGasThenTransactionProvided_d0g1v0.json",
     # "GeneralStateTests/stCodeSizeLimit/codesizeOOGInvalidSize_d0g0v0.json",
     # "GeneralStateTests/stCodeSizeLimit/codesizeValid_d0g0v0.json",
-    # "GeneralStateTests/stCreateTest/CREATE_AcreateB_BSuicide_BStore_d0g0v0.json",
+    "GeneralStateTests/stCreateTest/CREATE_AcreateB_BSuicide_BStore_d0g0v0.json",
     # "GeneralStateTests/stCreateTest/CREATE_ContractRETURNBigOffset_d0g0v0.json",
     # "GeneralStateTests/stCreateTest/CREATE_ContractRETURNBigOffset_d1g0v0.json",
     # "GeneralStateTests/stCreateTest/CREATE_ContractRETURNBigOffset_d2g0v0.json",
@@ -555,7 +555,7 @@ defmodule BlockchainTest do
     "GeneralStateTests/stReturnDataTest/returndatasize_initial_zero_read_d0g0v0.json",
     "GeneralStateTests/stReturnDataTest/returndatasize_initial_zero_read_d1g0v0.json",
     "GeneralStateTests/stRevertTest/LoopCallsDepthThenRevert_d0g0v0.json",
-    # "GeneralStateTests/stRevertTest/LoopCallsThenRevert_d0g1v0.json",
+    "GeneralStateTests/stRevertTest/LoopCallsThenRevert_d0g1v0.json",
     "GeneralStateTests/stRevertTest/LoopDelegateCallsDepthThenRevert_d0g0v0.json",
     "GeneralStateTests/stRevertTest/NashatyrevSuicideRevert_d0g0v0.json",
     "GeneralStateTests/stRevertTest/RevertDepthCreateAddressCollision_d1g0v0.json",
