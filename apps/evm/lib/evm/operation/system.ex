@@ -83,7 +83,8 @@ defmodule EVM.Operation.System do
   @spec call(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def call([call_gas, to, value, in_offset, in_size, out_offset, out_size], %{
         exec_env: exec_env,
-        machine_state: machine_state
+        machine_state: machine_state,
+        sub_state: sub_state
       }) do
     to = Address.new(to)
     {data, machine_state} = EVM.Memory.read(machine_state, in_offset, in_size)
@@ -93,6 +94,7 @@ defmodule EVM.Operation.System do
     message_call = %MessageCall{
       current_exec_env: exec_env,
       current_machine_state: machine_state,
+      current_sub_state: sub_state,
       output_params: {out_offset, out_size},
       sender: exec_env.address,
       originator: exec_env.originator,
@@ -115,7 +117,8 @@ defmodule EVM.Operation.System do
   @spec delegatecall(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def delegatecall([_call_gas, to, in_offset, in_size, out_offset, out_size], %{
         exec_env: exec_env,
-        machine_state: machine_state
+        machine_state: machine_state,
+        sub_state: sub_state
       }) do
     to = Address.new(to)
     {data, machine_state} = EVM.Memory.read(machine_state, in_offset, in_size)
@@ -123,6 +126,7 @@ defmodule EVM.Operation.System do
     message_call = %MessageCall{
       current_exec_env: exec_env,
       current_machine_state: machine_state,
+      current_sub_state: sub_state,
       output_params: {out_offset, out_size},
       sender: exec_env.sender,
       originator: exec_env.originator,
@@ -145,7 +149,8 @@ defmodule EVM.Operation.System do
   @spec staticcall(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def staticcall([call_gas, to, in_offset, in_size, out_offset, out_size], %{
         exec_env: exec_env,
-        machine_state: machine_state
+        machine_state: machine_state,
+        sub_state: sub_state
       }) do
     to = Address.new(to)
     {data, machine_state} = EVM.Memory.read(machine_state, in_offset, in_size)
@@ -153,6 +158,7 @@ defmodule EVM.Operation.System do
     message_call = %MessageCall{
       current_exec_env: exec_env,
       current_machine_state: machine_state,
+      current_sub_state: sub_state,
       output_params: {out_offset, out_size},
       sender: exec_env.address,
       originator: exec_env.originator,
@@ -189,7 +195,7 @@ defmodule EVM.Operation.System do
   @spec callcode(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def callcode(
         [call_gas, to, value, in_offset, in_size, out_offset, out_size],
-        %{exec_env: exec_env, machine_state: machine_state}
+        %{exec_env: exec_env, machine_state: machine_state, sub_state: sub_state}
       ) do
     to = Address.new(to)
     {data, machine_state} = EVM.Memory.read(machine_state, in_offset, in_size)
@@ -199,6 +205,7 @@ defmodule EVM.Operation.System do
     message_call = %MessageCall{
       current_exec_env: exec_env,
       current_machine_state: machine_state,
+      current_sub_state: sub_state,
       output_params: {out_offset, out_size},
       sender: exec_env.address,
       originator: exec_env.originator,

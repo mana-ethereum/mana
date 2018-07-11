@@ -9,9 +9,9 @@ defmodule EVM.Refunds do
   }
 
   # Refund given (added into refund counter) when the storage value is set to zero from non-zero.
-  @storage_refund 15000
+  @storage_refund 15_000
   # Refund given (added into refund counter) for destroying an account.
-  @selfdestruct_refund 24000
+  @selfdestruct_refund 24_000
 
   @doc """
   Returns the refund amount given a cycle of the VM.

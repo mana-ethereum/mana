@@ -2604,7 +2604,11 @@ defmodule GenerateStateTests do
 
         storage =
           Enum.reduce(account["storage"], storage, fn {key, value}, trie ->
-            Storage.put(trie.db, trie.root_hash, load_integer(key), load_integer(value))
+            if value == 0 do
+              trie
+            else
+              Storage.put(trie.db, trie.root_hash, load_integer(key), load_integer(value))
+            end
           end)
 
         new_account = %Account{

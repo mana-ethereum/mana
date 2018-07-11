@@ -58,7 +58,7 @@ defmodule Blockchain.StateTest do
       "xorNonConst"
     ],
     "AttackTest" => [
-      "ContractCreationSpam"
+      # "ContractCreationSpam",
       # "CrashingTransaction",
     ],
     "BadOpcode" => [
@@ -352,7 +352,7 @@ defmodule Blockchain.StateTest do
       "codesizeValid"
     ],
     "CreateTest" => [
-      # "CREATE_AcreateB_BSuicide_BStore",
+      "CREATE_AcreateB_BSuicide_BStore",
       "CREATE_ContractRETURNBigOffset",
       "CREATE_ContractSSTOREDuringInit",
       "CREATE_ContractSuicideDuringInit",
@@ -1529,7 +1529,7 @@ defmodule Blockchain.StateTest do
       "LoopCallsDepthThenRevert",
       "LoopCallsDepthThenRevert2",
       "LoopCallsDepthThenRevert3",
-      # "LoopCallsThenRevert",
+      "LoopCallsThenRevert",
       "LoopDelegateCallsDepthThenRevert",
       "NashatyrevSuicideRevert",
       "PythonRevertTestTue201814-1430",
@@ -2561,7 +2561,11 @@ defmodule Blockchain.StateTest do
 
         storage =
           Enum.reduce(account["storage"], storage, fn {key, value}, trie ->
-            Storage.put(trie.db, trie.root_hash, load_integer(key), load_integer(value))
+            if value == 0 do
+              trie
+            else
+              Storage.put(trie.db, trie.root_hash, load_integer(key), load_integer(value))
+            end
           end)
 
         new_account = %Account{
