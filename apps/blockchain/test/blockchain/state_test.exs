@@ -59,7 +59,7 @@ defmodule Blockchain.StateTest do
     ],
     "AttackTest" => [
       # "ContractCreationSpam",
-      # "CrashingTransaction",
+      "CrashingTransaction"
     ],
     "BadOpcode" => [
       "badOpcodes"

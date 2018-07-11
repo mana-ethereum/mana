@@ -1,6 +1,6 @@
 defmodule EVM.Operation.System do
   alias EVM.Interface.{AccountInterface, BlockInterface}
-  alias EVM.{MachineState, ExecEnv, Address, Stack, Operation, MessageCall, Gas, Memory}
+  alias EVM.{MachineState, ExecEnv, Address, Stack, Operation, MessageCall, Gas, Memory, SubState}
 
   @dialyzer {:no_return, callcode: 2}
 
@@ -10,7 +10,8 @@ defmodule EVM.Operation.System do
   @spec create(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def create([value, input_offset, input_size], %{
         exec_env: exec_env,
-        machine_state: machine_state
+        machine_state: machine_state,
+        sub_state: sub_state
       }) do
     {data, machine_state} = EVM.Memory.read(machine_state, input_offset, input_size)
 
@@ -22,7 +23,7 @@ defmodule EVM.Operation.System do
     is_allowed =
       value <= account_balance and exec_env.stack_depth < EVM.Functions.max_stack_depth()
 
-    {status, {updated_account_interface, n_gas, _n_sub_state}} =
+    {status, {updated_account_interface, n_gas, n_sub_state}} =
       if is_allowed do
         available_gas = machine_state.gas
 
@@ -51,7 +52,7 @@ defmodule EVM.Operation.System do
           block_header
         )
       else
-        {:error, {exec_env.account_interface, machine_state.gas, nil}}
+        {:error, {exec_env.account_interface, machine_state.gas, SubState.empty()}}
       end
 
     # Note if was exception halt or other failure on stack
@@ -69,10 +70,16 @@ defmodule EVM.Operation.System do
     machine_state = %{machine_state | stack: Stack.push(machine_state.stack, result), gas: n_gas}
     exec_env = %{exec_env | account_interface: updated_account_interface}
 
+    sub_state = %SubState{
+      refund: n_sub_state.refund + sub_state.refund,
+      selfdestruct_list: n_sub_state.selfdestruct_list ++ sub_state.selfdestruct_list,
+      logs: sub_state.logs
+    }
+
     %{
       machine_state: machine_state,
-      exec_env: exec_env
-      # TODO: sub_state
+      exec_env: exec_env,
+      sub_state: sub_state
     }
   end
 
