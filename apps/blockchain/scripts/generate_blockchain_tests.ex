@@ -178,6 +178,13 @@ defmodule GenerateBlockchainTests do
 
   defp transactions_from_json(json_transactions) do
     Enum.map(json_transactions, fn json_transaction ->
+      init =
+        if maybe_hex(json_transaction["to"]) == <<>> do
+          maybe_hex(json_transaction["data"])
+        else
+          ""
+        end
+
       %Transaction{
         nonce: load_integer(json_transaction["nonce"]),
         gas_price: load_integer(json_transaction["gasPrice"]),
@@ -187,7 +194,8 @@ defmodule GenerateBlockchainTests do
         v: load_integer(json_transaction["v"]),
         r: load_integer(json_transaction["r"]),
         s: load_integer(json_transaction["s"]),
-        data: maybe_hex(json_transaction["data"])
+        data: maybe_hex(json_transaction["data"]),
+        init: init
       }
     end)
   end
