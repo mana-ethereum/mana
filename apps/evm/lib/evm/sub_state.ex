@@ -82,10 +82,34 @@ defmodule EVM.SubState do
       iex> EVM.SubState.add_refund(machine_state, sub_state, exec_env)
       %EVM.SubState{refund: 15000}
   """
-  @spec add_refund(MachineState.t(), SubState.t(), ExecEnv.t()) :: SubState.t()
+  @spec add_refund(MachineState.t(), t(), ExecEnv.t()) :: t()
   def add_refund(machine_state, sub_state, exec_env) do
     refund = Refunds.refund(machine_state, sub_state, exec_env)
 
     %{sub_state | refund: sub_state.refund + refund}
+  end
+
+  @doc """
+  Merges two SubState structs.
+
+  ## Examples
+
+      iex> substate1 = %EVM.SubState{refund: 5, logs: [1], selfdestruct_list: [5]}
+      iex> substate2 = %EVM.SubState{refund: 5, logs: [5], selfdestruct_list: [1]}
+      iex> EVM.SubState.merge(substate1, substate2)
+      %EVM.SubState{refund: 10, logs: [1, 5], selfdestruct_list: [5, 1]}
+  """
+
+  @spec merge(t(), t()) :: t()
+  def merge(sub_state1, sub_state2) do
+    refund = sub_state1.refund + sub_state2.refund
+    selfdestruct_list = sub_state1.selfdestruct_list ++ sub_state2.selfdestruct_list
+    logs = sub_state1.logs ++ sub_state2.logs
+
+    %__MODULE__{
+      refund: refund,
+      selfdestruct_list: selfdestruct_list,
+      logs: logs
+    }
   end
 end

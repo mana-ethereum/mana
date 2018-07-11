@@ -1,6 +1,6 @@
 defmodule EVM.Operation.System do
   alias EVM.Interface.{AccountInterface, BlockInterface}
-  alias EVM.{MachineState, ExecEnv, Address, Stack, Operation, MessageCall, Gas, Memory}
+  alias EVM.{MachineState, ExecEnv, Address, Stack, Operation, MessageCall, Gas, Memory, SubState}
 
   @dialyzer {:no_return, callcode: 2}
 
@@ -10,7 +10,8 @@ defmodule EVM.Operation.System do
   @spec create(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def create([value, input_offset, input_size], %{
         exec_env: exec_env,
-        machine_state: machine_state
+        machine_state: machine_state,
+        sub_state: sub_state
       }) do
     {data, machine_state} = EVM.Memory.read(machine_state, input_offset, input_size)
 
@@ -22,7 +23,7 @@ defmodule EVM.Operation.System do
     is_allowed =
       value <= account_balance and exec_env.stack_depth < EVM.Functions.max_stack_depth()
 
-    {status, {updated_account_interface, n_gas, _n_sub_state}} =
+    {status, {updated_account_interface, n_gas, n_sub_state}} =
       if is_allowed do
         available_gas = machine_state.gas
 
@@ -51,7 +52,7 @@ defmodule EVM.Operation.System do
           block_header
         )
       else
-        {:error, {exec_env.account_interface, machine_state.gas, nil}}
+        {:error, {exec_env.account_interface, machine_state.gas, SubState.empty()}}
       end
 
     # Note if was exception halt or other failure on stack
@@ -69,10 +70,12 @@ defmodule EVM.Operation.System do
     machine_state = %{machine_state | stack: Stack.push(machine_state.stack, result), gas: n_gas}
     exec_env = %{exec_env | account_interface: updated_account_interface}
 
+    sub_state = SubState.merge(n_sub_state, sub_state)
+
     %{
       machine_state: machine_state,
-      exec_env: exec_env
-      # TODO: sub_state
+      exec_env: exec_env,
+      sub_state: sub_state
     }
   end
 
@@ -83,7 +86,8 @@ defmodule EVM.Operation.System do
   @spec call(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def call([call_gas, to, value, in_offset, in_size, out_offset, out_size], %{
         exec_env: exec_env,
-        machine_state: machine_state
+        machine_state: machine_state,
+        sub_state: sub_state
       }) do
     to = Address.new(to)
     {data, machine_state} = EVM.Memory.read(machine_state, in_offset, in_size)
@@ -93,6 +97,7 @@ defmodule EVM.Operation.System do
     message_call = %MessageCall{
       current_exec_env: exec_env,
       current_machine_state: machine_state,
+      current_sub_state: sub_state,
       output_params: {out_offset, out_size},
       sender: exec_env.address,
       originator: exec_env.originator,
@@ -115,7 +120,8 @@ defmodule EVM.Operation.System do
   @spec delegatecall(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def delegatecall([_call_gas, to, in_offset, in_size, out_offset, out_size], %{
         exec_env: exec_env,
-        machine_state: machine_state
+        machine_state: machine_state,
+        sub_state: sub_state
       }) do
     to = Address.new(to)
     {data, machine_state} = EVM.Memory.read(machine_state, in_offset, in_size)
@@ -123,6 +129,7 @@ defmodule EVM.Operation.System do
     message_call = %MessageCall{
       current_exec_env: exec_env,
       current_machine_state: machine_state,
+      current_sub_state: sub_state,
       output_params: {out_offset, out_size},
       sender: exec_env.sender,
       originator: exec_env.originator,
@@ -145,7 +152,8 @@ defmodule EVM.Operation.System do
   @spec staticcall(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def staticcall([call_gas, to, in_offset, in_size, out_offset, out_size], %{
         exec_env: exec_env,
-        machine_state: machine_state
+        machine_state: machine_state,
+        sub_state: sub_state
       }) do
     to = Address.new(to)
     {data, machine_state} = EVM.Memory.read(machine_state, in_offset, in_size)
@@ -153,6 +161,7 @@ defmodule EVM.Operation.System do
     message_call = %MessageCall{
       current_exec_env: exec_env,
       current_machine_state: machine_state,
+      current_sub_state: sub_state,
       output_params: {out_offset, out_size},
       sender: exec_env.address,
       originator: exec_env.originator,
@@ -182,14 +191,14 @@ defmodule EVM.Operation.System do
         iex> machine_state = %EVM.MachineState{gas: 100000}
         iex> %{machine_state: machine_state} =
         ...> EVM.Operation.System.callcode([10, 1, 1, 0, 0, 0, 0],
-        ...>   %{exec_env: exec_env, machine_state: machine_state})
+        ...>   %{exec_env: exec_env, machine_state: machine_state, sub_state: EVM.SubState.empty()})
         iex> EVM.Stack.peek(machine_state.stack)
         0
   """
   @spec callcode(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def callcode(
         [call_gas, to, value, in_offset, in_size, out_offset, out_size],
-        %{exec_env: exec_env, machine_state: machine_state}
+        %{exec_env: exec_env, machine_state: machine_state, sub_state: sub_state}
       ) do
     to = Address.new(to)
     {data, machine_state} = EVM.Memory.read(machine_state, in_offset, in_size)
@@ -199,6 +208,7 @@ defmodule EVM.Operation.System do
     message_call = %MessageCall{
       current_exec_env: exec_env,
       current_machine_state: machine_state,
+      current_sub_state: sub_state,
       output_params: {out_offset, out_size},
       sender: exec_env.address,
       originator: exec_env.originator,

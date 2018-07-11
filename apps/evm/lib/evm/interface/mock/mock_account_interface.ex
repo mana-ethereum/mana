@@ -237,7 +237,7 @@ defimpl EVM.Interface.AccountInterface, for: EVM.Interface.Mock.MockAccountInter
      {
        mock_account_interface,
        mock_account_interface.contract_result[:gas],
-       mock_account_interface.contract_result[:sub_state]
+       mock_account_interface.contract_result[:sub_state] || EVM.SubState.empty()
      }}
   end
 

@@ -1,5 +1,5 @@
 defmodule EVM.MessageCall do
-  alias EVM.{ExecEnv, Memory, Builtin, VM, Functions, Stack, MachineState}
+  alias EVM.{ExecEnv, Memory, Builtin, VM, Functions, Stack, MachineState, SubState}
   alias EVM.Interface.AccountInterface
 
   @moduledoc """
@@ -8,6 +8,7 @@ defmodule EVM.MessageCall do
   defstruct [
     :current_exec_env,
     :current_machine_state,
+    :current_sub_state,
     :output_params,
     # s
     :sender,
@@ -102,13 +103,14 @@ defmodule EVM.MessageCall do
         end
 
       exec_env =
-        message_call.current_exec_env
-        |> Map.put(:account_interface, n_exec_env.account_interface)
+        Map.put(message_call.current_exec_env, :account_interface, n_exec_env.account_interface)
+
+      sub_state = SubState.merge(n_sub_state, message_call.current_sub_state)
 
       %{
         machine_state: machine_state,
         exec_env: exec_env,
-        sub_state: n_sub_state
+        sub_state: sub_state
       }
     end
   end
