@@ -4,6 +4,8 @@ defmodule ExWire.DEVp2pCommunicationTest do
   alias ExWire.{Config, Handshake}
   alias ExWire.Struct.Peer
 
+  @moduletag network: true
+
   setup do
     private_key = Config.private_key()
     Application.put_env(:ex_wire, :private_key, private_key)
@@ -22,12 +24,11 @@ defmodule ExWire.DEVp2pCommunicationTest do
     assert_received_ack_resp(initiator_pid, keys)
     assert_encrypted_handshake_success(initiator_pid)
 
-    assert_send_hello_packet(initiator_pid)
     assert_session_is_active(initiator_pid)
   end
 
   defp assert_received_ack_resp(pid, %{private_key: private_key}) do
-    assert_received {:trace, ^pid, :receive, {:tcp, _socket, ack_data}}
+    assert_received({:trace, ^pid, :receive, {:tcp, _socket, ack_data}})
 
     {:ok, ack_resp, _, _} = Handshake.read_ack_resp(ack_data, private_key)
     assert %ExWire.Handshake.Struct.AckRespV4{} = ack_resp
@@ -45,16 +46,9 @@ defmodule ExWire.DEVp2pCommunicationTest do
     assert ExWire.DEVp2p.session_active?(state.session)
   end
 
-  defp assert_send_hello_packet(pid) do
-    assert_received {:trace, ^pid, :receive, {_, {:send, packet_data}}}
-
-    assert %{packet: {packet_mod, _packet_type, _packet_data}} = packet_data
-    assert packet_mod == ExWire.Packet.Hello
-  end
-
   defp start_initiator_process(port) do
     peer = build_peer_with_recipient_data(port)
-    ExWire.Adapter.TCP.start_link(:outbound, peer)
+    ExWire.P2P.Server.start_link(:outbound, peer)
   end
 
   defp start_recipient_process(port) do

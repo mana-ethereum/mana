@@ -16,7 +16,7 @@ defmodule ExWire.RemoteConnectionTest do
   require Logger
 
   alias ExWire.Packet
-  alias ExWire.Adapter.TCP
+  alias ExWire.P2P.Server, as: P2P
 
   @moduletag integration: true
   @moduletag network: true
@@ -134,9 +134,9 @@ defmodule ExWire.RemoteConnectionTest do
   test "connect to remote peer for handshake" do
     {:ok, peer} = ExWire.Struct.Peer.from_uri(@remote_test_peer)
 
-    {:ok, client_pid} = TCP.start_link(:outbound, peer)
+    {:ok, client_pid} = P2P.start_link(:outbound, peer)
 
-    TCP.subscribe(client_pid, {__MODULE__, :receive_packet, [self()]})
+    P2P.subscribe(client_pid, {__MODULE__, :receive_packet, [self()]})
 
     receive_status(client_pid)
   end
@@ -150,7 +150,7 @@ defmodule ExWire.RemoteConnectionTest do
          genesis_hash: genesis_hash
        }} ->
         # Send a simple status message
-        TCP.send_packet(client_pid, %Packet.Status{
+        P2P.send_packet(client_pid, %Packet.Status{
           protocol_version: ExWire.Config.protocol_version(),
           network_id: ExWire.Config.network_id(),
           total_difficulty: total_difficulty,
@@ -158,7 +158,7 @@ defmodule ExWire.RemoteConnectionTest do
           genesis_hash: genesis_hash
         })
 
-        ExWire.Adapter.TCP.send_packet(client_pid, %ExWire.Packet.GetBlockHeaders{
+        P2P.send_packet(client_pid, %ExWire.Packet.GetBlockHeaders{
           block_identifier: genesis_hash,
           max_headers: 1,
           skip: 0,
@@ -181,7 +181,7 @@ defmodule ExWire.RemoteConnectionTest do
   def receive_block_headers(client_pid) do
     receive do
       {:incoming_packet, _packet = %Packet.BlockHeaders{headers: [header]}} ->
-        ExWire.Adapter.TCP.send_packet(client_pid, %ExWire.Packet.GetBlockBodies{
+        P2P.send_packet(client_pid, %ExWire.Packet.GetBlockBodies{
           hashes: [header |> Block.Header.hash()]
         })
 
