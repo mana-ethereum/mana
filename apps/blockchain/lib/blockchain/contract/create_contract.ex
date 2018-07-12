@@ -49,8 +49,10 @@ defmodule Blockchain.Contract.CreateContract do
     if account_exists?(params, contract_address) do
       account = Account.get_account(params.state, contract_address)
 
-      if account.nonce == 0 && account.code_hash == ExthCrypto.Hash.Keccak.kec(<<>>) &&
-           params.stack_depth != 0 do
+      # params.stack_depth != 0 means that we're not in contract creation transaction
+      # because `create` evm instruction should have parameters on the stack that are pushed to it so
+      # it never is zero
+      if account.nonce == 0 && Account.is_simple_account?(account) && params.stack_depth != 0 do
         {:ok, {params.state, params.available_gas, SubState.empty()}}
       else
         {:ok, {params.state, 0, SubState.empty()}}
