@@ -606,7 +606,7 @@ defmodule BlockchainTest do
     "GeneralStateTests/stRevertTest/RevertPrefoundCall_d0g0v0.json",
     "GeneralStateTests/stRevertTest/RevertPrefoundEmptyCall_d0g0v0.json",
     "GeneralStateTests/stRevertTest/RevertPrefoundEmpty_d0g0v0.json",
-    # "GeneralStateTests/stRevertTest/RevertPrefound_d0g0v0.json",
+    "GeneralStateTests/stRevertTest/RevertPrefound_d0g0v0.json",
     "GeneralStateTests/stRevertTest/RevertRemoteSubCallStorageOOG2_d0g0v0.json",
     "GeneralStateTests/stRevertTest/RevertRemoteSubCallStorageOOG_d0g0v0.json",
     "GeneralStateTests/stShift/sar01_d0g0v0.json",
