@@ -1256,16 +1256,16 @@ defmodule BlockchainTest do
     # "bcTotalDifficultyTest/newChainFrom5Block.json",
     "bcTotalDifficultyTest/newChainFrom6Block.json",
     # "bcTotalDifficultyTest/sideChainWithMoreTransactions.json",
-    # "bcTotalDifficultyTest/sideChainWithNewMaxDifficultyStartingFromBlock3AfterBlock4.json",
-    # "bcTotalDifficultyTest/uncleBlockAtBlock3AfterBlock3.json",
+    "bcTotalDifficultyTest/sideChainWithNewMaxDifficultyStartingFromBlock3AfterBlock4.json",
+    "bcTotalDifficultyTest/uncleBlockAtBlock3AfterBlock3.json",
     "bcTotalDifficultyTest/uncleBlockAtBlock3afterBlock4.json",
-    # "bcUncleHeaderValidity/correct.json",
+    "bcUncleHeaderValidity/correct.json",
     # "bcUncleHeaderValidity/diffTooHigh.json",
     # "bcUncleHeaderValidity/diffTooLow.json",
     # "bcUncleHeaderValidity/diffTooLow2.json",
-    # "bcUncleHeaderValidity/futureUncleTimestamp2.json",
+    "bcUncleHeaderValidity/futureUncleTimestamp2.json",
     # "bcUncleHeaderValidity/futureUncleTimestamp3.json",
-    # "bcUncleHeaderValidity/futureUncleTimestampDifficultyDrop.json",
+    "bcUncleHeaderValidity/futureUncleTimestampDifficultyDrop.json",
     # "bcUncleHeaderValidity/futureUncleTimestampDifficultyDrop2.json",
     # "bcUncleHeaderValidity/gasLimitLTGasUsageUncle.json",
     # "bcUncleHeaderValidity/gasLimitTooHigh.json",
@@ -1281,7 +1281,7 @@ defmodule BlockchainTest do
     # "bcUncleHeaderValidity/pastUncleTimestamp.json",
     # "bcUncleHeaderValidity/timestampTooHigh.json",
     # "bcUncleHeaderValidity/timestampTooLow.json",
-    # "bcUncleHeaderValidity/uncleBloomNot0.json",
+    "bcUncleHeaderValidity/uncleBloomNot0.json",
     # "bcUncleHeaderValidity/uncleBloomNot0_2.json",
     # "bcUncleHeaderValidity/unknownUncleParentHash.json",
     # "bcUncleHeaderValidity/wrongMixHash.json",
@@ -1296,17 +1296,17 @@ defmodule BlockchainTest do
     # "bcUncleTest/InChainUncleGreatGreatGreatGrandPa.json",
     # "bcUncleTest/InChainUncleGreatGreatGreatGreatGrandPa.json",
     # "bcUncleTest/UncleIsBrother.json",
-    # "bcUncleTest/oneUncle.json",
-    # "bcUncleTest/oneUncleGeneration2.json",
-    # "bcUncleTest/oneUncleGeneration3.json",
-    # "bcUncleTest/oneUncleGeneration4.json",
-    # "bcUncleTest/oneUncleGeneration5.json",
-    # "bcUncleTest/oneUncleGeneration6.json",
+    "bcUncleTest/oneUncle.json",
+    "bcUncleTest/oneUncleGeneration2.json",
+    "bcUncleTest/oneUncleGeneration3.json",
+    "bcUncleTest/oneUncleGeneration4.json",
+    "bcUncleTest/oneUncleGeneration5.json",
+    "bcUncleTest/oneUncleGeneration6.json",
     # "bcUncleTest/oneUncleGeneration7.json",
     # "bcUncleTest/threeUncle.json",
     # "bcUncleTest/twoEqualUncle.json",
-    # "bcUncleTest/twoUncle.json",
-    # "bcUncleTest/uncleHeaderAtBlock2.json",
+    "bcUncleTest/twoUncle.json",
+    "bcUncleTest/uncleHeaderAtBlock2.json",
     # "bcUncleTest/uncleHeaderAtBlock2Byzantium.json",
     # "bcUncleTest/uncleHeaderWithGeneration0.json",
     # "bcUncleTest/uncleWithSameBlockNumber.json",
@@ -1335,7 +1335,7 @@ defmodule BlockchainTest do
     # "bcWalletTest/wallet2outOf3txs2.json",
     # "bcWalletTest/wallet2outOf3txsRevoke.json",
     # "bcWalletTest/wallet2outOf3txsRevokeAndConfirmAgain.json",
-    # "bcWalletTest/walletReorganizeOwners.json"
+    # "bcWalletTest/walletReorganizeOwners.json",
   ]
 
   test "runs blockchain  tests" do
@@ -1391,7 +1391,12 @@ defmodule BlockchainTest do
   defp add_blocks(blocktree, json_test, state, chain) do
     Enum.reduce(json_test["blocks"], blocktree, fn json_block, acc ->
       block =
-        block_from_json(json_block["rlp"], json_block["blockHeader"], json_block["transactions"])
+        block_from_json(
+          json_block["rlp"],
+          json_block["blockHeader"],
+          json_block["transactions"],
+          json_block["uncleHeaders"]
+        )
 
       case Blocktree.verify_and_add_block(acc, chain, block, state.db) do
         {:ok, blocktree} -> blocktree
@@ -1400,12 +1405,13 @@ defmodule BlockchainTest do
     end)
   end
 
-  defp block_from_json(rlp, json_header, json_transactions \\ [], _json_ommers \\ []) do
+  defp block_from_json(rlp, json_header, json_transactions \\ [], json_ommers \\ []) do
     block = block_from_rlp(rlp)
     header = header_from_json(json_header)
     transactions = transactions_from_json(json_transactions)
+    ommers = ommers_from_json(json_ommers)
 
-    %{block | header: header, transactions: transactions, ommers: []}
+    %{block | header: header, transactions: transactions, ommers: ommers}
   end
 
   defp block_from_rlp(block_rlp) do
@@ -1435,9 +1441,38 @@ defmodule BlockchainTest do
     }
   end
 
+  defp ommers_from_json(json_ommers) do
+    Enum.map(json_ommers, fn json_ommer ->
+      %Header{
+        parent_hash: maybe_hex(json_ommer["parentHash"]),
+        ommers_hash: maybe_hex(json_ommer["uncleHash"]),
+        beneficiary: maybe_hex(json_ommer["coinbase"]),
+        state_root: maybe_hex(json_ommer["stateRoot"]),
+        transactions_root: maybe_hex(json_ommer["transactionsTrie"]),
+        receipts_root: maybe_hex(json_ommer["receiptTrie"]),
+        logs_bloom: maybe_hex(json_ommer["bloom"]),
+        difficulty: load_integer(json_ommer["difficulty"]),
+        number: load_integer(json_ommer["number"]),
+        gas_limit: load_integer(json_ommer["gasLimit"]),
+        gas_used: load_integer(json_ommer["gasUsed"]),
+        timestamp: load_integer(json_ommer["timestamp"]),
+        extra_data: maybe_hex(json_ommer["extraData"]),
+        mix_hash: maybe_hex(json_ommer["mixHash"]),
+        nonce: maybe_hex(json_ommer["nonce"])
+      }
+    end)
+  end
+
   defp transactions_from_json(json_transactions) do
-    Enum.reduce(json_transactions, [], fn json_transaction, acc ->
-      transaction = %Transaction{
+    Enum.map(json_transactions, fn json_transaction ->
+      init =
+        if maybe_hex(json_transaction["to"]) == <<>> do
+          maybe_hex(json_transaction["data"])
+        else
+          ""
+        end
+
+      %Transaction{
         nonce: load_integer(json_transaction["nonce"]),
         gas_price: load_integer(json_transaction["gasPrice"]),
         gas_limit: load_integer(json_transaction["gasLimit"]),
@@ -1448,8 +1483,6 @@ defmodule BlockchainTest do
         s: load_integer(json_transaction["s"]),
         data: maybe_hex(json_transaction["data"])
       }
-
-      acc ++ [transaction]
     end)
   end
 

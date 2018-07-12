@@ -124,17 +124,24 @@ defmodule SyncWithInfura do
 end
 
 {db, empty_tree, chain} = SyncWithInfura.setup()
-current_block = case MerklePatriciaTree.DB.get(db, "current_block_hash") do
-  {:ok, current_block_hash} ->
-    {:ok, current_block} = Blockchain.Block.get_block(current_block_hash, db)
-    current_block
-  _ -> Blockchain.Genesis.create_block(chain, db)
-end
+
+current_block =
+  case MerklePatriciaTree.DB.get(db, "current_block_hash") do
+    {:ok, current_block_hash} ->
+      {:ok, current_block} = Blockchain.Block.get_block(current_block_hash, db)
+      current_block
+
+    _ ->
+      Blockchain.Genesis.create_block(chain, db)
+  end
+
 parents = SyncWithInfura.get_parents(current_block, db, [])
-tree = Enum.reduce(parents, empty_tree, fn(block, tree) ->
-  {:ok, tree} = Blockchain.Blocktree.verify_and_add_block(tree, chain, block, db)
+
+tree =
+  Enum.reduce(parents, empty_tree, fn block, tree ->
+    {:ok, tree} = Blockchain.Blocktree.verify_and_add_block(tree, chain, block, db)
     Logger.info("Verfied Saved Block #{block.header.number}")
-  tree
-end)
+    tree
+  end)
 
 SyncWithInfura.add_block_to_tree(db, chain, tree, current_block.header.number)
