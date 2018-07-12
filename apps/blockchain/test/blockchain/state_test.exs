@@ -58,7 +58,7 @@ defmodule Blockchain.StateTest do
       "xorNonConst"
     ],
     "AttackTest" => [
-      # "ContractCreationSpam",
+      "ContractCreationSpam",
       "CrashingTransaction"
     ],
     "BadOpcode" => [

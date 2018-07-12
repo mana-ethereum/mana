@@ -9,8 +9,8 @@ defmodule EVM.SubState do
     LogEntry,
     Refunds,
     ExecEnv,
-    SubState,
-    MachineState
+    MachineState,
+    Refunds
   }
 
   defstruct selfdestruct_list: [],
@@ -102,13 +102,18 @@ defmodule EVM.SubState do
 
   @spec merge(t(), t()) :: t()
   def merge(sub_state1, sub_state2) do
-    refund = sub_state1.refund + sub_state2.refund
     selfdestruct_list = sub_state1.selfdestruct_list ++ sub_state2.selfdestruct_list
+    dedup_selfdestruct_list = Enum.dedup(selfdestruct_list)
     logs = sub_state1.logs ++ sub_state2.logs
+
+    refund =
+      sub_state1.refund + sub_state2.refund -
+        (Enum.count(selfdestruct_list) - Enum.count(dedup_selfdestruct_list)) *
+          Refunds.selfdestruct_refund()
 
     %__MODULE__{
       refund: refund,
-      selfdestruct_list: selfdestruct_list,
+      selfdestruct_list: dedup_selfdestruct_list,
       logs: logs
     }
   end
