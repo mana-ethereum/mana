@@ -11,7 +11,7 @@ defmodule BlockchainTest do
 
   @ethereum_common_tests_path "/../../ethereum_common_tests/BlockchainTests/"
   @tests [
-    # "GeneralStateTests/stAttackTest/ContractCreationSpam_d0g0v0.json",
+    "GeneralStateTests/stAttackTest/ContractCreationSpam_d0g0v0.json",
     # "GeneralStateTests/stAttackTest/CrashingTransaction_d0g0v0.json",
     "GeneralStateTests/stCallCodes/call_OOG_additionalGasCosts1_d0g0v0.json",
     "GeneralStateTests/stCallCodes/call_OOG_additionalGasCosts2_d0g0v0.json",
