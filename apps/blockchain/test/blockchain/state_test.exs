@@ -1554,7 +1554,7 @@ defmodule Blockchain.StateTest do
       "RevertPrecompiledTouch",
       "RevertPrecompiledTouchCC",
       "RevertPrecompiledTouchDC",
-      # "RevertPrefound",
+      "RevertPrefound",
       "RevertPrefoundCall",
       "RevertPrefoundCallOOG",
       "RevertPrefoundEmpty",
