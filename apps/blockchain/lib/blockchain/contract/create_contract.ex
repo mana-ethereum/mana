@@ -47,7 +47,16 @@ defmodule Blockchain.Contract.CreateContract do
     contract_address = Address.new(params.sender, sender_account.nonce)
 
     if account_exists?(params, contract_address) do
-      {:ok, failed_create(params)}
+      account = Account.get_account(params.state, contract_address)
+
+      # params.stack_depth != 0 means that we're not in contract creation transaction
+      # because `create` evm instruction should have parameters on the stack that are pushed to it so
+      # it never is zero
+      if account.nonce == 0 && Account.is_simple_account?(account) && params.stack_depth != 0 do
+        {:ok, {params.state, params.available_gas, SubState.empty()}}
+      else
+        {:ok, {params.state, 0, SubState.empty()}}
+      end
     else
       result = {_, _, _, output} = create(params, contract_address)
 
@@ -58,7 +67,7 @@ defmodule Blockchain.Contract.CreateContract do
       # is refunded to the caller and the state is reverted to the
       # point immediately prior to balance transfer.
       if output == :failed do
-        {:error, failed_create(params)}
+        {:error, {params.state, 0, SubState.empty()}}
       else
         {:ok, finalize(result, params, contract_address)}
       end
@@ -99,11 +108,6 @@ defmodule Blockchain.Contract.CreateContract do
     }
 
     EVM.VM.run(params.available_gas, exec_env)
-  end
-
-  @spec failed_create(t()) :: {EVM.Gas.t(), EVM.SubState.t(), EVM.ExecEnv.t(), EVM.VM.output()}
-  defp failed_create(params) do
-    {params.state, 0, SubState.empty()}
   end
 
   @spec finalize(
