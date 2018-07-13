@@ -416,7 +416,7 @@ defmodule Blockchain.Transaction do
       3 * 68 + 4 + 21000
 
       iex> Blockchain.Transaction.intrinsic_gas_cost(%Blockchain.Transaction{to: <<>>, init: <<1, 2, 0, 3>>, data: <<>>}, %Block.Header{number: 5_000_000})
-      3 * 68 + 4 + 32000 + 21000
+      3 * 68 + 4  + 21000
   """
   @spec intrinsic_gas_cost(t, Header.t()) :: Gas.t()
   def intrinsic_gas_cost(tx, block_header) do
@@ -427,8 +427,8 @@ defmodule Blockchain.Transaction do
     data_cost + cc_cost + Gas.g_transaction()
   end
 
-  defp contract_creation_cost(tx, block_header) do
-    # TODO: https://github.com/poanetwork/mana/issues/190
+  defp contract_creation_cost(_tx, _block_header) do
+    # TODO:     https://github.com/poanetwork/mana/issues/190
     # 0    if tx.to == <<>> and Header.is_after_homestead?(block_header),
     #       do: Gas.g_txcreate(),
     #       else: 0
