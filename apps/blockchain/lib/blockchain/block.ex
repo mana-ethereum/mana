@@ -663,7 +663,7 @@ defmodule Blockchain.Block do
       iex> chain = Blockchain.Test.ropsten_chain()
       iex> parent = Blockchain.Genesis.create_block(chain, db)
       ...> child = Blockchain.Block.gen_child_block(parent, chain)
-      ...> Blockchain.Block.validate(child, chain, nil, db)
+      ...> Blockchain.Block.validate(child, chain, :parent_not_found, db)
       {:errors, [:non_genesis_block_requires_parent]}
 
       iex> db = MerklePatriciaTree.Test.random_ets_db()
@@ -677,7 +677,7 @@ defmodule Blockchain.Block do
   """
   @spec validate(t, Chain.t(), t, DB.db()) :: :valid | {:invalid, [atom()]}
   def validate(block, chain, parent_block, db) do
-    if block.header.number > 0 and parent_block == nil do
+    if block.header.number > 0 and parent_block == :parent_not_found do
       {:errors, [:non_genesis_block_requires_parent]}
     else
       with :valid <-
