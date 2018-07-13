@@ -428,8 +428,10 @@ defmodule Blockchain.Transaction do
   end
 
   defp contract_creation_cost(tx, block_header) do
-    if tx.to == <<>> and Header.is_after_homestead?(block_header),
-      do: Gas.g_txcreate(),
-      else: 0
+    # TODO: https://github.com/poanetwork/mana/issues/190
+    # 0    if tx.to == <<>> and Header.is_after_homestead?(block_header),
+    #       do: Gas.g_txcreate(),
+    #       else: 0
+    0
   end
 end
