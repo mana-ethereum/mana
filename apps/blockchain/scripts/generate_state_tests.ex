@@ -19,33 +19,7 @@ defmodule GenerateStateTests do
         test_path
         |> read_state_test_file()
         |> Enum.each(fn test ->
-          test_path = String.trim(test_path, @base_path <> "/")
-
-          try do
-            if Map.has_key?(test["post"], "Frontier") do
-              all_posts_match =
-                test["post"]["Frontier"]
-                |> Enum.with_index()
-                |> Enum.all?(fn indexed_post ->
-                  run_test(test, indexed_post)
-                end)
-
-              if all_posts_match do
-                if !only_count, do: log_test(test_path)
-                :ets.update_counter(test_counts, "passing", {2, 1}, {"passing", 0})
-              else
-                :ets.update_counter(test_counts, "failing", {2, 1}, {"failing", 0})
-                if !only_count, do: log_commented_test(test_path)
-              end
-            else
-              :ets.update_counter(test_counts, "post_frontier", {2, 1}, {"post_frontier", 0})
-              if !only_count, do: log_test(test_path)
-            end
-          rescue
-            _ ->
-              :ets.update_counter(test_counts, "failing", {2, 1}, {"failing", 0})
-              if !only_count, do: log_commented_test(test_path)
-          end
+          run_tests_in_json(test, test_path, test_counts, only_count)
         end)
       end)
     end)
@@ -77,6 +51,36 @@ defmodule GenerateStateTests do
     wildcard
     |> Path.wildcard()
     |> Enum.sort()
+  end
+
+  defp run_tests_in_json(test, test_path, test_counts, only_count) do
+    test_path = String.trim(test_path, @base_path <> "/")
+
+    try do
+      if Map.has_key?(test["post"], "Frontier") do
+        all_posts_match =
+          test["post"]["Frontier"]
+          |> Enum.with_index()
+          |> Enum.all?(fn indexed_post ->
+            run_test(test, indexed_post)
+          end)
+
+        if all_posts_match do
+          if !only_count, do: log_test(test_path)
+          :ets.update_counter(test_counts, "passing", {2, 1}, {"passing", 0})
+        else
+          :ets.update_counter(test_counts, "failing", {2, 1}, {"failing", 0})
+          if !only_count, do: log_commented_test(test_path)
+        end
+      else
+        :ets.update_counter(test_counts, "post_frontier", {2, 1}, {"post_frontier", 0})
+        if !only_count, do: log_test(test_path)
+      end
+    rescue
+      _ ->
+        :ets.update_counter(test_counts, "failing", {2, 1}, {"failing", 0})
+        if !only_count, do: log_commented_test(test_path)
+    end
   end
 
   defp run_test(test, {post, index}) do
@@ -157,10 +161,12 @@ defmodule GenerateStateTests do
 
         storage =
           Enum.reduce(account["storage"], storage, fn {key, value}, trie ->
+            value = load_integer(value)
+
             if value == 0 do
               trie
             else
-              Storage.put(trie.db, trie.root_hash, load_integer(key), load_integer(value))
+              Storage.put(trie.db, trie.root_hash, load_integer(key), value)
             end
           end)
 

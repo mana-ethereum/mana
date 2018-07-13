@@ -1973,7 +1973,7 @@ defmodule Blockchain.StateTest do
     # "stTransactionTest/UserTransactionGasLimitIsTooLowWhenZeroCost.json",
     "stTransactionTest/UserTransactionZeroCost.json",
     "stTransactionTest/UserTransactionZeroCostWithData.json",
-    # "stTransitionTest/createNameRegistratorPerTxsAfter.json",
+    "stTransitionTest/createNameRegistratorPerTxsAfter.json",
     "stTransitionTest/createNameRegistratorPerTxsAt.json",
     "stTransitionTest/createNameRegistratorPerTxsBefore.json",
     # "stTransitionTest/createNameRegistratorPerTxsNotEnoughGasAfter.json",
@@ -2443,10 +2443,12 @@ defmodule Blockchain.StateTest do
 
         storage =
           Enum.reduce(account["storage"], storage, fn {key, value}, trie ->
+            value = load_integer(value)
+
             if value == 0 do
               trie
             else
-              Storage.put(trie.db, trie.root_hash, load_integer(key), load_integer(value))
+              Storage.put(trie.db, trie.root_hash, load_integer(key), value)
             end
           end)
 
