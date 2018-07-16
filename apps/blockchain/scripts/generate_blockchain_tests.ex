@@ -32,10 +32,10 @@ defmodule GenerateBlockchainTests do
               end
             end)
 
-          if failing != 0 do
-            log_commented_test(relative_path)
-          else
-            log_test(relative_path)
+          cond do
+            failing != 0 -> log_commented_test(relative_path)
+            passing != 0 -> log_test(relative_path)
+            true -> :ok
           end
 
           {pass_acc + passing, fail_acc + failing}
