@@ -119,6 +119,16 @@ defmodule Blockchain.Block do
     }
   end
 
+  @spec decode_rlp(binary()) :: {:ok, [ExRLP.t()]} | {:error, any()}
+  def decode_rlp(rlp) do
+    try do
+      {:ok, ExRLP.decode(rlp)}
+    rescue
+      e ->
+        {:error, e}
+    end
+  end
+
   @doc """
   Computes hash of a block, which is simply the hash of the serialized
   block after applying RLP encoding.

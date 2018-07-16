@@ -89,7 +89,15 @@ defmodule GenerateBlockchainTests do
   end
 
   defp add_genesis_block(blocktree, json_test, state, chain) do
-    genesis_block = block_from_json(json_test["genesisRLP"], json_test["genesisBlockHeader"])
+    block_list =
+      if json_test["genesisRLP"] do
+        {:ok, block_list} =
+          json_test["genesisRLP"] |> maybe_hex() |> Blockchain.Block.decode_rlp()
+
+        block_list
+      end
+
+    genesis_block = block_from_json(block_list, json_test["genesisBlockHeader"])
 
     {:ok, blocktree} =
       Blocktree.verify_and_add_block(blocktree, chain, genesis_block, state.db, false)
@@ -103,35 +111,36 @@ defmodule GenerateBlockchainTests do
 
   defp add_blocks(blocktree, json_test, state, chain) do
     Enum.reduce(json_test["blocks"], blocktree, fn json_block, acc ->
-      block =
-        block_from_json(
-          json_block["rlp"],
-          json_block["blockHeader"],
-          json_block["transactions"],
-          json_block["uncleHeaders"]
-        )
+      decoded_rlp = json_block["rlp"] |> maybe_hex() |> Blockchain.Block.decode_rlp()
 
-      case Blocktree.verify_and_add_block(acc, chain, block, state.db) do
-        {:ok, blocktree} -> blocktree
-        _ -> acc
+      case decoded_rlp do
+        {:ok, block_list} ->
+          block =
+            block_from_json(block_list, json_block["blockHeader"], json_block["transactions"])
+
+          case Blocktree.verify_and_add_block(acc, chain, block, state.db) do
+            {:ok, blocktree} -> blocktree
+            _ -> acc
+          end
+
+        _ ->
+          acc
       end
     end)
   end
 
-  defp block_from_json(rlp, json_header, json_transactions \\ [], json_ommers \\ []) do
-    block = block_from_rlp(rlp)
+  defp block_from_json(block_list, json_header, json_transactions \\ [], _json_ommers \\ []) do
+    block = block_from_rlp(block_list)
     header = header_from_json(json_header)
     transactions = transactions_from_json(json_transactions)
-    ommers = ommers_from_json(json_ommers)
 
-    %{block | header: header, transactions: transactions, ommers: ommers}
+    %{block | header: header, transactions: transactions, ommers: []}
   end
 
-  defp block_from_rlp(block_rlp) do
-    block_rlp
-    |> maybe_hex()
-    |> ExRLP.decode()
-    |> Blockchain.Block.deserialize()
+  defp block_from_rlp(block_list) do
+    if is_nil(block_list),
+      do: %Blockchain.Block{},
+      else: Blockchain.Block.deserialize(block_list)
   end
 
   defp header_from_json(json_header) do
