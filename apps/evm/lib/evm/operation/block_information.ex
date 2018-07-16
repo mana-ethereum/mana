@@ -33,7 +33,7 @@ defmodule EVM.Operation.BlockInformation do
     if block_difference > 256 || block_difference < 0 do
       0
     else
-      block_header = BlockInterface.get_block_by_number(exec_env.block_interface, block_number)
+      block_header = BlockInterface.get_ancestor_header(exec_env.block_interface, block_number)
       if block_header, do: block_header.mix_hash, else: 0
     end
   end

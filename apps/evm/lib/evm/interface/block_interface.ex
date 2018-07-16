@@ -11,6 +11,6 @@ defprotocol EVM.Interface.BlockInterface do
   @spec get_block_by_hash(t, EVM.hash()) :: Block.Header.t() | nil
   def get_block_by_hash(t, block_hash)
 
-  @spec get_block_by_number(t, non_neg_integer()) :: Block.Header.t() | nil
-  def get_block_by_number(t, steps)
+  @spec get_ancestor_header(t, non_neg_integer()) :: Block.Header.t() | nil
+  def get_ancestor_header(t, n)
 end

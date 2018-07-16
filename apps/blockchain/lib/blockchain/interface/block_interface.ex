@@ -84,24 +84,34 @@ defimpl EVM.Interface.BlockInterface, for: Blockchain.Interface.BlockInterface d
       ...> }
       iex> Blockchain.Block.put_block(block, db)
       iex> Blockchain.Interface.BlockInterface.new(block.header, db)
-      ...> |> EVM.Interface.BlockInterface.get_block_by_number(0)
+      ...> |> EVM.Interface.BlockInterface.get_ancestor_header(0)
+      ...> |> Block.Header.hash()
       <<78, 28, 127, 10, 192, 253, 127, 239, 254, 179, 39, 34, 245, 44, 152, 98, 128, 71, 238, 155, 100, 161, 199, 71, 243, 223, 172, 191, 74, 99, 128, 63>>
   """
-  @spec get_block_by_number(EVM.Interface.BlockInterface.t(), non_neg_integer()) ::
+  @spec get_ancestor_header(EVM.Interface.BlockInterface.t(), non_neg_integer()) ::
           Block.Header.t() | nil
-  def get_block_by_number(block_interface, steps) do
-    header_hash = Block.Header.hash(block_interface.block_header)
+  def get_ancestor_header(block_interface, n) when n < 0 or n > 256, do: nil
 
-    result =
-      Blockchain.Block.get_block_hash_by_steps(
-        header_hash,
-        steps,
-        block_interface.db
+  def get_ancestor_header(block_interface, n) do
+    {:ok, header} =
+      get_ancestor_header(
+        block_interface,
+        block_interface.block_header,
+        n
       )
 
-    case result do
-      {:ok, block_header} -> block_header
-      :not_found -> nil
-    end
+    header
+  end
+
+  @spec get_ancestor_header(
+          EVM.Interface.BlockInterface.t(),
+          Block.Header.t(),
+          non_neg_integer()
+        ) :: {:ok, Block.Header.t()}
+  defp get_ancestor_header(block_interface, block_header, 0), do: {:ok, block_header}
+
+  defp get_ancestor_header(block_interface, block_header, n) do
+    parent_header = get_block_by_hash(block_interface, block_header.parent_hash)
+    get_ancestor_header(block_interface, parent_header, n - 1)
   end
 end
