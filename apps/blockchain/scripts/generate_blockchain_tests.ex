@@ -129,12 +129,13 @@ defmodule GenerateBlockchainTests do
     end)
   end
 
-  defp block_from_json(block_list, json_header, json_transactions \\ [], _json_ommers \\ []) do
+  defp block_from_json(block_list, json_header, json_transactions \\ [], json_ommers \\ []) do
     block = block_from_rlp(block_list)
     header = header_from_json(json_header)
     transactions = transactions_from_json(json_transactions)
+    ommers = ommers_from_json(json_ommers)
 
-    %{block | header: header, transactions: transactions, ommers: []}
+    %{block | header: header, transactions: transactions, ommers: ommers}
   end
 
   defp block_from_rlp(block_list) do
