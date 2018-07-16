@@ -17,8 +17,7 @@ defmodule GenerateBlockchainTests do
           |> Enum.filter(fn {_name, test} ->
             test["network"] == "Frontier"
           end)
-          |> Enum.map(fn {_name, test} -> test end)
-          |> Enum.reduce({0, 0}, fn test, {pass_count, fail_count} ->
+          |> Enum.reduce({0, 0}, fn {_name, test}, {pass_count, fail_count} ->
             relative_path = String.trim(json_test_path, @base_path)
 
             try do
@@ -111,7 +110,7 @@ defmodule GenerateBlockchainTests do
 
   defp add_blocks(blocktree, json_test, state, chain) do
     Enum.reduce(json_test["blocks"], blocktree, fn json_block, acc ->
-      decoded_rlp = json_block["rlp"] |> maybe_hex() |> Blockchain.Block.decode_rlp()
+      decoded_rlp = json_block["rlp"] |> Blockchain.Block.decode_rlp()
 
       case decoded_rlp do
         {:ok, block_list} ->

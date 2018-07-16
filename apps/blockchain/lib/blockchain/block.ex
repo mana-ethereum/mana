@@ -120,6 +120,17 @@ defmodule Blockchain.Block do
   end
 
   @spec decode_rlp(binary()) :: {:ok, [ExRLP.t()]} | {:error, any()}
+  def decode_rlp("0x" <> hex_data) do
+    try do
+      hex_binary = Base.decode16!(hex_data, case: :mixed)
+
+      decode_rlp(hex_binary)
+    rescue
+      e ->
+        {:error, e}
+    end
+  end
+
   def decode_rlp(rlp) do
     try do
       {:ok, ExRLP.decode(rlp)}
