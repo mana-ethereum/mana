@@ -50,7 +50,7 @@ defmodule ExWire.DEVp2pCommunicationTest do
   defp trace_and_wait_for_messages(pid) do
     :erlang.trace(pid, true, [:receive])
 
-    Process.sleep(500)
+    Process.sleep(1000)
   end
 
   def build_peer_with_recipient_data(port) do
