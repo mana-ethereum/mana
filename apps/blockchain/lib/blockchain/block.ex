@@ -131,9 +131,18 @@ defmodule Blockchain.Block do
     end
   end
 
-  def decode_rlp(rlp) do
+  def decode_rlp(rlp) when is_binary(rlp) do
     try do
-      {:ok, ExRLP.decode(rlp)}
+      rlp |> ExRLP.decode() |> decode_rlp()
+    rescue
+      e ->
+        {:error, e}
+    end
+  end
+
+  def decode_rlp(rlp_result_list) do
+    try do
+      {:ok, deserialize(rlp_result_list)}
     rescue
       e ->
         {:error, e}
