@@ -19,9 +19,9 @@ defmodule ExWire.DEVp2p do
     alias ExWire.Packet.Hello
 
     @type handshake_status :: boolean | ExWire.Packet.Hello.t()
-    @type t :: %Session{handshake_sent: handshake_status, handshake_received: handshake_status}
+    @type t :: %Session{hello_sent: handshake_status, hello_received: handshake_status}
 
-    defstruct handshake_sent: false, handshake_received: false
+    defstruct hello_sent: false, hello_received: false
 
     @doc """
     Checks whether or not the session is active.
@@ -31,32 +31,32 @@ defmodule ExWire.DEVp2p do
 
     ## Examples
 
-        iex> handshake_received = %ExWire.Packet.Hello{caps: [{"eth", 62}]}
-        iex> handshake_sent = %ExWire.Packet.Hello{caps: [{"eth", 62}]}
-        iex> ExWire.DEVp2p.Session.active?(%ExWire.DEVp2p.Session{handshake_received: handshake_received, handshake_sent: handshake_sent})
+        iex> hello_received = %ExWire.Packet.Hello{caps: [{"eth", 62}]}
+        iex> hello_sent = %ExWire.Packet.Hello{caps: [{"eth", 62}]}
+        iex> ExWire.DEVp2p.Session.active?(%ExWire.DEVp2p.Session{hello_received: hello_received, hello_sent: hello_sent})
         true
     """
     @spec active?(t) :: boolean()
-    def active?(%Session{handshake_received: false}), do: false
-    def active?(%Session{handshake_sent: false}), do: false
+    def active?(%Session{hello_received: false}), do: false
+    def active?(%Session{hello_sent: false}), do: false
 
-    def active?(%Session{handshake_sent: %Hello{}, handshake_received: %Hello{}} = session) do
+    def active?(%Session{hello_sent: %Hello{}, hello_received: %Hello{}} = session) do
       compatible_capabilities?(session)
     end
 
     @spec disconnect(t) :: Session.t()
     def disconnect(session = %Session{}) do
-      %{session | handshake_sent: false, handshake_received: false}
+      %{session | hello_sent: false, hello_received: false}
     end
 
     @spec compatible_capabilities?(t) :: boolean()
     def compatible_capabilities?(session = %Session{}) do
-      %Session{handshake_received: handshake_received, handshake_sent: handshake_sent} = session
+      %Session{hello_received: hello_received, hello_sent: hello_sent} = session
 
       intersection =
         MapSet.intersection(
-          to_mapset(handshake_received.caps),
-          to_mapset(handshake_sent.caps)
+          to_mapset(hello_received.caps),
+          to_mapset(hello_sent.caps)
         )
 
       !Enum.empty?(intersection)
@@ -79,8 +79,8 @@ defmodule ExWire.DEVp2p do
   Function to create a DEVp2p struct needed for a protocol handshake. This
   should be an `ExWire.Packet.Hello` struct with the appropriate values filled in.
   """
-  @spec generate_handshake :: Packet.Hello.t()
-  def generate_handshake do
+  @spec build_hello :: Packet.Hello.t()
+  def build_hello do
     %Packet.Hello{
       p2p_version: Config.p2p_version(),
       client_id: Config.client_id(),
@@ -94,18 +94,18 @@ defmodule ExWire.DEVp2p do
   Function to update `ExWire.DEVp2p.Session` when a handshake is sent. The
   handshake should be an `ExWire.Packet.Hello` that we have sent to a peer.
   """
-  @spec handshake_sent(Session.t(), Packet.Hello.t()) :: Session.t()
-  def handshake_sent(session, hello = %Packet.Hello{}) do
-    %{session | handshake_sent: hello}
+  @spec hello_sent(Session.t(), Packet.Hello.t()) :: Session.t()
+  def hello_sent(session, hello = %Packet.Hello{}) do
+    %{session | hello_sent: hello}
   end
 
   @doc """
   Function to update `ExWire.DEVp2p.Session` when a handshake is received. The
   handshake should be an `ExWire.Packet.Hello` that we have received from a peer.
   """
-  @spec handshake_received(Session.t(), Packet.Hello.t()) :: Session.t()
-  def handshake_received(session, hello = %Packet.Hello{}) do
-    %{session | handshake_received: hello}
+  @spec hello_received(Session.t(), Packet.Hello.t()) :: Session.t()
+  def hello_received(session, hello = %Packet.Hello{}) do
+    %{session | hello_received: hello}
   end
 
   @doc """
@@ -127,28 +127,12 @@ defmodule ExWire.DEVp2p do
   properly update the session based on the message received.
   """
   @spec handle_message(Session.t(), struct()) ::
-          {:error, :handshake_incomplete, Session.t()}
-          | {:ok, ExWire.Packet.handle_response(), Session.t()}
-  def handle_message(session, message) do
-    if session_active?(session) do
-      response = generate_response(message)
-      new_session = update_session(session, message)
-      {:ok, response, new_session}
-    else
-      {:error, :handshake_incomplete, session}
-    end
+          {:error, :handshake_incomplete} | {:ok, Session.t()}
+  def handle_message(session, %Packet.Hello{} = packet) do
+    {:ok, hello_received(session, packet)}
   end
 
-  @spec update_session(Session.t(), struct()) :: Session.t()
-  defp update_session(session, %Packet.Disconnect{}) do
-    Session.disconnect(session)
+  def handle_message(_session, _message) do
+    {:error, :handshake_incomplete}
   end
-
-  defp update_session(session, _message), do: session
-
-  @spec generate_response(struct()) :: ExWire.Packet.handle_response()
-  defp generate_response(%Packet.Ping{} = ping), do: Packet.Ping.handle(ping)
-
-  defp generate_response(%Packet.Disconnect{} = disconnect),
-    do: Packet.Disconnect.handle(disconnect)
 end

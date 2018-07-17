@@ -19,10 +19,10 @@ defmodule ExWire.Adapter.TCP do
   GenServer implementation (and thus the `use GenServer` part), we have to
   implement this ourselves.
   """
-  def child_spec([:inbound]) do
+  def child_spec([:inbound, socket]) do
     %{
       id: ExWire.TCP.Inbound,
-      start: {ExWire.Adapter.TCP, :start_link, [:inbound]},
+      start: {ExWire.Adapter.TCP, :start_link, [{:inbound, socket}]},
       restart: :temporary
     }
   end
@@ -38,9 +38,10 @@ defmodule ExWire.Adapter.TCP do
     })
   end
 
-  def start_link(:inbound) do
+  def start_link({:inbound, socket}) do
     GenServer.start_link(ExWire.Adapter.TCP.Server, %{
-      is_outbound: false
+      is_outbound: false,
+      socket: socket
     })
   end
 

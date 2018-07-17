@@ -15,29 +15,15 @@ defmodule ExWire.DEVp2pCommunicationTest do
     port = 30309
 
     {:ok, _recipient_pid} = start_recipient_process(port)
-
     {:ok, initiator_pid} = start_initiator_process(port)
 
     trace_and_wait_for_messages(initiator_pid)
 
     assert_received_ack_resp(initiator_pid, keys)
-    assert_send_hello_message(initiator_pid)
-  end
+    assert_encrypted_handshake_success(initiator_pid)
 
-  def assert_send_hello_message(pid) do
-    assert_received {:trace, ^pid, :receive, {_, {:send, packet_data}}}
-
-    assert %{packet: {packet_mod, _packet_type, _packet_data}} = packet_data
-    assert packet_mod == ExWire.Packet.Hello
-  end
-
-  def start_initiator_process(port) do
-    peer = build_peer_with_recipient_data(port)
-    ExWire.Adapter.TCP.start_link(:outbound, peer)
-  end
-
-  def start_recipient_process(port) do
-    ExWire.TCP.Listener.start_link(port: port, name: :listener)
+    assert_send_hello_packet(initiator_pid)
+    assert_session_is_active(initiator_pid)
   end
 
   defp assert_received_ack_resp(pid, %{private_key: private_key}) do
@@ -45,6 +31,34 @@ defmodule ExWire.DEVp2pCommunicationTest do
 
     {:ok, ack_resp, _, _} = Handshake.read_ack_resp(ack_data, private_key)
     assert %ExWire.Handshake.Struct.AckRespV4{} = ack_resp
+  end
+
+  defp assert_encrypted_handshake_success(pid) do
+    state = :sys.get_state(pid)
+
+    refute is_nil(state.secrets)
+  end
+
+  defp assert_session_is_active(pid) do
+    state = :sys.get_state(pid)
+
+    assert ExWire.DEVp2p.session_active?(state.session)
+  end
+
+  defp assert_send_hello_packet(pid) do
+    assert_received {:trace, ^pid, :receive, {_, {:send, packet_data}}}
+
+    assert %{packet: {packet_mod, _packet_type, _packet_data}} = packet_data
+    assert packet_mod == ExWire.Packet.Hello
+  end
+
+  defp start_initiator_process(port) do
+    peer = build_peer_with_recipient_data(port)
+    ExWire.Adapter.TCP.start_link(:outbound, peer)
+  end
+
+  defp start_recipient_process(port) do
+    ExWire.TCP.Listener.start_link(port: port, name: :listener)
   end
 
   defp trace_and_wait_for_messages(pid) do

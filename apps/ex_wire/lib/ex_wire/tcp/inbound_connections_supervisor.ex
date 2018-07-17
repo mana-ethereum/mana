@@ -8,8 +8,8 @@ defmodule ExWire.TCP.InboundConnectionsSupervisor do
   @doc """
   Starts a new supervised process to handle an inbound tcp connection.
   """
-  def new_connection_handler do
-    DynamicSupervisor.start_child(__MODULE__, {ExWire.Adapter.TCP, [:inbound]})
+  def new_connection_handler(socket) do
+    DynamicSupervisor.start_child(__MODULE__, {ExWire.Adapter.TCP, [:inbound, socket]})
   end
 
   def start_link(args) do
