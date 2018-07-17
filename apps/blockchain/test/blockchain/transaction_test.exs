@@ -160,6 +160,22 @@ defmodule Blockchain.TransactionTest do
     end
   end
 
+  describe "input_data/1" do
+    test "returns the init data when it is a contract creation transaction" do
+      machine_code = MachineCode.compile([:stop])
+      tx = %Transaction{to: <<>>, init: machine_code}
+
+      assert Transaction.input_data(tx) == machine_code
+    end
+
+    test "returns the data when it is a message call transaction" do
+      machine_code = MachineCode.compile([:stop])
+      tx = %Transaction{to: <<1::160>>, data: machine_code}
+
+      assert Transaction.input_data(tx) == machine_code
+    end
+  end
+
   describe "execute/3" do
     test "creates a new contract" do
       beneficiary = <<0x05::160>>
@@ -204,21 +220,21 @@ defmodule Blockchain.TransactionTest do
         |> Account.put_account(sender, %Account{balance: 400_000, nonce: 5})
         |> Transaction.execute(tx, %Block.Header{beneficiary: beneficiary})
 
-      assert gas == 21_756
+      assert gas == 28_180
       assert logs == []
 
       addresses = [sender, beneficiary, contract_address]
       actual_accounts = Account.get_accounts(state, addresses)
 
       expected_accounts = [
-        %Blockchain.Account{balance: 334_727, nonce: 6},
-        %Blockchain.Account{balance: 65_268},
+        %Blockchain.Account{balance: 315_455, nonce: 6},
+        %Blockchain.Account{balance: 84_540},
         %Blockchain.Account{
           balance: 5,
           nonce: 0,
           code_hash:
-            <<197, 210, 70, 1, 134, 247, 35, 60, 146, 126, 125, 178, 220, 199, 3, 192, 229, 0,
-              182, 83, 202, 130, 39, 59, 123, 250, 216, 4, 93, 133, 164, 112>>
+            <<243, 247, 169, 254, 54, 79, 170, 185, 59, 33, 109, 165, 10, 50, 20, 21, 79, 34, 160,
+              162, 180, 21, 178, 58, 132, 200, 22, 158, 139, 99, 110, 227>>
         }
       ]
 
@@ -258,7 +274,7 @@ defmodule Blockchain.TransactionTest do
         gas_limit: 100_000,
         to: contract_address,
         value: 5,
-        init: machine_code
+        data: machine_code
       }
 
       tx = Transaction.Signature.sign_transaction(unsigned_tx, private_key)
@@ -272,7 +288,7 @@ defmodule Blockchain.TransactionTest do
         |> Account.put_code(contract_address, machine_code)
         |> Transaction.execute(tx, %Block.Header{beneficiary: beneficiary})
 
-      assert gas == 21780
+      assert gas == 21_780
       assert logs == []
 
       addresses = [sender, beneficiary, contract_address]

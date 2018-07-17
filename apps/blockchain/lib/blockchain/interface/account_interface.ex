@@ -260,7 +260,7 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
       iex> EVM.Interface.AccountInterface.get_account_nonce(account_interface, <<1::160>>)
       1
   """
-  @spec get_account_nonce(EVM.Inteface.AccountInterface.t(), EVM.address()) :: integer() | nil
+  @spec get_account_nonce(EVM.Interface.AccountInterface.t(), EVM.address()) :: integer() | nil
   def get_account_nonce(account_interface, address) do
     account = Account.get_account(account_interface.state, address)
     if account, do: account.nonce, else: nil

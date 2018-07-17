@@ -2365,10 +2365,10 @@ defmodule Blockchain.StateTest do
             nonce: load_integer(test["transaction"]["nonce"]),
             gas_price: load_integer(test["transaction"]["gasPrice"]),
             gas_limit: load_integer(Enum.at(test["transaction"]["gasLimit"], gas_limit_index)),
-            data: maybe_hex(Enum.at(test["transaction"]["data"], data_index)),
             to: maybe_hex(test["transaction"]["to"]),
             value: load_integer(Enum.at(test["transaction"]["value"], value_index))
           }
+          |> populate_init_or_data(maybe_hex(Enum.at(test["transaction"]["data"], data_index)))
           |> Transaction.Signature.sign_transaction(maybe_hex(test["transaction"]["secretKey"]))
 
         {state, _, logs} =
@@ -2393,6 +2393,14 @@ defmodule Blockchain.StateTest do
         logs_hash = logs_hash(logs)
         assert maybe_hex(expected_logs) == logs_hash
       end)
+    end
+  end
+
+  defp populate_init_or_data(tx, data) do
+    if Transaction.contract_creation?(tx) do
+      %{tx | init: data}
+    else
+      %{tx | data: data}
     end
   end
 

@@ -69,7 +69,7 @@ defmodule Blockchain.Transaction do
       tx.gas_limit |> BitHelper.encode_unsigned(),
       tx.to,
       tx.value |> BitHelper.encode_unsigned(),
-      if(tx.to == <<>>, do: tx.init, else: tx.data)
+      input_data(tx)
     ]
 
     if include_vrs do
@@ -81,6 +81,21 @@ defmodule Blockchain.Transaction do
         ]
     else
       base
+    end
+  end
+
+  @doc """
+  Returns the input data for the transaction. If the transaction is a contract
+  creation, then it will return the data in the `init` field. If the transaction
+  is a message call transaction, then it will return the data in the `data`
+  field.
+  """
+  @spec input_data(t) :: binary()
+  def input_data(tx) do
+    if contract_creation?(tx) do
+      tx.init
+    else
+      tx.data
     end
   end
 
@@ -267,6 +282,7 @@ defmodule Blockchain.Transaction do
   @spec execute(EVM.state(), t, Header.t()) :: {EVM.state(), Gas.t(), EVM.SubState.logs()}
   def execute(state, tx, block_header) do
     # TODO: Check transaction validity.
+    # https://github.com/poanetwork/mana/issues/85
     {:ok, sender} = Transaction.Signature.sender(tx)
 
     state_0 = begin_transaction(state, sender, tx)
@@ -282,45 +298,42 @@ defmodule Blockchain.Transaction do
 
     # TODO: Sender versus originator?
     {state_p, remaining_gas, sub_state} =
-      case tx.to do
-        # Λ
-        <<>> ->
-          params = %Contract.CreateContract{
-            state: state_0,
-            sender: sender,
-            originator: originator,
-            available_gas: gas,
-            gas_price: tx.gas_price,
-            endowment: tx.value,
-            init_code: tx.data,
-            stack_depth: stack_depth,
-            block_header: block_header
-          }
+      if contract_creation?(tx) do
+        params = %Contract.CreateContract{
+          state: state_0,
+          sender: sender,
+          originator: originator,
+          available_gas: gas,
+          gas_price: tx.gas_price,
+          endowment: tx.value,
+          init_code: tx.init,
+          stack_depth: stack_depth,
+          block_header: block_header
+        }
 
-          {_, result} = Contract.create(params)
-          result
+        {_, result} = Contract.create(params)
+        result
+      else
+        params = %Contract.MessageCall{
+          state: state_0,
+          sender: sender,
+          originator: originator,
+          recipient: tx.to,
+          contract: tx.to,
+          available_gas: gas,
+          gas_price: tx.gas_price,
+          value: tx.value,
+          apparent_value: apparent_value,
+          data: tx.data,
+          stack_depth: stack_depth,
+          block_header: block_header
+        }
 
-        recipient ->
-          params = %Contract.MessageCall{
-            state: state_0,
-            sender: sender,
-            originator: originator,
-            recipient: recipient,
-            contract: recipient,
-            available_gas: gas,
-            gas_price: tx.gas_price,
-            value: tx.value,
-            apparent_value: apparent_value,
-            data: tx.data,
-            stack_depth: stack_depth,
-            block_header: block_header
-          }
+        # Note, we only want to take the first 3 items from the tuples,
+        # as designated Θ_3 in the literature Θ_3
+        {state, remaining_gas_, sub_state_, _output} = Contract.message_call(params)
 
-          # Note, we only want to take the first 3 items from the tuples,
-          # as designated Θ_3 in the literature Θ_3
-          {state, remaining_gas_, sub_state_, _output} = Contract.message_call(params)
-
-          {state, remaining_gas_, sub_state_}
+        {state, remaining_gas_, sub_state_}
       end
 
     refund = MathHelper.calculate_total_refund(tx, remaining_gas, sub_state.refund)
@@ -420,18 +433,29 @@ defmodule Blockchain.Transaction do
   """
   @spec intrinsic_gas_cost(t, Header.t()) :: Gas.t()
   def intrinsic_gas_cost(tx, block_header) do
-    # cost of tx’s associated data and initialisation EVM-code,
-    # depending on whether the transaction is for contract-creation or message-call
-    data_cost = Gas.g_txdata(tx.init) + Gas.g_txdata(tx.data)
+    data_cost = input_data_cost(tx)
     cc_cost = contract_creation_cost(tx, block_header)
     data_cost + cc_cost + Gas.g_transaction()
   end
 
+  defp input_data_cost(tx) do
+    tx
+    |> input_data()
+    |> Gas.g_txdata()
+  end
+
   defp contract_creation_cost(_tx, _block_header) do
-    # TODO:     https://github.com/poanetwork/mana/issues/190
-    # 0    if tx.to == <<>> and Header.is_after_homestead?(block_header),
-    #       do: Gas.g_txcreate(),
-    #       else: 0
+    # TODO: https://github.com/poanetwork/mana/issues/190
+    #
+    # cost of tx’s associated data and initialisation EVM-code,
+    # depending on whether the transaction is for contract-creation or message-call
+    #
+    # if tx.to == <<>> and Header.is_after_homestead?(block_header),
+    # do: Gas.g_txcreate(),
+    # else: 0
     0
   end
+
+  def contract_creation?(%Blockchain.Transaction{to: <<>>}), do: true
+  def contract_creation?(%Blockchain.Transaction{to: _recipient}), do: false
 end
