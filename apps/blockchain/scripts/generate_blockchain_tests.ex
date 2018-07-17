@@ -120,7 +120,13 @@ defmodule GenerateBlockchainTests do
 
       case block do
         {:ok, block} ->
-          block = block_from_json(block, json_block["blockHeader"], json_block["transactions"])
+          block =
+            block_from_json(
+              block,
+              json_block["blockHeader"],
+              json_block["transactions"],
+              json_block["uncleHeaders"]
+            )
 
           case Blocktree.verify_and_add_block(acc, chain, block, state.db) do
             {:ok, blocktree} -> blocktree

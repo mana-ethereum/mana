@@ -1116,16 +1116,16 @@ defmodule BlockchainTest do
     # "bcTotalDifficultyTest/newChainFrom5Block.json",
     "bcTotalDifficultyTest/newChainFrom6Block.json",
     # "bcTotalDifficultyTest/sideChainWithMoreTransactions.json",
-    # "bcTotalDifficultyTest/sideChainWithNewMaxDifficultyStartingFromBlock3AfterBlock4.json",
-    # "bcTotalDifficultyTest/uncleBlockAtBlock3AfterBlock3.json",
+    "bcTotalDifficultyTest/sideChainWithNewMaxDifficultyStartingFromBlock3AfterBlock4.json",
+    "bcTotalDifficultyTest/uncleBlockAtBlock3AfterBlock3.json",
     "bcTotalDifficultyTest/uncleBlockAtBlock3afterBlock4.json",
-    # "bcUncleHeaderValidity/correct.json",
+    "bcUncleHeaderValidity/correct.json",
     "bcUncleHeaderValidity/diffTooHigh.json",
     "bcUncleHeaderValidity/diffTooLow.json",
     "bcUncleHeaderValidity/diffTooLow2.json",
-    # "bcUncleHeaderValidity/futureUncleTimestamp2.json",
+    "bcUncleHeaderValidity/futureUncleTimestamp2.json",
     "bcUncleHeaderValidity/futureUncleTimestamp3.json",
-    # "bcUncleHeaderValidity/futureUncleTimestampDifficultyDrop.json",
+    "bcUncleHeaderValidity/futureUncleTimestampDifficultyDrop.json",
     "bcUncleHeaderValidity/futureUncleTimestampDifficultyDrop2.json",
     "bcUncleHeaderValidity/gasLimitLTGasUsageUncle.json",
     "bcUncleHeaderValidity/gasLimitTooHigh.json",
@@ -1141,13 +1141,13 @@ defmodule BlockchainTest do
     "bcUncleHeaderValidity/pastUncleTimestamp.json",
     "bcUncleHeaderValidity/timestampTooHigh.json",
     "bcUncleHeaderValidity/timestampTooLow.json",
-    # "bcUncleHeaderValidity/uncleBloomNot0.json",
+    "bcUncleHeaderValidity/uncleBloomNot0.json",
     "bcUncleHeaderValidity/uncleBloomNot0_2.json",
     "bcUncleHeaderValidity/unknownUncleParentHash.json",
     "bcUncleHeaderValidity/wrongMixHash.json",
     "bcUncleHeaderValidity/wrongParentHash.json",
     "bcUncleHeaderValidity/wrongStateRoot.json",
-    # "bcUncleTest/EqualUncleInTwoDifferentBlocks.json",
+    "bcUncleTest/EqualUncleInTwoDifferentBlocks.json",
     "bcUncleTest/InChainUncle.json",
     "bcUncleTest/InChainUncleFather.json",
     "bcUncleTest/InChainUncleGrandPa.json",
@@ -1156,17 +1156,17 @@ defmodule BlockchainTest do
     "bcUncleTest/InChainUncleGreatGreatGreatGrandPa.json",
     "bcUncleTest/InChainUncleGreatGreatGreatGreatGrandPa.json",
     "bcUncleTest/UncleIsBrother.json",
-    # "bcUncleTest/oneUncle.json",
-    # "bcUncleTest/oneUncleGeneration2.json",
-    # "bcUncleTest/oneUncleGeneration3.json",
-    # "bcUncleTest/oneUncleGeneration4.json",
-    # "bcUncleTest/oneUncleGeneration5.json",
-    # "bcUncleTest/oneUncleGeneration6.json",
+    "bcUncleTest/oneUncle.json",
+    "bcUncleTest/oneUncleGeneration2.json",
+    "bcUncleTest/oneUncleGeneration3.json",
+    "bcUncleTest/oneUncleGeneration4.json",
+    "bcUncleTest/oneUncleGeneration5.json",
+    "bcUncleTest/oneUncleGeneration6.json",
     "bcUncleTest/oneUncleGeneration7.json",
     "bcUncleTest/threeUncle.json",
     "bcUncleTest/twoEqualUncle.json",
-    # "bcUncleTest/twoUncle.json",
-    # "bcUncleTest/uncleHeaderAtBlock2.json",
+    "bcUncleTest/twoUncle.json",
+    "bcUncleTest/uncleHeaderAtBlock2.json",
     "bcUncleTest/uncleHeaderAtBlock2Byzantium.json",
     "bcUncleTest/uncleHeaderWithGeneration0.json",
     "bcUncleTest/uncleWithSameBlockNumber.json",
@@ -1261,7 +1261,13 @@ defmodule BlockchainTest do
 
       case block do
         {:ok, block} ->
-          block = block_from_json(block, json_block["blockHeader"], json_block["transactions"])
+          block =
+            block_from_json(
+              block,
+              json_block["blockHeader"],
+              json_block["transactions"],
+              json_block["uncleHeaders"]
+            )
 
           case Blocktree.verify_and_add_block(acc, chain, block, state.db) do
             {:ok, blocktree} -> blocktree
