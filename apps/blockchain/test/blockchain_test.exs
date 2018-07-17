@@ -964,148 +964,8 @@ defmodule BlockchainTest do
     # "bcExploitTest/StrangeContractCreation.json",
     "bcExploitTest/SuicideIssue.json",
     "bcForgedTest/bcForkBlockTest.json",
-    "bcForgedTest/bcForkBlockTest.json",
-    "bcForgedTest/bcForkBlockTest.json",
-    "bcForgedTest/bcForkBlockTest.json",
-    "bcForgedTest/bcForkBlockTest.json",
     "bcForgedTest/bcForkUncle.json",
-    "bcForgedTest/bcForkUncle.json",
-    "bcForgedTest/bcForkUncle.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
-    # "bcForgedTest/bcInvalidRLPTest.json",
+    "bcForgedTest/bcInvalidRLPTest.json",
     "bcForkStressTest/AmIOnEIP150.json",
     # "bcForkStressTest/ForkStressTest.json",
     # "bcGasPricerTest/RPC_API_Test.json",
@@ -1135,7 +995,7 @@ defmodule BlockchainTest do
     "bcInvalidHeaderTest/wrongUncleHash.json",
     # "bcMultiChainTest/CallContractFromNotBestBlock.json",
     "bcMultiChainTest/ChainAtoChainB.json",
-    # "bcMultiChainTest/ChainAtoChainBCallContractFormA.json",
+    "bcMultiChainTest/ChainAtoChainBCallContractFormA.json",
     # "bcMultiChainTest/ChainAtoChainB_BlockHash.json",
     "bcMultiChainTest/ChainAtoChainB_blockorder1.json",
     # "bcMultiChainTest/ChainAtoChainB_blockorder2.json",
@@ -1376,7 +1236,14 @@ defmodule BlockchainTest do
   end
 
   defp add_genesis_block(blocktree, json_test, state, chain) do
-    genesis_block = block_from_json(json_test["genesisRLP"], json_test["genesisBlockHeader"])
+    block =
+      if json_test["genesisRLP"] do
+        {:ok, block} = Blockchain.Block.decode_rlp(json_test["genesisRLP"])
+
+        block
+      end
+
+    genesis_block = block_from_json(block, json_test["genesisBlockHeader"])
 
     {:ok, blocktree} =
       Blocktree.verify_and_add_block(blocktree, chain, genesis_block, state.db, false)
@@ -1390,35 +1257,36 @@ defmodule BlockchainTest do
 
   defp add_blocks(blocktree, json_test, state, chain) do
     Enum.reduce(json_test["blocks"], blocktree, fn json_block, acc ->
-      block =
-        block_from_json(
-          json_block["rlp"],
-          json_block["blockHeader"],
-          json_block["transactions"],
-          json_block["uncleHeaders"]
-        )
+      block = json_block["rlp"] |> Blockchain.Block.decode_rlp()
 
-      case Blocktree.verify_and_add_block(acc, chain, block, state.db) do
-        {:ok, blocktree} -> blocktree
-        _ -> acc
+      case block do
+        {:ok, block} ->
+          block =
+            block_from_json(
+              block,
+              json_block["blockHeader"],
+              json_block["transactions"],
+              json_block["uncleHeaders"]
+            )
+
+          case Blocktree.verify_and_add_block(acc, chain, block, state.db) do
+            {:ok, blocktree} -> blocktree
+            _ -> acc
+          end
+
+        _ ->
+          acc
       end
     end)
   end
 
-  defp block_from_json(rlp, json_header, json_transactions \\ [], json_ommers \\ []) do
-    block = block_from_rlp(rlp)
+  defp block_from_json(block, json_header, json_transactions \\ [], json_ommers \\ []) do
+    block = block || %Blockchain.Block{}
     header = header_from_json(json_header)
     transactions = transactions_from_json(json_transactions)
     ommers = ommers_from_json(json_ommers)
 
     %{block | header: header, transactions: transactions, ommers: ommers}
-  end
-
-  defp block_from_rlp(block_rlp) do
-    block_rlp
-    |> maybe_hex()
-    |> ExRLP.decode()
-    |> Blockchain.Block.deserialize()
   end
 
   defp header_from_json(json_header) do

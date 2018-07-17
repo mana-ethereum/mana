@@ -10,31 +10,37 @@ defmodule GenerateBlockchainTests do
 
   def run() do
     {passing_count, failing_count} =
-      Enum.reduce(tests(), {0, 0}, fn json_test_path, {pass_acc, fail_acc} ->
-        {passing, failing} =
-          json_test_path
-          |> read_test()
-          |> Enum.filter(fn {_name, test} ->
-            test["network"] == "Frontier"
-          end)
-          |> Enum.map(fn {_name, test} -> test end)
-          |> Enum.reduce({0, 0}, fn test, {pass_count, fail_count} ->
-            relative_path = String.trim(json_test_path, @base_path)
+      Enum.reduce(
+        tests(),
+        {0, 0},
+        fn json_test_path, {pass_acc, fail_acc} ->
+          relative_path = String.trim(json_test_path, @base_path)
 
-            try do
-              run_test(test)
-              log_test(relative_path)
+          {passing, failing} =
+            json_test_path
+            |> read_test()
+            |> Enum.filter(fn {_name, test} ->
+              test["network"] == "Frontier"
+            end)
+            |> Enum.reduce({0, 0}, fn {_name, test}, {pass_count, fail_count} ->
+              try do
+                run_test(test)
+                {pass_count + 1, fail_count}
+              rescue
+                _ ->
+                  {pass_count, fail_count + 1}
+              end
+            end)
 
-              {pass_count + 1, fail_count}
-            rescue
-              _ ->
-                log_commented_test(relative_path)
-                {pass_count, fail_count + 1}
-            end
-          end)
+          cond do
+            failing != 0 -> log_commented_test(relative_path)
+            passing != 0 -> log_test(relative_path)
+            true -> :ok
+          end
 
-        {pass_acc + passing, fail_acc + failing}
-      end)
+          {pass_acc + passing, fail_acc + failing}
+        end
+      )
 
     all_frontier_tests = passing_count + failing_count
 
@@ -89,7 +95,14 @@ defmodule GenerateBlockchainTests do
   end
 
   defp add_genesis_block(blocktree, json_test, state, chain) do
-    genesis_block = block_from_json(json_test["genesisRLP"], json_test["genesisBlockHeader"])
+    block =
+      if json_test["genesisRLP"] do
+        {:ok, block} = Blockchain.Block.decode_rlp(json_test["genesisRLP"])
+
+        block
+      end
+
+    genesis_block = block_from_json(block, json_test["genesisBlockHeader"])
 
     {:ok, blocktree} =
       Blocktree.verify_and_add_block(blocktree, chain, genesis_block, state.db, false)
@@ -103,35 +116,36 @@ defmodule GenerateBlockchainTests do
 
   defp add_blocks(blocktree, json_test, state, chain) do
     Enum.reduce(json_test["blocks"], blocktree, fn json_block, acc ->
-      block =
-        block_from_json(
-          json_block["rlp"],
-          json_block["blockHeader"],
-          json_block["transactions"],
-          json_block["uncleHeaders"]
-        )
+      block = json_block["rlp"] |> Blockchain.Block.decode_rlp()
 
-      case Blocktree.verify_and_add_block(acc, chain, block, state.db) do
-        {:ok, blocktree} -> blocktree
-        _ -> acc
+      case block do
+        {:ok, block} ->
+          block =
+            block_from_json(
+              block,
+              json_block["blockHeader"],
+              json_block["transactions"],
+              json_block["uncleHeaders"]
+            )
+
+          case Blocktree.verify_and_add_block(acc, chain, block, state.db) do
+            {:ok, blocktree} -> blocktree
+            _ -> acc
+          end
+
+        _ ->
+          acc
       end
     end)
   end
 
-  defp block_from_json(rlp, json_header, json_transactions \\ [], json_ommers \\ []) do
-    block = block_from_rlp(rlp)
+  defp block_from_json(block, json_header, json_transactions \\ [], json_ommers \\ []) do
+    block = block || %Blockchain.Block{}
     header = header_from_json(json_header)
     transactions = transactions_from_json(json_transactions)
     ommers = ommers_from_json(json_ommers)
 
     %{block | header: header, transactions: transactions, ommers: ommers}
-  end
-
-  defp block_from_rlp(block_rlp) do
-    block_rlp
-    |> maybe_hex()
-    |> ExRLP.decode()
-    |> Blockchain.Block.deserialize()
   end
 
   defp header_from_json(json_header) do
