@@ -11,3 +11,6 @@ apps/*/config/dev.exs
 # Ignore generated code from yecc and leex
 *_lexer.erl
 *_parser.erl
+
+# Ignore secret files
+apps/blockchain/config/dev.secret.exs

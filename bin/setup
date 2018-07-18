@@ -1,0 +1,52 @@
+#!/usr/bin/env sh
+
+fancy_echo() {
+  local fmt="$1"; shift
+
+  # shellcheck disable=SC2059
+  printf "\\n$fmt\\n" "$@"
+}
+
+# Exit if any subcommand fails
+set -e
+
+# set up secrets if not set up yet
+if [ ! -f apps/blockchain/config/dev.secret.exs ]; then
+  echo "Copying .secret files"
+  cp apps/blockchain/config/dev.secret.exs.example apps/blockchain/config/dev.secret.exs
+fi
+
+fancy_echo "Installing dependencies via brew"
+brew bundle --file=- <<EOF
+brew "automake"
+brew "autoconf"
+brew "gmp"
+brew "libtool"
+EOF
+
+# Set up Elixir
+if ! command -v mix > /dev/null; then
+  fancy_echo "It looks like you don't have Elixir installed."
+  echo "See http://elixir-lang.org/install.html for instructions."
+  exit 1
+fi
+
+ELIXIR_PATCH_VERSION=`elixir -v |grep Elixir | sed -n 's/.*1\.6\.\([0-9]\).*$/\1/p'`
+if (($ELIXIR_PATCH_VERSION < 5)); then
+  fancy_echo "Your elixir version must be ~> 1.6.5"
+  fancy_echo "Your current version:"
+  elixir -v
+  exit 1
+fi
+
+if ! command -v rustc > /dev/null; then
+  fancy_echo "It looks like you don't have Rust installed. We'll install that for you."
+  brew install rust
+fi
+
+fancy_echo "Installing elixir dependencies and compiling."
+mix local.hex --force
+mix local.rebar --force
+mix do deps.get, deps.compile, compile
+
+fancy_echo "You're all set!"
