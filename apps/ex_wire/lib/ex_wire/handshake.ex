@@ -42,7 +42,7 @@ defmodule ExWire.Handshake do
           init_nonce: nonce(),
           resp_nonce: nonce(),
           random_key_pair: ExthCrypto.Key.key_pair(),
-          remote_random_pub: ExthCrypto.Key.pubic_key(),
+          remote_random_pub: ExthCrypto.Key.public_key(),
           auth_msg: AuthMsgV4.t(),
           ack_resp: AckRespV4.t(),
           encoded_auth_msg: binary(),

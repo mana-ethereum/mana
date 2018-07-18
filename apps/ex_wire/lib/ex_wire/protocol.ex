@@ -28,7 +28,7 @@ defmodule ExWire.Protocol do
         152, 152, 127, 241, 82, 7, 92, 202, 59, 197, 237, 102, 1, 1, 214, 1, 201,
         132, 1, 2, 3, 4, 128, 130, 0, 5, 201, 132, 5, 6, 7, 8, 130, 0, 6, 128, 4>>
   """
-  @spec encode(Message.t(), Crypto.private_key()) :: binary()
+  @spec encode(Message.t(), ExthCrypto.Key.private_key()) :: binary()
   def encode(message, private_key) do
     signed_message = sign_message(message, private_key)
 
@@ -52,7 +52,7 @@ defmodule ExWire.Protocol do
       iex> ExthCrypto.Signature.verify(message |> ExWire.Message.encode |> ExWire.Crypto.hash, signature, ExthCrypto.Test.public_key())
       true
   """
-  @spec sign_message(Message.t(), Crypto.private_key()) :: binary()
+  @spec sign_message(Message.t(), ExthCrypto.Key.private_key()) :: binary()
   def sign_message(message, private_key) do
     message
     |> Message.encode()
@@ -69,7 +69,7 @@ defmodule ExWire.Protocol do
       iex> ExthCrypto.Signature.verify(ExWire.Crypto.hash("mace windu"), signature, ExthCrypto.Test.public_key())
       true
   """
-  @spec sign_binary(binary(), Crypto.private_key()) :: binary()
+  @spec sign_binary(binary(), ExthCrypto.Key.private_key()) :: binary()
   def sign_binary(value, private_key) do
     hashed_value = Crypto.hash(value)
 

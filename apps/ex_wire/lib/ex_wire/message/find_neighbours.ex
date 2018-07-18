@@ -81,6 +81,6 @@ defmodule ExWire.Message.FindNeighbours do
       iex> ExWire.Message.FindNeighbours.to(%ExWire.Message.FindNeighbours{target: <<1>>, timestamp: 2})
       nil
   """
-  @spec to(t) :: Endpoint.t() | nil
+  @spec to(t) :: ExWire.Struct.Endpoint.t() | nil
   def to(_message), do: nil
 end

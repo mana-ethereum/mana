@@ -4,7 +4,8 @@ defmodule ExWire.Message do
   easily encoded and decoded.
   """
   alias ExWire.Message.{Ping, Pong, FindNeighbours, Neighbours}
-  alias ExWire.{Endpoint, Crypto}
+  alias ExWire.Crypto
+  alias ExWire.Struct.Endpoint
 
   defmodule UnknownMessageError do
     defexception [:message]

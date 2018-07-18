@@ -32,7 +32,7 @@ defmodule ExWire.Struct.Peer do
         ident: "6ce059...1acd9d"
       }
   """
-  @spec new(Sring.t(), integer(), String.t()) :: t
+  @spec new(String.t(), integer(), String.t()) :: t
   def new(host, port, remote_id_hex) do
     remote_id =
       remote_id_hex

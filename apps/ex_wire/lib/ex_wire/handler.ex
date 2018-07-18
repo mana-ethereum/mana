@@ -32,9 +32,9 @@ defmodule ExWire.Handler do
 
     @type t :: %__MODULE__{
             remote_host: Endpoint.t(),
-            signature: Crpyto.signature(),
+            signature: Crypto.signature(),
             recovery_id: Crypto.recovery_id(),
-            hash: Cryto.hash(),
+            hash: Crypto.hash(),
             data: binary(),
             timestamp: integer(),
             type: integer()

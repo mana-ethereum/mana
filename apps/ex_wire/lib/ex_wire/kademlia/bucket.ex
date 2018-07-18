@@ -301,7 +301,7 @@ defmodule ExWire.Kademlia.Bucket do
       iex> bucket |> ExWire.Kademlia.Bucket.insert_node(node) |> ExWire.Kademlia.Bucket.member?(node)
       true
   """
-  @spec member?(t(), Peer.t()) :: boolean()
+  @spec member?(t(), ExWire.Struct.Peer.t()) :: boolean()
   def member?(%__MODULE__{nodes: nodes}, node) do
     nodes
     |> Enum.any?(fn bucket_node ->

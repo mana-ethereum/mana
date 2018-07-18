@@ -46,8 +46,6 @@ lib/trie/helper.ex:41: The variable _@1 can never match since previous clauses c
 -------------------------------
 # blockchain/block.ex warnings
 -------------------------------
-:0: Unknown type 'Elixir.ExthCrypto':hash/0
-:0: Unknown type 'Elixir.Header':t/0
 apps/blockchain/lib/blockchain/block.ex:438: Function gen_child_block/2 has no local return
 apps/blockchain/lib/blockchain/block.ex:438: Function gen_child_block/3 has no local return
 apps/blockchain/lib/blockchain/block.ex:443: The call 'Elixir.Blockchain.Block':set_block_number(#{'__struct__':='Elixir.Blockchain.Block', 'block_hash':='nil', 'header':=#{'__struct__':='Elixir.Block.Header', 'beneficiary':=_, 'difficulty':='nil', 'extra_data':=_, 'gas_limit':=0, 'gas_used':=0, 'logs_bloom':=<<_:2048>>, 'mix_hash':=_, 'nonce':=<<_:64>>, 'number':='nil', 'ommers_hash':=<<_:256>>, 'parent_hash':='nil', 'receipts_root':=<<_:256>>, 'state_root':=_, 'timestamp':=_, 'transactions_root':=<<_:256>>}, 'ommers':=[], 'transactions':=[]},Vparent_block@1::any()) breaks the contract (t(),t()) -> t()
