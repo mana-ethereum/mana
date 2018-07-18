@@ -3,6 +3,7 @@ defmodule GenerateStateTests do
   alias Blockchain.{Account, Transaction}
   alias Blockchain.Interface.AccountInterface
   alias Blockchain.Account.Storage
+  alias ExthCrypto.Hash.Keccak
 
   use EthCommonTest.Harness
 
@@ -102,7 +103,7 @@ defmodule GenerateStateTests do
       }
       |> Transaction.Signature.sign_transaction(maybe_hex(test["transaction"]["secretKey"]))
 
-    {state, _, _} =
+    {state, _, logs} =
       Transaction.execute(state, transaction, %Block.Header{
         beneficiary: maybe_hex(test["env"]["currentCoinbase"]),
         difficulty: load_integer(test["env"]["currentDifficulty"]),
@@ -118,7 +119,10 @@ defmodule GenerateStateTests do
       |> Map.fetch!("hash")
       |> maybe_hex()
 
-    state.root_hash == expected_hash
+    expected_logs = test["post"]["Frontier"] |> Enum.at(index) |> Map.fetch!("logs")
+    logs_hash = logs_hash(logs)
+
+    state.root_hash == expected_hash && maybe_hex(expected_logs) == logs_hash
   end
 
   defp log_test_percentage(test_type, test_count, total_tests) do
@@ -182,6 +186,12 @@ defmodule GenerateStateTests do
       end)
 
     AccountInterface.new(state)
+  end
+
+  defp logs_hash(logs) do
+    logs
+    |> ExRLP.encode()
+    |> Keccak.kec()
   end
 end
 
