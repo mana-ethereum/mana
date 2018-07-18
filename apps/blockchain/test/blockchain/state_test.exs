@@ -2419,10 +2419,7 @@ defmodule Blockchain.StateTest do
     test_path
     |> File.read!()
     |> Poison.decode!()
-    |> Enum.map(fn {name, body} ->
-      IO.inspect(name)
-      body
-    end)
+    |> Enum.map(fn {_name, body} -> body end)
   end
 
   def state_test_file_name(group, test) do
