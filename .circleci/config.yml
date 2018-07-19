@@ -10,68 +10,57 @@ jobs:
 
     working_directory: ~/app
 
-    dialyzer:
-      docker:
-        # Ensure .tool-versions matches
-        - image: circleci/elixir:1.6.5
-          environment:
-            MIX_ENV: test
+    steps:
+      - run: sudo apt-get update; sudo apt-get -y install libtool autoconf libgmp3-dev
+      - checkout
+      - run: git submodule sync --recursive
+      - run: git submodule update --recursive --init
+      - run: curl https://sh.rustup.rs -sSf | sh -s -- -y
+      - run: echo 'export PATH=~/.cargo/bin:$PATH' >> $BASH_ENV
 
-      working_directory: ~/app
+      - run: mix local.hex --force
+      - run: mix local.rebar --force
 
-      steps:
-        - attach_workspace:
-            at: .
-        - run: sudo apt-get update; sudo apt-get -y install libtool autoconf libgmp3-dev
-        - checkout
-        - run: git submodule sync --recursive
-        - run: git submodule update --recursive --init
-        - run: curl https://sh.rustup.rs -sSf | sh -s -- -y
-        - run: echo 'export PATH=~/.cargo/bin:$PATH' >> $BASH_ENV
+      - restore_cache:
+          keys:
+            - v1-env-cache-{{ arch }}-{{ .Branch }}
+      - restore_cache:
+          keys:
+            - v1-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
+            - v1-mix-cache-{{ .Branch }}
+            - v1-mix-cache
+      - restore_cache:
+          keys:
+            - v1-build-cache-{{ .Branch }}
+            - v1-build-cache
 
-        - run: mix local.hex --force
-        - run: mix local.rebar --force
+      - run:
+          command: mix do deps.get, compile
+          no_output_timeout: 2400
+      - run: cd deps/libsecp256k1 && rebar compile
 
-        - restore_cache:
-            keys:
-              - v1-env-cache-{{ arch }}-{{ .Branch }}
-        - restore_cache:
-            keys:
-              - v1-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
-              - v1-mix-cache-{{ .Branch }}
-              - v1-mix-cache
-        - restore_cache:
-            keys:
-              - v1-build-cache-{{ .Branch }}
-              - v1-build-cache
+      - save_cache:
+          key: v1-env-cache-{{ arch }}-{{ .Branch }}
+          paths:
+            - $HOME/.cargo
+            - $HOME/.rustup
+      - save_cache:
+          key: v1-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
+          paths: "deps"
+      - save_cache:
+          key: v1-mix-cache-{{ .Branch }}
+          paths: "deps"
+      - save_cache:
+          key: v1-mix-cache
+          paths: "deps"
+      - save_cache:
+          key: v1-build-cache-{{ .Branch }}
+          paths: "_build"
+      - save_cache:
+          key: v1-build-cache
+          paths: "_build"
 
-        - run:
-            command: mix do deps.get, compile
-            no_output_timeout: 2400
-        - run: cd deps/libsecp256k1 && rebar compile
-
-        - save_cache:
-            key: v1-env-cache-{{ arch }}-{{ .Branch }}
-            paths:
-              - $HOME/.cargo
-              - $HOME/.rustup
-        - save_cache:
-            key: v1-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
-            paths: "deps"
-        - save_cache:
-            key: v1-mix-cache-{{ .Branch }}
-            paths: "deps"
-        - save_cache:
-            key: v1-mix-cache
-            paths: "deps"
-        - save_cache:
-            key: v1-build-cache-{{ .Branch }}
-            paths: "_build"
-        - save_cache:
-            key: v1-build-cache
-            paths: "_build"
-
-        - run: mix test --exclude network --exclude pending
+      - run: mix test --exclude network --exclude pending
 
   dialyzer:
     docker:
