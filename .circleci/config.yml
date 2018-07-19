@@ -62,6 +62,23 @@ jobs:
 
       - run: mix test --exclude network --exclude pending
 
+      - persist_to_workspace:
+          root: .
+          paths:
+            - .circleci
+            - .dialyzer.ignore-warnings
+            - .formatter.exs
+            - .git
+            - .gitignore
+            - _build
+            - apps
+            - bin
+            - config
+            - deps
+            - doc
+            - mix.exs
+            - mix.lock
+
   dialyzer:
     docker:
       # Ensure .tool-versions matches
