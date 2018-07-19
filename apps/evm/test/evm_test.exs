@@ -65,7 +65,7 @@ defmodule EvmTest do
         end
 
         if test["logs"] do
-          logs_hash = logs_hash(sub_state.logs)
+          logs_hash = sub_state.logs |> Enum.reverse() |> logs_hash()
           assert hex_to_bin(test["logs"]) == logs_hash
         end
       end

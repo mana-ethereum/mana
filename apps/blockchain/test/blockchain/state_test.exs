@@ -1876,7 +1876,7 @@ defmodule Blockchain.StateTest do
     "stSystemOperationsTest/CallRecursiveBomb2.json",
     "stSystemOperationsTest/CallRecursiveBomb3.json",
     # "stSystemOperationsTest/CallRecursiveBombLog.json",
-    # "stSystemOperationsTest/CallRecursiveBombLog2.json",
+    "stSystemOperationsTest/CallRecursiveBombLog2.json",
     "stSystemOperationsTest/CallToNameRegistrator0.json",
     "stSystemOperationsTest/CallToNameRegistratorAddressTooBigLeft.json",
     "stSystemOperationsTest/CallToNameRegistratorAddressTooBigRight.json",

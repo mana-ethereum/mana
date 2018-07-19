@@ -60,7 +60,7 @@ defmodule EVM.SubState do
   def add_log(sub_state, address, topics, data) do
     log_entry = LogEntry.new(address, topics, data)
 
-    new_logs = sub_state.logs ++ [log_entry]
+    new_logs = [log_entry | sub_state.logs]
 
     %{sub_state | logs: new_logs}
   end
@@ -104,7 +104,7 @@ defmodule EVM.SubState do
   def merge(sub_state1, sub_state2) do
     selfdestruct_list = sub_state1.selfdestruct_list ++ sub_state2.selfdestruct_list
     dedup_selfdestruct_list = Enum.dedup(selfdestruct_list)
-    logs = sub_state1.logs ++ sub_state2.logs
+    logs = (sub_state1.logs ++ sub_state2.logs) |> Enum.dedup()
 
     refund =
       sub_state1.refund + sub_state2.refund -
