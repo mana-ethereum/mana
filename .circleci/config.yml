@@ -78,6 +78,7 @@ jobs:
             - doc
             - mix.exs
             - mix.lock
+            - chains
 
   dialyzer:
     docker:
