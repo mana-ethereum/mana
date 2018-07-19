@@ -105,7 +105,7 @@ defmodule EVM.MessageCall do
       exec_env =
         Map.put(message_call.current_exec_env, :account_interface, n_exec_env.account_interface)
 
-      sub_state = SubState.merge(n_sub_state, message_call.current_sub_state)
+      sub_state = SubState.merge(message_call.current_sub_state, n_sub_state)
 
       %{
         machine_state: machine_state,
