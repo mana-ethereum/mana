@@ -112,3 +112,15 @@ jobs:
            at: .
 
       - run: mix format --check-formatted
+
+workflows:
+  version: 2
+  primary:
+    jobs:
+      - build
+      - check_formatted:
+          requires:
+            - build
+      - dialyzer:
+          requires:
+            - build
