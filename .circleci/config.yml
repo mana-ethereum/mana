@@ -62,6 +62,42 @@ jobs:
 
       - run: mix test --exclude network --exclude pending
 
+      - persist_to_workspace:
+          root: .
+          paths:
+            - .circleci
+            - .dialyzer.ignore-warnings
+            - .formatter.exs
+            - .git
+            - .gitignore
+            - _build
+            - apps
+            - bin
+            - config
+            - deps
+            - doc
+            - mix.exs
+            - mix.lock
+            - chains
+
+  dialyzer:
+    docker:
+      # Ensure .tool-versions matches
+      - image: circleci/elixir:1.6.5
+        environment:
+          MIX_ENV: test
+
+    working_directory: ~/app
+
+    steps:
+      - attach_workspace:
+          at: .
+      - run: curl https://sh.rustup.rs -sSf | sh -s -- -y
+      - run: echo 'export PATH=~/.cargo/bin:$PATH' >> $BASH_ENV
+
+      - run: mix local.hex --force
+      - run: mix local.rebar --force
+
       - restore_cache:
           keys:
             - v1-plt-cache-{{ arch }}-{{ checksum "mix.lock" }}
@@ -80,4 +116,29 @@ jobs:
 
       - run: mix dialyzer --halt-exit-status
 
+
+  check_formatted:
+    docker:
+      - image: circleci/elixir:1.6.5
+        environment:
+          MIX_ENV: test
+
+    working_directory: ~/app
+
+    steps:
+      - attach_workspace:
+           at: .
+
       - run: mix format --check-formatted
+
+workflows:
+  version: 2
+  primary:
+    jobs:
+      - build
+      - check_formatted:
+          requires:
+            - build
+      - dialyzer:
+          requires:
+            - build
