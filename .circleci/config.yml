@@ -129,8 +129,6 @@ jobs:
       - attach_workspace:
            at: .
 
-      - run: mix local.hex --force
-
       - run: mix format --check-formatted
 
   credo:
@@ -145,6 +143,8 @@ jobs:
     steps:
       - attach_workspace:
           at: .
+
+      - run: mix local.hex --force
 
       - run: mix credo --only readability
 
