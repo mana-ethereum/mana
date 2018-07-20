@@ -63,7 +63,7 @@ defmodule ExWire.Framing.Frame do
 
     # header-mac: right128 of egress-mac.update(aes(mac-secret,egress-mac) ^ header-ciphertext).digest
     egress_mac = update_mac(egress_mac, mac_encoder, mac_secret, header_enc)
-    header_mac = MAC.final(egress_mac) |> Binary.take(16)
+    header_mac = egress_mac |> MAC.final() |> Binary.take(16)
 
     {encoder_stream, frame_unpadded_enc} = AES.stream_encrypt(frame_unpadded, encoder_stream)
 
@@ -76,11 +76,12 @@ defmodule ExWire.Framing.Frame do
 
     frame_enc = frame_unpadded_enc <> frame_padding_enc
 
-    # frame-mac: right128 of egress-mac.update(aes(mac-secret,egress-mac) ^ right128(egress-mac.update(frame-ciphertext).digest))
+    # frame-mac: right128 of egress-mac.update(aes(mac-secret,egress-mac) ^
+    #            right128(egress-mac.update(frame-ciphertext).digest))
     # from EncryptedConnection::update_mac(&mut self.egress_mac, &mut self.mac_encoder, &[0u8; 0]);
     egress_mac = MAC.update(egress_mac, frame_enc)
     egress_mac = update_mac(egress_mac, mac_encoder, mac_secret, nil)
-    frame_mac = MAC.final(egress_mac) |> Binary.take(16)
+    frame_mac = egress_mac |> MAC.final() |> Binary.take(16)
 
     # egress-mac: h256, continuously updated with egress-bytes*
     # ingress-mac: h256, continuously updated with ingress-bytes*

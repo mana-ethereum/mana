@@ -7,7 +7,6 @@ defmodule EVM.Operation.Sha3 do
   @doc """
   Compute Keccak-256 hash.
 
-
   ## Examples
 
       iex> EVM.Operation.Sha3.sha3([1, 0], %{machine_state: %EVM.MachineState{}})

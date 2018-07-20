@@ -85,7 +85,6 @@ defmodule EVM.Operation.StackMemoryStorageAndFlow do
       iex> EVM.Operation.StackMemoryStorageAndFlow.sload([key], %{exec_env: %EVM.ExecEnv{account_interface: account_interface, address: address}})
       0x111222333444555
 
-
       iex> address = 0x0000000000000000000000000000000000000001
       iex> key = 0x11223344556677889900
       iex> other_key = 0x1234
@@ -118,7 +117,6 @@ defmodule EVM.Operation.StackMemoryStorageAndFlow do
   TODO: Handle signed values
 
   ## Examples
-
 
       iex> address = 0x0000000000000000000000000000000000000001
       iex> key = 0x11223344556677889900
@@ -169,7 +167,6 @@ defmodule EVM.Operation.StackMemoryStorageAndFlow do
   @doc """
   Get the value of the program counter prior to the increment corresponding to this instruction.
 
-
   ## Examples
 
       iex> EVM.Operation.StackMemoryStorageAndFlow.pc([], %{machine_state: %EVM.MachineState{program_counter: 99}})
@@ -181,7 +178,6 @@ defmodule EVM.Operation.StackMemoryStorageAndFlow do
 
   @doc """
   Get the size of active memory in bytes
-
 
   ## Examples
 

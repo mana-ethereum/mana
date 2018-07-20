@@ -100,7 +100,6 @@ defmodule MerklePatriciaTree.Trie.Storage do
       ...> |> MerklePatriciaTree.Trie.Storage.get_node()
       :not_found
 
-
       iex> trie = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db(), <<130, 72, 105>>)
       iex> MerklePatriciaTree.Trie.Storage.put_node(["AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"], trie)
       <<141, 163, 93, 242, 120, 27, 128, 97, 138, 56, 116, 101, 165, 201,

@@ -37,7 +37,8 @@ defmodule EVM.Operation.Metadata.System do
                     # %{
                     #   id: 0xF4,
                     #   description:
-                    #     "Message-call into this account with an alternative account’s code, but persisting the current values for sender and value.",
+                    #     "Message-call into this account with an alternative account’s code,
+                    #       but persisting the current values for sender and value.",
                     #   sym: :delegatecall,
                     #   input_count: 6,
                     #   output_count: 1,
