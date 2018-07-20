@@ -8,7 +8,7 @@ defmodule Blockchain.Block do
 
   alias ExthCrypto.Hash.Keccak
   alias Block.Header
-  alias Blockchain.{Account, Transaction, Chain, Genesis}
+  alias Blockchain.{Account, Transaction, Chain}
   alias Blockchain.Block.HolisticValidity
   alias Blockchain.Transaction.Receipt
   alias MerklePatriciaTree.{Trie, DB}
@@ -725,9 +725,12 @@ defmodule Blockchain.Block do
   """
   @spec put_receipt(t, integer(), Receipt.t(), DB.db()) :: t
   def put_receipt(block, i, receipt, db) do
+    encoded_receiot = receipt |> Receipt.serialize() |> ExRLP.encode()
+
     updated_receipts_root =
-      Trie.new(db, block.header.receipts_root)
-      |> Trie.update(ExRLP.encode(i), Receipt.serialize(receipt) |> ExRLP.encode())
+      db
+      |> Trie.new(block.header.receipts_root)
+      |> Trie.update(ExRLP.encode(i), encoded_receiot)
 
     %{block | header: %{block.header | receipts_root: updated_receipts_root.root_hash}}
   end
@@ -750,10 +753,12 @@ defmodule Blockchain.Block do
   @spec put_transaction(t, integer(), Transaction.t(), DB.db()) :: t
   def put_transaction(block, i, trx, db) do
     total_transactions = block.transactions ++ [trx]
+    encoded_transaction = trx |> Transaction.serialize() |> ExRLP.encode()
 
     updated_transactions_root =
-      Trie.new(db, block.header.transactions_root)
-      |> Trie.update(ExRLP.encode(i), Transaction.serialize(trx) |> ExRLP.encode())
+      db
+      |> Trie.new(block.header.transactions_root)
+      |> Trie.update(ExRLP.encode(i), encoded_transaction)
 
     %{
       block
@@ -804,17 +809,18 @@ defmodule Blockchain.Block do
   @spec add_rewards(t, DB.db(), EVM.Wei.t()) :: t
   def add_rewards(block, db, base_reward \\ @base_reward)
 
-  def add_rewards(block = %{header: %{beneficiary: beneficiary}}, db, base_reward)
+  def add_rewards(%{header: %{beneficiary: beneficiary}}, _db, _base_reward)
       when is_nil(beneficiary),
       do: raise("Unable to add block rewards, beneficiary is nil")
 
-  def add_rewards(block = %{header: %{number: number}}, db, base_reward)
+  def add_rewards(block = %{header: %{number: number}}, _db, _base_reward)
       when number == 0,
       do: block
 
   def add_rewards(block, db, base_reward) do
     state =
-      get_state(block, db)
+      block
+      |> get_state(db)
       |> add_miner_reward(block, base_reward)
       |> add_ommer_rewards(block, base_reward)
 
