@@ -22,7 +22,7 @@ defmodule EVM.RefundsTest do
       account_interface: account_interface
     }
 
-    result = EVM.VM.run(25012, exec_env)
+    result = EVM.VM.run(25_012, exec_env)
 
     expected_account_state = %{
       address => %{
@@ -39,7 +39,7 @@ defmodule EVM.RefundsTest do
     expected_exec_env = Map.put(exec_env, :account_interface, expected_account_interface)
 
     assert result ==
-             {0, %EVM.SubState{logs: [], refund: 15000, selfdestruct_list: []}, expected_exec_env,
-              ""}
+             {0, %EVM.SubState{logs: [], refund: 15_000, selfdestruct_list: []},
+              expected_exec_env, ""}
   end
 end

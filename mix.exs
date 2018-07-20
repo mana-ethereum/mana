@@ -37,6 +37,7 @@ defmodule Exthereum.MixProject do
     [
       {:dialyxir, "~> 0.5", only: [:dev, :test], runtime: false},
       {:ethereumex, "~> 0.3.2"},
+      {:credo, "~> 0.9.1", only: [:dev, :test], runtime: false}
     ]
   end
 end

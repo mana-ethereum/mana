@@ -22,8 +22,8 @@ defmodule ExWire.RemoteConnectionTest do
   @moduletag network: true
 
   @local_peer [127, 0, 0, 1]
-  @local_peer_port 35353
-  @local_tcp_port 36363
+  @local_peer_port 35_353
+  @local_tcp_port 36_363
 
   def receive(inbound_message, [pid | _]) do
     send(pid, {:inbound_message, inbound_message})

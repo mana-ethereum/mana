@@ -151,7 +151,7 @@ defmodule Blockchain.TransactionTest do
       expected_beneficiary = %Account{balance: 63_012}
       expected_contract = %Account{balance: 5, nonce: 0}
 
-      assert gas_used == 21004
+      assert gas_used == 21_004
       assert logs == []
 
       assert Account.get_account(state, sender_address) == expected_sender
@@ -296,7 +296,7 @@ defmodule Blockchain.TransactionTest do
 
       expected_accounts = [
         %Account{balance: 334_655, nonce: 6},
-        %Account{balance: 65340},
+        %Account{balance: 65_340},
         %Account{
           balance: 5,
           code_hash:

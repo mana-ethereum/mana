@@ -131,11 +131,29 @@ jobs:
 
       - run: mix format --check-formatted
 
+  credo:
+    docker:
+      # Ensure .tool-versions matches
+      - image: circleci/elixir:1.6.5
+        environment:
+          MIX_ENV: test
+
+    working_directory: ~/app
+
+    steps:
+      - attach_workspace:
+          at: .
+
+      - run: mix credo --only readability
+
 workflows:
   version: 2
   primary:
     jobs:
       - build
+      - credo:
+          requires:
+            - build
       - check_formatted:
           requires:
             - build

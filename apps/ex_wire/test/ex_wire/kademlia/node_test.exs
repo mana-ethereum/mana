@@ -24,7 +24,7 @@ defmodule ExWire.Kademlia.NodeTest do
         remote_host: %ExWire.Struct.Endpoint{
           ip: {52, 176, 100, 77},
           tcp_port: nil,
-          udp_port: 30303
+          udp_port: 30_303
         },
         signature:
           <<25, 156, 98, 35, 222, 28, 223, 231, 188, 210, 75, 92, 206, 83, 84, 245, 146, 193, 40,
