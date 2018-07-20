@@ -71,6 +71,7 @@ jobs:
             - .git
             - .gitignore
             - _build
+            - .credo.exs
             - apps
             - bin
             - config
