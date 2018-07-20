@@ -725,12 +725,12 @@ defmodule Blockchain.Block do
   """
   @spec put_receipt(t, integer(), Receipt.t(), DB.db()) :: t
   def put_receipt(block, i, receipt, db) do
-    encoded_receiot = receipt |> Receipt.serialize() |> ExRLP.encode()
+    encoded_receipt = receipt |> Receipt.serialize() |> ExRLP.encode()
 
     updated_receipts_root =
       db
       |> Trie.new(block.header.receipts_root)
-      |> Trie.update(ExRLP.encode(i), encoded_receiot)
+      |> Trie.update(ExRLP.encode(i), encoded_receipt)
 
     %{block | header: %{block.header | receipts_root: updated_receipts_root.root_hash}}
   end
