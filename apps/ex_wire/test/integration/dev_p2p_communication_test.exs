@@ -12,7 +12,7 @@ defmodule ExWire.DEVp2pCommunicationTest do
   end
 
   test "nodes exchange encrypted handshake and DEVp2p protocol handshake", keys do
-    port = 30309
+    port = 30_309
 
     {:ok, _recipient_pid} = start_recipient_process(port)
     {:ok, initiator_pid} = start_initiator_process(port)

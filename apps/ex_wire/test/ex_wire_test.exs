@@ -11,13 +11,13 @@ defmodule ExWireTest do
 
   @them %ExWire.Struct.Endpoint{
     ip: [0, 0, 0, 1],
-    udp_port: 30303,
+    udp_port: 30_303,
     tcp_port: nil
   }
 
   @us %ExWire.Struct.Endpoint{
     ip: [0, 0, 0, 2],
-    udp_port: 30303,
+    udp_port: 30_303,
     tcp_port: nil
   }
 

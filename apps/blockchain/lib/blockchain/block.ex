@@ -121,32 +121,26 @@ defmodule Blockchain.Block do
 
   @spec decode_rlp(binary()) :: {:ok, [ExRLP.t()]} | {:error, any()}
   def decode_rlp("0x" <> hex_data) do
-    try do
-      hex_binary = Base.decode16!(hex_data, case: :mixed)
+    hex_binary = Base.decode16!(hex_data, case: :mixed)
 
-      decode_rlp(hex_binary)
-    rescue
-      e ->
-        {:error, e}
-    end
+    decode_rlp(hex_binary)
+  rescue
+    e ->
+      {:error, e}
   end
 
   def decode_rlp(rlp) when is_binary(rlp) do
-    try do
-      rlp |> ExRLP.decode() |> decode_rlp()
-    rescue
-      e ->
-        {:error, e}
-    end
+    rlp |> ExRLP.decode() |> decode_rlp()
+  rescue
+    e ->
+      {:error, e}
   end
 
   def decode_rlp(rlp_result_list) do
-    try do
-      {:ok, deserialize(rlp_result_list)}
-    rescue
-      e ->
-        {:error, e}
-    end
+    {:ok, deserialize(rlp_result_list)}
+  rescue
+    e ->
+      {:error, e}
   end
 
   @doc """

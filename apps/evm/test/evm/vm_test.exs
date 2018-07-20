@@ -54,7 +54,7 @@ defmodule EVM.VMTest do
       account_interface: account_interface
     }
 
-    result = VM.run(20006, exec_env)
+    result = VM.run(20_006, exec_env)
 
     expected_account_state = %{
       address => %{

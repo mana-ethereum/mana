@@ -16,6 +16,6 @@ defmodule EVM.GasTest do
 
     cost = EVM.Gas.cost(machine_state, exec_env)
 
-    assert cost == 28046
+    assert cost == 28_046
   end
 end

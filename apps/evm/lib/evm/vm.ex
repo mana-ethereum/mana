@@ -77,7 +77,7 @@ defmodule EVM.VM do
        ) do
     # Debugger generally runs here.
     {machine_state, sub_state, exec_env} =
-      if Debugger.is_enabled?() do
+      if Debugger.enabled?() do
         case Debugger.is_breakpoint?(machine_state, sub_state, exec_env) do
           :continue ->
             {machine_state, sub_state, exec_env}

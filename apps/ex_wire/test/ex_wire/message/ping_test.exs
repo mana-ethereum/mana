@@ -13,14 +13,14 @@ defmodule ExWire.Message.PingTest do
       expected_result = %ExWire.Message.Ping{
         from: %ExWire.Struct.Endpoint{
           ip: [0, 0, 0, 0],
-          tcp_port: 30303,
-          udp_port: 30303
+          tcp_port: 30_303,
+          udp_port: 30_303
         },
         timestamp: 1_483_942_093,
         to: %ExWire.Struct.Endpoint{
           ip: [58, 136, 8, 186],
           tcp_port: nil,
-          udp_port: 13272
+          udp_port: 13_272
         },
         version: 4
       }

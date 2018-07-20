@@ -83,6 +83,6 @@ defmodule ExWire.TestHelper do
   end
 
   def random_port_number do
-    Enum.random(49152..65535)
+    Enum.random(49_152..65_535)
   end
 end
