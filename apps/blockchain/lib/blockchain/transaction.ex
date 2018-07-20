@@ -345,7 +345,7 @@ defmodule Blockchain.Transaction do
         Account.del_account(state, address)
       end)
 
-    expended_gas = tx.gas_limit - remaining_gas
+    expended_gas = tx.gas_limit - refund
 
     # { σ', Υ^g, Υ^l }, as defined in Eq.(79) and Eq.(80)
     {state_after_selfdestruct, expended_gas, sub_state.logs}

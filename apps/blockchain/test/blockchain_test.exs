@@ -651,6 +651,7 @@ defmodule BlockchainTest do
     "GeneralStateTests/stSolidityTest/CreateContractFromMethod_d0g0v0.json",
     "GeneralStateTests/stSolidityTest/RecursiveCreateContractsCreate4Contracts_d0g0v0.json",
     "GeneralStateTests/stSolidityTest/RecursiveCreateContracts_d0g0v0.json",
+    "GeneralStateTests/stSpecialTest/FailedCreateRevertsDeletion_d0g0v0.json",
     "GeneralStateTests/stSpecialTest/StackDepthLimitSEC_d0g0v0.json",
     "GeneralStateTests/stSystemOperationsTest/ABAcalls0_d0g0v0.json",
     "GeneralStateTests/stSystemOperationsTest/ABAcalls1_d0g0v0.json",

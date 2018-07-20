@@ -82,6 +82,7 @@ defmodule Blockchain.Block.HolisticValidity do
       |> check_state_root_validity(child_block, block)
       |> check_ommers_hash_validity(child_block, block)
       |> check_transactions_root_validity(child_block, block)
+      |> check_gas_used(child_block, block)
 
     # TODO: Check receipts after resolving https://github.com/poanetwork/mana/issues/66
     # |> check_receipts_root_validity(child_block, block)
@@ -122,6 +123,15 @@ defmodule Blockchain.Block.HolisticValidity do
       errors
     else
       [:receipts_root_mismatch | errors]
+    end
+  end
+
+  @spec check_gas_used([atom()], Block.t(), Block.t()) :: [atom()]
+  defp check_gas_used(errors, child_block, block) do
+    if child_block.header.gas_used == block.header.gas_used do
+      errors
+    else
+      [:gas_used_mismatch | errors]
     end
   end
 end
