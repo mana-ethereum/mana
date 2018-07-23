@@ -212,7 +212,7 @@ defmodule ABI.TypeEncoder do
     encode_type({:tuple, repeated_type}, [data |> List.to_tuple() | rest])
   end
 
-  defp encode_type({:array, type}, [data | _rest] = all_data) do
+  defp encode_type({:array, type}, all_data = [data | _rest]) do
     element_count = Enum.count(data)
 
     encoded_uint = encode_uint(element_count, 256)

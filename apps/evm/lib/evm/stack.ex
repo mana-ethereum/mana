@@ -41,7 +41,7 @@ defmodule EVM.Stack do
       ** (FunctionClauseError) no function clause matching in EVM.Stack.pop/1
   """
   @spec pop(t) :: {EVM.val(), t}
-  def pop([h | t] = _stack), do: {h, t}
+  def pop([h | t]), do: {h, t}
 
   @doc """
   Peeks at head of stack, returns nil

@@ -40,7 +40,7 @@ defmodule ExWire.DEVp2p do
     def active?(%Session{hello_received: false}), do: false
     def active?(%Session{hello_sent: false}), do: false
 
-    def active?(%Session{hello_sent: %Hello{}, hello_received: %Hello{}} = session) do
+    def active?(session = %Session{hello_sent: %Hello{}, hello_received: %Hello{}}) do
       compatible_capabilities?(session)
     end
 
@@ -128,7 +128,7 @@ defmodule ExWire.DEVp2p do
   """
   @spec handle_message(Session.t(), struct()) ::
           {:error, :handshake_incomplete} | {:ok, Session.t()}
-  def handle_message(session, %Packet.Hello{} = packet) do
+  def handle_message(session, packet = %Packet.Hello{}) do
     {:ok, hello_received(session, packet)}
   end
 

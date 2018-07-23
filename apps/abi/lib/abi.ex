@@ -39,7 +39,7 @@ defmodule ABI do
     encode(ABI.Parser.parse!(function_signature), data)
   end
 
-  def encode(%ABI.FunctionSelector{} = function_selector, data) do
+  def encode(function_selector = %ABI.FunctionSelector{}, data) do
     ABI.TypeEncoder.encode(data, function_selector)
   end
 
@@ -71,7 +71,7 @@ defmodule ABI do
     decode(ABI.Parser.parse!(function_signature), data)
   end
 
-  def decode(%ABI.FunctionSelector{} = function_selector, data) do
+  def decode(function_selector = %ABI.FunctionSelector{}, data) do
     ABI.TypeDecoder.decode(data, function_selector)
   end
 
