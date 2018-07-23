@@ -169,7 +169,14 @@ defmodule Blockchain.Blocktree do
   """
   @spec verify_and_add_block(t, Chain.t(), Block.t(), MerklePatriciaTree.DB.db(), boolean()) ::
           {:ok, t} | :parent_not_found | {:invalid, [atom()]}
-  def verify_and_add_block(blocktree, chain, block, db, do_validate \\ true) do
+  def verify_and_add_block(
+        blocktree,
+        chain,
+        block,
+        db,
+        do_validate \\ true,
+        specified_block_hash \\ nil
+      ) do
     parent =
       case Block.get_parent_block(block, db) do
         :genesis -> nil
@@ -183,7 +190,8 @@ defmodule Blockchain.Blocktree do
         else: :valid
 
     with :valid <- validation do
-      {:ok, block_hash} = Block.put_block(block, db)
+      {:ok, block_hash} = Block.put_block(block, db, specified_block_hash)
+
       # Cache computed block hash
       block = %{block | block_hash: block_hash}
 

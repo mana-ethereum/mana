@@ -105,7 +105,14 @@ defmodule GenerateBlockchainTests do
     genesis_block = block_from_json(block, json_test["genesisBlockHeader"])
 
     {:ok, blocktree} =
-      Blocktree.verify_and_add_block(blocktree, chain, genesis_block, state.db, false)
+      Blocktree.verify_and_add_block(
+        blocktree,
+        chain,
+        genesis_block,
+        state.db,
+        false,
+        maybe_hex(json_test["genesisBlockHeader"]["hash"])
+      )
 
     blocktree
   end
