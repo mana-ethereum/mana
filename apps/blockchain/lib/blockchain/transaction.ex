@@ -6,6 +6,7 @@ defmodule Blockchain.Transaction do
   """
 
   alias Blockchain.{Account, Contract, Transaction, MathHelper}
+  alias Blockchain.Transaction.Validity
   alias Block.Header
   alias EVM.Gas
 
@@ -157,115 +158,15 @@ defmodule Blockchain.Transaction do
   end
 
   @doc """
-  Validates the validity of a transaction that is required to be
-  true before we're willing to execute a transaction. This is
-  specified in Section 6.2 of the Yellow Paper Eq.(65) and Eq.(66).
-
-  TODO: Consider returning a set of reasons, instead of a singular reason.
-
-  ## Examples
-
-      # Sender address is nil
-      iex> trx = %Blockchain.Transaction{data: <<>>, gas_limit: 1_000, gas_price: 1, init: <<1>>, nonce: 5, to: <<>>, value: 5, r: 1, s: 2, v: 3}
-      iex> MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
-      ...> |> Blockchain.Transaction.is_valid?(trx, %Block.Header{})
-      {:invalid, :invalid_sender}
-
-      # Sender account is nil
-      iex> private_key = <<1::256>>
-      iex> trx =
-      ...>   %Blockchain.Transaction{data: <<>>, gas_limit: 1_000, gas_price: 1, init: <<1>>, nonce: 5, to: <<>>, value: 5}
-      ...>   |> Blockchain.Transaction.Signature.sign_transaction(private_key)
-      iex> MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
-      ...> |> Blockchain.Transaction.is_valid?(trx, %Block.Header{})
-      {:invalid, :missing_account}
-
-      # Has sender account, but nonce mismatch
-      iex> private_key = <<1::256>>
-      iex> sender = <<126, 95, 69, 82, 9, 26, 105, 18, 93, 93, 252, 183, 184, 194, 101, 144, 41, 57, 91, 223>> # based on simple private key
-      iex> trx =
-      ...>   %Blockchain.Transaction{data: <<>>, gas_limit: 1_000, gas_price: 1, init: <<1>>, nonce: 4, to: <<>>, value: 5}
-      ...>   |> Blockchain.Transaction.Signature.sign_transaction(private_key)
-      iex> MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
-      ...> |> Blockchain.Account.put_account(sender, %Blockchain.Account{balance: 1000, nonce: 5})
-      ...> |> Blockchain.Transaction.is_valid?(trx, %Block.Header{})
-      {:invalid, :nonce_mismatch}
-
-      # Insufficient starting gas
-      iex> private_key = <<1::256>>
-      iex> sender = <<126, 95, 69, 82, 9, 26, 105, 18, 93, 93, 252, 183, 184, 194, 101, 144, 41, 57, 91, 223>> # based on simple private key
-      iex> trx =
-      ...>   %Blockchain.Transaction{data: <<>>, gas_limit: 1_000, gas_price: 1, init: <<1>>, nonce: 5, to: <<>>, value: 5}
-      ...>   |> Blockchain.Transaction.Signature.sign_transaction(private_key)
-      iex> MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
-      ...> |> Blockchain.Account.put_account(sender, %Blockchain.Account{balance: 1000, nonce: 5})
-      ...> |> Blockchain.Transaction.is_valid?(trx, %Block.Header{})
-      {:invalid, :insufficient_intrinsic_gas}
-
-      # Insufficient endowment
-      iex> private_key = <<1::256>>
-      iex> sender = <<126, 95, 69, 82, 9, 26, 105, 18, 93, 93, 252, 183, 184, 194, 101, 144, 41, 57, 91, 223>> # based on simple private key
-      iex> trx =
-      ...>   %Blockchain.Transaction{data: <<>>, gas_limit: 100_000, gas_price: 1, init: <<1>>, nonce: 5, to: <<>>, value: 5}
-      ...>   |> Blockchain.Transaction.Signature.sign_transaction(private_key)
-      iex> MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
-      ...> |> Blockchain.Account.put_account(sender, %Blockchain.Account{balance: 1000, nonce: 5})
-      ...> |> Blockchain.Transaction.is_valid?(trx, %Block.Header{})
-      {:invalid, :insufficient_balance}
-
-      iex> private_key = <<1::256>>
-      iex> sender = <<126, 95, 69, 82, 9, 26, 105, 18, 93, 93, 252, 183, 184, 194, 101, 144, 41, 57, 91, 223>> # based on simple private key
-      iex> trx =
-      ...>   %Blockchain.Transaction{data: <<>>, gas_limit: 100_000, gas_price: 1, init: <<1>>, nonce: 5, to: <<>>, value: 5}
-      ...>   |> Blockchain.Transaction.Signature.sign_transaction(private_key)
-      iex> MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
-      ...> |> Blockchain.Account.put_account(sender, %Blockchain.Account{balance: 100_001, nonce: 5})
-      ...> |> Blockchain.Transaction.is_valid?(trx, %Block.Header{})
-      {:invalid, :insufficient_balance}
-
-      iex> private_key = <<1::256>>
-      iex> sender = <<126, 95, 69, 82, 9, 26, 105, 18, 93, 93, 252, 183, 184, 194, 101, 144, 41, 57, 91, 223>> # based on simple private key
-      iex> trx =
-      ...>   %Blockchain.Transaction{data: <<>>, gas_limit: 100_000, gas_price: 1, init: <<1>>, nonce: 5, to: <<>>, value: 5}
-      ...>   |> Blockchain.Transaction.Signature.sign_transaction(private_key)
-      iex> MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
-      ...> |> Blockchain.Account.put_account(sender, %Blockchain.Account{balance: 100_006, nonce: 5})
-      ...> |> Blockchain.Transaction.is_valid?(trx, %Block.Header{gas_limit: 50_000, gas_used: 49_999})
-      {:invalid, :over_gas_limit}
-
-      iex> private_key = <<1::256>>
-      iex> sender = <<126, 95, 69, 82, 9, 26, 105, 18, 93, 93, 252, 183, 184, 194, 101, 144, 41, 57, 91, 223>> # based on simple private key
-      iex> trx =
-      ...>   %Blockchain.Transaction{data: <<>>, gas_limit: 100_000, gas_price: 1, init: <<1>>, nonce: 5, to: <<>>, value: 5}
-      ...>   |> Blockchain.Transaction.Signature.sign_transaction(private_key)
-      iex> MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
-      ...> |> Blockchain.Account.put_account(sender, %Blockchain.Account{balance: 100_006, nonce: 5})
-      ...> |> Blockchain.Transaction.is_valid?(trx, %Block.Header{gas_limit: 500_000, gas_used: 49_999})
-      :valid
+  Validates the validity of a transaction and then executes it if transaction is valid.
   """
-  @spec is_valid?(EVM.state(), t, Block.Header.t()) :: :valid | {:invalid, atom()}
-  def is_valid?(state, trx, block_header) do
-    g_0 = intrinsic_gas_cost(trx, block_header)
-    v_0 = trx.gas_limit * trx.gas_price + trx.value
+  @spec execute_with_validation(EVM.state(), t, Header.t()) ::
+          {EVM.state(), Gas.t(), EVM.SubState.logs()}
+  def execute_with_validation(state, tx, block_header) do
+    validation_result = Validity.validate(state, tx, block_header)
 
-    case Transaction.Signature.sender(trx) do
-      {:error, _reason} ->
-        {:invalid, :invalid_sender}
-
-      {:ok, sender_address} ->
-        case Account.get_account(state, sender_address) do
-          nil ->
-            {:invalid, :missing_account}
-
-          sender_account ->
-            cond do
-              sender_account.nonce != trx.nonce -> {:invalid, :nonce_mismatch}
-              g_0 > trx.gas_limit -> {:invalid, :insufficient_intrinsic_gas}
-              v_0 > sender_account.balance -> {:invalid, :insufficient_balance}
-              trx.gas_limit > Header.available_gas(block_header) -> {:invalid, :over_gas_limit}
-              true -> :valid
-            end
-        end
+    with :valid <- validation_result do
+      execute(state, tx, block_header)
     end
   end
 
@@ -281,8 +182,6 @@ defmodule Blockchain.Transaction do
   """
   @spec execute(EVM.state(), t, Header.t()) :: {EVM.state(), Gas.t(), EVM.SubState.logs()}
   def execute(state, tx, block_header) do
-    # TODO: Check transaction validity.
-    # https://github.com/poanetwork/mana/issues/85
     {:ok, sender} = Transaction.Signature.sender(tx)
 
     state_0 = begin_transaction(state, sender, tx)
