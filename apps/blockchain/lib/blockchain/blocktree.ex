@@ -191,7 +191,6 @@ defmodule Blockchain.Blocktree do
 
     with :valid <- validation do
       {:ok, block_hash} = Block.put_block(block, db, specified_block_hash)
-      block_hash = if !is_nil(specified_block_hash), do: specified_block_hash, else: block_hash
 
       # Cache computed block hash
       block = %{block | block_hash: block_hash}
