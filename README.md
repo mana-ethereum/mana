@@ -65,8 +65,8 @@ cd apps/evm && mix test test/evm_test.exs
 cd apps/blockchain && mix test test/blockchain_test.exs
 
 # Ethereum General State tests
-cd apps/blockchain && mix test test/state_test.exs
+cd apps/blockchain && mix test test/blockchain/state_test.exs
 
 # Ethereum Transaction tests
-cd apps/blockchain && mix test test/transaction_test.exs
+cd apps/blockchain && mix test test/blockchain/transaction_test.exs
 ```
