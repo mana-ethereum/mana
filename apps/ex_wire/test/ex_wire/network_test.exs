@@ -15,7 +15,7 @@ defmodule ExWire.NetworkTest do
       payload = <<0::512>> <> <<0::8>> <> <<1::8>> <> ping_data
       hash = ExWire.Crypto.hash("hello")
 
-      assert_raise ExWire.Crypto.HashMismatch, fn ->
+      assert_raise ExWire.Crypto.HashMismatchError, fn ->
         Network.receive(%InboundMessage{
           data: hash <> payload,
           server_pid: self(),

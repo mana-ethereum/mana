@@ -25,12 +25,12 @@ defmodule ExthCrypto.Cipher do
       "a73c5576667b7b43a23a9fd930b5465d637a44d08bf702881a8d4e6a5d4944b5"
   """
   @spec encrypt(plaintext, ExthCrypto.Key.symmetric_key(), init_vector, cipher) :: ciphertext
-  def encrypt(plaintext, symmetric_key, init_vector, {mod, _block_size, mode} = _cipher) do
+  def encrypt(plaintext, symmetric_key, init_vector, {mod, _block_size, mode}) do
     mod.encrypt(plaintext, mode, symmetric_key, init_vector)
   end
 
   @spec encrypt(plaintext, ExthCrypto.Key.symmetric_key(), cipher) :: ciphertext
-  def encrypt(plaintext, symmetric_key, {mod, _block_size, mode} = _cipher) do
+  def encrypt(plaintext, symmetric_key, {mod, _block_size, mode}) do
     mod.encrypt(plaintext, mode, symmetric_key)
   end
 
@@ -55,12 +55,12 @@ defmodule ExthCrypto.Cipher do
       <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0>> <> "execute order 66"
   """
   @spec decrypt(ciphertext, ExthCrypto.Key.symmetric_key(), init_vector, cipher) :: plaintext
-  def decrypt(ciphertext, symmetric_key, init_vector, {mod, _block_size, mode} = _cipher) do
+  def decrypt(ciphertext, symmetric_key, init_vector, {mod, _block_size, mode}) do
     mod.decrypt(ciphertext, mode, symmetric_key, init_vector)
   end
 
   @spec decrypt(ciphertext, ExthCrypto.Key.symmetric_key(), cipher) :: plaintext
-  def decrypt(ciphertext, symmetric_key, {mod, _block_size, mode} = _cipher) do
+  def decrypt(ciphertext, symmetric_key, {mod, _block_size, mode}) do
     mod.decrypt(ciphertext, mode, symmetric_key)
   end
 

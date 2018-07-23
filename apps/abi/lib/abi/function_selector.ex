@@ -113,7 +113,7 @@ defmodule ABI.FunctionSelector do
   end
 
   @doc false
-  def parse_specification_item(%{"type" => "function"} = item) do
+  def parse_specification_item(item = %{"type" => "function"}) do
     %{
       "name" => function_name,
       "inputs" => named_inputs,

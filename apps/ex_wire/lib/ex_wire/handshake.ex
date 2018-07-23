@@ -136,7 +136,7 @@ defmodule ExWire.Handshake do
   It also generates a new ephemeral key pair and nonce.
   """
   @spec build_ack_resp(t()) :: AckRespV4.t()
-  def build_ack_resp(%Handshake{} = handshake) do
+  def build_ack_resp(handshake = %Handshake{}) do
     ephemeral_public_key = elem(handshake.random_key_pair, 0)
 
     %AckRespV4{
@@ -153,7 +153,7 @@ defmodule ExWire.Handshake do
   # TODO: Add examples
   """
   @spec handle_ack(t(), binary()) :: {:ok, t(), Secrets.t()} | {:invalid, String.t()}
-  def handle_ack(%Handshake{} = handshake, ack_data) do
+  def handle_ack(handshake = %Handshake{}, ack_data) do
     case read_ack_resp(ack_data, ExWire.Config.private_key()) do
       {:ok, ack_resp, _ack_resp_bin, _frame_rest} ->
         updated_handshake = add_ack_data(handshake, ack_resp, ack_data)
@@ -167,7 +167,7 @@ defmodule ExWire.Handshake do
   end
 
   @spec add_ack_data(t(), AckRespV4.t(), binary()) :: t()
-  defp add_ack_data(handshake, %AckRespV4{} = ack_resp, encoded_ack_data) do
+  defp add_ack_data(handshake, ack_resp = %AckRespV4{}, encoded_ack_data) do
     %Handshake{
       handshake
       | resp_nonce: ack_resp.recipient_nonce,
@@ -184,7 +184,7 @@ defmodule ExWire.Handshake do
   TODO: Add examples
   """
   @spec handle_auth(t(), binary()) :: {:ok, t(), Secrets.t()} | {:invalid, String.t()}
-  def handle_auth(%Handshake{} = handshake, auth_data) do
+  def handle_auth(handshake = %Handshake{}, auth_data) do
     case read_auth_msg(auth_data, ExWire.Config.private_key()) do
       {:ok, auth_msg, <<>>} ->
         resp_handshake =
@@ -227,7 +227,7 @@ defmodule ExWire.Handshake do
     %{handshake | ack_resp: ack_resp, encoded_ack_resp: encoded_ack_resp}
   end
 
-  defp encode(%AuthMsgV4{} = auth_msg, remote_pub, initiator_ephemeral_key_pair) do
+  defp encode(auth_msg = %AuthMsgV4{}, remote_pub, initiator_ephemeral_key_pair) do
     {:ok, encoded_auth_msg} =
       auth_msg
       |> AuthMsgV4.serialize()
@@ -236,7 +236,7 @@ defmodule ExWire.Handshake do
     encoded_auth_msg
   end
 
-  defp encode(%AckRespV4{} = ack_resp, remote_pub, recipient_ephemeral_key_pair) do
+  defp encode(ack_resp = %AckRespV4{}, remote_pub, recipient_ephemeral_key_pair) do
     {:ok, encoded_ack_resp} =
       ack_resp
       |> AckRespV4.serialize()

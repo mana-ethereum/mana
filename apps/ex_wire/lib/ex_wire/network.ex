@@ -60,7 +60,7 @@ defmodule ExWire.Network do
       :ok
 
       iex> ExWire.Network.assert_integrity(<<1::256>> <> "hi mom")
-      ** (ExWire.Crypto.HashMismatch) Invalid hash
+      ** (ExWire.Crypto.HashMismatchError) Invalid hash
   """
   @spec assert_integrity(binary()) :: :ok
   def assert_integrity(<<hash::size(256), payload::bits>>) do

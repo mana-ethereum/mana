@@ -10,7 +10,7 @@ defmodule ExWire.Crypto do
   @type signature :: binary()
   @type recovery_id :: integer()
 
-  defmodule HashMismatch do
+  defmodule HashMismatchError do
     defexception [:message]
   end
 
@@ -73,13 +73,13 @@ defmodule ExWire.Crypto do
       :ok
 
       iex> ExWire.Crypto.assert_hash("hi mom", <<3>>)
-      ** (ExWire.Crypto.HashMismatch) Invalid hash
+      ** (ExWire.Crypto.HashMismatchError) Invalid hash
   """
   @spec assert_hash(binary(), hash) :: :ok
   def assert_hash(data, check_hash) do
     case hash_matches(data, check_hash) do
       :valid -> :ok
-      :invalid -> raise HashMismatch, "Invalid hash"
+      :invalid -> raise HashMismatchError, "Invalid hash"
     end
   end
 

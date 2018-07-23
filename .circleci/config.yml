@@ -147,7 +147,7 @@ jobs:
 
       - run: mix local.hex --force
 
-      - run: mix credo --only readability
+      - run: mix credo --only readability,consistency
 
 workflows:
   version: 2

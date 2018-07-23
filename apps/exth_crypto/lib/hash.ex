@@ -40,7 +40,7 @@ defmodule ExthCrypto.Hash do
       "2aae6c35c94fcfb415dbe95f408b9ce91ee846ed"
   """
   @spec hash(iodata(), hash_type) :: hash
-  def hash(data, {hash_fun, _, _} = _hasher) do
+  def hash(data, {hash_fun, _, _}) do
     hash_fun.(data)
   end
 end
