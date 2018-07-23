@@ -162,89 +162,9 @@ defmodule Blockchain.Transaction do
   specified in Section 6.2 of the Yellow Paper Eq.(65) and Eq.(66).
 
   TODO: Consider returning a set of reasons, instead of a singular reason.
-
-  ## Examples
-
-      # Sender address is nil
-      iex> trx = %Blockchain.Transaction{data: <<>>, gas_limit: 1_000, gas_price: 1, init: <<1>>, nonce: 5, to: <<>>, value: 5, r: 1, s: 2, v: 3}
-      iex> MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
-      ...> |> Blockchain.Transaction.is_valid?(trx, %Block.Header{})
-      {:invalid, :invalid_sender}
-
-      # Sender account is nil
-      iex> private_key = <<1::256>>
-      iex> trx =
-      ...>   %Blockchain.Transaction{data: <<>>, gas_limit: 1_000, gas_price: 1, init: <<1>>, nonce: 5, to: <<>>, value: 5}
-      ...>   |> Blockchain.Transaction.Signature.sign_transaction(private_key)
-      iex> MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
-      ...> |> Blockchain.Transaction.is_valid?(trx, %Block.Header{})
-      {:invalid, :missing_account}
-
-      # Has sender account, but nonce mismatch
-      iex> private_key = <<1::256>>
-      iex> sender = <<126, 95, 69, 82, 9, 26, 105, 18, 93, 93, 252, 183, 184, 194, 101, 144, 41, 57, 91, 223>> # based on simple private key
-      iex> trx =
-      ...>   %Blockchain.Transaction{data: <<>>, gas_limit: 1_000, gas_price: 1, init: <<1>>, nonce: 4, to: <<>>, value: 5}
-      ...>   |> Blockchain.Transaction.Signature.sign_transaction(private_key)
-      iex> MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
-      ...> |> Blockchain.Account.put_account(sender, %Blockchain.Account{balance: 1000, nonce: 5})
-      ...> |> Blockchain.Transaction.is_valid?(trx, %Block.Header{})
-      {:invalid, :nonce_mismatch}
-
-      # Insufficient starting gas
-      iex> private_key = <<1::256>>
-      iex> sender = <<126, 95, 69, 82, 9, 26, 105, 18, 93, 93, 252, 183, 184, 194, 101, 144, 41, 57, 91, 223>> # based on simple private key
-      iex> trx =
-      ...>   %Blockchain.Transaction{data: <<>>, gas_limit: 1_000, gas_price: 1, init: <<1>>, nonce: 5, to: <<>>, value: 5}
-      ...>   |> Blockchain.Transaction.Signature.sign_transaction(private_key)
-      iex> MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
-      ...> |> Blockchain.Account.put_account(sender, %Blockchain.Account{balance: 1000, nonce: 5})
-      ...> |> Blockchain.Transaction.is_valid?(trx, %Block.Header{})
-      {:invalid, :insufficient_intrinsic_gas}
-
-      # Insufficient endowment
-      iex> private_key = <<1::256>>
-      iex> sender = <<126, 95, 69, 82, 9, 26, 105, 18, 93, 93, 252, 183, 184, 194, 101, 144, 41, 57, 91, 223>> # based on simple private key
-      iex> trx =
-      ...>   %Blockchain.Transaction{data: <<>>, gas_limit: 100_000, gas_price: 1, init: <<1>>, nonce: 5, to: <<>>, value: 5}
-      ...>   |> Blockchain.Transaction.Signature.sign_transaction(private_key)
-      iex> MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
-      ...> |> Blockchain.Account.put_account(sender, %Blockchain.Account{balance: 1000, nonce: 5})
-      ...> |> Blockchain.Transaction.is_valid?(trx, %Block.Header{})
-      {:invalid, :insufficient_balance}
-
-      iex> private_key = <<1::256>>
-      iex> sender = <<126, 95, 69, 82, 9, 26, 105, 18, 93, 93, 252, 183, 184, 194, 101, 144, 41, 57, 91, 223>> # based on simple private key
-      iex> trx =
-      ...>   %Blockchain.Transaction{data: <<>>, gas_limit: 100_000, gas_price: 1, init: <<1>>, nonce: 5, to: <<>>, value: 5}
-      ...>   |> Blockchain.Transaction.Signature.sign_transaction(private_key)
-      iex> MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
-      ...> |> Blockchain.Account.put_account(sender, %Blockchain.Account{balance: 100_001, nonce: 5})
-      ...> |> Blockchain.Transaction.is_valid?(trx, %Block.Header{})
-      {:invalid, :insufficient_balance}
-
-      iex> private_key = <<1::256>>
-      iex> sender = <<126, 95, 69, 82, 9, 26, 105, 18, 93, 93, 252, 183, 184, 194, 101, 144, 41, 57, 91, 223>> # based on simple private key
-      iex> trx =
-      ...>   %Blockchain.Transaction{data: <<>>, gas_limit: 100_000, gas_price: 1, init: <<1>>, nonce: 5, to: <<>>, value: 5}
-      ...>   |> Blockchain.Transaction.Signature.sign_transaction(private_key)
-      iex> MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
-      ...> |> Blockchain.Account.put_account(sender, %Blockchain.Account{balance: 100_006, nonce: 5})
-      ...> |> Blockchain.Transaction.is_valid?(trx, %Block.Header{gas_limit: 50_000, gas_used: 49_999})
-      {:invalid, :over_gas_limit}
-
-      iex> private_key = <<1::256>>
-      iex> sender = <<126, 95, 69, 82, 9, 26, 105, 18, 93, 93, 252, 183, 184, 194, 101, 144, 41, 57, 91, 223>> # based on simple private key
-      iex> trx =
-      ...>   %Blockchain.Transaction{data: <<>>, gas_limit: 100_000, gas_price: 1, init: <<1>>, nonce: 5, to: <<>>, value: 5}
-      ...>   |> Blockchain.Transaction.Signature.sign_transaction(private_key)
-      iex> MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
-      ...> |> Blockchain.Account.put_account(sender, %Blockchain.Account{balance: 100_006, nonce: 5})
-      ...> |> Blockchain.Transaction.is_valid?(trx, %Block.Header{gas_limit: 500_000, gas_used: 49_999})
-      :valid
   """
-  @spec is_valid?(EVM.state(), t, Block.Header.t()) :: :valid | {:invalid, atom()}
-  def is_valid?(state, trx, block_header) do
+  @spec valid?(EVM.state(), t, Block.Header.t()) :: :valid | {:invalid, atom()}
+  def valid?(state, trx, block_header) do
     g_0 = intrinsic_gas_cost(trx, block_header)
     v_0 = trx.gas_limit * trx.gas_price + trx.value
 
