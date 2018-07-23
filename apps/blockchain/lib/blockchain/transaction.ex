@@ -168,24 +168,42 @@ defmodule Blockchain.Transaction do
     g_0 = intrinsic_gas_cost(trx, block_header)
     v_0 = trx.gas_limit * trx.gas_price + trx.value
 
-    case Transaction.Signature.sender(trx) do
-      {:error, _reason} ->
-        {:invalid, :invalid_sender}
+    result =
+      case Transaction.Signature.sender(trx) do
+        {:error, _reason} ->
+          {:invalid, :invalid_sender}
 
-      {:ok, sender_address} ->
-        case Account.get_account(state, sender_address) do
-          nil ->
-            {:invalid, :missing_account}
+        {:ok, sender_address} ->
+          case Account.get_account(state, sender_address) do
+            nil ->
+              {:invalid, :missing_account}
 
-          sender_account ->
-            cond do
-              sender_account.nonce != trx.nonce -> {:invalid, :nonce_mismatch}
-              g_0 > trx.gas_limit -> {:invalid, :insufficient_intrinsic_gas}
-              v_0 > sender_account.balance -> {:invalid, :insufficient_balance}
-              trx.gas_limit > Header.available_gas(block_header) -> {:invalid, :over_gas_limit}
-              true -> :valid
-            end
-        end
+            sender_account ->
+              {:ok, sender_account}
+          end
+      end
+
+    with {:ok, sender_account} <- result do
+      cond do
+        sender_account.nonce != trx.nonce -> {:invalid, :nonce_mismatch}
+        g_0 > trx.gas_limit -> {:invalid, :insufficient_intrinsic_gas}
+        v_0 > sender_account.balance -> {:invalid, :insufficient_balance}
+        trx.gas_limit > Header.available_gas(block_header) -> {:invalid, :over_gas_limit}
+        true -> :valid
+      end
+    end
+  end
+
+  @doc """
+  Validates the validity of a transaction and then executes it if transaction is valid.
+  """
+  @spec execute_with_validation(EVM.state(), t, Header.t()) ::
+          {EVM.state(), Gas.t(), EVM.SubState.logs()}
+  def execute_with_validation(state, tx, block_header) do
+    validation_result = valid?(state, tx, block_header)
+
+    with :valid <- validation_result do
+      execute(state, tx, block_header)
     end
   end
 
@@ -201,8 +219,6 @@ defmodule Blockchain.Transaction do
   """
   @spec execute(EVM.state(), t, Header.t()) :: {EVM.state(), Gas.t(), EVM.SubState.logs()}
   def execute(state, tx, block_header) do
-    # TODO: Check transaction validity.
-    # https://github.com/poanetwork/mana/issues/85
     {:ok, sender} = Transaction.Signature.sender(tx)
 
     state_0 = begin_transaction(state, sender, tx)

@@ -1962,8 +1962,8 @@ defmodule Blockchain.StateTest do
     "stTransactionTest/SuicidesStopAfterSuicide.json",
     "stTransactionTest/TransactionDataCosts652.json",
     "stTransactionTest/TransactionFromCoinbaseHittingBlockGasLimit.json",
-    # "stTransactionTest/TransactionFromCoinbaseHittingBlockGasLimit1.json",
-    # "stTransactionTest/TransactionFromCoinbaseNotEnoughFounds.json",
+    "stTransactionTest/TransactionFromCoinbaseHittingBlockGasLimit1.json",
+    "stTransactionTest/TransactionFromCoinbaseNotEnoughFounds.json",
     # "stTransactionTest/TransactionNonceCheck.json",
     # "stTransactionTest/TransactionNonceCheck2.json",
     "stTransactionTest/TransactionSendingToEmpty.json",
@@ -2353,7 +2353,7 @@ defmodule Blockchain.StateTest do
       test["post"]["Frontier"]
       |> Enum.with_index()
       |> Enum.each(fn {post, index} ->
-        state = account_interface(test).state
+        pre_state = account_interface(test).state
 
         indexes = post["indexes"]
         gas_limit_index = indexes["gas"]
@@ -2371,8 +2371,8 @@ defmodule Blockchain.StateTest do
           |> populate_init_or_data(maybe_hex(Enum.at(test["transaction"]["data"], data_index)))
           |> Transaction.Signature.sign_transaction(maybe_hex(test["transaction"]["secretKey"]))
 
-        {state, _, logs} =
-          Transaction.execute(state, transaction, %Block.Header{
+        result =
+          Transaction.execute_with_validation(pre_state, transaction, %Block.Header{
             beneficiary: maybe_hex(test["env"]["currentCoinbase"]),
             difficulty: load_integer(test["env"]["currentDifficulty"]),
             timestamp: load_integer(test["env"]["currentTimestamp"]),
@@ -2380,6 +2380,12 @@ defmodule Blockchain.StateTest do
             gas_limit: load_integer(test["env"]["currentGasLimit"]),
             parent_hash: maybe_hex(test["env"]["previousHash"])
           })
+
+        {state, logs} =
+          case result do
+            {state, _, logs} -> {state, logs}
+            _ -> {pre_state, []}
+          end
 
         expected_hash =
           test["post"]["Frontier"]
