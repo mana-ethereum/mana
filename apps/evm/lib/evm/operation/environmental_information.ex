@@ -291,7 +291,8 @@ defmodule EVM.Operation.EnvironmentalInformation do
 
     account_code = AccountInterface.get_account_code(exec_env.account_interface, wrapped_address)
 
-    if length == 0 || length + mem_offset > EVM.max_int() || account_code == "" do
+    if length == 0 || length + mem_offset > EVM.max_int() ||
+         (code_offset == 0 && account_code == "") do
       0
     else
       data = Memory.read_zeroed_memory(account_code, code_offset, length)

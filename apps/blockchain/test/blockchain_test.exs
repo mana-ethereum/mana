@@ -706,7 +706,7 @@ defmodule BlockchainTest do
     "GeneralStateTests/stSystemOperationsTest/currentAccountBalance_d0g0v0.json",
     "GeneralStateTests/stSystemOperationsTest/doubleSelfdestructTest2_d0g0v0.json",
     "GeneralStateTests/stSystemOperationsTest/doubleSelfdestructTest_d0g0v0.json",
-    # "GeneralStateTests/stSystemOperationsTest/extcodecopy_d0g0v0.json",
+    "GeneralStateTests/stSystemOperationsTest/extcodecopy_d0g0v0.json",
     "GeneralStateTests/stSystemOperationsTest/return0_d0g0v0.json",
     "GeneralStateTests/stSystemOperationsTest/return1_d0g0v0.json",
     "GeneralStateTests/stSystemOperationsTest/return2_d0g0v0.json",
