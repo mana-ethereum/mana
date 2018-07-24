@@ -117,4 +117,18 @@ defmodule EVM.SubState do
       logs: logs
     }
   end
+
+  @doc """
+  Marks an account for later destruction.
+
+  ## Examples
+
+      iex> sub_state = %EVM.SubState{}
+      iex> address = <<0x01::160>>
+      iex> EVM.SubState.mark_account_for_destruction(sub_state, address)
+      %EVM.SubState{selfdestruct_list: [<<0x01::160>>]}
+  """
+  def mark_account_for_destruction(sub_state, account_address) do
+    %{sub_state | selfdestruct_list: sub_state.selfdestruct_list ++ [account_address]}
+  end
 end

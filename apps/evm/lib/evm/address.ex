@@ -5,6 +5,8 @@ defmodule EVM.Address do
 
   alias ExthCrypto.Hash.Keccak
 
+  @type t :: binary() | non_neg_integer()
+
   @size 20
   @max round(:math.pow(2, @size * EVM.byte_size()))
 

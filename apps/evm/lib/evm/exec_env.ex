@@ -67,12 +67,23 @@ defmodule EVM.ExecEnv do
     Map.put(exec_env, :account_interface, account_interface)
   end
 
-  @spec destroy_account(t()) :: t()
-  def destroy_account(exec_env = %{account_interface: account_interface, address: address}) do
-    account_interface = AccountInterface.destroy_account(account_interface, address)
+  @spec clear_account_balance(t()) :: t()
+  def clear_account_balance(exec_env = %{account_interface: account_interface, address: address}) do
+    account_interface = AccountInterface.clear_balance(account_interface, address)
+
     Map.put(exec_env, :account_interface, account_interface)
   end
 
+  @spec transfer_balance_to(t(), EVM.Address.t()) :: t()
+  def transfer_balance_to(exec_env, to) do
+    %{account_interface: account_interface, address: address} = exec_env
+
+    balance = AccountInterface.get_account_balance(account_interface, address)
+
+    transfer_wei_to(exec_env, to, balance)
+  end
+
+  @spec transfer_wei_to(t(), EVM.Address.t(), integer()) :: t()
   def transfer_wei_to(exec_env, to, value) do
     account_interface =
       AccountInterface.transfer(exec_env.account_interface, exec_env.address, to, value)

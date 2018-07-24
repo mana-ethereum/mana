@@ -148,16 +148,6 @@ defimpl EVM.Interface.AccountInterface, for: EVM.Interface.Mock.MockAccountInter
     Map.merge(account, opts)
   end
 
-  @spec destroy_account(EVM.Interface.AccountInterface.t(), EVM.address()) ::
-          EVM.Interface.AccountInterface.t()
-  def destroy_account(mock_account_interface, address) do
-    account_map =
-      mock_account_interface.account_map
-      |> Map.delete(address)
-
-    %{mock_account_interface | account_map: account_map}
-  end
-
   @spec get_account_nonce(EVM.Interface.AccountInterface.t(), EVM.address()) :: integer()
   def get_account_nonce(mock_account_interface, address) do
     get_in(mock_account_interface.account_map, [address, :nonce])
@@ -245,5 +235,12 @@ defimpl EVM.Interface.AccountInterface, for: EVM.Interface.Mock.MockAccountInter
           EVM.address()
   def new_contract_address(_mock_account_interface, address, _nonce) do
     address
+  end
+
+  @spec clear_balance(EVM.Interface.AccountInterface.t(), EVM.address()) :: EVM.address()
+  def clear_balance(mock_account_interface, address) do
+    account = get_account(mock_account_interface, address)
+
+    put_account(mock_account_interface, address, %{account | balance: 0})
   end
 end

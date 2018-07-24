@@ -38,9 +38,6 @@ defprotocol EVM.Interface.AccountInterface do
   @spec remove_storage(t(), EVM.address(), integer()) :: t()
   def remove_storage(t, address, key)
 
-  @spec destroy_account(t, EVM.address()) :: t
-  def destroy_account(t, address)
-
   @spec dump_storage(t) :: %{EVM.address() => EVM.val()}
   def dump_storage(t)
 
@@ -98,4 +95,8 @@ defprotocol EVM.Interface.AccountInterface do
 
   @spec new_contract_address(t, EVM.address(), integer()) :: EVM.address()
   def new_contract_address(t, address, nonce)
+
+  @doc "Sets the balance of the account at the given address to zero"
+  @spec clear_balance(t, EVM.address()) :: t
+  def clear_balance(t, address)
 end

@@ -259,23 +259,26 @@ defmodule EVM.Operation.System do
   @doc """
   Halt execution and register account for later deletion.
   Transfers `value` wei from callers account to the "refund account".
-  Address of the "refund account" is the first 20 bytes in the stack.
 
   Defined as SELFDESTRUCT in the Yellow Paper.
+
+  Note:
+
+  There was a consensus issue at some point (see Quirk #2 in
+  http://martin.swende.se/blog/Ethereum_quirks_and_vulns.html). There is one
+  test case witnessing the current consensus
+  `GeneralStateTests/stSystemOperationsTest/suicideSendEtherPostDeath.json`.
   """
   @spec selfdestruct(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def selfdestruct([refund_address], %{exec_env: exec_env, sub_state: sub_state}) do
     to = Address.new(refund_address)
-    balance = AccountInterface.get_account_balance(exec_env.account_interface, exec_env.address)
 
     new_exec_env =
       exec_env
-      |> ExecEnv.transfer_wei_to(to, balance)
+      |> ExecEnv.transfer_balance_to(to)
+      |> ExecEnv.clear_account_balance()
 
-    new_substate = %{
-      sub_state
-      | selfdestruct_list: sub_state.selfdestruct_list ++ [exec_env.address]
-    }
+    new_substate = SubState.mark_account_for_destruction(sub_state, exec_env.address)
 
     %{exec_env: new_exec_env, sub_state: new_substate}
   end

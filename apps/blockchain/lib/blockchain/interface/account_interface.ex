@@ -214,36 +214,6 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
   end
 
   @doc """
-  Destructs an account (SELFDESTRUCT operation in YP).
-  This removes any trace of the account from the system.
-
-  ## Examples
-
-      iex> MerklePatriciaTree.Test.random_ets_db()
-      ...> |> MerklePatriciaTree.Trie.new()
-      ...> |> Blockchain.Account.add_wei(<<1::160>>, 5)
-      ...> |> Blockchain.Interface.AccountInterface.new()
-      ...> |> EVM.Interface.AccountInterface.destroy_account(<<1::160>>)
-      ...> |> EVM.Interface.AccountInterface.get_account_balance(<<1::160>>)
-      nil
-
-      iex> MerklePatriciaTree.Test.random_ets_db()
-      ...> |> MerklePatriciaTree.Trie.new()
-      ...> |> Blockchain.Account.add_wei(<<1::160>>, 5)
-      ...> |> Blockchain.Interface.AccountInterface.new()
-      ...> |> EVM.Interface.AccountInterface.destroy_account(<<2::160>>)
-      ...> |> EVM.Interface.AccountInterface.get_account_balance(<<1::160>>)
-      5
-  """
-  @spec destroy_account(EVM.Interface.AccountInterface.t(), EVM.address()) ::
-          EVM.Interface.AccountInterface.t()
-  def destroy_account(account_interface, address) do
-    updated_state = Account.del_account(account_interface.state, address)
-
-    %{account_interface | state: updated_state}
-  end
-
-  @doc """
   Given an account interface and an address, returns the nonce at that address.
 
   ## Examples
@@ -419,5 +389,13 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
           EVM.address()
   def new_contract_address(_account_interface, address, nonce) do
     Contract.Address.new(address, nonce)
+  end
+
+  @spec clear_balance(EVM.Interface.AccountInterface.t(), EVM.address()) ::
+          EVM.Interface.AccountInterface.t()
+  def clear_balance(account_interface, address) do
+    state = Account.clear_balance(account_interface.state, address)
+
+    Map.put(account_interface, :state, state)
   end
 end
