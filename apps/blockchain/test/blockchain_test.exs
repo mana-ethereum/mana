@@ -717,7 +717,7 @@ defmodule BlockchainTest do
     "GeneralStateTests/stSystemOperationsTest/suicideCoinbase_d0g0v0.json",
     "GeneralStateTests/stSystemOperationsTest/suicideNotExistingAccount_d0g0v0.json",
     "GeneralStateTests/stSystemOperationsTest/suicideOrigin_d0g0v0.json",
-    # "GeneralStateTests/stSystemOperationsTest/suicideSendEtherPostDeath_d0g0v0.json",
+    "GeneralStateTests/stSystemOperationsTest/suicideSendEtherPostDeath_d0g0v0.json",
     "GeneralStateTests/stSystemOperationsTest/suicideSendEtherToMe_d0g0v0.json",
     "GeneralStateTests/stSystemOperationsTest/testRandomTest_d0g0v0.json",
     "GeneralStateTests/stTransactionTest/ContractStoreClearsOOG_d0g0v0.json",

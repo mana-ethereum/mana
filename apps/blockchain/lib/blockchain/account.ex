@@ -582,4 +582,23 @@ defmodule Blockchain.Account do
         end
     end
   end
+
+  @doc """
+  Sets the balance of an account to zero.
+
+  ## Examples
+
+      iex> state = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
+      ...>   |> Blockchain.Account.put_account(<<0x01::160>>, %Blockchain.Account{balance: 100})
+      iex> state
+      ...> |> Blockchain.Account.clear_balance(<<0x01::160>>)
+      ...> |> Blockchain.Account.get_account(<<0x01::160>>)
+      %Blockchain.Account{balance: 0}
+  """
+  @spec clear_balance(EVM.state(), EVM.address()) :: EVM.state()
+  def clear_balance(state, address) do
+    update_account(state, address, fn acct ->
+      %{acct | balance: 0}
+    end)
+  end
 end
