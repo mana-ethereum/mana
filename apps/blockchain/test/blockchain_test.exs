@@ -1021,7 +1021,7 @@ defmodule BlockchainTest do
     "bcRandomBlockhashTest/randomStatetest203BC.json",
     "bcRandomBlockhashTest/randomStatetest213BC.json",
     "bcRandomBlockhashTest/randomStatetest218BC.json",
-    # "bcRandomBlockhashTest/randomStatetest21BC.json",
+    "bcRandomBlockhashTest/randomStatetest21BC.json",
     # "bcRandomBlockhashTest/randomStatetest224BC.json",
     "bcRandomBlockhashTest/randomStatetest234BC.json",
     "bcRandomBlockhashTest/randomStatetest235BC.json",
