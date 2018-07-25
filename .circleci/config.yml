@@ -101,6 +101,7 @@ jobs:
 
       - restore_cache:
           keys:
+            - v1-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
             - v1-plt-cache-{{ arch }}-{{ checksum "mix.lock" }}
             - v1-plt-cache-{{ arch }}
             - v1-plt-cache

@@ -17,8 +17,8 @@
   "mimerl": {:hex, :mimerl, "1.0.2", "993f9b0e084083405ed8252b99460c4f0563e41729ab42d9074fd5e52439be88", [:rebar3], [], "hexpm"},
   "parse_trans": {:hex, :parse_trans, "3.2.0", "2adfa4daf80c14dc36f522cf190eb5c4ee3e28008fc6394397c16f62a26258c2", [:rebar3], [], "hexpm"},
   "poison": {:hex, :poison, "3.1.0", "d9eb636610e096f86f25d9a46f35a9facac35609a7591b3be3326e99a0484665", [:mix], [], "hexpm"},
-  "rox": {:hex, :rox, "2.2.1", "847593765a119b48b1de381a874b692eac5375c79a6fd82b4c6353b98b7d9fdb", [:mix], [{:rustler, "~> 0.10", [hex: :rustler, repo: "hexpm", optional: false]}], "hexpm"},
-  "rustler": {:hex, :rustler, "0.17.1", "2b4f120daf411b4eebd8cad6cb68f7d519dc409ca9e70daa8856d1d37b13e203", [:mix], [], "hexpm"},
+  "rox": {:git, "https://github.com/poanetwork/rox.git", "f763f561780c69d77a62789d0d165af8ae1574bb", [branch: "update-erlang_nif-sys"]},
+  "rustler": {:hex, :rustler, "0.18.0", "db4bd0c613d83a1badc31be90ddada6f9821de29e4afd15c53a5da61882e4f2d", [:mix], [], "hexpm"},
   "ssl_verify_fun": {:hex, :ssl_verify_fun, "1.1.1", "28a4d65b7f59893bc2c7de786dec1e1555bd742d336043fe644ae956c3497fbe", [:make, :rebar], [], "hexpm"},
   "unicode_util_compat": {:hex, :unicode_util_compat, "0.3.1", "a1f612a7b512638634a603c8f401892afbf99b8ce93a45041f8aaca99cadb85e", [:rebar3], [], "hexpm"},
 }
