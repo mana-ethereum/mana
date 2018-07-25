@@ -1,5 +1,5 @@
 defmodule EVM.Operation.Logging do
-  alias EVM.{Operation, Memory, SubState}
+  alias EVM.{Operation, Memory, SubState, MachineState}
 
   @doc """
   Append log record with no topics.
@@ -243,6 +243,10 @@ defmodule EVM.Operation.Logging do
     address = exec_env.address
     updated_substate = sub_state |> SubState.add_log(address, topics, data)
 
-    %{sub_state: updated_substate}
+    words = Memory.get_active_words(offset + size)
+
+    updated_machine_state = MachineState.maybe_set_active_words(machine_state, words)
+
+    %{sub_state: updated_substate, machine_state: updated_machine_state}
   end
 end
