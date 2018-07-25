@@ -243,9 +243,13 @@ defmodule EVM.Operation.Logging do
     address = exec_env.address
     updated_substate = sub_state |> SubState.add_log(address, topics, data)
 
-    words = Memory.get_active_words(offset + size)
-
-    updated_machine_state = MachineState.maybe_set_active_words(machine_state, words)
+    updated_machine_state =
+      if size > 0 do
+        words = Memory.get_active_words(offset + size)
+        MachineState.maybe_set_active_words(machine_state, words)
+      else
+        machine_state
+      end
 
     %{sub_state: updated_substate, machine_state: updated_machine_state}
   end
