@@ -14,7 +14,7 @@ defmodule SyncWithInfura do
   def add_block_to_tree(db, chain, tree, n) do
     next_block = get_block(n)
     {:ok, next_tree} = Blockchain.Blocktree.verify_and_add_block(tree, chain, next_block, db)
-    Logger.info("Verfied Block #{n}")
+    Logger.info("Verified Block #{n}")
     MerklePatriciaTree.DB.put!(db, "current_block_hash", Blockchain.Block.hash(next_block))
     add_block_to_tree(db, chain, next_tree, n + 1)
   end
