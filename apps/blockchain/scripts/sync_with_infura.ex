@@ -94,7 +94,7 @@ defmodule SyncWithInfura do
 
     Blockchain.Block.add_ommers(block, ommers)
   rescue
-    :exit, error ->
+    error ->
       IO.inspect(error)
       Logger.info("Retrying")
       get_block(n)
@@ -138,7 +138,7 @@ parents = SyncWithInfura.get_parents(current_block, db, [])
 tree =
   Enum.reduce(parents, empty_tree, fn block, tree ->
     {:ok, tree} = Blockchain.Blocktree.verify_and_add_block(tree, chain, block, db)
-    Logger.info("Verfied Saved Block #{block.header.number}")
+    Logger.info("Verified Saved Block #{block.header.number}")
     tree
   end)
 

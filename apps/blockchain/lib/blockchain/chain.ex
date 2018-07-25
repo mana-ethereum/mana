@@ -225,7 +225,7 @@ defmodule Blockchain.Chain do
   defp get_builtin_account({raw_address, info}) do
     address = load_raw_hex(raw_address)
 
-    balance = if info["balance"], do: load_decimal(info["balance"]), else: 0
+    balance = if info["balance"], do: load_decimal(info["balance"])
 
     nonce =
       if info["nonce"],

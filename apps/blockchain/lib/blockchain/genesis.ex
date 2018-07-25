@@ -64,8 +64,12 @@ defmodule Blockchain.Genesis do
 
     state =
       Enum.reduce(accounts, Trie.new(db), fn {address, account_map}, trie ->
-        account = create_account(db, address, account_map)
-        Account.put_account(trie, address, account)
+        if is_nil(account_map[:balance]) do
+          trie
+        else
+          account = create_account(db, address, account_map)
+          Account.put_account(trie, address, account)
+        end
       end)
 
     header = %{header | state_root: state.root_hash}
