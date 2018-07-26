@@ -49,6 +49,8 @@ defmodule Blockchain.Genesis do
           transactions_root: <<86, 232, 31, 23, 27, 204, 85, 166, 255, 131, 69, 230, 146, 192, 248, 110, 91, 72, 224, 27, 153, 108, 173, 192, 1, 98, 47, 181, 227, 99, 180, 33>>,
           receipts_root: <<86, 232, 31, 23, 27, 204, 85, 166, 255, 131, 69, 230, 146, 192, 248, 110, 91, 72, 224, 27, 153, 108, 173, 192, 1, 98, 47, 181, 227, 99, 180, 33>>,
           ommers_hash: <<29, 204, 77, 232, 222, 199, 93, 122, 171, 133, 181, 103, 182, 204, 212, 26, 211, 18, 69, 27, 148, 138, 116, 19, 240, 161, 66, 253, 64, 212, 147, 71>>,
+          mix_hash: <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0>>,
+          nonce: 66
         },
         ommers: [],
         transactions: []
@@ -90,8 +92,8 @@ defmodule Blockchain.Genesis do
       beneficiary: genesis[:author],
       difficulty: genesis[:difficulty],
       gas_limit: genesis[:gas_limit],
-      mix_hash: genesis[:seal][:ethereum][:mix_hash],
-      nonce: genesis[:seal][:ethereum][:nonce]
+      mix_hash: genesis[:seal][:mix_hash],
+      nonce: genesis[:seal][:nonce]
     }
   end
 

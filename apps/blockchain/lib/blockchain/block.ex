@@ -404,7 +404,7 @@ defmodule Blockchain.Block do
 
   ## Examples
 
-      iex> %Blockchain.Block{header: %Block.Header{state_root: <<1::256>>, number: 100_000, difficulty: 15_500_0000, timestamp: 5_000_000, gas_limit: 500_000}}
+      iex> %Blockchain.Block{header: %Block.Header{parent_hash: <<0::256>>, beneficiary: <<5::160>>, state_root: <<1::256>>, number: 100_000, difficulty: 15_500_0000, timestamp: 5_000_000, gas_limit: 500_000}}
       ...> |> Blockchain.Block.gen_child_block(Blockchain.Test.ropsten_chain(), timestamp: 5010000, extra_data: "hi", beneficiary: <<5::160>>)
       %Blockchain.Block{
         header: %Block.Header{
@@ -414,11 +414,12 @@ defmodule Blockchain.Block do
           difficulty: 147_507_383,
           timestamp: 5_010_000,
           gas_limit: 500_000,
-          extra_data: "hi"
+          extra_data: "hi",
+          parent_hash: <<141, 203, 173, 190, 43, 64, 71, 106, 211, 77, 254, 89, 58, 72, 3, 108, 6, 101, 232, 254, 10, 149, 244, 245, 102, 5, 55, 235, 198, 39, 66, 227>>
         }
       }
 
-      iex> %Blockchain.Block{header: %Block.Header{state_root: <<1::256>>, number: 100_000, difficulty: 1_500_0000, timestamp: 5000, gas_limit: 500_000}}
+      iex> %Blockchain.Block{header: %Block.Header{parent_hash: <<0::256>>, beneficiary: <<5::160>>, state_root: <<1::256>>, number: 100_000, difficulty: 1_500_0000, timestamp: 5000, gas_limit: 500_000}}
       ...> |> Blockchain.Block.gen_child_block(Blockchain.Test.ropsten_chain(), state_root: <<2::256>>, timestamp: 6010, extra_data: "hi", beneficiary: <<5::160>>)
       %Blockchain.Block{
         header: %Block.Header{
@@ -428,7 +429,8 @@ defmodule Blockchain.Block do
           difficulty: 142_74_924,
           timestamp: 6010,
           gas_limit: 500_000,
-          extra_data: "hi"
+          extra_data: "hi",
+          parent_hash: <<233, 151, 241, 216, 121, 36, 187, 39, 42, 93, 8, 68, 162, 118, 84, 219, 140, 35, 220, 90, 118, 129, 76, 45, 249, 55, 241, 82, 181, 30, 22, 128>>
         }
       }
   """
@@ -462,11 +464,11 @@ defmodule Blockchain.Block do
   end
 
   @doc """
-  Calculates and sets block's parent's hash
+  Sets block's parent's hash
   """
   @spec set_block_parent_hash(t, t) :: t
   def set_block_parent_hash(block, parent_block) do
-    hash = hash(parent_block)
+    hash = parent_block.block_hash || hash(parent_block)
     header = %{block.header | parent_hash: hash}
     %{block | header: header}
   end
