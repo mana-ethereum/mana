@@ -447,12 +447,14 @@ defmodule Blockchain.Block do
     beneficiary = opts[:beneficiary] || nil
     extra_data = opts[:extra_data] || <<>>
     state_root = opts[:state_root] || parent_block.header.state_root
+    mix_hash = opts[:mix_hash] || parent_block.header.mix_hash
 
     %Header{
       state_root: state_root,
       timestamp: timestamp,
       extra_data: extra_data,
-      beneficiary: beneficiary
+      beneficiary: beneficiary,
+      mix_hash: mix_hash
     }
   end
 
