@@ -39,14 +39,29 @@ if (($ELIXIR_PATCH_VERSION < 5)); then
   exit 1
 fi
 
+mix local.rebar --force
+
+if ! command -v rebar > /dev/null; then
+  fancy_echo "\`rebar\`: Command not found"
+  fancy_echo "Please either add ~/.mix to your \$PATH environemnt varible or install it with brew: \`brew install rebar\`"
+
+  exit 1
+fi
+
+mix local.hex --force
+
+if ! command -v mix > /dev/null; then
+  fancy_echo "\`mix\`: command not found"
+  fancy_echo "Please add \`~/.mix\` to your \$PATH environment variable"
+  exit 1
+fi
+
 if ! command -v rustc > /dev/null; then
   fancy_echo "It looks like you don't have Rust installed. We'll install that for you."
   brew install rust
 fi
 
 fancy_echo "Installing elixir dependencies and compiling."
-mix local.hex --force
-mix local.rebar --force
 mix deps.get
 cd deps/libsecp256k1 && rebar compile && cd ../../
 mix do deps.compile, compile
