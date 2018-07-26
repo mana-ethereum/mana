@@ -92,23 +92,18 @@ defimpl EVM.Interface.BlockInterface, for: Blockchain.Interface.BlockInterface d
           Block.Header.t() | nil
   def get_ancestor_header(_block_interface, n) when n < 0 or n > 256, do: nil
 
-  def get_ancestor_header(block_interface, n) do
-    {:ok, header} =
-      get_ancestor_header(
-        block_interface,
-        block_interface.block_header,
-        n
-      )
-
-    header
+  def get_ancestor_header(block_interface, nth_ancestor) do
+    get_ancestor_header(block_interface, block_interface.block_header, nth_ancestor)
   end
 
   @spec get_ancestor_header(
           EVM.Interface.BlockInterface.t(),
           Block.Header.t(),
           non_neg_integer()
-        ) :: {:ok, Block.Header.t()}
-  defp get_ancestor_header(_block_interface, block_header, 0), do: {:ok, block_header}
+        ) :: Block.Header.t()
+  defp get_ancestor_header(_block_interface, block_header, 0) do
+    block_header
+  end
 
   defp get_ancestor_header(block_interface, block_header, n) do
     parent_header = get_block_by_hash(block_interface, block_header.parent_hash)
