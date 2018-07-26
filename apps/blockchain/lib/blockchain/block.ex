@@ -441,6 +441,7 @@ defmodule Blockchain.Block do
     |> set_block_number(parent_block)
     |> set_block_difficulty(chain, parent_block)
     |> set_block_gas_limit(chain, parent_block, gas_limit)
+    |> set_block_parent_hash(parent_block)
   end
 
   @spec gen_child_header(t, keyword()) :: Header.t()
@@ -458,6 +459,16 @@ defmodule Blockchain.Block do
       beneficiary: beneficiary,
       mix_hash: mix_hash
     }
+  end
+
+  @doc """
+  Calculates and sets block's parent's hash
+  """
+  @spec set_block_parent_hash(t, t) :: t
+  def set_block_parent_hash(block, parent_block) do
+    hash = hash(parent_block)
+    header = %{block.header | parent_hash: hash}
+    %{block | header: header}
   end
 
   @doc """
