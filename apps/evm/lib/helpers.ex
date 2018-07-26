@@ -101,7 +101,7 @@ defmodule EVM.Helpers do
   end
 
   def decode_signed(n) when is_binary(n) do
-    <<sign::size(1), _::bitstring>> = n
+    <<sign::binary-size(1), _::bitstring>> = n
 
     if sign == 0 do
       :binary.decode_unsigned(n)
