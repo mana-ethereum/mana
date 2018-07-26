@@ -32,8 +32,6 @@ defmodule EVM.Gas do
   @g_sset 20_000
   # Paid for an SSTORE operation when the storage value’s zeroness remains unchanged or is set to zero.
   @g_sreset 5000
-  # Amount of gas to pay for a SELFDESTRUCT operation.
-  @g_selfdestruct 5000
   # Paid for a CREATE operation.
   @g_create 32_000
   # Paid per byte for a CREATE operation to succeed in placing code into state.
@@ -54,8 +52,6 @@ defmodule EVM.Gas do
   @g_memory 3
   # The divsor of quadratic costs
   @g_quad_coeff_div 512
-  # Paid by all contract-creating transactions after the Homestead transition.
-  @g_txcreate 32_000
   # Paid for every zero byte of data or code for a transaction.
   @g_txdatazero 4
   # Paid for every non-zero byte of data or code for a transaction.
@@ -124,7 +120,6 @@ defmodule EVM.Gas do
   @w_mid_instr [:addmod, :mulmod, :jump]
   @w_high_instr [:jumpi]
   @w_extcode_instr [:extcodesize]
-  @memory_operations [:mstore, :mstore8, :sha3, :codecopy, :extcodecopy, :calldatacopy, :mload]
 
   @doc """
   Returns the cost to execute the given a cycle of the VM. This is defined
@@ -150,7 +145,7 @@ defmodule EVM.Gas do
     memory_expansion_cost(machine_state, memory_offset, length)
   end
 
-  def memory_cost(:extcodecopy, [_address, code_offset, memory_offset, length], machine_state) do
+  def memory_cost(:extcodecopy, [_address, code_offset, _memory_offset, length], machine_state) do
     if code_offset + length > EVM.max_int() do
       0
     else

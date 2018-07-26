@@ -61,11 +61,10 @@ defmodule EVM.Logger do
   defp program_counter_string(machine_state) do
     program_counter = machine_state.program_counter + 1
 
-    program_counter_string =
-      program_counter
-      |> :binary.encode_unsigned()
-      |> Base.encode16(case: :lower)
-      |> String.trim_leading("0")
-      |> String.pad_trailing(3)
+    program_counter
+    |> :binary.encode_unsigned()
+    |> Base.encode16(case: :lower)
+    |> String.trim_leading("0")
+    |> String.pad_trailing(3)
   end
 end
