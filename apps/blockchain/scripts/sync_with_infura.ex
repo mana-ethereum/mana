@@ -95,8 +95,7 @@ defmodule SyncWithInfura do
     Blockchain.Block.add_ommers(block, ommers)
   rescue
     error ->
-      # credo:disable-for-next-line
-      IO.inspect(error)
+      Logger.info("error:  #{inspect(error)}")
       Logger.info("Retrying")
       get_block(n)
   end

@@ -362,8 +362,11 @@ defmodule EVM.Debugger do
          exec_env,
          input_sequence
        ) do
-    # credo:disable-for-next-line
-    IO.inspect([machine_state, sub_state, exec_env], limit: :infinity)
+    Logger.info(
+      "machine_state:  #{inspect(machine_state)}, sub_state: #{inspect(sub_state)}, exec_env: #{
+        inspect(exec_env)
+      }"
+    )
 
     prompt(breakpoint, machine_state, sub_state, exec_env, input_sequence)
   end
