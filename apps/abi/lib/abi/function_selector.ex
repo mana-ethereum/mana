@@ -178,7 +178,7 @@ defmodule ABI.FunctionSelector do
       "bark(uint256,bool,string[],string[3],(uint256,bool))"
   """
   def encode(function_selector) do
-    types = get_types(function_selector) |> Enum.join(",")
+    types = function_selector |> get_types() |> Enum.join(",")
 
     "#{function_selector.function}(#{types})"
   end

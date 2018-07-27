@@ -50,7 +50,8 @@ defmodule EthCommonTest.Helpers do
     # This is pretty terrible, but the JSON is just messed up in a number
     # of these tests (it contains duplicate keys with very strange values)
     body =
-      File.read!(file_name)
+      file_name
+      |> File.read!()
       |> String.split("\n")
       |> Enum.filter(fn x -> not (x |> String.contains?("secretkey ")) end)
       |> Enum.join("\n")
@@ -79,7 +80,7 @@ defmodule EthCommonTest.Helpers do
 
   @spec load_src(String.t(), String.t()) :: any()
   def load_src(filler_type, filler) do
-    test_file_name("src/#{filler_type}", filler) |> read_test_file()
+    "src/#{filler_type}" |> test_file_name(filler) |> read_test_file()
   end
 
   @spec ethereum_common_tests_path :: String.t()

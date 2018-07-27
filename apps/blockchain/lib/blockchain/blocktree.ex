@@ -291,7 +291,7 @@ defmodule Blockchain.Blocktree do
   # Gets the maximum difficulty amoungst a set of child nodes
   @spec max_difficulty(%{EVM.hash() => t}) :: integer()
   defp max_difficulty(children) do
-    Enum.map(children, fn {_, child} -> child.total_difficulty end) |> Enum.max()
+    children |> Enum.map(fn {_, child} -> child.total_difficulty end) |> Enum.max()
   end
 
   @doc """

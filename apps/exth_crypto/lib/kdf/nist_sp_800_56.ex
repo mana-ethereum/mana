@@ -61,8 +61,11 @@ defmodule ExthCrypto.KDF.NistSp80056 do
       true ->
         derived_keying_material_padded =
           Enum.reduce(1..reps, <<>>, fn counter, results ->
+            num = counter |> mod(@two_power_32)
+
             counter_enc =
-              :binary.encode_unsigned(counter |> mod(@two_power_32), :big)
+              num
+              |> :binary.encode_unsigned(:big)
               |> ExthCrypto.Math.pad(4)
 
             result = hasher.(counter_enc <> shared_secret <> extra_data)

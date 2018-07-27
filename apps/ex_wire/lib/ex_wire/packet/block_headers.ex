@@ -77,7 +77,7 @@ defmodule ExWire.Packet.BlockHeaders do
   @spec handle(ExWire.Packet.packet()) :: ExWire.Packet.handle_response()
   def handle(packet = %__MODULE__{}) do
     # TODO: Do.
-    Logger.debug("[Packet] Peer sent #{Enum.count(packet.headers)} header(s)")
+    Logger.debug(fn -> "[Packet] Peer sent #{Enum.count(packet.headers)} header(s)" end)
 
     # packet.headers |> Exth.inspect("Got headers, requesting more?")
 

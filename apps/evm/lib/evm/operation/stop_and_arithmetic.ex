@@ -143,7 +143,8 @@ defmodule EVM.Operation.StopAndArithmetic do
   """
   @spec exp(Operation.stack_args(), Operation.vm_map()) :: EVM.val()
   def exp([s0, s1], _) do
-    :crypto.mod_pow(s0, s1, EVM.max_int())
+    s0
+    |> :crypto.mod_pow(s1, EVM.max_int())
     |> :binary.decode_unsigned()
   end
 

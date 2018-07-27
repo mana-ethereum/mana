@@ -16,12 +16,14 @@ defmodule ExWire.Framing.FrameTest do
     mac_encoder = {ExthCrypto.AES, ExthCrypto.AES.block_size(), :ecb}
 
     assert expected_1 ==
-             ExthCrypto.Cipher.encrypt(input_1, mac_secret, mac_encoder)
+             input_1
+             |> ExthCrypto.Cipher.encrypt(mac_secret, mac_encoder)
              |> Binary.take(-16)
              |> ExthCrypto.Math.bin_to_hex()
 
     assert expected_2 ==
-             ExthCrypto.Cipher.encrypt(input_2, mac_secret, mac_encoder)
+             input_2
+             |> ExthCrypto.Cipher.encrypt(mac_secret, mac_encoder)
              |> Binary.take(-16)
              |> ExthCrypto.Math.bin_to_hex()
   end

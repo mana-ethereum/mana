@@ -232,7 +232,7 @@ defmodule ABI.TypeEncoder do
   # Note, we'll accept a binary or an integer here, so long as the
   # binary is not longer than our allowed data size
   defp encode_uint(data, size_in_bits) when rem(size_in_bits, 8) == 0 do
-    size_in_bytes = (size_in_bits / 8) |> round
+    size_in_bytes = round(size_in_bits / 8)
     bin = maybe_encode_unsigned(data)
 
     if byte_size(bin) > size_in_bytes,

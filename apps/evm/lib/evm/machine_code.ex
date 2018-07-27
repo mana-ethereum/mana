@@ -25,7 +25,8 @@ defmodule EVM.MachineCode do
   """
   @spec current_operation(MachineState.t(), ExecEnv.t()) :: Metadata.t()
   def current_operation(machine_state, exec_env) do
-    Operation.get_operation_at(exec_env.machine_code, machine_state.program_counter)
+    exec_env.machine_code
+    |> Operation.get_operation_at(machine_state.program_counter)
     |> Operation.metadata()
   end
 
@@ -77,7 +78,8 @@ defmodule EVM.MachineCode do
   # entire set of machine code
   defp do_valid_jump_destinations(machine_code, pos) do
     operation =
-      Operation.get_operation_at(machine_code, pos)
+      machine_code
+      |> Operation.get_operation_at(pos)
       |> Operation.decode()
 
     next_pos = Operation.next_instr_pos(pos, operation)
@@ -108,11 +110,13 @@ defmodule EVM.MachineCode do
   @spec compile([atom() | integer()]) :: binary()
   def compile(code) do
     for n <- code, into: <<>> do
-      case n do
-        x when is_atom(x) -> EVM.Operation.encode(n)
-        x when is_integer(x) -> x
-      end
-      |> :binary.encode_unsigned()
+      num =
+        case n do
+          x when is_atom(x) -> EVM.Operation.encode(n)
+          x when is_integer(x) -> x
+        end
+
+      :binary.encode_unsigned(num)
     end
   end
 

@@ -124,19 +124,17 @@ defmodule EVM.Memory do
     do: read_zeroed_memory(:binary.encode_unsigned(memory), offset, bytes)
 
   def read_zeroed_memory(memory, offset, bytes) do
-    cond do
-      memory == nil || offset > byte_size(memory) ->
-        # We're totally out of memory, let's just drop zeros
-        bytes_in_bits = bytes * 8
-        <<0::size(bytes_in_bits)>>
+    if memory == nil || offset > byte_size(memory) do
+      # We're totally out of memory, let's just drop zeros
+      bytes_in_bits = bytes * 8
+      <<0::size(bytes_in_bits)>>
+    else
+      memory_size = byte_size(memory)
+      final_pos = offset + bytes
+      memory_bytes_final_pos = min(final_pos, memory_size)
+      padding = (final_pos - memory_bytes_final_pos) * 8
 
-      true ->
-        memory_size = byte_size(memory)
-        final_pos = offset + bytes
-        memory_bytes_final_pos = min(final_pos, memory_size)
-        padding = (final_pos - memory_bytes_final_pos) * 8
-
-        :binary.part(memory, offset, memory_bytes_final_pos - offset) <> <<0::size(padding)>>
+      :binary.part(memory, offset, memory_bytes_final_pos - offset) <> <<0::size(padding)>>
     end
   end
 
@@ -156,7 +154,8 @@ defmodule EVM.Memory do
   """
   def get_active_words(bytes) do
     # note: round has no effect due to ceil, just being used for float to int conversion
-    (bytes / 32) |> :math.ceil() |> round()
+    num = bytes / 32
+    num |> :math.ceil() |> round()
   end
 
   @doc """

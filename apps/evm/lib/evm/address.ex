@@ -57,7 +57,8 @@ defmodule EVM.Address do
   """
   @spec new_from_private_key(binary()) :: binary()
   def new_from_private_key(private_key) do
-    ExthCrypto.Signature.get_public_key(private_key)
+    private_key
+    |> ExthCrypto.Signature.get_public_key()
     |> elem(1)
     |> EVM.Helpers.take_n_last_bytes(@size)
   end

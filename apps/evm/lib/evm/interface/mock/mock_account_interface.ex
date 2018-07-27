@@ -23,7 +23,9 @@ defimpl EVM.Interface.AccountInterface, for: EVM.Interface.Mock.MockAccountInter
 
   @spec account_exists?(EVM.Interface.AccountInterface.t(), EVM.address()) :: boolean()
   def account_exists?(mock_account_interface, address) do
-    !!get_account(mock_account_interface, :binary.decode_unsigned(address))
+    account = get_account(mock_account_interface, :binary.decode_unsigned(address))
+
+    !is_nil(account)
   end
 
   @spec get_account_balance(EVM.Interface.AccountInterface.t(), EVM.address()) ::

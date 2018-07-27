@@ -31,7 +31,8 @@ defimpl EVM.Interface.BlockInterface, for: EVM.Interface.Mock.MockBlockInterface
   @spec get_ancestor_header(EVM.Interface.BlockInterface.t(), integer()) :: Block.Header.t()
   def get_ancestor_header(mock_block_interface, number) do
     block =
-      Map.values(mock_block_interface.block_map)
+      mock_block_interface.block_map
+      |> Map.values()
       |> Enum.find(fn block -> block.number == number end)
 
     if block do

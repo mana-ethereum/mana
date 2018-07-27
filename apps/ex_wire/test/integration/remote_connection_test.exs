@@ -169,7 +169,7 @@ defmodule ExWire.RemoteConnectionTest do
 
       {:incoming_packet, packet} ->
         if System.get_env("TRACE"),
-          do: Logger.debug("Expecting status packet, got: #{inspect(packet)}")
+          do: Logger.debug(fn -> "Expecting status packet, got: #{inspect(packet)}" end)
 
         receive_status(client_pid)
     after
@@ -189,7 +189,7 @@ defmodule ExWire.RemoteConnectionTest do
 
       {:incoming_packet, packet} ->
         if System.get_env("TRACE"),
-          do: Logger.debug("Expecting block headers packet, got: #{inspect(packet)}")
+          do: Logger.debug(fn -> "Expecting block headers packet, got: #{inspect(packet)}" end)
 
         receive_block_headers(client_pid)
     after
@@ -209,7 +209,7 @@ defmodule ExWire.RemoteConnectionTest do
 
       {:incoming_packet, packet} ->
         if System.get_env("TRACE"),
-          do: Logger.debug("Expecting block bodies packet, got: #{inspect(packet)}")
+          do: Logger.debug(fn -> "Expecting block bodies packet, got: #{inspect(packet)}" end)
 
         receive_block_bodies(client_pid)
     after

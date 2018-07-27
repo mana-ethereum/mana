@@ -84,7 +84,8 @@ defmodule Blockchain.TransactionTest do
     |> Enum.map(fn {fork, fork_tests} ->
       {
         fork,
-        Enum.map(fork_tests, fn {key_to_test, value} ->
+        fork_tests
+        |> Enum.map(fn {key_to_test, value} ->
           {String.to_atom(key_to_test), maybe_hex(value)}
         end)
         |> Enum.into(%{})
@@ -216,7 +217,8 @@ defmodule Blockchain.TransactionTest do
       tx = Transaction.Signature.sign_transaction(unsigned_tx, private_key)
 
       {state, gas, logs} =
-        Trie.new(MerklePatriciaTree.Test.random_ets_db())
+        MerklePatriciaTree.Test.random_ets_db()
+        |> Trie.new()
         |> Account.put_account(sender, %Account{balance: 400_000, nonce: 5})
         |> Transaction.execute(tx, %Block.Header{beneficiary: beneficiary})
 

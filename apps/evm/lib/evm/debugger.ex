@@ -3,6 +3,7 @@ defmodule EVM.Debugger do
   A first-class debugger for the EVM. We are able to set
   breakpoints and walk through code execution.
   """
+  require Logger
 
   alias EVM.Debugger.Breakpoint
   alias EVM.Debugger.Command
@@ -362,7 +363,11 @@ defmodule EVM.Debugger do
          exec_env,
          input_sequence
        ) do
-    IO.inspect([machine_state, sub_state, exec_env], limit: :infinity)
+    Logger.info(
+      "machine_state:  #{inspect(machine_state)}, sub_state: #{inspect(sub_state)}, exec_env: #{
+        inspect(exec_env)
+      }"
+    )
 
     prompt(breakpoint, machine_state, sub_state, exec_env, input_sequence)
   end

@@ -114,7 +114,7 @@ defmodule ExWire.Framing.Frame do
 
     # verify header mac
     ingress_mac = update_mac(ingress_mac, mac_encoder, mac_secret, header_enc)
-    expected_header_mac = MAC.final(ingress_mac) |> Binary.take(16)
+    expected_header_mac = ingress_mac |> MAC.final() |> Binary.take(16)
 
     if expected_header_mac != header_mac do
       {:error, "Failed to match header ingress mac"}
@@ -147,7 +147,7 @@ defmodule ExWire.Framing.Frame do
 
         ingress_mac = MAC.update(ingress_mac, frame_enc_with_padding)
         ingress_mac = update_mac(ingress_mac, mac_encoder, mac_secret, nil)
-        expected_frame_mac = MAC.final(ingress_mac) |> Binary.take(16)
+        expected_frame_mac = ingress_mac |> MAC.final() |> Binary.take(16)
 
         if expected_frame_mac != frame_mac do
           {:error, "Failed to match frame ingress mac"}
@@ -186,9 +186,9 @@ defmodule ExWire.Framing.Frame do
           binary()
         ) :: MAC.mac_inst()
   defp update_mac(mac, mac_encoder, mac_secret, seed) do
-    final = MAC.final(mac) |> Binary.take(16)
+    final = mac |> MAC.final() |> Binary.take(16)
 
-    enc = ExthCrypto.Cipher.encrypt(final, mac_secret, mac_encoder) |> Binary.take(-16)
+    enc = final |> ExthCrypto.Cipher.encrypt(mac_secret, mac_encoder) |> Binary.take(-16)
 
     enc_xored = ExthCrypto.Math.xor(enc, if(seed, do: seed, else: final))
 

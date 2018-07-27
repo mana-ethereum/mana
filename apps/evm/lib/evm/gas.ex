@@ -253,12 +253,12 @@ defmodule EVM.Gas do
         # f
         offset,
         # l
-        length
+        size
       ) do
-    if length == 0 do
+    if size == 0 do
       active_words
     else
-      max(active_words, round(:math.ceil((offset + length) / 32)))
+      max(active_words, round(:math.ceil((offset + size) / 32)))
     end
   end
 
@@ -450,6 +450,7 @@ defmodule EVM.Gas do
     @g_log + @g_logdata * size + @g_logtopic * 4
   end
 
+  # credo:disable-for-next-line
   def operation_cost(operation, _inputs, _machine_state, _exec_env) do
     cond do
       operation in @w_very_low_instr -> @g_verylow
