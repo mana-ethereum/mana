@@ -7,6 +7,9 @@ defmodule EVM.Helpers do
   use Bitwise
   alias EVM.Address
 
+  @max_uint_255 round(:math.pow(2, 255)) - 1
+  @max_256_ceiling round(:math.pow(2, 256))
+
   @doc """
   Inverts a map so each key becomes a value,
   and vice versa.
@@ -97,17 +100,15 @@ defmodule EVM.Helpers do
   def decode_signed(n) when is_nil(n), do: 0
 
   def decode_signed(n) when is_integer(n) do
-    decode_signed(:binary.encode_unsigned(n))
+    if n <= @max_uint_255 do
+      n
+    else
+      n - @max_256_ceiling
+    end
   end
 
   def decode_signed(n) when is_binary(n) do
-    <<sign::binary-size(1), _::bitstring>> = n
-
-    if sign == 0 do
-      :binary.decode_unsigned(n)
-    else
-      :binary.decode_unsigned(n) - EVM.max_int()
-    end
+    n |> :binary.decode_unsigned() |> decode_signed()
   end
 
   @spec encode_val(integer() | binary() | list(integer())) :: list(EVM.val()) | EVM.val()
