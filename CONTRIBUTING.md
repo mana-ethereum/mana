@@ -23,8 +23,14 @@ Thank your for contributing to this project! We welcome collaborators and expect
 ### Issues
 Creating and discussing [Issues](https://github.com/poanetwork/mana/issues) provides significant value to the project. If you find a bug you can report it in an Issue.     
 
-### Pull Requests
-All pull requests should include: 
+### Pull Requests (PR)
+
+Before submitting a PR:
+1. Add a test for the new or updated functionality. For tests that are simple and would make sense in documentation add a doctest. For more complicated tests add a regular test. If you're not sure which type to add ask in [Gitter](https://gitter.im/poanetwork/mana).
+2. Run `mix format` to format your code.
+3. Run `mix credo` and fix any errors and warnings.
+
+**All pull requests should include:** 
 * A clear, readable description of the purpose of the PR
 * A clear, readable description of changes
 * Any additional concerns or comments (optional)

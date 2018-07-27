@@ -1,12 +1,12 @@
-# Mana Ethereum Implementation
+# Mana-Ethereum
 
 [![CircleCI](https://circleci.com/gh/poanetwork/mana/tree/master.svg?style=svg)](https://circleci.com/gh/poanetwork/mana/tree/master) [![Waffle.io - Columns and their card count](https://badge.waffle.io/poanetwork/mana.svg?columns=all)](https://waffle.io/poanetwork/mana)
 
-Mana is an open-source Ethereum blockchain client built using [Elixir](https://elixir-lang.org/). Elixir runs on the Erlang Virtual Machine, which is used for distributed systems and offers massive scalability and high visibility. These properties make Elixir a perfect candidate for blockchain network development.
+Mana-Ethereum is an open-source Ethereum blockchain client built using [Elixir](https://elixir-lang.org/). Elixir runs on the Erlang Virtual Machine, which is used for distributed systems and offers massive scalability and high visibility. These properties make Elixir a perfect candidate for blockchain network development.
 
-In the current Ethereum ecosystem, a majority of active nodes on the network are Geth or Parity nodes. Mana provides an additional open-source alternative. Our aim is to create an open, well-documented implementation that closely matches the protocols described in the [Ethereum yellow paper](https://ethereum.github.io/yellowpaper/paper.pdf).
+In the current Ethereum ecosystem, a majority of active nodes on the network are Geth or Parity nodes. Mana-Ethereum provides an additional open-source alternative. Our aim is to create an open, well-documented implementation that closely matches the protocols described in the [Ethereum yellow paper](https://ethereum.github.io/yellowpaper/paper.pdf).
 
-Mana is currently in development.
+Mana-Ethereum is currently in development.
 
 # Dependencies
 
@@ -108,6 +108,8 @@ BYZANTIUM VERSION )
 
 Additional Ethereum Implementations
 
-* [Parity](https://github.com/paritytech/parity-ethereum)
-* [Geth](https://github.com/ethereum/go-ethereum/)
+* [Parity-Ethereum](https://github.com/paritytech/parity-ethereum)
+* [Go-Ethereum (Geth)](https://github.com/ethereum/go-ethereum/)
 * [EthereumJS](https://github.com/ethereumjs/ethereumjs-vm)
+* [Py-EVM](https://github.com/ethereum/py-evm)
+
