@@ -7,6 +7,7 @@ defmodule Exth do
   def inspect(variable, prefix \\ nil) do
     args = if prefix, do: [prefix, variable], else: variable
 
+    # credo:disable-for-next-line
     IO.inspect(args, limit: :infinity)
 
     variable

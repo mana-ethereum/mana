@@ -21,7 +21,9 @@ defmodule ExWire.Adapter.TCP.Server do
     {:ok, socket} = TCP.connect(peer.host, peer.port)
     handshake = Handshake.new(peer.remote_id)
 
-    Logger.debug("[Network] [#{peer}] Established outbound connection with #{peer.host}.")
+    Logger.debug(fn ->
+      "[Network] [#{peer}] Established outbound connection with #{peer.host}."
+    end)
 
     send_auth_message()
 
@@ -106,7 +108,7 @@ defmodule ExWire.Adapter.TCP.Server do
   state for decoded ack response.
   """
   def handle_cast(:send_auth_message, state = %{socket: socket, peer: peer}) do
-    Logger.debug("[Network] Generating EIP8 Handshake for #{peer.host}")
+    Logger.debug(fn -> "[Network] Generating EIP8 Handshake for #{peer.host}" end)
 
     handshake = Handshake.generate_auth(state.handshake)
     send_unframed_data(handshake.encoded_auth_msg, socket, peer)
@@ -142,16 +144,16 @@ defmodule ExWire.Adapter.TCP.Server do
   defp handle_acknowledgement_received(data, state = %{peer: peer}) do
     case Handshake.handle_ack(state.handshake, data) do
       {:ok, handshake, secrets} ->
-        Logger.debug("[Network] [#{peer}] Got ack from #{peer.host}, deriving secrets")
+        Logger.debug(fn -> "[Network] [#{peer}] Got ack from #{peer.host}, deriving secrets" end)
 
         session = initiate_dev_p2p_session()
 
         Map.merge(state, %{handshake: handshake, secrets: secrets, session: session})
 
       {:invalid, reason} ->
-        Logger.warn(
+        Logger.warn(fn ->
           "[Network] [#{peer}] Failed to get handshake message when expecting ack - #{reason}"
-        )
+        end)
 
         state
     end
@@ -161,7 +163,7 @@ defmodule ExWire.Adapter.TCP.Server do
     case Handshake.handle_auth(state.handshake, data) do
       {:ok, handshake, secrets} ->
         peer = get_peer_info(handshake.auth_msg, socket)
-        Logger.debug("[Network] Received auth. Sending ack.")
+        Logger.debug(fn -> "[Network] Received auth. Sending ack." end)
 
         send_unframed_data(handshake.encoded_ack_resp, socket, peer)
         session = initiate_dev_p2p_session()
@@ -169,7 +171,9 @@ defmodule ExWire.Adapter.TCP.Server do
         Map.merge(state, %{handshake: handshake, secrets: secrets, peer: peer, session: session})
 
       {:invalid, reason} ->
-        Logger.warn("[Network] Received unknown handshake message when expecting auth: #{reason}")
+        Logger.warn(fn ->
+          "[Network] Received unknown handshake message when expecting auth: #{reason}"
+        end)
 
         state
     end
@@ -183,10 +187,13 @@ defmodule ExWire.Adapter.TCP.Server do
 
     case Frame.unframe(total_data, secrets) do
       {:ok, packet_type, packet_data, frame_rest, updated_secrets} ->
-        Logger.debug("[Network] [#{peer}] Got packet `#{inspect(packet_type)}` from #{peer.host}")
+        Logger.debug(fn ->
+          "[Network] [#{peer}] Got packet `#{inspect(packet_type)}` from #{peer.host}"
+        end)
 
         updated_session =
-          get_packet(packet_type, packet_data)
+          packet_type
+          |> get_packet(packet_data)
           |> handle_packet(session, state)
 
         updated_state =
@@ -248,11 +255,11 @@ defmodule ExWire.Adapter.TCP.Server do
   end
 
   defp send_unframed_data(data, socket, peer) do
-    Logger.debug(
+    Logger.debug(fn ->
       "[Network] [#{peer}] Sending raw data message of length #{byte_size(data)} byte(s) to #{
         peer.host
       }"
-    )
+    end)
 
     TCP.send_data(socket, data)
   end

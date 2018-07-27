@@ -253,12 +253,12 @@ defmodule EVM.Gas do
         # f
         offset,
         # l
-        length
+        size
       ) do
-    if length == 0 do
+    if size == 0 do
       active_words
     else
-      max(active_words, round(:math.ceil((offset + length) / 32)))
+      max(active_words, round(:math.ceil((offset + size) / 32)))
     end
   end
 

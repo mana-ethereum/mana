@@ -15,11 +15,11 @@ defmodule EVM.Logger do
   end
 
   defp log_opcode_and_gas_left(operation, machine_state) do
-    Logger.debug(
+    Logger.debug(fn ->
       "[0x#{program_counter_string(machine_state)}][#{operation_string(operation)}(0x#{
         opcode_string(operation)
       }) Gas Left: #{machine_state.gas})"
-    )
+    end)
   end
 
   defp log_inputs(operation, machine_state) do
@@ -39,7 +39,7 @@ defmodule EVM.Logger do
               |> Base.encode16(case: :lower)
               |> String.trim_leading("0")
 
-        Logger.debug("       | #{i}: 0x#{value_string}")
+        Logger.debug(fn -> "       | #{i}: 0x#{value_string}" end)
       end)
     end
   end
