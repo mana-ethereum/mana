@@ -1,4 +1,4 @@
-defmodule EVM61.Address do
+defmodule EVM.Address do
   @moduledoc """
   EVM address functions and constants.
   """
