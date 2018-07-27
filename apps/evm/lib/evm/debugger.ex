@@ -3,6 +3,7 @@ defmodule EVM.Debugger do
   A first-class debugger for the EVM. We are able to set
   breakpoints and walk through code execution.
   """
+  require Logger
 
   alias EVM.Debugger.Breakpoint
   alias EVM.Debugger.Command
