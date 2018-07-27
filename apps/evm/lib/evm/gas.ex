@@ -450,6 +450,7 @@ defmodule EVM.Gas do
     @g_log + @g_logdata * size + @g_logtopic * 4
   end
 
+  # credo:disable-for-next-line
   def operation_cost(operation, _inputs, _machine_state, _exec_env) do
     cond do
       operation in @w_very_low_instr -> @g_verylow

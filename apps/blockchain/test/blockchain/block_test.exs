@@ -159,7 +159,8 @@ defmodule Blockchain.BlockTest do
     chain = Blockchain.Test.ropsten_chain()
 
     block =
-      Genesis.create_block(chain, db)
+      chain
+      |> Genesis.create_block(db)
       |> Block.add_rewards(db)
       |> Block.put_header(:mix_hash, <<0::256>>)
       |> Block.put_header(:nonce, <<0x42::64>>)
@@ -210,7 +211,8 @@ defmodule Blockchain.BlockTest do
     chain = Blockchain.Test.ropsten_chain()
 
     result =
-      Genesis.create_block(chain, db)
+      chain
+      |> Genesis.create_block(db)
       |> Block.add_rewards(db)
       |> Block.validate(chain, nil, db)
 

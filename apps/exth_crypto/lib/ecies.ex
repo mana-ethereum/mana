@@ -206,14 +206,14 @@ defmodule ExthCrypto.ECIES do
           generated_message_tag =
             MAC.mac(cipher_iv <> encoded_message <> shared_info_2, key_mac_hashed, params.mac)
 
-          unless message_tag == generated_message_tag do
-            {:error, "Invalid message tag"}
-          else
+          if message_tag == generated_message_tag do
             # SEC1 - §5.1.4 - Step 9
             message = Cipher.decrypt(encoded_message, key_enc, cipher_iv, params.cipher)
 
             # SEC1 - §5.1.4 - Step 10
             {:ok, message}
+          else
+            {:error, "Invalid message tag"}
           end
         end
 

@@ -117,7 +117,8 @@ defmodule ExWire.Handshake do
     my_ephemeral_private_key = elem(handshake.random_key_pair, 1)
 
     {signature, _, _, recovery_id} =
-      ECDH.generate_shared_secret(initiator_static_private_key, handshake.remote_pub)
+      initiator_static_private_key
+      |> ECDH.generate_shared_secret(handshake.remote_pub)
       |> ExthCrypto.Math.xor(handshake.init_nonce)
       |> ExthCrypto.Signature.sign_digest(my_ephemeral_private_key)
 

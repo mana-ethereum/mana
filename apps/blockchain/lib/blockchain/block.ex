@@ -289,7 +289,8 @@ defmodule Blockchain.Block do
   @spec get_receipt(t, integer(), DB.db()) :: Receipt.t() | nil
   def get_receipt(block, i, db) do
     serialized_receipt =
-      Trie.new(db, block.header.receipts_root)
+      db
+      |> Trie.new(block.header.receipts_root)
       |> Trie.get(i |> ExRLP.encode())
 
     case serialized_receipt do
@@ -327,7 +328,8 @@ defmodule Blockchain.Block do
   @spec get_transaction(t, integer(), DB.db()) :: Transaction.t() | nil
   def get_transaction(block, i, db) do
     serialized_transaction =
-      Trie.new(db, block.header.transactions_root)
+      db
+      |> Trie.new(block.header.transactions_root)
       |> Trie.get(i |> ExRLP.encode())
 
     case serialized_transaction do

@@ -211,7 +211,8 @@ defmodule Blockchain.Transaction.Signature do
   @spec transaction_hash(Transaction.t(), integer() | nil) :: Keccak.keccak_hash()
   def transaction_hash(tx, chain_id \\ nil) do
     # See EIP-155
-    Transaction.serialize(tx, false)
+    tx
+    |> Transaction.serialize(false)
     |> Kernel.++(if chain_id, do: [chain_id |> :binary.encode_unsigned(), <<>>, <<>>], else: [])
     |> ExRLP.encode()
     |> Keccak.kec()

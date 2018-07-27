@@ -53,7 +53,8 @@ defmodule HandshakeTest do
       set_environment(my_static_private_key)
 
       handshake =
-        Handshake.new(her_static_public_key)
+        her_static_public_key
+        |> Handshake.new()
         |> Handshake.generate_auth()
 
       set_environment(her_static_private_key)
@@ -76,7 +77,8 @@ defmodule HandshakeTest do
       set_environment(my_static_private_key)
 
       my_handshake =
-        Handshake.new(her_static_public_key)
+        her_static_public_key
+        |> Handshake.new()
         |> Handshake.generate_auth()
 
       set_environment(her_static_private_key)

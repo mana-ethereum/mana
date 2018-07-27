@@ -32,7 +32,8 @@ defmodule Blockchain.Contract.MessageCallTest do
       code = MachineCode.compile(assembly)
 
       state =
-        Trie.new(db)
+        db
+        |> Trie.new()
         |> Account.put_account(<<0x10::160>>, %Account{balance: 10})
         |> Account.put_account(<<0x20::160>>, %Account{balance: 20})
         |> Account.put_code(<<0x20::160>>, code)

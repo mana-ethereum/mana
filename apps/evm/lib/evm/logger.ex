@@ -44,11 +44,12 @@ defmodule EVM.Logger do
     end
   end
 
-  defp operation_string(operation),
-    do:
-      Atom.to_string(operation.sym)
-      |> String.upcase()
-      |> String.pad_leading(8)
+  defp operation_string(operation) do
+    operation.sym
+    |> Atom.to_string()
+    |> String.upcase()
+    |> String.pad_leading(8)
+  end
 
   defp opcode_string(operation),
     do:

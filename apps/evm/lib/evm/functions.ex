@@ -97,6 +97,7 @@ defmodule EVM.Functions do
       {:halt, :invalid_instruction}
   """
   @spec is_exception_halt?(MachineState.t(), ExecEnv.t()) :: :continue | {:halt, atom()}
+  # credo:disable-for-next-line
   def is_exception_halt?(machine_state, exec_env) do
     operation = Operation.get_operation_at(exec_env.machine_code, machine_state.program_counter)
     operation_metadata = Operation.metadata(operation)

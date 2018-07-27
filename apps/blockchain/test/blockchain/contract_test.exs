@@ -18,7 +18,8 @@ defmodule Blockchain.ContractTest do
       endowment = 6
 
       accounts =
-        Trie.new(db)
+        db
+        |> Trie.new()
         |> Account.put_account(sender_address, sender_account)
         |> Contract.create_blank(contract_address, sender_address, endowment)
         |> Account.get_accounts([sender_address, contract_address])
