@@ -1927,7 +1927,7 @@ defmodule Blockchain.StateTest do
     # "stSystemOperationsTest/suicideCoinbase.json",
     "stSystemOperationsTest/suicideNotExistingAccount.json",
     "stSystemOperationsTest/suicideOrigin.json",
-    # "stSystemOperationsTest/suicideSendEtherPostDeath.json",
+    "stSystemOperationsTest/suicideSendEtherPostDeath.json",
     "stSystemOperationsTest/suicideSendEtherToMe.json",
     "stSystemOperationsTest/testRandomTest.json",
     "stTransactionTest/ContractStoreClearsOOG.json",
