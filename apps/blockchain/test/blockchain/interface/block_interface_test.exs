@@ -23,9 +23,12 @@ defmodule Blockchain.Interface.BlockInterfaceTest do
 
       Blockchain.Block.put_block(block, db)
 
-      assert header ===
-               Blockchain.Interface.BlockInterface.new(block.header, db)
-               |> EVM.Interface.BlockInterface.get_ancestor_header(0)
+      ancestor_header =
+        block.header
+        |> Blockchain.Interface.BlockInterface.new(db)
+        |> EVM.Interface.BlockInterface.get_ancestor_header(0)
+
+      assert header == ancestor_header
     end
 
     test "returns the parent header if passed 1" do
@@ -62,9 +65,12 @@ defmodule Blockchain.Interface.BlockInterfaceTest do
       Blockchain.Block.put_block(parent_block, db)
       Blockchain.Block.put_block(block, db)
 
-      assert parent_header ===
-               Blockchain.Interface.BlockInterface.new(block.header, db)
-               |> EVM.Interface.BlockInterface.get_ancestor_header(1)
+      ancestor_header =
+        block.header
+        |> Blockchain.Interface.BlockInterface.new(db)
+        |> EVM.Interface.BlockInterface.get_ancestor_header(1)
+
+      assert parent_header == ancestor_header
     end
 
     test "gets the header of the nth ancestor" do
@@ -116,7 +122,7 @@ defmodule Blockchain.Interface.BlockInterfaceTest do
       Blockchain.Block.put_block(parent_block, db)
       Blockchain.Block.put_block(block, db)
 
-      assert grand_parent_header ===
+      assert grand_parent_header ==
                block.header
                |> Blockchain.Interface.BlockInterface.new(db)
                |> EVM.Interface.BlockInterface.get_ancestor_header(2)
