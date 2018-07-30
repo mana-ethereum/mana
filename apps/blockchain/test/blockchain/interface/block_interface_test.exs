@@ -4,33 +4,6 @@ defmodule Blockchain.Interface.BlockInterfaceTest do
   doctest EVM.Interface.BlockInterface.Blockchain.Interface.BlockInterface
 
   describe ".get_ancestor_header/2" do
-    test "returns own header if passed 0" do
-      db = MerklePatriciaTree.Test.random_ets_db()
-
-      header = %Block.Header{
-        number: 2,
-        parent_hash: <<1, 3, 2>>,
-        beneficiary: <<2, 3, 4>>,
-        difficulty: 100,
-        timestamp: 11,
-        mix_hash: <<1>>,
-        nonce: <<2>>
-      }
-
-      block = %Blockchain.Block{
-        header: header
-      }
-
-      Blockchain.Block.put_block(block, db)
-
-      ancestor_header =
-        block.header
-        |> Blockchain.Interface.BlockInterface.new(db)
-        |> EVM.Interface.BlockInterface.get_ancestor_header(0)
-
-      assert header == ancestor_header
-    end
-
     test "returns the parent header if passed 1" do
       db = MerklePatriciaTree.Test.random_ets_db()
 
@@ -122,30 +95,49 @@ defmodule Blockchain.Interface.BlockInterfaceTest do
       Blockchain.Block.put_block(parent_block, db)
       Blockchain.Block.put_block(block, db)
 
-      assert grand_parent_header ==
-               block.header
-               |> Blockchain.Interface.BlockInterface.new(db)
-               |> EVM.Interface.BlockInterface.get_ancestor_header(2)
+      ancestor_header =
+        block.header
+        |> Blockchain.Interface.BlockInterface.new(db)
+        |> EVM.Interface.BlockInterface.get_ancestor_header(2)
+
+      assert grand_parent_header == ancestor_header
     end
-  end
 
-  test "returns nil if n > 256" do
-    db = MerklePatriciaTree.Test.random_ets_db()
-    header = %Block.Header{}
+    test "returns nil if n > 256" do
+      db = MerklePatriciaTree.Test.random_ets_db()
+      header = %Block.Header{}
 
-    assert nil ==
-             header
-             |> Blockchain.Interface.BlockInterface.new(db)
-             |> EVM.Interface.BlockInterface.get_ancestor_header(257)
-  end
+      ancestor_header =
+        header
+        |> Blockchain.Interface.BlockInterface.new(db)
+        |> EVM.Interface.BlockInterface.get_ancestor_header(257)
 
-  test "returns nil if n < 0" do
-    db = MerklePatriciaTree.Test.random_ets_db()
-    header = %Block.Header{}
+      assert is_nil(ancestor_header)
+    end
 
-    assert nil ==
-             header
-             |> Blockchain.Interface.BlockInterface.new(db)
-             |> EVM.Interface.BlockInterface.get_ancestor_header(-1)
+    test "returns nil if n < 0" do
+      db = MerklePatriciaTree.Test.random_ets_db()
+      header = %Block.Header{}
+
+      ancestor_header =
+        header
+        |> Blockchain.Interface.BlockInterface.new(db)
+        |> EVM.Interface.BlockInterface.get_ancestor_header(-1)
+
+      assert is_nil(ancestor_header)
+    end
+
+    test "returns nil if passed 0" do
+      db = MerklePatriciaTree.Test.random_ets_db()
+
+      header = %Block.Header{}
+
+      ancestor_header =
+        header
+        |> Blockchain.Interface.BlockInterface.new(db)
+        |> EVM.Interface.BlockInterface.get_ancestor_header(0)
+
+      assert is_nil(ancestor_header)
+    end
   end
 end
