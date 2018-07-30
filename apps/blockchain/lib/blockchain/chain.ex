@@ -186,7 +186,7 @@ defmodule Blockchain.Chain do
   defp get_genesis_seal(map) do
     %{
       nonce: map["ethereum"]["nonce"] |> load_hex(),
-      mix_hash: map["ethereum"]["mix_hash"] |> load_raw_hex()
+      mix_hash: map["ethereum"]["mixHash"] |> load_raw_hex()
     }
   end
 

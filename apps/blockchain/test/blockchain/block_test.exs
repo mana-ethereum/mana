@@ -23,10 +23,8 @@ defmodule Blockchain.BlockTest do
             difficulty: test["difficulty"] |> maybe_hex,
             author: test["coinbase"] |> maybe_hex,
             seal: %{
-              ethereum: %{
-                mix_hash: test["mixHash"] |> maybe_hex,
-                nonce: test["nonce"] |> maybe_hex
-              }
+              mix_hash: test["mixHash"] |> maybe_hex,
+              nonce: test["nonce"] |> maybe_hex
             }
           },
           accounts: get_test_accounts(test["alloc"])

@@ -29,14 +29,24 @@ defimpl EVM.Interface.BlockInterface, for: EVM.Interface.Mock.MockBlockInterface
   end
 
   @spec get_ancestor_header(EVM.Interface.BlockInterface.t(), integer()) :: Block.Header.t()
-  def get_ancestor_header(mock_block_interface, number) do
-    block =
-      mock_block_interface.block_map
-      |> Map.values()
-      |> Enum.find(fn block -> block.number == number end)
+  def get_ancestor_header(mock_block_interface, nth_back) do
+    current_number = mock_block_interface.block_header.number
+    number_to_find = current_number - nth_back
 
-    if block do
-      mock_block_interface.block_map[block.mix_hash]
+    block_header =
+      mock_block_interface
+      |> get_all_block_headers()
+      |> Enum.find(fn header -> header.number == number_to_find end)
+
+    if block_header do
+      block_header
+    else
+      nil
     end
+  end
+
+  @spec get_all_block_headers(EVM.Interface.BlockInterface.t()) :: [Block.Header.t()]
+  defp get_all_block_headers(mock_block_interface) do
+    Map.values(mock_block_interface.block_map)
   end
 end
