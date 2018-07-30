@@ -468,8 +468,8 @@ defmodule Blockchain.Block do
   """
   @spec set_block_parent_hash(t, t) :: t
   def set_block_parent_hash(block, parent_block) do
-    hash = parent_block.block_hash || hash(parent_block)
-    header = %{block.header | parent_hash: hash}
+    parent_hash = parent_block.block_hash || hash(parent_block)
+    header = %{block.header | parent_hash: parent_hash}
     %{block | header: header}
   end
 
