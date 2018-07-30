@@ -107,7 +107,15 @@ defmodule Blockchain.Blocktree do
         blocktree.block
 
       _ ->
-        {_hash, tree} = Enum.max_by(blocktree.children, fn {_k, v} -> v.total_difficulty end)
+        max_difficulty =
+          blocktree.children
+          |> Enum.map(fn {_k, v} -> v.total_difficulty end)
+          |> Enum.max()
+
+        {_hash, tree} =
+          blocktree.children
+          |> Enum.filter(fn {_k, v} -> v.total_difficulty == max_difficulty end)
+          |> Enum.min_by(fn {_k, v} -> v.block.header.timestamp end)
 
         get_canonical_block(tree)
     end
