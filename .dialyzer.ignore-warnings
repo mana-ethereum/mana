@@ -27,7 +27,6 @@
 -------------------------------
 # TODO: rewrite mocked protocol typespecs
 -------------------------------
-
 lib/evm/interface/mock/mock_account_interface
 lib/evm/interface/mock/mock_block_interface
 lib/evm/machine_code
