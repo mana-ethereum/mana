@@ -22,7 +22,7 @@ defmodule Blockchain.Transaction.Signature do
 
   # The follow are the maximum value for x in the signature, as defined in Eq.(212)
   @secp256k1n 115_792_089_237_316_195_423_570_985_008_687_907_852_837_564_279_074_904_382_605_163_141_518_161_494_337
-  @secp256k1n_2 round(:math.floor(@secp256k1n / 2))
+  @secp256k1n_2 round(Float.floor(@secp256k1n / 2))
   @base_recovery_id 27
   @base_recovery_id_eip_155 35
 

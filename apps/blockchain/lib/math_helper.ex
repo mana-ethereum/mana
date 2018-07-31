@@ -28,7 +28,7 @@ defmodule Blockchain.MathHelper do
     # T_g - trx.gas_limit
     # g' - remaining_gas
     # A'_r - refund
-    max_refund = round(:math.floor((trx.gas_limit - remaining_gas) / 2))
+    max_refund = round(Float.floor((trx.gas_limit - remaining_gas) / 2))
 
     remaining_gas + min(max_refund, refund)
   end
