@@ -88,10 +88,9 @@ defmodule GenerateBlockchainTests do
       |> add_genesis_block(json_test, state, chain)
       |> add_blocks(json_test, state, chain)
 
-    canonical_block = Blocktree.get_canonical_block(blocktree)
     best_block_hash = maybe_hex(json_test["lastblockhash"])
 
-    if canonical_block.block_hash != best_block_hash, do: raise(RuntimeError)
+    if blocktree.best_block.block_hash != best_block_hash, do: raise(RuntimeError)
   end
 
   defp add_genesis_block(blocktree, json_test, state, chain) do

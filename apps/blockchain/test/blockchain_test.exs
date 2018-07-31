@@ -968,7 +968,7 @@ defmodule BlockchainTest do
     "bcForgedTest/bcForkUncle.json",
     "bcForgedTest/bcInvalidRLPTest.json",
     "bcForkStressTest/AmIOnEIP150.json",
-    # "bcForkStressTest/ForkStressTest.json",
+    "bcForkStressTest/ForkStressTest.json",
     "bcGasPricerTest/RPC_API_Test.json",
     "bcGasPricerTest/highGasUsage.json",
     "bcGasPricerTest/notxs.json",
@@ -999,7 +999,7 @@ defmodule BlockchainTest do
     "bcMultiChainTest/ChainAtoChainBCallContractFormA.json",
     "bcMultiChainTest/ChainAtoChainB_BlockHash.json",
     "bcMultiChainTest/ChainAtoChainB_blockorder1.json",
-    # "bcMultiChainTest/ChainAtoChainB_blockorder2.json",
+    "bcMultiChainTest/ChainAtoChainB_blockorder2.json",
     "bcMultiChainTest/ChainAtoChainB_difficultyB.json",
     "bcMultiChainTest/ChainAtoChainBtoChainA.json",
     "bcMultiChainTest/ChainAtoChainBtoChainAtoChainB.json",
@@ -1110,11 +1110,11 @@ defmodule BlockchainTest do
     "bcStateTests/suicideCoinbase.json",
     "bcStateTests/transactionFromNotExistingAccount.json",
     "bcTotalDifficultyTest/lotsOfBranches.json",
-    # "bcTotalDifficultyTest/lotsOfBranchesOverrideAtTheEnd.json",
-    # "bcTotalDifficultyTest/lotsOfBranchesOverrideAtTheMiddle.json",
+    "bcTotalDifficultyTest/lotsOfBranchesOverrideAtTheEnd.json",
+    "bcTotalDifficultyTest/lotsOfBranchesOverrideAtTheMiddle.json",
     "bcTotalDifficultyTest/lotsOfLeafs.json",
-    # "bcTotalDifficultyTest/newChainFrom4Block.json",
-    # "bcTotalDifficultyTest/newChainFrom5Block.json",
+    "bcTotalDifficultyTest/newChainFrom4Block.json",
+    "bcTotalDifficultyTest/newChainFrom5Block.json",
     "bcTotalDifficultyTest/newChainFrom6Block.json",
     "bcTotalDifficultyTest/sideChainWithMoreTransactions.json",
     "bcTotalDifficultyTest/sideChainWithNewMaxDifficultyStartingFromBlock3AfterBlock4.json",
@@ -1230,10 +1230,9 @@ defmodule BlockchainTest do
       |> add_genesis_block(json_test, state, chain)
       |> add_blocks(json_test, state, chain)
 
-    canonical_block = Blocktree.get_canonical_block(blocktree)
     best_block_hash = maybe_hex(json_test["lastblockhash"])
 
-    assert canonical_block.block_hash == best_block_hash
+    assert blocktree.best_block.block_hash == best_block_hash
   end
 
   defp add_genesis_block(blocktree, json_test, state, chain) do

@@ -24,12 +24,14 @@ defmodule Blockchain.Blocktree do
   defstruct block: nil,
             children: [],
             total_difficulty: 0,
+            best_block: nil,
             parent_map: %{}
 
   @type t :: %__MODULE__{
           block: :root | Block.t(),
           children: %{EVM.hash() => t},
           total_difficulty: integer(),
+          best_block: Block.t() | nil,
           parent_map: %{EVM.hash() => EVM.hash()}
         }
 
@@ -66,59 +68,6 @@ defmodule Blockchain.Blocktree do
       total_difficulty: gen_block.header.difficulty,
       parent_map: %{}
     }
-  end
-
-  @doc """
-  Traverses a tree to find the most canonical block.
-  This decides based on blocks with the highest difficulty recursively walking down the tree.
-  Canonical blockchain is defined in Section 10 of the Yellow Paper.
-
-  ## Examples
-
-      iex> Blockchain.Blocktree.new_tree() |> Blockchain.Blocktree.get_canonical_block()
-      :root
-
-      iex> block_1 = %Blockchain.Block{block_hash: <<1>>, header: %Block.Header{number: 0, parent_hash: <<0::256>>, difficulty: 100}}
-      iex> Blockchain.Blocktree.new_tree()
-      ...> |> Blockchain.Blocktree.add_block(block_1)
-      ...> |> Blockchain.Blocktree.get_canonical_block()
-      %Blockchain.Block{block_hash: <<1>>, header: %Block.Header{difficulty: 100, number: 0, parent_hash: <<0::256>>}}
-
-      iex> block_10 = %Blockchain.Block{block_hash: <<10>>, header: %Block.Header{number: 5, parent_hash: <<0::256>>, difficulty: 100}}
-      iex> block_20 = %Blockchain.Block{block_hash: <<20>>, header: %Block.Header{number: 6, parent_hash: <<10>>, difficulty: 110}}
-      iex> block_21 = %Blockchain.Block{block_hash: <<21>>, header: %Block.Header{number: 6, parent_hash: <<10>>, difficulty: 109}}
-      iex> block_30 = %Blockchain.Block{block_hash: <<30>>, header: %Block.Header{number: 7, parent_hash: <<20>>, difficulty: 120}}
-      iex> block_31 = %Blockchain.Block{block_hash: <<31>>, header: %Block.Header{number: 7, parent_hash: <<20>>, difficulty: 119}}
-      iex> block_41 = %Blockchain.Block{block_hash: <<41>>, header: %Block.Header{number: 8, parent_hash: <<30>>, difficulty: 129}}
-      iex> Blockchain.Blocktree.new_tree()
-      ...> |> Blockchain.Blocktree.add_block(block_10)
-      ...> |> Blockchain.Blocktree.add_block(block_20)
-      ...> |> Blockchain.Blocktree.add_block(block_30)
-      ...> |> Blockchain.Blocktree.add_block(block_31)
-      ...> |> Blockchain.Blocktree.add_block(block_41)
-      ...> |> Blockchain.Blocktree.add_block(block_21)
-      ...> |> Blockchain.Blocktree.get_canonical_block()
-      %Blockchain.Block{block_hash: <<41>>, header: %Block.Header{difficulty: 129, number: 8, parent_hash: <<30>>}}
-  """
-  @spec get_canonical_block(t) :: Block.t()
-  def get_canonical_block(blocktree) do
-    case Enum.count(blocktree.children) do
-      0 ->
-        blocktree.block
-
-      _ ->
-        max_difficulty =
-          blocktree.children
-          |> Enum.map(fn {_k, v} -> v.total_difficulty end)
-          |> Enum.max()
-
-        {_hash, tree} =
-          blocktree.children
-          |> Enum.filter(fn {_k, v} -> v.total_difficulty == max_difficulty end)
-          |> Enum.min_by(fn {_k, v} -> v.block.header.timestamp end)
-
-        get_canonical_block(tree)
-    end
   end
 
   @doc """
@@ -242,6 +191,7 @@ defmodule Blockchain.Blocktree do
           }
         },
         total_difficulty: 110,
+        best_block: %Blockchain.Block{block_hash: <<2>>, header: %Block.Header{difficulty: 110, number: 6, parent_hash: <<1>>}},
         parent_map: %{
           <<1>> => <<0::256>>,
           <<2>> => <<1>>,
@@ -260,8 +210,24 @@ defmodule Blockchain.Blocktree do
         raise InvalidBlockError, "No path to root"
 
       {:ok, path} ->
-        do_add_block(blocktree, block, block_hash, path)
+        blocktree
+        |> do_add_block(block, block_hash, path)
+        |> update_best_block(block)
     end
+  end
+
+  @spec update_best_block(t, Block.t()) :: t
+  defp update_best_block(blocktree, block) do
+    best_block = blocktree.best_block
+
+    new_best_block =
+      if is_nil(best_block) || block.header.number > best_block.header.number ||
+           (block.header.number == best_block.header.number &&
+              block.header.difficulty > best_block.header.difficulty),
+         do: block,
+         else: best_block
+
+    %{blocktree | best_block: new_best_block}
   end
 
   # Recursively walk tree and to add children block
