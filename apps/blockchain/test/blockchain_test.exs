@@ -1232,7 +1232,7 @@ defmodule BlockchainTest do
 
     best_block_hash = maybe_hex(json_test["lastblockhash"])
 
-    if blocktree.best_block.block_hash != best_block_hash, do: raise(RuntimeError)
+    assert blocktree.best_block.block_hash == best_block_hash
   end
 
   defp add_genesis_block(blocktree, json_test, state, chain) do
