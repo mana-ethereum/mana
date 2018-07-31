@@ -210,18 +210,24 @@ defmodule Blockchain.Blocktree do
         raise InvalidBlockError, "No path to root"
 
       {:ok, path} ->
-        updated_blocktree = do_add_block(blocktree, block, block_hash, path)
-        best_block = blocktree.best_block
-
-        new_best_block =
-          if is_nil(best_block) || block.header.number > best_block.header.number ||
-               (block.header.number == best_block.header.number &&
-                  block.header.difficulty > best_block.header.difficulty),
-             do: block,
-             else: best_block
-
-        %{updated_blocktree | best_block: new_best_block}
+        blocktree
+        |> do_add_block(block, block_hash, path)
+        |> update_best_block(block)
     end
+  end
+
+  @spec update_best_block(t, Block.t()) :: t
+  defp update_best_block(blocktree, block) do
+    best_block = blocktree.best_block
+
+    new_best_block =
+      if is_nil(best_block) || block.header.number > best_block.header.number ||
+           (block.header.number == best_block.header.number &&
+              block.header.difficulty > best_block.header.difficulty),
+         do: block,
+         else: best_block
+
+    %{blocktree | best_block: new_best_block}
   end
 
   # Recursively walk tree and to add children block
