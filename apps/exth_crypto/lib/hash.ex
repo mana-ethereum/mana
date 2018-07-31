@@ -19,13 +19,13 @@ defmodule ExthCrypto.Hash do
   @doc """
   The SHA1 hasher.
   """
-  @spec sha1() :: ExthCrypto.hash_type()
+  @spec sha1() :: hash_type()
   def sha1, do: {&ExthCrypto.Hash.SHA.sha1/1, nil, 20}
 
   @doc """
   The KECCAK hasher, as defined by Ethereum.
   """
-  @spec kec() :: ExCrpyto.hash_type()
+  @spec kec() :: hash_type()
   def kec, do: {&ExthCrypto.Hash.Keccak.kec/1, nil, 256}
 
   @doc """

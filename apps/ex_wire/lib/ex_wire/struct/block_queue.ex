@@ -423,7 +423,7 @@ defmodule ExWire.Struct.BlockQueue do
     trie.root_hash
   end
 
-  @spec get_ommers_hash([EVM.hash()]) :: ExthCrypto.hash()
+  @spec get_ommers_hash([EVM.hash()]) :: ExthCrypto.Hash.hash()
   defp get_ommers_hash(ommers) do
     ommers |> ExRLP.encode() |> ExthCrypto.Hash.Keccak.kec()
   end
