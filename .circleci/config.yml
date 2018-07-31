@@ -24,11 +24,15 @@ jobs:
       - restore_cache:
           keys:
             - v1-env-cache-{{ arch }}-{{ .Branch }}
+            - v1-env-cache-{{ .Branch }}
+            - v1-env-cache
+
       - restore_cache:
           keys:
             - v1-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
             - v1-mix-cache-{{ .Branch }}
             - v1-mix-cache
+
       - restore_cache:
           keys:
             - v1-build-cache-{{ .Branch }}
@@ -37,6 +41,7 @@ jobs:
       - run:
           command: mix do deps.get, compile
           no_output_timeout: 2400
+
       - run: cd deps/libsecp256k1 && rebar compile
 
       - save_cache:
@@ -44,6 +49,19 @@ jobs:
           paths:
             - $HOME/.cargo
             - $HOME/.rustup
+
+      - save_cache:
+          key: v1-env-cache-{{ .Branch }}
+          paths:
+            - $HOME/.cargo
+            - $HOME/.rustup
+
+      - save_cache:
+          key: v1-env-cache
+          paths:
+            - $HOME/.cargo
+            - $HOME/.rustup
+
       - save_cache:
           key: v1-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
           paths: "deps"
@@ -53,6 +71,7 @@ jobs:
       - save_cache:
           key: v1-mix-cache
           paths: "deps"
+
       - save_cache:
           key: v1-build-cache-{{ .Branch }}
           paths: "_build"
@@ -101,20 +120,58 @@ jobs:
 
       - restore_cache:
           keys:
+            - v1-build-cache-{{ .Branch }}
+            - v1-build-cache
+
+      - restore_cache:
+          keys:
             - v1-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
-            - v1-plt-cache-{{ arch }}-{{ checksum "mix.lock" }}
-            - v1-plt-cache-{{ arch }}
-            - v1-plt-cache
+            - v1-mix-cache-{{ .Branch }}
+            - v1-mix-cache
+
+      - restore_cache:
+          keys:
+            - v1-env-cache-{{ arch}}-{{ .Branch }}
+            - v1-env-cache-{{ .Branch }}
+            - v1-env-cache
+
+      - restore_cache:
+          keys:
+            - v1-plt-cache-{{ ".tool-versions" }}-{{ checksum "mix.lock" }}
+            - v1-plt-cache-{{ ".tool-versions" }}-{{ checksum "mix.exs" }}
+            - v1-plt-cache-{{ ".tool-versions" }}
+
+      - run:
+          name: Unpack PLT cache
+          command: |
+            mkdir -p _build/test
+            cp plts/dialyxir*.plt _build/test/ || true
+            mkdir -p ~/.mix
+            cp plts/dialyxir*.plt ~/.mix/ || true
 
       - run: mix dialyzer --plt
 
+      - run:
+          name: Pack PLT cache
+          command: |
+            mkdir -p plts
+            cp _build/test/dialyxir*.plt plts/
+            cp ~/.mix/dialyxir*.plt plts/
+
       - save_cache:
-          key: v1-plt-cache-{{ arch }}-{{ checksum "mix.lock" }}
+          key: v1-plt-cache-{{ ".tool-versions" }}-{{ checksum "mix.lock" }}
           paths:
-            - _build
-            - ~/.mix
-            - $HOME/.cargo
-            - $HOME/.rustup
+            - plts
+
+      - save_cache:
+          key: v1-plt-cache-{{ ".tool-versions" }}-{{ checksum "mix.exs" }}
+          paths:
+            - plts
+
+      - save_cache:
+          key: v1-plt-cache-{{ ".tool-versions" }}
+          paths:
+            - plts
 
       - run: mix dialyzer --halt-exit-status
 
