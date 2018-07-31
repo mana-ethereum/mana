@@ -24,12 +24,14 @@ defmodule Blockchain.Blocktree do
   defstruct block: nil,
             children: [],
             total_difficulty: 0,
+            best_block: nil,
             parent_map: %{}
 
   @type t :: %__MODULE__{
           block: :root | Block.t(),
           children: %{EVM.hash() => t},
           total_difficulty: integer(),
+          best_block: Block.t() | nil,
           parent_map: %{EVM.hash() => EVM.hash()}
         }
 
@@ -260,7 +262,17 @@ defmodule Blockchain.Blocktree do
         raise InvalidBlockError, "No path to root"
 
       {:ok, path} ->
-        do_add_block(blocktree, block, block_hash, path)
+        updated_blocktree = do_add_block(blocktree, block, block_hash, path)
+        best_block = blocktree.best_block
+
+        new_best_block =
+          if is_nil(best_block) || block.header.number > best_block.header.number ||
+               (block.header.number == best_block.header.number &&
+                  block.header.difficulty > best_block.header.difficulty),
+             do: block,
+             else: best_block
+
+        %{updated_blocktree | best_block: new_best_block}
     end
   end
 
