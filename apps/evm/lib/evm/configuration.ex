@@ -8,6 +8,6 @@ defprotocol EVM.Configuration do
   @spec contract_creation_cost(t) :: integer()
   def contract_creation_cost(t)
 
-  @spec has_static_call?(t) :: boolean()
-  def has_static_call?(t)
+  @spec has_delegate_call?(t) :: boolean()
+  def has_delegate_call?(t)
 end

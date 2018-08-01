@@ -1,5 +1,5 @@
-defmodule Blockchain.Configuration.HomesteadTest do
-  defstruct contract_creation_cost: 53_000, has_static_call: true
+defmodule EVM.Configuration.HomesteadTest do
+  defstruct contract_creation_cost: 53_000, has_delegate_call: true
 
   def new do
     %__MODULE__{}
@@ -10,6 +10,6 @@ defimpl EVM.Configuration, for: Blockchain.Configuration.HomesteadTest do
   @spec contract_creation_cost(EVM.Configuration.t()) :: integer()
   def contract_creation_cost(config), do: config.contract_creation_cost
 
-  @spec has_static_call?(EVM.Configuration.t()) :: boolean()
-  def has_static_call?(config), do: config.has_static_call
+  @spec has_delegate_call?(EVM.Configuration.t()) :: boolean()
+  def has_delegate_call?(config), do: config.has_delegate_call
 end

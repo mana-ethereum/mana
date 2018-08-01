@@ -100,7 +100,7 @@ defmodule EVM.Functions do
   # credo:disable-for-next-line
   def is_exception_halt?(machine_state, exec_env) do
     operation = Operation.get_operation_at(exec_env.machine_code, machine_state.program_counter)
-    operation_metadata = Operation.metadata(operation)
+    operation_metadata = operation_metadata(operation, exec_env)
     # dw
     input_count = Map.get(operation_metadata || %{}, :input_count)
     # aw
@@ -132,6 +132,22 @@ defmodule EVM.Functions do
 
       true ->
         :continue
+    end
+  end
+
+  def operation_metadata(operation, exec_env) do
+    operation_metadata = Operation.metadata(operation)
+
+    if operation_metadata do
+      config = exec_env.config
+
+      case operation_metadata.sym do
+        :delegatecall ->
+          if EVM.Configuration.has_delegate_call?(config), do: operation_metadata
+
+        _ ->
+          operation_metadata
+      end
     end
   end
 

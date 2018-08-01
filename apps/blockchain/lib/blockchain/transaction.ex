@@ -162,7 +162,12 @@ defmodule Blockchain.Transaction do
   """
   @spec execute_with_validation(EVM.state(), t, Header.t()) ::
           {EVM.state(), Gas.t(), EVM.SubState.logs(), EVM.Configuration.t()}
-  def execute_with_validation(state, tx, block_header, config \\ EVM.Configuration.Default.new()) do
+  def execute_with_validation(
+        state,
+        tx,
+        block_header,
+        config \\ EVM.Configuration.FrontierTest.new()
+      ) do
     validation_result = Validity.validate(state, tx, block_header, config)
 
     with :valid <- validation_result do
@@ -182,7 +187,7 @@ defmodule Blockchain.Transaction do
   """
   @spec execute(EVM.state(), t, Header.t(), EVM.Configuration.t()) ::
           {EVM.state(), Gas.t(), EVM.SubState.logs()}
-  def execute(state, tx, block_header, config \\ EVM.Configuration.Default.new()) do
+  def execute(state, tx, block_header, config \\ EVM.Configuration.FrontierTest.new()) do
     {:ok, sender} = Transaction.Signature.sender(tx)
 
     state_0 = begin_transaction(state, sender, tx)

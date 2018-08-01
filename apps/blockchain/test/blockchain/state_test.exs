@@ -2349,81 +2349,81 @@ defmodule Blockchain.StateTest do
   end
 
   defp run_test(test) do
-    if Map.has_key?(test["post"], "Frontier") do
-      test["post"]["Frontier"]
-      |> Enum.with_index()
-      |> Enum.each(fn {post, index} ->
-        pre_state = account_interface(test).state
+    test["post"]
+    |> Enum.each(fn {hardfork, _test_data} ->
+      hardfork_configuration = configuration(hardfork)
 
-        indexes = post["indexes"]
-        gas_limit_index = indexes["gas"]
-        value_index = indexes["value"]
-        data_index = indexes["data"]
+      if hardfork_configuration do
+        run_transaction(test, hardfork, hardfork_configuration)
+      end
+    end)
+  end
 
-        test["post"]
-        |> Enum.each(fn {hardfork, post_values} ->
-          hardfork_configuration = configuration(hardfork)
+  defp run_transaction(test, hardfork, hardfork_configuration) do
+    test["post"][hardfork]
+    |> Enum.with_index()
+    |> Enum.each(fn {post, index} ->
+      pre_state = account_interface(test).state
 
-          if hardfork_configuration do
-            transaction =
-              %Transaction{
-                nonce: load_integer(test["transaction"]["nonce"]),
-                gas_price: load_integer(test["transaction"]["gasPrice"]),
-                gas_limit:
-                  load_integer(Enum.at(test["transaction"]["gasLimit"], gas_limit_index)),
-                to: maybe_hex(test["transaction"]["to"]),
-                value: load_integer(Enum.at(test["transaction"]["value"], value_index))
-              }
-              |> populate_init_or_data(
-                maybe_hex(Enum.at(test["transaction"]["data"], data_index))
-              )
-              |> Transaction.Signature.sign_transaction(
-                maybe_hex(test["transaction"]["secretKey"])
-              )
+      indexes = post["indexes"]
+      gas_limit_index = indexes["gas"]
+      value_index = indexes["value"]
+      data_index = indexes["data"]
 
-            result =
-              Transaction.execute_with_validation(
-                pre_state,
-                transaction,
-                %Block.Header{
-                  beneficiary: maybe_hex(test["env"]["currentCoinbase"]),
-                  difficulty: load_integer(test["env"]["currentDifficulty"]),
-                  timestamp: load_integer(test["env"]["currentTimestamp"]),
-                  number: load_integer(test["env"]["currentNumber"]),
-                  gas_limit: load_integer(test["env"]["currentGasLimit"]),
-                  parent_hash: maybe_hex(test["env"]["previousHash"])
-                },
-                hardfork_configuration
-              )
+      transaction =
+        %Transaction{
+          nonce: load_integer(test["transaction"]["nonce"]),
+          gas_price: load_integer(test["transaction"]["gasPrice"]),
+          gas_limit: load_integer(Enum.at(test["transaction"]["gasLimit"], gas_limit_index)),
+          to: maybe_hex(test["transaction"]["to"]),
+          value: load_integer(Enum.at(test["transaction"]["value"], value_index))
+        }
+        |> populate_init_or_data(maybe_hex(Enum.at(test["transaction"]["data"], data_index)))
+        |> Transaction.Signature.sign_transaction(maybe_hex(test["transaction"]["secretKey"]))
 
-            {state, logs} =
-              case result do
-                {state, _, logs} -> {state, logs}
-                _ -> {pre_state, []}
-              end
+      result =
+        Transaction.execute_with_validation(
+          pre_state,
+          transaction,
+          %Block.Header{
+            beneficiary: maybe_hex(test["env"]["currentCoinbase"]),
+            difficulty: load_integer(test["env"]["currentDifficulty"]),
+            timestamp: load_integer(test["env"]["currentTimestamp"]),
+            number: load_integer(test["env"]["currentNumber"]),
+            gas_limit: load_integer(test["env"]["currentGasLimit"]),
+            parent_hash: maybe_hex(test["env"]["previousHash"])
+          },
+          hardfork_configuration
+        )
 
-            expected_hash =
-              post_values
-              |> Enum.at(index)
-              |> Map.fetch!("hash")
-              |> maybe_hex()
+      {state, logs} =
+        case result do
+          {state, _, logs} -> {state, logs}
+          _ -> {pre_state, []}
+        end
 
-            assert state.root_hash == expected_hash
+      expected_hash =
+        test["post"][hardfork]
+        |> Enum.at(index)
+        |> Map.fetch!("hash")
+        |> maybe_hex()
 
-            expected_logs = test["post"][hardfork] |> Enum.at(index) |> Map.fetch!("logs")
-            logs_hash = logs_hash(logs)
-            assert maybe_hex(expected_logs) == logs_hash
-          end
-        end)
-      end)
-    end
+      assert state.root_hash == expected_hash
+
+      expected_logs = test["post"][hardfork] |> Enum.at(index) |> Map.fetch!("logs")
+      logs_hash = logs_hash(logs)
+      assert maybe_hex(expected_logs) == logs_hash
+    end)
   end
 
   def configuration(hardfork) do
     case hardfork do
-      "Frontier" -> EVM.Configuration.Default.new()
-      "Homestead" -> Blockchain.Configuration.HomesteadTest.new()
-      _ -> nil
+      "Frontier" ->
+        EVM.Configuration.FrontierTest.new()
+
+      # "Homestead" -> EVM.Configuration.HomesteadTest.new()
+      _ ->
+        nil
     end
   end
 
