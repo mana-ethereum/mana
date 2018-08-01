@@ -131,7 +131,7 @@ jobs:
 
       - restore_cache:
           keys:
-            - v1-env-cache-{{ arch}}-{{ .Branch }}
+            - v1-env-cache-{{ arch }}-{{ .Branch }}
             - v1-env-cache-{{ .Branch }}
             - v1-env-cache
 
