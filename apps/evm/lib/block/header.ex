@@ -635,4 +635,7 @@ defmodule Block.Header do
         gas_limit >= min_gas_limit
     end
   end
+
+  @spec mined_by?(t, EVM.address()) :: boolean()
+  def mined_by?(header, address), do: header.beneficiary == address
 end

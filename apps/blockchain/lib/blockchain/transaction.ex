@@ -190,8 +190,23 @@ defmodule Blockchain.Transaction do
   def execute(state, tx, block_header, config \\ EVM.Configuration.Frontier.new()) do
     {:ok, sender} = Transaction.Signature.sender(tx)
 
-    state_0 = begin_transaction(state, sender, tx)
+    {updated_state, remaining_gas, sub_state} =
+      state
+      |> begin_transaction(sender, tx)
+      |> apply_transaction(tx, block_header, sender)
 
+    {expended_gas, refund} = calculate_gas_usage(tx, remaining_gas, sub_state)
+
+    final_state =
+      updated_state
+      |> pay_and_refund_gas(sender, tx, refund, block_header)
+      |> clean_up_accounts_marked_for_destruction(sub_state, block_header)
+
+    # { σ', Υ^g, Υ^l }, as defined in Eq.(79) and Eq.(80)
+    {final_state, expended_gas, sub_state.logs}
+  end
+
+  defp apply_transaction(state, tx, block_header, sender) do
     # sender and originator are the same for transaction execution
     originator = sender
     # stack depth starts at zero for transaction execution
@@ -202,60 +217,52 @@ defmodule Blockchain.Transaction do
     gas = tx.gas_limit - intrinsic_gas_cost(tx, config)
 
     # TODO: Sender versus originator?
-    {state_p, remaining_gas, sub_state} =
-      if contract_creation?(tx) do
-        params = %Contract.CreateContract{
-          state: state_0,
-          sender: sender,
-          originator: originator,
-          available_gas: gas,
-          gas_price: tx.gas_price,
-          endowment: tx.value,
-          init_code: tx.init,
-          stack_depth: stack_depth,
-          block_header: block_header,
-          config: config
-        }
+    if contract_creation?(tx) do
+      params = %Contract.CreateContract{
+        state: state,
+        sender: sender,
+        originator: originator,
+        available_gas: gas,
+        gas_price: tx.gas_price,
+        endowment: tx.value,
+        init_code: tx.init,
+        stack_depth: stack_depth,
+        block_header: block_header,
+        config: config
+      }
 
-        {_, result} = Contract.create(params)
-        result
-      else
-        params = %Contract.MessageCall{
-          state: state_0,
-          sender: sender,
-          originator: originator,
-          recipient: tx.to,
-          contract: tx.to,
-          available_gas: gas,
-          gas_price: tx.gas_price,
-          value: tx.value,
-          apparent_value: apparent_value,
-          data: tx.data,
-          stack_depth: stack_depth,
-          block_header: block_header,
-          config: config
-        }
+      {_, result} = Contract.create(params)
+      result
+    else
+      params = %Contract.MessageCall{
+        state: state,
+        sender: sender,
+        originator: originator,
+        recipient: tx.to,
+        contract: tx.to,
+        available_gas: gas,
+        gas_price: tx.gas_price,
+        value: tx.value,
+        apparent_value: apparent_value,
+        data: tx.data,
+        stack_depth: stack_depth,
+        block_header: block_header,
+        config: config
+      }
 
-        # Note, we only want to take the first 3 items from the tuples,
-        # as designated Θ_3 in the literature Θ_3
-        {state, remaining_gas_, sub_state_, _output} = Contract.message_call(params)
+      # Note, we only want to take the first 3 items from the tuples,
+      # as designated Θ_3 in the literature Θ_3
+      {state, remaining_gas_, sub_state_, _output} = Contract.message_call(params)
 
-        {state, remaining_gas_, sub_state_}
-      end
+      {state, remaining_gas_, sub_state_}
+    end
+  end
 
+  defp calculate_gas_usage(tx, remaining_gas, sub_state) do
     refund = MathHelper.calculate_total_refund(tx, remaining_gas, sub_state.refund)
-
-    state_after_gas = finalize_transaction_gas(state_p, sender, tx, refund, block_header)
-
-    state_after_selfdestruct =
-      Enum.reduce(sub_state.selfdestruct_list, state_after_gas, fn address, state ->
-        Account.del_account(state, address)
-      end)
-
     expended_gas = tx.gas_limit - refund
 
-    # { σ', Υ^g, Υ^l }, as defined in Eq.(79) and Eq.(80)
-    {state_after_selfdestruct, expended_gas, sub_state.logs}
+    {expended_gas, refund}
   end
 
   @doc """
@@ -298,21 +305,31 @@ defmodule Blockchain.Transaction do
       iex> state = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
       ...>   |> Blockchain.Account.put_account(<<0x01::160>>, %Blockchain.Account{balance: 11})
       ...>   |> Blockchain.Account.put_account(<<0x02::160>>, %Blockchain.Account{balance: 22})
-      iex> Blockchain.Transaction.finalize_transaction_gas(state, <<0x01::160>>, trx, 5, %Block.Header{beneficiary: <<0x02::160>>})
+      iex> Blockchain.Transaction.pay_and_refund_gas(state, <<0x01::160>>, trx, 5, %Block.Header{beneficiary: <<0x02::160>>})
       ...>   |> Blockchain.Account.get_accounts([<<0x01::160>>, <<0x02::160>>])
       [
         %Blockchain.Account{balance: 61},
         %Blockchain.Account{balance: 272},
       ]
   """
-  @spec finalize_transaction_gas(EVM.state(), EVM.address(), t, Gas.t(), Block.Header.t()) ::
+  @spec pay_and_refund_gas(EVM.state(), EVM.address(), t, Gas.t(), Block.Header.t()) ::
           EVM.state()
-  def finalize_transaction_gas(state, sender, trx, total_refund, block_header) do
+  def pay_and_refund_gas(state, sender, trx, total_refund, block_header) do
     # Eq.(74)
     # Eq.(75)
     state
     |> Account.add_wei(sender, total_refund * trx.gas_price)
     |> Account.add_wei(block_header.beneficiary, (trx.gas_limit - total_refund) * trx.gas_price)
+  end
+
+  defp clean_up_accounts_marked_for_destruction(state, sub_state, block_header) do
+    Enum.reduce(sub_state.selfdestruct_list, state, fn address, new_state ->
+      if Header.mined_by?(block_header, address) do
+        Account.reset_account(new_state, address)
+      else
+        Account.del_account(new_state, address)
+      end
+    end)
   end
 
   @doc """
