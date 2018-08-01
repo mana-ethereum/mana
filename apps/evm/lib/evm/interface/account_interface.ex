@@ -79,7 +79,8 @@ defprotocol EVM.Interface.AccountInterface do
           EVM.Wei.t(),
           EVM.MachineCode.t(),
           integer(),
-          Header.t()
+          Header.t(),
+          EVM.Configuration.t()
         ) :: {:ok | :error, {t, EVM.Gas.t(), EVM.SubState.t()}}
   def create_contract(
         t,
@@ -90,7 +91,8 @@ defprotocol EVM.Interface.AccountInterface do
         endowment,
         init_code,
         stack_depth,
-        block_header
+        block_header,
+        config
       )
 
   @spec new_contract_address(t, EVM.address(), integer()) :: EVM.address()

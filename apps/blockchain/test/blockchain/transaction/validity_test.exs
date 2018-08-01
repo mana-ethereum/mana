@@ -21,7 +21,7 @@ defmodule Blockchain.Transaction.ValidityTest do
       result =
         MerklePatriciaTree.Test.random_ets_db()
         |> MerklePatriciaTree.Trie.new()
-        |> Validity.validate(trx, %Block.Header{})
+        |> Validity.validate(trx, %Block.Header{}, EVM.Configuration.FrontierTest.new())
 
       assert result == {:invalid, :invalid_sender}
     end
@@ -44,7 +44,7 @@ defmodule Blockchain.Transaction.ValidityTest do
       result =
         MerklePatriciaTree.Test.random_ets_db()
         |> MerklePatriciaTree.Trie.new()
-        |> Validity.validate(trx, %Block.Header{})
+        |> Validity.validate(trx, %Block.Header{}, EVM.Configuration.FrontierTest.new())
 
       assert result == {:invalid, :missing_account}
     end
@@ -71,7 +71,7 @@ defmodule Blockchain.Transaction.ValidityTest do
         MerklePatriciaTree.Test.random_ets_db()
         |> MerklePatriciaTree.Trie.new()
         |> Account.put_account(sender, %Account{balance: 1000, nonce: 5})
-        |> Validity.validate(trx, %Block.Header{})
+        |> Validity.validate(trx, %Block.Header{}, EVM.Configuration.FrontierTest.new())
 
       assert result ==
                {:invalid,
@@ -105,7 +105,7 @@ defmodule Blockchain.Transaction.ValidityTest do
         MerklePatriciaTree.Test.random_ets_db()
         |> MerklePatriciaTree.Trie.new()
         |> Account.put_account(sender, %Account{balance: 1000, nonce: 5})
-        |> Validity.validate(trx, %Block.Header{})
+        |> Validity.validate(trx, %Block.Header{}, EVM.Configuration.FrontierTest.new())
 
       assert result ==
                {:invalid, [:over_gas_limit, :insufficient_balance, :insufficient_intrinsic_gas]}
@@ -133,7 +133,7 @@ defmodule Blockchain.Transaction.ValidityTest do
         MerklePatriciaTree.Test.random_ets_db()
         |> MerklePatriciaTree.Trie.new()
         |> Account.put_account(sender, %Account{balance: 1000, nonce: 5})
-        |> Validity.validate(trx, %Block.Header{})
+        |> Validity.validate(trx, %Block.Header{}, EVM.Configuration.FrontierTest.new())
 
       assert result == {:invalid, [:over_gas_limit, :insufficient_balance]}
     end
@@ -160,7 +160,11 @@ defmodule Blockchain.Transaction.ValidityTest do
         MerklePatriciaTree.Test.random_ets_db()
         |> MerklePatriciaTree.Trie.new()
         |> Account.put_account(sender, %Account{balance: 100_006, nonce: 5})
-        |> Validity.validate(trx, %Block.Header{gas_limit: 50_000, gas_used: 49_999})
+        |> Validity.validate(
+          trx,
+          %Block.Header{gas_limit: 50_000, gas_used: 49_999},
+          EVM.Configuration.FrontierTest.new()
+        )
 
       assert result == {:invalid, [:over_gas_limit]}
     end
@@ -187,7 +191,11 @@ defmodule Blockchain.Transaction.ValidityTest do
         MerklePatriciaTree.Test.random_ets_db()
         |> MerklePatriciaTree.Trie.new()
         |> Account.put_account(sender, %Account{balance: 100_006, nonce: 5})
-        |> Validity.validate(trx, %Block.Header{gas_limit: 500_000, gas_used: 49_999})
+        |> Validity.validate(
+          trx,
+          %Block.Header{gas_limit: 500_000, gas_used: 49_999},
+          EVM.Configuration.FrontierTest.new()
+        )
 
       assert result == :valid
     end

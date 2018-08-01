@@ -49,7 +49,8 @@ defmodule EVM.Operation.System do
           # stack_depth
           n_exec_env.stack_depth + 1,
           # block_header
-          block_header
+          block_header,
+          exec_env.config
         )
       else
         {:error, {exec_env.account_interface, machine_state.gas, SubState.empty()}}

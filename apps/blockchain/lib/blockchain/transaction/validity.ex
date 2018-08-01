@@ -51,9 +51,9 @@ defmodule Blockchain.Transaction.Validity do
     end
   end
 
-  @spec check_intristic_gas([atom()], Transaction.t(), Block.Header.t()) :: [atom()]
-  defp check_intristic_gas(errors, transaction, block_header) do
-    intrinsic_gas_cost = Transaction.intrinsic_gas_cost(transaction, block_header)
+  @spec check_intristic_gas([atom()], Transaction.t(), EVM.Configuration.t()) :: [atom()]
+  defp check_intristic_gas(errors, transaction, config) do
+    intrinsic_gas_cost = Transaction.intrinsic_gas_cost(transaction, config)
 
     if intrinsic_gas_cost > transaction.gas_limit do
       [:insufficient_intrinsic_gas | errors]

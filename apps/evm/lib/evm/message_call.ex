@@ -132,7 +132,8 @@ defmodule EVM.MessageCall do
       machine_code: machine_code,
       stack_depth: message_call.stack_depth + 1,
       account_interface: message_call.current_exec_env.account_interface,
-      block_interface: message_call.current_exec_env.block_interface
+      block_interface: message_call.current_exec_env.block_interface,
+      config: message_call.current_exec_env.config
     }
   end
 

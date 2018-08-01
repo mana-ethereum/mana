@@ -1,3 +1,4 @@
+
 # protocol warnings
 
 :0: Unknown function 'Elixir.EVM.Interface.AccountInterface.Atom':'__impl__'/1
@@ -22,7 +23,17 @@
 :0: Unknown function 'Elixir.EVM.Interface.BlockInterface.Port':'__impl__'/1
 :0: Unknown function 'Elixir.EVM.Interface.BlockInterface.Reference':'__impl__'/1
 :0: Unknown function 'Elixir.EVM.Interface.BlockInterface.Tuple':'__impl__'/1
-
+:0: Unknown function 'Elixir.EVM.Configuration.Atom':'__impl__'/1
+:0: Unknown function 'Elixir.EVM.Configuration.BitString':'__impl__'/1
+:0: Unknown function 'Elixir.EVM.Configuration.Float':'__impl__'/1
+:0: Unknown function 'Elixir.EVM.Configuration.Function':'__impl__'/1
+:0: Unknown function 'Elixir.EVM.Configuration.Integer':'__impl__'/1
+:0: Unknown function 'Elixir.EVM.Configuration.List':'__impl__'/1
+:0: Unknown function 'Elixir.EVM.Configuration.Map':'__impl__'/1
+:0: Unknown function 'Elixir.EVM.Configuration.PID':'__impl__'/1
+:0: Unknown function 'Elixir.EVM.Configuration.Port':'__impl__'/1
+:0: Unknown function 'Elixir.EVM.Configuration.Reference':'__impl__'/1
+:0: Unknown function 'Elixir.EVM.Configuration.Tuple':'__impl__'/1
 
 -------------------------------
 # TODO: rewrite mocked protocol typespecs
