@@ -6,7 +6,7 @@ Mana-Ethereum is an open-source Ethereum blockchain client built using [Elixir](
 
 In the current Ethereum ecosystem, a majority of active nodes on the network are Geth or Parity nodes. Mana-Ethereum provides an additional open-source alternative. Our aim is to create an open, well-documented implementation that closely matches the protocols described in the [Ethereum yellow paper](https://ethereum.github.io/yellowpaper/paper.pdf).
 
-Mana-Ethereum is currently in development.
+Mana-Ethereum is currently in development. See the [Project Status](#project-status) for more information.
 
 # Dependencies
 
@@ -29,8 +29,8 @@ git clone --recurse-submodules https://github.com/poanetwork/mana.git
 # Running a node
 
 Currently, peer-to-peer communication is incomplete, but if you would like
-to partially sync blocks, you can use an experimental script to sync with
-`Infura`:
+to partially sync blocks, you can use an experimental script to [sync with
+Infura](https://github.com/poanetwork/mana/blob/master/apps/blockchain/scripts/sync_with_infura.ex). This script downloads blocks from Infura, runs the transactions inside them then verifies the block.
 
 ## Running the sync_with_infura script
 
@@ -51,6 +51,11 @@ to partially sync blocks, you can use an experimental script to sync with
 `mix run apps/blockchain/scripts/sync_with_infura.ex`
 
 If running properly, you will see a timestamp in hr/min/sec/millisec and a running list of Verified Blocks.
+
+### Infura sync issues
+
+- When running the script mainnet fails on block [116523](https://etherscan.io/txs?block=116524) with a `state_root_mismatch` error. We believe [this transaction](https://etherscan.io/tx/0x5dd753ec16e8bf9429f7583b7cf7d4302daeb9616660051b8038da0f4b9f3e41) is causing the issue.
+- Ropsten fails on block [11](https://ropsten.etherscan.io/txs?block=11) with a `state_root_mismatch` error as well.
 
 # Testing
 
@@ -77,6 +82,31 @@ cd apps/blockchain && mix test test/blockchain/state_test.exs
 cd apps/blockchain && mix test test/blockchain/transaction_test.exs
 ```
 
+## Test Status
+
+Ethereum common tests are created for all clients to test against. We plan to progress through supported hard fork test protocols, and are currently working on the Homestead tests. See the [common test documentation](http://ethereum-tests.readthedocs.io/en/latest/index.html) for more information.
+
+- [x] Frontier: 100% tests passing
+  - Passing Frontier tests: 1325/1325 = 100%
+    - [VMTests](https://github.com/ethereum/tests/tree/develop/VMTests/vmTests) = 100% passing
+    - [BlockchainTests](https://github.com/ethereum/tests/tree/develop/BlockchainTests) (Includes GeneralStateTests) 1325/1325 = 100% passing
+    - [GeneralStateTests](https://github.com/ethereum/tests/tree/develop/GeneralStateTests)(723/738) = 98% passing
+  - Failing Frontier tests: 0/1325 = 0% 
+- [ ] Homestead
+- [ ] EIP150
+- [ ] EIP158
+- [ ] Byzantium
+- [ ] Constantinople:  View the community [Constantinople Project Tracker](https://github.com/ethereum/pm/issues/53).
+
+# Project Status
+
+| Functionality | Status          | 
+| ------------- |-------------- | 
+| Encoding and Hashing | The [RLP](https://hex.pm/packages/ex_rlp) encoding protocol and the [Merkle Patricia Tree](https://github.com/poanetwork/mana/tree/master/apps/merkle_patricia_tree) data structure are fully implemented.| 
+| [Ethereum Virtual Machine](https://github.com/poanetwork/mana/tree/master/apps/evm) | Our EVM currently passes 100% of the common [VM tests](https://github.com/ethereum/tests/tree/develop/VMTests). We are still discovering subtle differences in our implementation such as the [“vanishing Ether” issue](https://github.com/poanetwork/mana/commit/aa3056efe341dd548a750c6f5b4c8962ccef2518). This component is for the most part complete.    |  
+| Peer to Peer Networking | Currently we can connect to one of the Ethereum bootnodes, get a list of peers, and add them to a list of known peers. We have fully implemented the modified [kademlia DHT](https://github.com/poanetwork/mana/tree/master/apps/ex_wire/lib/ex_wire/kademlia). <br /><br />We can also successfully perform the encrypted handshake with peer nodes and derive secrets to frame the rest of the messages. We have not yet implemented the ability to send [multi-frame packets](https://github.com/ethereum/devp2p/blob/master/rlpx.md#framing). See Issue [#97](https://github.com/poanetwork/mana/issues/97).  |
+| DEVp2p Protocol and Ethereum Wire Protocol | These are partially implemented but need to be completed. See Issue [#166](https://github.com/poanetwork/mana/issues/166) and Issue [#167](https://github.com/poanetwork/mana/issues/167). |     
+
 # Documentation
 To view module and reference documentation:
 
@@ -85,7 +115,6 @@ To view module and reference documentation:
 
 2. View the generated docs.  
 `open doc/index.html`
-
 
 # License
 
@@ -101,8 +130,7 @@ See the [CONTRIBUTING](CONTRIBUTING.md) document for contribution, testing and p
 
 # References
 
-* [Ethereum yellow paper](https://ethereum.github.io/yellowpaper/paper.pdf)(ETHEREUM: A SECURE DECENTRALISED GENERALISED TRANSACTION LEDGER
-BYZANTIUM VERSION )
+* [Ethereum yellow paper](https://ethereum.github.io/yellowpaper/paper.pdf)(Ethereum: A Secure Decentralised Generalised Transaction Ledger Byzantium Version)
 
 * [Message Calls in Ethereum](http://www.badykov.com/ethereum/2018/06/17/message-calls-in-ethereum/)
 
@@ -112,4 +140,3 @@ Additional Ethereum Implementations
 * [Go-Ethereum (Geth)](https://github.com/ethereum/go-ethereum/)
 * [EthereumJS](https://github.com/ethereumjs/ethereumjs-vm)
 * [Py-EVM](https://github.com/ethereum/py-evm)
-
