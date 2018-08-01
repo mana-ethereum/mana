@@ -2360,45 +2360,70 @@ defmodule Blockchain.StateTest do
         value_index = indexes["value"]
         data_index = indexes["data"]
 
-        transaction =
-          %Transaction{
-            nonce: load_integer(test["transaction"]["nonce"]),
-            gas_price: load_integer(test["transaction"]["gasPrice"]),
-            gas_limit: load_integer(Enum.at(test["transaction"]["gasLimit"], gas_limit_index)),
-            to: maybe_hex(test["transaction"]["to"]),
-            value: load_integer(Enum.at(test["transaction"]["value"], value_index))
-          }
-          |> populate_init_or_data(maybe_hex(Enum.at(test["transaction"]["data"], data_index)))
-          |> Transaction.Signature.sign_transaction(maybe_hex(test["transaction"]["secretKey"]))
+        test["post"]
+        |> Enum.each(fn {hardfork, post_values} ->
+          hardfork_configuration = configuration(hardfork)
 
-        result =
-          Transaction.execute_with_validation(pre_state, transaction, %Block.Header{
-            beneficiary: maybe_hex(test["env"]["currentCoinbase"]),
-            difficulty: load_integer(test["env"]["currentDifficulty"]),
-            timestamp: load_integer(test["env"]["currentTimestamp"]),
-            number: load_integer(test["env"]["currentNumber"]),
-            gas_limit: load_integer(test["env"]["currentGasLimit"]),
-            parent_hash: maybe_hex(test["env"]["previousHash"])
-          })
+          if hardfork_configuration do
+            transaction =
+              %Transaction{
+                nonce: load_integer(test["transaction"]["nonce"]),
+                gas_price: load_integer(test["transaction"]["gasPrice"]),
+                gas_limit:
+                  load_integer(Enum.at(test["transaction"]["gasLimit"], gas_limit_index)),
+                to: maybe_hex(test["transaction"]["to"]),
+                value: load_integer(Enum.at(test["transaction"]["value"], value_index))
+              }
+              |> populate_init_or_data(
+                maybe_hex(Enum.at(test["transaction"]["data"], data_index))
+              )
+              |> Transaction.Signature.sign_transaction(
+                maybe_hex(test["transaction"]["secretKey"])
+              )
 
-        {state, logs} =
-          case result do
-            {state, _, logs} -> {state, logs}
-            _ -> {pre_state, []}
+            result =
+              Transaction.execute_with_validation(
+                pre_state,
+                transaction,
+                %Block.Header{
+                  beneficiary: maybe_hex(test["env"]["currentCoinbase"]),
+                  difficulty: load_integer(test["env"]["currentDifficulty"]),
+                  timestamp: load_integer(test["env"]["currentTimestamp"]),
+                  number: load_integer(test["env"]["currentNumber"]),
+                  gas_limit: load_integer(test["env"]["currentGasLimit"]),
+                  parent_hash: maybe_hex(test["env"]["previousHash"])
+                },
+                hardfork_configuration
+              )
+
+            {state, logs} =
+              case result do
+                {state, _, logs} -> {state, logs}
+                _ -> {pre_state, []}
+              end
+
+            expected_hash =
+              post_values
+              |> Enum.at(index)
+              |> Map.fetch!("hash")
+              |> maybe_hex()
+
+            assert state.root_hash == expected_hash
+
+            expected_logs = test["post"][hardfork] |> Enum.at(index) |> Map.fetch!("logs")
+            logs_hash = logs_hash(logs)
+            assert maybe_hex(expected_logs) == logs_hash
           end
-
-        expected_hash =
-          test["post"]["Frontier"]
-          |> Enum.at(index)
-          |> Map.fetch!("hash")
-          |> maybe_hex()
-
-        assert state.root_hash == expected_hash
-
-        expected_logs = test["post"]["Frontier"] |> Enum.at(index) |> Map.fetch!("logs")
-        logs_hash = logs_hash(logs)
-        assert maybe_hex(expected_logs) == logs_hash
+        end)
       end)
+    end
+  end
+
+  def configuration(hardfork) do
+    case hardfork do
+      "Frontier" -> EVM.Configuration.Default.new()
+      "Homestead" -> Blockchain.Configuration.HomesteadTest.new()
+      _ -> nil
     end
   end
 
