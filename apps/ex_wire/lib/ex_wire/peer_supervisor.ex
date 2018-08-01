@@ -23,7 +23,7 @@ defmodule ExWire.PeerSupervisor do
       for bootnode <- bootnodes do
         {:ok, peer} = ExWire.Struct.Peer.from_uri(bootnode)
 
-        worker(ExWire.Adapter.TCP, [:outbound, peer, [{:server, ExWire.Sync}]])
+        worker(ExWire.P2P.Server, [:outbound, peer, [{:server, ExWire.Sync}]])
       end
 
     Supervisor.init(children, strategy: :one_for_one)
@@ -39,7 +39,7 @@ defmodule ExWire.PeerSupervisor do
 
     for {_id, child, _type, _modules} <- Supervisor.which_children(pid) do
       # Children which are being restarted by not have a child_pid at this time.
-      if is_pid(child), do: ExWire.Adapter.TCP.send_packet(child, packet)
+      if is_pid(child), do: ExWire.P2P.Server.send_packet(child, packet)
     end
   end
 end

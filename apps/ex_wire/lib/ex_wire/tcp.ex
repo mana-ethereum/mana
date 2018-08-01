@@ -5,7 +5,7 @@ defmodule ExWire.TCP do
 
   @spec listen(integer()) :: {:ok, port()} | {:error, any()}
   def listen(port_number) do
-    :gen_tcp.listen(port_number, [:binary, active: false])
+    :gen_tcp.listen(port_number, [:binary, active: false, reuseaddr: true])
   end
 
   @spec accept_connection(port()) :: {:ok, port()} | {:error, any()}
