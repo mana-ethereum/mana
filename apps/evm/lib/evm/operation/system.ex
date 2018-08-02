@@ -137,7 +137,7 @@ defmodule EVM.Operation.System do
       recipient: exec_env.address,
       code_owner: to,
       gas_price: exec_env.gas_price,
-      value: 0,
+      value: exec_env.value_in_wei,
       execution_value: call_gas,
       data: data,
       stack_depth: exec_env.stack_depth
