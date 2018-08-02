@@ -141,8 +141,8 @@ defmodule ExWire.Sync do
 
   def request_next_block(block_tree) do
     next_number =
-      case Blockchain.Blocktree.get_canonical_block(block_tree) do
-        :root -> 0
+      case block_tree.best_block do
+        nil -> 0
         %Blockchain.Block{header: %Block.Header{number: number}} -> number + 1
       end
 

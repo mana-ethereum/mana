@@ -12,8 +12,9 @@ defmodule Blockchain.Transaction.Validity do
   true before we're willing to execute a transaction. This is
   specified in Section 6.2 of the Yellow Paper Eq.(65) and Eq.(66).
   """
-  @spec validate(EVM.state(), Transaction.t(), Block.Header.t()) :: :valid | {:invalid, atom()}
-  def validate(state, trx, block_header) do
+  @spec validate(EVM.state(), Transaction.t(), Block.Header.t(), EVM.Configuration.t()) ::
+          :valid | {:invalid, atom()}
+  def validate(state, trx, block_header, config) do
     result =
       case Transaction.Signature.sender(trx) do
         {:error, _reason} ->
@@ -33,7 +34,7 @@ defmodule Blockchain.Transaction.Validity do
       errors =
         []
         |> check_sender_nonce(trx, sender_account)
-        |> check_intristic_gas(trx, block_header)
+        |> check_intristic_gas(trx, config)
         |> check_balance(trx, sender_account)
         |> check_gas_limit(trx, block_header)
 
@@ -50,9 +51,9 @@ defmodule Blockchain.Transaction.Validity do
     end
   end
 
-  @spec check_intristic_gas([atom()], Transaction.t(), Block.Header.t()) :: [atom()]
-  defp check_intristic_gas(errors, transaction, block_header) do
-    intrinsic_gas_cost = Transaction.intrinsic_gas_cost(transaction, block_header)
+  @spec check_intristic_gas([atom()], Transaction.t(), EVM.Configuration.t()) :: [atom()]
+  defp check_intristic_gas(errors, transaction, config) do
+    intrinsic_gas_cost = Transaction.intrinsic_gas_cost(transaction, config)
 
     if intrinsic_gas_cost > transaction.gas_limit do
       [:insufficient_intrinsic_gas | errors]

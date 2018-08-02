@@ -49,7 +49,8 @@ defmodule EVM.Operation.System do
           # stack_depth
           n_exec_env.stack_depth + 1,
           # block_header
-          block_header
+          block_header,
+          exec_env.config
         )
       else
         {:error, {exec_env.account_interface, machine_state.gas, SubState.empty()}}
@@ -118,7 +119,7 @@ defmodule EVM.Operation.System do
   persisting the current values for sender and value.
   """
   @spec delegatecall(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
-  def delegatecall([_call_gas, to, in_offset, in_size, out_offset, out_size], %{
+  def delegatecall([call_gas, to, in_offset, in_size, out_offset, out_size], %{
         exec_env: exec_env,
         machine_state: machine_state,
         sub_state: sub_state
@@ -136,8 +137,8 @@ defmodule EVM.Operation.System do
       recipient: exec_env.address,
       code_owner: to,
       gas_price: exec_env.gas_price,
-      value: 0,
-      execution_value: exec_env.value_in_wei,
+      value: exec_env.value_in_wei,
+      execution_value: call_gas,
       data: data,
       stack_depth: exec_env.stack_depth
     }

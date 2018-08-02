@@ -1,5 +1,6 @@
 defmodule EVM.ExecEnv do
   alias EVM.Interface.{AccountInterface, BlockInterface}
+  alias EVM.Configuration
 
   @moduledoc """
   Stores information about the execution environment which led
@@ -29,7 +30,8 @@ defmodule EVM.ExecEnv do
             stack_depth: 0,
             # I_h (wrapped in interface)
             account_interface: nil,
-            block_interface: nil
+            block_interface: nil,
+            config: EVM.Configuration.Frontier.new()
 
   @type t :: %__MODULE__{
           address: EVM.address(),
@@ -41,7 +43,8 @@ defmodule EVM.ExecEnv do
           machine_code: EVM.MachineCode.t(),
           stack_depth: integer(),
           block_interface: BlockInterface.t(),
-          account_interface: AccountInterface.t()
+          account_interface: AccountInterface.t(),
+          config: Configuration.t()
         }
 
   @spec put_storage(t(), integer(), integer()) :: t()

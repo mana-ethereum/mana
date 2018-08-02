@@ -26,7 +26,8 @@ defmodule Blockchain.Contract.CreateContract do
             init_code: <<>>,
             # e
             stack_depth: 0,
-            block_header: nil
+            block_header: nil,
+            config: nil
 
   @type t :: %__MODULE__{
           state: EVM.state(),
@@ -37,7 +38,8 @@ defmodule Blockchain.Contract.CreateContract do
           endowment: EVM.Wei.t(),
           init_code: EVM.MachineCode.t(),
           stack_depth: integer(),
-          block_header: Header.t()
+          block_header: Header.t(),
+          config: EVM.Configuration.t()
         }
 
   # TODO: Block header? "I_H has no special treatment and is determined from the blockchain"
@@ -104,7 +106,8 @@ defmodule Blockchain.Contract.CreateContract do
       machine_code: params.init_code,
       stack_depth: params.stack_depth,
       block_interface: BlockInterface.new(params.block_header, state_with_blank_contract.db),
-      account_interface: AccountInterface.new(state_with_blank_contract)
+      account_interface: AccountInterface.new(state_with_blank_contract),
+      config: params.config
     }
 
     EVM.VM.run(params.available_gas, exec_env)

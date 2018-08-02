@@ -161,12 +161,17 @@ defmodule Blockchain.Transaction do
   Validates the validity of a transaction and then executes it if transaction is valid.
   """
   @spec execute_with_validation(EVM.state(), t, Header.t()) ::
-          {EVM.state(), Gas.t(), EVM.SubState.logs()}
-  def execute_with_validation(state, tx, block_header) do
-    validation_result = Validity.validate(state, tx, block_header)
+          {EVM.state(), Gas.t(), EVM.SubState.logs(), EVM.Configuration.t()}
+  def execute_with_validation(
+        state,
+        tx,
+        block_header,
+        config \\ EVM.Configuration.Frontier.new()
+      ) do
+    validation_result = Validity.validate(state, tx, block_header, config)
 
     with :valid <- validation_result do
-      execute(state, tx, block_header)
+      execute(state, tx, block_header, config)
     end
   end
 
@@ -180,8 +185,9 @@ defmodule Blockchain.Transaction do
   not directly triggered by a transaction but coming from
   the execution of EVM-code.
   """
-  @spec execute(EVM.state(), t, Header.t()) :: {EVM.state(), Gas.t(), EVM.SubState.logs()}
-  def execute(state, tx, block_header) do
+  @spec execute(EVM.state(), t, Header.t(), EVM.Configuration.t()) ::
+          {EVM.state(), Gas.t(), EVM.SubState.logs()}
+  def execute(state, tx, block_header, config \\ EVM.Configuration.Frontier.new()) do
     {:ok, sender} = Transaction.Signature.sender(tx)
 
     state_0 = begin_transaction(state, sender, tx)
@@ -193,7 +199,7 @@ defmodule Blockchain.Transaction do
     # apparent value is the full value for transaction execution
     apparent_value = tx.value
     # gas is equal to what was just subtracted from sender account less intrinsic gas cost
-    gas = tx.gas_limit - intrinsic_gas_cost(tx, block_header)
+    gas = tx.gas_limit - intrinsic_gas_cost(tx, config)
 
     # TODO: Sender versus originator?
     {state_p, remaining_gas, sub_state} =
@@ -207,7 +213,8 @@ defmodule Blockchain.Transaction do
           endowment: tx.value,
           init_code: tx.init,
           stack_depth: stack_depth,
-          block_header: block_header
+          block_header: block_header,
+          config: config
         }
 
         {_, result} = Contract.create(params)
@@ -225,7 +232,8 @@ defmodule Blockchain.Transaction do
           apparent_value: apparent_value,
           data: tx.data,
           stack_depth: stack_depth,
-          block_header: block_header
+          block_header: block_header,
+          config: config
         }
 
         # Note, we only want to take the first 3 items from the tuples,
@@ -315,26 +323,26 @@ defmodule Blockchain.Transaction do
 
   ## Examples
 
-      iex> Blockchain.Transaction.intrinsic_gas_cost(%Blockchain.Transaction{to: <<1::160>>, init: <<>>, data: <<1, 2, 0, 3>>}, %Block.Header{number: 5})
+      iex> Blockchain.Transaction.intrinsic_gas_cost(%Blockchain.Transaction{to: <<1::160>>, init: <<>>, data: <<1, 2, 0, 3>>}, EVM.Configuration.Frontier.new())
       3 * 68 + 4 + 21000
 
-      iex> Blockchain.Transaction.intrinsic_gas_cost(%Blockchain.Transaction{to: <<1::160>>, init: <<>>, data: <<1, 2, 0, 3>>}, %Block.Header{number: 5_000_000})
+      iex> Blockchain.Transaction.intrinsic_gas_cost(%Blockchain.Transaction{to: <<1::160>>, init: <<>>, data: <<1, 2, 0, 3>>}, EVM.Configuration.Frontier.new())
       3 * 68 + 4 + 21000
 
-      iex> Blockchain.Transaction.intrinsic_gas_cost(%Blockchain.Transaction{to: <<1::160>>, init: <<>>, data: <<>>}, %Block.Header{number: 5_000_000})
+      iex> Blockchain.Transaction.intrinsic_gas_cost(%Blockchain.Transaction{to: <<1::160>>, init: <<>>, data: <<>>}, EVM.Configuration.Frontier.new())
       21000
 
-      iex> Blockchain.Transaction.intrinsic_gas_cost(%Blockchain.Transaction{to: <<>>, init: <<1, 2, 0, 3>>, data: <<>>}, %Block.Header{number: 5})
+      iex> Blockchain.Transaction.intrinsic_gas_cost(%Blockchain.Transaction{to: <<>>, init: <<1, 2, 0, 3>>, data: <<>>}, EVM.Configuration.Frontier.new())
       3 * 68 + 4 + 21000
 
-      iex> Blockchain.Transaction.intrinsic_gas_cost(%Blockchain.Transaction{to: <<>>, init: <<1, 2, 0, 3>>, data: <<>>}, %Block.Header{number: 5_000_000})
+      iex> Blockchain.Transaction.intrinsic_gas_cost(%Blockchain.Transaction{to: <<>>, init: <<1, 2, 0, 3>>, data: <<>>}, EVM.Configuration.Frontier.new())
       3 * 68 + 4  + 21000
   """
-  @spec intrinsic_gas_cost(t, Header.t()) :: Gas.t()
-  def intrinsic_gas_cost(tx, block_header) do
+  @spec intrinsic_gas_cost(t, EVM.Configuration.t()) :: Gas.t()
+  def intrinsic_gas_cost(tx, config) do
     data_cost = input_data_cost(tx)
-    cc_cost = contract_creation_cost(tx, block_header)
-    data_cost + cc_cost + Gas.g_transaction()
+
+    data_cost + transaction_cost(tx, config)
   end
 
   defp input_data_cost(tx) do
@@ -343,16 +351,12 @@ defmodule Blockchain.Transaction do
     |> Gas.g_txdata()
   end
 
-  defp contract_creation_cost(_tx, _block_header) do
-    # TODO: https://github.com/poanetwork/mana/issues/190
-    #
-    # cost of tx’s associated data and initialisation EVM-code,
-    # depending on whether the transaction is for contract-creation or message-call
-    #
-    # if tx.to == <<>> and Header.is_after_homestead?(block_header),
-    # do: Gas.g_txcreate(),
-    # else: 0
-    0
+  defp transaction_cost(tx, config) do
+    if contract_creation?(tx) do
+      EVM.Configuration.contract_creation_cost(config)
+    else
+      Gas.g_transaction()
+    end
   end
 
   def contract_creation?(%Blockchain.Transaction{to: <<>>}), do: true

@@ -28,7 +28,8 @@ defmodule Blockchain.Contract.MessageCall do
             data: <<>>,
             # e
             stack_depth: 0,
-            block_header: nil
+            block_header: nil,
+            config: nil
 
   @type t :: %__MODULE__{
           state: EVM.state(),
@@ -42,7 +43,8 @@ defmodule Blockchain.Contract.MessageCall do
           apparent_value: EVM.Wei.t(),
           data: binary(),
           stack_depth: integer(),
-          block_header: Header.t()
+          block_header: Header.t(),
+          config: EVM.Configuration.t()
         }
 
   @doc """
@@ -80,7 +82,8 @@ defmodule Blockchain.Contract.MessageCall do
       machine_code: machine_code,
       stack_depth: params.stack_depth,
       block_interface: BlockInterface.new(params.block_header, state.db),
-      account_interface: AccountInterface.new(state)
+      account_interface: AccountInterface.new(state),
+      config: params.config
     }
 
     {gas, sub_state, exec_env, output} = run.(params.available_gas, exec_env)
