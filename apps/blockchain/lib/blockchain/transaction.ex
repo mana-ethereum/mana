@@ -193,7 +193,7 @@ defmodule Blockchain.Transaction do
     {updated_state, remaining_gas, sub_state} =
       state
       |> begin_transaction(sender, tx)
-      |> apply_transaction(tx, block_header, sender)
+      |> apply_transaction(tx, block_header, sender, config)
 
     {expended_gas, refund} = calculate_gas_usage(tx, remaining_gas, sub_state)
 
@@ -206,7 +206,7 @@ defmodule Blockchain.Transaction do
     {final_state, expended_gas, sub_state.logs}
   end
 
-  defp apply_transaction(state, tx, block_header, sender) do
+  defp apply_transaction(state, tx, block_header, sender, config) do
     # sender and originator are the same for transaction execution
     originator = sender
     # stack depth starts at zero for transaction execution
