@@ -614,7 +614,7 @@ defmodule Blockchain.Account do
       ...> |> Blockchain.Account.get_account(<<0x01::160>>)
       %Blockchain.Account{}
   """
-  @spec clear_balance(EVM.state(), EVM.address()) :: EVM.state()
+  @spec reset_account(EVM.state(), EVM.address()) :: EVM.state()
   def reset_account(state, address) do
     put_account(state, address, %__MODULE__{})
   end
