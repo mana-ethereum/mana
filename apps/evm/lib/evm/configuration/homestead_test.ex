@@ -6,7 +6,7 @@ defmodule EVM.Configuration.HomesteadTest do
   end
 end
 
-defimpl EVM.Configuration, for: Blockchain.Configuration.HomesteadTest do
+defimpl EVM.Configuration, for: EVM.Configuration.HomesteadTest do
   @spec contract_creation_cost(EVM.Configuration.t()) :: integer()
   def contract_creation_cost(config), do: config.contract_creation_cost
 

@@ -186,6 +186,8 @@ defmodule EVM.Gas do
   end
 
   def memory_cost(:delegatecall, stack_args, machine_state) do
+    stack_args = List.insert_at(stack_args, 2, 0)
+
     call_memory_cost(stack_args, machine_state)
   end
 
@@ -412,13 +414,13 @@ defmodule EVM.Gas do
 
   def operation_cost(
         :delegatecall,
-        [gas_limit, to_address, value, _in_offset, _in_length, _out_offset, _out_length],
+        [gas_limit, to_address, _in_offset, _in_length, _out_offset, _out_length],
         _machine_state,
         exec_env
       ) do
     to_address = Address.new(to_address)
 
-    @g_call + call_value_cost(value) + new_account_cost(exec_env, to_address) + gas_limit
+    @g_call + new_account_cost(exec_env, to_address) + gas_limit
   end
 
   def operation_cost(
