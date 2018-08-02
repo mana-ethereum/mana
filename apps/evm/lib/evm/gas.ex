@@ -420,7 +420,7 @@ defmodule EVM.Gas do
       ) do
     to_address = Address.new(to_address)
 
-    @g_call + new_account_cost(exec_env, to_address) + gas_limit
+    @g_call + gas_limit
   end
 
   def operation_cost(
