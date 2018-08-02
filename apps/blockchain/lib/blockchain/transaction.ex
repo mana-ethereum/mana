@@ -206,6 +206,8 @@ defmodule Blockchain.Transaction do
     {final_state, expended_gas, sub_state.logs}
   end
 
+  @spec apply_transaction(EVM.state(), t, Header.t(), EVM.address(), EVM.Configuration.t()) ::
+          {EVM.state(), Gas.t(), EVM.SubState.t()}
   defp apply_transaction(state, tx, block_header, sender, config) do
     # sender and originator are the same for transaction execution
     originator = sender
@@ -258,6 +260,7 @@ defmodule Blockchain.Transaction do
     end
   end
 
+  @spec calculate_gas_usage(t, Gas.t(), EVM.SubState.t()) :: {Gas.t(), Gas.t()}
   defp calculate_gas_usage(tx, remaining_gas, sub_state) do
     refund = MathHelper.calculate_total_refund(tx, remaining_gas, sub_state.refund)
     expended_gas = tx.gas_limit - refund
@@ -322,6 +325,8 @@ defmodule Blockchain.Transaction do
     |> Account.add_wei(block_header.beneficiary, (trx.gas_limit - total_refund) * trx.gas_price)
   end
 
+  @spec clean_up_accounts_marked_for_destruction(EVM.state(), EVM.SubState.t(), Block.Header.t()) ::
+          EVM.state()
   defp clean_up_accounts_marked_for_destruction(state, sub_state, block_header) do
     Enum.reduce(sub_state.selfdestruct_list, state, fn address, new_state ->
       if Header.mined_by?(block_header, address) do
