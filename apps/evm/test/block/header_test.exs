@@ -29,4 +29,20 @@ defmodule Block.HeaderTest do
              |> ExRLP.decode()
              |> Header.deserialize()
   end
+
+  describe "mined_by?/2" do
+    test "returns true if the address is the beneficiary" do
+      miner_address = <<1, 3, 2>>
+      header = %Header{beneficiary: miner_address}
+
+      assert Header.mined_by?(header, miner_address)
+    end
+
+    test "returns false if the address is not the beneficiary" do
+      miner_address = <<1, 3, 2>>
+      header = %Header{beneficiary: <<1, 2, 2>>}
+
+      refute Header.mined_by?(header, miner_address)
+    end
+  end
 end

@@ -601,4 +601,21 @@ defmodule Blockchain.Account do
       %{acct | balance: 0}
     end)
   end
+
+  @doc """
+  Resets an account to the basic struct.
+
+  ## Examples
+
+      iex> state = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
+      ...>   |> Blockchain.Account.put_account(<<0x01::160>>, %Blockchain.Account{balance: 100, code_hash: "abc"})
+      iex> state
+      ...> |> Blockchain.Account.reset_account(<<0x01::160>>)
+      ...> |> Blockchain.Account.get_account(<<0x01::160>>)
+      %Blockchain.Account{}
+  """
+  @spec reset_account(EVM.state(), EVM.address()) :: EVM.state()
+  def reset_account(state, address) do
+    put_account(state, address, %__MODULE__{})
+  end
 end
