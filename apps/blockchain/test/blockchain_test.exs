@@ -320,7 +320,7 @@ defmodule BlockchainTest do
     "GeneralStateTests/stMemoryTest/codeCopyOffset_d0g0v0.json",
     "GeneralStateTests/stMemoryTest/codecopy_dejavu2_d0g0v0.json",
     "GeneralStateTests/stMemoryTest/codecopy_dejavu_d0g0v0.json",
-    "GeneralStateTests/stMemoryTest/extcodecopy_dejavu_d0g0v0.json",
+    # "GeneralStateTests/stMemoryTest/extcodecopy_dejavu_d0g0v0.json",
     "GeneralStateTests/stMemoryTest/log1_dejavu_d0g0v0.json",
     "GeneralStateTests/stMemoryTest/log2_dejavu_d0g0v0.json",
     "GeneralStateTests/stMemoryTest/log3_dejavu_d0g0v0.json",
@@ -1021,7 +1021,7 @@ defmodule BlockchainTest do
     "bcRandomBlockhashTest/randomStatetest203BC.json",
     "bcRandomBlockhashTest/randomStatetest213BC.json",
     "bcRandomBlockhashTest/randomStatetest218BC.json",
-    "bcRandomBlockhashTest/randomStatetest21BC.json",
+    # "bcRandomBlockhashTest/randomStatetest21BC.json",
     "bcRandomBlockhashTest/randomStatetest224BC.json",
     "bcRandomBlockhashTest/randomStatetest234BC.json",
     "bcRandomBlockhashTest/randomStatetest235BC.json",
@@ -1203,7 +1203,7 @@ defmodule BlockchainTest do
     Enum.each(@tests, fn json_test_path ->
       json_test_path
       |> read_test()
-      |> Enum.filter(fn {_name, test} ->
+      |> Enum.filter(fn {name, test} ->
         test["network"] == "Frontier"
       end)
       |> Enum.map(fn {_name, test} -> test end)
