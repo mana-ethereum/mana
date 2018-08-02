@@ -31,7 +31,7 @@ defmodule EVM.ExecEnv do
             # I_h (wrapped in interface)
             account_interface: nil,
             block_interface: nil,
-            config: EVM.Configuration.FrontierTest.new()
+            config: EVM.Configuration.Frontier.new()
 
   @type t :: %__MODULE__{
           address: EVM.address(),

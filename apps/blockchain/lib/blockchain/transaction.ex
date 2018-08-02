@@ -166,7 +166,7 @@ defmodule Blockchain.Transaction do
         state,
         tx,
         block_header,
-        config \\ EVM.Configuration.FrontierTest.new()
+        config \\ EVM.Configuration.Frontier.new()
       ) do
     validation_result = Validity.validate(state, tx, block_header, config)
 
@@ -187,7 +187,7 @@ defmodule Blockchain.Transaction do
   """
   @spec execute(EVM.state(), t, Header.t(), EVM.Configuration.t()) ::
           {EVM.state(), Gas.t(), EVM.SubState.logs()}
-  def execute(state, tx, block_header, config \\ EVM.Configuration.FrontierTest.new()) do
+  def execute(state, tx, block_header, config \\ EVM.Configuration.Frontier.new()) do
     {:ok, sender} = Transaction.Signature.sender(tx)
 
     state_0 = begin_transaction(state, sender, tx)
@@ -323,19 +323,19 @@ defmodule Blockchain.Transaction do
 
   ## Examples
 
-      iex> Blockchain.Transaction.intrinsic_gas_cost(%Blockchain.Transaction{to: <<1::160>>, init: <<>>, data: <<1, 2, 0, 3>>}, EVM.Configuration.FrontierTest.new())
+      iex> Blockchain.Transaction.intrinsic_gas_cost(%Blockchain.Transaction{to: <<1::160>>, init: <<>>, data: <<1, 2, 0, 3>>}, EVM.Configuration.Frontier.new())
       3 * 68 + 4 + 21000
 
-      iex> Blockchain.Transaction.intrinsic_gas_cost(%Blockchain.Transaction{to: <<1::160>>, init: <<>>, data: <<1, 2, 0, 3>>}, EVM.Configuration.FrontierTest.new())
+      iex> Blockchain.Transaction.intrinsic_gas_cost(%Blockchain.Transaction{to: <<1::160>>, init: <<>>, data: <<1, 2, 0, 3>>}, EVM.Configuration.Frontier.new())
       3 * 68 + 4 + 21000
 
-      iex> Blockchain.Transaction.intrinsic_gas_cost(%Blockchain.Transaction{to: <<1::160>>, init: <<>>, data: <<>>}, EVM.Configuration.FrontierTest.new())
+      iex> Blockchain.Transaction.intrinsic_gas_cost(%Blockchain.Transaction{to: <<1::160>>, init: <<>>, data: <<>>}, EVM.Configuration.Frontier.new())
       21000
 
-      iex> Blockchain.Transaction.intrinsic_gas_cost(%Blockchain.Transaction{to: <<>>, init: <<1, 2, 0, 3>>, data: <<>>}, EVM.Configuration.FrontierTest.new())
+      iex> Blockchain.Transaction.intrinsic_gas_cost(%Blockchain.Transaction{to: <<>>, init: <<1, 2, 0, 3>>, data: <<>>}, EVM.Configuration.Frontier.new())
       3 * 68 + 4 + 21000
 
-      iex> Blockchain.Transaction.intrinsic_gas_cost(%Blockchain.Transaction{to: <<>>, init: <<1, 2, 0, 3>>, data: <<>>}, EVM.Configuration.FrontierTest.new())
+      iex> Blockchain.Transaction.intrinsic_gas_cost(%Blockchain.Transaction{to: <<>>, init: <<1, 2, 0, 3>>, data: <<>>}, EVM.Configuration.Frontier.new())
       3 * 68 + 4  + 21000
   """
   @spec intrinsic_gas_cost(t, EVM.Configuration.t()) :: Gas.t()

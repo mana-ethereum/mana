@@ -1,4 +1,4 @@
-defmodule EVM.Configuration.FrontierTest do
+defmodule EVM.Configuration.Frontier do
   defstruct contract_creation_cost: 21_000, has_delegate_call: false
 
   def new do
@@ -6,7 +6,7 @@ defmodule EVM.Configuration.FrontierTest do
   end
 end
 
-defimpl EVM.Configuration, for: EVM.Configuration.FrontierTest do
+defimpl EVM.Configuration, for: EVM.Configuration.Frontier do
   @spec contract_creation_cost(EVM.Configuration.t()) :: integer()
   def contract_creation_cost(config), do: config.contract_creation_cost
 

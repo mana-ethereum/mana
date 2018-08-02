@@ -2419,9 +2419,9 @@ defmodule Blockchain.StateTest do
   def configuration(hardfork) do
     case hardfork do
       "Frontier" ->
-        EVM.Configuration.FrontierTest.new()
+        EVM.Configuration.Frontier.new()
 
-      # "Homestead" -> EVM.Configuration.HomesteadTest.new()
+      # "Homestead" -> EVM.Configuration.Homestead.new()
       _ ->
         nil
     end

@@ -1,4 +1,4 @@
-defmodule EVM.Configuration.HomesteadTest do
+defmodule EVM.Configuration.Homestead do
   defstruct contract_creation_cost: 53_000, has_delegate_call: true
 
   def new do
@@ -6,7 +6,7 @@ defmodule EVM.Configuration.HomesteadTest do
   end
 end
 
-defimpl EVM.Configuration, for: EVM.Configuration.HomesteadTest do
+defimpl EVM.Configuration, for: EVM.Configuration.Homestead do
   @spec contract_creation_cost(EVM.Configuration.t()) :: integer()
   def contract_creation_cost(config), do: config.contract_creation_cost
 
