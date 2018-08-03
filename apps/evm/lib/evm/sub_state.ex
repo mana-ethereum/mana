@@ -60,7 +60,7 @@ defmodule EVM.SubState do
   def add_log(sub_state, address, topics, data) do
     log_entry = LogEntry.new(address, topics, data)
 
-    new_logs = [log_entry | sub_state.logs]
+    new_logs = sub_state.logs ++ [log_entry]
 
     %{sub_state | logs: new_logs}
   end
