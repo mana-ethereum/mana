@@ -3,6 +3,14 @@ defmodule MathHelper do
   Simple functions to help with common
   math functions.
   """
+  @decimal_context %Decimal.Context{precision: 38, rounding: :floor}
+
+  @spec div(integer(), integer()) :: integer()
+  def div(num1, num2) do
+    Decimal.with_context(@decimal_context, fn ->
+      num1 |> Decimal.div(num2) |> Decimal.to_integer()
+    end)
+  end
 
   @doc """
   Simple floor function that makes sure

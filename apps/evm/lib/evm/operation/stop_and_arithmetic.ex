@@ -99,7 +99,10 @@ defmodule EVM.Operation.StopAndArithmetic do
         0 - Helpers.decode_signed(s0)
 
       _ ->
-        MathHelper.round_int(Helpers.decode_signed(s0) / Helpers.decode_signed(s1))
+        signed_s0 = Helpers.decode_signed(s0)
+        signed_s1 = Helpers.decode_signed(s1)
+
+        MathHelper.div(signed_s0, signed_s1)
     end
   end
 
