@@ -3,8 +3,7 @@ defmodule MathHelper do
   Simple functions to help with common
   math functions.
   """
-  # 78 is a number of digits in max unsigned 32 byte integer number
-  @decimal_context %Decimal.Context{precision: 78}
+  @decimal_context %Decimal.Context{precision: 1_000}
 
   @spec sub(integer(), integer()) :: integer()
   def sub(num1, num2) do
