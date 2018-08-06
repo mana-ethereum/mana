@@ -42,7 +42,7 @@ defmodule BlockchainTest do
       |> read_test()
       |> Enum.map(fn {_name, test} -> test end)
       |> Enum.each(fn test ->
-        if failing_test?(json_test_path, test) do
+        if !failing_test?(json_test_path, test) do
           run_test(test)
         end
       end)
@@ -75,10 +75,6 @@ defmodule BlockchainTest do
         |> add_blocks(json_test, state, chain)
 
       best_block_hash = maybe_hex(json_test["lastblockhash"])
-
-      IO.puts("got #{inspect(blocktree.best_block.block_hash |> Base.encode16(case: :lower))}")
-
-      IO.puts("expected #{inspect(best_block_hash |> Base.encode16(case: :lower))}")
 
       assert blocktree.best_block.block_hash == best_block_hash
     end
@@ -271,8 +267,7 @@ defmodule BlockchainTest do
   end
 
   defp tests do
-    # wildcard = @ethereum_common_tests_path <> "**/*.json"
-    wildcard = @ethereum_common_tests_path <> "**/callcodecall_10_d0g0v0.json"
+    wildcard = @ethereum_common_tests_path <> "**/*.json"
 
     wildcard
     |> Path.wildcard()
