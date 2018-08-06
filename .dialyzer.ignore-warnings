@@ -61,6 +61,42 @@ apps/blockchain/lib/blockchain/block.ex:438: Function gen_child_block/3 has no l
 apps/blockchain/lib/blockchain/block.ex:443: The call 'Elixir.Blockchain.Block':set_block_number(#{'__struct__':='Elixir.Blockchain.Block', 'block_hash':='nil', 'header':=#{'__struct__':='Elixir.Block.Header', 'beneficiary':=_, 'difficulty':='nil', 'extra_data':=_, 'gas_limit':=0, 'gas_used':=0, 'logs_bloom':=<<_:2048>>, 'mix_hash':=_, 'nonce':=<<_:64>>, 'number':='nil', 'ommers_hash':=<<_:256>>, 'parent_hash':='nil', 'receipts_root':=<<_:256>>, 'state_root':=_, 'timestamp':=_, 'transactions_root':=<<_:256>>}, 'ommers':=[], 'transactions':=[]},Vparent_block@1::any()) breaks the contract (t(),t()) -> t()
 apps/blockchain/lib/blockchain/block.ex:449: Invalid type specification for function 'Elixir.Blockchain.Block':gen_child_header/2. The success typing is (_,'nil' | [{atom(),_}] | map()) -> #{'__struct__':='Elixir.Block.Header', 'beneficiary':=_, 'difficulty':='nil', 'extra_data':=_, 'gas_limit':=0, 'gas_used':=0, 'logs_bloom':=<<_:2048>>, 'mix_hash':=_, 'nonce':=<<_:64>>, 'number':='nil', 'ommers_hash':=<<_:256>>, 'parent_hash':='nil', 'receipts_root':=<<_:256>>, 'state_root':=_, 'timestamp':=_, 'transactions_root':=<<_:256>>}
 apps/blockchain/lib/blockchain/block.ex:714: Invalid type specification for function 'Elixir.Blockchain.Block':put_state/2. The success typing is (#{'__struct__':='Elixir.Blockchain.Block', 'header':=#{'__struct__':='Elixir.Block.Header', 'state_root':=_, _=>_}, _=>_},atom() | #{'root_hash':=_, _=>_}) -> #{'__struct__':='Elixir.Blockchain.Block', 'header':=#{'__struct__':='Elixir.Block.Header', 'state_root':=_, _=>_}, _=>_}
+apps/blockchain/lib/blockchain/block.ex:675: Function add_transactions/3 has no local return
+apps/blockchain/lib/blockchain/block.ex:675: The call 'Elixir.Blockchain.Block':add_transactions(_@1
+::any(),_@2::any(),_@3::any(),#{'__struct__':='Elixir.EVM.Configuration.Frontier', 'contract_creatio
+n_cost':=21000, 'has_delegate_call':='false'}) will never return since the success typing is (#{'__s
+truct__':='Elixir.Blockchain.Block', 'block_hash':='nil' | <<_:256>>, 'header':=#{'__struct__':='Eli
+xir.Block.Header', 'beneficiary':='nil' | <<_:160>>, 'difficulty':='nil' | integer(), 'extra_data':=
+binary(), 'gas_limit':=integer(), 'gas_used':=integer(), 'logs_bloom':=binary(), 'mix_hash':='nil' |
+ <<_:256>>, 'nonce':='nil' | <<_:64>>, 'number':='nil' | integer(), 'ommers_hash':=binary(), 'parent
+_hash':=<<_:256>>, 'receipts_root':=binary(), 'state_root':=binary(), 'timestamp':='nil' | integer()
+, 'transactions_root':=binary()}, 'ommers':=[#{'__struct__':='Elixir.Block.Header', 'beneficiary':='
+nil' | <<_:160>>, 'difficulty':='nil' | integer(), 'extra_data':=binary(), 'gas_limit':=integer(), '
+gas_used':=integer(), 'logs_bloom':=binary(), 'mix_hash':='nil' | <<_:256>>, 'nonce':='nil' | <<_:64
+>>, 'number':='nil' | integer(), 'ommers_hash':=binary(), 'parent_hash':=<<_:256>>, 'receipts_root':
+=binary(), 'state_root':=binary(), 'timestamp':='nil' | integer(), 'transactions_root':=binary()}],
+'transactions':=[#{'__struct__':='Elixir.Blockchain.Transaction', 'data':=binary(), 'gas_limit':=int
+eger(), 'gas_price':=integer(), 'init':=binary(), 'nonce':=integer(), 'r':=integer(), 's':=integer()
+, 'to':=<<_:_*160>>, 'v':=integer(), 'value':=integer()}]},[],{atom(),_},atom()) -> #{'__struct__':=
+'Elixir.Blockchain.Block', 'block_hash':='nil' | <<_:256>>, 'header':=#{'__struct__':='Elixir.Block.
+Header', 'beneficiary':='nil' | <<_:160>>, 'difficulty':='nil' | integer(), 'extra_data':=binary(),
+'gas_limit':=integer(), 'gas_used':=integer(), 'logs_bloom':=binary(), 'mix_hash':='nil' | <<_:256>>
+, 'nonce':='nil' | <<_:64>>, 'number':='nil' | integer(), 'ommers_hash':=binary(), 'parent_hash':=<<
+_:256>>, 'receipts_root':=binary(), 'state_root':=binary(), 'timestamp':='nil' | integer(), 'transac
+tions_root':=binary()}, 'ommers':=[#{'__struct__':='Elixir.Block.Header', 'beneficiary':='nil' | <<_
+:160>>, 'difficulty':='nil' | integer(), 'extra_data':=binary(), 'gas_limit':=integer(), 'gas_used':
+=integer(), 'logs_bloom':=binary(), 'mix_hash':='nil' | <<_:256>>, 'nonce':='nil' | <<_:64>>, 'numbe
+r':='nil' | integer(), 'ommers_hash':=binary(), 'parent_hash':=<<_:256>>, 'receipts_root':=binary(),
+ 'state_root':=binary(), 'timestamp':='nil' | integer(), 'transactions_root':=binary()}], 'transacti
+ons':=[#{'__struct__':='Elixir.Blockchain.Transaction', 'data':=binary(), 'gas_limit':=integer(), 'g
+as_price':=integer(), 'init':=binary(), 'nonce':=integer(), 'r':=integer(), 's':=integer(), 'to':=<<
+_:_*160>>, 'v':=integer(), 'value':=integer()}]} and the contract is (t(),['Elixir.Blockchain.Transa
+ction':t()],'Elixir.MerklePatriciaTree.DB':db(),'Elixir.EVM.Configuration':t()) -> t()
+apps/blockchain/lib/blockchain/block.ex:715: Invalid type specification for function 'Elixir.Blockch
+ain.Block':put_state/2. The success typing is (#{'__struct__':='Elixir.Blockchain.Block', 'header':=
+#{'__struct__':='Elixir.Block.Header', 'state_root':=_, _=>_}, _=>_},atom() | #{'root_hash':=_, _=>_
+}) -> #{'__struct__':='Elixir.Blockchain.Block', 'header':=#{'__struct__':='Elixir.Block.Header', 's
+tate_root':=_, _=>_}, _=>_}
 
 -------------------------------
 # blockchain/chain.ex

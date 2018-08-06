@@ -8,7 +8,11 @@ defmodule GenerateBlockchainTests do
 
   @base_path System.cwd() <> "/../../ethereum_common_tests/BlockchainTests/"
 
-  def run() do
+  def run(args) do
+    hardfork = List.first(args)
+
+    if !Enum.member?(["Frontier", "Homestead"], hardfork), do: raise(RuntimeError)
+
     {passing_count, failing_count} =
       Enum.reduce(
         tests(),
@@ -20,7 +24,7 @@ defmodule GenerateBlockchainTests do
             json_test_path
             |> read_test()
             |> Enum.filter(fn {_name, test} ->
-              test["network"] == "Frontier"
+              test["network"] == hardfork
             end)
             |> Enum.reduce({0, 0}, fn {_name, test}, {pass_count, fail_count} ->
               try do
@@ -32,27 +36,25 @@ defmodule GenerateBlockchainTests do
               end
             end)
 
-          cond do
-            failing != 0 -> log_commented_test(relative_path)
-            passing != 0 -> log_test(relative_path)
-            true -> :ok
+          if failing != 0 do
+            log_test(relative_path)
           end
 
           {pass_acc + passing, fail_acc + failing}
         end
       )
 
-    all_frontier_tests = passing_count + failing_count
+    all_tests = passing_count + failing_count
 
     IO.puts(
-      "Passing Frontier tests: #{passing_count}/#{all_frontier_tests} = #{
-        trunc(Float.round(passing_count / all_frontier_tests, 2) * 100)
+      "Passing #{hardfork} tests: #{passing_count}/#{all_tests} = #{
+        trunc(Float.round(passing_count / all_tests, 2) * 100)
       }%"
     )
 
     IO.puts(
-      "Failing Frontier tests: #{failing_count}/#{all_frontier_tests} = #{
-        trunc(Float.round(failing_count / all_frontier_tests, 2) * 100)
+      "Failing #{hardfork} tests: #{failing_count}/#{all_tests} = #{
+        trunc(Float.round(failing_count / all_tests, 2) * 100)
       }%"
     )
   end
@@ -63,10 +65,6 @@ defmodule GenerateBlockchainTests do
     wildcard
     |> Path.wildcard()
     |> Enum.sort()
-  end
-
-  defp log_commented_test(relative_path) do
-    IO.puts("    # \"#{relative_path}\",")
   end
 
   defp log_test(relative_path) do
@@ -252,4 +250,4 @@ defmodule GenerateBlockchainTests do
   end
 end
 
-GenerateBlockchainTests.run()
+GenerateBlockchainTests.run(System.argv())
