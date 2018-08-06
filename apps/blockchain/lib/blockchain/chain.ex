@@ -83,7 +83,8 @@ defmodule Blockchain.Chain do
           params: params(),
           genesis: Genesis.t(),
           nodes: [String.t()],
-          accounts: %{EVM.address() => account() | builtin_account()}
+          accounts: %{EVM.address() => account() | builtin_account()},
+          evm_config: EVM.Configuration.t()
         }
 
   @doc """
