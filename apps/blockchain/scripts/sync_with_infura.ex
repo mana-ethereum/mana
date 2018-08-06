@@ -13,10 +13,16 @@ defmodule SyncWithInfura do
 
   def add_block_to_tree(db, chain, tree, n) do
     next_block = get_block(n)
-    {:ok, next_tree} = Blockchain.Blocktree.verify_and_add_block(tree, chain, next_block, db)
-    Logger.info("Verified Block #{n}")
-    MerklePatriciaTree.DB.put!(db, "current_block_hash", Blockchain.Block.hash(next_block))
-    add_block_to_tree(db, chain, next_tree, n + 1)
+    case Blockchain.Blocktree.verify_and_add_block(tree, chain, next_block, db) do
+      {:ok, next_tree} ->
+        Logger.info("Verified Block #{n}")
+        MerklePatriciaTree.DB.put!(db, "current_block_hash", Blockchain.Block.hash(next_block))
+        add_block_to_tree(db, chain, next_tree, n + 1)
+      {:invalid, error} ->
+        Logger.info("Failed to Verify Block #{n}")
+        Logger.error(inspect error)
+        MerklePatriciaTree.DB.put!(db, "current_block_tree", :erlang.term_to_binary(tree))
+    end
   end
 
   def load_hex("0x" <> hex_string) do
@@ -136,10 +142,10 @@ current_block =
 parents = SyncWithInfura.get_parents(current_block, db, [])
 
 tree =
-  Enum.reduce(parents, empty_tree, fn block, tree ->
-    {:ok, tree} = Blockchain.Blocktree.verify_and_add_block(tree, chain, block, db)
-    Logger.info("Verified Saved Block #{block.header.number}")
-    tree
-  end)
+  case MerklePatriciaTree.DB.get(db, "current_block_tree") do
+    {:ok, current_block_tree} ->
+      :erlang.binary_to_term(current_block_tree)
+    _ -> Blockchain.Blocktree.new_tree()
+  end
 
 SyncWithInfura.add_block_to_tree(db, chain, tree, current_block.header.number)
