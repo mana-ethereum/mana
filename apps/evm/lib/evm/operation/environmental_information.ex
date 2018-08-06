@@ -283,7 +283,7 @@ defmodule EVM.Operation.EnvironmentalInformation do
        }
   """
   @spec extcodecopy(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
-  def extcodecopy([address, code_offset, mem_offset, size], %{
+  def extcodecopy([address, mem_offset, code_offset, size], %{
         machine_state: machine_state,
         exec_env: exec_env
       }) do

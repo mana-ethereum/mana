@@ -7,151 +7,204 @@ defmodule GenerateStateTests do
 
   use EthCommonTest.Harness
 
-  @base_path Path.join([EthCommonTest.Helpers.ethereum_common_tests_path(), "GeneralStateTests"])
+  def run(_args) do
+    initial_state = %{
+      passing: %{
+        "Homestead" => [],
+        "Frontier" => []
+      },
+      failing: %{
+        "Homestead" => [],
+        "Frontier" => []
+      }
+    }
 
-  def run(args) do
-    only_count = Enum.member?(args, "--count")
-    test_counts = :ets.new(:test_counts, [:public])
+    completed_tests =
+      Enum.reduce(test_directories(), initial_state, fn directory_path, completed_tests ->
+        test_group = Enum.fetch!(String.split(directory_path, "/"), 4)
 
-    Enum.each(test_directories(), fn directory_path ->
-      directory_path
-      |> tests()
-      |> Enum.each(fn test_path ->
-        test_path
-        |> read_state_test_file()
-        |> Enum.each(fn test ->
-          run_tests_in_json(test, test_path, test_counts, only_count)
+        directory_path
+        |> tests()
+        |> Enum.reduce(completed_tests, fn test_path, completed_tests ->
+          test_path
+          |> read_state_test_file()
+          |> Enum.reduce(completed_tests, fn {test_name, test}, completed_tests ->
+            run_test(completed_tests, test_group, test_name, test)
+          end)
         end)
       end)
-    end)
 
-    if only_count do
-      [{"passing", passing_tests}] = :ets.lookup(test_counts, "passing")
-      [{"failing", failing_tests}] = :ets.lookup(test_counts, "failing")
-      [{"post_frontier", post_frontier_tests}] = :ets.lookup(test_counts, "post_frontier")
+    IO.puts("Failing tests")
+    IO.puts(inspect(completed_tests[:failing], limit: :infinity, width: 10))
+
+    for hardfork <- ["Homestead", "Frontier"] do
+      passing_tests = length(completed_tests[:passing][hardfork])
+      failing_tests = length(completed_tests[:failing][hardfork])
       total_tests = passing_tests + failing_tests
 
-      log_test_percentage("Passing", passing_tests, total_tests)
-      log_test_percentage("Failing", failing_tests, total_tests)
-      IO.puts("Post Frontier tests: #{post_frontier_tests}")
+      IO.puts(
+        "Passing #{hardfork} tests tests #{passing_tests}/#{total_tests}= #{
+          round(passing_tests / total_tests * 1000) / 10
+        }%"
+      )
     end
   end
 
-  defp test_directories do
-    path = Path.join([EthCommonTest.Helpers.ethereum_common_tests_path(), "GeneralStateTests"])
-    wildcard = path <> "/*"
+  defp run_test(completed_tests, test_group, test_name, test) do
+    completed_tests =
+      test["post"]
+      |> Enum.reduce(completed_tests, fn {hardfork, _test_data}, completed_tests ->
+        hardfork_configuration = configuration(hardfork)
 
-    wildcard
-    |> Path.wildcard()
-    |> Enum.sort()
-  end
-
-  defp tests(directory_path) do
-    wildcard = directory_path <> "/**/*.json"
-
-    wildcard
-    |> Path.wildcard()
-    |> Enum.sort()
-  end
-
-  defp run_tests_in_json(test, test_path, test_counts, only_count) do
-    test_path = String.trim(test_path, @base_path <> "/")
-
-    try do
-      if Map.has_key?(test["post"], "Frontier") do
-        all_posts_match =
-          test["post"]["Frontier"]
-          |> Enum.with_index()
-          |> Enum.all?(fn indexed_post ->
-            run_test(test, indexed_post)
-          end)
-
-        if all_posts_match do
-          if !only_count, do: log_test(test_path)
-          :ets.update_counter(test_counts, "passing", {2, 1}, {"passing", 0})
+        if hardfork_configuration do
+          run_transaction(
+            completed_tests,
+            test_group,
+            test_name,
+            test,
+            hardfork,
+            hardfork_configuration
+          )
         else
-          :ets.update_counter(test_counts, "failing", {2, 1}, {"failing", 0})
-          if !only_count, do: log_commented_test(test_path)
+          completed_tests
         end
-      else
-        :ets.update_counter(test_counts, "post_frontier", {2, 1}, {"post_frontier", 0})
-        if !only_count, do: log_test(test_path)
-      end
-    rescue
+      end)
+
+    completed_tests
+  end
+
+  defp run_transaction(
+         completed_tests,
+         test_group,
+         test_name,
+         test,
+         hardfork,
+         hardfork_configuration
+       ) do
+    completed_tests =
+      test["post"][hardfork]
+      |> Enum.with_index()
+      |> Enum.reduce(completed_tests, fn {post, index}, completed_tests ->
+        try do
+          pre_state = account_interface(test).state
+
+          indexes = post["indexes"]
+          gas_limit_index = indexes["gas"]
+          value_index = indexes["value"]
+          data_index = indexes["data"]
+
+          transaction =
+            %Transaction{
+              nonce: load_integer(test["transaction"]["nonce"]),
+              gas_price: load_integer(test["transaction"]["gasPrice"]),
+              gas_limit: load_integer(Enum.at(test["transaction"]["gasLimit"], gas_limit_index)),
+              to: maybe_hex(test["transaction"]["to"]),
+              value: load_integer(Enum.at(test["transaction"]["value"], value_index))
+            }
+            |> populate_init_or_data(maybe_hex(Enum.at(test["transaction"]["data"], data_index)))
+            |> Transaction.Signature.sign_transaction(maybe_hex(test["transaction"]["secretKey"]))
+
+          result =
+            Transaction.execute_with_validation(
+              pre_state,
+              transaction,
+              %Block.Header{
+                beneficiary: maybe_hex(test["env"]["currentCoinbase"]),
+                difficulty: load_integer(test["env"]["currentDifficulty"]),
+                timestamp: load_integer(test["env"]["currentTimestamp"]),
+                number: load_integer(test["env"]["currentNumber"]),
+                gas_limit: load_integer(test["env"]["currentGasLimit"]),
+                parent_hash: maybe_hex(test["env"]["previousHash"])
+              },
+              hardfork_configuration
+            )
+
+          {state, logs} =
+            case result do
+              {state, _, logs} -> {state, logs}
+              _ -> {pre_state, []}
+            end
+
+          expected_hash =
+            test["post"][hardfork]
+            |> Enum.at(index)
+            |> Map.fetch!("hash")
+            |> maybe_hex()
+
+          valid_root_hash = state.root_hash == expected_hash
+
+          expected_logs = test["post"][hardfork] |> Enum.at(index) |> Map.fetch!("logs")
+          logs_hash = logs_hash(logs)
+
+          valid_logs_hash = maybe_hex(expected_logs) == logs_hash
+
+          if valid_root_hash && valid_logs_hash do
+            update_in(completed_tests, [:passing, hardfork], &["#{test_group}/#{test_name}" | &1])
+          else
+            update_in(completed_tests, [:failing, hardfork], &["#{test_group}/#{test_name}" | &1])
+          end
+        rescue
+          _ ->
+            update_in(completed_tests, [:failing, hardfork], &["#{test_group}/#{test_name}" | &1])
+        end
+      end)
+
+    completed_tests
+  end
+
+  def configuration(hardfork) do
+    case hardfork do
+      "Frontier" ->
+        EVM.Configuration.Frontier.new()
+
+      "Homestead" ->
+        EVM.Configuration.Homestead.new()
+
       _ ->
-        :ets.update_counter(test_counts, "failing", {2, 1}, {"failing", 0})
-        if !only_count, do: log_commented_test(test_path)
+        nil
     end
   end
 
-  defp run_test(test, {post, index}) do
-    pre_state = account_interface(test).state
-
-    indexes = post["indexes"]
-    gas_limit_index = indexes["gas"]
-    value_index = indexes["value"]
-    data_index = indexes["data"]
-
-    transaction =
-      %Transaction{
-        nonce: load_integer(test["transaction"]["nonce"]),
-        gas_price: load_integer(test["transaction"]["gasPrice"]),
-        gas_limit: load_integer(Enum.at(test["transaction"]["gasLimit"], gas_limit_index)),
-        to: maybe_hex(test["transaction"]["to"]),
-        value: load_integer(Enum.at(test["transaction"]["value"], value_index))
-      }
-      |> populate_init_or_data(maybe_hex(Enum.at(test["transaction"]["data"], data_index)))
-      |> Transaction.Signature.sign_transaction(maybe_hex(test["transaction"]["secretKey"]))
-
-    result =
-      Transaction.execute_with_validation(pre_state, transaction, %Block.Header{
-        beneficiary: maybe_hex(test["env"]["currentCoinbase"]),
-        difficulty: load_integer(test["env"]["currentDifficulty"]),
-        timestamp: load_integer(test["env"]["currentTimestamp"]),
-        number: load_integer(test["env"]["currentNumber"]),
-        gas_limit: load_integer(test["env"]["currentGasLimit"]),
-        parent_hash: maybe_hex(test["env"]["previousHash"])
-      })
-
-    {state, logs} =
-      case result do
-        {state, _, logs} -> {state, logs}
-        _ -> {pre_state, []}
-      end
-
-    expected_hash =
-      test["post"]["Frontier"]
-      |> Enum.at(index)
-      |> Map.fetch!("hash")
-      |> maybe_hex()
-
-    expected_logs = test["post"]["Frontier"] |> Enum.at(index) |> Map.fetch!("logs")
-    logs_hash = logs_hash(logs)
-
-    state.root_hash == expected_hash && maybe_hex(expected_logs) == logs_hash
+  defp populate_init_or_data(tx, data) do
+    if Transaction.contract_creation?(tx) do
+      %{tx | init: data}
+    else
+      %{tx | data: data}
+    end
   end
 
-  defp log_test_percentage(test_type, test_count, total_tests) do
-    IO.puts(
-      "#{test_type} tests: #{test_count}/#{total_tests} = #{
-        trunc(Float.round(test_count / total_tests, 2) * 100)
-      }%"
-    )
-  end
-
-  defp log_commented_test(test_name) do
-    IO.puts("    # \"#{test_name}\",")
-  end
-
-  defp log_test(test_name) do
-    IO.puts("      \"#{test_name}\",")
+  def dump_state(state) do
+    state
+    |> Trie.Inspector.all_values()
+    |> Enum.map(fn {key, value} ->
+      k = Base.encode16(key, case: :lower)
+      v = value |> ExRLP.decode() |> Account.deserialize()
+      {k, v}
+    end)
+    |> Enum.map(fn {address_key, account} ->
+      IO.puts(address_key)
+      IO.puts("  Balance: #{account.balance}")
+      IO.puts("  Nonce: #{account.nonce}")
+      IO.puts("  Storage Root:")
+      IO.puts("  " <> Base.encode16(account.storage_root))
+      IO.puts("  Code Hash")
+      IO.puts("  " <> Base.encode16(account.code_hash))
+    end)
   end
 
   def read_state_test_file(test_path) do
     test_path
     |> File.read!()
     |> Poison.decode!()
-    |> Enum.map(fn {_name, body} -> body end)
+  end
+
+  def state_test_file_name(group, test) do
+    file_name = Path.join(~w(st#{group} #{test}.json))
+    relative_path = Path.join(~w(.. .. ethereum_common_tests GeneralStateTests #{file_name}))
+
+    System.cwd()
+    |> Path.join(relative_path)
+    |> Path.expand()
   end
 
   def account_interface(test) do
@@ -200,12 +253,21 @@ defmodule GenerateStateTests do
     |> Keccak.kec()
   end
 
-  defp populate_init_or_data(tx, data) do
-    if Transaction.contract_creation?(tx) do
-      %{tx | init: data}
-    else
-      %{tx | data: data}
-    end
+  defp test_directories do
+    path = Path.join([EthCommonTest.Helpers.ethereum_common_tests_path(), "GeneralStateTests"])
+    wildcard = path <> "/*"
+
+    wildcard
+    |> Path.wildcard()
+    |> Enum.sort()
+  end
+
+  defp tests(directory_path) do
+    wildcard = directory_path <> "/**/*.json"
+
+    wildcard
+    |> Path.wildcard()
+    |> Enum.sort()
   end
 end
 
