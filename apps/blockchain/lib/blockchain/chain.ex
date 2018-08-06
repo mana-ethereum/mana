@@ -19,7 +19,8 @@ defmodule Blockchain.Chain do
             params: %{},
             genesis: %{},
             nodes: [],
-            accounts: %{}
+            accounts: %{},
+            evm_config: nil
 
   @type engine :: %{
           minimum_difficulty: integer(),
@@ -101,8 +102,8 @@ defmodule Blockchain.Chain do
       iex> Blockchain.Chain.load_chain(:ropsten).genesis.difficulty
       0x100000
   """
-  @spec load_chain(atom()) :: t
-  def load_chain(chain) do
+  @spec load_chain(atom(), EVM.Configuration.t()) :: t
+  def load_chain(chain, evm_config \\ nil) do
     chain_data = read_chain!(chain)
 
     engine =
@@ -120,7 +121,8 @@ defmodule Blockchain.Chain do
       params: get_params(chain_data["params"]),
       genesis: get_genesis(chain_data["genesis"]),
       nodes: chain_data["nodes"],
-      accounts: accounts
+      accounts: accounts,
+      evm_config: evm_config || EVM.Configuration.Frontier.new()
     }
   end
 

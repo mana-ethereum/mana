@@ -671,25 +671,26 @@ defmodule Blockchain.Block do
 
       # Create a contract
   """
-  @spec add_transactions(t, [Transaction.t()], DB.db()) :: t
-  def add_transactions(block, transactions, db) do
+  @spec add_transactions(t, [Transaction.t()], DB.db(), EVM.Configuration.t()) :: t
+  def add_transactions(block, transactions, db, config \\ EVM.Configuration.Frontier.new()) do
     trx_count = get_transaction_count(block)
 
-    do_add_transactions(block, transactions, db, trx_count)
+    do_add_transactions(block, transactions, db, trx_count, config)
   end
 
-  @spec do_add_transactions(t, [Transaction.t()], DB.db(), integer()) :: t
-  defp do_add_transactions(block, [], _, _), do: block
+  @spec do_add_transactions(t, [Transaction.t()], DB.db(), integer(), EVM.Configuration.t()) :: t
+  defp do_add_transactions(block, [], _, _, _), do: block
 
   defp do_add_transactions(
          block = %__MODULE__{header: header},
          [trx | transactions],
          db,
-         trx_count
+         trx_count,
+         config
        ) do
     state = Trie.new(db, header.state_root)
     # TODO: How do we deal with invalid transactions
-    {new_state, gas_used, logs} = Transaction.execute(state, trx, header)
+    {new_state, gas_used, logs} = Transaction.execute(state, trx, header, config)
 
     total_gas_used = block.header.gas_used + gas_used
 
@@ -707,7 +708,7 @@ defmodule Blockchain.Block do
       |> put_receipt(trx_count, receipt, db)
       |> put_transaction(trx_count, trx, db)
 
-    do_add_transactions(updated_block, transactions, db, trx_count + 1)
+    do_add_transactions(updated_block, transactions, db, trx_count + 1, config)
   end
 
   # Updates a block to have a new state root given a state object
