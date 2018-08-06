@@ -1,7 +1,7 @@
 defmodule GenerateBlockchainTests do
   use EthCommonTest.Harness
 
-  alias Blockchain.{Blocktree, Account, Transaction}
+  alias Blockchain.{Blocktree, Account, Transaction, Chain}
   alias MerklePatriciaTree.Trie
   alias Blockchain.Account.Storage
   alias Block.Header
@@ -79,7 +79,8 @@ defmodule GenerateBlockchainTests do
 
   defp run_test(json_test) do
     state = populate_prestate(json_test)
-    chain = Blockchain.Chain.load_chain(:frontier_test)
+
+    chain = load_chain(json_test["network"])
 
     blocktree =
       create_blocktree()
@@ -89,6 +90,34 @@ defmodule GenerateBlockchainTests do
     best_block_hash = maybe_hex(json_test["lastblockhash"])
 
     if blocktree.best_block.block_hash != best_block_hash, do: raise(RuntimeError)
+  end
+
+  defp load_chain(hardfork) do
+    config = evm_config(hardfork)
+
+    case hardfork do
+      "Frontier" ->
+        Chain.load_chain(:frontier_test, config)
+
+      "Homestead" ->
+        Chain.load_chain(:homestead_test, config)
+
+      _ ->
+        nil
+    end
+  end
+
+  defp evm_config(hardfork) do
+    case hardfork do
+      "Frontier" ->
+        EVM.Configuration.Frontier.new()
+
+      "Homestead" ->
+        EVM.Configuration.Homestead.new()
+
+      _ ->
+        nil
+    end
   end
 
   defp add_genesis_block(blocktree, json_test, state, chain) do
