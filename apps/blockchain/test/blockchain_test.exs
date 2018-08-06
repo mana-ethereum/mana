@@ -354,7 +354,8 @@ defmodule BlockchainTest do
     "EIP150" => [],
     "EIP158" => [],
     "Constantinople" => [],
-    "EIP158ToByzantiumAt5" => []
+    "EIP158ToByzantiumAt5" => [],
+    "FrontierToHomesteadAt5" => []
   }
 
   test "runs blockchain tests" do
