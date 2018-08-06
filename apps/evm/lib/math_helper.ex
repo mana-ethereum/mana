@@ -3,12 +3,44 @@ defmodule MathHelper do
   Simple functions to help with common
   math functions.
   """
-  @decimal_context %Decimal.Context{precision: 38, rounding: :floor}
+  # 78 is a number of digits in max unsigned 32 byte integer number
+  @decimal_context %Decimal.Context{precision: 78}
+
+  @spec sub(integer(), integer()) :: integer()
+  def sub(num1, num2) do
+    op = fn x1, x2 -> Decimal.sub(x1, x2) end
+
+    decimal_operation(num1, num2, op)
+  end
+
+  @spec add(integer(), integer()) :: integer()
+  def add(num1, num2) do
+    op = fn x1, x2 -> Decimal.add(x1, x2) end
+
+    decimal_operation(num1, num2, op)
+  end
+
+  @spec mult(integer(), integer()) :: integer()
+  def mult(num1, num2) do
+    op = fn x1, x2 -> Decimal.mult(x1, x2) end
+
+    decimal_operation(num1, num2, op)
+  end
 
   @spec div(integer(), integer()) :: integer()
   def div(num1, num2) do
+    op = fn x1, x2 -> Decimal.div(x1, x2) end
+
+    decimal_operation(num1, num2, op)
+  end
+
+  @spec decimal_operation(integer(), integer(), fun()) :: integer()
+  defp decimal_operation(num1, num2, op) do
     Decimal.with_context(@decimal_context, fn ->
-      num1 |> Decimal.div(num2) |> Decimal.to_integer()
+      num1
+      |> op.(num2)
+      |> Decimal.round(0, :down)
+      |> Decimal.to_integer()
     end)
   end
 
