@@ -36,7 +36,7 @@ iex> ABI.decode("baz(uint,address)", "000000000000000000000000000000000000000000
 
 ## Support
 
-Currently support for the following types:
+Currently supports the following types:
 
   * [X] `uint<M>`
   * [X] `int<M>`
