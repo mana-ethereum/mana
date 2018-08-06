@@ -10,9 +10,9 @@ defmodule ABI.Mixfile do
      lockfile: "../../mix.lock",
       description: "Ethereum's ABI Interface",
       package: [
-        maintainers: ["Geoffrey Hayes", "Mason Fischer"],
+        maintainers: ["Mason Fischer"],
         licenses: ["MIT"],
-        links: %{"GitHub" => "https://github.com/exthereum/abi"}
+        links: %{"GitHub" => "https://github.com/poanetwork/mana/tree/master/apps/abi"}
       ],
       build_embedded: Mix.env == :prod,
       start_permanent: Mix.env == :prod,

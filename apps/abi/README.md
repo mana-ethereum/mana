@@ -1,12 +1,12 @@
 # ABI
 
-The [Application Binary Interface](https://solidity.readthedocs.io/en/develop/abi-spec.html) (ABI) of Solidity describes how to transform binary data to types which the Solidity programming language understands. For instance, if we want to call a function `bark(uint32,bool)` on a Solidity-created contract `contract Dog`, what `data` parameter do we pass into our Ethereum transaction? This project allows us to encode such function calls.
+The [Application Binary Interface](https://solidity.readthedocs.io/en/develop/abi-spec.html) (ABI) application encodes and decodes  data for use in Solidity-created smart contracts. Data is encoded according to its [type](#Support), and contains the parameters and contents necessary to pass into an Ethereum transaction.
 
 ## Usage
 
 ### Encoding
 
-To encode a function call, pass the ABI spec and the data to pass in to `ABI.encode/1`.
+To encode a function call, pass the ABI spec and data to `ABI.encode/1`.
 
 ```elixir
 iex> ABI.encode("baz(uint,address)", [50, <<1::160>> |> :binary.decode_unsigned])
@@ -16,7 +16,7 @@ iex> ABI.encode("baz(uint,address)", [50, <<1::160>> |> :binary.decode_unsigned]
 Then, you can construct an Ethereum transaction with that data, e.g.
 
 ```elixir
-# Blockchain comes from `Exthereum.Blockchain`, see below.
+# Blockchain comes from `Mana-Ethereum.Blockchain`, see below.
 iex> %Blockchain.Transaction{
 ...> # ...
 ...> data: <<162, 145, 173, 214, 0, 0, 0, 0, 0, 0, 0, 0, ...>
@@ -27,7 +27,7 @@ That transaction can then be sent via JSON-RPC or DevP2P to execute the given fu
 
 ### Decoding
 
-Decode is generally the opposite of encoding, though we generally leave off the function signature from the start of the data. E.g. from above:
+Decode is the opposite of encode, and does not require the function selector (the first 4 bytes of the Keccak hash at the beginning of the call data i.e. 0xcdcd77c0).
 
 ```elixir
 iex> ABI.decode("baz(uint,address)", "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000320000000000000000000000000000000000000000000000000000000000000001" |> Base.decode16!(case: :lower))
@@ -36,7 +36,7 @@ iex> ABI.decode("baz(uint,address)", "000000000000000000000000000000000000000000
 
 ## Support
 
-Currently supports:
+Currently support for the following types:
 
   * [X] `uint<M>`
   * [X] `int<M>`
@@ -59,8 +59,8 @@ Currently supports:
 * [Solidity ABI](https://solidity.readthedocs.io/en/develop/abi-spec.html)
 * [Solidity Docs](https://solidity.readthedocs.io/)
 * [Solidity Grammar](https://github.com/ethereum/solidity/blob/develop/docs/grammar.txt)
-* [Exthereum Blockchain](https://github.com/exthereum/blockchain)
+* [Mana-Ethereum Blockchain](https://github.com/poanetwork/mana/tree/master/apps/blockchain)
 
-# Collaboration
+# Contributing
 
-This ABI library is licensed under the MIT license. Feel free to submit issues, pull requests or fork the code as you wish.
+See the [CONTRIBUTING](https://github.com/poanetwork/mana/blob/master/CONTRIBUTING.md) document for contribution, testing and pull request protocol.
