@@ -8,8 +8,6 @@ defmodule Blockchain.StateTest do
   use EthCommonTest.Harness
   use ExUnit.Case, async: true
 
-  @base_path Path.join([EthCommonTest.Helpers.ethereum_common_tests_path(), "GeneralStateTests"])
-
   @failing_tests %{
     "Frontier" => [
       "stTransitionTest/createNameRegistratorPerTxsNotEnoughGasAfter",
@@ -282,12 +280,5 @@ defmodule Blockchain.StateTest do
     wildcard
     |> Path.wildcard()
     |> Enum.sort()
-  end
-
-  def read_state_test_file(test_path) do
-    test_path
-    |> File.read!()
-    |> Poison.decode!()
-    |> Enum.map(fn {_name, body} -> body end)
   end
 end
