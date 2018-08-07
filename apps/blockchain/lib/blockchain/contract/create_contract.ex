@@ -71,7 +71,7 @@ defmodule Blockchain.Contract.CreateContract do
       if output == :failed do
         {:error, {params.state, 0, SubState.empty()}}
       else
-        {:ok, finalize(result, params, contract_address)}
+        finalize(result, params, contract_address)
       end
     end
   end
@@ -122,30 +122,32 @@ defmodule Blockchain.Contract.CreateContract do
     state_after_init = exec_env.account_interface.state
 
     contract_creation_cost = creation_cost(output)
+    insufficient_gas = remaining_gas < contract_creation_cost
 
-    insufficient_gas_before_homestead =
-      remaining_gas < contract_creation_cost and Header.is_before_homestead?(params.block_header)
+    if insufficient_gas && EVM.Configuration.fail_contract_creation?(params.config) do
+      {:error, {params.state, 0, SubState.empty()}}
+    else
+      resultant_gas =
+        cond do
+          state_after_init == nil -> 0
+          insufficient_gas -> remaining_gas
+          true -> remaining_gas - contract_creation_cost
+        end
 
-    resultant_gas =
-      cond do
-        state_after_init == nil -> 0
-        insufficient_gas_before_homestead -> remaining_gas
-        true -> remaining_gas - contract_creation_cost
-      end
+      resultant_state =
+        cond do
+          state_after_init == nil ->
+            params.state
 
-    resultant_state =
-      cond do
-        state_after_init == nil ->
-          params.state
+          insufficient_gas ->
+            state_after_init
 
-        insufficient_gas_before_homestead ->
-          state_after_init
+          true ->
+            Account.put_code(state_after_init, address, output)
+        end
 
-        true ->
-          Account.put_code(state_after_init, address, output)
-      end
-
-    {resultant_state, resultant_gas, accrued_sub_state}
+      {:ok, {resultant_state, resultant_gas, accrued_sub_state}}
+    end
   end
 
   # Returns the additional cost after creating a new contract.

@@ -15,9 +15,7 @@ defmodule BlockchainTest do
     "Frontier" => [],
     "Homestead" => [
       "GeneralStateTests/stDelegatecallTestHomestead/delegatecodeDynamicCode_d0g0v0.json",
-      "GeneralStateTests/stRandom2/randomStatetest643_d0g0v0.json",
-      "bcValidBlockTest/dataTx2.json",
-      "bcWalletTest/wallet2outOf3txs.json"
+      "GeneralStateTests/stDelegatecallTestHomestead/delegatecodeDynamicCode_d0g0v0.json"
     ],
     # the rest are not implemented yet
     "Byzantium" => [],

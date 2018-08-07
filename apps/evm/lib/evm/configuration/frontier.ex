@@ -1,5 +1,7 @@
 defmodule EVM.Configuration.Frontier do
-  defstruct contract_creation_cost: 21_000, has_delegate_call: false
+  defstruct contract_creation_cost: 21_000,
+            has_delegate_call: false,
+            fail_contract_creation: false
 
   def new do
     %__MODULE__{}
@@ -12,4 +14,7 @@ defimpl EVM.Configuration, for: EVM.Configuration.Frontier do
 
   @spec has_delegate_call?(EVM.Configuration.t()) :: boolean()
   def has_delegate_call?(config), do: config.has_delegate_call
+
+  @spec fail_contract_creation?(EVM.Configuration.t()) :: boolean()
+  def fail_contract_creation?(config), do: config.fail_contract_creation
 end
