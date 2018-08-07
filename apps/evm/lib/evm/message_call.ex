@@ -10,31 +10,59 @@ defmodule EVM.MessageCall do
     :current_machine_state,
     :current_sub_state,
     :output_params,
-    # s
     :sender,
-    # o
     :originator,
-    # r
     :recipient,
-    # c
     :code_owner,
-    # p
     :gas_price,
-    # v
     :value,
-    # v with overline
     :execution_value,
-    # d
     :data,
-    # e
     :stack_depth
   ]
+
+  @type out_size :: integer()
+  @type out_offset :: integer()
+  @type output_params :: {out_offset(), out_size()}
+
+  @typedoc """
+  Terms from the Yellow Paper:
+
+  s: sender,
+  o: originator,
+  r: recipient,
+  c: code_owner,
+  p: gas_price,
+  v: value,
+  v with overline: execution_value,
+  d: data,
+  e: stack_depth
+  """
+  @type t :: %__MODULE__{
+          current_exec_env: ExecEnv.t(),
+          current_machine_state: MachineState.t(),
+          current_sub_state: SubState.t(),
+          output_params: output_params(),
+          sender: EVM.Address.t(),
+          originator: EVM.Address.t(),
+          recipient: EVM.Address.t(),
+          code_owner: EVM.Address.t(),
+          gas_price: EVM.Gas.gas_price(),
+          value: integer(),
+          execution_value: integer(),
+          data: binary(),
+          stack_depth: integer()
+        }
 
   @doc """
   Message call function. Described as Θ in the Eq.(98) of the Yellow Paper
   """
+  @spec call(t) ::
+          %{machine_state: MachineState.t(), exec_env: ExecEnv.t(), sub_state: SubState.t()}
+          | %{machine_state: MachineState.t()}
   def call(message_call) do
     {out_offset, out_size} = message_call.output_params
+
     words = Memory.get_active_words(out_offset + out_size)
 
     updated_machine_state =
@@ -42,14 +70,14 @@ defmodule EVM.MessageCall do
 
     message_call = %{message_call | current_machine_state: updated_machine_state}
 
-    if valid_stack_depth?(message_call) && enough_gas?(message_call) do
+    if valid_stack_depth?(message_call) && sufficient_funds?(message_call) do
       execute(message_call)
     else
       failed_call(message_call, message_call.execution_value)
     end
   end
 
-  defp enough_gas?(message_call) do
+  defp sufficient_funds?(message_call) do
     sender_balance =
       AccountInterface.get_account_balance(
         message_call.current_exec_env.account_interface,
@@ -64,13 +92,24 @@ defmodule EVM.MessageCall do
   end
 
   defp execute(message_call) do
-    # first transitional state
-    message_call = transfer_value_to_recipient(message_call)
+    message_call = transfer_funds_if_needed(message_call)
 
     message_call
     |> prepare_call_execution_env()
     |> execute_call(message_call)
     |> update_state(message_call)
+  end
+
+  defp transfer_funds_if_needed(message_call) do
+    if recipient_is_current_account?(message_call) do
+      message_call
+    else
+      transfer_value_to_recipient(message_call)
+    end
+  end
+
+  defp recipient_is_current_account?(message_call) do
+    message_call.current_exec_env.address == message_call.recipient
   end
 
   def transfer_value_to_recipient(message_call) do

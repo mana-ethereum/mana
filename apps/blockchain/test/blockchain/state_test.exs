@@ -58,7 +58,6 @@ defmodule Blockchain.StateTest do
       "stEIP158Specific/vitalikTransactionTest",
       "stEIP150Specific/SuicideToNotExistingContract",
       "stEIP150Specific/CreateAndGasInsideCreate",
-      "stDelegatecallTestHomestead/delegatecodeDynamicCode",
       "stDelegatecallTestHomestead/Delegatecall1024OOG",
       "stCreateTest/CREATE_AcreateB_BSuicide_BStore"
     ],
@@ -98,7 +97,6 @@ defmodule Blockchain.StateTest do
       "stInitCodeTest/OutOfGasPrefundedContractCreation",
       "stInitCodeTest/OutOfGasContractCreation",
       "stInitCodeTest/NotEnoughCashContractCreation",
-      "stDelegatecallTestHomestead/delegatecodeDynamicCode",
       "stDelegatecallTestHomestead/callcodeOutput3partialFail",
       "stDelegatecallTestHomestead/callcodeOutput3partial",
       "stDelegatecallTestHomestead/callcodeOutput3Fail",

@@ -10,27 +10,34 @@ defmodule Blockchain.Contract.MessageCall do
   alias EVM.SubState
   alias EVM.MessageCall
 
-  # σ
   defstruct state: %{},
-            # s
             sender: <<>>,
-            # o
             originator: <<>>,
             recipient: <<>>,
             contract: <<>>,
-            # g
             available_gas: 0,
-            # p
             gas_price: 0,
             value: 0,
             apparent_value: 0,
-            # d
             data: <<>>,
-            # e
             stack_depth: 0,
             block_header: nil,
             config: nil
 
+  @typedoc """
+  Terms from the Yellow Paper:
+
+  σ: state
+  s: sender,
+  o: originator,
+  r: recipient,
+  g: available_gas
+  p: gas_price,
+  v: value,
+  v with overline: apparent_value,
+  d: data,
+  e: stack_depth
+  """
   @type t :: %__MODULE__{
           state: EVM.state(),
           sender: EVM.address(),
