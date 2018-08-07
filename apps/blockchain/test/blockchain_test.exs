@@ -12,16 +12,10 @@ defmodule BlockchainTest do
   @ethereum_common_tests_path System.cwd() <> "/../../ethereum_common_tests/BlockchainTests/"
 
   @failing_tests %{
-    "Frontier" => [
-      "GeneralStateTests/stMemoryTest/extcodecopy_dejavu_d0g0v0.json",
-      "bcRandomBlockhashTest/randomStatetest21BC.json"
-    ],
+    "Frontier" => [],
     "Homestead" => [
       "GeneralStateTests/stDelegatecallTestHomestead/delegatecodeDynamicCode_d0g0v0.json",
-      "GeneralStateTests/stMemoryTest/extcodecopy_dejavu_d0g0v0.json",
-      "GeneralStateTests/stRandom2/randomStatetest571_d0g0v0.json",
       "GeneralStateTests/stRandom2/randomStatetest643_d0g0v0.json",
-      "bcRandomBlockhashTest/randomStatetest21BC.json",
       "bcValidBlockTest/dataTx2.json",
       "bcWalletTest/wallet2outOf3txs.json"
     ],

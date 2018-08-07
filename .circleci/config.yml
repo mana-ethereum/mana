@@ -79,7 +79,9 @@ jobs:
           key: v1-build-cache
           paths: "_build"
 
-      - run: mix test --exclude network --exclude pending
+      - run:
+          command: mix test --exclude network --exclude pending
+          no_output_timeout: "20m"
 
       - persist_to_workspace:
           root: .
