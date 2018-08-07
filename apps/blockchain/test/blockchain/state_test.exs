@@ -10,7 +10,6 @@ defmodule Blockchain.StateTest do
 
   @failing_tests %{
     "Frontier" => [
-      "stTransitionTest/createNameRegistratorPerTxsNotEnoughGasAfter",
       "stTransactionTest/UserTransactionGasLimitIsTooLowWhenZeroCost",
       "stTransactionTest/TransactionToItselfNotEnoughFounds",
       "stTransactionTest/TransactionNonceCheck2",
@@ -43,7 +42,6 @@ defmodule Blockchain.StateTest do
       "stRevertTest/RevertOpcodeMultipleSubCalls",
       "stRevertTest/RevertOpcodeInInit",
       "stRevertTest/RevertOpcodeInInit",
-      "stRandom2/randomStatetest643",
       "stRandom2/201503110226PYTHON_DUP6",
       "stRandom/randomStatetest347",
       "stRandom/randomStatetest184",
