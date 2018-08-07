@@ -13,6 +13,6 @@ defimpl EVM.Configuration, for: EVM.Configuration.Homestead do
   @spec has_delegate_call?(EVM.Configuration.t()) :: boolean()
   def has_delegate_call?(config), do: config.has_delegate_call
 
-  @spec fail_contract_creation?(EVM.Configuration.t()) :: boolean()
-  def fail_contract_creation?(config), do: config.fail_contract_creation
+  @spec fail_contract_creation_lack_of_gas?(EVM.Configuration.t()) :: boolean()
+  def fail_contract_creation_lack_of_gas?(config), do: config.fail_contract_creation
 end
