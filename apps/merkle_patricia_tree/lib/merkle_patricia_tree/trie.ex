@@ -1,5 +1,5 @@
 defmodule MerklePatriciaTree.Trie do
-  @moduledoc File.read!("#{__DIR__}/../README.md")
+  @moduledoc File.read!("#{__DIR__}/../../README.md")
 
   alias ExthCrypto.Hash.Keccak
   alias MerklePatriciaTree.Trie.{Helper, Builder, Destroyer, Node, Storage}

@@ -10,7 +10,7 @@ Mana-Ethereum is currently in development. See the [Project Status](#project-sta
 
 # Dependencies
 
- * Elixir ~> 1.6.5
+ * Elixir ~> 1.7.1
  * Rust ~> 1.26.0 (as a dependency of [Rox](https://github.com/urbint/rox))
 
 
@@ -24,7 +24,7 @@ git clone --recurse-submodules https://github.com/poanetwork/mana.git
 
 * Go to the mana subdirectory `cd mana`
 
-* Run `bin/setup` 
+* Run `bin/setup`
 
 # Running a node
 
@@ -47,7 +47,7 @@ Infura](https://github.com/poanetwork/mana/blob/master/apps/blockchain/scripts/s
        config :ethereumex, url: "https://mainnet.infura.io/<your api key here>
      ```
 5. Save the file and return to the mana home directory.
-6. Run the script.  
+6. Run the script.
 `mix run apps/blockchain/scripts/sync_with_infura.ex`
 
 If running properly, you will see a timestamp in hr/min/sec/millisec and a running list of Verified Blocks.
@@ -91,7 +91,7 @@ Ethereum common tests are created for all clients to test against. We plan to pr
     - [VMTests](https://github.com/ethereum/tests/tree/develop/VMTests/vmTests) = 100% passing
     - [BlockchainTests](https://github.com/ethereum/tests/tree/develop/BlockchainTests) (Includes GeneralStateTests) 1325/1325 = 100% passing
     - [GeneralStateTests](https://github.com/ethereum/tests/tree/develop/GeneralStateTests)(723/738) = 98% passing
-  - Failing Frontier tests: 0/1325 = 0% 
+  - Failing Frontier tests: 0/1325 = 0%
 - [ ] Homestead
 - [ ] EIP150
 - [ ] EIP158
@@ -100,20 +100,20 @@ Ethereum common tests are created for all clients to test against. We plan to pr
 
 # Project Status
 
-| Functionality | Status          | 
-| ------------- |-------------- | 
-| Encoding and Hashing | The [RLP](https://hex.pm/packages/ex_rlp) encoding protocol and the [Merkle Patricia Tree](https://github.com/poanetwork/mana/tree/master/apps/merkle_patricia_tree) data structure are fully implemented.| 
-| [Ethereum Virtual Machine](https://github.com/poanetwork/mana/tree/master/apps/evm) | Our EVM currently passes 100% of the common [VM tests](https://github.com/ethereum/tests/tree/develop/VMTests). We are still discovering subtle differences in our implementation such as the [“vanishing Ether” issue](https://github.com/poanetwork/mana/commit/aa3056efe341dd548a750c6f5b4c8962ccef2518). This component is for the most part complete.    |  
+| Functionality | Status          |
+| ------------- |-------------- |
+| Encoding and Hashing | The [RLP](https://hex.pm/packages/ex_rlp) encoding protocol and the [Merkle Patricia Tree](https://github.com/poanetwork/mana/tree/master/apps/merkle_patricia_tree) data structure are fully implemented.|
+| [Ethereum Virtual Machine](https://github.com/poanetwork/mana/tree/master/apps/evm) | Our EVM currently passes 100% of the common [VM tests](https://github.com/ethereum/tests/tree/develop/VMTests). We are still discovering subtle differences in our implementation such as the [“vanishing Ether” issue](https://github.com/poanetwork/mana/commit/aa3056efe341dd548a750c6f5b4c8962ccef2518). This component is for the most part complete.    |
 | Peer to Peer Networking | Currently we can connect to one of the Ethereum bootnodes, get a list of peers, and add them to a list of known peers. We have fully implemented the modified [kademlia DHT](https://github.com/poanetwork/mana/tree/master/apps/ex_wire/lib/ex_wire/kademlia). <br /><br />We can also successfully perform the encrypted handshake with peer nodes and derive secrets to frame the rest of the messages. We have not yet implemented the ability to send [multi-frame packets](https://github.com/ethereum/devp2p/blob/master/rlpx.md#framing). See Issue [#97](https://github.com/poanetwork/mana/issues/97).  |
-| DEVp2p Protocol and Ethereum Wire Protocol | These are partially implemented but need to be completed. See Issue [#166](https://github.com/poanetwork/mana/issues/166) and Issue [#167](https://github.com/poanetwork/mana/issues/167). |     
+| DEVp2p Protocol and Ethereum Wire Protocol | These are partially implemented but need to be completed. See Issue [#166](https://github.com/poanetwork/mana/issues/166) and Issue [#167](https://github.com/poanetwork/mana/issues/167). |
 
 # Documentation
 To view module and reference documentation:
 
-1. Generate documentation.  
+1. Generate documentation.
 `mix docs`
 
-2. View the generated docs.  
+2. View the generated docs.
 `open doc/index.html`
 
 # License

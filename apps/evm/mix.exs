@@ -48,7 +48,6 @@ defmodule EVM.Mixfile do
       {:credo, "~> 0.9.1", only: [:dev, :test], runtime: false},
       {:poison, "~> 3.1.0", only: [:dev, :test], runtime: false},
       {:decimal, "~>1.5.0"},
-      {:ex_doc, "~> 0.14", only: :dev, runtime: false},
       {:merkle_patricia_tree, in_umbrella: true},
       {:exth_crypto, in_umbrella: true},
       {:ex_rlp, "~> 0.3.0"},
