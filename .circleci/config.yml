@@ -103,7 +103,7 @@ jobs:
   dialyzer:
     docker:
       # Ensure .tool-versions matches
-      - image: circleci/elixir:1.6.5
+      - image: circleci/elixir:1.7.1
         environment:
           MIX_ENV: test
 
@@ -178,7 +178,7 @@ jobs:
 
   check_formatted:
     docker:
-      - image: circleci/elixir:1.6.5
+      - image: circleci/elixir:1.7.1
         environment:
           MIX_ENV: test
 
@@ -193,7 +193,7 @@ jobs:
   credo:
     docker:
       # Ensure .tool-versions matches
-      - image: circleci/elixir:1.6.5
+      - image: circleci/elixir:1.7.1
         environment:
           MIX_ENV: test
 
