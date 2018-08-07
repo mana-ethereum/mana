@@ -86,13 +86,13 @@ cd apps/blockchain && mix test test/blockchain/transaction_test.exs
 
 Ethereum common tests are created for all clients to test against. We plan to progress through supported hard fork test protocols, and are currently working on the Homestead tests. See the [common test documentation](http://ethereum-tests.readthedocs.io/en/latest/index.html) for more information.
 
-- [x] Frontier: 100% tests passing
-  - Passing Frontier tests: 1325/1325 = 100%
-    - [VMTests](https://github.com/ethereum/tests/tree/develop/VMTests/vmTests) = 100% passing
+- [VMTests](https://github.com/ethereum/tests/tree/develop/VMTests/vmTests) = 100% passing
+- [x] Frontier
     - [BlockchainTests](https://github.com/ethereum/tests/tree/develop/BlockchainTests) (Includes GeneralStateTests) 1325/1325 = 100% passing
-    - [GeneralStateTests](https://github.com/ethereum/tests/tree/develop/GeneralStateTests)(723/738) = 98% passing
-  - Failing Frontier tests: 0/1325 = 0%
-- [ ] Homestead
+    - [GeneralStateTests](https://github.com/ethereum/tests/tree/develop/GeneralStateTests) 1014/1026 = 98.8% passing
+- [x] Homestead
+    - [BlockchainTests](https://github.com/ethereum/tests/tree/develop/BlockchainTests) (Includes GeneralStateTests) 2230/2231 = 99.9% passing
+    - [GeneralStateTests](https://github.com/ethereum/tests/tree/develop/GeneralStateTests) 2023/2062 = 98.1% passing
 - [ ] EIP150
 - [ ] EIP158
 - [ ] Byzantium
