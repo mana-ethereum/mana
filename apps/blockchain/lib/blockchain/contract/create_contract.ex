@@ -135,15 +135,10 @@ defmodule Blockchain.Contract.CreateContract do
         end
 
       resultant_state =
-        cond do
-          state_after_init == nil ->
-            params.state
-
-          insufficient_gas ->
-            state_after_init
-
-          true ->
-            Account.put_code(state_after_init, address, output)
+        if insufficient_gas do
+          state_after_init
+        else
+          Account.put_code(state_after_init, address, output)
         end
 
       {:ok, {resultant_state, resultant_gas, accrued_sub_state}}
