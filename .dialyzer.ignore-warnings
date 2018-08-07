@@ -1,3 +1,5 @@
+:0: Unknown function 'Elixir.Poison':'decode!'/1
+:0: Unknown function 'Elixir.Poison':'encode!'/1
 
 # protocol warnings
 
@@ -58,9 +60,15 @@ lib/trie/helper.ex:41: The variable _@1 can never match since previous clauses c
 -------------------------------
 apps/blockchain/lib/blockchain/block.ex:438: Function gen_child_block/2 has no local return
 apps/blockchain/lib/blockchain/block.ex:438: Function gen_child_block/3 has no local return
-apps/blockchain/lib/blockchain/block.ex:443: The call 'Elixir.Blockchain.Block':set_block_number(#{'__struct__':='Elixir.Blockchain.Block', 'block_hash':='nil', 'header':=#{'__struct__':='Elixir.Block.Header', 'beneficiary':=_, 'difficulty':='nil', 'extra_data':=_, 'gas_limit':=0, 'gas_used':=0, 'logs_bloom':=<<_:2048>>, 'mix_hash':=_, 'nonce':=<<_:64>>, 'number':='nil', 'ommers_hash':=<<_:256>>, 'parent_hash':='nil', 'receipts_root':=<<_:256>>, 'state_root':=_, 'timestamp':=_, 'transactions_root':=<<_:256>>}, 'ommers':=[], 'transactions':=[]},Vparent_block@1::any()) breaks the contract (t(),t()) -> t()
-apps/blockchain/lib/blockchain/block.ex:449: Invalid type specification for function 'Elixir.Blockchain.Block':gen_child_header/2. The success typing is (_,'nil' | [{atom(),_}] | map()) -> #{'__struct__':='Elixir.Block.Header', 'beneficiary':=_, 'difficulty':='nil', 'extra_data':=_, 'gas_limit':=0, 'gas_used':=0, 'logs_bloom':=<<_:2048>>, 'mix_hash':=_, 'nonce':=<<_:64>>, 'number':='nil', 'ommers_hash':=<<_:256>>, 'parent_hash':='nil', 'receipts_root':=<<_:256>>, 'state_root':=_, 'timestamp':=_, 'transactions_root':=<<_:256>>}
-apps/blockchain/lib/blockchain/block.ex:714: Invalid type specification for function 'Elixir.Blockchain.Block':put_state/2. The success typing is (#{'__struct__':='Elixir.Blockchain.Block', 'header':=#{'__struct__':='Elixir.Block.Header', 'state_root':=_, _=>_}, _=>_},atom() | #{'root_hash':=_, _=>_}) -> #{'__struct__':='Elixir.Blockchain.Block', 'header':=#{'__struct__':='Elixir.Block.Header', 'state_root':=_, _=>_}, _=>_}
+apps/blockchain/lib/blockchain/block.ex:443: The call 'Elixir.Blockchain.Block':set_block_number(#{'__s
+truct__':='Elixir.Blockchain.Block', 'block_hash':='nil', 'header':=#{'__struct__':='Elixir.Block.Heade
+r', 'beneficiary':=_, 'difficulty':='nil', 'extra_data':=_, 'gas_limit':=0, 'gas_used':=0, 'logs_bloom'
+:=<<_:2048>>, 'mix_hash':=_, 'nonce':=<<_:64>>, 'number':='nil', 'ommers_hash':=<<_:256>>, 'parent_hash
+':='nil', 'receipts_root':=<<_:256>>, 'state_root':=_, 'timestamp':=_, 'transactions_root':=<<_:256>>},
+ 'ommers':=[], 'transactions':=[]},_parent_block@1::any()) breaks the contract (t(),t()) -> t()
+apps/merkle_patricia_tree/lib/merkle_patricia_tree/trie/helper.ex:41: Guard test is_binary(__@1::<<_:4>
+>) can never succeed
+
 apps/blockchain/lib/blockchain/block.ex:675: Function add_transactions/3 has no local return
 apps/blockchain/lib/blockchain/block.ex:675: The call 'Elixir.Blockchain.Block':add_transactions(_@1
 ::any(),_@2::any(),_@3::any(),#{'__struct__':='Elixir.EVM.Configuration.Frontier', 'contract_creatio

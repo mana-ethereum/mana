@@ -50,8 +50,7 @@ defmodule EVM.Mixfile do
       {:decimal, "~>1.5.0"},
       {:merkle_patricia_tree, in_umbrella: true},
       {:exth_crypto, in_umbrella: true},
-      {:ex_rlp, "~> 0.3.0"},
-      {:dialyxir, "~> 0.5", only: [:dev], runtime: false}
+      {:ex_rlp, "~> 0.3.0"}
     ]
   end
 end
