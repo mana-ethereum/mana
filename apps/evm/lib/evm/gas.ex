@@ -146,7 +146,7 @@ defmodule EVM.Gas do
   end
 
   def memory_cost(:extcodecopy, [_address, mem_offset, _code_offset, length], machine_state) do
-    if mem_offset + length >= EVM.max_int() do
+    if mem_offset + length > EVM.max_int() do
       0
     else
       memory_expansion_cost(machine_state, mem_offset, length)
