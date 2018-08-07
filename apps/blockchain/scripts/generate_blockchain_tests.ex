@@ -48,7 +48,7 @@ defmodule GenerateBlockchainTests do
 
     IO.puts(
       "Passing #{hardfork} tests: #{passing_count}/#{all_tests} = #{
-        trunc(Float.round(passing_count / all_tests, 2) * 100)
+        round(passing_count / all_tests * 1000) / 10
       }%"
     )
 

@@ -49,10 +49,8 @@ defmodule Blockchain.Mixfile do
   defp deps do
     [
       {:credo, "~>  0.9.1", only: [:dev, :test], runtime: false},
-      {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
       {:ethereumex, "~> 0.3.2"},
       {:evm, in_umbrella: true},
-      {:ex_doc, "~> 0.16", only: :dev, runtime: false},
       {:ex_rlp, "~> 0.3.0"},
       {:exth_crypto, in_umbrella: true},
       {:merkle_patricia_tree, in_umbrella: true},

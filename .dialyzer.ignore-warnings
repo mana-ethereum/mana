@@ -1,3 +1,5 @@
+:0: Unknown function 'Elixir.Poison':'decode!'/1
+:0: Unknown function 'Elixir.Poison':'encode!'/1
 
 # protocol warnings
 
@@ -35,6 +37,27 @@
 :0: Unknown function 'Elixir.EVM.Configuration.Reference':'__impl__'/1
 :0: Unknown function 'Elixir.EVM.Configuration.Tuple':'__impl__'/1
 
+# evm warnings
+
+apps/evm/lib/evm/functions.ex:155: Function 'not_enough_gas?'/4 has no local return
+apps/evm/lib/evm/functions.ex:162: Function 'nested_operation_gas_overflow?'/3 will never be called
+apps/evm/lib/evm/functions.ex:180: Function 'is_invalid_jump_destination?'/3 will never be called
+apps/evm/lib/evm/gas.ex:135: Function cost/2 has no local return
+apps/evm/lib/evm/gas.ex:138: The call 'Elixir.EVM.Gas':operation_cost(atom(),_inputs@1::[integer()],_machine_state@1::#{'__struct__':='Elixir.EVM.MachineState', 'active_words':=integer(), 'gas':=integer(), 'last_return_data':=[integer()], 'memory':=binary(), 'previously_active_words':=_, 'program_counter':=integer(), 'stack':=[integer()]},_exec_env@1::#{'__struct__':='Elixir.EVM.ExecEnv', 'account_interface':=atom(), 'address':=<<_:160>>, 'block_interface':=atom(), 'config':=atom(), 'data':=binary(), 'gas_price':=integer(), 'machine_code':=binary(), 'originator':=<<_:160>>, 'sender':=<<_:160>>, 'stack_depth':=integer(), 'value_in_wei':=integer()}) breaks the contract (atom(),['Elixir.EVM':val()],['Elixir.EVM':val()],'Elixir.EVM.MachineState':t()) -> t() | 'nil'
+apps/evm/lib/evm/gas.ex:327: Function operation_cost/0 has no local return
+apps/evm/lib/evm/gas.ex:327: The call 'Elixir.EVM.Gas':operation_cost('nil','nil','nil','nil') breaks the contract (atom(),['Elixir.EVM':val()],['Elixir.EVM':val()],'Elixir.EVM.MachineState':t()) -> t() | 'nil'
+apps/evm/lib/evm/gas.ex:327: Function operation_cost/1 has no local return
+apps/evm/lib/evm/gas.ex:327: The call 'Elixir.EVM.Gas':operation_cost(__@1::any(),'nil','nil','nil') breaks the contract (atom(),['Elixir.EVM':val()],['Elixir.EVM':val()],'Elixir.EVM.MachineState':t()) -> t() | 'nil'
+apps/evm/lib/evm/gas.ex:327: Function operation_cost/2 has no local return
+apps/evm/lib/evm/gas.ex:327: The call 'Elixir.EVM.Gas':operation_cost(__@1::any(),__@2::any(),'nil','nil') breaks the contract (atom(),['Elixir.EVM':val()],['Elixir.EVM':val()],'Elixir.EVM.MachineState':t()) -> t() | 'nil'
+apps/evm/lib/evm/gas.ex:327: Function operation_cost/3 has no local return
+apps/evm/lib/evm/gas.ex:327: The call 'Elixir.EVM.Gas':operation_cost(__@1::any(),__@2::any(),__@3::any(),'nil') breaks the contract (atom(),['Elixir.EVM':val()],['Elixir.EVM':val()],'Elixir.EVM.MachineState':t()) -> t() | 'nil'
+apps/evm/lib/evm/machine_state.ex:48: Function subtract_gas/2 has no local return
+apps/evm/lib/evm/operation/environmental_information.ex:114: Function calldataload/2 has no local return
+apps/evm/lib/evm/operation/environmental_information.ex:117: The call 'Elixir.EVM.Helpers':decode_signed(binary()) breaks the contract (integer() | 'nil') -> 'Elixir.EVM':val() | 'nil'
+apps/evm/lib/evm/vm.ex:98: The pattern 'continue' can never match the type {'halt','invalid_instruction' | 'stack_underflow' | 'undefined_instruction'}
+apps/evm/lib/evm/vm.ex:133: Function cycle/3 has no local return
+
 -------------------------------
 # TODO: rewrite mocked protocol typespecs
 -------------------------------
@@ -58,9 +81,15 @@ lib/trie/helper.ex:41: The variable _@1 can never match since previous clauses c
 -------------------------------
 apps/blockchain/lib/blockchain/block.ex:438: Function gen_child_block/2 has no local return
 apps/blockchain/lib/blockchain/block.ex:438: Function gen_child_block/3 has no local return
-apps/blockchain/lib/blockchain/block.ex:443: The call 'Elixir.Blockchain.Block':set_block_number(#{'__struct__':='Elixir.Blockchain.Block', 'block_hash':='nil', 'header':=#{'__struct__':='Elixir.Block.Header', 'beneficiary':=_, 'difficulty':='nil', 'extra_data':=_, 'gas_limit':=0, 'gas_used':=0, 'logs_bloom':=<<_:2048>>, 'mix_hash':=_, 'nonce':=<<_:64>>, 'number':='nil', 'ommers_hash':=<<_:256>>, 'parent_hash':='nil', 'receipts_root':=<<_:256>>, 'state_root':=_, 'timestamp':=_, 'transactions_root':=<<_:256>>}, 'ommers':=[], 'transactions':=[]},Vparent_block@1::any()) breaks the contract (t(),t()) -> t()
-apps/blockchain/lib/blockchain/block.ex:449: Invalid type specification for function 'Elixir.Blockchain.Block':gen_child_header/2. The success typing is (_,'nil' | [{atom(),_}] | map()) -> #{'__struct__':='Elixir.Block.Header', 'beneficiary':=_, 'difficulty':='nil', 'extra_data':=_, 'gas_limit':=0, 'gas_used':=0, 'logs_bloom':=<<_:2048>>, 'mix_hash':=_, 'nonce':=<<_:64>>, 'number':='nil', 'ommers_hash':=<<_:256>>, 'parent_hash':='nil', 'receipts_root':=<<_:256>>, 'state_root':=_, 'timestamp':=_, 'transactions_root':=<<_:256>>}
-apps/blockchain/lib/blockchain/block.ex:714: Invalid type specification for function 'Elixir.Blockchain.Block':put_state/2. The success typing is (#{'__struct__':='Elixir.Blockchain.Block', 'header':=#{'__struct__':='Elixir.Block.Header', 'state_root':=_, _=>_}, _=>_},atom() | #{'root_hash':=_, _=>_}) -> #{'__struct__':='Elixir.Blockchain.Block', 'header':=#{'__struct__':='Elixir.Block.Header', 'state_root':=_, _=>_}, _=>_}
+apps/blockchain/lib/blockchain/block.ex:443: The call 'Elixir.Blockchain.Block':set_block_number(#{'__s
+truct__':='Elixir.Blockchain.Block', 'block_hash':='nil', 'header':=#{'__struct__':='Elixir.Block.Heade
+r', 'beneficiary':=_, 'difficulty':='nil', 'extra_data':=_, 'gas_limit':=0, 'gas_used':=0, 'logs_bloom'
+:=<<_:2048>>, 'mix_hash':=_, 'nonce':=<<_:64>>, 'number':='nil', 'ommers_hash':=<<_:256>>, 'parent_hash
+':='nil', 'receipts_root':=<<_:256>>, 'state_root':=_, 'timestamp':=_, 'transactions_root':=<<_:256>>},
+ 'ommers':=[], 'transactions':=[]},_parent_block@1::any()) breaks the contract (t(),t()) -> t()
+apps/merkle_patricia_tree/lib/merkle_patricia_tree/trie/helper.ex:41: Guard test is_binary(__@1::<<_:4>
+>) can never succeed
+
 apps/blockchain/lib/blockchain/block.ex:675: Function add_transactions/3 has no local return
 apps/blockchain/lib/blockchain/block.ex:675: The call 'Elixir.Blockchain.Block':add_transactions(_@1
 ::any(),_@2::any(),_@3::any(),#{'__struct__':='Elixir.EVM.Configuration.Frontier', 'contract_creatio
