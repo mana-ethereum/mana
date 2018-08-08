@@ -11,11 +11,13 @@ defmodule GenerateStateTests do
     initial_state = %{
       passing: %{
         "Homestead" => [],
-        "Frontier" => []
+        "Frontier" => [],
+        "EIP150" => []
       },
       failing: %{
         "Homestead" => [],
-        "Frontier" => []
+        "Frontier" => [],
+        "EIP150" => []
       }
     }
 
@@ -34,10 +36,17 @@ defmodule GenerateStateTests do
         end)
       end)
 
-    IO.puts("Failing tests")
-    IO.puts(inspect(completed_tests[:failing], limit: :infinity, width: 10))
+    failing_tests =
+      completed_tests[:failing]
+      |> Enum.map(fn {hardfork, tests} ->
+        {hardfork, Enum.dedup(tests)}
+      end)
+      |> Enum.into(%{})
 
-    for hardfork <- ["Homestead", "Frontier"] do
+    IO.puts("Failing tests")
+    IO.puts(inspect(failing_tests, limit: :infinity))
+
+    for hardfork <- ["Homestead", "Frontier", "EIP150"] do
       passing_tests = length(completed_tests[:passing][hardfork])
       failing_tests = length(completed_tests[:failing][hardfork])
       total_tests = passing_tests + failing_tests
@@ -159,6 +168,9 @@ defmodule GenerateStateTests do
 
       "Homestead" ->
         EVM.Configuration.Homestead.new()
+
+      "EIP150" ->
+        EVM.Configuration.EIP150.new()
 
       _ ->
         nil

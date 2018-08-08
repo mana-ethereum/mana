@@ -3,7 +3,7 @@ defmodule EVM.Gas do
   Functions for interacting wth gas and costs of opscodes.
   """
 
-  alias EVM.{MachineState, MachineCode, Operation, Address, ExecEnv}
+  alias EVM.{MachineState, MachineCode, Operation, Address, ExecEnv, Configuration}
 
   @type t :: EVM.val()
   @type gas_price :: EVM.Wei.t()
@@ -20,12 +20,6 @@ defmodule EVM.Gas do
   @g_mid 8
   # Amount of gas to pay for operations of the set W_high.
   @g_high 10
-  # Amount of gas to pay for operations of the set W_extcode.
-  @g_extcode 20
-  # Amount of gas to pay for a BALANCE operation.
-  @g_balance 20
-  # Paid for a SLOAD operation.
-  @g_sload 50
   # Paid for a JUMPDEST operation.
   @g_jumpdest 1
   # Paid for an SSTORE operation when the storage value is set to non-zero from zero.
@@ -36,8 +30,6 @@ defmodule EVM.Gas do
   @g_create 32_000
   # Paid per byte for a CREATE operation to succeed in placing code into state.
   @g_codedeposit 200
-  # Paid for a CALL operation.
-  @g_call 40
   # Paid for a non-zero value transfer as part of the CALL operation.
   @g_callvalue 9000
   # A stipend for the called contract subtracted from Gcallvalue for a non-zero value transfer.
@@ -73,7 +65,7 @@ defmodule EVM.Gas do
   # Payment for BLOCKHASH operation
   @g_blockhash 20
 
-  @w_zero_instr [:stop, :return, :selfdestruct, :revert]
+  @w_zero_instr [:stop, :return, :revert]
   @w_base_instr [
     :address,
     :origin,
@@ -119,7 +111,6 @@ defmodule EVM.Gas do
   @w_low_instr [:mul, :div, :sdiv, :mod, :smod, :signextend]
   @w_mid_instr [:addmod, :mulmod, :jump]
   @w_high_instr [:jumpi]
-  @w_extcode_instr [:extcodesize]
 
   @doc """
   Returns the cost to execute the given a cycle of the VM. This is defined
@@ -322,6 +313,12 @@ defmodule EVM.Gas do
       iex> EVM.Gas.operation_cost(:sha3, [10, 1024], %EVM.MachineState{stack: [10, 1024]}, exec_env)
       222
 
+      iex> address = 0x0000000000000000000000000000000000000001
+      iex> account_interface = EVM.Interface.Mock.MockAccountInterface.new()
+      iex> exec_env = %EVM.ExecEnv{address: address, account_interface: account_interface}
+      iex> EVM.Gas.operation_cost(:sstore, [0, 0], %EVM.MachineState{}, exec_env)
+      20000
+
   """
   @spec operation_cost(atom(), list(EVM.val()), list(EVM.val()), MachineState.t()) :: t | nil
   def operation_cost(operation \\ nil, inputs \\ nil, machine_state \\ nil, exec_env \\ nil)
@@ -347,28 +344,15 @@ defmodule EVM.Gas do
         :extcodecopy,
         [_address, _code_offset, _mem_offset, length],
         _machine_state,
-        _exec_env
+        exec_env
       ) do
-    @g_extcode + @g_copy * MathHelper.bits_to_words(length)
+    Configuration.extcodecopy_cost(exec_env.config) + @g_copy * MathHelper.bits_to_words(length)
   end
 
   def operation_cost(:sha3, [_length, offset], _machine_state, _exec_env) do
     @g_sha3 + @g_sha3word * MathHelper.bits_to_words(offset)
   end
 
-  @doc """
-  Returns the cost of a call to `sstore`.
-  This is defined in Appenfix H.2. of the Yellow Paper under the
-  definition of SSTORE, referred to as `C_SSTORE`.
-
-  ## Examples
-
-    iex> address = 0x0000000000000000000000000000000000000001
-    iex> account_interface = EVM.Interface.Mock.MockAccountInterface.new()
-    iex> exec_env = %EVM.ExecEnv{address: address, account_interface: account_interface}
-    iex> EVM.Gas.operation_cost(:sstore, [0, 0], %EVM.MachineState{}, exec_env)
-    20000
-  """
   def operation_cost(:sstore, [key, new_value], _machine_state, exec_env) do
     case ExecEnv.get_storage(exec_env, key) do
       :account_not_found ->
@@ -398,7 +382,8 @@ defmodule EVM.Gas do
       ) do
     to_address = Address.new(to_address)
 
-    @g_call + call_value_cost(value) + new_account_cost(exec_env, to_address) + call_gas
+    Configuration.call_cost(exec_env.config) + call_value_cost(value) +
+      new_account_cost(exec_env, to_address) + call_gas
   end
 
   def operation_cost(
@@ -409,27 +394,26 @@ defmodule EVM.Gas do
       ) do
     to_address = Address.new(to_address)
 
-    @g_call + call_value_cost(value) + new_account_cost(exec_env, to_address) + gas_limit
+    Configuration.call_cost(exec_env.config) + call_value_cost(value) +
+      new_account_cost(exec_env, to_address) + gas_limit
   end
 
   def operation_cost(
         :delegatecall,
-        [gas_limit, to_address, _in_offset, _in_length, _out_offset, _out_length],
+        [gas_limit, _to_address, _in_offset, _in_length, _out_offset, _out_length],
         _machine_state,
         exec_env
       ) do
-    to_address = Address.new(to_address)
-
-    @g_call + gas_limit
+    Configuration.call_cost(exec_env.config) + gas_limit
   end
 
   def operation_cost(
         :callcode,
         [gas_limit, _to_address, value, _in_offset, _in_length, _out_offset, _out_length],
         _machine_state,
-        _exec_env
+        exec_env
       ) do
-    @g_call + call_value_cost(value) + gas_limit
+    Configuration.call_cost(exec_env.config) + call_value_cost(value) + gas_limit
   end
 
   def operation_cost(:log0, [_offset, size | _], _machine_state, _exec_env) do
@@ -453,21 +437,49 @@ defmodule EVM.Gas do
   end
 
   # credo:disable-for-next-line
-  def operation_cost(operation, _inputs, _machine_state, _exec_env) do
+  def operation_cost(operation, _inputs, _machine_state, exec_env) do
     cond do
-      operation in @w_very_low_instr -> @g_verylow
-      operation in @w_zero_instr -> @g_zero
-      operation in @w_base_instr -> @g_base
-      operation in @w_low_instr -> @g_low
-      operation in @w_mid_instr -> @g_mid
-      operation in @w_high_instr -> @g_high
-      operation in @w_extcode_instr -> @g_extcode
-      operation == :create -> @g_create
-      operation == :blockhash -> @g_blockhash
-      operation == :balance -> @g_balance
-      operation == :sload -> @g_sload
-      operation == :jumpdest -> @g_jumpdest
-      true -> 0
+      operation in @w_very_low_instr ->
+        @g_verylow
+
+      operation in @w_zero_instr ->
+        @g_zero
+
+      operation in @w_base_instr ->
+        @g_base
+
+      operation in @w_low_instr ->
+        @g_low
+
+      operation in @w_mid_instr ->
+        @g_mid
+
+      operation in @w_high_instr ->
+        @g_high
+
+      operation == :extcodesize ->
+        Configuration.extcodecopy_cost(exec_env.config)
+
+      operation == :create ->
+        @g_create
+
+      operation == :blockhash ->
+        @g_blockhash
+
+      operation == :balance ->
+        Configuration.balance_cost(exec_env.config)
+
+      operation == :sload ->
+        Configuration.sload_cost(exec_env.config)
+
+      operation == :selfdestruct ->
+        Configuration.selfdestruct_cost(exec_env.config)
+
+      operation == :jumpdest ->
+        @g_jumpdest
+
+      true ->
+        0
     end
   end
 
