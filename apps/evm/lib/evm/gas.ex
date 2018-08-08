@@ -321,6 +321,12 @@ defmodule EVM.Gas do
     end
   end
 
+  def operation_cost(:selfdestruct, _, _, exec_env) do
+    is_new_account = ExecEnv.new_account?(exec_env)
+
+    Configuration.selfdestruct_cost(exec_env.config, new_account: is_new_account)
+  end
+
   def operation_cost(
         :call,
         [call_gas, to_address, value, _in_offset, _in_length, _out_offset, _out_length],
@@ -418,9 +424,6 @@ defmodule EVM.Gas do
 
       operation == :sload ->
         Configuration.sload_cost(exec_env.config)
-
-      operation == :selfdestruct ->
-        Configuration.selfdestruct_cost(exec_env.config)
 
       operation == :jumpdest ->
         @g_jumpdest

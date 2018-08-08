@@ -93,4 +93,9 @@ defmodule EVM.ExecEnv do
 
     %{exec_env | account_interface: account_interface}
   end
+
+  @spec new_account?(t()) :: boolean()
+  def new_account?(exec_env) do
+    !AccountInterface.account_exists?(exec_env.account_interface, exec_env.address)
+  end
 end

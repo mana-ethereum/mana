@@ -5,6 +5,7 @@ defmodule EVM.Configuration.EIP150 do
             sload_cost: 200,
             call_cost: 700,
             selfdestruct_cost: 5_000,
+            new_account_destruction_cost: 25_000,
             fallback_config: EVM.Configuration.Homestead.new()
 
   def new do
@@ -39,5 +40,9 @@ defimpl EVM.Configuration, for: EVM.Configuration.EIP150 do
   def call_cost(config), do: config.call_cost
 
   @spec selfdestruct_cost(EVM.Configuration.t(), keyword()) :: integer()
-  def selfdestruct_cost(config, _params), do: config.selfdestruct_cost
+  def selfdestruct_cost(config, new_account: false), do: config.selfdestruct_cost
+
+  def selfdestruct_cost(config, new_account: true) do
+    config.selfdestruct_cost + config.new_account_destruction_cost
+  end
 end
