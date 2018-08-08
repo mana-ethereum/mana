@@ -266,59 +266,6 @@ defmodule EVM.Gas do
   @doc """
   Returns the operation cost for every possible operation.
   This is defined in Appendix H of the Yellow Paper.
-
-  ## Examples
-
-      iex> address = 0x0000000000000000000000000000000000000001
-      iex> account_interface = EVM.Interface.Mock.MockAccountInterface.new()
-      iex> exec_env = %EVM.ExecEnv{address: address, account_interface: account_interface}
-      iex> EVM.Gas.operation_cost(:sstore, [], %EVM.MachineState{stack: [0, 0]}, exec_env)
-      20_000
-
-      iex> EVM.Gas.operation_cost(:exp, [0, 0], %EVM.MachineState{}, exec_env)
-      10
-
-      iex> EVM.Gas.operation_cost(:exp, [0, 1024], %EVM.MachineState{}, exec_env)
-      30
-
-      iex> EVM.Gas.operation_cost(:jumpdest, [], nil, exec_env)
-      1
-
-      iex> EVM.Gas.operation_cost(:blockhash, [], nil, exec_env)
-      20
-
-      iex> EVM.Gas.operation_cost(:stop, [], nil, exec_env)
-      0
-
-      iex> EVM.Gas.operation_cost(:address, [], nil, exec_env)
-      2
-
-      iex> EVM.Gas.operation_cost(:push0, [], nil, exec_env)
-      3
-
-      iex> EVM.Gas.operation_cost(:mul, [], nil, exec_env)
-      5
-
-      iex> EVM.Gas.operation_cost(:addmod, [], nil, exec_env)
-      8
-
-      iex> EVM.Gas.operation_cost(:jumpi, [], nil, exec_env)
-      10
-
-      iex> EVM.Gas.operation_cost(:extcodesize, [], nil, exec_env)
-      700
-
-      iex> EVM.Gas.operation_cost(:sha3, [0, 0], %EVM.MachineState{stack: [0, 0]}, exec_env)
-      30
-      iex> EVM.Gas.operation_cost(:sha3, [10, 1024], %EVM.MachineState{stack: [10, 1024]}, exec_env)
-      222
-
-      iex> address = 0x0000000000000000000000000000000000000001
-      iex> account_interface = EVM.Interface.Mock.MockAccountInterface.new()
-      iex> exec_env = %EVM.ExecEnv{address: address, account_interface: account_interface}
-      iex> EVM.Gas.operation_cost(:sstore, [0, 0], %EVM.MachineState{}, exec_env)
-      20000
-
   """
   @spec operation_cost(atom(), list(EVM.val()), list(EVM.val()), MachineState.t()) :: t | nil
   def operation_cost(operation \\ nil, inputs \\ nil, machine_state \\ nil, exec_env \\ nil)
