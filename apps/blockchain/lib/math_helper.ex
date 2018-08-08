@@ -2,8 +2,7 @@ defmodule Blockchain.MathHelper do
   alias Blockchain.Transaction
 
   @doc """
-  Caluclates the amount which should be refunded based on the current transactions
-  final usage. This includes the remaining gas plus refunds from clearing storage.
+  Calculates the amount amount of gas to refund based on the final usage of the current transaction. This includes the remaining gas plus refunds from clearing storage.
 
   The specs calls for capping the refund at half of the total amount of gas used.
 

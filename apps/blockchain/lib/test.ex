@@ -2,7 +2,7 @@ defmodule Blockchain.Test do
   @moduledoc """
   Helper functions related to testing the Blockchain.
 
-  NOTE: Remember to recompile test after updading chain configs.
+  NOTE: Remember to recompile test after updating chain configs.
   """
 
   @chain Blockchain.Chain.load_chain(:ropsten)

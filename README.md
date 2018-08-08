@@ -98,6 +98,40 @@ Ethereum common tests are created for all clients to test against. We plan to pr
 - [ ] Byzantium
 - [ ] Constantinople:  View the community [Constantinople Project Tracker](https://github.com/ethereum/pm/issues/53).
 
+## Debugging
+
+To debug a given run of the blockchain, you can set breakpoints on contract addresses by
+setting the `BREAKPOINT` environment variable and specifying a contract address to break on. E.g.
+
+```bash
+BREAKPOINT=bc1ffc1620da1468624a596cb841d35e6b2f1fb6 iex -S mix
+
+...
+
+00:04:18.739 [warn]  Debugger has been enabled. Set breakpoint #1 on contract address 0xbc1ffc1620da1468624a596cb841d35e6b2f1fb6.
+
+...
+
+-- Breakpoint #1 triggered with conditions contract address 0xbc1ffc1620da1468624a596cb841d35e6b2f1fb6 (start) --
+
+gas: 277888 | pc: 0 | memory: 0 | words: 0 | # stack: 0
+
+----> [ 0] push2
+      [ 1] 0
+      [ 2] 4
+      [ 3] dup1
+      [ 4] push2
+      [ 5] 0
+      [ 6] 14
+      [ 7] push1
+      [ 8] 0
+      [ 9] codecopy
+
+Enter a debug command or type `h` for help.
+
+>>
+```
+
 # Project Status
 
 | Functionality | Status          |
