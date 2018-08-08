@@ -314,6 +314,9 @@ defmodule BlockchainTest do
       "Homestead" ->
         Chain.load_chain(:homestead_test, config)
 
+      "EIP150" ->
+        Chain.load_chain(:eip150_test, config)
+
       _ ->
         nil
     end
