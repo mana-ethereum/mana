@@ -40,4 +40,8 @@ defprotocol EVM.Configuration do
   # EIP150
   @spec selfdestruct_cost(t, keyword()) :: integer()
   def selfdestruct_cost(t, params \\ [])
+
+  # EIP150
+  @spec fail_call_lack_of_gas?(t) :: boolean()
+  def fail_call_lack_of_gas?(t)
 end

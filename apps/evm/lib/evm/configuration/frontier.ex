@@ -7,7 +7,8 @@ defmodule EVM.Configuration.Frontier do
             balance_cost: 20,
             sload_cost: 50,
             call_cost: 40,
-            selfdestruct_cost: 0
+            selfdestruct_cost: 0,
+            fail_call_lack_of_gas: true
 
   def new do
     %__MODULE__{}
@@ -41,4 +42,7 @@ defimpl EVM.Configuration, for: EVM.Configuration.Frontier do
 
   @spec selfdestruct_cost(EVM.Configuration.t(), keyword()) :: integer()
   def selfdestruct_cost(config, _params), do: config.selfdestruct_cost
+
+  @spec fail_call_lack_of_gas?(EVM.Configuration.t()) :: boolean()
+  def fail_call_lack_of_gas?(config), do: config.fail_call_lack_of_gas
 end

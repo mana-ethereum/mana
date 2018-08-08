@@ -3,7 +3,7 @@ defmodule EVM.Gas do
   Functions for interacting wth gas and costs of opscodes.
   """
 
-  alias EVM.{MachineState, MachineCode, Operation, Address, ExecEnv, Configuration}
+  alias EVM.{MachineState, MachineCode, Operation, Address, ExecEnv, Configuration, Helpers}
 
   @type t :: EVM.val()
   @type gas_price :: EVM.Wei.t()
@@ -111,6 +111,7 @@ defmodule EVM.Gas do
   @w_low_instr [:mul, :div, :sdiv, :mod, :smod, :signextend]
   @w_mid_instr [:addmod, :mulmod, :jump]
   @w_high_instr [:jumpi]
+  @call_operations [:call, :callcode, :delegatecall, :staticcall]
 
   @doc """
   Returns the cost to execute the given a cycle of the VM. This is defined
@@ -129,7 +130,42 @@ defmodule EVM.Gas do
     operation_cost = operation_cost(operation.sym, inputs, machine_state, exec_env)
     memory_cost = memory_cost(operation.sym, inputs, machine_state)
 
-    memory_cost + operation_cost
+    gas_cost = memory_cost + operation_cost
+
+    if operation.sym in @call_operations && machine_state.gas < gas_cost do
+      if Configuration.fail_call_lack_of_gas?(exec_env.config) do
+        gas_cost
+      else
+        if machine_state.gas - gas_cost + List.first(inputs) > 0 do
+          Helpers.all_but_one_64th(machine_state.gas - gas_cost + List.first(inputs)) +
+            (gas_cost - List.first(inputs))
+        else
+          gas_cost
+        end
+      end
+    else
+      gas_cost
+    end
+  end
+
+  def cost_wth_state_update(machine_state, exec_env) do
+    operation = MachineCode.current_operation(machine_state, exec_env)
+    inputs = Operation.inputs(operation, machine_state)
+    operation_cost = operation_cost(operation.sym, inputs, machine_state, exec_env)
+    memory_cost = memory_cost(operation.sym, inputs, machine_state)
+
+    gas_cost = memory_cost + operation_cost
+
+    if operation.sym in @call_operations && machine_state.gas < gas_cost do
+      new_call_gas = Helpers.all_but_one_64th(machine_state.gas - gas_cost + List.first(inputs))
+
+      cost = gas_cost - List.first(inputs) + new_call_gas
+      new_stack = Stack.replace(machine_state.stack, 0, new_call_gas)
+
+      %{machine_state | gas: machine_state.gas - cost, stack: new_stack}
+    else
+      %{machine_state | gas: machine_state.gas - gas_cost}
+    end
   end
 
   def memory_cost(:calldatacopy, [memory_offset, _call_data_start, length], machine_state) do

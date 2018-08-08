@@ -122,4 +122,6 @@ defmodule EVM.Stack do
   """
   @spec length(t) :: integer()
   def length(stack), do: Kernel.length(stack)
+
+  def replace(stack, n, val), do: List.replace_at(stack, n, val)
 end
