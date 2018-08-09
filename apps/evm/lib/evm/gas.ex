@@ -3,7 +3,15 @@ defmodule EVM.Gas do
   Functions for interacting wth gas and costs of opscodes.
   """
 
-  alias EVM.{MachineState, MachineCode, Operation, Address, ExecEnv, Configuration}
+  alias EVM.{
+    MachineState,
+    MachineCode,
+    Operation,
+    Address,
+    ExecEnv,
+    Configuration,
+    Helpers
+  }
 
   @type t :: EVM.val()
   @type gas_price :: EVM.Wei.t()
@@ -111,6 +119,7 @@ defmodule EVM.Gas do
   @w_low_instr [:mul, :div, :sdiv, :mod, :smod, :signextend]
   @w_mid_instr [:addmod, :mulmod, :jump]
   @w_high_instr [:jumpi]
+  @call_operations [:call, :callcode, :delegatecall, :staticcall]
 
   @doc """
   Returns the cost to execute the given a cycle of the VM. This is defined
@@ -122,14 +131,34 @@ defmodule EVM.Gas do
       iex> EVM.Gas.cost(%EVM.MachineState{}, %EVM.ExecEnv{})
       0
   """
-  @spec cost(MachineState.t(), ExecEnv.t()) :: t | nil
-  def cost(machine_state, exec_env) do
+  @spec cost(MachineState.t(), ExecEnv.t(), keyword()) :: t | nil | {atom(), t | nil}
+  def cost(machine_state, exec_env, params \\ []) do
+    with_status = Keyword.get(params, :with_status)
+
     operation = MachineCode.current_operation(machine_state, exec_env)
     inputs = Operation.inputs(operation, machine_state)
     operation_cost = operation_cost(operation.sym, inputs, machine_state, exec_env)
     memory_cost = memory_cost(operation.sym, inputs, machine_state)
 
-    memory_cost + operation_cost
+    gas_cost = memory_cost + operation_cost
+
+    if machine_state.gas < gas_cost &&
+         !Configuration.fail_nested_operation_lack_of_gas?(exec_env.config) do
+      cost_change_result =
+        gas_cost_for_nested_operation(
+          operation.sym,
+          inputs: inputs,
+          original_cost: gas_cost,
+          machine_state: machine_state
+        )
+
+      case cost_change_result do
+        {status, value} -> if with_status, do: {status, value}, else: value
+        {status, value, call_gass} -> if with_status, do: {status, value, call_gass}, else: value
+      end
+    else
+      if with_status, do: {:original, gas_cost}, else: gas_cost
+    end
   end
 
   def memory_cost(:calldatacopy, [memory_offset, _call_data_start, length], machine_state) do
@@ -493,4 +522,31 @@ defmodule EVM.Gas do
   @doc "Paid for every transaction."
   @spec g_transaction() :: t
   def g_transaction, do: @g_transaction
+
+  # EIP150
+  @spec gas_cost_for_nested_operation(atom(), keyword()) :: {atom(), integer()}
+  defp gas_cost_for_nested_operation(
+         operation,
+         inputs: inputs,
+         original_cost: original_cost,
+         machine_state: machine_state
+       ) do
+    if operation in @call_operations do
+      stack_exec_gas = List.first(inputs)
+      call_cost_without_exec_gas = original_cost - stack_exec_gas
+      remaining_gas = machine_state.gas - call_cost_without_exec_gas
+
+      if remaining_gas > 0 do
+        new_call_gas = Helpers.all_but_one_64th(remaining_gas)
+        new_gas_cost = new_call_gas + call_cost_without_exec_gas
+
+        {:changed, new_gas_cost, new_call_gas}
+      else
+        # will fail in EVM.Functions.is_exception_halt?
+        {:original, original_cost}
+      end
+    else
+      {:original, original_cost}
+    end
+  end
 end

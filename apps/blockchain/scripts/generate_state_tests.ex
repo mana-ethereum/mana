@@ -46,7 +46,7 @@ defmodule GenerateStateTests do
     IO.puts("Failing tests")
     IO.puts(inspect(failing_tests, limit: :infinity))
 
-    for hardfork <- ["Homestead", "Frontier", "EIP150"] do
+    for hardfork <- ["EIP150", "Homestead", "Frontier"] do
       passing_tests = length(completed_tests[:passing][hardfork])
       failing_tests = length(completed_tests[:failing][hardfork])
       total_tests = passing_tests + failing_tests
