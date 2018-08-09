@@ -144,7 +144,7 @@ defmodule EVM.Gas do
 
     if machine_state.gas < gas_cost &&
          !Configuration.fail_nested_operation_lack_of_gas?(exec_env.config) do
-      {status, value} =
+      cost_change_result =
         gas_cost_for_nested_operation(
           operation.sym,
           inputs: inputs,
@@ -152,7 +152,10 @@ defmodule EVM.Gas do
           machine_state: machine_state
         )
 
-      if with_status, do: {status, value}, else: value
+      case cost_change_result do
+        {status, value} -> if with_status, do: {status, value}, else: value
+        {status, value, call_gass} -> if with_status, do: {status, value, call_gass}, else: value
+      end
     else
       if with_status, do: {:original, gas_cost}, else: gas_cost
     end
@@ -534,9 +537,10 @@ defmodule EVM.Gas do
       remaining_gas = machine_state.gas - call_cost_without_exec_gas
 
       if remaining_gas > 0 do
-        new_gas_cost = Helpers.all_but_one_64th(remaining_gas) + call_cost_without_exec_gas
+        new_call_gas = Helpers.all_but_one_64th(remaining_gas)
+        new_gas_cost = new_call_gas + call_cost_without_exec_gas
 
-        {:changed, new_gas_cost}
+        {:changed, new_gas_cost, new_call_gas}
       else
         # will fail in EVM.Functions.is_exception_halt?
         {:original, original_cost}
