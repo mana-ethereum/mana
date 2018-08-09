@@ -37,6 +37,6 @@ defimpl EVM.Configuration, for: EVM.Configuration.Homestead do
   @spec selfdestruct_cost(EVM.Configuration.t(), keyword()) :: integer()
   def selfdestruct_cost(config, _params), do: config.fallback_config.selfdestruct_cost
 
-  @spec fail_call_lack_of_gas?(EVM.Configuration.t()) :: boolean()
-  def fail_call_lack_of_gas?(config), do: config.fallback_config.fail_call_lack_of_gas
+  @spec fail_nested_operation_lack_of_gas?(EVM.Configuration.t()) :: boolean()
+  def fail_nested_operation_lack_of_gas?(config), do: config.fallback_config.fail_nested_operation
 end

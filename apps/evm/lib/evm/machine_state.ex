@@ -47,8 +47,6 @@ defmodule EVM.MachineState do
   @spec subtract_gas(MachineState.t(), ExecEnv.t()) :: MachineState.t()
   def subtract_gas(machine_state, exec_env) do
     Gas.cost_wth_state_update(machine_state, exec_env)
-
-    # %{machine_state | gas: machine_state.gas - cost}
   end
 
   @doc """

@@ -242,6 +242,6 @@ defmodule EVM.Helpers do
   """
   @spec all_but_one_64th(integer()) :: integer()
   def all_but_one_64th(n) do
-    round(n - :math.ceil(n / 64))
+    round(n - :math.floor(n / 64))
   end
 end

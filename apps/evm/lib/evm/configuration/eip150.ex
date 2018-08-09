@@ -6,7 +6,7 @@ defmodule EVM.Configuration.EIP150 do
             call_cost: 700,
             selfdestruct_cost: 5_000,
             new_account_destruction_cost: 25_000,
-            fail_call_lack_of_gas: false,
+            fail_nested_operation: false,
             fallback_config: EVM.Configuration.Homestead.new()
 
   def new do
@@ -47,6 +47,6 @@ defimpl EVM.Configuration, for: EVM.Configuration.EIP150 do
     config.selfdestruct_cost + config.new_account_destruction_cost
   end
 
-  @spec fail_call_lack_of_gas?(EVM.Configuration.t()) :: boolean()
-  def fail_call_lack_of_gas?(config), do: config.fail_call_lack_of_gas
+  @spec fail_nested_operation_lack_of_gas?(EVM.Configuration.t()) :: boolean()
+  def fail_nested_operation_lack_of_gas?(config), do: config.fail_nested_operation
 end

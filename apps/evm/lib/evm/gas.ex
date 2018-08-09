@@ -142,7 +142,7 @@ defmodule EVM.Gas do
     gas_cost = memory_cost + operation_cost
 
     if operation.sym in @call_operations && machine_state.gas < gas_cost do
-      if Configuration.fail_call_lack_of_gas?(exec_env.config) do
+      if Configuration.fail_nested_operation_lack_of_gas?(exec_env.config) do
         gas_cost
       else
         stack_exec_gas = List.first(inputs)

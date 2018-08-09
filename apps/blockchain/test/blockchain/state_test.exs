@@ -24,7 +24,6 @@ defmodule Blockchain.StateTest do
       "stTransactionTest/RefundOverflow2",
       "stTransactionTest/RefundOverflow",
       "stTransactionTest/OverflowGasRequire",
-      "stTransactionTest/InternalCallHittingGasLimit2",
       "stTransactionTest/EmptyTransaction",
       "stTransactionTest/CreateTransactionReverted",
       "stSystemOperationsTest/suicideNotExistingAccount",
@@ -34,7 +33,6 @@ defmodule Blockchain.StateTest do
       "stSystemOperationsTest/CreateHashCollision",
       "stSystemOperationsTest/CallRecursiveBombLog2",
       "stSystemOperationsTest/CallRecursiveBombLog",
-      "stSystemOperationsTest/CallRecursiveBomb3",
       "stSystemOperationsTest/CallRecursiveBomb2",
       "stSystemOperationsTest/CallRecursiveBomb1",
       "stSystemOperationsTest/CallRecursiveBomb0_OOG_atMaxCallDepth",
@@ -47,39 +45,22 @@ defmodule Blockchain.StateTest do
       "stRevertTest/RevertOpcodeWithBigOutputInInit",
       "stRevertTest/RevertOpcodeMultipleSubCalls",
       "stRevertTest/RevertOpcodeInInit",
-      "stRevertTest/LoopDelegateCallsDepthThenRevert",
-      "stRevertTest/LoopCallsDepthThenRevert",
       "stRefundTest/refund_TxToSuicide",
       "stRecursiveCreate/recursiveCreateReturnValue",
       "stRecursiveCreate/recursiveCreate",
       "stRandom2/201503110226PYTHON_DUP6",
       "stNonZeroCallsTest/NonZeroValue_SUICIDE",
       "stMemExpandingEIP150Calls/CreateAndGasInsideCreateWithMemExpandingCalls",
-      "stMemExpandingEIP150Calls/CallAskMoreGasOnDepth2ThenTransactionHasWithMemExpandingCalls",
       "stInitCodeTest/OutOfGasPrefundedContractCreation",
       "stInitCodeTest/OutOfGasContractCreation",
       "stInitCodeTest/NotEnoughCashContractCreation",
       "stInitCodeTest/CallRecursiveContract",
       "stEIP158Specific/vitalikTransactionTest",
-      "stEIP150singleCodeGasPrices/RawDelegateCallGasMemoryAsk",
-      "stEIP150singleCodeGasPrices/RawDelegateCallGasAsk",
-      "stEIP150singleCodeGasPrices/RawCallMemoryGasAsk",
-      "stEIP150singleCodeGasPrices/RawCallGasValueTransferMemoryAsk",
-      "stEIP150singleCodeGasPrices/RawCallGasValueTransferAsk",
-      "stEIP150singleCodeGasPrices/RawCallGasAsk",
-      "stEIP150singleCodeGasPrices/RawCallCodeGasValueTransferMemoryAsk",
-      "stEIP150singleCodeGasPrices/RawCallCodeGasValueTransferAsk",
-      "stEIP150singleCodeGasPrices/RawCallCodeGasMemoryAsk",
-      "stEIP150singleCodeGasPrices/RawCallCodeGasAsk",
       "stEIP150Specific/SuicideToNotExistingContract",
       "stEIP150Specific/CreateAndGasInsideCreate",
-      "stEIP150Specific/CallAskMoreGasOnDepth2ThenTransactionHas",
       "stDelegatecallTestHomestead/delegatecodeDynamicCode",
       "stDelegatecallTestHomestead/Delegatecall1024OOG",
-      "stCreateTest/CreateCollisionToEmpty",
-      "stCreateTest/CREATE_AcreateB_BSuicide_BStore",
-      "stChangedEIP150/contractCreationMakeCallThatAskMoreGasThenTransactionProvided",
-      "stChangedEIP150/Call1024PreCalls"
+      "stCreateTest/CREATE_AcreateB_BSuicide_BStore"
     ],
     "Frontier" => [
       "stTransactionTest/UserTransactionGasLimitIsTooLowWhenZeroCost",
@@ -132,7 +113,6 @@ defmodule Blockchain.StateTest do
       "stDelegatecallTestHomestead/callOutput1"
     ]
   }
-
   test "Blockchain state tests" do
     Enum.each(test_directories(), fn directory_path ->
       test_group = Enum.fetch!(String.split(directory_path, "/"), 4)
