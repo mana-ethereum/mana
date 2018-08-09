@@ -3,7 +3,16 @@ defmodule EVM.Gas do
   Functions for interacting wth gas and costs of opscodes.
   """
 
-  alias EVM.{MachineState, MachineCode, Operation, Address, ExecEnv, Configuration, Helpers}
+  alias EVM.{
+    MachineState,
+    MachineCode,
+    Operation,
+    Address,
+    ExecEnv,
+    Configuration,
+    Helpers,
+    Stack
+  }
 
   @type t :: EVM.val()
   @type gas_price :: EVM.Wei.t()
@@ -136,9 +145,12 @@ defmodule EVM.Gas do
       if Configuration.fail_call_lack_of_gas?(exec_env.config) do
         gas_cost
       else
-        if machine_state.gas - gas_cost + List.first(inputs) > 0 do
-          Helpers.all_but_one_64th(machine_state.gas - gas_cost + List.first(inputs)) +
-            (gas_cost - List.first(inputs))
+        stack_exec_gas = List.first(inputs)
+        call_cost_without_exec_gas = gas_cost - stack_exec_gas
+        remaining_gas = machine_state.gas - call_cost_without_exec_gas
+
+        if remaining_gas > 0 do
+          Helpers.all_but_one_64th(remaining_gas) + call_cost_without_exec_gas
         else
           gas_cost
         end
@@ -157,9 +169,12 @@ defmodule EVM.Gas do
     gas_cost = memory_cost + operation_cost
 
     if operation.sym in @call_operations && machine_state.gas < gas_cost do
-      new_call_gas = Helpers.all_but_one_64th(machine_state.gas - gas_cost + List.first(inputs))
+      stack_exec_gas = List.first(inputs)
+      call_cost_without_exec_gas = gas_cost - stack_exec_gas
+      remaining_gas = machine_state.gas - call_cost_without_exec_gas
+      new_call_gas = Helpers.all_but_one_64th(remaining_gas)
 
-      cost = gas_cost - List.first(inputs) + new_call_gas
+      cost = call_cost_without_exec_gas + new_call_gas
       new_stack = Stack.replace(machine_state.stack, 0, new_call_gas)
 
       %{machine_state | gas: machine_state.gas - cost, stack: new_stack}
