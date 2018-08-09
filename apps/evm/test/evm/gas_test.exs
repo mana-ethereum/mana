@@ -2,6 +2,30 @@ defmodule EVM.GasTest do
   use ExUnit.Case, async: true
   doctest EVM.Gas
 
+  describe "cost/3" do
+    test "returns modified call cost and call gas if not enough gas is provided (EIP150)" do
+      config = EVM.Configuration.EIP150.new()
+      inputs = [100_000, 1, 0, 0, 32, 32, 32]
+
+      machine_state = %EVM.MachineState{
+        program_counter: 0,
+        stack: inputs,
+        gas: 40_000
+      }
+
+      account_interface = EVM.Interface.Mock.MockAccountInterface.new()
+
+      exec_env = %EVM.ExecEnv{
+        machine_code: EVM.MachineCode.compile([:call]),
+        address: 1,
+        account_interface: account_interface,
+        config: config
+      }
+
+      assert {:changed, 39777, 14071} == EVM.Gas.cost(machine_state, exec_env, with_status: true)
+    end
+  end
+
   test "Gas cost: CALL" do
     to_address = 0x0F572E5295C57F15886F9B263E2F6D2D6C7B5EC6
     inputs = [3000, to_address, 0, 0, 32, 32, 32]

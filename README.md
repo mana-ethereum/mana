@@ -93,7 +93,9 @@ Ethereum common tests are created for all clients to test against. We plan to pr
 - [x] Homestead
     - [BlockchainTests](https://github.com/ethereum/tests/tree/develop/BlockchainTests) (Includes GeneralStateTests) 2230/2231 = 99.9% passing
     - [GeneralStateTests](https://github.com/ethereum/tests/tree/develop/GeneralStateTests) 2023/2062 = 98.1% passing
-- [ ] EIP150
+- [x] EIP150
+   - [BlockchainTests](https://github.com/ethereum/tests/tree/develop/BlockchainTests) (Includes GeneralStateTests) 1237/1275 = 97.0% passing
+   - [GeneralStateTests](https://github.com/ethereum/tests/tree/develop/GeneralStateTests) 1055/1114= 94.7% passing
 - [ ] EIP158
 - [ ] Byzantium
 - [ ] Constantinople:  View the community [Constantinople Project Tracker](https://github.com/ethereum/pm/issues/53).
