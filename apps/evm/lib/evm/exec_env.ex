@@ -12,27 +12,32 @@ defmodule EVM.ExecEnv do
 
   This generally relates to `I` in the Yellow Paper, defined in Section 9.3.
   """
-  # I_a
+
   defstruct address: nil,
-            # I_o
             originator: nil,
-            # I_p
             gas_price: nil,
-            # I_d
             data: nil,
-            # I_s
             sender: nil,
-            # I_v
             value_in_wei: nil,
-            # I_b
             machine_code: <<>>,
-            # I_e
             stack_depth: 0,
-            # I_h (wrapped in interface)
             account_interface: nil,
             block_interface: nil,
             config: EVM.Configuration.Frontier.new()
 
+  @typedoc """
+  Terms from Yellow Paper:
+
+  - I_a: address
+  - I_o: originator
+  - I_p: gas_price
+  - I_d: data
+  - I_s: sender
+  - I_v: value_in_wei
+  - I_b: machine_code
+  - I_e: stack_depth
+  - I_h (wrapped in interface): account_interface
+  """
   @type t :: %__MODULE__{
           address: EVM.address(),
           originator: EVM.address(),

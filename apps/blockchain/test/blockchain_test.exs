@@ -13,9 +13,7 @@ defmodule BlockchainTest do
 
   @failing_tests %{
     "Frontier" => [],
-    "Homestead" => [
-      "GeneralStateTests/stDelegatecallTestHomestead/delegatecodeDynamicCode_d0g0v0.json"
-    ],
+    "Homestead" => [],
     "EIP150" => [
       "GeneralStateTests/stCreateTest/CREATE_AcreateB_BSuicide_BStore_d0g0v0.json",
       "GeneralStateTests/stDelegatecallTestHomestead/Delegatecall1024OOG_d0g0v0.json",
@@ -62,10 +60,9 @@ defmodule BlockchainTest do
     Enum.each(tests(), fn json_test_path ->
       json_test_path
       |> read_test()
-      |> Enum.map(fn {_name, test} -> test end)
-      |> Enum.each(fn test ->
+      |> Enum.each(fn {name, test} ->
         if !failing_test?(json_test_path, test) do
-          run_test(test)
+          run_test(name, test)
         end
       end)
     end)
@@ -85,8 +82,9 @@ defmodule BlockchainTest do
     |> Poison.decode!()
   end
 
-  defp run_test(json_test) do
-    chain = load_chain(json_test["network"])
+  defp run_test(test_name, json_test) do
+    fork = json_test["network"]
+    chain = load_chain(fork)
 
     if chain do
       state = populate_prestate(json_test)
@@ -98,8 +96,12 @@ defmodule BlockchainTest do
 
       best_block_hash = maybe_hex(json_test["lastblockhash"])
 
-      assert blocktree.best_block.block_hash == best_block_hash
+      assert blocktree.best_block.block_hash == best_block_hash, failure_message(test_name, fork)
     end
+  end
+
+  defp failure_message(test_name, fork) do
+    "Block hash mismatch in test #{test_name} for #{fork}"
   end
 
   defp load_chain(hardfork) do
