@@ -5,10 +5,9 @@ defmodule SyncWithInfura do
 
   def setup() do
     db = MerklePatriciaTree.DB.RocksDB.init(db_name())
-    tree = Blockchain.Blocktree.new_tree()
     chain = Blockchain.Chain.load_chain(:foundation)
 
-    {db, tree, chain}
+    {db, chain}
   end
 
   def add_block_to_tree(db, chain, tree, n) do
@@ -127,7 +126,7 @@ defmodule SyncWithInfura do
   end
 end
 
-{db, empty_tree, chain} = SyncWithInfura.setup()
+{db, chain} = SyncWithInfura.setup()
 
 current_block =
   case MerklePatriciaTree.DB.get(db, "current_block_hash") do
@@ -138,8 +137,6 @@ current_block =
     _ ->
       Blockchain.Genesis.create_block(chain, db)
   end
-
-parents = SyncWithInfura.get_parents(current_block, db, [])
 
 tree =
   case MerklePatriciaTree.DB.get(db, "current_block_tree") do
