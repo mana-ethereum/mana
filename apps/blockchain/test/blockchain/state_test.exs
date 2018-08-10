@@ -8,8 +8,7 @@ defmodule Blockchain.StateTest do
   use EthCommonTest.Harness
   use ExUnit.Case, async: true
 
-  @failing_tests
-  %{
+  @failing_tests %{
     "EIP150" => [
       "stZeroCallsTest/ZeroValue_SUICIDE",
       "stTransitionTest/createNameRegistratorPerTxsNotEnoughGasBefore",
