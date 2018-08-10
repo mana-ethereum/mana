@@ -1,6 +1,18 @@
 defmodule EVM.Operation.System do
   alias EVM.Interface.{AccountInterface, BlockInterface}
-  alias EVM.{MachineState, ExecEnv, Address, Stack, Operation, MessageCall, Gas, Memory, SubState}
+
+  alias EVM.{
+    MachineState,
+    ExecEnv,
+    Address,
+    Stack,
+    Operation,
+    MessageCall,
+    Gas,
+    Memory,
+    SubState,
+    Configuration
+  }
 
   @dialyzer {:no_return, callcode: 2}
 
@@ -23,10 +35,17 @@ defmodule EVM.Operation.System do
     is_allowed =
       value <= account_balance and exec_env.stack_depth < EVM.Functions.max_stack_depth()
 
+    available_gas =
+      if Configuration.fail_nested_operation_lack_of_gas?(exec_env.config) do
+        machine_state.gas
+      else
+        EVM.Helpers.all_but_one_64th(machine_state.gas)
+      end
+
+    remaining_gas = machine_state.gas - available_gas
+
     {status, {updated_account_interface, n_gas, n_sub_state}} =
       if is_allowed do
-        available_gas = machine_state.gas
-
         {account_interface, _nonce} =
           AccountInterface.increment_account_nonce(exec_env.account_interface, exec_env.address)
 
@@ -53,7 +72,7 @@ defmodule EVM.Operation.System do
           exec_env.config
         )
       else
-        {:error, {exec_env.account_interface, machine_state.gas, SubState.empty()}}
+        {:error, {exec_env.account_interface, available_gas, SubState.empty()}}
       end
 
     # Note if was exception halt or other failure on stack
@@ -68,7 +87,12 @@ defmodule EVM.Operation.System do
         0
       end
 
-    machine_state = %{machine_state | stack: Stack.push(machine_state.stack, result), gas: n_gas}
+    machine_state = %{
+      machine_state
+      | stack: Stack.push(machine_state.stack, result),
+        gas: n_gas + remaining_gas
+    }
+
     exec_env = %{exec_env | account_interface: updated_account_interface}
 
     sub_state = SubState.merge(n_sub_state, sub_state)

@@ -55,7 +55,7 @@ defmodule EVM.Operation.StackMemoryStorageAndFlow do
   """
   @spec mstore(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def mstore([offset, value], %{machine_state: machine_state}) do
-    machine_state = EVM.Memory.write(machine_state, offset, Helpers.left_pad_bytes(value))
+    machine_state = Memory.write(machine_state, offset, Helpers.left_pad_bytes(value))
 
     %{machine_state: machine_state}
   end
