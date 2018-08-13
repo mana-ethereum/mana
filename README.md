@@ -10,7 +10,7 @@ Mana-Ethereum is currently in development. See the [Project Status](#project-sta
 
 # Dependencies
 
- * Elixir ~> 1.7.1
+ * Elixir ~> 1.7.2
  * Rust ~> 1.26.0 (as a dependency of [Rox](https://github.com/urbint/rox))
 
 
@@ -89,48 +89,17 @@ Ethereum common tests are created for all clients to test against. We plan to pr
 - [VMTests](https://github.com/ethereum/tests/tree/develop/VMTests/vmTests) = 100% passing
 - [x] Frontier
     - [BlockchainTests](https://github.com/ethereum/tests/tree/develop/BlockchainTests) (Includes GeneralStateTests) 1325/1325 = 100% passing
-    - [GeneralStateTests](https://github.com/ethereum/tests/tree/develop/GeneralStateTests) 1014/1026 = 98.8% passing
+    - [GeneralStateTests](https://github.com/ethereum/tests/tree/develop/GeneralStateTests) 1015/1027 = 98.8% passing
 - [x] Homestead
-    - [BlockchainTests](https://github.com/ethereum/tests/tree/develop/BlockchainTests) (Includes GeneralStateTests) 2230/2231 = 99.9% passing
-    - [GeneralStateTests](https://github.com/ethereum/tests/tree/develop/GeneralStateTests) 2023/2062 = 98.1% passing
-- [ ] EIP150
+    - [BlockchainTests](https://github.com/ethereum/tests/tree/develop/BlockchainTests) (Includes GeneralStateTests) 2231/2231 = 100% passing
+    - [GeneralStateTests](https://github.com/ethereum/tests/tree/develop/GeneralStateTests) 2024/2062 = 98.2% passing
+- [x] EIP150
+   - [BlockchainTests](https://github.com/ethereum/tests/tree/develop/BlockchainTests) (Includes GeneralStateTests) 1257/1275 = 98.5% passing
+   - [GeneralStateTests](https://github.com/ethereum/tests/tree/develop/GeneralStateTests) 1075/1114= 96.5% passing
 - [ ] EIP158
 - [ ] Byzantium
 - [ ] Constantinople:  View the community [Constantinople Project Tracker](https://github.com/ethereum/pm/issues/53).
 
-## Debugging
-
-To debug a given run of the blockchain, you can set breakpoints on contract addresses by
-setting the `BREAKPOINT` environment variable and specifying a contract address to break on. E.g.
-
-```bash
-BREAKPOINT=bc1ffc1620da1468624a596cb841d35e6b2f1fb6 iex -S mix
-
-...
-
-00:04:18.739 [warn]  Debugger has been enabled. Set breakpoint #1 on contract address 0xbc1ffc1620da1468624a596cb841d35e6b2f1fb6.
-
-...
-
--- Breakpoint #1 triggered with conditions contract address 0xbc1ffc1620da1468624a596cb841d35e6b2f1fb6 (start) --
-
-gas: 277888 | pc: 0 | memory: 0 | words: 0 | # stack: 0
-
-----> [ 0] push2
-      [ 1] 0
-      [ 2] 4
-      [ 3] dup1
-      [ 4] push2
-      [ 5] 0
-      [ 6] 14
-      [ 7] push1
-      [ 8] 0
-      [ 9] codecopy
-
-Enter a debug command or type `h` for help.
-
->>
-```
 
 # Project Status
 

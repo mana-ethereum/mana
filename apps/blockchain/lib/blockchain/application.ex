@@ -1,6 +1,4 @@
 defmodule Blockchain.Application do
-  # See https://elixir-lang.org/getting-started/mix-otp/supervisor-and-application.html
-  # for more information on OTP Applications
   @moduledoc false
 
   use Application
@@ -32,8 +30,6 @@ defmodule Blockchain.Application do
       # worker(Blockchain.Worker, [arg1, arg2, arg3]),
     ]
 
-    # See https://elixir-lang.org/getting-started/mix-otp/supervisor-and-application.html
-    # for other strategies and supported options
     opts = [strategy: :one_for_one, name: Blockchain.Supervisor]
     Supervisor.start_link(children, opts)
   end
