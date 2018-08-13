@@ -42,7 +42,7 @@
 apps/evm/lib/evm/functions.ex:155: Function 'not_enough_gas?'/4 has no local return
 apps/evm/lib/evm/functions.ex:162: Function 'nested_operation_gas_overflow?'/3 will never be called
 apps/evm/lib/evm/functions.ex:180: Function 'is_invalid_jump_destination?'/3 will never be called
-apps/evm/lib/evm/functions.ex:180: Function 'is_invalid_jump_destination?'/3 will never be calledxb
+apps/evm/lib/evm/functions.ex:167: Function 'is_invalid_jump_destination?'/3 will never be called
 apps/evm/lib/evm/gas.ex:135: Function cost/2 has no local return
 apps/evm/lib/evm/gas.ex:135: Function cost/3 has no local return
 apps/evm/lib/evm/gas.ex:140: The call 'Elixir.EVM.Gas':operation_cost(atom(),_inputs@1::[integer()],_machine_state@1::#{'__struct__':='Elixir.EVM.MachineState', 'active_words':=integer(), 'gas':=integer(), 'last_return_data':=[integer

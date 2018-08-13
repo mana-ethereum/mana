@@ -30,7 +30,6 @@ defmodule Blockchain.StateTest do
       "stSystemOperationsTest/extcodecopy",
       "stSystemOperationsTest/CreateHashCollision",
       "stSystemOperationsTest/ABAcallsSuicide1",
-      "stSystemOperationsTest/ABAcalls2",
       "stRevertTest/RevertOpcodeWithBigOutputInInit",
       "stRevertTest/RevertOpcodeMultipleSubCalls",
       "stRevertTest/RevertOpcodeInInit",
@@ -42,7 +41,6 @@ defmodule Blockchain.StateTest do
       "stInitCodeTest/NotEnoughCashContractCreation",
       "stEIP158Specific/vitalikTransactionTest",
       "stEIP150Specific/SuicideToNotExistingContract",
-      "stDelegatecallTestHomestead/Delegatecall1024OOG",
       "stCreateTest/CREATE_AcreateB_BSuicide_BStore"
     ],
     "Frontier" => [
