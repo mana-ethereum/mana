@@ -50,8 +50,7 @@ defmodule Blockchain.StateTest do
       "stInitCodeTest/NotEnoughCashContractCreation",
       "stEIP158Specific/vitalikTransactionTest",
       "stEIP150Specific/SuicideToNotExistingContract",
-      "stDelegatecallTestHomestead/Delegatecall1024OOG",
-      "stCreateTest/CREATE_AcreateB_BSuicide_BStore"
+      "stDelegatecallTestHomestead/Delegatecall1024OOG"
     ],
     "Frontier" => [
       "stTransactionTest/UserTransactionGasLimitIsTooLowWhenZeroCost",
@@ -103,6 +102,7 @@ defmodule Blockchain.StateTest do
       "stDelegatecallTestHomestead/callOutput1"
     ]
   }
+
   test "Blockchain state tests" do
     Enum.each(test_directories(), fn directory_path ->
       test_group = Enum.fetch!(String.split(directory_path, "/"), 4)

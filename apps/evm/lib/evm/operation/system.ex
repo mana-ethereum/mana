@@ -11,7 +11,8 @@ defmodule EVM.Operation.System do
     Gas,
     Memory,
     SubState,
-    Configuration
+    Configuration,
+    Address
   }
 
   @dialyzer {:no_return, callcode: 2}
@@ -78,11 +79,9 @@ defmodule EVM.Operation.System do
     # Note if was exception halt or other failure on stack
     result =
       if status == :ok do
-        nonce =
-          exec_env.account_interface
-          |> AccountInterface.get_account_nonce(exec_env.address)
+        nonce = AccountInterface.get_account_nonce(exec_env.account_interface, exec_env.address)
 
-        EVM.Address.new(exec_env.address, nonce)
+        Address.new(exec_env.address, nonce)
       else
         0
       end
@@ -93,6 +92,7 @@ defmodule EVM.Operation.System do
         gas: n_gas + remaining_gas
     }
 
+    exec_env = ExecEnv.add_created_address(exec_env, result)
     exec_env = %{exec_env | account_interface: updated_account_interface}
 
     sub_state = SubState.merge(n_sub_state, sub_state)
