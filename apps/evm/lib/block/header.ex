@@ -9,38 +9,41 @@ defmodule Block.Header do
   @empty_trie MerklePatriciaTree.Trie.empty_trie_root_hash()
   @empty_keccak [] |> ExRLP.encode() |> Keccak.kec()
 
-  # H_p P(B_H)H_r
   defstruct parent_hash: nil,
-            # H_o KEC(RLP(L∗H(B_U)))
             ommers_hash: @empty_keccak,
-            # H_c
             beneficiary: nil,
-            # H_r TRIE(LS(Π(σ, B)))
             state_root: @empty_trie,
-            # H_t TRIE({∀i < kBTk, i ∈ P : p(i, LT(B_T[i]))})
             transactions_root: @empty_trie,
-            # H_e TRIE({∀i < kBRk, i ∈ P : p(i, LR(B_R[i]))})
             receipts_root: @empty_trie,
-            # H_b bloom
             logs_bloom: <<0::2048>>,
-            # H_d
             difficulty: nil,
-            # H_i
             number: nil,
-            # H_l
             gas_limit: 0,
-            # H_g
             gas_used: 0,
-            # H_s
             timestamp: nil,
-            # H_x
             extra_data: <<>>,
-            # H_m
             mix_hash: <<0::256>>,
-            # H_n
             nonce: <<0::64>>
 
-  # As defined in section 4.3
+  @typedoc """
+  As defined in section 4.3 of Yellow Paper:
+
+  * H_p P(B_H)H_r = parent_hash
+  * H_o KEC(RLP(L∗H(B_U)))  = ommers_hash
+  * H_c = beneficiary
+  * H_r TRIE(LS(Π(σ, B))) = state_root
+  * H_t TRIE({∀i < kBTk, i ∈ P : p(i, LT(B_T[i]))}) = transactions_root
+  * H_e TRIE({∀i < kBRk, i ∈ P : p(i, LR(B_R[i]))}) = receipts_root
+  * H_b bloom = logs_bloom
+  * H_d = difficulty
+  * H_i = number
+  * H_l = gas_limit
+  * H_g = gas_used
+  * H_s = timestamp
+  * H_x = extra_data
+  * H_m = mix_hash
+  * H_n = nonce
+  """
   @type t :: %__MODULE__{
           parent_hash: EVM.hash(),
           ommers_hash: EVM.trie_root(),
@@ -48,7 +51,6 @@ defmodule Block.Header do
           state_root: EVM.trie_root(),
           transactions_root: EVM.trie_root(),
           receipts_root: EVM.trie_root(),
-          # TODO
           logs_bloom: binary(),
           difficulty: integer() | nil,
           number: integer() | nil,
@@ -395,28 +397,6 @@ defmodule Block.Header do
       ...>  %Block.Header{number: 3_000_000, timestamp: 55, difficulty: 300_000}
       ...> )
       268_734_142
-
-      Test actual Ropsten genesis block
-      iex> Block.Header.get_difficulty(
-      ...>   %Block.Header{number: 0, timestamp: 0},
-      ...>   nil,
-      ...>   0x100000,
-      ...>   0x020000,
-      ...>   0x0800,
-      ...>   0
-      ...> )
-      1_048_576
-
-      # Test actual Ropsten first block
-      iex> Block.Header.get_difficulty(
-      ...>   %Block.Header{number: 1, timestamp: 1_479_642_530},
-      ...>   %Block.Header{number: 0, timestamp: 0, difficulty: 1_048_576},
-      ...>   0x100000,
-      ...>   0x020000,
-      ...>   0x0800,
-      ...>   0
-      ...> )
-      997_888
   """
   @spec get_difficulty(t, t | nil, integer()) :: integer()
   def get_difficulty(
