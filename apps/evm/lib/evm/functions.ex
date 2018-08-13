@@ -155,20 +155,7 @@ defmodule EVM.Functions do
   defp not_enough_gas?(machine_state, exec_env, metadata, inputs) do
     cost = Gas.cost(machine_state, exec_env)
 
-    cost > machine_state.gas || nested_operation_gas_overflow?(metadata.sym, cost, inputs)
-  end
-
-  @spec nested_operation_gas_overflow?(atom(), integer(), [EVM.val()]) :: boolean()
-  defp nested_operation_gas_overflow?(:call, cost, [call_gas, _, _, _, _, _, _]) do
-    call_gas + cost > @max_int
-  end
-
-  defp nested_operation_gas_overflow?(:callcode, cost, [call_gas, _, _, _, _, _, _]) do
-    call_gas + cost > @max_int
-  end
-
-  defp nested_operation_gas_overflow?(_, _, _) do
-    false
+    cost > machine_state.gas
   end
 
   @spec is_invalid_instruction?(Metadata.t()) :: boolean()

@@ -29,16 +29,7 @@ defmodule Blockchain.StateTest do
       "stSystemOperationsTest/suicideCallerAddresTooBigRight",
       "stSystemOperationsTest/extcodecopy",
       "stSystemOperationsTest/CreateHashCollision",
-      "stSystemOperationsTest/CallRecursiveBombLog2",
-      "stSystemOperationsTest/CallRecursiveBombLog",
-      "stSystemOperationsTest/CallRecursiveBomb2",
-      "stSystemOperationsTest/CallRecursiveBomb1",
-      "stSystemOperationsTest/CallRecursiveBomb0_OOG_atMaxCallDepth",
-      "stSystemOperationsTest/CallRecursiveBomb0",
       "stSystemOperationsTest/ABAcallsSuicide1",
-      "stSystemOperationsTest/ABAcalls3",
-      "stSystemOperationsTest/ABAcalls2",
-      "stSystemOperationsTest/ABAcalls1",
       "stRevertTest/RevertOpcodeWithBigOutputInInit",
       "stRevertTest/RevertOpcodeMultipleSubCalls",
       "stRevertTest/RevertOpcodeInInit",
@@ -49,8 +40,7 @@ defmodule Blockchain.StateTest do
       "stInitCodeTest/OutOfGasContractCreation",
       "stInitCodeTest/NotEnoughCashContractCreation",
       "stEIP158Specific/vitalikTransactionTest",
-      "stEIP150Specific/SuicideToNotExistingContract",
-      "stDelegatecallTestHomestead/Delegatecall1024OOG"
+      "stEIP150Specific/SuicideToNotExistingContract"
     ],
     "Frontier" => [
       "stTransactionTest/UserTransactionGasLimitIsTooLowWhenZeroCost",

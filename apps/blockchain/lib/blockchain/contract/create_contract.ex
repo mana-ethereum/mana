@@ -27,7 +27,7 @@ defmodule Blockchain.Contract.CreateContract do
             # e
             stack_depth: 0,
             block_header: nil,
-            config: nil
+            config: EVM.Configuration.Frontier.new()
 
   @type t :: %__MODULE__{
           state: EVM.state(),

@@ -22,7 +22,7 @@ defmodule Blockchain.Contract.MessageCall do
             data: <<>>,
             stack_depth: 0,
             block_header: nil,
-            config: nil
+            config: EVM.Configuration.Frontier.new()
 
   @typedoc """
   Terms from the Yellow Paper:
