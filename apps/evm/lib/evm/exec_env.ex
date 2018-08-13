@@ -23,7 +23,8 @@ defmodule EVM.ExecEnv do
             stack_depth: 0,
             account_interface: nil,
             block_interface: nil,
-            config: EVM.Configuration.Frontier.new()
+            config: EVM.Configuration.Frontier.new(),
+            created_accounts: []
 
   @typedoc """
   Terms from Yellow Paper:
@@ -49,7 +50,8 @@ defmodule EVM.ExecEnv do
           stack_depth: integer(),
           block_interface: BlockInterface.t(),
           account_interface: AccountInterface.t(),
-          config: Configuration.t()
+          config: Configuration.t(),
+          created_accounts: [EVM.address()]
         }
 
   @spec put_storage(t(), integer(), integer()) :: t()
@@ -101,6 +103,13 @@ defmodule EVM.ExecEnv do
 
   @spec new_account?(t()) :: boolean()
   def new_account?(exec_env) do
-    !AccountInterface.account_exists?(exec_env.account_interface, exec_env.address)
+    Enum.member?(exec_env.created_accounts, exec_env.address)
+  end
+
+  @spec add_created_address(t(), integer()) :: t()
+  def add_created_address(exec_env, address) do
+    address = :binary.encode_unsigned(address)
+
+    %{exec_env | created_accounts: [address | exec_env.created_accounts]}
   end
 end

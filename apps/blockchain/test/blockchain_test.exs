@@ -15,7 +15,6 @@ defmodule BlockchainTest do
     "Frontier" => [],
     "Homestead" => [],
     "EIP150" => [
-      "GeneralStateTests/stCreateTest/CREATE_AcreateB_BSuicide_BStore_d0g0v0.json",
       "GeneralStateTests/stEIP150Specific/SuicideToNotExistingContract_d0g0v0.json",
       "GeneralStateTests/stEIP158Specific/vitalikTransactionTest_d0g0v0.json",
       "GeneralStateTests/stNonZeroCallsTest/NonZeroValue_SUICIDE_d0g0v0.json",
