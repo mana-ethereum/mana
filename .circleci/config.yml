@@ -4,7 +4,7 @@ jobs:
     parallelism: 1
     resource_class: large
     docker:
-      - image: circleci/elixir:1.7.1
+      - image: circleci/elixir:1.7.2
         environment:
           MIX_ENV: test
 
@@ -105,7 +105,7 @@ jobs:
   dialyzer:
     docker:
       # Ensure .tool-versions matches
-      - image: circleci/elixir:1.7.1
+      - image: circleci/elixir:1.7.2
         environment:
           MIX_ENV: test
 
@@ -180,7 +180,7 @@ jobs:
 
   check_formatted:
     docker:
-      - image: circleci/elixir:1.7.1
+      - image: circleci/elixir:1.7.2
         environment:
           MIX_ENV: test
 
@@ -195,7 +195,7 @@ jobs:
   credo:
     docker:
       # Ensure .tool-versions matches
-      - image: circleci/elixir:1.7.1
+      - image: circleci/elixir:1.7.2
         environment:
           MIX_ENV: test
 
