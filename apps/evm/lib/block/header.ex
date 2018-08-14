@@ -9,6 +9,8 @@ defmodule Block.Header do
   @empty_trie MerklePatriciaTree.Trie.empty_trie_root_hash()
   @empty_keccak [] |> ExRLP.encode() |> Keccak.kec()
 
+  @frontier_difficulty_adjustment 13
+
   defstruct parent_hash: nil,
             ommers_hash: @empty_keccak,
             beneficiary: nil,
@@ -412,58 +414,66 @@ defmodule Block.Header do
         initial_difficulty
 
       is_before_homestead?(header, homestead_block) ->
+        get_frontier_difficulty(
+          header,
+          parent_header,
+          minimum_difficulty,
+          difficulty_bound_divisor
+        )
+
+      true ->
         # Find the delta from parent block
         difficulty_delta =
           difficulty_x(parent_header.difficulty, difficulty_bound_divisor) *
-            difficulty_s1(header, parent_header) + difficulty_e(header)
-
-        # Add delta to parent block
-        next_difficulty = parent_header.difficulty + difficulty_delta
-
-        # Return next difficulty, capped at minimum
-        max(minimum_difficulty, next_difficulty)
-
-      true ->
-        # Find the delta from parent block (note: we use difficulty_s2 since we're after Homestead)
-        difficulty_delta =
-          difficulty_x(parent_header.difficulty, difficulty_bound_divisor) *
-            difficulty_s2(header, parent_header) + difficulty_e(header)
+            homestead_difficulty_parameter(header, parent_header)
 
         # Add delta to parent's difficulty
-        next_difficulty = parent_header.difficulty + difficulty_delta
+        next_difficulty = parent_header.difficulty + difficulty_delta + difficulty_e(header)
 
         # Return next difficulty, capped at minimum
         max(minimum_difficulty, next_difficulty)
     end
   end
 
-  # Eq.(42) ς1 - Effectively decides if blocks are being mined too quicky or too slower
-  @spec difficulty_s1(t, t) :: integer()
-  defp difficulty_s1(header, parent_header) do
-    if header.timestamp < parent_header.timestamp + 13, do: 1, else: -1
+  defp get_frontier_difficulty(
+         header,
+         parent_header,
+         minimum_difficulty,
+         difficulty_bound_divisor
+       ) do
+    difficulty_delta =
+      difficulty_x(parent_header.difficulty, difficulty_bound_divisor) *
+        delta_sign(header, parent_header)
+
+    next_difficulty = parent_header.difficulty + difficulty_delta + difficulty_e(header)
+
+    max(minimum_difficulty, next_difficulty)
+  end
+
+  # Eq.(42) ς1 - Effectively decides if blocks are being mined too quicky or too slowly
+  @spec delta_sign(t, t) :: integer()
+  defp delta_sign(header, parent_header) do
+    if header.timestamp < parent_header.timestamp + @frontier_difficulty_adjustment,
+      do: 1,
+      else: -1
   end
 
   # Eq.(43) ς2
-  @spec difficulty_s2(t, t) :: integer()
-  defp difficulty_s2(header, parent_header) do
-    s = MathHelper.floor((header.timestamp - parent_header.timestamp) / 10)
+  @spec homestead_difficulty_parameter(t, t) :: integer()
+  defp homestead_difficulty_parameter(header, parent_header) do
+    s = div(header.timestamp - parent_header.timestamp, 10)
     max(1 - s, -99)
   end
 
   # Eq.(41) x - Creates some multiplier for how much we should change difficulty based on previous difficulty
   @spec difficulty_x(integer(), integer()) :: integer()
   defp difficulty_x(parent_difficulty, difficulty_bound_divisor),
-    do: MathHelper.floor(parent_difficulty / difficulty_bound_divisor)
+    do: div(parent_difficulty, difficulty_bound_divisor)
 
   # Eq.(44) ε - Adds a delta to ensure we're increasing difficulty over time
   @spec difficulty_e(t) :: integer()
   defp difficulty_e(header) do
-    MathHelper.floor(
-      :math.pow(
-        2,
-        MathHelper.floor(header.number / 100_000) - 2
-      )
-    )
+    MathHelper.floor(:math.pow(2, div(header.number, 100_000) - 2))
   end
 
   # Eq.(51)
