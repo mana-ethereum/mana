@@ -23,6 +23,9 @@ defimpl EVM.Configuration, for: EVM.Configuration.EIP150 do
   @spec has_delegate_call?(Configuration.t()) :: boolean()
   def has_delegate_call?(config), do: config.fallback_config.has_delegate_call
 
+  @spec max_signature_s(Configuration.t()) :: atom()
+  def max_signature_s(config), do: Configuration.max_signature_s(config.fallback_config)
+
   @spec fail_contract_creation_lack_of_gas?(Configuration.t()) :: boolean()
   def fail_contract_creation_lack_of_gas?(config),
     do: config.fallback_config.fail_contract_creation

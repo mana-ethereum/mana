@@ -2,6 +2,7 @@ defmodule EVM.Configuration.Frontier do
   defstruct contract_creation_cost: 21_000,
             has_delegate_call: false,
             fail_contract_creation: false,
+            max_signature_s: :secp256k1n,
             extcodesize_cost: 20,
             extcodecopy_cost: 20,
             balance_cost: 20,
@@ -25,6 +26,9 @@ defimpl EVM.Configuration, for: EVM.Configuration.Frontier do
 
   @spec has_delegate_call?(Configuration.t()) :: boolean()
   def has_delegate_call?(config), do: config.has_delegate_call
+
+  @spec max_signature_s(Configuration.t()) :: atom()
+  def max_signature_s(config), do: config.max_signature_s
 
   @spec fail_contract_creation_lack_of_gas?(Configuration.t()) :: boolean()
   def fail_contract_creation_lack_of_gas?(config), do: config.fail_contract_creation

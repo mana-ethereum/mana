@@ -13,6 +13,10 @@ defprotocol EVM.Configuration do
   @spec fail_contract_creation_lack_of_gas?(t) :: boolean()
   def fail_contract_creation_lack_of_gas?(t)
 
+  # EIP2
+  @spec max_signature_s(t) :: atom()
+  def max_signature_s(t)
+
   # EIP7
   @spec has_delegate_call?(t) :: boolean()
   def has_delegate_call?(t)
