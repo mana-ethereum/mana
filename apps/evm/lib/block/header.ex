@@ -400,7 +400,7 @@ defmodule Block.Header do
       ...> )
       268_734_142
   """
-  @spec get_difficulty(t, t | nil, integer()) :: integer()
+  @spec get_difficulty(t, t | nil, integer(), integer(), integer(), integer()) :: integer()
   def get_difficulty(
         header,
         parent_header,
@@ -414,7 +414,7 @@ defmodule Block.Header do
         initial_difficulty
 
       is_before_homestead?(header, homestead_block) ->
-        get_frontier_difficulty(
+        calculate_frontier_difficulty(
           header,
           parent_header,
           minimum_difficulty,
@@ -422,20 +422,33 @@ defmodule Block.Header do
         )
 
       true ->
-        # Find the delta from parent block
-        difficulty_delta =
-          difficulty_x(parent_header.difficulty, difficulty_bound_divisor) *
-            homestead_difficulty_parameter(header, parent_header)
-
-        # Add delta to parent's difficulty
-        next_difficulty = parent_header.difficulty + difficulty_delta + difficulty_e(header)
-
-        # Return next difficulty, capped at minimum
-        max(minimum_difficulty, next_difficulty)
+        calculate_homestead_difficulty(
+          header,
+          parent_header,
+          minimum_difficulty,
+          difficulty_bound_divisor
+        )
     end
   end
 
-  defp get_frontier_difficulty(
+  @spec calculate_homestead_difficulty(t, t | nil, integer(), integer()) :: integer()
+  defp calculate_homestead_difficulty(
+         header,
+         parent_header,
+         minimum_difficulty,
+         difficulty_bound_divisor
+       ) do
+    difficulty_delta =
+      difficulty_x(parent_header.difficulty, difficulty_bound_divisor) *
+        homestead_difficulty_parameter(header, parent_header)
+
+    next_difficulty = parent_header.difficulty + difficulty_delta + difficulty_e(header)
+
+    max(minimum_difficulty, next_difficulty)
+  end
+
+  @spec calculate_frontier_difficulty(t, t | nil, integer(), integer()) :: integer()
+  defp calculate_frontier_difficulty(
          header,
          parent_header,
          minimum_difficulty,

@@ -7,34 +7,48 @@ defmodule Block.HeaderTest do
   alias Block.Header
   alias EVM.EthereumCommonTestsHelper, as: Helper
 
-  @forks_with_block %{
+  @fork_block_num %{
     frontier: 1,
     homestead: 1_150_000,
-    dao_fork: 1_920_000,
-    eip_150: 2_463_000,
-    spurious_dragon: 2_675_000,
     byzantium: 4_370_000
   }
 
-  @next_fork_block_number @forks_with_block[:homestead]
-
   describe "Difficulty Tests (Ethereum Common Tests)" do
-    test "Calculates frontier and homestead difficulties" do
-      difficulty_tests()
+    test "calculates Frontier difficulty" do
+      "difficultyFrontier.json"
+      |> difficulty_tests()
       |> read_test()
-      |> Enum.filter(&forks_to_run/1)
+      |> Enum.filter(&forks_to_run(&1, :frontier))
+      |> Enum.map(&run_test/1)
+      |> Enum.filter(&failed_tests/1)
+      |> make_assertion()
+    end
+
+    test "calculates Homestead difficulty" do
+      "difficultyHomestead.json"
+      |> difficulty_tests()
+      |> read_test()
+      |> Enum.filter(&forks_to_run(&1, :homestead))
       |> Enum.map(&run_test/1)
       |> Enum.filter(&failed_tests/1)
       |> make_assertion()
     end
   end
 
-  defp forks_to_run({_name, test_data}) do
-    hex_to_int(test_data["currentBlockNumber"]) < @next_fork_block_number
+  defp forks_to_run({_name, test_data}, :frontier) do
+    # difficultyFrontier.json tests have:
+    # Auto-generated Frontier and Homestead chain difficulty tests
+    # Why is it called `Frontier`? Who knows.
+    # We only test Frontier blocks
+    hex_to_int(test_data["currentBlockNumber"]) < @fork_block_num[:homestead]
   end
 
-  defp filter_test(tests, number) do
-    Enum.filter(tests, fn {name, _} -> name == "DifficultyTest#{number}" end)
+  defp forks_to_run({_name, test_data}, :homestead) do
+    # difficultyHomestead.json tests have:
+    # Auto-generated Frontier and Homestead chain difficulty tests
+    # Why is it called `Homestead`? Who knows.
+    # We only test blocks after Homestead fork
+    @fork_block_num[:homestead] <= hex_to_int(test_data["currentBlockNumber"])
   end
 
   defp run_test({name, test_data}) do
@@ -102,11 +116,8 @@ defmodule Block.HeaderTest do
     expected_difficulty != difficulty
   end
 
-  defp difficulty_tests do
-    # difficultyFrontier.json tests have:
-    # Auto-generated Frontier/Homestead chain difficulty tests
-    # Why is it called `Frontier`? Who knows
-    Helper.basic_tests_path() <> "/difficultyFrontier.json"
+  defp difficulty_tests(path) do
+    Path.join(Helper.basic_tests_path(), path)
   end
 
   defp read_test(path) do
