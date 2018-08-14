@@ -44,4 +44,8 @@ defprotocol EVM.Configuration do
   # EIP150
   @spec fail_nested_operation_lack_of_gas?(t) :: boolean()
   def fail_nested_operation_lack_of_gas?(t)
+
+  # EIP160
+  @spec exp_byte_cost(t) :: integer()
+  def exp_byte_cost(t)
 end

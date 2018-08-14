@@ -46,8 +46,6 @@ defmodule EVM.Gas do
   @g_newaccount 25_000
   # Partial payment for an EXP operation.
   @g_exp 10
-  # Partial payment when multiplied by dlog256(exponent)e for the EXP operation.
-  @g_expbyte 10
   # Paid for every additional word when expanding memory.
   @g_memory 3
   # The divsor of quadratic costs
@@ -298,8 +296,8 @@ defmodule EVM.Gas do
   @spec operation_cost(atom(), list(EVM.val()), list(EVM.val()), MachineState.t()) :: t | nil
   def operation_cost(operation \\ nil, inputs \\ nil, machine_state \\ nil, exec_env \\ nil)
 
-  def operation_cost(:exp, [_base, exponent], _machine_state, _exec_env) do
-    @g_exp + @g_expbyte * MathHelper.integer_byte_size(exponent)
+  def operation_cost(:exp, [_base, exponent], _machine_state, exec_env) do
+    @g_exp + Configuration.exp_byte_cost(exec_env.config) * MathHelper.integer_byte_size(exponent)
   end
 
   def operation_cost(:codecopy, [_memory_offset, _code_offset, length], _machine_state, _exec_env) do
