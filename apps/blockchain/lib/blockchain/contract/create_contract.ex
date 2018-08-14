@@ -93,6 +93,8 @@ defmodule Blockchain.Contract.CreateContract do
         params.endowment
       )
 
+    account_interface = AccountInterface.new(state_with_blank_contract)
+
     # Create an execution environment for a create contract call.
     # This is defined in Eq.(88), Eq.(89), Eq.(90), Eq.(91), Eq.(92),
     # Eq.(93), Eq.(94) and Eq.(95) of the Yellow Paper.
@@ -106,7 +108,8 @@ defmodule Blockchain.Contract.CreateContract do
       machine_code: params.init_code,
       stack_depth: params.stack_depth,
       block_interface: BlockInterface.new(params.block_header, state_with_blank_contract.db),
-      account_interface: AccountInterface.new(state_with_blank_contract),
+      account_interface: account_interface,
+      initial_account_interface: account_interface,
       config: params.config
     }
 
