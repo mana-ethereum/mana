@@ -24,7 +24,8 @@ defmodule EVM.ExecEnv do
             account_interface: nil,
             block_interface: nil,
             config: EVM.Configuration.Frontier.new(),
-            created_accounts: []
+            created_accounts: [],
+            initial_account_interface: nil
 
   @typedoc """
   Terms from Yellow Paper:
@@ -101,9 +102,13 @@ defmodule EVM.ExecEnv do
     %{exec_env | account_interface: account_interface}
   end
 
-  @spec new_account?(t()) :: boolean()
-  def new_account?(exec_env) do
-    Enum.member?(exec_env.created_accounts, exec_env.address)
+  @spec new_account?(t(), EVM.Address.t()) :: boolean()
+  def new_account?(exec_env, address) do
+    Enum.member?(exec_env.created_accounts, address) ||
+      !AccountInterface.account_exists?(
+        exec_env.initial_account_interface,
+        address
+      )
   end
 
   @spec add_created_address(t(), integer()) :: t()

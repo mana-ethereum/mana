@@ -76,6 +76,8 @@ defmodule Blockchain.Contract.MessageCall do
     # TODO: make copy of original state or use cache for making changes
     state = Account.transfer!(params.state, params.sender, params.recipient, params.value)
 
+    account_interace = AccountInterface.new(state)
+
     # Create an execution environment for a message call.
     # This is defined in Eq.(107), Eq.(108), Eq.(109), Eq.(110),
     # Eq.(111), Eq.(112), Eq.(113) and Eq.(114) of the Yellow Paper.
@@ -89,7 +91,8 @@ defmodule Blockchain.Contract.MessageCall do
       machine_code: machine_code,
       stack_depth: params.stack_depth,
       block_interface: BlockInterface.new(params.block_header, state.db),
-      account_interface: AccountInterface.new(state),
+      account_interface: account_interace,
+      initial_account_interface: account_interace,
       config: params.config
     }
 

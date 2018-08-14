@@ -15,24 +15,7 @@ defmodule BlockchainTest do
     "Frontier" => [],
     "Homestead" => [],
     "EIP150" => [
-      "GeneralStateTests/stEIP150Specific/SuicideToNotExistingContract_d0g0v0.json",
-      "GeneralStateTests/stEIP158Specific/vitalikTransactionTest_d0g0v0.json",
-      "GeneralStateTests/stNonZeroCallsTest/NonZeroValue_SUICIDE_d0g0v0.json",
-      "GeneralStateTests/stRefundTest/refund_TxToSuicide_d0g1v0.json",
-      "GeneralStateTests/stSystemOperationsTest/ABAcallsSuicide1_d1g0v0.json",
-      "GeneralStateTests/stSystemOperationsTest/CreateHashCollision_d0g0v0.json",
-      "GeneralStateTests/stSystemOperationsTest/doubleSelfdestructTest2_d0g0v0.json",
-      "GeneralStateTests/stSystemOperationsTest/doubleSelfdestructTest_d0g0v0.json",
-      "GeneralStateTests/stSystemOperationsTest/extcodecopy_d0g0v0.json",
-      "GeneralStateTests/stSystemOperationsTest/suicideCallerAddresTooBigRight_d0g0v0.json",
-      "GeneralStateTests/stSystemOperationsTest/suicideNotExistingAccount_d0g0v0.json",
-      "GeneralStateTests/stTransactionTest/SuicidesAndInternlCallSuicidesOOG_d0g0v0.json",
-      "GeneralStateTests/stTransactionTest/SuicidesAndInternlCallSuicidesSuccess_d1g0v0.json",
-      "GeneralStateTests/stTransactionTest/SuicidesMixingCoinbase_d0g1v0.json",
-      "GeneralStateTests/stZeroCallsTest/ZeroValue_SUICIDE_d0g0v0.json",
-      "bcRandomBlockhashTest/randomStatetest344BC.json",
-      "bcValidBlockTest/RecallSuicidedContract.json",
-      "bcValidBlockTest/RecallSuicidedContractInOneBlock.json"
+      "GeneralStateTests/stSystemOperationsTest/CreateHashCollision_d0g0v0.json"
     ],
     # the rest are not implemented yet
     "Byzantium" => [],

@@ -79,8 +79,11 @@ defmodule EvmTest do
   end
 
   defp get_exec_env(test) do
+    account_interface = account_interface(test)
+
     %EVM.ExecEnv{
-      account_interface: account_interface(test),
+      account_interface: account_interface,
+      initial_account_interface: account_interface,
       address: hex_to_bin(test["exec"]["address"]),
       block_interface: block_interface(test),
       data: hex_to_bin(test["exec"]["data"]),

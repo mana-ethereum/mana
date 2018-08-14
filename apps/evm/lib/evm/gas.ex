@@ -349,8 +349,9 @@ defmodule EVM.Gas do
     end
   end
 
-  def operation_cost(:selfdestruct, _, _, exec_env) do
-    is_new_account = ExecEnv.new_account?(exec_env)
+  def operation_cost(:selfdestruct, [address | _], _, exec_env) do
+    address = Address.new(address)
+    is_new_account = ExecEnv.new_account?(exec_env, address)
 
     Configuration.selfdestruct_cost(exec_env.config, new_account: is_new_account)
   end

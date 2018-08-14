@@ -10,7 +10,6 @@ defmodule Blockchain.StateTest do
 
   @failing_tests %{
     "EIP150" => [
-      "stZeroCallsTest/ZeroValue_SUICIDE",
       "stTransitionTest/createNameRegistratorPerTxsNotEnoughGasBefore",
       "stTransitionTest/createNameRegistratorPerTxsNotEnoughGasAt",
       "stTransitionTest/createNameRegistratorPerTxsNotEnoughGasAfter",
@@ -18,29 +17,19 @@ defmodule Blockchain.StateTest do
       "stTransactionTest/TransactionToItselfNotEnoughFounds",
       "stTransactionTest/TransactionNonceCheck2",
       "stTransactionTest/TransactionNonceCheck",
-      "stTransactionTest/SuicidesAndInternlCallSuicidesSuccess",
-      "stTransactionTest/SuicidesAndInternlCallSuicidesOOG",
       "stTransactionTest/RefundOverflow2",
       "stTransactionTest/RefundOverflow",
       "stTransactionTest/OverflowGasRequire",
       "stTransactionTest/EmptyTransaction",
       "stTransactionTest/CreateTransactionReverted",
-      "stSystemOperationsTest/suicideNotExistingAccount",
-      "stSystemOperationsTest/suicideCallerAddresTooBigRight",
-      "stSystemOperationsTest/extcodecopy",
       "stSystemOperationsTest/CreateHashCollision",
-      "stSystemOperationsTest/ABAcallsSuicide1",
       "stRevertTest/RevertOpcodeWithBigOutputInInit",
       "stRevertTest/RevertOpcodeMultipleSubCalls",
       "stRevertTest/RevertOpcodeInInit",
-      "stRefundTest/refund_TxToSuicide",
       "stRandom2/201503110226PYTHON_DUP6",
-      "stNonZeroCallsTest/NonZeroValue_SUICIDE",
       "stInitCodeTest/OutOfGasPrefundedContractCreation",
       "stInitCodeTest/OutOfGasContractCreation",
-      "stInitCodeTest/NotEnoughCashContractCreation",
-      "stEIP158Specific/vitalikTransactionTest",
-      "stEIP150Specific/SuicideToNotExistingContract"
+      "stInitCodeTest/NotEnoughCashContractCreation"
     ],
     "Frontier" => [
       "stTransactionTest/UserTransactionGasLimitIsTooLowWhenZeroCost",
