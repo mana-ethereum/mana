@@ -11,7 +11,8 @@ defmodule GenerateBlockchainTests do
   def run(args) do
     hardfork = List.first(args)
 
-    if !Enum.member?(["Frontier", "Homestead"], hardfork), do: raise(RuntimeError)
+    if !Enum.member?(["Frontier", "Homestead", "EIP150", "EIP158"], hardfork),
+      do: raise(RuntimeError)
 
     {passing_count, failing_count} =
       Enum.reduce(
@@ -102,6 +103,12 @@ defmodule GenerateBlockchainTests do
       "Homestead" ->
         Chain.load_chain(:homestead_test, config)
 
+      "EIP150" ->
+        Chain.load_chain(:eip150_test, config)
+
+      "EIP158" ->
+        Chain.load_chain(:eip150_test, config)
+
       _ ->
         nil
     end
@@ -114,6 +121,12 @@ defmodule GenerateBlockchainTests do
 
       "Homestead" ->
         EVM.Configuration.Homestead.new()
+
+      "EIP150" ->
+        EVM.Configuration.EIP150.new()
+
+      "EIP158" ->
+        EVM.Configuration.EIP158.new()
 
       _ ->
         nil

@@ -1,32 +1,31 @@
-defmodule EVM.Configuration.Frontier do
-  defstruct contract_creation_cost: 21_000,
-            has_delegate_call: false,
-            fail_contract_creation: false,
-            extcodesize_cost: 20,
-            extcodecopy_cost: 20,
-            balance_cost: 20,
-            sload_cost: 50,
-            call_cost: 40,
-            selfdestruct_cost: 0,
-            fail_nested_operation: true,
-            exp_byte_cost: 10
+defmodule EVM.Configuration.EIP150 do
+  defstruct extcodesize_cost: 700,
+            extcodecopy_cost: 700,
+            balance_cost: 400,
+            sload_cost: 200,
+            call_cost: 700,
+            selfdestruct_cost: 5_000,
+            new_account_destruction_cost: 25_000,
+            fail_nested_operation: false,
+            fallback_config: EVM.Configuration.Homestead.new()
 
   def new do
     %__MODULE__{}
   end
 end
 
-defimpl EVM.Configuration, for: EVM.Configuration.Frontier do
+defimpl EVM.Configuration, for: EVM.Configuration.EIP150 do
   alias EVM.Configuration
 
   @spec contract_creation_cost(Configuration.t()) :: integer()
-  def contract_creation_cost(config), do: config.contract_creation_cost
+  def contract_creation_cost(config), do: config.fallback_config.contract_creation_cost
 
   @spec has_delegate_call?(Configuration.t()) :: boolean()
-  def has_delegate_call?(config), do: config.has_delegate_call
+  def has_delegate_call?(config), do: config.fallback_config.has_delegate_call
 
   @spec fail_contract_creation_lack_of_gas?(Configuration.t()) :: boolean()
-  def fail_contract_creation_lack_of_gas?(config), do: config.fail_contract_creation
+  def fail_contract_creation_lack_of_gas?(config),
+    do: config.fallback_config.fail_contract_creation
 
   @spec extcodesize_cost(Configuration.t()) :: integer()
   def extcodesize_cost(config), do: config.extcodesize_cost
@@ -44,11 +43,15 @@ defimpl EVM.Configuration, for: EVM.Configuration.Frontier do
   def call_cost(config), do: config.call_cost
 
   @spec selfdestruct_cost(Configuration.t(), keyword()) :: integer()
-  def selfdestruct_cost(config, _params), do: config.selfdestruct_cost
+  def selfdestruct_cost(config, new_account: false), do: config.selfdestruct_cost
+
+  def selfdestruct_cost(config, new_account: true) do
+    config.selfdestruct_cost + config.new_account_destruction_cost
+  end
 
   @spec fail_nested_operation_lack_of_gas?(Configuration.t()) :: boolean()
   def fail_nested_operation_lack_of_gas?(config), do: config.fail_nested_operation
 
   @spec exp_byte_cost(Configuration.t()) :: integer()
-  def exp_byte_cost(config), do: config.exp_byte_cost
+  def exp_byte_cost(config), do: Configuration.exp_byte_cost(config.fallback_config)
 end

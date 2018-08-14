@@ -7,15 +7,21 @@ defmodule GenerateStateTests do
 
   use EthCommonTest.Harness
 
+  @hardforks ["EIP158", "EIP150", "Homestead", "Frontier"]
+
   def run(_args) do
     initial_state = %{
       passing: %{
         "Homestead" => [],
-        "Frontier" => []
+        "Frontier" => [],
+        "EIP150" => [],
+        "EIP158" => []
       },
       failing: %{
         "Homestead" => [],
-        "Frontier" => []
+        "Frontier" => [],
+        "EIP150" => [],
+        "EIP158" => []
       }
     }
 
@@ -34,10 +40,17 @@ defmodule GenerateStateTests do
         end)
       end)
 
-    IO.puts("Failing tests")
-    IO.puts(inspect(completed_tests[:failing], limit: :infinity, width: 10))
+    failing_tests =
+      completed_tests[:failing]
+      |> Enum.map(fn {hardfork, tests} ->
+        {hardfork, Enum.dedup(tests)}
+      end)
+      |> Enum.into(%{})
 
-    for hardfork <- ["Homestead", "Frontier"] do
+    IO.puts("Failing tests")
+    IO.puts(inspect(failing_tests, limit: :infinity))
+
+    for hardfork <- @hardforks do
       passing_tests = length(completed_tests[:passing][hardfork])
       failing_tests = length(completed_tests[:failing][hardfork])
       total_tests = passing_tests + failing_tests
@@ -159,6 +172,12 @@ defmodule GenerateStateTests do
 
       "Homestead" ->
         EVM.Configuration.Homestead.new()
+
+      "EIP150" ->
+        EVM.Configuration.EIP150.new()
+
+      "EIP158" ->
+        EVM.Configuration.EIP158.new()
 
       _ ->
         nil

@@ -10,27 +10,34 @@ defmodule Blockchain.Contract.MessageCall do
   alias EVM.SubState
   alias EVM.MessageCall
 
-  # σ
   defstruct state: %{},
-            # s
             sender: <<>>,
-            # o
             originator: <<>>,
             recipient: <<>>,
             contract: <<>>,
-            # g
             available_gas: 0,
-            # p
             gas_price: 0,
             value: 0,
             apparent_value: 0,
-            # d
             data: <<>>,
-            # e
             stack_depth: 0,
             block_header: nil,
-            config: nil
+            config: EVM.Configuration.Frontier.new()
 
+  @typedoc """
+  Terms from the Yellow Paper:
+
+  σ: state
+  s: sender,
+  o: originator,
+  r: recipient,
+  g: available_gas
+  p: gas_price,
+  v: value,
+  v with overline: apparent_value,
+  d: data,
+  e: stack_depth
+  """
   @type t :: %__MODULE__{
           state: EVM.state(),
           sender: EVM.address(),
@@ -69,6 +76,8 @@ defmodule Blockchain.Contract.MessageCall do
     # TODO: make copy of original state or use cache for making changes
     state = Account.transfer!(params.state, params.sender, params.recipient, params.value)
 
+    account_interace = AccountInterface.new(state)
+
     # Create an execution environment for a message call.
     # This is defined in Eq.(107), Eq.(108), Eq.(109), Eq.(110),
     # Eq.(111), Eq.(112), Eq.(113) and Eq.(114) of the Yellow Paper.
@@ -82,7 +91,8 @@ defmodule Blockchain.Contract.MessageCall do
       machine_code: machine_code,
       stack_depth: params.stack_depth,
       block_interface: BlockInterface.new(params.block_header, state.db),
-      account_interface: AccountInterface.new(state),
+      account_interface: account_interace,
+      initial_account_interface: account_interace,
       config: params.config
     }
 

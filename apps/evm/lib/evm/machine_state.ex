@@ -1,7 +1,7 @@
 defmodule EVM.MachineState do
   @moduledoc """
   Module for tracking the current machine state, which is roughly
-  equivilant to the VM state for an executing contract.
+  equivalent to the VM state for an executing contract.
 
   This is most often seen as µ in the Yellow Paper.
   """
@@ -9,26 +9,31 @@ defmodule EVM.MachineState do
   alias EVM.{Gas, Stack, MachineState, ProgramCounter, ExecEnv}
   alias EVM.Operation.Metadata
 
-  # g
   defstruct gas: nil,
-            # pc
             program_counter: 0,
-            # m
             memory: <<>>,
-            # i
             active_words: 0,
             previously_active_words: 0,
-            # s
             stack: [],
             last_return_data: []
 
   @type program_counter :: integer()
   @type memory :: binary()
+  @typedoc """
+  Yellow paper terms:
+
+  - g: gas
+  - pc: program_counter
+  - m: memory
+  - i: active_words
+  - s: stack
+  """
   @type t :: %__MODULE__{
           gas: Gas.t(),
           program_counter: program_counter,
           memory: memory,
           active_words: integer(),
+          previously_active_words: integer(),
           stack: Stack.t(),
           last_return_data: [EVM.val()] | []
         }
@@ -46,9 +51,15 @@ defmodule EVM.MachineState do
   """
   @spec subtract_gas(MachineState.t(), ExecEnv.t()) :: MachineState.t()
   def subtract_gas(machine_state, exec_env) do
-    cost = Gas.cost(machine_state, exec_env)
+    case Gas.cost(machine_state, exec_env, with_status: true) do
+      {:changed, cost, new_call_gas} ->
+        new_stack = Stack.replace(machine_state.stack, 0, new_call_gas)
 
-    %{machine_state | gas: machine_state.gas - cost}
+        %{machine_state | gas: machine_state.gas - cost, stack: new_stack}
+
+      {:original, cost} ->
+        %{machine_state | gas: machine_state.gas - cost}
+    end
   end
 
   @doc """

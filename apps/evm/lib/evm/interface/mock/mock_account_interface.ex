@@ -16,6 +16,12 @@ defmodule EVM.Interface.Mock.MockAccountInterface do
       contract_result: contract_result
     }
   end
+
+  def add_account(interface, address, account) do
+    account_map = Map.put(interface.account_map, address, account)
+
+    %{interface | account_map: account_map}
+  end
 end
 
 defimpl EVM.Interface.AccountInterface, for: EVM.Interface.Mock.MockAccountInterface do

@@ -12,27 +12,34 @@ defmodule EVM.ExecEnv do
 
   This generally relates to `I` in the Yellow Paper, defined in Section 9.3.
   """
-  # I_a
+
   defstruct address: nil,
-            # I_o
             originator: nil,
-            # I_p
             gas_price: nil,
-            # I_d
             data: nil,
-            # I_s
             sender: nil,
-            # I_v
             value_in_wei: nil,
-            # I_b
             machine_code: <<>>,
-            # I_e
             stack_depth: 0,
-            # I_h (wrapped in interface)
             account_interface: nil,
             block_interface: nil,
-            config: EVM.Configuration.Frontier.new()
+            config: EVM.Configuration.Frontier.new(),
+            created_accounts: [],
+            initial_account_interface: nil
 
+  @typedoc """
+  Terms from Yellow Paper:
+
+  - I_a: address
+  - I_o: originator
+  - I_p: gas_price
+  - I_d: data
+  - I_s: sender
+  - I_v: value_in_wei
+  - I_b: machine_code
+  - I_e: stack_depth
+  - I_h (wrapped in interface): account_interface
+  """
   @type t :: %__MODULE__{
           address: EVM.address(),
           originator: EVM.address(),
@@ -44,7 +51,8 @@ defmodule EVM.ExecEnv do
           stack_depth: integer(),
           block_interface: BlockInterface.t(),
           account_interface: AccountInterface.t(),
-          config: Configuration.t()
+          config: Configuration.t(),
+          created_accounts: [EVM.address()]
         }
 
   @spec put_storage(t(), integer(), integer()) :: t()
@@ -92,5 +100,21 @@ defmodule EVM.ExecEnv do
       AccountInterface.transfer(exec_env.account_interface, exec_env.address, to, value)
 
     %{exec_env | account_interface: account_interface}
+  end
+
+  @spec new_account?(t(), EVM.Address.t()) :: boolean()
+  def new_account?(exec_env, address) do
+    Enum.member?(exec_env.created_accounts, address) ||
+      !AccountInterface.account_exists?(
+        exec_env.initial_account_interface,
+        address
+      )
+  end
+
+  @spec add_created_address(t(), integer()) :: t()
+  def add_created_address(exec_env, address) do
+    address = :binary.encode_unsigned(address)
+
+    %{exec_env | created_accounts: [address | exec_env.created_accounts]}
   end
 end
