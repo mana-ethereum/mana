@@ -131,8 +131,7 @@ defmodule Blockchain.Contract.CreateContract do
       insufficient_gas && EVM.Configuration.fail_contract_creation_lack_of_gas?(params.config) ->
         {:error, {params.state, 0, SubState.empty()}}
 
-      # EIP170 https://github.com/ethereum/EIPs/blob/master/EIPS/eip-170.md
-      byte_size(output) > 24_577 ->
+      EVM.Configuration.limit_contract_code_size?(params.config, byte_size(output)) ->
         {:error, {params.state, 0, SubState.empty()}}
 
       true ->

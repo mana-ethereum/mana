@@ -48,4 +48,8 @@ defprotocol EVM.Configuration do
   # EIP160
   @spec exp_byte_cost(t) :: integer()
   def exp_byte_cost(t)
+
+  # EIP170
+  @spec limit_contract_code_size?(t, integer) :: boolean()
+  def limit_contract_code_size?(t, size \\ 0)
 end
