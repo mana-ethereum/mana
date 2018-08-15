@@ -1,6 +1,6 @@
 defmodule Blockchain.Block do
   @moduledoc """
-  This module effectively encodes a Block, the heart of the blockchain.
+  This module effectively encodes a block, the heart of the blockchain.
   A chain is formed when blocks point to previous blocks,
   either as a parent or an ommer (uncle).
   For more information, see Section 4.3 of the Yellow Paper.
@@ -491,7 +491,7 @@ defmodule Blockchain.Block do
 
   @doc """
   Set the difficulty of a new block based on Eq.(39), better defined
-  in Block.Header`.
+  in `Block.Header`.
 
   # TODO: Validate these results
 

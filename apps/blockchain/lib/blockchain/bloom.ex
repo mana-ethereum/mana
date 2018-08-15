@@ -1,4 +1,17 @@
 defmodule Blockchain.Bloom do
+  @moduledoc """
+  When a block is generated or verified, the contract addresses and fields from the generated logs are added to a bloom filter. This is included in the block header.
+
+  _From Yellow Paper 4.3.1. Transaction Receipt_: The transaction receipt (R) is a tuple of four items comprising the post-transaction state:
+
+   - _Ru:_ the cumulative gas used in the block containing the transaction receipt immediately after the transaction has happened 
+
+   - _Rl:_ the set of logs created through execution of the transaction 
+
+   - _Rb_: the *bloom filter* composed from information in those logs
+
+   - _Rz_: the status code of the transaction.
+  """
   alias ExthCrypto.Hash.Keccak
 
   use Bitwise

@@ -1,6 +1,6 @@
 defmodule Blockchain.Account do
   @moduledoc """
-  Represents the state of an account,
+  Represents the account state,
   as defined in Section 4.1 of the Yellow Paper.
   """
 
