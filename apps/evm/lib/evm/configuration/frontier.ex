@@ -9,7 +9,8 @@ defmodule EVM.Configuration.Frontier do
             call_cost: 40,
             selfdestruct_cost: 0,
             fail_nested_operation: true,
-            exp_byte_cost: 10
+            exp_byte_cost: 10,
+            limit_contract_code_size: false
 
   def new do
     %__MODULE__{}
@@ -51,4 +52,7 @@ defimpl EVM.Configuration, for: EVM.Configuration.Frontier do
 
   @spec exp_byte_cost(Configuration.t()) :: integer()
   def exp_byte_cost(config), do: config.exp_byte_cost
+
+  @spec limit_contract_code_size?(Configuration.t(), integer()) :: boolean()
+  def limit_contract_code_size?(config, _), do: config.limit_contract_code_size
 end

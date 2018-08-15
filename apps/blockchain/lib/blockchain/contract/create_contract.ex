@@ -127,24 +127,29 @@ defmodule Blockchain.Contract.CreateContract do
     contract_creation_cost = creation_cost(output)
     insufficient_gas = remaining_gas < contract_creation_cost
 
-    if insufficient_gas && EVM.Configuration.fail_contract_creation_lack_of_gas?(params.config) do
-      {:error, {params.state, 0, SubState.empty()}}
-    else
-      resultant_gas =
-        if insufficient_gas do
-          remaining_gas
-        else
-          remaining_gas - contract_creation_cost
-        end
+    cond do
+      insufficient_gas && EVM.Configuration.fail_contract_creation_lack_of_gas?(params.config) ->
+        {:error, {params.state, 0, SubState.empty()}}
 
-      resultant_state =
-        if insufficient_gas do
-          state_after_init
-        else
-          Account.put_code(state_after_init, address, output)
-        end
+      EVM.Configuration.limit_contract_code_size?(params.config, byte_size(output)) ->
+        {:error, {params.state, 0, SubState.empty()}}
 
-      {:ok, {resultant_state, resultant_gas, accrued_sub_state}}
+      true ->
+        resultant_gas =
+          if insufficient_gas do
+            remaining_gas
+          else
+            remaining_gas - contract_creation_cost
+          end
+
+        resultant_state =
+          if insufficient_gas do
+            state_after_init
+          else
+            Account.put_code(state_after_init, address, output)
+          end
+
+        {:ok, {resultant_state, resultant_gas, accrued_sub_state}}
     end
   end
 

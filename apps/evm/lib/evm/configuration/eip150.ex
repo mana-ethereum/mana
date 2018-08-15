@@ -54,4 +54,8 @@ defimpl EVM.Configuration, for: EVM.Configuration.EIP150 do
 
   @spec exp_byte_cost(Configuration.t()) :: integer()
   def exp_byte_cost(config), do: Configuration.exp_byte_cost(config.fallback_config)
+
+  @spec limit_contract_code_size?(Configuration.t(), integer()) :: boolean()
+  def limit_contract_code_size?(config, _),
+    do: Configuration.limit_contract_code_size?(config.fallback_config)
 end

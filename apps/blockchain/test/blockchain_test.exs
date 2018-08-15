@@ -24,7 +24,6 @@ defmodule BlockchainTest do
       "GeneralStateTests/stCallCodes/call_OOG_additionalGasCosts1_d0g0v0.json",
       "GeneralStateTests/stCallCodes/callcodeDynamicCode_d0g0v0.json",
       "GeneralStateTests/stCallCreateCallCodeTest/createNameRegistratorPerTxs_d0g0v0.json",
-      "GeneralStateTests/stCodeSizeLimit/codesizeOOGInvalidSize_d0g0v0.json",
       "GeneralStateTests/stCodeSizeLimit/codesizeValid_d0g0v0.json",
       "GeneralStateTests/stCreateTest/CREATE_AcreateB_BSuicide_BStore_d0g0v0.json",
       "GeneralStateTests/stCreateTest/CREATE_ContractSSTOREDuringInit_d0g0v0.json",

@@ -206,7 +206,6 @@ defmodule Blockchain.StateTest do
       "stCreateTest/CREATE_ContractSSTOREDuringInit",
       "stCreateTest/CREATE_AcreateB_BSuicide_BStore",
       "stCodeSizeLimit/codesizeValid",
-      "stCodeSizeLimit/codesizeOOGInvalidSize",
       "stCodeSizeLimit/codesizeInit",
       "stCallCreateCallCodeTest/createNameRegistratorPerTxs",
       "stCallCodes/callcodeDynamicCode",
