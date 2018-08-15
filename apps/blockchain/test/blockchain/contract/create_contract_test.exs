@@ -6,8 +6,6 @@ defmodule Blockchain.Contract.CreateContractTest do
   alias EVM.{SubState, MachineCode}
   alias MerklePatriciaTree.{Trie, DB}
 
-  # TODO: Add rich tests for contract creation
-
   setup do
     db = MerklePatriciaTree.Test.random_ets_db(:contract_test)
     {:ok, %{db: db}}
@@ -16,24 +14,6 @@ defmodule Blockchain.Contract.CreateContractTest do
   describe "execute/1" do
     test "creates a new contract", %{db: db} do
       account = %Account{balance: 11, nonce: 5}
-
-      assembly = [
-        :push1,
-        3,
-        :push1,
-        5,
-        :add,
-        :push1,
-        0x00,
-        :mstore,
-        :push1,
-        32,
-        :push1,
-        0,
-        :return
-      ]
-
-      init_code = MachineCode.compile(assembly)
 
       state =
         db
@@ -47,7 +27,7 @@ defmodule Blockchain.Contract.CreateContractTest do
         available_gas: 100_000_000,
         gas_price: 1,
         endowment: 5,
-        init_code: init_code,
+        init_code: build_sample_code(),
         stack_depth: 5,
         block_header: %Block.Header{nonce: 1}
       }
@@ -82,5 +62,81 @@ defmodule Blockchain.Contract.CreateContractTest do
       assert Account.get_machine_code(state, contract_address) == {:ok, <<0x08::256>>}
       assert state |> Trie.Inspector.all_keys() |> Enum.count() == 2
     end
+
+    test "does not create contract if address already exists with nonce", %{db: db} do
+      account = %Account{balance: 11, nonce: 5}
+      account_address = <<0x10::160>>
+      collision_account = %Account{nonce: 1}
+      collision_account_address = Contract.Address.new(account_address, account.nonce)
+
+      state =
+        db
+        |> Trie.new()
+        |> Account.put_account(account_address, account)
+        |> Account.put_account(collision_account_address, collision_account)
+
+      params = %Contract.CreateContract{
+        state: state,
+        sender: account_address,
+        originator: account_address,
+        available_gas: 100_000_000,
+        gas_price: 1,
+        endowment: 5,
+        init_code: build_sample_code(),
+        stack_depth: 5,
+        block_header: %Block.Header{nonce: 1}
+      }
+
+      assert {:error, {^state, 0, sub_state}} = Contract.create(params)
+      assert SubState.empty?(sub_state)
+    end
+
+    test "does not create contract if address has code", %{db: db} do
+      account = %Account{balance: 11, nonce: 5}
+      account_address = <<0x10::160>>
+      collision_account = %Account{code_hash: build_sample_code(), nonce: 0}
+      collision_account_address = Contract.Address.new(account_address, account.nonce)
+
+      state =
+        db
+        |> Trie.new()
+        |> Account.put_account(account_address, account)
+        |> Account.put_account(collision_account_address, collision_account)
+
+      params = %Contract.CreateContract{
+        state: state,
+        sender: account_address,
+        originator: account_address,
+        available_gas: 100_000_000,
+        gas_price: 1,
+        endowment: 5,
+        init_code: build_sample_code(),
+        stack_depth: 5,
+        block_header: %Block.Header{nonce: 1}
+      }
+
+      assert {:error, {^state, 0, sub_state}} = Contract.create(params)
+      assert SubState.empty?(sub_state)
+    end
+  end
+
+  defp build_sample_code do
+    assembly = [
+      :push1,
+      3,
+      :push1,
+      5,
+      :add,
+      :push1,
+      0x00,
+      :mstore,
+      :push1,
+      32,
+      :push1,
+      0,
+      :return
+    ]
+
+    MachineCode.compile(assembly)
   end
 end
