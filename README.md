@@ -97,8 +97,8 @@ Ethereum common tests are created for all clients to test against. We plan to pr
    - [BlockchainTests](https://github.com/ethereum/tests/tree/develop/BlockchainTests) (Includes GeneralStateTests) 1274/1275 = 99.9% passing
    - [GeneralStateTests](https://github.com/ethereum/tests/tree/develop/GeneralStateTests) 1088/1114 = 97.7% passing
 - [x] EIP158
-   - [BlockchainTests](https://github.com/ethereum/tests/tree/develop/BlockchainTests) (Includes GeneralStateTests) 1031/1233 = 83.6%
-   - [GeneralStateTests](https://github.com/ethereum/tests/tree/develop/GeneralStateTests) 859/1181 = 72.7% passing
+   - [BlockchainTests](https://github.com/ethereum/tests/tree/develop/BlockchainTests) (Includes GeneralStateTests) 1108/1233 = 89.9%
+   - [GeneralStateTests](https://github.com/ethereum/tests/tree/develop/GeneralStateTests) 1052/1181= 89.1% passing
 - [ ] Byzantium
 - [ ] Constantinople:  View the community [Constantinople Project Tracker](https://github.com/ethereum/pm/issues/53).
 

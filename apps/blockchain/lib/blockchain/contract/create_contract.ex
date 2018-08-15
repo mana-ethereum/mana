@@ -90,7 +90,8 @@ defmodule Blockchain.Contract.CreateContract do
         params.state,
         address,
         params.sender,
-        params.endowment
+        params.endowment,
+        EVM.Configuration.start_nonce(params.config)
       )
 
     account_interface = AccountInterface.new(state_with_blank_contract)

@@ -1,7 +1,8 @@
 defmodule EVM.Configuration.EIP158 do
   defstruct fallback_config: EVM.Configuration.EIP150.new(),
             exp_byte_cost: 50,
-            code_size_limit: 24_577
+            code_size_limit: 24_577,
+            start_nonce: 1
 
   def new do
     %__MODULE__{}
@@ -50,4 +51,7 @@ defimpl EVM.Configuration, for: EVM.Configuration.EIP158 do
 
   @spec limit_contract_code_size?(Configuration.t(), integer()) :: boolean()
   def limit_contract_code_size?(config, size), do: size >= config.code_size_limit
+
+  @spec start_nonce(Configuration.t()) :: integer()
+  def start_nonce(config), do: config.start_nonce
 end
