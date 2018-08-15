@@ -4,6 +4,32 @@ defmodule Blockchain.Transaction.ValidityTest do
   alias Blockchain.{Transaction, Account}
 
   describe "validate/3" do
+    test "invalidates transaction when signature's s-value is too high (after homestead fork)" do
+      trx = %Transaction{
+        data: <<>>,
+        gas_limit: 1_000,
+        gas_price: 1,
+        init: <<1>>,
+        nonce: 5,
+        to: <<>>,
+        value: 5,
+        r: 1,
+        s: Transaction.Signature.secp256k1n_2() + 1,
+        v: 27
+      }
+
+      result =
+        MerklePatriciaTree.Test.random_ets_db()
+        |> MerklePatriciaTree.Trie.new()
+        |> Validity.validate(
+          trx,
+          %Block.Header{},
+          EVM.Configuration.Homestead.new()
+        )
+
+      assert result == {:invalid, :invalid_sender}
+    end
+
     test "invalidates transaction when sender address is nil" do
       trx = %Transaction{
         data: <<>>,
@@ -138,7 +164,7 @@ defmodule Blockchain.Transaction.ValidityTest do
       assert result == {:invalid, [:over_gas_limit, :insufficient_balance]}
     end
 
-    test "invalidates account when tranaction gas limit exceeds header gas limit" do
+    test "invalidates account when transaction gas limit exceeds header gas limit" do
       private_key = <<1::256>>
       # based on simple private key
       sender =

@@ -123,7 +123,7 @@ defmodule Blockchain.Account do
       ...> |> Blockchain.Account.get_account(<<0x01::160>>)
       nil
   """
-  @spec get_account(EVM.state(), EVM.address()) :: t | nil
+  @spec get_account(Trie.t(), EVM.address()) :: t | nil
   def get_account(state, address) do
     address = if is_binary(address), do: address, else: :binary.encode_unsigned(address)
     trie = Trie.get(state, Keccak.kec(address))

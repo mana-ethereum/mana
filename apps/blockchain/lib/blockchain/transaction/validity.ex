@@ -6,31 +6,19 @@ defmodule Blockchain.Transaction.Validity do
 
   alias Blockchain.{Account, Transaction}
   alias Block.Header
+  alias MerklePatriciaTree.Trie
 
   @doc """
   Validates the validity of a transaction that is required to be
   true before we're willing to execute a transaction. This is
   specified in Section 6.2 of the Yellow Paper Eq.(65) and Eq.(66).
   """
-  @spec validate(EVM.state(), Transaction.t(), Block.Header.t(), EVM.Configuration.t()) ::
+  @spec validate(Trie.t(), Transaction.t(), Block.Header.t(), EVM.Configuration.t()) ::
           :valid | {:invalid, atom()}
   def validate(state, trx, block_header, config) do
-    result =
-      case Transaction.Signature.sender(trx) do
-        {:error, _reason} ->
-          {:invalid, :invalid_sender}
-
-        {:ok, sender_address} ->
-          case Account.get_account(state, sender_address) do
-            nil ->
-              {:invalid, :missing_account}
-
-            sender_account ->
-              {:ok, sender_account}
-          end
-      end
-
-    with {:ok, sender_account} <- result do
+    with :ok <- validate_signature(trx, config),
+         {:ok, sender_address} <- Transaction.Signature.sender(trx),
+         {:ok, sender_account} <- retrieve_account(state, sender_address) do
       errors =
         []
         |> check_sender_nonce(trx, sender_account)
@@ -39,6 +27,30 @@ defmodule Blockchain.Transaction.Validity do
         |> check_gas_limit(trx, block_header)
 
       if errors == [], do: :valid, else: {:invalid, errors}
+    end
+  end
+
+  @spec validate_signature(Transaction.t(), EVM.Configuration.t()) ::
+          :ok | {:invalid, :invalid_signature}
+  defp validate_signature(trx, config) do
+    max_s_value = EVM.Configuration.max_signature_s(config)
+
+    if Transaction.Signature.is_signature_valid?(trx.r, trx.s, trx.v, max_s: max_s_value) do
+      :ok
+    else
+      {:invalid, :invalid_sender}
+    end
+  end
+
+  @spec retrieve_account(Trie.t(), EVM.address()) ::
+          {:ok, Account.t()} | {:invalid, :missing_account}
+  defp retrieve_account(state, sender_address) do
+    case Account.get_account(state, sender_address) do
+      nil ->
+        {:invalid, :missing_account}
+
+      sender_account ->
+        {:ok, sender_account}
     end
   end
 

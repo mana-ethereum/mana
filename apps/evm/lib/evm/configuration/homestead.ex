@@ -1,6 +1,7 @@
 defmodule EVM.Configuration.Homestead do
   defstruct contract_creation_cost: 53_000,
             has_delegate_call: true,
+            max_signature_s: :secp256k1n_2,
             fail_contract_creation: true,
             fallback_config: EVM.Configuration.Frontier.new()
 
@@ -17,6 +18,9 @@ defimpl EVM.Configuration, for: EVM.Configuration.Homestead do
 
   @spec has_delegate_call?(Configuration.t()) :: boolean()
   def has_delegate_call?(config), do: config.has_delegate_call
+
+  @spec max_signature_s(Configuration.t()) :: atom()
+  def max_signature_s(config), do: config.max_signature_s
 
   @spec fail_contract_creation_lack_of_gas?(Configuration.t()) :: boolean()
   def fail_contract_creation_lack_of_gas?(config), do: config.fail_contract_creation
