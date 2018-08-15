@@ -6,13 +6,14 @@ defmodule Blockchain.Transaction.Validity do
 
   alias Blockchain.{Account, Transaction}
   alias Block.Header
+  alias MerklePatriciaTree.Trie
 
   @doc """
   Validates the validity of a transaction that is required to be
   true before we're willing to execute a transaction. This is
   specified in Section 6.2 of the Yellow Paper Eq.(65) and Eq.(66).
   """
-  @spec validate(EVM.state(), Transaction.t(), Block.Header.t(), EVM.Configuration.t()) ::
+  @spec validate(Trie.t(), Transaction.t(), Block.Header.t(), EVM.Configuration.t()) ::
           :valid | {:invalid, atom()}
   def validate(state, trx, block_header, config) do
     with :ok <- validate_signature(trx, config),
@@ -41,7 +42,7 @@ defmodule Blockchain.Transaction.Validity do
     end
   end
 
-  @spec retrieve_account(EVM.state(), EVM.address()) ::
+  @spec retrieve_account(Trie.t(), EVM.address()) ::
           {:ok, Account.t()} | {:invalid, :missing_account}
   defp retrieve_account(state, sender_address) do
     case Account.get_account(state, sender_address) do
