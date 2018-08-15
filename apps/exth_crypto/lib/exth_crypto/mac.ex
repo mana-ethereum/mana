@@ -24,7 +24,7 @@ defmodule ExthCrypto.MAC do
       iex> ExthCrypto.MAC.mac("The quick brown fox jumps over the lazy dog", "key", :sha256, 8)
       <<247, 188, 131, 244, 48, 83, 132, 36>>
   """
-  @spec mac(iodata(), iodata(), Hash.hash_algorithm(), integer()) :: mac
+  @spec mac(iodata(), iodata(), Hash.hash_algorithm(), integer() | nil) :: mac
   def mac(data, key, hash_algorithm, length \\ nil) when is_atom(hash_algorithm) do
     if Enum.member?(Hash.hash_algorithms(), hash_algorithm) do
       case length do
