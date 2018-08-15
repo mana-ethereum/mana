@@ -42,7 +42,7 @@ defimpl EVM.Configuration, for: EVM.Configuration.Homestead do
 
   @spec fail_nested_operation_lack_of_gas?(Configuration.t()) :: boolean()
   def fail_nested_operation_lack_of_gas?(config),
-    do: Configuration.fail_nested_operation(config.fallback_config)
+    do: Configuration.fail_nested_operation_lack_of_gas?(config.fallback_config)
 
   @spec exp_byte_cost(Configuration.t()) :: integer()
   def exp_byte_cost(config), do: Configuration.exp_byte_cost(config.fallback_config)
