@@ -10,7 +10,8 @@ defmodule EVM.Configuration.Frontier do
             selfdestruct_cost: 0,
             fail_nested_operation: true,
             exp_byte_cost: 10,
-            limit_contract_code_size: false
+            limit_contract_code_size: false,
+            start_nonce: 0
 
   def new do
     %__MODULE__{}
@@ -55,4 +56,7 @@ defimpl EVM.Configuration, for: EVM.Configuration.Frontier do
 
   @spec limit_contract_code_size?(Configuration.t(), integer()) :: boolean()
   def limit_contract_code_size?(config, _), do: config.limit_contract_code_size
+
+  @spec start_nonce(Configuration.t()) :: integer()
+  def start_nonce(config), do: config.start_nonce
 end

@@ -47,4 +47,7 @@ defimpl EVM.Configuration, for: EVM.Configuration.Homestead do
 
   @spec limit_contract_code_size?(Configuration.t(), integer()) :: boolean()
   def limit_contract_code_size?(config, _), do: config.fallback_config.limit_contract_code_size
+
+  @spec start_nonce(Configuration.t()) :: integer()
+  def start_nonce(config), do: config.fallback_config.start_nonce
 end
