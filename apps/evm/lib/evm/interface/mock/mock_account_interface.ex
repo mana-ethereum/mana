@@ -34,6 +34,11 @@ defimpl EVM.Interface.AccountInterface, for: EVM.Interface.Mock.MockAccountInter
     !is_nil(account)
   end
 
+  @spec empty_account?(EVM.Interface.AccountInterface.t(), EVM.address()) :: boolean()
+  def empty_account?(mock_account_interface, address) do
+    account_exists?(mock_account_interface, address)
+  end
+
   @spec get_account_balance(EVM.Interface.AccountInterface.t(), EVM.address()) ::
           nil | EVM.Wei.t()
   def get_account_balance(mock_account_interface, address) do

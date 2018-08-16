@@ -13,6 +13,8 @@ defmodule EVM.Gas do
     Helpers
   }
 
+  alias EVM.ExecEnv.AccountInterface
+
   @type t :: EVM.val()
   @type gas_price :: EVM.Wei.t()
 
@@ -349,7 +351,20 @@ defmodule EVM.Gas do
 
   def operation_cost(:selfdestruct, [address | _], _, exec_env) do
     address = Address.new(address)
-    is_new_account = ExecEnv.new_account?(exec_env, address)
+
+    is_new_account =
+      cond do
+        !Configuration.empty_account_value_transfer?(exec_env.config) &&
+            ExecEnv.new_account?(exec_env, address) ->
+          true
+
+        Configuration.empty_account_value_transfer?(exec_env.config) &&
+          ExecEnv.new_or_empty_account?(exec_env, address) && ExecEnv.get_balance(exec_env) > 0 ->
+          true
+
+        true ->
+          false
+      end
 
     Configuration.selfdestruct_cost(exec_env.config, new_account: is_new_account)
   end

@@ -10,6 +10,9 @@ defprotocol EVM.Interface.AccountInterface do
   @spec account_exists?(t, EVM.address()) :: boolean()
   def account_exists?(t, address)
 
+  @spec empty_account?(t, EVM.address()) :: boolean()
+  def empty_account?(t, address)
+
   @spec get_account_balance(t, EVM.address()) :: nil | EVM.Wei.t()
   def get_account_balance(t, address)
 
