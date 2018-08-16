@@ -73,7 +73,7 @@ defmodule EVM.ExecEnv do
 
   @spec get_balance(t()) :: EVM.Wei.t()
   def get_balance(%{account_interface: account_interface, address: address}) do
-    AccountInterface.get_balance(account_interface, address)
+    AccountInterface.get_account_balance(account_interface, address)
   end
 
   @spec remove_storage(t(), integer()) :: t()
@@ -120,7 +120,7 @@ defmodule EVM.ExecEnv do
     is_new_account || is_not_existent_account
   end
 
-  @spec new_account?(t(), EVM.Address.t()) :: boolean()
+  @spec new_or_empty_account?(t(), EVM.Address.t()) :: boolean()
   def new_or_empty_account?(exec_env, address) do
     is_new_account = new_account?(exec_env, address)
 

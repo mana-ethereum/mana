@@ -13,8 +13,6 @@ defmodule EVM.Gas do
     Helpers
   }
 
-  alias EVM.ExecEnv.AccountInterface
-
   @type t :: EVM.val()
   @type gas_price :: EVM.Wei.t()
 
