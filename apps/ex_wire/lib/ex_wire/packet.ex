@@ -7,7 +7,7 @@ defmodule ExWire.Packet do
 
   alias ExWire.Packet
 
-  @type packet :: %{}
+  @type packet :: struct()
   @type block_identifier :: binary() | integer()
   @type block_hash :: {binary(), integer()}
 

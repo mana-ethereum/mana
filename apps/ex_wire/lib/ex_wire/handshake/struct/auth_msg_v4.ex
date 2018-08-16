@@ -33,7 +33,7 @@ defmodule ExWire.Handshake.Struct.AuthMsgV4 do
     ]
   end
 
-  @spec deserialize(ExRLP.t()) :: t
+  @spec deserialize(nonempty_maybe_improper_list()) :: t
   def deserialize(rlp) do
     [signature | rlp_tail] = rlp
     [initiator_public_key | rlp_tail] = rlp_tail
