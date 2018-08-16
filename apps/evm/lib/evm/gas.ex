@@ -349,7 +349,20 @@ defmodule EVM.Gas do
 
   def operation_cost(:selfdestruct, [address | _], _, exec_env) do
     address = Address.new(address)
-    is_new_account = ExecEnv.new_account?(exec_env, address)
+
+    is_new_account =
+      cond do
+        !Configuration.empty_account_value_transfer?(exec_env.config) &&
+            ExecEnv.new_account?(exec_env, address) ->
+          true
+
+        Configuration.empty_account_value_transfer?(exec_env.config) &&
+          ExecEnv.new_or_empty_account?(exec_env, address) && ExecEnv.get_balance(exec_env) > 0 ->
+          true
+
+        true ->
+          false
+      end
 
     Configuration.selfdestruct_cost(exec_env.config, new_account: is_new_account)
   end
@@ -363,7 +376,7 @@ defmodule EVM.Gas do
     to_address = Address.new(to_address)
 
     Configuration.call_cost(exec_env.config) + call_value_cost(value) +
-      new_account_cost(exec_env, to_address) + call_gas
+      new_account_cost(exec_env, to_address, value) + call_gas
   end
 
   def operation_cost(
@@ -375,7 +388,7 @@ defmodule EVM.Gas do
     to_address = Address.new(to_address)
 
     Configuration.call_cost(exec_env.config) + call_value_cost(value) +
-      new_account_cost(exec_env, to_address) + gas_limit
+      new_account_cost(exec_env, to_address, value) + gas_limit
   end
 
   def operation_cost(
@@ -473,12 +486,18 @@ defmodule EVM.Gas do
   defp call_value_cost(0), do: 0
   defp call_value_cost(_), do: @g_callvalue
 
-  defp new_account_cost(exec_env, address) do
-    if exec_env.account_interface
-       |> EVM.Interface.AccountInterface.account_exists?(address) do
-      0
-    else
-      @g_newaccount
+  defp new_account_cost(exec_env, address, value) do
+    cond do
+      !Configuration.empty_account_value_transfer?(exec_env.config) &&
+          !EVM.Interface.AccountInterface.account_exists?(exec_env.account_interface, address) ->
+        @g_newaccount
+
+      Configuration.empty_account_value_transfer?(exec_env.config) && value > 0 &&
+          !EVM.Interface.AccountInterface.account_exists?(exec_env.account_interface, address) ->
+        @g_newaccount
+
+      true ->
+        0
     end
   end
 

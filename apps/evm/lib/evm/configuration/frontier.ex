@@ -12,7 +12,8 @@ defmodule EVM.Configuration.Frontier do
             fail_nested_operation: true,
             exp_byte_cost: 10,
             limit_contract_code_size: false,
-            start_nonce: 0
+            start_nonce: 0,
+            empty_account_value_transfer: false
 
   def new do
     %__MODULE__{}
@@ -63,4 +64,7 @@ defimpl EVM.Configuration, for: EVM.Configuration.Frontier do
 
   @spec start_nonce(Configuration.t()) :: integer()
   def start_nonce(config), do: config.start_nonce
+
+  @spec empty_account_value_transfer?(Configuration.t()) :: boolean()
+  def empty_account_value_transfer?(config), do: config.empty_account_value_transfer
 end
