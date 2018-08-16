@@ -57,4 +57,8 @@ defimpl EVM.Configuration, for: EVM.Configuration.Homestead do
 
   @spec start_nonce(Configuration.t()) :: integer()
   def start_nonce(config), do: Configuration.start_nonce(config.fallback_config)
+
+  @spec empty_account_value_transfer?(Configuration.t()) :: boolean()
+  def empty_account_value_transfer?(config),
+    do: Configuration.empty_account_value_transfer?(config.fallback_config)
 end

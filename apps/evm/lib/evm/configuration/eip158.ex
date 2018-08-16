@@ -2,7 +2,8 @@ defmodule EVM.Configuration.EIP158 do
   defstruct fallback_config: EVM.Configuration.EIP150.new(),
             exp_byte_cost: 50,
             code_size_limit: 24_577,
-            start_nonce: 1
+            start_nonce: 1,
+            empty_account_value_transfer: true
 
   def new do
     %__MODULE__{}
@@ -42,8 +43,8 @@ defimpl EVM.Configuration, for: EVM.Configuration.EIP158 do
   def call_cost(config), do: Configuration.call_cost(config.fallback_config)
 
   @spec selfdestruct_cost(Configuration.t(), keyword()) :: integer()
-  def selfdestruct_cost(config, _params),
-    do: Configuration.selfdestruct_cost(config.fallback_config)
+  def selfdestruct_cost(config, params),
+    do: Configuration.selfdestruct_cost(config.fallback_config, params)
 
   @spec fail_nested_operation_lack_of_gas?(Configuration.t()) :: boolean()
   def fail_nested_operation_lack_of_gas?(config),
@@ -57,4 +58,7 @@ defimpl EVM.Configuration, for: EVM.Configuration.EIP158 do
 
   @spec start_nonce(Configuration.t()) :: integer()
   def start_nonce(config), do: config.start_nonce
+
+  @spec empty_account_value_transfer?(Configuration.t()) :: boolean()
+  def empty_account_value_transfer?(config), do: config.empty_account_value_transfer
 end

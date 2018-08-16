@@ -183,7 +183,7 @@ defmodule ExWire.Framing.Frame do
           MAC.mac_inst(),
           ExthCrypto.Cipher.cipher(),
           ExthCrypto.Key.symmetric_key(),
-          binary()
+          binary() | nil
         ) :: MAC.mac_inst()
   defp update_mac(mac, mac_encoder, mac_secret, seed) do
     final = mac |> MAC.final() |> Binary.take(16)
