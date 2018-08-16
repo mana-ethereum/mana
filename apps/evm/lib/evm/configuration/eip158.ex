@@ -43,8 +43,8 @@ defimpl EVM.Configuration, for: EVM.Configuration.EIP158 do
   def call_cost(config), do: Configuration.call_cost(config.fallback_config)
 
   @spec selfdestruct_cost(Configuration.t(), keyword()) :: integer()
-  def selfdestruct_cost(config, _params),
-    do: Configuration.selfdestruct_cost(config.fallback_config)
+  def selfdestruct_cost(config, params),
+    do: Configuration.selfdestruct_cost(config.fallback_config, params)
 
   @spec fail_nested_operation_lack_of_gas?(Configuration.t()) :: boolean()
   def fail_nested_operation_lack_of_gas?(config),

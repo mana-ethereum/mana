@@ -124,7 +124,8 @@ defmodule EVM.ExecEnv do
   def new_or_empty_account?(exec_env, address) do
     is_new_account = new_account?(exec_env, address)
 
-    is_empty_account = AccountInterface.empty_account?(exec_env.account_interface, address)
+    is_empty_account =
+      AccountInterface.empty_account?(exec_env.initial_account_interface, address)
 
     is_new_account || is_empty_account
   end
