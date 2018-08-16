@@ -94,8 +94,8 @@ Ethereum common tests are created for all clients to test against. We plan to pr
     - [BlockchainTests](https://github.com/ethereum/tests/tree/develop/BlockchainTests) (Includes GeneralStateTests) 2231/2231 = 100% passing
     - [GeneralStateTests](https://github.com/ethereum/tests/tree/develop/GeneralStateTests) 2024/2062 = 98.2% passing
 - [x] EIP150
-   - [BlockchainTests](https://github.com/ethereum/tests/tree/develop/BlockchainTests) (Includes GeneralStateTests) 1274/1275 = 99.9% passing
-   - [GeneralStateTests](https://github.com/ethereum/tests/tree/develop/GeneralStateTests) 1088/1114 = 97.7% passing
+   - [BlockchainTests](https://github.com/ethereum/tests/tree/develop/BlockchainTests) (Includes GeneralStateTests) 1275/1275 = 100% passing
+   - [GeneralStateTests](https://github.com/ethereum/tests/tree/develop/GeneralStateTests) 1089/1114 = 97.8% passing
 - [x] EIP158
    - [BlockchainTests](https://github.com/ethereum/tests/tree/develop/BlockchainTests) (Includes GeneralStateTests) 1167/1233 = 94.6% passing
    - [GeneralStateTests](https://github.com/ethereum/tests/tree/develop/GeneralStateTests) 1107/1181= 93.7% passing

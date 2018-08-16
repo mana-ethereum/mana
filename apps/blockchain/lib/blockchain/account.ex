@@ -140,6 +140,14 @@ defmodule Blockchain.Account do
   end
 
   @doc """
+  Checks that an account is neither nil nor empty
+  """
+  @spec exists?(t() | nil) :: boolean()
+  def exists?(account) do
+    !(is_nil(account) || empty?(account))
+  end
+
+  @doc """
   Checks if an account is empty.
   """
   @spec empty?(t()) :: boolean()

@@ -14,9 +14,7 @@ defmodule BlockchainTest do
   @failing_tests %{
     "Frontier" => [],
     "Homestead" => [],
-    "EIP150" => [
-      "GeneralStateTests/stSystemOperationsTest/CreateHashCollision_d0g0v0.json"
-    ],
+    "EIP150" => [],
     "EIP158" => [
       "GeneralStateTests/stCallCodes/call_OOG_additionalGasCosts1_d0g0v0.json",
       "GeneralStateTests/stCreateTest/CREATE_AcreateB_BSuicide_BStore_d0g0v0.json",
@@ -65,7 +63,6 @@ defmodule BlockchainTest do
       "GeneralStateTests/stRevertTest/RevertPrefound_d0g0v0.json",
       "GeneralStateTests/stSpecialTest/failed_tx_xcf416c53_d0g0v0.json",
       "GeneralStateTests/stSpecialTest/tx_e1c174e2_d0g0v0.json",
-      "GeneralStateTests/stSystemOperationsTest/CreateHashCollision_d0g0v0.json",
       "GeneralStateTests/stSystemOperationsTest/doubleSelfdestructTest2_d0g0v0.json",
       "GeneralStateTests/stSystemOperationsTest/doubleSelfdestructTest_d0g0v0.json",
       "GeneralStateTests/stTransactionTest/OverflowGasRequire2_d0g0v0.json",

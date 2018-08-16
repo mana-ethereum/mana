@@ -42,22 +42,23 @@ defmodule Blockchain.Contract.CreateContract do
           config: EVM.Configuration.t()
         }
 
-  # TODO: Block header? "I_H has no special treatment and is determined from the blockchain"
   @spec execute(t()) :: {EVM.state(), EVM.Gas.t(), EVM.SubState.t()}
   def execute(params) do
     sender_account = Account.get_account(params.state, params.sender)
     contract_address = Address.new(params.sender, sender_account.nonce)
+    account = Account.get_account(params.state, contract_address)
 
-    if account_exists?(params, contract_address) do
-      account = Account.get_account(params.state, contract_address)
+    if Account.exists?(account) do
+      cond do
+        account_will_collide?(account) ->
+          error(params)
 
-      # params.stack_depth != 0 means that we're not in contract creation transaction
-      # because `create` evm instruction should have parameters on the stack that are pushed to it so
-      # it never is zero
-      if account.nonce == 0 && Account.is_simple_account?(account) && params.stack_depth != 0 do
-        {:ok, {params.state, params.available_gas, SubState.empty()}}
-      else
-        {:ok, {params.state, 0, SubState.empty()}}
+        account.nonce == 0 && Account.is_simple_account?(account) &&
+            not_in_contract_create_transaction?(params) ->
+          {:ok, {params.state, params.available_gas, SubState.empty()}}
+
+        true ->
+          {:ok, {params.state, 0, SubState.empty()}}
       end
     else
       result = {_, _, _, output} = create(params, contract_address)
@@ -68,19 +69,31 @@ defmodule Blockchain.Contract.CreateContract do
       # valid jump destination or invalid instruction), then no gas
       # is refunded to the caller and the state is reverted to the
       # point immediately prior to balance transfer.
+      #
       if output == :failed do
-        {:error, {params.state, 0, SubState.empty()}}
+        error(params)
       else
         finalize(result, params, contract_address)
       end
     end
   end
 
-  @spec account_exists?(t(), EVM.address()) :: boolean()
-  defp account_exists?(params, address) do
-    account = Account.get_account(params.state, address)
+  @spec not_in_contract_create_transaction?(t) :: boolean()
+  defp not_in_contract_create_transaction?(params) do
+    # params.stack_depth != 0 means that we're not in contract creation transaction
+    # because `create` evm instruction should have parameters on the stack that are pushed to it so
+    # it never is zero
+    params.stack_depth != 0
+  end
 
-    !(is_nil(account) || Account.empty?(account))
+  @spec account_will_collide?(Account.t()) :: boolean()
+  defp account_will_collide?(account) do
+    account.nonce > 0 || !Account.is_simple_account?(account)
+  end
+
+  @spec error(t) :: {:error, EVM.state(), 0, SubState.t()}
+  defp error(params) do
+    {:error, {params.state, 0, SubState.empty()}}
   end
 
   @spec create(t(), EVM.address()) :: {EVM.state(), EVM.Gas.t(), EVM.SubState.t()}
