@@ -8,7 +8,7 @@ defmodule Blockchain.Transaction do
   alias Blockchain.{Account, Contract, Transaction, MathHelper}
   alias Blockchain.Transaction.Validity
   alias Block.Header
-  alias EVM.Gas
+  alias EVM.{Gas, Configuration}
 
   # nonce: T_n
   # gas_price: T_p
@@ -201,6 +201,7 @@ defmodule Blockchain.Transaction do
       updated_state
       |> pay_and_refund_gas(sender, tx, refund, block_header)
       |> clean_up_accounts_marked_for_destruction(sub_state, block_header)
+      |> clean_touched_accounts(sub_state, config)
 
     # { σ', Υ^g, Υ^l }, as defined in Eq.(79) and Eq.(80)
     {final_state, expended_gas, sub_state.logs}
@@ -337,6 +338,22 @@ defmodule Blockchain.Transaction do
     end)
   end
 
+  defp clean_touched_accounts(state, sub_state, config) do
+    if Configuration.clean_touched_accounts?(config) do
+      Enum.reduce(sub_state.touched_accounts, state, fn address, new_state ->
+        account = Account.get_account(state, address)
+
+        if account && Account.empty?(account) do
+          Account.del_account(new_state, address)
+        else
+          new_state
+        end
+      end)
+    else
+      state
+    end
+  end
+
   @doc """
   Defines the "intrinsic gas cost," that is the amount of gas
   this transaction requires to be paid prior to execution. This
@@ -360,7 +377,7 @@ defmodule Blockchain.Transaction do
       iex> Blockchain.Transaction.intrinsic_gas_cost(%Blockchain.Transaction{to: <<>>, init: <<1, 2, 0, 3>>, data: <<>>}, EVM.Configuration.Frontier.new())
       3 * 68 + 4  + 21000
   """
-  @spec intrinsic_gas_cost(t, EVM.Configuration.t()) :: Gas.t()
+  @spec intrinsic_gas_cost(t, Configuration.t()) :: Gas.t()
   def intrinsic_gas_cost(tx, config) do
     data_cost = input_data_cost(tx)
 
@@ -375,7 +392,7 @@ defmodule Blockchain.Transaction do
 
   defp transaction_cost(tx, config) do
     if contract_creation?(tx) do
-      EVM.Configuration.contract_creation_cost(config)
+      Configuration.contract_creation_cost(config)
     else
       Gas.g_transaction()
     end

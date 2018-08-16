@@ -14,15 +14,17 @@ defmodule EVM.SubState do
   }
 
   defstruct selfdestruct_list: [],
+            touched_accounts: [],
             logs: [],
             refund: 0
 
-  @type selfdestruct_list :: [EVM.address()]
+  @type address_list :: [EVM.address()]
   @type logs :: [LogEntry.t()]
   @type refund :: EVM.Wei.t()
 
   @type t :: %__MODULE__{
-          selfdestruct_list: selfdestruct_list,
+          selfdestruct_list: address_list,
+          touched_accounts: address_list,
           logs: logs,
           refund: refund
         }
@@ -111,9 +113,12 @@ defmodule EVM.SubState do
         (Enum.count(selfdestruct_list) - Enum.count(dedup_selfdestruct_list)) *
           Refunds.selfdestruct_refund()
 
+    touched_accounts = Enum.dedup(sub_state1.touched_accounts ++ sub_state2.touched_accounts)
+
     %__MODULE__{
       refund: refund,
       selfdestruct_list: dedup_selfdestruct_list,
+      touched_accounts: touched_accounts,
       logs: logs
     }
   end
@@ -130,5 +135,9 @@ defmodule EVM.SubState do
   """
   def mark_account_for_destruction(sub_state, account_address) do
     %{sub_state | selfdestruct_list: sub_state.selfdestruct_list ++ [account_address]}
+  end
+
+  def add_touched_account(sub_state, address) do
+    %{sub_state | touched_accounts: sub_state.touched_accounts ++ [address]}
   end
 end

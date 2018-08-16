@@ -95,7 +95,10 @@ defmodule EVM.Operation.System do
     exec_env = ExecEnv.add_created_address(exec_env, result)
     exec_env = %{exec_env | account_interface: updated_account_interface}
 
-    sub_state = SubState.merge(n_sub_state, sub_state)
+    sub_state =
+      n_sub_state
+      |> SubState.merge(sub_state)
+      |> SubState.add_touched_account(result)
 
     %{
       machine_state: machine_state,
@@ -303,7 +306,10 @@ defmodule EVM.Operation.System do
       |> ExecEnv.transfer_balance_to(to)
       |> ExecEnv.clear_account_balance()
 
-    new_substate = SubState.mark_account_for_destruction(sub_state, exec_env.address)
+    new_substate =
+      sub_state
+      |> SubState.mark_account_for_destruction(exec_env.address)
+      |> SubState.add_touched_account(to)
 
     %{exec_env: new_exec_env, sub_state: new_substate}
   end

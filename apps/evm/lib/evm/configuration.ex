@@ -61,6 +61,10 @@ defprotocol EVM.Configuration do
   @spec empty_account_value_transfer?(t) :: boolean()
   def empty_account_value_transfer?(t)
 
+  # EIP161-cd
+  @spec clean_touched_accounts?(t) :: boolean()
+  def clean_touched_accounts?(t)
+
   # EIP170
   @spec limit_contract_code_size?(t, integer) :: boolean()
   def limit_contract_code_size?(t, size \\ 0)

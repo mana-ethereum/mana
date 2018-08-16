@@ -68,4 +68,8 @@ defimpl EVM.Configuration, for: EVM.Configuration.EIP150 do
   @spec empty_account_value_transfer?(Configuration.t()) :: boolean()
   def empty_account_value_transfer?(config),
     do: Configuration.empty_account_value_transfer?(config.fallback_config)
+
+  @spec clean_touched_accounts?(Configuration.t()) :: boolean()
+  def clean_touched_accounts?(config),
+    do: Configuration.clean_touched_accounts?(config.fallback_config)
 end

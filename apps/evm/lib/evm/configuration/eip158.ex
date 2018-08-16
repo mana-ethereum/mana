@@ -3,7 +3,8 @@ defmodule EVM.Configuration.EIP158 do
             exp_byte_cost: 50,
             code_size_limit: 24_577,
             start_nonce: 1,
-            empty_account_value_transfer: true
+            empty_account_value_transfer: true,
+            clean_touched_accounts: true
 
   def new do
     %__MODULE__{}
@@ -61,4 +62,7 @@ defimpl EVM.Configuration, for: EVM.Configuration.EIP158 do
 
   @spec empty_account_value_transfer?(Configuration.t()) :: boolean()
   def empty_account_value_transfer?(config), do: config.empty_account_value_transfer
+
+  @spec clean_touched_accounts?(Configuration.t()) :: boolean()
+  def clean_touched_accounts?(config), do: config.clean_touched_accounts
 end
