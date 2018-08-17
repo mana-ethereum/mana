@@ -163,7 +163,9 @@ defmodule Blockchain.Contract.CreateContract do
             Account.put_code(state_after_init, address, output)
           end
 
-        {:ok, {resultant_state, resultant_gas, accrued_sub_state}}
+        sub_state = SubState.add_touched_account(accrued_sub_state, address)
+
+        {:ok, {resultant_state, resultant_gas, sub_state}}
     end
   end
 
