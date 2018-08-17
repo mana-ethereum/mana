@@ -14,7 +14,8 @@ defmodule EVM.Configuration.Frontier do
             limit_contract_code_size: false,
             start_nonce: 0,
             empty_account_value_transfer: false,
-            clean_touched_accounts: false
+            clean_touched_accounts: false,
+            has_revert: false
 
   def new do
     %__MODULE__{}
@@ -71,4 +72,7 @@ defimpl EVM.Configuration, for: EVM.Configuration.Frontier do
 
   @spec clean_touched_accounts?(Configuration.t()) :: boolean()
   def clean_touched_accounts?(config), do: config.clean_touched_accounts
+
+  @spec has_revert?(Configuration.t()) :: boolean()
+  def has_revert?(config), do: config.has_revert
 end

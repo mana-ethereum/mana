@@ -1,17 +1,13 @@
-defmodule EVM.Configuration.EIP158 do
-  defstruct fallback_config: EVM.Configuration.EIP150.new(),
-            exp_byte_cost: 50,
-            code_size_limit: 24_577,
-            start_nonce: 1,
-            empty_account_value_transfer: true,
-            clean_touched_accounts: true
+defmodule EVM.Configuration.Byzantium do
+  defstruct fallback_config: EVM.Configuration.EIP158.new(),
+            has_revert: true
 
   def new do
     %__MODULE__{}
   end
 end
 
-defimpl EVM.Configuration, for: EVM.Configuration.EIP158 do
+defimpl EVM.Configuration, for: EVM.Configuration.Byzantium do
   alias EVM.Configuration
 
   @spec contract_creation_cost(Configuration.t()) :: integer()
@@ -52,20 +48,23 @@ defimpl EVM.Configuration, for: EVM.Configuration.EIP158 do
     do: Configuration.fail_nested_operation_lack_of_gas?(config.fallback_config)
 
   @spec exp_byte_cost(Configuration.t()) :: integer()
-  def exp_byte_cost(config), do: config.exp_byte_cost
+  def exp_byte_cost(config), do: Configuration.exp_byte_cost(config.fallback_config)
 
   @spec limit_contract_code_size?(Configuration.t(), integer()) :: boolean()
-  def limit_contract_code_size?(config, size), do: size >= config.code_size_limit
+  def limit_contract_code_size?(config, size),
+    do: Configuration.limit_contract_code_size?(config.fallback_config, size)
 
   @spec start_nonce(Configuration.t()) :: integer()
-  def start_nonce(config), do: config.start_nonce
+  def start_nonce(config), do: Configuration.start_nonce(config.fallback_config)
 
   @spec empty_account_value_transfer?(Configuration.t()) :: boolean()
-  def empty_account_value_transfer?(config), do: config.empty_account_value_transfer
+  def empty_account_value_transfer?(config),
+    do: Configuration.empty_account_value_transfer?(config.fallback_config)
 
   @spec clean_touched_accounts?(Configuration.t()) :: boolean()
-  def clean_touched_accounts?(config), do: config.clean_touched_accounts
+  def clean_touched_accounts?(config),
+    do: Configuration.clean_touched_accounts?(config.fallback_config)
 
   @spec has_revert?(Configuration.t()) :: boolean()
-  def has_revert?(config), do: Configuration.has_revert?(config.fallback_config)
+  def has_revert?(config), do: config.has_revert
 end

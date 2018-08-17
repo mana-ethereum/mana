@@ -68,4 +68,8 @@ defprotocol EVM.Configuration do
   # EIP170
   @spec limit_contract_code_size?(t, integer) :: boolean()
   def limit_contract_code_size?(t, size \\ 0)
+
+  # EIP140
+  @spec has_revert?(t) :: boolean()
+  def has_revert?(t)
 end
