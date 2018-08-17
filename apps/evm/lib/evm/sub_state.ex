@@ -37,7 +37,7 @@ defmodule EVM.SubState do
   @doc """
   Checks whether the given `sub_state` is empty.
   """
-  def empty?(sub_state), do: sub_state == empty()
+  def empty?(sub_state), do: %{sub_state | touched_accounts: []} == empty()
 
   @doc """
   Adds log entry to substate's log entry list.

@@ -8,7 +8,7 @@ defmodule Blockchain.Transaction do
   alias Blockchain.{Account, Contract, Transaction, MathHelper}
   alias Blockchain.Transaction.Validity
   alias Block.Header
-  alias EVM.{Gas, Configuration}
+  alias EVM.{Gas, Configuration, SubState}
 
   # nonce: T_n
   # gas_price: T_p
@@ -256,8 +256,9 @@ defmodule Blockchain.Transaction do
       # Note, we only want to take the first 3 items from the tuples,
       # as designated Θ_3 in the literature Θ_3
       {state, remaining_gas_, sub_state_, _output} = Contract.message_call(params)
+      sub_state = SubState.add_touched_account(sub_state_, block_header.beneficiary)
 
-      {state, remaining_gas_, sub_state_}
+      {state, remaining_gas_, sub_state}
     end
   end
 
