@@ -13,7 +13,8 @@ defmodule EVM.Configuration.Frontier do
             exp_byte_cost: 10,
             limit_contract_code_size: false,
             start_nonce: 0,
-            empty_account_value_transfer: false
+            empty_account_value_transfer: false,
+            clean_touched_accounts: false
 
   def new do
     %__MODULE__{}
@@ -67,4 +68,7 @@ defimpl EVM.Configuration, for: EVM.Configuration.Frontier do
 
   @spec empty_account_value_transfer?(Configuration.t()) :: boolean()
   def empty_account_value_transfer?(config), do: config.empty_account_value_transfer
+
+  @spec clean_touched_accounts?(Configuration.t()) :: boolean()
+  def clean_touched_accounts?(config), do: config.clean_touched_accounts
 end
