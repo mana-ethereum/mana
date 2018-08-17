@@ -31,14 +31,6 @@ defmodule Blockchain.StateTest do
       "stInitCodeTest/NotEnoughCashContractCreation"
     ],
     "EIP158" => [
-      "stZeroCallsTest/ZeroValue_TransactionCALLwithData_ToOneStorageKey",
-      "stZeroCallsTest/ZeroValue_TransactionCALLwithData_ToEmpty",
-      "stZeroCallsTest/ZeroValue_TransactionCALLwithData",
-      "stZeroCallsTest/ZeroValue_TransactionCALL_ToOneStorageKey",
-      "stZeroCallsTest/ZeroValue_TransactionCALL_ToEmpty",
-      "stZeroCallsTest/ZeroValue_TransactionCALL",
-      "stTransactionTest/TransactionDataCosts652",
-      "stTransactionTest/OverflowGasRequire2",
       "stTransactionTest/EmptyTransaction2",
       "stSpecialTest/failed_tx_xcf416c53",
       "stRevertTest/RevertPrefound",
