@@ -72,7 +72,7 @@ defmodule EVM.Operation.SystemTest do
       {updated_machine_state, _, updated_exec_env, output} =
         VM.exec(machine_state, substate, exec_env)
 
-      assert updated_machine_state.gas == 79985
+      assert updated_machine_state.gas == 79_985
 
       assert updated_exec_env.account_interface.account_map == %{
                1 => %{balance: 0, code: "", nonce: 0, storage: %{}}
