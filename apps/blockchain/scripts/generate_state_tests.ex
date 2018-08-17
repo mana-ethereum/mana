@@ -7,7 +7,7 @@ defmodule GenerateStateTests do
 
   use EthCommonTest.Harness
 
-  @hardforks ["EIP158", "EIP150", "Homestead", "Frontier"]
+  @hardforks ["Byzantium", "EIP158", "EIP150", "Homestead", "Frontier"]
 
   def run(_args) do
     initial_state = %{
@@ -15,13 +15,15 @@ defmodule GenerateStateTests do
         "Homestead" => [],
         "Frontier" => [],
         "EIP150" => [],
-        "EIP158" => []
+        "EIP158" => [],
+        "Byzantium" => []
       },
       failing: %{
         "Homestead" => [],
         "Frontier" => [],
         "EIP150" => [],
-        "EIP158" => []
+        "EIP158" => [],
+        "Byzantium" => []
       }
     }
 
@@ -178,6 +180,9 @@ defmodule GenerateStateTests do
 
       "EIP158" ->
         EVM.Configuration.EIP158.new()
+
+      # "Byzantium" ->
+      #   EVM.Configuration.Byzantium.new()
 
       _ ->
         nil

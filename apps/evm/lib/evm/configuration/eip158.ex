@@ -65,4 +65,7 @@ defimpl EVM.Configuration, for: EVM.Configuration.EIP158 do
 
   @spec clean_touched_accounts?(Configuration.t()) :: boolean()
   def clean_touched_accounts?(config), do: config.clean_touched_accounts
+
+  @spec has_revert?(Configuration.t()) :: boolean()
+  def has_revert?(config), do: Configuration.has_revert?(config.fallback_config)
 end

@@ -144,6 +144,9 @@ defmodule EVM.Functions do
         :delegatecall ->
           if EVM.Configuration.has_delegate_call?(config), do: operation_metadata
 
+        :revert ->
+          if EVM.Configuration.has_revert?(config), do: operation_metadata
+
         _ ->
           operation_metadata
       end
