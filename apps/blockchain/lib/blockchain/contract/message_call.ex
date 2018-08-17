@@ -97,6 +97,7 @@ defmodule Blockchain.Contract.MessageCall do
     }
 
     {gas, sub_state, exec_env, output} = run.(params.available_gas, exec_env)
+    sub_state = SubState.add_touched_account(sub_state, params.recipient)
 
     # From the Yellow Paper:
     # if the execution halts in an exceptional fashion

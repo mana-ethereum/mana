@@ -19,16 +19,7 @@ defmodule BlockchainTest do
       "GeneralStateTests/stNonZeroCallsTest/NonZeroValue_CALL_ToEmpty_d0g0v0.json",
       "GeneralStateTests/stNonZeroCallsTest/NonZeroValue_CALL_ToOneStorageKey_d0g0v0.json",
       "GeneralStateTests/stRevertTest/RevertPrefound_d0g0v0.json",
-      "GeneralStateTests/stSpecialTest/failed_tx_xcf416c53_d0g0v0.json",
-      "GeneralStateTests/stTransactionTest/OverflowGasRequire2_d0g0v0.json",
-      "GeneralStateTests/stTransactionTest/TransactionDataCosts652_d0g0v0.json",
-      "GeneralStateTests/stZeroCallsTest/ZeroValue_TransactionCALL_ToEmpty_d0g0v0.json",
-      "GeneralStateTests/stZeroCallsTest/ZeroValue_TransactionCALL_ToOneStorageKey_d0g0v0.json",
-      "GeneralStateTests/stZeroCallsTest/ZeroValue_TransactionCALL_d0g0v0.json",
-      "GeneralStateTests/stZeroCallsTest/ZeroValue_TransactionCALLwithData_ToEmpty_d0g0v0.json",
-      "GeneralStateTests/stZeroCallsTest/ZeroValue_TransactionCALLwithData_ToOneStorageKey_d0g0v0.json",
-      "GeneralStateTests/stZeroCallsTest/ZeroValue_TransactionCALLwithData_d0g0v0.json",
-      "bcTotalDifficultyTest/lotsOfLeafs.json"
+      "GeneralStateTests/stSpecialTest/failed_tx_xcf416c53_d0g0v0.json"
     ],
     # the rest are not implemented yet
     "Byzantium" => [],
