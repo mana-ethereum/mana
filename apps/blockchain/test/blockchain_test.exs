@@ -16,8 +16,6 @@ defmodule BlockchainTest do
     "Homestead" => [],
     "EIP150" => [],
     "EIP158" => [
-      "GeneralStateTests/stNonZeroCallsTest/NonZeroValue_CALL_ToEmpty_d0g0v0.json",
-      "GeneralStateTests/stNonZeroCallsTest/NonZeroValue_CALL_ToOneStorageKey_d0g0v0.json",
       "GeneralStateTests/stRevertTest/RevertPrefound_d0g0v0.json",
       "GeneralStateTests/stSpecialTest/failed_tx_xcf416c53_d0g0v0.json"
     ],

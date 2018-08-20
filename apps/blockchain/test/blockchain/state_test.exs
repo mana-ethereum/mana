@@ -34,9 +34,7 @@ defmodule Blockchain.StateTest do
       "stTransactionTest/EmptyTransaction2",
       "stSpecialTest/failed_tx_xcf416c53",
       "stRevertTest/RevertPrefound",
-      "stRevertTest/RevertOpcodeMultipleSubCalls",
-      "stNonZeroCallsTest/NonZeroValue_CALL_ToOneStorageKey",
-      "stNonZeroCallsTest/NonZeroValue_CALL_ToEmpty"
+      "stRevertTest/RevertOpcodeMultipleSubCalls"
     ],
     "Frontier" => [
       "stTransactionTest/UserTransactionGasLimitIsTooLowWhenZeroCost",
