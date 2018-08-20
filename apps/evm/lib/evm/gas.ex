@@ -389,8 +389,9 @@ defmodule EVM.Gas do
         exec_env
       ) do
     to_address = Address.new(to_address)
+    value = 0
 
-    Configuration.call_cost(exec_env.config) + new_account_cost(exec_env, to_address, 0) +
+    Configuration.call_cost(exec_env.config) + new_account_cost(exec_env, to_address, value) +
       gas_limit
   end
 
