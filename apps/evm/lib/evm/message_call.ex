@@ -2,10 +2,7 @@ defmodule EVM.MessageCall do
   alias EVM.{ExecEnv, Memory, Builtin, VM, Functions, Stack, MachineState, SubState}
   alias EVM.Interface.AccountInterface
 
-  @moduledoc """
-  Describes a message call function that used for all call operations (call, delegatecall, callcode, staticcall).
-  """
-  defstruct [
+  @enforce_keys [
     :current_exec_env,
     :current_machine_state,
     :current_sub_state,
@@ -20,6 +17,24 @@ defmodule EVM.MessageCall do
     :data,
     :stack_depth
   ]
+
+  @moduledoc """
+  Describes a message call function that used for all call operations (call, delegatecall, callcode, staticcall).
+  """
+  defstruct current_exec_env: nil,
+            current_machine_state: nil,
+            current_sub_state: nil,
+            output_params: nil,
+            sender: nil,
+            originator: nil,
+            recipient: nil,
+            code_owner: nil,
+            gas_price: nil,
+            value: nil,
+            execution_value: nil,
+            data: nil,
+            stack_depth: nil,
+            static: false
 
   @type out_size :: integer()
   @type out_offset :: integer()
@@ -51,7 +66,8 @@ defmodule EVM.MessageCall do
           value: integer(),
           execution_value: integer(),
           data: binary(),
-          stack_depth: integer()
+          stack_depth: integer(),
+          static: boolean()
         }
 
   @doc """
@@ -177,7 +193,8 @@ defmodule EVM.MessageCall do
       initial_account_interface: message_call.current_exec_env.initial_account_interface,
       block_interface: message_call.current_exec_env.block_interface,
       config: message_call.current_exec_env.config,
-      created_accounts: message_call.current_exec_env.created_accounts
+      created_accounts: message_call.current_exec_env.created_accounts,
+      static: message_call.static || false
     }
   end
 

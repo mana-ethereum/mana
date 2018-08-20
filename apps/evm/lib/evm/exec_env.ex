@@ -25,7 +25,8 @@ defmodule EVM.ExecEnv do
             block_interface: nil,
             config: EVM.Configuration.Frontier.new(),
             created_accounts: [],
-            initial_account_interface: nil
+            initial_account_interface: nil,
+            static: false
 
   @typedoc """
   Terms from Yellow Paper:
@@ -52,7 +53,8 @@ defmodule EVM.ExecEnv do
           block_interface: BlockInterface.t(),
           account_interface: AccountInterface.t(),
           config: Configuration.t(),
-          created_accounts: [EVM.address()]
+          created_accounts: [EVM.address()],
+          static: boolean()
         }
 
   @spec put_storage(t(), integer(), integer()) :: t()
