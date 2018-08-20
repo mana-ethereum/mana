@@ -353,11 +353,12 @@ defmodule EVM.Gas do
     is_new_account =
       cond do
         !Configuration.empty_account_value_transfer?(exec_env.config) &&
-            ExecEnv.new_account?(exec_env, address) ->
+            ExecEnv.non_existent_account?(exec_env, address) ->
           true
 
         Configuration.empty_account_value_transfer?(exec_env.config) &&
-          ExecEnv.new_or_empty_account?(exec_env, address) && ExecEnv.get_balance(exec_env) > 0 ->
+          ExecEnv.non_existent_or_empty_account?(exec_env, address) &&
+            ExecEnv.get_balance(exec_env) > 0 ->
           true
 
         true ->
@@ -489,11 +490,11 @@ defmodule EVM.Gas do
   defp new_account_cost(exec_env, address, value) do
     cond do
       !Configuration.empty_account_value_transfer?(exec_env.config) &&
-          !EVM.Interface.AccountInterface.account_exists?(exec_env.account_interface, address) ->
+          ExecEnv.non_existent_account?(exec_env, address) ->
         @g_newaccount
 
       Configuration.empty_account_value_transfer?(exec_env.config) && value > 0 &&
-          !EVM.Interface.AccountInterface.account_exists?(exec_env.account_interface, address) ->
+          ExecEnv.non_existent_or_empty_account?(exec_env, address) ->
         @g_newaccount
 
       true ->
