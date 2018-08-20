@@ -25,7 +25,6 @@ defmodule EVM.ExecEnv do
             block_interface: nil,
             config: EVM.Configuration.Frontier.new(),
             created_accounts: [],
-            initial_account_interface: nil,
             static: false
 
   @typedoc """

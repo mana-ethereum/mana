@@ -135,7 +135,8 @@ defmodule EVM.Operation.System do
       value: value,
       execution_value: call_gas,
       data: data,
-      stack_depth: exec_env.stack_depth
+      stack_depth: exec_env.stack_depth,
+      static: exec_env.static
     }
 
     MessageCall.call(message_call)
@@ -167,7 +168,8 @@ defmodule EVM.Operation.System do
       value: exec_env.value_in_wei,
       execution_value: call_gas,
       data: data,
-      stack_depth: exec_env.stack_depth
+      stack_depth: exec_env.stack_depth,
+      static: exec_env.static
     }
 
     MessageCall.call(message_call)
@@ -247,7 +249,8 @@ defmodule EVM.Operation.System do
       value: value,
       execution_value: call_gas,
       data: data,
-      stack_depth: exec_env.stack_depth
+      stack_depth: exec_env.stack_depth,
+      static: exec_env.static
     }
 
     MessageCall.call(message_call)
