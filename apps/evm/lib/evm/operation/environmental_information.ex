@@ -205,14 +205,10 @@ defmodule EVM.Operation.EnvironmentalInformation do
         exec_env: exec_env,
         machine_state: machine_state
       }) do
-    if size == 0 do
-      0
-    else
-      data = Memory.read_zeroed_memory(exec_env.machine_code, code_offset, size)
-      machine_state = Memory.write(machine_state, mem_offset, data)
+    data = Memory.read_zeroed_memory(exec_env.machine_code, code_offset, size)
+    machine_state = Memory.write(machine_state, mem_offset, data)
 
-      %{machine_state: machine_state}
-    end
+    %{machine_state: machine_state}
   end
 
   @doc """

@@ -16,7 +16,7 @@ As discussed in the paper, we define a few data structures.
 Here is an example of a simple program running on the VM:
 
 ```elixir
-EVM.VM.run(%{}, 5, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:push1, 3, :push1, 5, :add, :push1, 0x00, :mstore, :push1, 0, :push1, 32, :return])})
+EVM.VM.run(%{}, 5, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:push1, 3, :push1, 5, :add, :push1, 0x00, :mstore, :push1, 32, :push1, 0, :return])})
 {%{}, 5, [], [], 0, <<0x08::256>>}
 ```
 
