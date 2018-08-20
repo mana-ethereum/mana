@@ -39,21 +39,22 @@
 
 # evm warnings
 
-apps/evm/lib/evm/functions.ex:157: Function 'not_enough_gas?'/2 has no local return
-apps/evm/lib/evm/functions.ex:169: Function 'is_invalid_jump_destination?'/3 will never be called
+apps/evm/lib/evm/functions.ex:160: Function 'not_enough_gas?'/2 has no local return
+apps/evm/lib/evm/functions.ex:172: Function 'is_invalid_jump_destination?'/3 will never be called
 apps/evm/lib/evm/functions.ex:180: Function 'is_invalid_jump_destination?'/3 will never be called
 apps/evm/lib/evm/gas.ex:133: Function cost/2 has no local return
 apps/evm/lib/evm/gas.ex:133: Function cost/3 has no local return
-apps/evm/lib/evm/gas.ex:138: The call 'Elixir.EVM.Gas':operation_cost(atom(),_inputs@1::[integer()],_machine_state@1::#{'__struct__':='Elixir.EVM.MachineState', 'active_words':=integer(), 'gas':=integer(), 'last_return_data':=[integer()], 'memory':=binary(), 'previously_active_words':=integer(), 'program_counter':=integer(), 'stack':=[integer()]},_exec_env@1::#{'__struct__':='Elixir.EVM.ExecEnv', 'account_interface':=atom(), 'address':=<<_:160>>, 'block_interface':=atom(), 'config':=atom(), 'created_accounts':=[<<_:160>>], 'data':=binary(), 'gas_price':=integer(), 'initial_account_interface':=_, 'machine_code':=binary(), 'originator':=<<_:160>>, 'sender':=<<_:160>>, 'stack_depth':=integer(), 'value_in_wei':=integer()}) breaks the contract (atom(),['Elixir.EVM':val()],['Elixir.EVM':val()],'Elixir.EVM.MachineState':t()) -> t() | 'nil'
-apps/evm/lib/evm/gas.ex:297: Function operation_cost/0 has no local return
-apps/evm/lib/evm/gas.ex:297: The call 'Elixir.EVM.Gas':operation_cost('nil','nil','nil','nil') breaks the contract (atom(),['Elixir.EVM':val()],['Elixir.EVM':val()],'Elixir.EVM.MachineState':t()) -> t() | 'nil'
-apps/evm/lib/evm/gas.ex:297: Function operation_cost/1 has no local return
-apps/evm/lib/evm/gas.ex:297: The call 'Elixir.EVM.Gas':operation_cost(__@1::any(),'nil','nil','nil') breaks the contract (atom(),['Elixir.EVM':val()],['Elixir.EVM':val()],'Elixir.EVM.MachineState':t()) -> t() | 'nil'
-apps/evm/lib/evm/gas.ex:297: Function operation_cost/2 has no local return
-apps/evm/lib/evm/gas.ex:297: The call 'Elixir.EVM.Gas':operation_cost(__@1::any(),__@2::any(),'nil','nil') breaks the contract (atom(),['Elixir.EVM':val()],['Elixir.EVM':val()],'Elixir.EVM.MachineState':t()) -> t() | 'nil'
-apps/evm/lib/evm/gas.ex:297: Function operation_cost/3 has no local return
-apps/evm/lib/evm/gas.ex:297: The call 'Elixir.EVM.Gas':operation_cost(__@1::any(),__@2::any(),__@3::any(),'nil') breaks the contract (atom(),['Elixir.EVM':val()],['Elixir.EVM':val()],'Elixir.EVM.MachineState':t()) -> t() | 'nil'
+apps/evm/lib/evm/gas.ex:299: Function operation_cost/0 has no local return
+apps/evm/lib/evm/gas.ex:299: The call 'Elixir.EVM.Gas':operation_cost('nil','nil','nil','nil') breaks the contract (atom(),['Elixir.EVM':val()],['Elixir.EVM':val()],'Elixir.EVM.MachineState':t()) -> t() | 'nil'
+apps/evm/lib/evm/gas.ex:299: Function operation_cost/1 has no local return
+apps/evm/lib/evm/gas.ex:299: The call 'Elixir.EVM.Gas':operation_cost(__@1::any(),'nil','nil','nil') breaks the contract (atom(),['Elixir.EVM':val()],['Elixir.EVM':val()],'Elixir.EVM.MachineState':t()) -> t() | 'nil'
+apps/evm/lib/evm/gas.ex:299: Function operation_cost/2 has no local return
+apps/evm/lib/evm/gas.ex:299: The call 'Elixir.EVM.Gas':operation_cost(__@1::any(),__@2::any(),'nil','nil') breaks the contract (atom(),['Elixir.EVM':val()],['Elixir.EVM':val()],'Elixir.EVM.MachineState':t()) -> t() | 'nil'
+apps/evm/lib/evm/gas.ex:299: Function operation_cost/3 has no local return
+apps/evm/lib/evm/gas.ex:299: The call 'Elixir.EVM.Gas':operation_cost(__@1::any(),__@2::any(),__@3::any(),'nil') breaks the contract (atom(),['Elixir.EVM':val()],['Elixir.EVM':val()],'Elixir.EVM.MachineState':t()) -> t() | 'nil'
+apps/evm/lib/evm/gas.ex:547: Function gas_cost_for_nested_operation/2 will never be called
 apps/evm/lib/evm/gas.ex:545: Function gas_cost_for_nested_operation/2 will never be called
+apps/evm/lib/evm/gas.ex:138: The call 'Elixir.EVM.Gas':operation_cost(atom(),_inputs@1::[integer()],_machine_state@1::#{'__struct__':='Elixir.EVM.MachineState', 'active_words':=integer(), 'gas':=integer(), 'last_return_data':=[integer()], 'memory':=binary(), 'previously_active_words':=integer(), 'program_counter':=integer(), 'stack':=[integer()]},_exec_env@1::#{'__struct__':='Elixir.EVM.ExecEnv', 'account_interface':=atom(), 'address':=<<_:160>>, 'block_interface':=atom(), 'config':=atom(), 'created_accounts':=[<<_:160>>], 'data':=binary(), 'gas_price':=integer(), 'initial_account_interface':=_, 'machine_code':=binary(), 'originator':=<<_:160>>, 'sender':=<<_:160>>, 'stack_depth':=integer(), 'static':=boolean(), 'value_in_wei':=integer()}) breaks the contract (atom(),['Elixir.EVM':val()],['Elixir.EVM':val()],'Elixir.EVM.MachineState':t()) -> t() | 'nil
 apps/evm/lib/evm/machine_state.ex:53: Function subtract_gas/2 has no local return
 apps/evm/lib/evm/operation/environmental_information.ex:114: Function calldataload/2 has no local return
 apps/evm/lib/evm/operation/environmental_information.ex:117: The call 'Elixir.EVM.Helpers':decode_signed(binary()) breaks the contract (integer() | 'nil') -> 'Elixir.EVM':val() | 'nil'

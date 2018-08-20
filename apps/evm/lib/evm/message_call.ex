@@ -2,10 +2,7 @@ defmodule EVM.MessageCall do
   alias EVM.{ExecEnv, Memory, Builtin, VM, Functions, Stack, MachineState, SubState}
   alias EVM.Interface.AccountInterface
 
-  @moduledoc """
-  Describes a message call function that used for all call operations (call, delegatecall, callcode, staticcall).
-  """
-  defstruct [
+  @enforce_keys [
     :current_exec_env,
     :current_machine_state,
     :current_sub_state,
@@ -18,9 +15,26 @@ defmodule EVM.MessageCall do
     :value,
     :execution_value,
     :data,
-    :stack_depth,
-    :static
+    :stack_depth
   ]
+
+  @moduledoc """
+  Describes a message call function that used for all call operations (call, delegatecall, callcode, staticcall).
+  """
+  defstruct current_exec_env: nil,
+            current_machine_state: nil,
+            current_sub_state: nil,
+            output_params: nil,
+            sender: nil,
+            originator: nil,
+            recipient: nil,
+            code_owner: nil,
+            gas_price: nil,
+            value: nil,
+            execution_value: nil,
+            data: nil,
+            stack_depth: nil,
+            static: false
 
   @type out_size :: integer()
   @type out_offset :: integer()
