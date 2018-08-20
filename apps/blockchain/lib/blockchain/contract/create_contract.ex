@@ -7,28 +7,32 @@ defmodule Blockchain.Contract.CreateContract do
   alias Blockchain.Interface.{BlockInterface, AccountInterface}
   alias Block.Header
   alias Blockchain.Contract.Address
-  alias Blockchain.{Account, Contract}
+  alias Blockchain.Account
   alias EVM.{SubState, Gas}
 
-  # σ
   defstruct state: %{},
-            # s
             sender: <<>>,
-            # o
             originator: <<>>,
-            # g
             available_gas: 0,
-            # p
             gas_price: 0,
-            # v
             endowment: 0,
-            # i
             init_code: <<>>,
-            # e
             stack_depth: 0,
             block_header: nil,
             config: EVM.Configuration.Frontier.new()
 
+  @typedoc """
+  Yellow Paper Terms:
+
+  - σ: state,
+  - s: sender,
+  - o: originator,
+  - g: available_gas,
+  - p: gas_price,
+  - v: endowment,
+  - i: init_code,
+  - e: stack_depth
+  """
   @type t :: %__MODULE__{
           state: EVM.state(),
           sender: EVM.address(),
@@ -51,11 +55,14 @@ defmodule Blockchain.Contract.CreateContract do
     if Account.exists?(account) do
       cond do
         account_will_collide?(account) ->
-          error(params)
+          error(params.state)
 
         account.nonce == 0 && Account.is_simple_account?(account) &&
             not_in_contract_create_transaction?(params) ->
-          {:ok, {params.state, params.available_gas, SubState.empty()}}
+          new_state =
+            increment_nonce_of_touched_account(params.state, params.config, contract_address)
+
+          {:ok, {new_state, params.available_gas, SubState.empty()}}
 
         true ->
           {:ok, {params.state, 0, SubState.empty()}}
@@ -71,10 +78,20 @@ defmodule Blockchain.Contract.CreateContract do
       # point immediately prior to balance transfer.
       #
       if output == :failed do
-        error(params)
+        error(params.state)
       else
         finalize(result, params, contract_address)
       end
+    end
+  end
+
+  @spec increment_nonce_of_touched_account(EVM.state(), EVM.Configuration.t(), EVM.address()) ::
+          EVM.state()
+  defp increment_nonce_of_touched_account(state, config, address) do
+    if EVM.Configuration.increment_nonce_on_create?(config) do
+      Account.increment_nonce(state, address)
+    else
+      state
     end
   end
 
@@ -91,21 +108,17 @@ defmodule Blockchain.Contract.CreateContract do
     account.nonce > 0 || !Account.is_simple_account?(account)
   end
 
-  @spec error(t) :: {:error, EVM.state(), 0, SubState.t()}
-  defp error(params) do
-    {:error, {params.state, 0, SubState.empty()}}
+  @spec error(EVM.state()) :: {:error, EVM.state(), 0, SubState.t()}
+  defp error(state) do
+    {:error, {state, 0, SubState.empty()}}
   end
 
   @spec create(t(), EVM.address()) :: {EVM.state(), EVM.Gas.t(), EVM.SubState.t()}
   defp create(params, address) do
     state_with_blank_contract =
-      Contract.create_blank(
-        params.state,
-        address,
-        params.sender,
-        params.endowment,
-        EVM.Configuration.start_nonce(params.config)
-      )
+      params
+      |> init_blank_account(address)
+      |> increment_nonce_of_touched_account(params.config, address)
 
     account_interface = AccountInterface.new(state_with_blank_contract)
 
@@ -127,6 +140,13 @@ defmodule Blockchain.Contract.CreateContract do
     }
 
     EVM.VM.run(params.available_gas, exec_env)
+  end
+
+  @spec init_blank_account(t, EVM.address()) :: EVM.state()
+  defp init_blank_account(params, address) do
+    params.state
+    |> Account.put_account(address, %Account{nonce: 0})
+    |> Account.transfer!(params.sender, address, params.endowment)
   end
 
   @spec finalize(

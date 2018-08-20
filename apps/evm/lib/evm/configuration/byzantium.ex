@@ -55,8 +55,9 @@ defimpl EVM.Configuration, for: EVM.Configuration.Byzantium do
   def limit_contract_code_size?(config, size),
     do: Configuration.limit_contract_code_size?(config.fallback_config, size)
 
-  @spec start_nonce(Configuration.t()) :: integer()
-  def start_nonce(config), do: Configuration.start_nonce(config.fallback_config)
+  @spec increment_nonce_on_create?(Configuration.t()) :: boolean()
+  def increment_nonce_on_create?(config),
+    do: Configuration.increment_nonce_on_create?(config.fallback_config)
 
   @spec empty_account_value_transfer?(Configuration.t()) :: boolean()
   def empty_account_value_transfer?(config),

@@ -54,8 +54,8 @@ defprotocol EVM.Configuration do
   def exp_byte_cost(t)
 
   # EIP161-a
-  @spec start_nonce(t) :: integer()
-  def start_nonce(t)
+  @spec increment_nonce_on_create?(t) :: boolean()
+  def increment_nonce_on_create?(t)
 
   # EIP161-b
   @spec empty_account_value_transfer?(t) :: boolean()

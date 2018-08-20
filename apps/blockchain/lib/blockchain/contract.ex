@@ -6,7 +6,6 @@ defmodule Blockchain.Contract do
   in sections 7 and 8 of the Yellow Paper.
   """
 
-  alias Blockchain.Account
   alias Blockchain.Contract.{CreateContract, MessageCall}
 
   @doc """
@@ -27,16 +26,4 @@ defmodule Blockchain.Contract do
   @spec message_call(MessageCall.t()) ::
           {EVM.state(), EVM.Gas.t(), EVM.SubState.t(), EVM.VM.output()}
   def message_call(params), do: MessageCall.execute(params)
-
-  @doc """
-  Creates a blank contract prior to initialization code
-  being run and sets its nonce to 1, as defined in Eq.(78-82) of the Yellow Paper.
-  """
-  @spec create_blank(EVM.state(), EVM.address(), EVM.address(), EVM.Wei.t(), integer()) ::
-          EVM.state()
-  def create_blank(state, contract_address, sender_address, endowment, nonce) do
-    state
-    |> Account.put_account(contract_address, %Account{nonce: nonce})
-    |> Account.transfer!(sender_address, contract_address, endowment)
-  end
 end
