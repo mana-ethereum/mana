@@ -31,8 +31,10 @@ defmodule Blockchain.StateTest do
       "stInitCodeTest/NotEnoughCashContractCreation"
     ],
     "EIP158" => [
-      "GeneralStateTests/stRevertTest/RevertPrefound_d0g0v0.json",
-      "GeneralStateTests/stSpecialTest/failed_tx_xcf416c53_d0g0v0.json"
+      "stTransactionTest/EmptyTransaction2",
+      "stSpecialTest/failed_tx_xcf416c53",
+      "stRevertTest/RevertPrefound",
+      "stRevertTest/RevertOpcodeMultipleSubCalls"
     ],
     "Frontier" => [
       "stTransactionTest/UserTransactionGasLimitIsTooLowWhenZeroCost",
