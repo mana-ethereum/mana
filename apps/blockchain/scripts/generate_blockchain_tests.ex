@@ -11,7 +11,7 @@ defmodule GenerateBlockchainTests do
   def run(args) do
     hardfork = List.first(args)
 
-    if !Enum.member?(["Frontier", "Homestead", "EIP150", "EIP158"], hardfork),
+    if !Enum.member?(["Byzantium", "Frontier", "Homestead", "EIP150", "EIP158"], hardfork),
       do: raise(RuntimeError)
 
     {passing_count, failing_count} =
@@ -109,6 +109,9 @@ defmodule GenerateBlockchainTests do
       "EIP158" ->
         Chain.load_chain(:eip150_test, config)
 
+      "Byzantium" ->
+        Chain.load_chain(:byzantium_test, config)
+
       _ ->
         nil
     end
@@ -127,6 +130,9 @@ defmodule GenerateBlockchainTests do
 
       "EIP158" ->
         EVM.Configuration.EIP158.new()
+
+      "Byzantium" ->
+        EVM.Configuration.Byzantium.new()
 
       _ ->
         nil

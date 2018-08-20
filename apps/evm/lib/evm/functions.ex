@@ -129,6 +129,9 @@ defmodule EVM.Functions do
       is_invalid_jump_destination?(operation_metadata, inputs, exec_env.machine_code) ->
         {:halt, :invalid_jump_destination}
 
+      exec_env.static && static_state_modification?(operation_metadata.sym, inputs) ->
+        {:halt, :static_state_modification}
+
       true ->
         :continue
     end
@@ -178,4 +181,24 @@ defmodule EVM.Functions do
   end
 
   defp is_invalid_jump_destination?(_operation, _inputs, _machine_code), do: false
+
+  defp static_state_modification?(:call, [_, _, value, _, _, _, _]), do: value > 0
+
+  defp static_state_modification?(:log0, _), do: true
+
+  defp static_state_modification?(:log1, _), do: true
+
+  defp static_state_modification?(:log2, _), do: true
+
+  defp static_state_modification?(:log3, _), do: true
+
+  defp static_state_modification?(:log4, _), do: true
+
+  defp static_state_modification?(:selfdestruct, _), do: true
+
+  defp static_state_modification?(:create, _), do: true
+
+  defp static_state_modification?(:sstore, _), do: true
+
+  defp static_state_modification?(_, _), do: false
 end
