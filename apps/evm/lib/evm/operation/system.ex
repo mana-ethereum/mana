@@ -199,7 +199,8 @@ defmodule EVM.Operation.System do
       value: 0,
       execution_value: call_gas,
       data: data,
-      stack_depth: exec_env.stack_depth
+      stack_depth: exec_env.stack_depth,
+      static: true
     }
 
     MessageCall.call(message_call)

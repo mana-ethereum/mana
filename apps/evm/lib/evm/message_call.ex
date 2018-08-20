@@ -18,7 +18,8 @@ defmodule EVM.MessageCall do
     :value,
     :execution_value,
     :data,
-    :stack_depth
+    :stack_depth,
+    :static
   ]
 
   @type out_size :: integer()
@@ -51,7 +52,8 @@ defmodule EVM.MessageCall do
           value: integer(),
           execution_value: integer(),
           data: binary(),
-          stack_depth: integer()
+          stack_depth: integer(),
+          static: boolean()
         }
 
   @doc """
@@ -177,7 +179,8 @@ defmodule EVM.MessageCall do
       initial_account_interface: message_call.current_exec_env.initial_account_interface,
       block_interface: message_call.current_exec_env.block_interface,
       config: message_call.current_exec_env.config,
-      created_accounts: message_call.current_exec_env.created_accounts
+      created_accounts: message_call.current_exec_env.created_accounts,
+      static: message_call.static || false
     }
   end
 

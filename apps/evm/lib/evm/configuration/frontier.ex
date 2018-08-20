@@ -15,7 +15,8 @@ defmodule EVM.Configuration.Frontier do
             start_nonce: 0,
             empty_account_value_transfer: false,
             clean_touched_accounts: false,
-            has_revert: false
+            has_revert: false,
+            has_static_call: false
 
   def new do
     %__MODULE__{}
@@ -75,4 +76,7 @@ defimpl EVM.Configuration, for: EVM.Configuration.Frontier do
 
   @spec has_revert?(Configuration.t()) :: boolean()
   def has_revert?(config), do: config.has_revert
+
+  @spec has_static_call?(Configuration.t()) :: boolean()
+  def has_static_call?(config), do: config.has_static_call
 end

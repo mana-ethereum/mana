@@ -147,6 +147,9 @@ defmodule EVM.Functions do
         :revert ->
           if EVM.Configuration.has_revert?(config), do: operation_metadata
 
+        :staticcall ->
+          if EVM.Configuration.has_static_call?(config), do: operation_metadata
+
         _ ->
           operation_metadata
       end

@@ -181,8 +181,8 @@ defmodule GenerateStateTests do
       "EIP158" ->
         EVM.Configuration.EIP158.new()
 
-      # "Byzantium" ->
-      #   EVM.Configuration.Byzantium.new()
+      "Byzantium" ->
+        EVM.Configuration.Byzantium.new()
 
       _ ->
         nil

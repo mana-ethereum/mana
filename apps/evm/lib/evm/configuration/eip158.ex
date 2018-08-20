@@ -68,4 +68,7 @@ defimpl EVM.Configuration, for: EVM.Configuration.EIP158 do
 
   @spec has_revert?(Configuration.t()) :: boolean()
   def has_revert?(config), do: Configuration.has_revert?(config.fallback_config)
+
+  @spec has_static_call?(Configuration.t()) :: boolean()
+  def has_static_call?(config), do: Configuration.has_static_call?(config.fallback_config)
 end
