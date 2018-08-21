@@ -27,25 +27,28 @@ defmodule BlockchainTest do
   }
 
   test "runs blockchain tests" do
-    Enum.each(tests(), fn json_test_path ->
-      json_test_path
-      |> read_test()
-      |> ignore_known_failing_tests(json_test_path)
-      |> Enum.filter(&available_chains/1)
-      |> Enum.map(&run_test/1)
-      |> Enum.filter(&failing_tests/1)
-      |> make_assertions()
-    end)
+    for fork <- forks_with_existing_implementation() do
+      tests()
+      |> Enum.reject(&known_fork_failures?(&1, fork))
+      |> Enum.each(fn json_test_path ->
+        json_test_path
+        |> read_test()
+        |> Enum.filter(&fork_test(&1, fork))
+        |> Enum.map(&run_test/1)
+        |> Enum.filter(&failing_tests/1)
+        |> make_assertions()
+      end)
+    end
   end
 
-  defp ignore_known_failing_tests(tests, json_test_path) do
-    Enum.filter(tests, fn {_name, test} ->
-      !known_failing_test?(json_test_path, test)
-    end)
+  defp forks_with_existing_implementation do
+    @failing_tests
+    |> Map.keys()
+    |> Enum.reject(&fork_without_implementation?/1)
   end
 
-  defp known_failing_test?(json_test_path, json_test) do
-    hardfork_failing_tests = Map.fetch!(@failing_tests, json_test["network"])
+  defp known_fork_failures?(json_test_path, fork) do
+    hardfork_failing_tests = Map.fetch!(@failing_tests, fork)
 
     Enum.any?(hardfork_failing_tests, fn failing_test ->
       String.contains?(json_test_path, failing_test)
@@ -58,11 +61,14 @@ defmodule BlockchainTest do
     |> Poison.decode!()
   end
 
-  defp available_chains({_test_name, json_test}) do
-    fork = json_test["network"]
-    chain = load_chain(fork)
+  defp fork_test({_test_name, json_test}, fork) do
+    fork == json_test["network"]
+  end
 
-    !is_nil(chain)
+  defp fork_without_implementation?(fork) do
+    fork
+    |> load_chain()
+    |> is_nil()
   end
 
   defp run_test({test_name, json_test}) do
