@@ -27,18 +27,68 @@ defmodule BlockchainTest do
   }
 
   test "runs blockchain tests" do
-    for fork <- forks_with_existing_implementation() do
-      tests()
-      |> Enum.reject(&known_fork_failures?(&1, fork))
-      |> Enum.each(fn json_test_path ->
-        json_test_path
-        |> read_test()
-        |> Enum.filter(&fork_test(&1, fork))
-        |> Enum.map(&run_test/1)
-        |> Enum.filter(&failing_tests/1)
-        |> make_assertions()
-      end)
+    forks_with_existing_implementation()
+    |> Enum.map(&spawn_forks/1)
+    |> Enum.flat_map(&receive_replies/1)
+    |> make_assertions()
+  end
+
+  defp spawn_forks(fork) do
+    {fork_pid, fork_ref} = spawn_tests_for_fork(fork)
+    {fork, fork_pid, fork_ref}
+  end
+
+  defp receive_replies({fork, fork_pid, fork_ref}) do
+    timeout = 100_000
+
+    case receive_fork_reply(fork_pid, fork_ref, timeout) do
+      {:fork_failure, error} -> raise "[#{fork}] error: #{inspect(error)}"
+      test_failures -> test_failures
     end
+  end
+
+  defp spawn_tests_for_fork(fork) do
+    parent = self()
+
+    spawn_monitor(fn ->
+      failing_tests = run_tests_for_fork(fork)
+      send(parent, {self(), :fork_tests_finished, failing_tests})
+      exit(:shutdown)
+    end)
+  end
+
+  defp receive_fork_reply(fork_pid, fork_ref, timeout) do
+    receive do
+      {^fork_pid, :fork_tests_finished, failing_tests} ->
+        Process.demonitor(fork_ref, [:flush])
+        failing_tests
+
+      {:DOWN, ^fork_ref, :process, ^fork_pid, error} ->
+        {:fork_failure, error}
+    after
+      timeout ->
+        case Process.info(fork_pid, :current_stacktrace) do
+          {:current_stacktrace, stacktrace} ->
+            Process.demonitor(fork_ref, [:flush])
+            Process.exit(fork_pid, :kill)
+            {:fork_failure, stacktrace}
+
+          nil ->
+            receive_fork_reply(fork_pid, fork_ref, timeout)
+        end
+    end
+  end
+
+  defp run_tests_for_fork(fork) do
+    tests()
+    |> Enum.reject(&known_fork_failures?(&1, fork))
+    |> Enum.flat_map(fn json_test_path ->
+      json_test_path
+      |> read_test()
+      |> Enum.filter(&fork_test(&1, fork))
+      |> Enum.map(&run_test/1)
+      |> Enum.filter(&failing_tests/1)
+    end)
   end
 
   defp forks_with_existing_implementation do
