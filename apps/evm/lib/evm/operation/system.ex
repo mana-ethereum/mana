@@ -92,7 +92,6 @@ defmodule EVM.Operation.System do
         gas: n_gas + remaining_gas
     }
 
-    exec_env = ExecEnv.add_created_address(exec_env, result)
     exec_env = %{exec_env | account_interface: updated_account_interface}
 
     sub_state =
@@ -135,7 +134,8 @@ defmodule EVM.Operation.System do
       value: value,
       execution_value: call_gas,
       data: data,
-      stack_depth: exec_env.stack_depth
+      stack_depth: exec_env.stack_depth,
+      static: exec_env.static
     }
 
     MessageCall.call(message_call)
@@ -167,7 +167,8 @@ defmodule EVM.Operation.System do
       value: exec_env.value_in_wei,
       execution_value: call_gas,
       data: data,
-      stack_depth: exec_env.stack_depth
+      stack_depth: exec_env.stack_depth,
+      static: exec_env.static
     }
 
     MessageCall.call(message_call)
@@ -247,7 +248,8 @@ defmodule EVM.Operation.System do
       value: value,
       execution_value: call_gas,
       data: data,
-      stack_depth: exec_env.stack_depth
+      stack_depth: exec_env.stack_depth,
+      static: exec_env.static
     }
 
     MessageCall.call(message_call)

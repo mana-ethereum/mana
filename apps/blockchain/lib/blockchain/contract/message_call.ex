@@ -92,7 +92,6 @@ defmodule Blockchain.Contract.MessageCall do
       stack_depth: params.stack_depth,
       block_interface: BlockInterface.new(params.block_header, state.db),
       account_interface: account_interace,
-      initial_account_interface: account_interace,
       config: params.config
     }
 
