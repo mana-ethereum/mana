@@ -31,7 +31,10 @@ defmodule BlockchainTest do
       json_test_path
       |> read_test()
       |> ignore_known_failing_tests(json_test_path)
-      |> Enum.each(&run_test/1)
+      |> Enum.filter(&available_chains/1)
+      |> Enum.map(&run_test/1)
+      |> Enum.filter(&failing_tests/1)
+      |> make_assertions()
     end)
   end
 
@@ -55,26 +58,54 @@ defmodule BlockchainTest do
     |> Poison.decode!()
   end
 
+  defp available_chains({_test_name, json_test}) do
+    fork = json_test["network"]
+    chain = load_chain(fork)
+
+    !is_nil(chain)
+  end
+
   defp run_test({test_name, json_test}) do
     fork = json_test["network"]
     chain = load_chain(fork)
 
-    if chain do
-      state = populate_prestate(json_test)
+    state = populate_prestate(json_test)
 
-      blocktree =
-        create_blocktree()
-        |> add_genesis_block(json_test, state, chain)
-        |> add_blocks(json_test, state, chain)
+    blocktree =
+      create_blocktree()
+      |> add_genesis_block(json_test, state, chain)
+      |> add_blocks(json_test, state, chain)
 
-      best_block_hash = maybe_hex(json_test["lastblockhash"])
+    best_block_hash = maybe_hex(json_test["lastblockhash"])
 
-      assert blocktree.best_block.block_hash == best_block_hash, failure_message(test_name, fork)
-    end
+    {fork, test_name, best_block_hash, blocktree.best_block.block_hash}
   end
 
-  defp failure_message(test_name, fork) do
-    "Block hash mismatch in test #{test_name} for #{fork}"
+  defp make_assertions([]), do: assert(true)
+  defp make_assertions(failing_tests), do: refute(true, failure_message(failing_tests))
+
+  defp failure_message(failing_tests) do
+    total_failures = Enum.count(failing_tests)
+
+    error_messages =
+      failing_tests
+      |> Enum.map(&single_error_message/1)
+      |> Enum.join("\n")
+
+    """
+    Block hash mismatch for the following tests:
+    #{inspect(error_messages)}
+    -----------------
+    Total failures: #{inspect(total_failures)}
+    """
+  end
+
+  defp single_error_message({fork, test_name, expected, actual}) do
+    "[#{fork}] #{test_name}: expected #{inspect(expected)}, but received #{inspect(actual)}"
+  end
+
+  defp failing_tests({_fork, _test_name, expected, actual}) do
+    expected != actual
   end
 
   defp load_chain(hardfork) do
