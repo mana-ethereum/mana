@@ -16,7 +16,8 @@ defmodule EVM.Configuration.Frontier do
             empty_account_value_transfer: false,
             clean_touched_accounts: false,
             has_revert: false,
-            has_static_call: false
+            has_static_call: false,
+            support_variable_length_return_value: false
 
   def new do
     %__MODULE__{}
@@ -79,4 +80,8 @@ defimpl EVM.Configuration, for: EVM.Configuration.Frontier do
 
   @spec has_static_call?(Configuration.t()) :: boolean()
   def has_static_call?(config), do: config.has_static_call
+
+  @spec support_variable_length_return_value?(Configuration.t()) :: boolean()
+  def support_variable_length_return_value?(config),
+    do: config.support_variable_length_return_value
 end

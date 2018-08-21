@@ -153,6 +153,14 @@ defmodule EVM.Functions do
         :staticcall ->
           if EVM.Configuration.has_static_call?(config), do: operation_metadata
 
+        :returndatasize ->
+          if EVM.Configuration.support_variable_length_return_value?(config),
+            do: operation_metadata
+
+        :returndatacopy ->
+          if EVM.Configuration.support_variable_length_return_value?(config),
+            do: operation_metadata
+
         _ ->
           operation_metadata
       end

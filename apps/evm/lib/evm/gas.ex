@@ -88,7 +88,8 @@ defmodule EVM.Gas do
     :pop,
     :pc,
     :msize,
-    :gas
+    :gas,
+    :returndatasize
   ]
   @push_instrs Enum.map(0..32, fn n -> :"push#{n}" end)
   @dup_instrs Enum.map(0..16, fn n -> :"dup#{n}" end)
@@ -322,6 +323,15 @@ defmodule EVM.Gas do
         exec_env
       ) do
     Configuration.extcodecopy_cost(exec_env.config) + @g_copy * MathHelper.bits_to_words(length)
+  end
+
+  def operation_cost(
+        :returndatacopy,
+        [_memory_offset, _code_offset, length],
+        _machine_state,
+        _exec_env
+      ) do
+    @g_verylow + @g_copy * MathHelper.bits_to_words(length)
   end
 
   def operation_cost(:sha3, [_length, offset], _machine_state, _exec_env) do
