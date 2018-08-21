@@ -24,7 +24,6 @@ defmodule EVM.ExecEnv do
             account_interface: nil,
             block_interface: nil,
             config: EVM.Configuration.Frontier.new(),
-            created_accounts: [],
             static: false
 
   @typedoc """
@@ -52,7 +51,6 @@ defmodule EVM.ExecEnv do
           block_interface: BlockInterface.t(),
           account_interface: AccountInterface.t(),
           config: Configuration.t(),
-          created_accounts: [EVM.address()],
           static: boolean()
         }
 
@@ -121,12 +119,5 @@ defmodule EVM.ExecEnv do
     is_empty_account = AccountInterface.empty_account?(exec_env.account_interface, address)
 
     is_empty_account || non_existent_account?(exec_env, address)
-  end
-
-  @spec add_created_address(t(), integer()) :: t()
-  def add_created_address(exec_env, address) do
-    address = :binary.encode_unsigned(address)
-
-    %{exec_env | created_accounts: [address | exec_env.created_accounts]}
   end
 end

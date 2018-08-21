@@ -178,7 +178,6 @@ defmodule EVM.MessageCall do
       account_interface: message_call.current_exec_env.account_interface,
       block_interface: message_call.current_exec_env.block_interface,
       config: message_call.current_exec_env.config,
-      created_accounts: message_call.current_exec_env.created_accounts,
       static: message_call.static
     }
   end

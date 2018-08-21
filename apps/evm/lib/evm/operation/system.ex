@@ -92,7 +92,6 @@ defmodule EVM.Operation.System do
         gas: n_gas + remaining_gas
     }
 
-    exec_env = ExecEnv.add_created_address(exec_env, result)
     exec_env = %{exec_env | account_interface: updated_account_interface}
 
     sub_state =
