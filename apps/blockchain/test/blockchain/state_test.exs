@@ -415,7 +415,6 @@ defmodule Blockchain.StateTest do
     "EIP158" => [
       "stTransactionTest/EmptyTransaction2",
       "stSpecialTest/failed_tx_xcf416c53",
-      "stRevertTest/RevertPrefound",
       "stRevertTest/RevertOpcodeMultipleSubCalls"
     ],
     "Frontier" => [

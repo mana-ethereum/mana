@@ -2,7 +2,7 @@ defmodule EVM.Configuration.EIP158 do
   defstruct fallback_config: EVM.Configuration.EIP150.new(),
             exp_byte_cost: 50,
             code_size_limit: 24_577,
-            start_nonce: 1,
+            increment_nonce_on_create: true,
             empty_account_value_transfer: true,
             clean_touched_accounts: true
 
@@ -57,8 +57,8 @@ defimpl EVM.Configuration, for: EVM.Configuration.EIP158 do
   @spec limit_contract_code_size?(Configuration.t(), integer()) :: boolean()
   def limit_contract_code_size?(config, size), do: size >= config.code_size_limit
 
-  @spec start_nonce(Configuration.t()) :: integer()
-  def start_nonce(config), do: config.start_nonce
+  @spec increment_nonce_on_create?(Configuration.t()) :: boolean()
+  def increment_nonce_on_create?(config), do: config.increment_nonce_on_create
 
   @spec empty_account_value_transfer?(Configuration.t()) :: boolean()
   def empty_account_value_transfer?(config), do: config.empty_account_value_transfer

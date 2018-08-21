@@ -1,6 +1,7 @@
 defmodule BlockchainTest do
   use ExUnit.Case
-  use EthCommonTest.Harness
+
+  import EthCommonTest.Helpers
 
   alias Blockchain.{Blocktree, Account, Transaction, Chain}
   alias MerklePatriciaTree.Trie
@@ -9,14 +10,11 @@ defmodule BlockchainTest do
 
   doctest Blockchain
 
-  @ethereum_common_tests_path System.cwd() <> "/../../ethereum_common_tests/BlockchainTests/"
-
   @failing_tests %{
     "Frontier" => [],
     "Homestead" => [],
     "EIP150" => [],
     "EIP158" => [
-      "GeneralStateTests/stRevertTest/RevertPrefound_d0g0v0.json",
       "GeneralStateTests/stSpecialTest/failed_tx_xcf416c53_d0g0v0.json"
     ],
     # the rest are not implemented yet
@@ -32,15 +30,18 @@ defmodule BlockchainTest do
     Enum.each(tests(), fn json_test_path ->
       json_test_path
       |> read_test()
-      |> Enum.each(fn {name, test} ->
-        if !failing_test?(json_test_path, test) do
-          run_test(name, test)
-        end
-      end)
+      |> ignore_known_failing_tests(json_test_path)
+      |> Enum.each(&run_test/1)
     end)
   end
 
-  defp failing_test?(json_test_path, json_test) do
+  defp ignore_known_failing_tests(tests, json_test_path) do
+    Enum.filter(tests, fn {_name, test} ->
+      !known_failing_test?(json_test_path, test)
+    end)
+  end
+
+  defp known_failing_test?(json_test_path, json_test) do
     hardfork_failing_tests = Map.fetch!(@failing_tests, json_test["network"])
 
     Enum.any?(hardfork_failing_tests, fn failing_test ->
@@ -54,7 +55,7 @@ defmodule BlockchainTest do
     |> Poison.decode!()
   end
 
-  defp run_test(test_name, json_test) do
+  defp run_test({test_name, json_test}) do
     fork = json_test["network"]
     chain = load_chain(fork)
 
@@ -275,9 +276,8 @@ defmodule BlockchainTest do
   end
 
   defp tests do
-    wildcard = @ethereum_common_tests_path <> "**/*.json"
-
-    wildcard
+    ethereum_common_tests_path()
+    |> Path.join("/BlockchainTests/**/*.json")
     |> Path.wildcard()
     |> Enum.sort()
   end

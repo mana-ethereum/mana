@@ -12,7 +12,7 @@ defmodule EVM.Configuration.Frontier do
             fail_nested_operation: true,
             exp_byte_cost: 10,
             limit_contract_code_size: false,
-            start_nonce: 0,
+            increment_nonce_on_create: false,
             empty_account_value_transfer: false,
             clean_touched_accounts: false,
             has_revert: false,
@@ -65,8 +65,8 @@ defimpl EVM.Configuration, for: EVM.Configuration.Frontier do
   @spec limit_contract_code_size?(Configuration.t(), integer()) :: boolean()
   def limit_contract_code_size?(config, _), do: config.limit_contract_code_size
 
-  @spec start_nonce(Configuration.t()) :: integer()
-  def start_nonce(config), do: config.start_nonce
+  @spec increment_nonce_on_create?(Configuration.t()) :: boolean()
+  def increment_nonce_on_create?(config), do: config.increment_nonce_on_create
 
   @spec empty_account_value_transfer?(Configuration.t()) :: boolean()
   def empty_account_value_transfer?(config), do: config.empty_account_value_transfer

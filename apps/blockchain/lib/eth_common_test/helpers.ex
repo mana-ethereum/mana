@@ -85,6 +85,6 @@ defmodule EthCommonTest.Helpers do
 
   @spec ethereum_common_tests_path :: String.t()
   def ethereum_common_tests_path do
-    "../../ethereum_common_tests/"
+    Path.join(System.cwd(), "/../../ethereum_common_tests")
   end
 end
