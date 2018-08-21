@@ -471,7 +471,7 @@ defmodule Blockchain.StateTest do
 
   test "Blockchain state tests" do
     Enum.each(test_directories(), fn directory_path ->
-      test_group = Enum.fetch!(String.split(directory_path, "/"), -1)
+      test_group = test_group_from_directory(directory_path)
 
       directory_path
       |> tests()
@@ -668,6 +668,12 @@ defmodule Blockchain.StateTest do
     logs
     |> ExRLP.encode()
     |> Keccak.kec()
+  end
+
+  defp test_group_from_directory(directory_path) do
+    directory_path
+    |> String.split("/")
+    |> Enum.fetch!(-1)
   end
 
   defp test_directories do
