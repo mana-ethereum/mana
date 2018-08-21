@@ -98,15 +98,6 @@ if [ $ELIXIR_PATCH_VERSION -lt 5 ]; then
   exit 1
 fi
 
-mix local.rebar --force
-
-if ! command -v rebar > /dev/null; then
-  fancy_echo "\`rebar\`: Command not found"
-  fancy_echo "Please either add ~/.mix to your \$PATH environemnt varible or install it with brew: \`brew install rebar\`"
-
-  exit 1
-fi
-
 mix local.hex --force
 
 if ! command -v mix > /dev/null; then
@@ -122,7 +113,6 @@ fi
 
 fancy_echo "Installing elixir dependencies and compiling."
 mix deps.get
-cd deps/libsecp256k1 && rebar compile && cd ../../
 mix do deps.compile, compile
 
 fancy_echo "You're all set!"

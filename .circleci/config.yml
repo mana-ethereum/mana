@@ -19,7 +19,6 @@ jobs:
       - run: echo 'export PATH=~/.cargo/bin:$PATH' >> $BASH_ENV
 
       - run: mix local.hex --force
-      - run: mix local.rebar --force
 
       - restore_cache:
           keys:
@@ -41,8 +40,6 @@ jobs:
       - run:
           command: mix do deps.get, compile
           no_output_timeout: 2400
-
-      - run: cd deps/libsecp256k1 && rebar compile
 
       - save_cache:
           key: v1-env-cache-{{ arch }}-{{ .Branch }}
