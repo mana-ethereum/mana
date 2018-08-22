@@ -58,7 +58,7 @@ defmodule BlockchainTest do
   end
 
   defp fork_timeout_error(fork, stacktrace, timeout) do
-    "[#{fork}] timeout after #{inspect(timeout)} miliseconds: #{inspect(stacktrace)}"
+    "[#{fork}] timeout after #{inspect(timeout)} milliseconds: #{inspect(stacktrace)}"
   end
 
   defp spawn_tests_for_fork(fork) do
@@ -95,13 +95,13 @@ defmodule BlockchainTest do
 
   defp run_tests_for_fork(fork) do
     tests()
-    |> Enum.reject(&known_fork_failures?(&1, fork))
+    |> Stream.reject(&known_fork_failures?(&1, fork))
     |> Enum.flat_map(fn json_test_path ->
       json_test_path
       |> read_test()
-      |> Enum.filter(&fork_test(&1, fork))
-      |> Enum.map(&run_test/1)
-      |> Enum.filter(&failing_tests/1)
+      |> Stream.filter(&fork_test?(&1, fork))
+      |> Stream.map(&run_test/1)
+      |> Enum.filter(&failing_test?/1)
     end)
   end
 
@@ -119,7 +119,7 @@ defmodule BlockchainTest do
     |> Poison.decode!()
   end
 
-  defp fork_test({_test_name, json_test}, fork) do
+  defp fork_test?({_test_name, json_test}, fork) do
     fork == json_test["network"]
   end
 
@@ -174,7 +174,7 @@ defmodule BlockchainTest do
     "[#{fork}] #{test_name}: expected #{inspect(expected)}, but received #{inspect(actual)}"
   end
 
-  defp failing_tests({_fork, _test_name, expected, actual}) do
+  defp failing_test?({_fork, _test_name, expected, actual}) do
     expected != actual
   end
 
