@@ -29,8 +29,9 @@ jobs:
             - v1-build-cache-{{ .Branch }}
             - v1-build-cache
 
-      - run: ./bin/setup
-        no_output_timeout: 2400
+      - run:
+          command: ./bin/setup
+          no_output_timeout: 2400
 
       - save_cache:
           key: v1-env-cache-{{ arch }}-{{ .Branch }}
