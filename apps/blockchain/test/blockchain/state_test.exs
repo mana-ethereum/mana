@@ -462,17 +462,81 @@ defmodule Blockchain.StateTest do
   }
 
   test "Blockchain state tests" do
-    for fork <- forks_with_existing_implementation() do
-      tests()
-      |> Enum.reject(&known_fork_failure?(&1, fork))
-      |> Enum.each(fn test_path ->
-        test_path
-        |> read_state_test_file()
-        |> Enum.filter(&fork_test?(&1, fork))
-        |> Enum.flat_map(&run_test(&1, fork))
-        |> Enum.filter(&failed_test?/1)
-        |> make_assertions()
-      end)
+    forks_with_existing_implementation()
+    |> Enum.map(&spawn_forks/1)
+    |> Enum.flat_map(&receive_replies/1)
+    |> make_assertions()
+  end
+
+  defp run_tests_for_fork(fork) do
+    tests()
+    |> Enum.reject(&known_fork_failure?(&1, fork))
+    |> Enum.flat_map(fn test_path ->
+      test_path
+      |> read_state_test_file()
+      |> Enum.filter(&fork_test?(&1, fork))
+      |> Enum.flat_map(&run_test(&1, fork))
+      |> Enum.filter(&failed_test?/1)
+    end)
+  end
+
+  defp spawn_forks(fork) do
+    {fork_pid, fork_ref} = spawn_tests_for_fork(fork)
+    {fork, fork_pid, fork_ref}
+  end
+
+  defp receive_replies({fork, fork_pid, fork_ref}) do
+    ten_minute_timeout = 1000 * 60 * 10
+
+    case receive_fork_reply(fork_pid, fork_ref, ten_minute_timeout) do
+      {:fork_failure, error} ->
+        raise fork_failure_error(fork, error)
+
+      {:fork_timeout, stacktrace} ->
+        raise fork_timeout_error(fork, stacktrace, ten_minute_timeout)
+
+      test_failures ->
+        test_failures
+    end
+  end
+
+  defp fork_failure_error(fork, error) do
+    "[#{fork}] error: #{inspect(error)}"
+  end
+
+  defp fork_timeout_error(fork, stacktrace, timeout) do
+    "[#{fork}] timeout after #{inspect(timeout)} milliseconds: #{inspect(stacktrace)}"
+  end
+
+  defp spawn_tests_for_fork(fork) do
+    parent = self()
+
+    spawn_monitor(fn ->
+      failing_tests = run_tests_for_fork(fork)
+      send(parent, {self(), :fork_tests_finished, failing_tests})
+      exit(:shutdown)
+    end)
+  end
+
+  defp receive_fork_reply(fork_pid, fork_ref, timeout) do
+    receive do
+      {^fork_pid, :fork_tests_finished, failing_tests} ->
+        Process.demonitor(fork_ref, [:flush])
+        failing_tests
+
+      {:DOWN, ^fork_ref, :process, ^fork_pid, error} ->
+        {:fork_failure, error}
+    after
+      timeout ->
+        case Process.info(fork_pid, :current_stacktrace) do
+          {:current_stacktrace, stacktrace} ->
+            Process.demonitor(fork_ref, [:flush])
+            Process.exit(fork_pid, :kill)
+            {:fork_timeout, stacktrace}
+
+          nil ->
+            receive_fork_reply(fork_pid, fork_ref, timeout)
+        end
     end
   end
 
