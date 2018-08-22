@@ -17,20 +17,15 @@ jobs:
 
       - restore_cache:
           keys:
-            - v2-env-cache-{{ arch }}-{{ .Branch }}
-            - v2-env-cache-{{ .Branch }}
-            - v2-env-cache
+            - v3-env-cache-{{ arch }}-{{ .Branch }}
+            - v3-env-cache-{{ .Branch }}
+            - v3-env-cache
 
       - restore_cache:
           keys:
-            - v2-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
-            - v2-mix-cache-{{ .Branch }}
-            - v2-mix-cache
-
-      - restore_cache:
-          keys:
-            - v2-build-cache-{{ .Branch }}
-            - v2-build-cache
+            - v3-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
+            - v3-mix-cache-{{ .Branch }}
+            - v3-mix-cache
 
       - run: echo 'export PATH=~/.cargo/bin:$PATH' >> $BASH_ENV
 
@@ -39,39 +34,32 @@ jobs:
           no_output_timeout: 2400
 
       - save_cache:
-          key: v2-env-cache-{{ arch }}-{{ .Branch }}
+          key: v3-env-cache-{{ arch }}-{{ .Branch }}
           paths:
             - $HOME/.cargo
             - $HOME/.rustup
 
       - save_cache:
-          key: v2-env-cache-{{ .Branch }}
+          key: v3-env-cache-{{ .Branch }}
           paths:
             - $HOME/.cargo
             - $HOME/.rustup
 
       - save_cache:
-          key: v2-env-cache
+          key: v3-env-cache
           paths:
             - $HOME/.cargo
             - $HOME/.rustup
 
       - save_cache:
-          key: v2-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
+          key: v3-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
           paths: "deps"
       - save_cache:
-          key: v2-mix-cache-{{ .Branch }}
+          key: v3-mix-cache-{{ .Branch }}
           paths: "deps"
       - save_cache:
-          key: v2-mix-cache
+          key: v3-mix-cache
           paths: "deps"
-
-      - save_cache:
-          key: v2-build-cache-{{ .Branch }}
-          paths: "_build"
-      - save_cache:
-          key: v2-build-cache
-          paths: "_build"
 
       - run:
           command: mix test --exclude network --exclude pending
@@ -116,26 +104,26 @@ jobs:
 
       - restore_cache:
           keys:
-            - v2-build-cache-{{ .Branch }}
-            - v2-build-cache
+            - v3-build-cache-{{ .Branch }}
+            - v3-build-cache
 
       - restore_cache:
           keys:
-            - v2-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
-            - v2-mix-cache-{{ .Branch }}
-            - v2-mix-cache
+            - v3-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
+            - v3-mix-cache-{{ .Branch }}
+            - v3-mix-cache
 
       - restore_cache:
           keys:
-            - v2-env-cache-{{ arch }}-{{ .Branch }}
-            - v2-env-cache-{{ .Branch }}
-            - v2-env-cache
+            - v3-env-cache-{{ arch }}-{{ .Branch }}
+            - v3-env-cache-{{ .Branch }}
+            - v3-env-cache
 
       - restore_cache:
           keys:
-            - v2-plt-cache-{{ ".tool-versions" }}-{{ checksum "mix.lock" }}
-            - v2-plt-cache-{{ ".tool-versions" }}-{{ checksum "mix.exs" }}
-            - v2-plt-cache-{{ ".tool-versions" }}
+            - v3-plt-cache-{{ ".tool-versions" }}-{{ checksum "mix.lock" }}
+            - v3-plt-cache-{{ ".tool-versions" }}-{{ checksum "mix.exs" }}
+            - v3-plt-cache-{{ ".tool-versions" }}
 
       - run:
           name: Unpack PLT cache
@@ -155,17 +143,17 @@ jobs:
             cp ~/.mix/dialyxir*.plt plts/
 
       - save_cache:
-          key: v2-plt-cache-{{ ".tool-versions" }}-{{ checksum "mix.lock" }}
+          key: v3-plt-cache-{{ ".tool-versions" }}-{{ checksum "mix.lock" }}
           paths:
             - plts
 
       - save_cache:
-          key: v2-plt-cache-{{ ".tool-versions" }}-{{ checksum "mix.exs" }}
+          key: v3-plt-cache-{{ ".tool-versions" }}-{{ checksum "mix.exs" }}
           paths:
             - plts
 
       - save_cache:
-          key: v2-plt-cache-{{ ".tool-versions" }}
+          key: v3-plt-cache-{{ ".tool-versions" }}
           paths:
             - plts
 
