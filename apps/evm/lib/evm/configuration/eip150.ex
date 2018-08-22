@@ -79,4 +79,8 @@ defimpl EVM.Configuration, for: EVM.Configuration.EIP150 do
 
   @spec has_static_call?(Configuration.t()) :: boolean()
   def has_static_call?(config), do: Configuration.has_static_call?(config.fallback_config)
+
+  @spec support_variable_length_return_value?(Configuration.t()) :: boolean()
+  def support_variable_length_return_value?(config),
+    do: Configuration.support_variable_length_return_value?(config.fallback_config)
 end

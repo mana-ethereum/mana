@@ -1,7 +1,8 @@
 defmodule EVM.Configuration.Byzantium do
   defstruct fallback_config: EVM.Configuration.EIP158.new(),
             has_revert: true,
-            has_static_call: true
+            has_static_call: true,
+            support_variable_length_return_value: true
 
   def new do
     %__MODULE__{}
@@ -72,4 +73,8 @@ defimpl EVM.Configuration, for: EVM.Configuration.Byzantium do
 
   @spec has_static_call?(Configuration.t()) :: boolean()
   def has_static_call?(config), do: config.has_static_call
+
+  @spec support_variable_length_return_value?(Configuration.t()) :: boolean()
+  def support_variable_length_return_value?(config),
+    do: config.support_variable_length_return_value
 end

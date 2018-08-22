@@ -137,6 +137,7 @@ defmodule EVM.Functions do
     end
   end
 
+  # credo:disable-for-next-line
   def operation_metadata(operation, exec_env) do
     operation_metadata = Operation.metadata(operation)
 
@@ -152,6 +153,14 @@ defmodule EVM.Functions do
 
         :staticcall ->
           if EVM.Configuration.has_static_call?(config), do: operation_metadata
+
+        :returndatasize ->
+          if EVM.Configuration.support_variable_length_return_value?(config),
+            do: operation_metadata
+
+        :returndatacopy ->
+          if EVM.Configuration.support_variable_length_return_value?(config),
+            do: operation_metadata
 
         _ ->
           operation_metadata

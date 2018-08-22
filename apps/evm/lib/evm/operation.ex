@@ -207,11 +207,11 @@ defmodule EVM.Operation do
 
       # Add
       iex> EVM.Operation.run(EVM.Operation.metadata(:add), %EVM.MachineState{stack: [1, 2]}, %EVM.SubState{}, %EVM.ExecEnv{})
-      {%EVM.MachineState{stack: [3], last_return_data: [3]}, %EVM.SubState{}, %EVM.ExecEnv{}}
+      {%EVM.MachineState{stack: [3]}, %EVM.SubState{}, %EVM.ExecEnv{}}
 
       # Push
       iex> EVM.Operation.run(EVM.Operation.metadata(:push1), %EVM.MachineState{stack: [1, 2]}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: <<00, 01>>})
-      {%EVM.MachineState{stack: [1, 1, 2], last_return_data: [1]}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: <<0, 1>>}}
+      {%EVM.MachineState{stack: [1, 1, 2]}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: <<0, 1>>}}
 
       # nil
       iex> EVM.Operation.run(EVM.Operation.metadata(:stop), %EVM.MachineState{stack: [1, 2]}, %EVM.SubState{}, %EVM.ExecEnv{})
@@ -255,9 +255,9 @@ defmodule EVM.Operation do
   ## Examples
 
       iex> EVM.Operation.normalize_op_result(1, [])
-      %{stack: [1], last_return_data: [1]}
+      %{stack: [1]}
       iex> EVM.Operation.normalize_op_result([1,2], [])
-      %{stack: [1, 2], last_return_data: [1, 2]}
+      %{stack: [1, 2]}
 
   """
   @spec normalize_op_result(EVM.val() | list(EVM.val()) | op_result(), EVM.Stack.t()) ::
@@ -266,16 +266,8 @@ defmodule EVM.Operation do
     if is_integer(op_result) || is_list(op_result) || is_binary(op_result) do
       last_return_data = Helpers.encode_val(op_result)
 
-      last_return_data_normalized =
-        if is_list(last_return_data) do
-          last_return_data
-        else
-          [last_return_data]
-        end
-
       %{
-        stack: Stack.push(updated_stack, last_return_data),
-        last_return_data: last_return_data_normalized
+        stack: Stack.push(updated_stack, last_return_data)
       }
     else
       op_result
@@ -370,11 +362,6 @@ defmodule EVM.Operation do
       if op_result[:stack],
         do: %{base_machine_state | stack: op_result[:stack]},
         else: base_machine_state
-
-    next_machine_state =
-      if op_result[:last_return_data],
-        do: %{next_machine_state | last_return_data: op_result[:last_return_data]},
-        else: %{next_machine_state | last_return_data: []}
 
     next_sub_state = op_result[:sub_state] || sub_state
     next_exec_env = op_result[:exec_env] || exec_env

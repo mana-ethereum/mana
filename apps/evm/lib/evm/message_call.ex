@@ -138,9 +138,12 @@ defmodule EVM.MessageCall do
 
       machine_state =
         if output == :invalid_input do
-          machine_state
+          %{machine_state | last_return_data: []}
         else
-          Memory.write(machine_state, out_offset, output)
+          updated_machine_state = Memory.write(machine_state, out_offset, output)
+          list_output = :binary.bin_to_list(output)
+
+          %{updated_machine_state | last_return_data: list_output}
         end
 
       exec_env =

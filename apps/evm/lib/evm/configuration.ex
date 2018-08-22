@@ -73,6 +73,10 @@ defprotocol EVM.Configuration do
   @spec has_revert?(t) :: boolean()
   def has_revert?(t)
 
+  # EIP211
+  @spec support_variable_length_return_value?(t) :: boolean()
+  def support_variable_length_return_value?(t)
+
   # EIP214
   @spec has_static_call?(t) :: boolean()
   def has_static_call?(t)
