@@ -27,22 +27,86 @@ defmodule BlockchainTest do
   }
 
   test "runs blockchain tests" do
-    Enum.each(tests(), fn json_test_path ->
+    forks_with_existing_implementation()
+    |> Enum.map(&spawn_forks/1)
+    |> Enum.flat_map(&receive_replies/1)
+    |> make_assertions()
+  end
+
+  defp spawn_forks(fork) do
+    {fork_pid, fork_ref} = spawn_tests_for_fork(fork)
+    {fork, fork_pid, fork_ref}
+  end
+
+  defp receive_replies({fork, fork_pid, fork_ref}) do
+    ten_minute_timeout = 1000 * 60 * 10
+
+    case receive_fork_reply(fork_pid, fork_ref, ten_minute_timeout) do
+      {:fork_failure, error} ->
+        raise fork_failure_error(fork, error)
+
+      {:fork_timeout, stacktrace} ->
+        raise fork_timeout_error(fork, stacktrace, ten_minute_timeout)
+
+      test_failures ->
+        test_failures
+    end
+  end
+
+  defp fork_failure_error(fork, error) do
+    "[#{fork}] error: #{inspect(error)}"
+  end
+
+  defp fork_timeout_error(fork, stacktrace, timeout) do
+    "[#{fork}] timeout after #{inspect(timeout)} milliseconds: #{inspect(stacktrace)}"
+  end
+
+  defp spawn_tests_for_fork(fork) do
+    parent = self()
+
+    spawn_monitor(fn ->
+      failing_tests = run_tests_for_fork(fork)
+      send(parent, {self(), :fork_tests_finished, failing_tests})
+      exit(:shutdown)
+    end)
+  end
+
+  defp receive_fork_reply(fork_pid, fork_ref, timeout) do
+    receive do
+      {^fork_pid, :fork_tests_finished, failing_tests} ->
+        Process.demonitor(fork_ref, [:flush])
+        failing_tests
+
+      {:DOWN, ^fork_ref, :process, ^fork_pid, error} ->
+        {:fork_failure, error}
+    after
+      timeout ->
+        case Process.info(fork_pid, :current_stacktrace) do
+          {:current_stacktrace, stacktrace} ->
+            Process.demonitor(fork_ref, [:flush])
+            Process.exit(fork_pid, :kill)
+            {:fork_timeout, stacktrace}
+
+          nil ->
+            receive_fork_reply(fork_pid, fork_ref, timeout)
+        end
+    end
+  end
+
+  defp run_tests_for_fork(fork) do
+    tests()
+    |> Stream.reject(&known_fork_failures?(&1, fork))
+    |> Enum.flat_map(fn json_test_path ->
       json_test_path
       |> read_test()
-      |> ignore_known_failing_tests(json_test_path)
-      |> Enum.each(&run_test/1)
+      |> Stream.filter(&fork_test?(&1, fork))
+      |> Stream.map(&run_test/1)
+      |> Enum.filter(&failing_test?/1)
     end)
   end
 
-  defp ignore_known_failing_tests(tests, json_test_path) do
-    Enum.filter(tests, fn {_name, test} ->
-      !known_failing_test?(json_test_path, test)
-    end)
-  end
-
-  defp known_failing_test?(json_test_path, json_test) do
-    hardfork_failing_tests = Map.fetch!(@failing_tests, json_test["network"])
+  defp known_fork_failures?(json_test_path, fork) do
+    hardfork_failing_tests = Map.fetch!(@failing_tests, fork)
 
     Enum.any?(hardfork_failing_tests, fn failing_test ->
       String.contains?(json_test_path, failing_test)
@@ -55,26 +119,63 @@ defmodule BlockchainTest do
     |> Poison.decode!()
   end
 
+  defp fork_test?({_test_name, json_test}, fork) do
+    fork == json_test["network"]
+  end
+
+  defp forks_with_existing_implementation do
+    @failing_tests
+    |> Map.keys()
+    |> Enum.reject(&fork_without_implementation?/1)
+  end
+
+  defp fork_without_implementation?(fork) do
+    fork
+    |> load_chain()
+    |> is_nil()
+  end
+
   defp run_test({test_name, json_test}) do
     fork = json_test["network"]
     chain = load_chain(fork)
 
-    if chain do
-      state = populate_prestate(json_test)
+    state = populate_prestate(json_test)
 
-      blocktree =
-        create_blocktree()
-        |> add_genesis_block(json_test, state, chain)
-        |> add_blocks(json_test, state, chain)
+    blocktree =
+      create_blocktree()
+      |> add_genesis_block(json_test, state, chain)
+      |> add_blocks(json_test, state, chain)
 
-      best_block_hash = maybe_hex(json_test["lastblockhash"])
+    best_block_hash = maybe_hex(json_test["lastblockhash"])
 
-      assert blocktree.best_block.block_hash == best_block_hash, failure_message(test_name, fork)
-    end
+    {fork, test_name, best_block_hash, blocktree.best_block.block_hash}
   end
 
-  defp failure_message(test_name, fork) do
-    "Block hash mismatch in test #{test_name} for #{fork}"
+  defp make_assertions([]), do: assert(true)
+  defp make_assertions(failing_tests), do: refute(true, failure_message(failing_tests))
+
+  defp failure_message(failing_tests) do
+    total_failures = Enum.count(failing_tests)
+
+    error_messages =
+      failing_tests
+      |> Enum.map(&single_error_message/1)
+      |> Enum.join("\n")
+
+    """
+    Block hash mismatch for the following tests:
+    #{inspect(error_messages)}
+    -----------------
+    Total failures: #{inspect(total_failures)}
+    """
+  end
+
+  defp single_error_message({fork, test_name, expected, actual}) do
+    "[#{fork}] #{test_name}: expected #{inspect(expected)}, but received #{inspect(actual)}"
+  end
+
+  defp failing_test?({_fork, _test_name, expected, actual}) do
+    expected != actual
   end
 
   defp load_chain(hardfork) do
