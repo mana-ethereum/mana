@@ -470,12 +470,12 @@ defmodule Blockchain.StateTest do
 
   defp run_tests_for_fork(fork) do
     tests()
-    |> Enum.reject(&known_fork_failure?(&1, fork))
+    |> Stream.reject(&known_fork_failure?(&1, fork))
     |> Enum.flat_map(fn test_path ->
       test_path
       |> read_state_test_file()
-      |> Enum.filter(&fork_test?(&1, fork))
-      |> Enum.flat_map(&run_test(&1, fork))
+      |> Stream.filter(&fork_test?(&1, fork))
+      |> Stream.flat_map(&run_test(&1, fork))
       |> Enum.filter(&failed_test?/1)
     end)
   end
@@ -486,7 +486,7 @@ defmodule Blockchain.StateTest do
   end
 
   defp receive_replies({fork, fork_pid, fork_ref}) do
-    ten_minute_timeout = 1000 * 60 * 10
+    ten_minute_timeout = 1000 * 60 * 15
 
     case receive_fork_reply(fork_pid, fork_ref, ten_minute_timeout) do
       {:fork_failure, error} ->
