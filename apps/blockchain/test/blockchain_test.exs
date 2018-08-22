@@ -39,12 +39,26 @@ defmodule BlockchainTest do
   end
 
   defp receive_replies({fork, fork_pid, fork_ref}) do
-    timeout = 100_000
+    ten_minute_timeout = 1000 * 60 * 10
 
-    case receive_fork_reply(fork_pid, fork_ref, timeout) do
-      {:fork_failure, error} -> raise "[#{fork}] error: #{inspect(error)}"
-      test_failures -> test_failures
+    case receive_fork_reply(fork_pid, fork_ref, ten_minute_timeout) do
+      {:fork_failure, error} ->
+        raise fork_failure_error(fork, error)
+
+      {:fork_timeout, stacktrace} ->
+        raise fork_timeout_error(fork, stacktrace, ten_minute_timeout)
+
+      test_failures ->
+        test_failures
     end
+  end
+
+  defp fork_failure_error(fork, error) do
+    "[#{fork}] error: #{inspect(error)}"
+  end
+
+  defp fork_timeout_error(fork, stacktrace, timeout) do
+    "[#{fork}] timeout after #{inspect(timeout)} miliseconds: #{inspect(stacktrace)}"
   end
 
   defp spawn_tests_for_fork(fork) do
@@ -71,7 +85,7 @@ defmodule BlockchainTest do
           {:current_stacktrace, stacktrace} ->
             Process.demonitor(fork_ref, [:flush])
             Process.exit(fork_pid, :kill)
-            {:fork_failure, stacktrace}
+            {:fork_timeout, stacktrace}
 
           nil ->
             receive_fork_reply(fork_pid, fork_ref, timeout)
@@ -91,12 +105,6 @@ defmodule BlockchainTest do
     end)
   end
 
-  defp forks_with_existing_implementation do
-    @failing_tests
-    |> Map.keys()
-    |> Enum.reject(&fork_without_implementation?/1)
-  end
-
   defp known_fork_failures?(json_test_path, fork) do
     hardfork_failing_tests = Map.fetch!(@failing_tests, fork)
 
@@ -113,6 +121,12 @@ defmodule BlockchainTest do
 
   defp fork_test({_test_name, json_test}, fork) do
     fork == json_test["network"]
+  end
+
+  defp forks_with_existing_implementation do
+    @failing_tests
+    |> Map.keys()
+    |> Enum.reject(&fork_without_implementation?/1)
   end
 
   defp fork_without_implementation?(fork) do
