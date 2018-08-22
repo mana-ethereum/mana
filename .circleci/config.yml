@@ -27,6 +27,12 @@ jobs:
             - v3-mix-cache-{{ .Branch }}
             - v3-mix-cache
 
+      - restore_cache:
+          keys:
+            - v3-build-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
+            - v3-build-cache-{{ .Branch }}
+            - v3-build-cache
+
       - run: echo 'export PATH=~/.cargo/bin:$PATH' >> $BASH_ENV
 
       - run:
@@ -60,6 +66,16 @@ jobs:
       - save_cache:
           key: v3-mix-cache
           paths: "deps"
+
+      - save_cache:
+          key: v3-build-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
+          paths: "_build"
+      - save_cache:
+          key: v3-build-cache-{{ .Branch }}
+          paths: "_build"
+      - save_cache:
+          key: v3-build-cache
+          paths: "_build"
 
       - run:
           command: mix test --exclude network --exclude pending
