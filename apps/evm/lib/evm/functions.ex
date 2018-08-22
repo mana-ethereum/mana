@@ -137,6 +137,7 @@ defmodule EVM.Functions do
     end
   end
 
+  # credo:disable-for-next-line
   def operation_metadata(operation, exec_env) do
     operation_metadata = Operation.metadata(operation)
 
