@@ -7,6 +7,71 @@ fancy_echo() {
   printf "\\n$fmt\\n" "$@"
 }
 
+install_linux_deps() {
+  local LINUX_DEPS="automake autoconf autogen libtool gcc curl"
+  local flavor=`grep "^ID=" /etc/os-release | cut -d"=" -f 2`
+  echo $flavor
+  case $flavor in
+    debian|ubuntu)
+      sudo apt-get install -y $LINUX_DEPS libgmp-dev
+      ;;
+    fedora|centos)
+      sudo yum install $LINUX_DEPS gmp-devel
+      ;;
+    *)
+      fancy_echo "Unrecognized distribution $flavor"
+      exit 1
+      ;;
+  esac
+}
+
+install_linux_rust() {
+  curl https://sh.rustup.rs -sSf | sh
+  if [ $? -ne 0 ]; then
+    fancy_echo "Rust installation failed"
+    exit 1
+  fi
+}
+
+install_rust() {
+  local sys=`uname -s`
+  case $sys in
+    Linux*)
+      install_linux_rust
+      ;;
+    Darwin*)
+      brew install rust
+      ;;
+    *)
+      fancy_echo "Unknown system"
+      exit 1
+      ;;
+  esac
+}
+
+install_deps() {
+  local sys=`uname -s`
+  echo $sys
+  case $sys in
+    Linux*)
+      install_linux_deps
+      ;;
+    Darwin*)
+      fancy_echo "Installing dependencies via brew"
+      brew bundle --file=- <<EOF
+brew "automake"
+brew "autoconf"
+brew "gmp"
+brew "libtool"
+EOF
+      ;;
+    *)
+      fancy_echo "Unknown system"
+      exit 1
+      ;;
+  esac
+}
+
 # Exit if any subcommand fails
 set -e
 
@@ -16,13 +81,7 @@ if [ ! -f apps/blockchain/config/dev.secret.exs ]; then
   cp apps/blockchain/config/dev.secret.exs.example apps/blockchain/config/dev.secret.exs
 fi
 
-fancy_echo "Installing dependencies via brew"
-brew bundle --file=- <<EOF
-brew "automake"
-brew "autoconf"
-brew "gmp"
-brew "libtool"
-EOF
+install_deps
 
 # Set up Elixir
 if ! command -v mix > /dev/null; then
@@ -32,7 +91,7 @@ if ! command -v mix > /dev/null; then
 fi
 
 ELIXIR_PATCH_VERSION=`elixir -v |grep Elixir | sed -n 's/.*1\.6\.\([0-9]\).*$/\1/p'`
-if (($ELIXIR_PATCH_VERSION < 5)); then
+if [ $ELIXIR_PATCH_VERSION -lt 5 ]; then
   fancy_echo "Your elixir version must be ~> 1.6.5"
   fancy_echo "Your current version:"
   elixir -v
@@ -58,7 +117,7 @@ fi
 
 if ! command -v rustc > /dev/null; then
   fancy_echo "It looks like you don't have Rust installed. We'll install that for you."
-  brew install rust
+  install_rust
 fi
 
 fancy_echo "Installing elixir dependencies and compiling."
