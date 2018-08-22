@@ -25,28 +25,22 @@ install_linux_deps() {
   esac
 }
 
-install_linux_rust() {
-  curl https://sh.rustup.rs -sSf | sh
+install_darwin_deps(){
+    fancy_echo "Installing dependencies via brew"
+    brew bundle --file=- <<EOF
+brew "automake"
+brew "autoconf"
+brew "gmp"
+brew "libtool"
+EOF
+}
+
+install_rust() {
+  curl https://sh.rustup.rs -sSf | sh -s -- -y
   if [ $? -ne 0 ]; then
     fancy_echo "Rust installation failed"
     exit 1
   fi
-}
-
-install_rust() {
-  local sys=`uname -s`
-  case $sys in
-    Linux*)
-      install_linux_rust
-      ;;
-    Darwin*)
-      brew install rust
-      ;;
-    *)
-      fancy_echo "Unknown system"
-      exit 1
-      ;;
-  esac
 }
 
 install_deps() {
@@ -57,13 +51,7 @@ install_deps() {
       install_linux_deps
       ;;
     Darwin*)
-      fancy_echo "Installing dependencies via brew"
-      brew bundle --file=- <<EOF
-brew "automake"
-brew "autoconf"
-brew "gmp"
-brew "libtool"
-EOF
+      install_darwin_deps
       ;;
     *)
       fancy_echo "Unknown system"
@@ -90,20 +78,11 @@ if ! command -v mix > /dev/null; then
   exit 1
 fi
 
-ELIXIR_PATCH_VERSION=`elixir -v |grep Elixir | sed -n 's/.*1\.6\.\([0-9]\).*$/\1/p'`
-if [ $ELIXIR_PATCH_VERSION -lt 5 ]; then
-  fancy_echo "Your elixir version must be ~> 1.6.5"
+ELIXIR_PATCH_VERSION=`elixir -v |grep Elixir | sed -n 's/.*1\.7\.\([0-9]\).*$/\1/p'`
+if [ $ELIXIR_PATCH_VERSION -lt 2 ]; then
+  fancy_echo "Your elixir version must be ~> 1.7.2"
   fancy_echo "Your current version:"
   elixir -v
-  exit 1
-fi
-
-mix local.rebar --force
-
-if ! command -v rebar > /dev/null; then
-  fancy_echo "\`rebar\`: Command not found"
-  fancy_echo "Please either add ~/.mix to your \$PATH environemnt varible or install it with brew: \`brew install rebar\`"
-
   exit 1
 fi
 
@@ -121,8 +100,9 @@ if ! command -v rustc > /dev/null; then
 fi
 
 fancy_echo "Installing elixir dependencies and compiling."
+mix local.hex --force
+mix local.rebar --force
 mix deps.get
-cd deps/libsecp256k1 && rebar compile && cd ../../
 mix do deps.compile, compile
 
 fancy_echo "You're all set!"
