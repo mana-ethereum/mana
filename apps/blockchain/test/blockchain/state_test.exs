@@ -469,9 +469,9 @@ defmodule Blockchain.StateTest do
         test_path
         |> read_state_test_file()
         |> Enum.filter(&fork_test?(&1, fork))
-        |> Enum.each(fn {test_name, test} ->
-          run_test(test_name, test, fork)
-        end)
+        |> Enum.flat_map(&run_test(&1, fork))
+        |> Enum.filter(&failed_test?/1)
+        |> make_assertions()
       end)
     end
   end
@@ -514,12 +514,12 @@ defmodule Blockchain.StateTest do
     Path.join(group_name, test_name)
   end
 
-  defp run_test(test_name, test, hardfork) do
+  defp run_test({test_name, test}, hardfork) do
     hardfork_configuration = configuration(hardfork)
 
     test["post"][hardfork]
     |> Enum.with_index()
-    |> Enum.each(fn {post, index} ->
+    |> Enum.map(fn {post, index} ->
       pre_state = account_interface(test).state
 
       indexes = post["indexes"]
@@ -565,15 +565,96 @@ defmodule Blockchain.StateTest do
         |> Map.fetch!("hash")
         |> maybe_hex()
 
-      assert state.root_hash == expected_hash,
-             "State root mismatch for #{test_name} on #{hardfork}"
-
       expected_logs = test["post"][hardfork] |> Enum.at(index) |> Map.fetch!("logs")
       logs_hash = logs_hash(logs)
 
-      assert maybe_hex(expected_logs) == logs_hash,
-             "Logs hash mismatch for #{test_name} on #{hardfork}"
+      %{
+        hardfork: hardfork,
+        test_name: test_name,
+        state_root_mismatch: state.root_hash != expected_hash,
+        state_root_expected: expected_hash,
+        state_root_actual: state.root_hash,
+        logs_hash_mismatch: maybe_hex(expected_logs) != logs_hash,
+        logs_hash_expected: maybe_hex(expected_logs),
+        logs_hash_actual: logs_hash
+      }
     end)
+  end
+
+  defp failed_test?(%{state_root_mismatch: true}), do: true
+  defp failed_test?(%{logs_hash_mismatch: true}), do: true
+  defp failed_test?(%{}), do: false
+
+  defp make_assertions([]), do: assert(true)
+  defp make_assertions(failing_tests), do: assert(false, failure_message(failing_tests))
+
+  defp failure_message(failing_tests) do
+    """
+    #{state_root_failures_message(failing_tests)}
+    =========================
+
+    #{logs_hash_error_message(failing_tests)}
+    """
+  end
+
+  defp state_root_failures_message(failing_tests) do
+    state_root_mismatch_failures =
+      Enum.filter(failing_tests, fn test -> test.state_root_mismatch end)
+
+    total_count = Enum.count(state_root_mismatch_failures)
+
+    state_root_error_messages =
+      state_root_mismatch_failures
+      |> Enum.map(&single_state_root_error_message/1)
+      |> Enum.join("\n")
+
+    """
+    State root mismatch for the following tests:
+    #{inspect(state_root_error_messages)}
+    -----------------
+    Total state root failures: #{inspect(total_count)}
+    """
+  end
+
+  defp logs_hash_error_message(failing_tests) do
+    logs_hash_mismatch_failures =
+      Enum.filter(failing_tests, fn test -> test.logs_hash_mismatch end)
+
+    total_count = Enum.count(logs_hash_mismatch_failures)
+
+    logs_hash_error_messages =
+      logs_hash_mismatch_failures
+      |> Enum.map(&single_logs_hash_error_message/1)
+      |> Enum.join("\n")
+
+    """
+    Logs hash mismatch for the following tests:
+    #{inspect(logs_hash_error_messages)}
+    -----------------
+    Total logs hash failures: #{inspect(total_count)}
+    """
+  end
+
+  defp single_logs_hash_error_message(test_result) do
+    %{
+      hardfork: hardfork,
+      test_name: test_name,
+      logs_hash_expected: expected,
+      logs_hash_actual: actual
+    } = test_result
+
+    "[#{hardfork}] #{test_name}: expected #{inspect(expected)}, but received #{inspect(actual)}"
+  end
+
+  defp single_state_root_error_message(test_result) do
+    %{
+      hardfork: hardfork,
+      test_name: test_name,
+      state_root_expected: expected,
+      state_root_actual: actual
+    } = test_result
+
+    "[#{hardfork}] #{test_name}: expected #{inspect(expected)}, but received #{inspect(actual)}"
   end
 
   def configuration(hardfork) do
@@ -629,15 +710,6 @@ defmodule Blockchain.StateTest do
     test_path
     |> File.read!()
     |> Poison.decode!()
-  end
-
-  def state_test_file_name(group, test) do
-    file_name = Path.join(~w(st#{group} #{test}.json))
-    relative_path = Path.join(~w(.. .. ethereum_common_tests GeneralStateTests #{file_name}))
-
-    System.cwd()
-    |> Path.join(relative_path)
-    |> Path.expand()
   end
 
   def account_interface(test) do
