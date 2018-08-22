@@ -462,37 +462,61 @@ defmodule Blockchain.StateTest do
   }
 
   test "Blockchain state tests" do
-    Enum.each(test_directories(), fn directory_path ->
-      test_group = test_group_from_directory(directory_path)
-
-      directory_path
-      |> tests()
+    for fork <- forks_with_existing_implementation() do
+      tests()
+      |> Enum.reject(&known_fork_failure?(&1, fork))
       |> Enum.each(fn test_path ->
         test_path
         |> read_state_test_file()
+        |> Enum.filter(&fork_test?(&1, fork))
         |> Enum.each(fn {test_name, test} ->
-          run_test(test_group, test_name, test)
+          run_test(test_name, test, fork)
         end)
       end)
-    end)
+    end
   end
 
-  defp run_test(test_group, test_name, test) do
-    test["post"]
-    |> Enum.each(fn {hardfork, _test_data} ->
-      failing_tests = Map.get(@failing_tests, hardfork, %{})
-
-      if !Enum.member?(failing_tests, "#{test_group}/#{test_name}") do
-        hardfork_configuration = configuration(hardfork)
-
-        if hardfork_configuration do
-          run_transaction(test_name, test, hardfork, hardfork_configuration)
-        end
-      end
-    end)
+  defp fork_test?({_test_name, test_data}, fork) do
+    case Map.fetch(test_data["post"], fork) do
+      {:ok, _test_data} -> true
+      _ -> false
+    end
   end
 
-  defp run_transaction(test_name, test, hardfork, hardfork_configuration) do
+  defp forks_with_existing_implementation do
+    @failing_tests
+    |> Map.keys()
+    |> Enum.reject(&fork_without_implementation?/1)
+  end
+
+  defp fork_without_implementation?(fork) do
+    fork
+    |> configuration()
+    |> is_nil()
+  end
+
+  defp known_fork_failure?(json_test_path, hardfork) do
+    test_name = test_name_with_group_from_path(json_test_path)
+    failing_tests = Map.fetch!(@failing_tests, hardfork)
+
+    Enum.member?(failing_tests, test_name)
+  end
+
+  defp test_name_with_group_from_path(path) do
+    path_elements =
+      path
+      |> Path.rootname()
+      |> Path.split()
+
+    group_name = Enum.fetch!(path_elements, -2)
+    test_name = Enum.fetch!(path_elements, -1)
+
+    Path.join(group_name, test_name)
+  end
+
+  defp run_test(test_name, test, hardfork) do
+    hardfork_configuration = configuration(hardfork)
+
     test["post"][hardfork]
     |> Enum.with_index()
     |> Enum.each(fn {post, index} ->
@@ -662,25 +686,9 @@ defmodule Blockchain.StateTest do
     |> Keccak.kec()
   end
 
-  defp test_group_from_directory(directory_path) do
-    directory_path
-    |> String.split("/")
-    |> Enum.fetch!(-1)
-  end
-
-  defp test_directories do
-    path = Path.join([EthCommonTest.Helpers.ethereum_common_tests_path(), "GeneralStateTests"])
-    wildcard = path <> "/*"
-
-    wildcard
-    |> Path.wildcard()
-    |> Enum.sort()
-  end
-
-  defp tests(directory_path) do
-    wildcard = directory_path <> "/**/*.json"
-
-    wildcard
+  defp tests do
+    ethereum_common_tests_path()
+    |> Path.join("/GeneralStateTests/**/*.json")
     |> Path.wildcard()
     |> Enum.sort()
   end
