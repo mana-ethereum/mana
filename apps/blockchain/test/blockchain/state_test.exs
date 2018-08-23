@@ -463,6 +463,8 @@ defmodule Blockchain.StateTest do
 
   @timeout 1000 * 60 * 15
 
+  @tag :ethereum_common_tests
+  @tag :state_common_tests
   test "Blockchain state tests" do
     forks_with_existing_implementation()
     |> AsyncCommonTests.spawn_forks(&run_tests_for_fork/1)
