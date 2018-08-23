@@ -3,7 +3,7 @@ defmodule BlockchainTest do
 
   import EthCommonTest.Helpers
 
-  alias Blockchain.{Blocktree, Account, Transaction, Chain, AsyncCommonTests}
+  alias Blockchain.{Blocktree, Account, Transaction, Chain}
   alias MerklePatriciaTree.Trie
   alias Blockchain.Account.Storage
   alias Block.Header
@@ -26,12 +26,14 @@ defmodule BlockchainTest do
     "HomesteadToEIP150At5" => []
   }
 
+  @ten_minutes 1000 * 60 * 10
+
   @tag :ethereum_common_tests
   @tag :blockchain_common_tests
   test "runs blockchain tests" do
     forks_with_existing_implementation()
-    |> AsyncCommonTests.spawn_forks(&run_tests_for_fork/1)
-    |> AsyncCommonTests.receive_replies()
+    |> Task.async_stream(&run_tests_for_fork(&1), timeout: @ten_minutes)
+    |> Enum.flat_map(fn {:ok, results} -> results end)
     |> make_assertions()
   end
 
