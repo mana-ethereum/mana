@@ -1,6 +1,6 @@
 defmodule Blockchain.StateTest do
   alias MerklePatriciaTree.Trie
-  alias Blockchain.{Account, Transaction}
+  alias Blockchain.{Account, Transaction, AsyncCommonTests}
   alias Blockchain.Interface.AccountInterface
   alias Blockchain.Account.Storage
   alias ExthCrypto.Hash.Keccak
@@ -461,41 +461,71 @@ defmodule Blockchain.StateTest do
     ]
   }
 
+  @timeout 1000 * 60 * 15
+
   test "Blockchain state tests" do
-    Enum.each(test_directories(), fn directory_path ->
-      test_group = test_group_from_directory(directory_path)
+    forks_with_existing_implementation()
+    |> AsyncCommonTests.spawn_forks(&run_tests_for_fork/1)
+    |> AsyncCommonTests.receive_replies(@timeout)
+    |> make_assertions()
+  end
 
-      directory_path
-      |> tests()
-      |> Enum.each(fn test_path ->
-        test_path
-        |> read_state_test_file()
-        |> Enum.each(fn {test_name, test} ->
-          run_test(test_group, test_name, test)
-        end)
-      end)
+  defp run_tests_for_fork(fork) do
+    tests()
+    |> Stream.reject(&known_fork_failure?(&1, fork))
+    |> Enum.flat_map(fn test_path ->
+      test_path
+      |> read_state_test_file()
+      |> Stream.filter(&fork_test?(&1, fork))
+      |> Stream.flat_map(&run_test(&1, fork))
+      |> Enum.filter(&failed_test?/1)
     end)
   end
 
-  defp run_test(test_group, test_name, test) do
-    test["post"]
-    |> Enum.each(fn {hardfork, _test_data} ->
-      failing_tests = Map.get(@failing_tests, hardfork, %{})
-
-      if !Enum.member?(failing_tests, "#{test_group}/#{test_name}") do
-        hardfork_configuration = configuration(hardfork)
-
-        if hardfork_configuration do
-          run_transaction(test_name, test, hardfork, hardfork_configuration)
-        end
-      end
-    end)
+  defp fork_test?({_test_name, test_data}, fork) do
+    case Map.fetch(test_data["post"], fork) do
+      {:ok, _test_data} -> true
+      _ -> false
+    end
   end
 
-  defp run_transaction(test_name, test, hardfork, hardfork_configuration) do
+  defp forks_with_existing_implementation do
+    @failing_tests
+    |> Map.keys()
+    |> Enum.reject(&fork_without_implementation?/1)
+  end
+
+  defp fork_without_implementation?(fork) do
+    fork
+    |> configuration()
+    |> is_nil()
+  end
+
+  defp known_fork_failure?(json_test_path, hardfork) do
+    test_name = test_name_with_group_from_path(json_test_path)
+    failing_tests = Map.fetch!(@failing_tests, hardfork)
+
+    Enum.member?(failing_tests, test_name)
+  end
+
+  defp test_name_with_group_from_path(path) do
+    path_elements =
+      path
+      |> Path.rootname()
+      |> Path.split()
+
+    group_name = Enum.fetch!(path_elements, -2)
+    test_name = Enum.fetch!(path_elements, -1)
+
+    Path.join(group_name, test_name)
+  end
+
+  defp run_test({test_name, test}, hardfork) do
+    hardfork_configuration = configuration(hardfork)
+
     test["post"][hardfork]
     |> Enum.with_index()
-    |> Enum.each(fn {post, index} ->
+    |> Enum.map(fn {post, index} ->
       pre_state = account_interface(test).state
 
       indexes = post["indexes"]
@@ -541,15 +571,96 @@ defmodule Blockchain.StateTest do
         |> Map.fetch!("hash")
         |> maybe_hex()
 
-      assert state.root_hash == expected_hash,
-             "State root mismatch for #{test_name} on #{hardfork}"
-
       expected_logs = test["post"][hardfork] |> Enum.at(index) |> Map.fetch!("logs")
       logs_hash = logs_hash(logs)
 
-      assert maybe_hex(expected_logs) == logs_hash,
-             "Logs hash mismatch for #{test_name} on #{hardfork}"
+      %{
+        hardfork: hardfork,
+        test_name: test_name,
+        state_root_mismatch: state.root_hash != expected_hash,
+        state_root_expected: expected_hash,
+        state_root_actual: state.root_hash,
+        logs_hash_mismatch: maybe_hex(expected_logs) != logs_hash,
+        logs_hash_expected: maybe_hex(expected_logs),
+        logs_hash_actual: logs_hash
+      }
     end)
+  end
+
+  defp failed_test?(%{state_root_mismatch: true}), do: true
+  defp failed_test?(%{logs_hash_mismatch: true}), do: true
+  defp failed_test?(%{}), do: false
+
+  defp make_assertions([]), do: assert(true)
+  defp make_assertions(failing_tests), do: assert(false, failure_message(failing_tests))
+
+  defp failure_message(failing_tests) do
+    """
+    #{state_root_failures_message(failing_tests)}
+    =========================
+
+    #{logs_hash_error_message(failing_tests)}
+    """
+  end
+
+  defp state_root_failures_message(failing_tests) do
+    state_root_mismatch_failures =
+      Enum.filter(failing_tests, fn test -> test.state_root_mismatch end)
+
+    total_count = Enum.count(state_root_mismatch_failures)
+
+    state_root_error_messages =
+      state_root_mismatch_failures
+      |> Enum.map(&single_state_root_error_message/1)
+      |> Enum.join("\n")
+
+    """
+    State root mismatch for the following tests:
+    #{inspect(state_root_error_messages)}
+    -----------------
+    Total state root failures: #{inspect(total_count)}
+    """
+  end
+
+  defp logs_hash_error_message(failing_tests) do
+    logs_hash_mismatch_failures =
+      Enum.filter(failing_tests, fn test -> test.logs_hash_mismatch end)
+
+    total_count = Enum.count(logs_hash_mismatch_failures)
+
+    logs_hash_error_messages =
+      logs_hash_mismatch_failures
+      |> Enum.map(&single_logs_hash_error_message/1)
+      |> Enum.join("\n")
+
+    """
+    Logs hash mismatch for the following tests:
+    #{inspect(logs_hash_error_messages)}
+    -----------------
+    Total logs hash failures: #{inspect(total_count)}
+    """
+  end
+
+  defp single_logs_hash_error_message(test_result) do
+    %{
+      hardfork: hardfork,
+      test_name: test_name,
+      logs_hash_expected: expected,
+      logs_hash_actual: actual
+    } = test_result
+
+    "[#{hardfork}] #{test_name}: expected #{inspect(expected)}, but received #{inspect(actual)}"
+  end
+
+  defp single_state_root_error_message(test_result) do
+    %{
+      hardfork: hardfork,
+      test_name: test_name,
+      state_root_expected: expected,
+      state_root_actual: actual
+    } = test_result
+
+    "[#{hardfork}] #{test_name}: expected #{inspect(expected)}, but received #{inspect(actual)}"
   end
 
   def configuration(hardfork) do
@@ -607,15 +718,6 @@ defmodule Blockchain.StateTest do
     |> Poison.decode!()
   end
 
-  def state_test_file_name(group, test) do
-    file_name = Path.join(~w(st#{group} #{test}.json))
-    relative_path = Path.join(~w(.. .. ethereum_common_tests GeneralStateTests #{file_name}))
-
-    System.cwd()
-    |> Path.join(relative_path)
-    |> Path.expand()
-  end
-
   def account_interface(test) do
     db = MerklePatriciaTree.Test.random_ets_db()
 
@@ -662,25 +764,9 @@ defmodule Blockchain.StateTest do
     |> Keccak.kec()
   end
 
-  defp test_group_from_directory(directory_path) do
-    directory_path
-    |> String.split("/")
-    |> Enum.fetch!(-1)
-  end
-
-  defp test_directories do
-    path = Path.join([EthCommonTest.Helpers.ethereum_common_tests_path(), "GeneralStateTests"])
-    wildcard = path <> "/*"
-
-    wildcard
-    |> Path.wildcard()
-    |> Enum.sort()
-  end
-
-  defp tests(directory_path) do
-    wildcard = directory_path <> "/**/*.json"
-
-    wildcard
+  defp tests do
+    ethereum_common_tests_path()
+    |> Path.join("/GeneralStateTests/**/*.json")
     |> Path.wildcard()
     |> Enum.sort()
   end
