@@ -1,7 +1,7 @@
 version: 2
 jobs:
   build:
-    parallelism: 1
+    parallelism: 3
     resource_class: large
     docker:
       - image: circleci/elixir:1.7.2
@@ -78,7 +78,10 @@ jobs:
           paths: "_build"
 
       - run:
-          command: mix test --exclude network --exclude pending
+          name: Run Tests
+          command: |
+            echo "Running in node $CIRCLE_NODE_INDEX"
+            bin/test_command_for_node $CIRCLE_NODE_INDEX
           no_output_timeout: "20m"
 
       - persist_to_workspace:

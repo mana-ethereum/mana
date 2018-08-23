@@ -26,6 +26,8 @@ defmodule BlockchainTest do
     "HomesteadToEIP150At5" => []
   }
 
+  @tag :ethereum_common_tests
+  @tag :blockchain_common_tests
   test "runs blockchain tests" do
     forks_with_existing_implementation()
     |> AsyncCommonTests.spawn_forks(&run_tests_for_fork/1)
