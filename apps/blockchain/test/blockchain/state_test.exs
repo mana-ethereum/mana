@@ -1,6 +1,6 @@
 defmodule Blockchain.StateTest do
   alias MerklePatriciaTree.Trie
-  alias Blockchain.{Account, Transaction, AsyncCommonTests}
+  alias Blockchain.{Account, Transaction}
   alias Blockchain.Interface.AccountInterface
   alias Blockchain.Account.Storage
   alias ExthCrypto.Hash.Keccak
@@ -461,14 +461,14 @@ defmodule Blockchain.StateTest do
     ]
   }
 
-  @timeout 1000 * 60 * 15
+  @fifteen_minutes 1000 * 60 * 15
 
   @tag :ethereum_common_tests
   @tag :state_common_tests
   test "Blockchain state tests" do
     forks_with_existing_implementation()
-    |> AsyncCommonTests.spawn_forks(&run_tests_for_fork/1)
-    |> AsyncCommonTests.receive_replies(@timeout)
+    |> Task.async_stream(&run_tests_for_fork(&1), timeout: @fifteen_minutes)
+    |> Enum.flat_map(fn {:ok, results} -> results end)
     |> make_assertions()
   end
 
