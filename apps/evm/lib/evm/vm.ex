@@ -6,7 +6,7 @@ defmodule EVM.VM do
 
   alias EVM.{SubState, MachineCode, MachineState, ExecEnv, Functions, Gas, Operation, Debugger}
 
-  @type output :: binary() | :failed
+  @type output :: binary() | :failed | {:revert, binary()}
 
   @doc """
   This function computes the Ξ function Eq.(123) of the Section 9.4 of the Yellow Paper.
@@ -110,7 +110,7 @@ defmodule EVM.VM do
 
           # revert state and return
           {:revert, output} ->
-            {n_machine_state, original_sub_state, original_exec_env, output}
+            {n_machine_state, original_sub_state, original_exec_env, {:revert, output}}
 
           # break execution and return
           output ->

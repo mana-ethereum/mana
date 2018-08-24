@@ -68,7 +68,7 @@ defmodule Blockchain.Contract.CreateContract do
           {:ok, {params.state, 0, SubState.empty()}}
       end
     else
-      result = {_, _, _, output} = create(params, contract_address)
+      result = {rem_gas, _, _, output} = create(params, contract_address)
 
       # From the Yellow Paper:
       # if the execution halts in an exceptional fashion
@@ -77,10 +77,10 @@ defmodule Blockchain.Contract.CreateContract do
       # is refunded to the caller and the state is reverted to the
       # point immediately prior to balance transfer.
       #
-      if output == :failed do
-        error(params.state)
-      else
-        finalize(result, params, contract_address)
+      case output do
+        :failed -> error(params.state)
+        {:revert, _} -> {:error, {params.state, rem_gas, SubState.empty()}}
+        _ -> finalize(result, params, contract_address)
       end
     end
   end

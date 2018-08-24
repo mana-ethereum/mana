@@ -104,10 +104,15 @@ defmodule Blockchain.Contract.MessageCall do
     # valid jump destination or invalid instruction), then no gas
     # is refunded to the caller and the state is reverted to the
     # point immediately prior to balance transfer.
-    if output == :failed do
-      {params.state, 0, SubState.empty(), :failed}
-    else
-      {exec_env.account_interface.state, gas, sub_state, output}
+    case output do
+      :failed ->
+        {params.state, 0, SubState.empty(), :failed}
+
+      {:revert, _output} ->
+        {params.state, gas, SubState.empty(), :failed}
+
+      _ ->
+        {exec_env.account_interface.state, gas, sub_state, output}
     end
   end
 end
