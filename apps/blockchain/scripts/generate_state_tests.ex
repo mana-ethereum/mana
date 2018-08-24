@@ -8,49 +8,49 @@ defmodule GenerateStateTests do
   use EthCommonTest.Harness
 
   @hardforks ["EIP158", "EIP150", "Homestead", "Frontier", "Byzantium"]
+  @twenty_minutes 60 * 20 * 1000
+  @initial_state %{
+    passing: %{
+      "Homestead" => [],
+      "Frontier" => [],
+      "EIP150" => [],
+      "EIP158" => [],
+      "Byzantium" => []
+    },
+    failing: %{
+      "Homestead" => [],
+      "Frontier" => [],
+      "EIP150" => [],
+      "EIP158" => [],
+      "Byzantium" => []
+    }
+  }
 
   def run(_args) do
-    initial_state = %{
-      passing: %{
-        "Homestead" => [],
-        "Frontier" => [],
-        "EIP150" => [],
-        "EIP158" => [],
-        "Byzantium" => []
-      },
-      failing: %{
-        "Homestead" => [],
-        "Frontier" => [],
-        "EIP150" => [],
-        "EIP158" => [],
-        "Byzantium" => []
-      }
-    }
-
     completed_tests =
-      Enum.reduce(test_directories(), initial_state, fn directory_path, completed_tests ->
-        test_group = Enum.fetch!(String.split(directory_path, "/"), 4)
-
-        directory_path
-        |> tests()
-        |> Enum.reduce(completed_tests, fn test_path, completed_tests ->
-          test_path
-          |> read_state_test_file()
-          |> Enum.reduce(completed_tests, fn {test_name, test}, completed_tests ->
-            run_test(completed_tests, test_group, test_name, test)
+      test_directories()
+      |> Task.async_stream(&run_group_tests/1, timeout: @twenty_minutes)
+      |> Enum.reduce(@initial_state, fn {:ok, result}, acc ->
+        passing =
+          Map.merge(acc[:passing], result[:passing], fn _k, v1, v2 ->
+            v1
+            |> Kernel.++(v2)
+            |> Enum.sort()
           end)
-        end)
-      end)
 
-    failing_tests =
-      completed_tests[:failing]
-      |> Enum.map(fn {hardfork, tests} ->
-        {hardfork, Enum.dedup(tests)}
+        failing =
+          Map.merge(acc[:failing], result[:failing], fn _k, v1, v2 ->
+            v1
+            |> Kernel.++(v2)
+            |> Enum.dedup()
+            |> Enum.sort()
+          end)
+
+        %{acc | passing: passing, failing: failing}
       end)
-      |> Enum.into(%{})
 
     IO.puts("Failing tests")
-    IO.puts(inspect(failing_tests, limit: :infinity))
+    IO.puts(inspect(completed_tests[:failing], limit: :infinity))
 
     for hardfork <- @hardforks do
       passing_tests = length(completed_tests[:passing][hardfork])
@@ -63,6 +63,20 @@ defmodule GenerateStateTests do
         }%"
       )
     end
+  end
+
+  defp run_group_tests(directory_path) do
+    test_group = Enum.fetch!(String.split(directory_path, "/"), -1)
+
+    directory_path
+    |> tests()
+    |> Enum.reduce(@initial_state, fn test_path, completed_tests ->
+      test_path
+      |> read_state_test_file()
+      |> Enum.reduce(completed_tests, fn {test_name, test}, completed_tests ->
+        run_test(completed_tests, test_group, test_name, test)
+      end)
+    end)
   end
 
   defp run_test(completed_tests, test_group, test_name, test) do
