@@ -126,7 +126,7 @@ defmodule EVM.MessageCall do
   end
 
   def update_state(
-        {_gas_remaining, _n_sub_state, _n_exec_env, output} = exec_result,
+        exec_result = {_gas_remaining, _n_sub_state, _n_exec_env, output},
         message_call
       ) do
     case output do
