@@ -1,5 +1,5 @@
 defmodule EVM.MessageCall do
-  alias EVM.{ExecEnv, Memory, Builtin, VM, Functions, Stack, MachineState, SubState}
+  alias EVM.{ExecEnv, Memory, Builtin, VM, Functions, MachineState, SubState}
   alias EVM.Interface.AccountInterface
 
   @moduledoc """
@@ -149,7 +149,7 @@ defmodule EVM.MessageCall do
 
     machine_state =
       message_call.current_machine_state
-      |> MachineState.push(0)
+      |> push_failure_on_stack()
       |> MachineState.refund_gas(gas_remaining)
 
     updated_machine_state = Memory.write(machine_state, out_offset, output)
@@ -170,7 +170,7 @@ defmodule EVM.MessageCall do
 
     machine_state =
       message_call.current_machine_state
-      |> MachineState.push(1)
+      |> push_success_on_stack()
       |> MachineState.refund_gas(gas_remaining)
 
     machine_state =
@@ -264,15 +264,19 @@ defmodule EVM.MessageCall do
   end
 
   defp failed_call(message_call, remaining_gas \\ 0) do
-    machine_state = message_call.current_machine_state
-    updated_stack = Stack.push(machine_state.stack, 0)
-
-    updated_machine_state = %{
-      machine_state
-      | stack: updated_stack,
-        gas: machine_state.gas + remaining_gas
-    }
+    updated_machine_state =
+      message_call.current_machine_state
+      |> push_failure_on_stack()
+      |> MachineState.refund_gas(remaining_gas)
 
     %{machine_state: updated_machine_state}
+  end
+
+  defp push_failure_on_stack(machine_state) do
+    MachineState.push(machine_state, 0)
+  end
+
+  defp push_success_on_stack(machine_state) do
+    MachineState.push(machine_state, 1)
   end
 end
