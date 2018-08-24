@@ -15,7 +15,7 @@ defmodule EVM.MachineState do
             active_words: 0,
             previously_active_words: 0,
             stack: [],
-            last_return_data: []
+            last_return_data: <<>>
 
   @type program_counter :: integer()
   @type memory :: binary()
@@ -35,7 +35,7 @@ defmodule EVM.MachineState do
           active_words: integer(),
           previously_active_words: integer(),
           stack: Stack.t(),
-          last_return_data: [EVM.val()] | []
+          last_return_data: binary()
         }
 
   @doc """

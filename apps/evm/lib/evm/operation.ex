@@ -349,9 +349,7 @@ defmodule EVM.Operation do
         sub_state,
         exec_env
       ) do
-    next_machine_state = %{updated_machine_state | last_return_data: []}
-
-    {next_machine_state, sub_state, exec_env}
+    {updated_machine_state, sub_state, exec_env}
   end
 
   def merge_state(op_result = %{}, _operation, machine_state, sub_state, exec_env) do
