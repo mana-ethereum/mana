@@ -78,7 +78,7 @@ defmodule EVM.Operation.SystemTest do
                1 => %{balance: 0, code: "", nonce: 0, storage: %{}}
              }
 
-      assert output == <<0>>
+      assert output == {:revert, <<0>>}
     end
   end
 

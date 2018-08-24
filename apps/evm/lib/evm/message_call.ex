@@ -1,5 +1,5 @@
 defmodule EVM.MessageCall do
-  alias EVM.{ExecEnv, Memory, Builtin, VM, Functions, Stack, MachineState, SubState}
+  alias EVM.{ExecEnv, Memory, Builtin, VM, Functions, MachineState, SubState}
   alias EVM.Interface.AccountInterface
 
   @moduledoc """
@@ -125,41 +125,76 @@ defmodule EVM.MessageCall do
     %{message_call | current_exec_env: exec_env}
   end
 
-  def update_state({gas_remaining, n_sub_state, n_exec_env, output}, message_call) do
-    if output == :failed do
-      failed_call(message_call)
-    else
-      {out_offset, _out_size} = message_call.output_params
+  def update_state(
+        exec_result = {_gas_remaining, _n_sub_state, _n_exec_env, output},
+        message_call
+      ) do
+    case output do
+      :failed ->
+        failed_call(message_call)
 
-      machine_state =
-        message_call.current_machine_state
-        |> MachineState.push(1)
-        |> MachineState.refund_gas(gas_remaining)
+      {:revert, _output} ->
+        finalize_reverted_message_call(exec_result, message_call)
 
-      machine_state =
-        if output == :invalid_input do
-          %{machine_state | last_return_data: []}
-        else
-          updated_machine_state = Memory.write(machine_state, out_offset, output)
-          list_output = :binary.bin_to_list(output)
-
-          %{updated_machine_state | last_return_data: list_output}
-        end
-
-      exec_env =
-        Map.put(message_call.current_exec_env, :account_interface, n_exec_env.account_interface)
-
-      sub_state =
-        message_call.current_sub_state
-        |> SubState.merge(n_sub_state)
-        |> SubState.add_touched_account(message_call.recipient)
-
-      %{
-        machine_state: machine_state,
-        exec_env: exec_env,
-        sub_state: sub_state
-      }
+      _ ->
+        finalize_successful_message_call(exec_result, message_call)
     end
+  end
+
+  defp finalize_reverted_message_call(
+         {gas_remaining, _n_sub_state, _ren_exec_env, {:revert, output}},
+         message_call
+       ) do
+    {out_offset, _out_size} = message_call.output_params
+
+    machine_state =
+      message_call.current_machine_state
+      |> push_failure_on_stack()
+      |> MachineState.refund_gas(gas_remaining)
+
+    updated_machine_state = Memory.write(machine_state, out_offset, output)
+    list_output = :binary.bin_to_list(output)
+
+    updated_machine_state = %{updated_machine_state | last_return_data: list_output}
+
+    %{
+      machine_state: updated_machine_state
+    }
+  end
+
+  defp finalize_successful_message_call(
+         {gas_remaining, n_sub_state, n_exec_env, output},
+         message_call
+       ) do
+    {out_offset, _out_size} = message_call.output_params
+
+    machine_state =
+      message_call.current_machine_state
+      |> push_success_on_stack()
+      |> MachineState.refund_gas(gas_remaining)
+
+    machine_state =
+      if output == :invalid_input do
+        %{machine_state | last_return_data: <<>>}
+      else
+        updated_machine_state = Memory.write(machine_state, out_offset, output)
+
+        %{updated_machine_state | last_return_data: output}
+      end
+
+    exec_env =
+      Map.put(message_call.current_exec_env, :account_interface, n_exec_env.account_interface)
+
+    sub_state =
+      message_call.current_sub_state
+      |> SubState.merge(n_sub_state)
+      |> SubState.add_touched_account(message_call.recipient)
+
+    %{
+      machine_state: machine_state,
+      exec_env: exec_env,
+      sub_state: sub_state
+    }
   end
 
   defp prepare_call_execution_env(message_call) do
@@ -229,15 +264,19 @@ defmodule EVM.MessageCall do
   end
 
   defp failed_call(message_call, remaining_gas \\ 0) do
-    machine_state = message_call.current_machine_state
-    updated_stack = Stack.push(machine_state.stack, 0)
-
-    updated_machine_state = %{
-      machine_state
-      | stack: updated_stack,
-        gas: machine_state.gas + remaining_gas
-    }
+    updated_machine_state =
+      message_call.current_machine_state
+      |> push_failure_on_stack()
+      |> MachineState.refund_gas(remaining_gas)
 
     %{machine_state: updated_machine_state}
+  end
+
+  defp push_failure_on_stack(machine_state) do
+    MachineState.push(machine_state, 0)
+  end
+
+  defp push_success_on_stack(machine_state) do
+    MachineState.push(machine_state, 1)
   end
 end
