@@ -149,7 +149,7 @@ defmodule EVM.MessageCall do
 
     machine_state =
       message_call.current_machine_state
-      |> MachineState.push(1)
+      |> MachineState.push(0)
       |> MachineState.refund_gas(gas_remaining)
 
     updated_machine_state = Memory.write(machine_state, out_offset, output)
