@@ -11,8 +11,6 @@ defmodule Blockchain.StateTest do
   @failing_tests %{
     "Byzantium" => [
       "stCreateTest/CreateOOGafterInitCodeReturndata",
-      "stCreateTest/CreateOOGafterInitCodeRevert",
-      "stCreateTest/CreateOOGafterInitCodeRevert2",
       "stPreCompiledContracts/modexp",
       "stPreCompiledContracts/modexp_37120_22411_22000",
       "stPreCompiledContracts/modexp_37120_37111_0_1000000",
