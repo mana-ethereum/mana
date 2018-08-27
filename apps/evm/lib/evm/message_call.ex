@@ -221,7 +221,7 @@ defmodule EVM.MessageCall do
   end
 
   defp execute_call(call_exec_env, message_call) do
-    run = get_run_function(message_call.code_owner)
+    run = get_run_function(message_call.code_owner, message_call.current_exec_env.config)
     run.(message_call.execution_value, call_exec_env)
   end
 
@@ -250,16 +250,19 @@ defmodule EVM.MessageCall do
       iex> EVM.MessageCall.get_run_function(<<6::160>>)
       &EVM.VM.run/2
   """
-  @spec get_run_function(EVM.address()) ::
+  @spec get_run_function(EVM.address(), EVM.Configuration.t()) ::
           (EVM.Gas.t(), EVM.ExecEnv.t() ->
              {EVM.state(), EVM.Gas.t(), EVM.SubState.t(), EVM.VM.output()})
-  def get_run_function(code_owner) do
-    case :binary.decode_unsigned(code_owner) do
-      1 -> &Builtin.run_ecrec/2
-      2 -> &Builtin.run_sha256/2
-      3 -> &Builtin.run_rip160/2
-      4 -> &Builtin.run_id/2
-      _ -> &VM.run/2
+  def get_run_function(code_owner, config) do
+    address = :binary.decode_unsigned(code_owner)
+
+    cond do
+      address == 1 -> &Builtin.run_ecrec/2
+      address == 2 -> &Builtin.run_sha256/2
+      address == 3 -> &Builtin.run_rip160/2
+      address == 4 -> &Builtin.run_id/2
+      address == 5 && EVM.Configuration.has_mod_exp_builtin?(config) -> &Builtin.exp_mod/2
+      true -> &VM.run/2
     end
   end
 

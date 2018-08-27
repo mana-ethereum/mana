@@ -17,7 +17,8 @@ defmodule EVM.Configuration.Frontier do
             clean_touched_accounts: false,
             has_revert: false,
             has_static_call: false,
-            support_variable_length_return_value: false
+            support_variable_length_return_value: false,
+            has_mod_exp_builtin: false
 
   def new do
     %__MODULE__{}
@@ -84,4 +85,7 @@ defimpl EVM.Configuration, for: EVM.Configuration.Frontier do
   @spec support_variable_length_return_value?(Configuration.t()) :: boolean()
   def support_variable_length_return_value?(config),
     do: config.support_variable_length_return_value
+
+  @spec has_mod_exp_builtin?(Configuration.t()) :: boolean()
+  def has_mod_exp_builtin?(config), do: config.has_mod_exp_builtin
 end

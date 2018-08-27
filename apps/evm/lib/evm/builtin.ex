@@ -1,6 +1,6 @@
 defmodule EVM.Builtin do
   alias ExthCrypto.{Signature, Key}
-  alias EVM.Helpers
+  alias EVM.{Helpers, Memory}
 
   @moduledoc """
   Implements the built-in functions as defined in Appendix E
@@ -16,6 +16,7 @@ defmodule EVM.Builtin do
   @g_identity_base 15
   @g_identity_byte 3
   @g_ecrec 3000
+  @g_quaddivisor 20
 
   @doc """
   A precompiled contract that recovers a public key from a signed hash
@@ -146,6 +147,85 @@ defmodule EVM.Builtin do
       {remaining_gas, %EVM.SubState{}, exec_env, data}
     else
       {0, %EVM.SubState{}, exec_env, :failed}
+    end
+  end
+
+  @spec exp_mod(EVM.Gas.t(), EVM.ExecEnv.t()) ::
+          {EVM.Gas.t(), EVM.SubState.t(), EVM.ExecEnv.t(), EVM.VM.output()}
+  def exp_mod(gas, exec_env) do
+    length_data = Memory.read_zeroed_memory(exec_env.data, 0, 96)
+
+    <<b_length_bin::binary-size(32), e_length_bin::binary-size(32),
+      m_length_bin::binary-size(32)>> = length_data
+
+    b_length = :binary.decode_unsigned(b_length_bin)
+    e_length = :binary.decode_unsigned(e_length_bin)
+    m_length = :binary.decode_unsigned(m_length_bin)
+
+    if b_length >= 24_577 || e_length >= 24_577 || m_length >= 24_577 do
+      data = Memory.read_zeroed_memory(exec_env.data, 96, b_length + e_length + m_length)
+
+      <<b_bin::binary-size(b_length), e_bin::binary-size(e_length), m_bin::binary-size(m_length)>> =
+        data
+
+      b = :binary.decode_unsigned(b_bin)
+      e = :binary.decode_unsigned(e_bin)
+      m = :binary.decode_unsigned(m_bin)
+
+      required_gas =
+        f(max(b_length, m_length)) *
+          max(e_length_prime(e_length, e, {exec_env.data, b_length}), 1) / @g_quaddivisor
+
+      if required_gas <= gas do
+        result =
+          cond do
+            m == 0 -> 0
+            b == 0 -> 0
+            e == 0 -> 1
+            true -> :crypto.mod_pow(b, e, m)
+          end
+          |> IO.inspect()
+          |> :binary.encode_unsigned()
+
+        remaining_gas = gas - required_gas
+
+        {remaining_gas, %EVM.SubState{}, exec_env, result}
+      else
+        {0, %EVM.SubState{}, exec_env, :failed}
+      end
+    else
+      {0, %EVM.SubState{}, exec_env, :failed}
+    end
+  end
+
+  def f(x) when x <= 64, do: x * x
+
+  def f(x) when x > 64 and x <= 1024 do
+    MathHelper.floor(x * x / 4) + 96 * x - 3_072
+  end
+
+  def f(x) do
+    MathHelper.floor(x * x / 16) + 480 * x - 199_680
+  end
+
+  def e_length_prime(e_length, e, _) when e == 0 and e_length <= 32, do: 0
+
+  def e_length_prime(e_length, e, _) when e != 0 and e_length <= 32 do
+    e
+    |> :math.log2()
+    |> MathHelper.floor()
+  end
+
+  def e_length_prime(e_length, _e, {data, b_length}) do
+    b_length_data =
+      data
+      |> Memory.read_zeroed_memory(96 + b_length, 32)
+      |> :binary.decode_unsigned()
+
+    if e_length > 32 && b_length_data != 0 do
+      8 * (e_length - 32) + MathHelper.floor(:math.log2(b_length_data))
+    else
+      8 * (e_length - 32)
     end
   end
 end

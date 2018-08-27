@@ -2,7 +2,8 @@ defmodule EVM.Configuration.Byzantium do
   defstruct fallback_config: EVM.Configuration.EIP158.new(),
             has_revert: true,
             has_static_call: true,
-            support_variable_length_return_value: true
+            support_variable_length_return_value: true,
+            has_mod_exp_builtin: true
 
   def new do
     %__MODULE__{}
@@ -77,4 +78,7 @@ defimpl EVM.Configuration, for: EVM.Configuration.Byzantium do
   @spec support_variable_length_return_value?(Configuration.t()) :: boolean()
   def support_variable_length_return_value?(config),
     do: config.support_variable_length_return_value
+
+  @spec has_mod_exp_builtin?(Configuration.t()) :: boolean()
+  def has_mod_exp_builtin?(config), do: config.has_mod_exp_builtin
 end
