@@ -176,12 +176,11 @@ defmodule EVM.Builtin do
       if required_gas <= gas do
         result =
           cond do
-            m <= 1 -> 0
-            b == 0 -> 0
-            e == 0 -> 1
+            m <= 1 -> <<0>>
+            b == 0 -> <<0>>
+            e == 0 -> <<1>>
             true -> :crypto.mod_pow(b, e, m)
           end
-          |> :binary.encode_unsigned()
 
         remaining_gas = gas - required_gas
 
