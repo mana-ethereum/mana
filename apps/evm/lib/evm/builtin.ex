@@ -162,7 +162,7 @@ defmodule EVM.Builtin do
     e_length = :binary.decode_unsigned(e_length_bin)
     m_length = :binary.decode_unsigned(m_length_bin)
 
-    if b_length >= 24_577 || e_length >= 24_577 || m_length >= 24_577 do
+    if b_length <= 24_577 && e_length <= 24_577 && m_length <= 24_577 do
       data = Memory.read_zeroed_memory(exec_env.data, 96, b_length + e_length + m_length)
 
       <<b_bin::binary-size(b_length), e_bin::binary-size(e_length), m_bin::binary-size(m_length)>> =
@@ -173,8 +173,9 @@ defmodule EVM.Builtin do
       m = :binary.decode_unsigned(m_bin)
 
       required_gas =
-        f(max(b_length, m_length)) *
-          max(e_length_prime(e_length, e, {exec_env.data, b_length}), 1) / @g_quaddivisor
+        (f(max(b_length, m_length)) *
+           max(e_length_prime(e_length, e, {exec_env.data, b_length}), 1) / @g_quaddivisor)
+        |> round()
 
       if required_gas <= gas do
         result =
@@ -184,7 +185,6 @@ defmodule EVM.Builtin do
             e == 0 -> 1
             true -> :crypto.mod_pow(b, e, m)
           end
-          |> IO.inspect()
           |> :binary.encode_unsigned()
 
         remaining_gas = gas - required_gas
