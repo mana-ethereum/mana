@@ -27,18 +27,33 @@ defmodule BlockchainTest do
   }
 
   @ten_minutes 1000 * 60 * 10
+  @num_test_groups 10
 
   @tag :ethereum_common_tests
   @tag :blockchain_common_tests
   test "runs blockchain tests" do
-    forks_with_existing_implementation()
-    |> Task.async_stream(&run_tests_for_fork(&1), timeout: @ten_minutes)
+    grouped_test_per_fork()
+    |> Task.async_stream(&run_tests(&1), timeout: @ten_minutes)
     |> Enum.flat_map(fn {:ok, results} -> results end)
     |> make_assertions()
   end
 
-  defp run_tests_for_fork(fork) do
-    tests()
+  defp grouped_test_per_fork do
+    for fork <- forks_with_existing_implementation(),
+        test_group <- split_tests_into_groups(@num_test_groups),
+        do: {fork, test_group}
+  end
+
+  defp split_tests_into_groups(num_groups_desired) do
+    all_tests = tests()
+    test_count = Enum.count(all_tests)
+    tests_per_group = div(test_count, num_groups_desired)
+
+    Enum.chunk_every(all_tests, tests_per_group)
+  end
+
+  defp run_tests({fork, tests}) do
+    tests
     |> Stream.reject(&known_fork_failures?(&1, fork))
     |> Enum.flat_map(fn json_test_path ->
       json_test_path
