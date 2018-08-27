@@ -13,8 +13,6 @@ defmodule Blockchain.StateTest do
       "stBugs/returndatacopyPythonBug_Tue_03_48_41-1432",
       "stCreateTest/CreateOOGafterInitCodeReturndata",
       "stPreCompiledContracts/modexp",
-      "stPreCompiledContracts/modexp_37120_37111_0_1000000",
-      "stPreCompiledContracts/modexp_37120_37111_1_1000000",
       "stPreCompiledContracts/modexp_37120_37111_37111_1000000",
       "stPreCompiledContracts/modexp_37120_37111_97_1000000",
       "stPreCompiledContracts/modexp_39936_1_55201_1000000",

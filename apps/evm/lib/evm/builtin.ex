@@ -1,6 +1,6 @@
 defmodule EVM.Builtin do
   alias ExthCrypto.{Signature, Key}
-  alias EVM.{Helpers, Memory}
+  alias EVM.Memory
 
   @moduledoc """
   Implements the built-in functions as defined in Appendix E
@@ -42,17 +42,12 @@ defmodule EVM.Builtin do
   @spec run_ecrec(EVM.Gas.t(), EVM.ExecEnv.t()) ::
           {EVM.Gas.t(), EVM.SubState.t(), EVM.ExecEnv.t(), EVM.VM.output()}
   def run_ecrec(gas, exec_env = %EVM.ExecEnv{data: data}) do
-    used_gas = @g_ecrec
+    required_gas = @g_ecrec
 
-    if used_gas <= gas do
-      data =
-        data
-        |> Helpers.right_pad_bytes(128)
-        |> :binary.bin_to_list()
-        |> Enum.take(128)
-        |> :binary.list_to_bin()
+    if required_gas <= gas do
+      data = Memory.read_zeroed_memory(data, 0, 128)
 
-      remaining_gas = gas - used_gas
+      remaining_gas = gas - required_gas
 
       <<h::binary-size(32), v_with_version::binary-size(32), r::binary-size(32),
         s::binary-size(32)>> = data
@@ -91,10 +86,10 @@ defmodule EVM.Builtin do
   @spec run_sha256(EVM.Gas.t(), EVM.ExecEnv.t()) ::
           {EVM.Gas.t(), EVM.SubState.t(), EVM.ExecEnv.t(), EVM.VM.output()}
   def run_sha256(gas, exec_env = %EVM.ExecEnv{data: data}) do
-    used_gas = @g_sha256 + @g_256_byte * MathHelper.bits_to_words(byte_size(data))
+    required_gas = @g_sha256 + @g_256_byte * MathHelper.bits_to_words(byte_size(data))
 
-    if used_gas <= gas do
-      remaining_gas = gas - used_gas
+    if required_gas <= gas do
+      remaining_gas = gas - required_gas
       result = :crypto.hash(:sha256, data)
       {remaining_gas, %EVM.SubState{}, exec_env, result}
     else
@@ -115,10 +110,10 @@ defmodule EVM.Builtin do
   @spec run_rip160(EVM.Gas.t(), EVM.ExecEnv.t()) ::
           {EVM.Gas.t(), EVM.SubState.t(), EVM.ExecEnv.t(), EVM.VM.output()}
   def run_rip160(gas, exec_env = %EVM.ExecEnv{data: data}) do
-    used_gas = @g_rip160_base + @g_rip160_byte * MathHelper.bits_to_words(byte_size(data))
+    required_gas = @g_rip160_base + @g_rip160_byte * MathHelper.bits_to_words(byte_size(data))
 
-    if used_gas <= gas do
-      remaining_gas = gas - used_gas
+    if required_gas <= gas do
+      remaining_gas = gas - required_gas
       result = :crypto.hash(:ripemd160, data) |> EVM.Helpers.left_pad_bytes(32)
       {remaining_gas, %EVM.SubState{}, exec_env, result}
     else
@@ -139,10 +134,10 @@ defmodule EVM.Builtin do
           {EVM.Gas.t(), EVM.SubState.t(), EVM.ExecEnv.t(), EVM.VM.output()}
   def run_id(gas, exec_env) do
     data = exec_env.data
-    used_gas = @g_identity_base + @g_identity_byte * MathHelper.bits_to_words(byte_size(data))
+    required_gas = @g_identity_base + @g_identity_byte * MathHelper.bits_to_words(byte_size(data))
 
-    if used_gas <= gas do
-      remaining_gas = gas - used_gas
+    if required_gas <= gas do
+      remaining_gas = gas - required_gas
 
       {remaining_gas, %EVM.SubState{}, exec_env, data}
     else
@@ -173,7 +168,7 @@ defmodule EVM.Builtin do
       m = :binary.decode_unsigned(m_bin)
 
       required_gas =
-        round(
+        MathHelper.floor(
           f(max(b_length, m_length)) *
             max(e_length_prime(e_length, e, {exec_env.data, b_length}), 1) / @g_quaddivisor
         )
@@ -181,7 +176,7 @@ defmodule EVM.Builtin do
       if required_gas <= gas do
         result =
           cond do
-            m == 0 -> 0
+            m <= 1 -> 0
             b == 0 -> 0
             e == 0 -> 1
             true -> :crypto.mod_pow(b, e, m)
@@ -220,7 +215,7 @@ defmodule EVM.Builtin do
   def e_length_prime(e_length, _e, {data, b_length}) do
     b_length_data =
       data
-      |> Memory.read_zeroed_memory(96 + b_length, 32)
+      |> Memory.read_zeroed_memory(95 + b_length, 32)
       |> :binary.decode_unsigned()
 
     if e_length > 32 && b_length_data != 0 do
