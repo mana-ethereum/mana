@@ -232,22 +232,22 @@ defmodule EVM.MessageCall do
 
   ## Examples
 
-      iex> EVM.MessageCall.get_run_function(<<1::160>>)
+      iex> EVM.MessageCall.get_run_function(<<1::160>>, EVM.Configuration.Frontier.new())
       &EVM.Builtin.run_ecrec/2
 
-      iex> EVM.MessageCall.get_run_function(<<2::160>>)
+      iex> EVM.MessageCall.get_run_function(<<2::160>>, EVM.Configuration.Frontier.new())
       &EVM.Builtin.run_sha256/2
 
-      iex> EVM.MessageCall.get_run_function(<<3::160>>)
+      iex> EVM.MessageCall.get_run_function(<<3::160>>, EVM.Configuration.Frontier.new())
       &EVM.Builtin.run_rip160/2
 
-      iex> EVM.MessageCall.get_run_function(<<4::160>>)
+      iex> EVM.MessageCall.get_run_function(<<4::160>>, EVM.Configuration.Frontier.new())
       &EVM.Builtin.run_id/2
 
-      iex> EVM.MessageCall.get_run_function(<<5::160>>)
+      iex> EVM.MessageCall.get_run_function(<<5::160>>, EVM.Configuration.Frontier.new())
       &EVM.VM.run/2
 
-      iex> EVM.MessageCall.get_run_function(<<6::160>>)
+      iex> EVM.MessageCall.get_run_function(<<6::160>>, EVM.Configuration.Frontier.new())
       &EVM.VM.run/2
   """
   @spec get_run_function(EVM.address(), EVM.Configuration.t()) ::
