@@ -173,9 +173,10 @@ defmodule EVM.Builtin do
       m = :binary.decode_unsigned(m_bin)
 
       required_gas =
-        (f(max(b_length, m_length)) *
-           max(e_length_prime(e_length, e, {exec_env.data, b_length}), 1) / @g_quaddivisor)
-        |> round()
+        round(
+          f(max(b_length, m_length)) *
+            max(e_length_prime(e_length, e, {exec_env.data, b_length}), 1) / @g_quaddivisor
+        )
 
       if required_gas <= gas do
         result =
