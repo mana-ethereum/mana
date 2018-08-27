@@ -11,9 +11,9 @@ defmodule Blockchain.Mixfile do
       lockfile: "../../mix.lock",
       description: "Ethereum's Blockchain Manager",
       package: [
-        maintainers: ["Geoffrey Hayes", "Ayrat Badykov", "Mason Forest"],
-        licenses: ["MIT"],
-        links: %{"GitHub" => "https://github.com/exthereum/blockchain"}
+        maintainers: ["Ayrat Badykov", "Mason Forest"],
+        licenses: ["LGPL v3"],
+        links: %{"GitHub" => "https://github.com/poanetwork/mana/apps/blockchain"}
       ],
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
