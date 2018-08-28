@@ -169,8 +169,7 @@ defmodule EVM.Builtin do
 
       required_gas =
         MathHelper.floor(
-          f(max(b_length, m_length)) *
-            max(e_length_prime(e_length, e, {exec_env.data, b_length}), 1) / @g_quaddivisor
+          f(max(b_length, m_length)) * max(e_length_prime(e_length, e), 1) / @g_quaddivisor
         )
 
       if required_gas <= gas do
@@ -204,22 +203,25 @@ defmodule EVM.Builtin do
     MathHelper.floor(x * x / 16) + 480 * x - 199_680
   end
 
-  def e_length_prime(e_length, e, _) when e == 0 and e_length <= 32, do: 0
+  def e_length_prime(e_length, e) when e == 0 and e_length <= 32, do: 0
 
-  def e_length_prime(e_length, e, _) when e != 0 and e_length <= 32 do
+  def e_length_prime(e_length, e) when e != 0 and e_length <= 32 do
     e
     |> :math.log2()
     |> MathHelper.floor()
   end
 
-  def e_length_prime(e_length, _e, {data, b_length}) do
-    b_length_data =
-      data
-      |> Memory.read_zeroed_memory(95 + b_length, 32)
-      |> :binary.decode_unsigned()
+  def e_length_prime(e_length, e) do
+    bin_e = e |> :binary.encode_unsigned()
+    len = min(32, byte_size(bin_e))
 
-    if e_length > 32 && b_length_data != 0 do
-      8 * (e_length - 32) + MathHelper.floor(:math.log2(b_length_data))
+    <<e_first_32_bytes_bin::binary-size(len), _::binary>> = bin_e
+
+    e_first_32_bytes = e_first_32_bytes_bin |> :binary.decode_unsigned()
+
+    if e_length > 32 && e_first_32_bytes != 0 do
+
+      8 * (e_length - 32) + MathHelper.floor(:math.log2(e_first_32_bytes) - 1)
     else
       8 * (e_length - 32)
     end
