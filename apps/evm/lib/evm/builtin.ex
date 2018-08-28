@@ -18,6 +18,8 @@ defmodule EVM.Builtin do
   @g_ecrec 3000
   @g_quaddivisor 20
 
+  @data_size_limit 24_577
+
   @doc """
   A precompiled contract that recovers a public key from a signed hash
   (Elliptic curve digital signature algorithm public key recovery function)
@@ -145,56 +147,66 @@ defmodule EVM.Builtin do
     end
   end
 
-  @spec exp_mod(EVM.Gas.t(), EVM.ExecEnv.t()) ::
+  @spec mod_exp(EVM.Gas.t(), EVM.ExecEnv.t()) ::
           {EVM.Gas.t(), EVM.SubState.t(), EVM.ExecEnv.t(), EVM.VM.output()}
-  def exp_mod(gas, exec_env) do
-    length_data = Memory.read_zeroed_memory(exec_env.data, 0, 96)
+  def mod_exp(gas, exec_env) do
+    lengths_size = 96
+    length_data = Memory.read_zeroed_memory(exec_env.data, 0, lengths_size)
 
-    <<b_length_bin::binary-size(32), e_length_bin::binary-size(32),
-      m_length_bin::binary-size(32)>> = length_data
+    <<base_length_bin::binary-size(32), exponent_length_bin::binary-size(32),
+      modulus_length_bin::binary-size(32)>> = length_data
 
-    b_length = :binary.decode_unsigned(b_length_bin)
-    e_length = :binary.decode_unsigned(e_length_bin)
-    m_length = :binary.decode_unsigned(m_length_bin)
+    base_length = :binary.decode_unsigned(base_length_bin)
+    exponent_length = :binary.decode_unsigned(exponent_length_bin)
+    modulus_length = :binary.decode_unsigned(modulus_length_bin)
 
-    if b_length == 0 && m_length == 0 do
-      {gas, %EVM.SubState{}, exec_env, <<0>>}
-    else
-      if b_length <= 24_577 && e_length <= 24_577 && m_length <= 24_577 do
-        calculate_exp_mod(b_length, e_length, m_length, exec_env, gas)
-      else
+    cond do
+      base_length == 0 && modulus_length == 0 ->
+        {gas, %EVM.SubState{}, exec_env, <<0>>}
+
+      base_length <= @data_size_limit && exponent_length <= @data_size_limit &&
+          modulus_length <= @data_size_limit ->
+        calculate_mod_exp(base_length, exponent_length, modulus_length, exec_env, gas)
+
+      true ->
         {0, %EVM.SubState{}, exec_env, :failed}
-      end
     end
   end
 
-  @spec calculate_exp_mod(integer(), integer(), integer(), EVM.ExecEnv.t(), EVM.Gas.t()) ::
+  @spec calculate_mod_exp(integer(), integer(), integer(), EVM.ExecEnv.t(), EVM.Gas.t()) ::
           {EVM.Gas.t(), EVM.SubState.t(), EVM.ExecEnv.t(), EVM.VM.output()}
-  defp calculate_exp_mod(b_length, e_length, m_length, exec_env, gas) do
-    data = Memory.read_zeroed_memory(exec_env.data, 96, b_length + e_length + m_length)
+  defp calculate_mod_exp(base_length, exponent_length, modulus_length, exec_env, gas) do
+    lengths_size = 96
 
-    <<b_bin::binary-size(b_length), e_bin::binary-size(e_length), m_bin::binary-size(m_length)>> =
-      data
+    data =
+      Memory.read_zeroed_memory(
+        exec_env.data,
+        lengths_size,
+        base_length + exponent_length + modulus_length
+      )
 
-    b = :binary.decode_unsigned(b_bin)
-    e = :binary.decode_unsigned(e_bin)
-    m = :binary.decode_unsigned(m_bin)
+    <<base_bin::binary-size(base_length), exponent_bin::binary-size(exponent_length),
+      modulus_bin::binary-size(modulus_length)>> = data
+
+    base = :binary.decode_unsigned(base_bin)
+    exponent = :binary.decode_unsigned(exponent_bin)
+    modulus = :binary.decode_unsigned(modulus_bin)
 
     required_gas =
       MathHelper.floor(
-        f(max(b_length, m_length)) * max(e_length_prime(e_length, e, {b_length, data}), 1) /
-          @g_quaddivisor
+        f(max(base_length, modulus_length)) *
+          max(e_length_prime(exponent_length, exponent, {base_length, data}), 1) / @g_quaddivisor
       )
 
     if required_gas <= gas do
       result =
         cond do
-          m <= 1 -> <<0>>
-          e == 0 -> <<1>>
-          b == 0 -> <<0>>
-          true -> :crypto.mod_pow(b, e, m)
+          modulus <= 1 -> <<0>>
+          exponent == 0 -> <<1>>
+          base == 0 -> <<0>>
+          true -> :crypto.mod_pow(base, exponent, modulus)
         end
-        |> EVM.Helpers.left_pad_bytes(m_length)
+        |> EVM.Helpers.left_pad_bytes(modulus_length)
 
       remaining_gas = gas - required_gas
 

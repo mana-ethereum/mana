@@ -261,7 +261,7 @@ defmodule EVM.MessageCall do
       address == 2 -> &Builtin.run_sha256/2
       address == 3 -> &Builtin.run_rip160/2
       address == 4 -> &Builtin.run_id/2
-      address == 5 && EVM.Configuration.has_mod_exp_builtin?(config) -> &Builtin.exp_mod/2
+      address == 5 && EVM.Configuration.has_mod_exp_builtin?(config) -> &Builtin.mod_exp/2
       true -> &VM.run/2
     end
   end
