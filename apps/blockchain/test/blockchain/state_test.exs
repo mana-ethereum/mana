@@ -12,7 +12,6 @@ defmodule Blockchain.StateTest do
     "Byzantium" => [
       "stBugs/returndatacopyPythonBug_Tue_03_48_41-1432",
       "stCreateTest/CreateOOGafterInitCodeReturndata",
-      "stPreCompiledContracts/modexp",
       "stRandom2/randomStatetest642",
       "stRandom2/randomStatetest647",
       "stReturnDataTest/call_outsize_then_create_successful_then_returndatasize",
