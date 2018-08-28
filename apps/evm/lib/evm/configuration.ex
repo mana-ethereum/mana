@@ -80,4 +80,8 @@ defprotocol EVM.Configuration do
   # EIP214
   @spec has_static_call?(t) :: boolean()
   def has_static_call?(t)
+
+  # EIP198
+  @spec has_mod_exp_builtin?(t) :: boolean()
+  def has_mod_exp_builtin?(t)
 end

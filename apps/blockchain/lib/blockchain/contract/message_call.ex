@@ -66,7 +66,7 @@ defmodule Blockchain.Contract.MessageCall do
   """
   @spec execute(t()) :: {EVM.state(), EVM.Gas.t(), EVM.SubState.t(), EVM.VM.output()}
   def execute(params) do
-    run = MessageCall.get_run_function(params.recipient)
+    run = MessageCall.get_run_function(params.recipient, params.config)
 
     # Note, this could fail if machine code is not in state
     {:ok, machine_code} = Account.get_machine_code(params.state, params.contract)

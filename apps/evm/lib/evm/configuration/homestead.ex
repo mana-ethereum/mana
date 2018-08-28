@@ -76,4 +76,7 @@ defimpl EVM.Configuration, for: EVM.Configuration.Homestead do
   @spec support_variable_length_return_value?(Configuration.t()) :: boolean()
   def support_variable_length_return_value?(config),
     do: Configuration.support_variable_length_return_value?(config.fallback_config)
+
+  @spec has_mod_exp_builtin?(Configuration.t()) :: boolean()
+  def has_mod_exp_builtin?(config), do: Configuration.has_mod_exp_builtin?(config.fallback_config)
 end
