@@ -18,8 +18,7 @@ defmodule Block.HeaderTest do
       "difficultyFrontier.json"
       |> difficulty_tests()
       |> read_test()
-      |> Enum.filter(&forks_to_run(&1, :frontier))
-      |> Enum.map(&run_test/1)
+      |> Enum.map(&run_frontier_test/1)
       |> Enum.filter(&failed_tests/1)
       |> make_assertion()
     end
@@ -28,36 +27,28 @@ defmodule Block.HeaderTest do
       "difficultyHomestead.json"
       |> difficulty_tests()
       |> read_test()
-      |> Enum.filter(&forks_to_run(&1, :homestead))
-      |> Enum.map(&run_test/1)
+      |> Enum.map(&run_homestead_test/1)
       |> Enum.filter(&failed_tests/1)
       |> make_assertion()
     end
   end
 
-  defp forks_to_run({_name, test_data}, :frontier) do
-    # difficultyFrontier.json tests have:
-    # Auto-generated Frontier and Homestead chain difficulty tests
-    # Why is it called `Frontier`? Who knows.
-    # We only test Frontier blocks
-    hex_to_int(test_data["currentBlockNumber"]) < @fork_block_num[:homestead]
-  end
-
-  defp forks_to_run({_name, test_data}, :homestead) do
-    # difficultyHomestead.json tests have:
-    # Auto-generated Frontier and Homestead chain difficulty tests
-    # Why is it called `Homestead`? Who knows.
-    # We only test blocks after Homestead fork
-    @fork_block_num[:homestead] <= hex_to_int(test_data["currentBlockNumber"])
-  end
-
-  defp run_test({name, test_data}) do
+  defp run_frontier_test({name, test_data}) do
     expected_difficulty = hex_to_int(test_data["currentDifficulty"])
 
-    difficulty =
-      test_data
-      |> build_headers()
-      |> get_difficulty()
+    {header, parent_header} = build_headers(test_data)
+
+    difficulty = Header.get_frontier_difficulty(header, parent_header, 131_072, 131_072, 2048)
+
+    {name, expected_difficulty, difficulty}
+  end
+
+  defp run_homestead_test({name, test_data}) do
+    expected_difficulty = hex_to_int(test_data["currentDifficulty"])
+
+    {header, parent_header} = build_headers(test_data)
+
+    difficulty = Header.get_homestead_difficulty(header, parent_header, 131_072, 131_072, 2048)
 
     {name, expected_difficulty, difficulty}
   end
@@ -84,10 +75,6 @@ defmodule Block.HeaderTest do
     }
 
     {current_header, parent_header}
-  end
-
-  defp get_difficulty({header, parent_header}) do
-    Header.get_difficulty(header, parent_header)
   end
 
   defp make_assertion([]), do: assert(true)
@@ -153,22 +140,20 @@ defmodule Block.HeaderTest do
              |> Header.deserialize()
   end
 
-  describe "get_difficulty/6" do
+  describe "get_homestead_difficulty/6" do
     test "Ropsten's genesis block" do
       header = %Header{number: 0}
       ropsten_init_difficulty = 0x100000
       ropsten_min_difficulty = 0x020000
       ropsten_difficulty_bound_divisor = 0x0800
-      homestead_block = 0
 
       difficulty =
-        Header.get_difficulty(
+        Header.get_homestead_difficulty(
           header,
           nil,
           ropsten_init_difficulty,
           ropsten_min_difficulty,
-          ropsten_difficulty_bound_divisor,
-          homestead_block
+          ropsten_difficulty_bound_divisor
         )
 
       assert difficulty == 1_048_576
@@ -180,16 +165,14 @@ defmodule Block.HeaderTest do
       ropsten_init_difficulty = 0x100000
       ropsten_min_difficulty = 0x020000
       ropsten_difficulty_bound_divisor = 0x0800
-      homestead_block = 0
 
       difficulty =
-        Header.get_difficulty(
+        Header.get_homestead_difficulty(
           header,
           parent,
           ropsten_init_difficulty,
           ropsten_min_difficulty,
-          ropsten_difficulty_bound_divisor,
-          homestead_block
+          ropsten_difficulty_bound_divisor
         )
 
       assert difficulty == 997_888

@@ -513,18 +513,31 @@ defmodule Blockchain.Block do
   """
   @spec set_block_difficulty(t, Chain.t(), t) :: t
   def set_block_difficulty(block, chain, parent_block) do
-    # TODO: Incorporate more of chain
-    difficulty =
-      Header.get_difficulty(
+    difficulty = get_difficulty(block, parent_block, chain)
+
+    %{block | header: %{block.header | difficulty: difficulty}}
+  end
+
+  defp get_difficulty(block, parent_block, chain) do
+    homestead_block = chain.engine["Ethash"][:homestead_transition]
+
+    if Header.is_before_homestead?(block.header, homestead_block) do
+      Header.get_frontier_difficulty(
         block.header,
         if(parent_block, do: parent_block.header, else: nil),
         chain.genesis[:difficulty],
         chain.engine["Ethash"][:minimum_difficulty],
-        chain.engine["Ethash"][:difficulty_bound_divisor],
-        chain.engine["Ethash"][:homestead_transition]
+        chain.engine["Ethash"][:difficulty_bound_divisor]
       )
-
-    %{block | header: %{block.header | difficulty: difficulty}}
+    else
+      Header.get_homestead_difficulty(
+        block.header,
+        if(parent_block, do: parent_block.header, else: nil),
+        chain.genesis[:difficulty],
+        chain.engine["Ethash"][:minimum_difficulty],
+        chain.engine["Ethash"][:difficulty_bound_divisor]
+      )
+    end
   end
 
   @doc """
@@ -635,23 +648,26 @@ defmodule Blockchain.Block do
   """
   @spec validate(t, Chain.t(), t, DB.db()) :: :valid | {:invalid, [atom()]}
   def validate(block, chain, parent_block, db) do
+    with :valid <- validate_parent_block(block, parent_block),
+         expected_difficulty <- get_difficulty(block, parent_block, chain),
+         :valid <-
+           Header.validate(
+             block.header,
+             if(parent_block, do: parent_block.header, else: nil),
+             expected_difficulty,
+             chain.params[:gas_limit_bound_divisor],
+             chain.params[:min_gas_limit]
+           ) do
+      # Pass to holistic validity check
+      HolisticValidity.validate(block, chain, parent_block, db)
+    end
+  end
+
+  defp validate_parent_block(block, parent_block) do
     if block.header.number > 0 and parent_block == :parent_not_found do
       {:errors, [:non_genesis_block_requires_parent]}
     else
-      with :valid <-
-             Header.validate(
-               block.header,
-               if(parent_block, do: parent_block.header, else: nil),
-               chain.engine["Ethash"][:homestead_transition],
-               chain.genesis[:difficulty],
-               chain.engine["Ethash"][:minimum_difficulty],
-               chain.engine["Ethash"][:difficulty_bound_divisor],
-               chain.params[:gas_limit_bound_divisor],
-               chain.params[:min_gas_limit]
-             ) do
-        # Pass to holistic validity check
-        HolisticValidity.validate(block, chain, parent_block, db)
-      end
+      :valid
     end
   end
 
