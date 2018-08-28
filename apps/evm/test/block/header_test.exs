@@ -7,12 +7,6 @@ defmodule Block.HeaderTest do
   alias Block.Header
   alias EVM.EthereumCommonTestsHelper, as: Helper
 
-  @fork_block_num %{
-    frontier: 1,
-    homestead: 1_150_000,
-    byzantium: 4_370_000
-  }
-
   describe "Difficulty Tests (Ethereum Common Tests)" do
     test "calculates Frontier difficulty" do
       "difficultyFrontier.json"
@@ -38,7 +32,7 @@ defmodule Block.HeaderTest do
 
     {header, parent_header} = build_headers(test_data)
 
-    difficulty = Header.get_frontier_difficulty(header, parent_header, 131_072, 131_072, 2048)
+    difficulty = Header.get_frontier_difficulty(header, parent_header)
 
     {name, expected_difficulty, difficulty}
   end
@@ -48,7 +42,7 @@ defmodule Block.HeaderTest do
 
     {header, parent_header} = build_headers(test_data)
 
-    difficulty = Header.get_homestead_difficulty(header, parent_header, 131_072, 131_072, 2048)
+    difficulty = Header.get_homestead_difficulty(header, parent_header)
 
     {name, expected_difficulty, difficulty}
   end
