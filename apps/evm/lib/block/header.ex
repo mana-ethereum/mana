@@ -269,50 +269,37 @@ defmodule Block.Header do
   This defines Eq.(50) of the Yellow Paper,
   commonly referred to as V(H).
 
-  # TODO: Add proof of work check
-
   ## Examples
 
-      iex> Block.Header.validate(%Block.Header{number: 0, difficulty: 131_072, gas_limit: 200_000}, nil)
+      iex> Block.Header.validate(%Block.Header{number: 0, difficulty: 131_072, gas_limit: 200_000}, nil, 131_072)
       :valid
 
-      iex> Block.Header.validate(%Block.Header{number: 0, difficulty: 5, gas_limit: 5}, nil, true)
+      iex> Block.Header.validate(%Block.Header{number: 0, difficulty: 5, gas_limit: 5}, nil, 15)
       {:invalid, [:invalid_difficulty, :invalid_gas_limit]}
 
-      iex> Block.Header.validate(%Block.Header{number: 1, difficulty: 131_136, gas_limit: 200_000, timestamp: 65}, %Block.Header{number: 0, difficulty: 131_072, gas_limit: 200_000, timestamp: 55})
+      iex> Block.Header.validate(%Block.Header{number: 1, difficulty: 131_136, gas_limit: 200_000, timestamp: 65}, %Block.Header{number: 0, difficulty: 131_072, gas_limit: 200_000, timestamp: 55}, 131_136)
       :valid
 
-      iex> Block.Header.validate(%Block.Header{number: 1, difficulty: 131_000, gas_limit: 200_000, timestamp: 65}, %Block.Header{number: 0, difficulty: 131_072, gas_limit: 200_000, timestamp: 55}, true)
+      iex> Block.Header.validate(%Block.Header{number: 1, difficulty: 131_000, gas_limit: 200_000, timestamp: 65}, %Block.Header{number: 0, difficulty: 131_072, gas_limit: 200_000, timestamp: 55}, 131_100)
       {:invalid, [:invalid_difficulty]}
 
-      iex> Block.Header.validate(%Block.Header{number: 1, difficulty: 131_136, gas_limit: 200_000, timestamp: 45}, %Block.Header{number: 0, difficulty: 131_072, gas_limit: 200_000, timestamp: 55})
+      iex> Block.Header.validate(%Block.Header{number: 1, difficulty: 131_136, gas_limit: 200_000, timestamp: 45}, %Block.Header{number: 0, difficulty: 131_072, gas_limit: 200_000, timestamp: 55}, 131_136)
       {:invalid, [:child_timestamp_invalid]}
 
-      iex> Block.Header.validate(%Block.Header{number: 1, difficulty: 131_136, gas_limit: 300_000, timestamp: 65}, %Block.Header{number: 0, difficulty: 131_072, gas_limit: 200_000, timestamp: 55})
+      iex> Block.Header.validate(%Block.Header{number: 1, difficulty: 131_136, gas_limit: 300_000, timestamp: 65}, %Block.Header{number: 0, difficulty: 131_072, gas_limit: 200_000, timestamp: 55}, 131_136)
       {:invalid, [:invalid_gas_limit]}
 
-      iex> Block.Header.validate(%Block.Header{number: 2, difficulty: 131_136, gas_limit: 200_000, timestamp: 65}, %Block.Header{number: 0, difficulty: 131_072, gas_limit: 200_000, timestamp: 55})
+      iex> Block.Header.validate(%Block.Header{number: 2, difficulty: 131_136, gas_limit: 200_000, timestamp: 65}, %Block.Header{number: 0, difficulty: 131_072, gas_limit: 200_000, timestamp: 55}, 131_136)
       {:invalid, [:child_number_invalid]}
 
-      iex> Block.Header.validate(%Block.Header{number: 1, difficulty: 131_136, gas_limit: 200_000, timestamp: 65, extra_data: "0123456789012345678901234567890123456789"}, %Block.Header{number: 0, difficulty: 131_072, gas_limit: 200_000, timestamp: 55})
+      iex> Block.Header.validate(%Block.Header{number: 1, difficulty: 131_136, gas_limit: 200_000, timestamp: 65, extra_data: "0123456789012345678901234567890123456789"}, %Block.Header{number: 0, difficulty: 131_072, gas_limit: 200_000, timestamp: 55}, 131_136)
       {:invalid, [:extra_data_too_large]}
-
-      # TODO: Add tests for setting homestead_block
-      # TODO: Add tests for setting initial_difficulty
-      # TODO: Add tests for setting minimum_difficulty
-      # TODO: Add tests for setting difficulty_bound_divisor
-      # TODO: Add tests for setting gas_limit_bound_divisor
-      # TODO: Add tests for setting min_gas_limit
   """
-  @spec validate(t, t | nil, integer(), integer(), integer(), integer(), integer(), integer()) ::
-          :valid | {:invalid, [atom()]}
+  @spec validate(t, t | nil, integer(), integer(), integer()) :: :valid | {:invalid, [atom()]}
   def validate(
         header,
         parent_header,
-        homestead_block \\ @homestead_block,
-        initial_difficulty \\ @initial_difficulty,
-        minimum_difficulty \\ @minimum_difficulty,
-        difficulty_bound_divisor \\ @difficulty_bound_divisor,
+        expected_difficulty,
         gas_limit_bound_divisor \\ @gas_limit_bound_divisor,
         min_gas_limit \\ @min_gas_limit
       ) do
@@ -330,14 +317,7 @@ defmodule Block.Header do
         min_gas_limit
       )
       |> check_gas_limit(header)
-      |> check_difficulty_validity(
-        header,
-        parent_header,
-        initial_difficulty,
-        minimum_difficulty,
-        difficulty_bound_divisor,
-        homestead_block
-      )
+      |> check_difficulty_validity(header, expected_difficulty)
 
     if errors == [], do: :valid, else: {:invalid, errors}
   end
@@ -363,104 +343,83 @@ defmodule Block.Header do
 
   ## Examples
 
-      iex> Block.Header.get_difficulty(
+      iex> Block.Header.get_frontier_difficulty(
       ...>   %Block.Header{number: 0, timestamp: 55},
       ...>   nil
       ...> )
       131_072
 
-      iex> Block.Header.get_difficulty(
+      iex> Block.Header.get_frontier_difficulty(
       ...>   %Block.Header{number: 1, timestamp: 1479642530},
       ...>   %Block.Header{number: 0, timestamp: 0, difficulty: 1_048_576}
       ...> )
       1_048_064
 
-      iex> Block.Header.get_difficulty(
+      iex> Block.Header.get_frontier_difficulty(
       ...>  %Block.Header{number: 33, timestamp: 66},
       ...>  %Block.Header{number: 32, timestamp: 55, difficulty: 300_000}
       ...> )
       300_146
 
-      iex> Block.Header.get_difficulty(
+      iex> Block.Header.get_frontier_difficulty(
       ...>  %Block.Header{number: 33, timestamp: 88},
       ...>  %Block.Header{number: 32, timestamp: 55, difficulty: 300_000}
       ...> )
       299_854
 
-      # TODO: Is this right? These numbers are quite a jump
-      iex> Block.Header.get_difficulty(
+      iex> Block.Header.get_homestead_difficulty(
       ...>  %Block.Header{number: 3_000_001, timestamp: 66},
       ...>  %Block.Header{number: 3_000_000, timestamp: 55, difficulty: 300_000}
       ...> )
       268_735_456
 
-      iex> Block.Header.get_difficulty(
+      iex> Block.Header.get_homestead_difficulty(
       ...>  %Block.Header{number: 3_000_001, timestamp: 155},
       ...>  %Block.Header{number: 3_000_000, timestamp: 55, difficulty: 300_000}
       ...> )
       268_734_142
   """
-  @spec get_difficulty(t, t | nil, integer(), integer(), integer(), integer()) :: integer()
-  def get_difficulty(
+
+  @spec get_homestead_difficulty(t, t | nil, integer(), integer(), integer()) :: integer()
+  def get_homestead_difficulty(
         header,
         parent_header,
         initial_difficulty \\ @initial_difficulty,
         minimum_difficulty \\ @minimum_difficulty,
-        difficulty_bound_divisor \\ @difficulty_bound_divisor,
-        homestead_block \\ @homestead_block
+        difficulty_bound_divisor \\ @difficulty_bound_divisor
       ) do
-    cond do
-      header.number == 0 ->
-        initial_difficulty
+    if header.number == 0 do
+      initial_difficulty
+    else
+      difficulty_delta =
+        difficulty_x(parent_header.difficulty, difficulty_bound_divisor) *
+          homestead_difficulty_parameter(header, parent_header)
 
-      is_before_homestead?(header, homestead_block) ->
-        calculate_frontier_difficulty(
-          header,
-          parent_header,
-          minimum_difficulty,
-          difficulty_bound_divisor
-        )
+      next_difficulty = parent_header.difficulty + difficulty_delta + difficulty_e(header)
 
-      true ->
-        calculate_homestead_difficulty(
-          header,
-          parent_header,
-          minimum_difficulty,
-          difficulty_bound_divisor
-        )
+      max(minimum_difficulty, next_difficulty)
     end
   end
 
-  @spec calculate_homestead_difficulty(t, t | nil, integer(), integer()) :: integer()
-  defp calculate_homestead_difficulty(
-         header,
-         parent_header,
-         minimum_difficulty,
-         difficulty_bound_divisor
-       ) do
-    difficulty_delta =
-      difficulty_x(parent_header.difficulty, difficulty_bound_divisor) *
-        homestead_difficulty_parameter(header, parent_header)
+  @spec get_frontier_difficulty(t, t | nil, integer(), integer(), integer()) :: integer()
+  def get_frontier_difficulty(
+        header,
+        parent_header,
+        initial_difficulty \\ @initial_difficulty,
+        minimum_difficulty \\ @minimum_difficulty,
+        difficulty_bound_divisor \\ @difficulty_bound_divisor
+      ) do
+    if header.number == 0 do
+      initial_difficulty
+    else
+      difficulty_delta =
+        difficulty_x(parent_header.difficulty, difficulty_bound_divisor) *
+          delta_sign(header, parent_header)
 
-    next_difficulty = parent_header.difficulty + difficulty_delta + difficulty_e(header)
+      next_difficulty = parent_header.difficulty + difficulty_delta + difficulty_e(header)
 
-    max(minimum_difficulty, next_difficulty)
-  end
-
-  @spec calculate_frontier_difficulty(t, t | nil, integer(), integer()) :: integer()
-  defp calculate_frontier_difficulty(
-         header,
-         parent_header,
-         minimum_difficulty,
-         difficulty_bound_divisor
-       ) do
-    difficulty_delta =
-      difficulty_x(parent_header.difficulty, difficulty_bound_divisor) *
-        delta_sign(header, parent_header)
-
-    next_difficulty = parent_header.difficulty + difficulty_delta + difficulty_e(header)
-
-    max(minimum_difficulty, next_difficulty)
+      max(minimum_difficulty, next_difficulty)
+    end
   end
 
   # Eq.(42) ς1 - Effectively decides if blocks are being mined too quicky or too slowly
@@ -489,34 +448,13 @@ defmodule Block.Header do
     MathHelper.floor(:math.pow(2, div(header.number, 100_000) - 2))
   end
 
-  # Eq.(51)
-  @spec check_difficulty_validity(
-          [atom()],
-          t,
-          t | nil,
-          integer(),
-          integer(),
-          integer(),
-          integer()
-        ) :: [atom()]
+  @spec check_difficulty_validity([atom()], t, integer()) :: [atom()]
   defp check_difficulty_validity(
          errors,
          header,
-         parent_header,
-         initial_difficulty,
-         minimum_difficulty,
-         difficulty_bound_divisor,
-         homestead_block
+         expected_difficulty
        ) do
-    if header.difficulty ==
-         get_difficulty(
-           header,
-           parent_header,
-           initial_difficulty,
-           minimum_difficulty,
-           difficulty_bound_divisor,
-           homestead_block
-         ) do
+    if header.difficulty == expected_difficulty do
       errors
     else
       [:invalid_difficulty | errors]
