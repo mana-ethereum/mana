@@ -181,6 +181,7 @@ defmodule EVM.Builtin do
             e == 0 -> <<1>>
             true -> :crypto.mod_pow(b, e, m)
           end
+          |> EVM.Helpers.left_pad_bytes(m_length)
 
         remaining_gas = gas - required_gas
 
