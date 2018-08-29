@@ -7,12 +7,12 @@ defmodule GenerateBlockchainTests do
   alias Block.Header
 
   @base_path System.cwd() <> "/../../ethereum_common_tests/BlockchainTests/"
+  @allowed_forks ["Byzantium", "Frontier", "Homestead", "EIP150", "EIP158"]
+  @byzantium_failing_tests_path System.cwd() <> "/test/support/byzantium_failing_tests.txt"
 
   def run(args) do
-    hardfork = List.first(args)
-
-    if !Enum.member?(["Byzantium", "Frontier", "Homestead", "EIP150", "EIP158"], hardfork),
-      do: raise(RuntimeError)
+    hardfork = ensure_hardfork(args)
+    io_device = io_device_from_hardfork(hardfork)
 
     {passing_count, failing_count} =
       Enum.reduce(
@@ -38,7 +38,7 @@ defmodule GenerateBlockchainTests do
             end)
 
           if failing != 0 do
-            log_test(relative_path)
+            log_test(io_device, relative_path)
           end
 
           {pass_acc + passing, fail_acc + failing}
@@ -58,6 +58,30 @@ defmodule GenerateBlockchainTests do
         trunc(Float.round(failing_count / all_tests, 2) * 100)
       }%"
     )
+
+    close_io_device(io_device)
+  end
+
+  defp close_io_device(:stdio), do: :ok
+  defp close_io_device(file_pid), do: File.close(file_pid)
+
+  defp io_device_from_hardfork(hardfork) do
+    case hardfork do
+      "Byzantium" ->
+        File.open!(@byzantium_failing_tests_path, [:write])
+
+      _ ->
+        :stdio
+    end
+  end
+
+  defp ensure_hardfork(args) do
+    hardfork = List.first(args)
+
+    if !Enum.member?(@allowed_forks, hardfork),
+      do: raise("Please specify a fork: #{inspect(@allowed_forks)}")
+
+    hardfork
   end
 
   defp tests do
@@ -68,9 +92,8 @@ defmodule GenerateBlockchainTests do
     |> Enum.sort()
   end
 
-  defp log_test(relative_path) do
-    IO.puts("      \"#{relative_path}\",")
-  end
+  defp log_test(:stdio, path), do: IO.puts("      \"#{path}\",")
+  defp log_test(file_pid, path), do: IO.write(file_pid, "#{path}\n")
 
   defp read_test(path) do
     path

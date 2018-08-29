@@ -520,23 +520,35 @@ defmodule Blockchain.Block do
 
   defp get_difficulty(block, parent_block, chain) do
     homestead_block = chain.engine["Ethash"][:homestead_transition]
+    byzantium_block = chain.engine["Ethash"][:eip100b_transition]
 
-    if Header.is_before_homestead?(block.header, homestead_block) do
-      Header.get_frontier_difficulty(
-        block.header,
-        if(parent_block, do: parent_block.header, else: nil),
-        chain.genesis[:difficulty],
-        chain.engine["Ethash"][:minimum_difficulty],
-        chain.engine["Ethash"][:difficulty_bound_divisor]
-      )
-    else
-      Header.get_homestead_difficulty(
-        block.header,
-        if(parent_block, do: parent_block.header, else: nil),
-        chain.genesis[:difficulty],
-        chain.engine["Ethash"][:minimum_difficulty],
-        chain.engine["Ethash"][:difficulty_bound_divisor]
-      )
+    cond do
+      Header.is_before_homestead?(block.header, homestead_block) ->
+        Header.get_frontier_difficulty(
+          block.header,
+          if(parent_block, do: parent_block.header, else: nil),
+          chain.genesis[:difficulty],
+          chain.engine["Ethash"][:minimum_difficulty],
+          chain.engine["Ethash"][:difficulty_bound_divisor]
+        )
+
+      Header.is_before_byzantium?(block.header, byzantium_block) ->
+        Header.get_homestead_difficulty(
+          block.header,
+          if(parent_block, do: parent_block.header, else: nil),
+          chain.genesis[:difficulty],
+          chain.engine["Ethash"][:minimum_difficulty],
+          chain.engine["Ethash"][:difficulty_bound_divisor]
+        )
+
+      true ->
+        Header.get_byzantium_difficulty(
+          block.header,
+          if(parent_block, do: parent_block.header, else: nil),
+          chain.genesis[:difficulty],
+          chain.engine["Ethash"][:minimum_difficulty],
+          chain.engine["Ethash"][:difficulty_bound_divisor]
+        )
     end
   end
 

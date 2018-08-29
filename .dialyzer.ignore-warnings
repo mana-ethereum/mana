@@ -92,8 +92,8 @@ r', 'beneficiary':=_, 'difficulty':='nil', 'extra_data':=_, 'gas_limit':=0, 'gas
 apps/merkle_patricia_tree/lib/merkle_patricia_tree/trie/helper.ex:41: Guard test is_binary(__@1::<<_:4>
 >) can never succeed
 
-apps/blockchain/lib/blockchain/block.ex:691: Function add_transactions/3 has no local return
-apps/blockchain/lib/blockchain/block.ex:691: The call 'Elixir.Blockchain.Block':add_transactions(_@1
+apps/blockchain/lib/blockchain/block.ex:703: Function add_transactions/3 has no local return
+apps/blockchain/lib/blockchain/block.ex:703: The call 'Elixir.Blockchain.Block':add_transactions(_@1
 ::any(),_@2::any(),_@3::any(),#{'__struct__':='Elixir.EVM.Configuration.Frontier', 'contract_creatio
 n_cost':=21000, 'has_delegate_call':='false'}) will never return since the success typing is (#{'__s
 truct__':='Elixir.Blockchain.Block', 'block_hash':='nil' | <<_:256>>, 'header':=#{'__struct__':='Eli
