@@ -42,7 +42,6 @@ defmodule GenerateStateTests do
           Map.merge(acc[:failing], result[:failing], fn _k, v1, v2 ->
             v1
             |> Kernel.++(v2)
-            |> Enum.dedup()
             |> Enum.sort()
           end)
 
@@ -50,7 +49,8 @@ defmodule GenerateStateTests do
       end)
 
     IO.puts("Failing tests")
-    IO.puts(inspect(completed_tests[:failing], limit: :infinity))
+    deduped_tests = dedup_tests(completed_tests[:failing])
+    IO.inspect(deduped_tests, limit: :infinity)
 
     for hardfork <- @hardforks do
       passing_tests = length(completed_tests[:passing][hardfork])
@@ -63,6 +63,14 @@ defmodule GenerateStateTests do
         }%"
       )
     end
+  end
+
+  defp dedup_tests(tests) do
+    tests
+    |> Enum.map(fn {fork, list_of_tests} ->
+      {fork, Enum.dedup(list_of_tests)}
+    end)
+    |> Enum.into(%{})
   end
 
   defp run_group_tests(directory_path) do
