@@ -50,7 +50,7 @@ defmodule GenerateStateTests do
 
     IO.puts("Failing tests")
     deduped_tests = dedup_tests(completed_tests[:failing])
-    IO.inspect(deduped_tests, limit: :infinity)
+    IO.puts(inspect(deduped_tests), limit: :infinity)
 
     for hardfork <- @hardforks do
       passing_tests = length(completed_tests[:passing][hardfork])
