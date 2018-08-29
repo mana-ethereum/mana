@@ -34,7 +34,7 @@ defmodule GenerateBlockchainTests do
     all_tests = passing_count + failing_count
 
     log_passing_count(hardfork, passing_count, all_tests)
-    log_failing_count(hardfork, passing_count, all_tests)
+    log_failing_count(hardfork, failing_count, all_tests)
 
     close_io_device(io_device)
   end
