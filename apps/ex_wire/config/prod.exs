@@ -1,7 +1,7 @@
 use Mix.Config
 
 config :ex_wire,
-  db_path: "db/mana-dev",
+  db_path: "db/mana-prod",
   network_adapter: {ExWire.Adapter.UDP, NetworkClient},
   sync: true,
   discovery: true,

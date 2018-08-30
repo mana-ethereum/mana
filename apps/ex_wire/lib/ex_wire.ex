@@ -7,6 +7,7 @@ defmodule ExWire do
   @type node_id :: binary()
 
   use Application
+  require Logger
 
   alias ExWire.Config
 
@@ -14,10 +15,11 @@ defmodule ExWire do
     import Supervisor.Spec
 
     name = Keyword.get(args, :name, ExWire)
+    Logger.debug("starting ExWire")
 
     sync_children =
       if Config.sync() do
-        db = MerklePatriciaTree.DB.RocksDB.init(db_name())
+        db = MerklePatriciaTree.DB.RocksDB.init(db_path())
 
         [
           worker(ExWire.PeerSupervisor, [ExWire.Config.bootnodes()]),
@@ -29,12 +31,16 @@ defmodule ExWire do
 
     node_discovery =
       if Config.discovery() do
-        [worker(ExWire.NodeDiscoverySupervisor, [])]
+        [
+          worker(ExWire.NodeDiscoverySupervisor, [])
+        ]
       else
         []
       end
 
-    tcp_listening = [ExWire.TCPListeningSupervisor]
+    tcp_listening = [
+      ExWire.TCPListeningSupervisor
+    ]
 
     children = sync_children ++ node_discovery ++ tcp_listening
 
@@ -42,8 +48,7 @@ defmodule ExWire do
     Supervisor.start_link(children, opts)
   end
 
-  defp db_name() do
-    env = Mix.env() |> to_string()
-    "db/mana-" <> env
+  defp db_path() do
+    Application.get_env(:ex_wire, :db_path)
   end
 end

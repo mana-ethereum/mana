@@ -35,6 +35,7 @@ defmodule Exthereum.MixProject do
   # Run "mix help deps" for examples and options.
   defp deps do
     [
+      {:distillery, "~> 2.0"},
       {:ex_doc, "~> 0.19", only: :dev, runtime: false},
       {:dialyxir, "~> 0.5", only: [:dev, :test], runtime: false},
       {:ethereumex, "~> 0.3.2"},

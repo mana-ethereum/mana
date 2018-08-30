@@ -1,4 +1,6 @@
 defmodule ExWire.PeerSupervisor do
+  require Logger
+
   @moduledoc """
   The Peer Supervisor is responsible for maintaining a set of peer TCP connections.
 
@@ -17,13 +19,14 @@ defmodule ExWire.PeerSupervisor do
   end
 
   def init(bootnodes) do
+    Logger.debug("starting PeerSupervisor")
     # TODO: Ask for peers, etc.
 
     children =
       for bootnode <- bootnodes do
         {:ok, peer} = ExWire.Struct.Peer.from_uri(bootnode)
 
-        worker(ExWire.P2P.Server, [:outbound, peer, [{:server, ExWire.Sync}]])
+        worker(ExWire.P2P.Server, [:outbound, peer, [{:server, ExWire.Sync}]], id: bootnode)
       end
 
     Supervisor.init(children, strategy: :one_for_one)
