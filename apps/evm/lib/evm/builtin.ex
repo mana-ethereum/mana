@@ -1,6 +1,9 @@
 defmodule EVM.Builtin do
   alias ExthCrypto.{Signature, Key}
   alias EVM.Memory
+  alias BN.IntegerModP.Point
+  alias BN.IntegerModP
+  alias BN.BN128Arithmetic
 
   @moduledoc """
   Implements the built-in functions as defined in Appendix E
@@ -17,6 +20,7 @@ defmodule EVM.Builtin do
   @g_identity_byte 3
   @g_ecrec 3000
   @g_quaddivisor 20
+  @g_ec_add 500
 
   @data_size_limit 24_577
 
@@ -170,6 +174,48 @@ defmodule EVM.Builtin do
 
       true ->
         {0, %EVM.SubState{}, exec_env, :failed}
+    end
+  end
+
+  @spec ec_add(EVM.Gas.t(), EVM.ExecEnv.t()) ::
+          {EVM.Gas.t(), EVM.SubState.t(), EVM.ExecEnv.t(), EVM.VM.output()}
+  def ec_add(gas, exec_env) do
+    data = Memory.read_zeroed_memory(exec_env.data, 0, 128)
+
+    <<x1_bin::binary-size(32), y1_bin::binary-size(32), x2_bin::binary-size(32),
+      y2_bin::binary-size(32)>> = data
+
+    x1 = :binary.decode_unsigned(x1_bin)
+    y1 = :binary.decode_unsigned(y1_bin)
+    x2 = :binary.decode_unsigned(x2_bin)
+    y2 = :binary.decode_unsigned(y2_bin)
+
+    if gas >= @g_ec_add do
+      if x1 > IntegerModP.default_modulus() || x2 > IntegerModP.default_modulus() ||
+           y1 > IntegerModP.default_modulus() || y2 > IntegerModP.default_modulus() do
+        {0, %EVM.SubState{}, exec_env, :failed}
+      else
+        {:ok, point1} = Point.new(x1, y1)
+        {:ok, point2} = Point.new(x2, y2)
+
+        if !BN128Arithmetic.on_curve?(point1) || !BN128Arithmetic.on_curve?(point2) do
+          {0, %EVM.SubState{}, exec_env, :failed}
+        else
+          result = BN128Arithmetic.add(point1, point2)
+
+          result_x = result.x.value |> :binary.encode_unsigned()
+          result_y = result.y.value |> :binary.encode_unsigned()
+
+          output =
+            <<>>
+            |> Memory.write_zeroed_data(0, result_x, 32)
+            |> Memory.write_zeroed_data(32, result_y, 32)
+
+          {gas - @g_ec_add, %EVM.SubState{}, exec_env, output}
+        end
+      end
+    else
+      {0, %EVM.SubState{}, exec_env, :failed}
     end
   end
 
