@@ -9,57 +9,87 @@ defmodule GenerateBlockchainTests do
   @base_path System.cwd() <> "/../../ethereum_common_tests/BlockchainTests/"
   @allowed_forks ["Byzantium", "Frontier", "Homestead", "EIP150", "EIP158"]
   @byzantium_failing_tests_path System.cwd() <> "/test/support/byzantium_failing_tests.txt"
+  @initial_pass_fail {[], []}
+  @number_of_test_groups 20
+  @ten_minutes 1000 * 60 * 10
 
   def run(args) do
     hardfork = ensure_hardfork(args)
     io_device = io_device_from_hardfork(hardfork)
 
-    {passing_count, failing_count} =
-      Enum.reduce(
-        tests(),
-        {0, 0},
-        fn json_test_path, {pass_acc, fail_acc} ->
-          relative_path = String.trim(json_test_path, @base_path)
+    {passing_tests, failing_tests} =
+      tests_files()
+      |> split_into_groups(@number_of_test_groups)
+      |> Task.async_stream(&run_test_group(&1, hardfork), timeout: @ten_minutes)
+      |> Enum.reduce(@initial_pass_fail, fn {:ok, {passing, failing}}, {pass_acc, fail_acc} ->
+        {passing ++ pass_acc, failing ++ fail_acc}
+      end)
 
-          {passing, failing} =
-            json_test_path
-            |> read_test()
-            |> Enum.filter(fn {_name, test} ->
-              test["network"] == hardfork
-            end)
-            |> Enum.reduce({0, 0}, fn {_name, test}, {pass_count, fail_count} ->
-              try do
-                run_test(test)
-                {pass_count + 1, fail_count}
-              rescue
-                _ ->
-                  {pass_count, fail_count + 1}
-              end
-            end)
+    failing_tests
+    |> Enum.sort()
+    |> Enum.each(&log_test(io_device, &1))
 
-          if failing != 0 do
-            log_test(io_device, relative_path)
-          end
-
-          {pass_acc + passing, fail_acc + failing}
-        end
-      )
-
+    passing_count = length(passing_tests)
+    failing_count = length(failing_tests)
     all_tests = passing_count + failing_count
 
+    log_passing_count(hardfork, passing_count, all_tests)
+    log_failing_count(hardfork, failing_count, all_tests)
+
+    close_io_device(io_device)
+  end
+
+  defp log_passing_count(hardfork, passing_count, all_tests) do
     IO.puts(
       "Passing #{hardfork} tests: #{passing_count}/#{all_tests} = #{
         round(passing_count / all_tests * 1000) / 10
       }%"
     )
+  end
 
+  defp log_failing_count(hardfork, failing_count, all_tests) do
     IO.puts(
       "Failing #{hardfork} tests: #{failing_count}/#{all_tests} = #{
         trunc(Float.round(failing_count / all_tests, 2) * 100)
       }%"
     )
+  end
 
-    close_io_device(io_device)
+  defp run_test_group(test_group, hardfork) do
+    Enum.reduce(test_group, @initial_pass_fail, &run_tests_in_file(&1, &2, hardfork))
+  end
+
+  defp run_tests_in_file(json_test_path, {pass_acc, fail_acc}, hardfork) do
+    relative_path = String.trim(json_test_path, @base_path)
+
+    {passing, failing} =
+      json_test_path
+      |> read_test()
+      |> Enum.filter(&fork_test?(&1, hardfork))
+      |> Enum.reduce(@initial_pass_fail, &pass_or_fail(&1, &2, relative_path))
+
+    {pass_acc ++ passing, fail_acc ++ failing}
+  end
+
+  defp split_into_groups(all_tests, num_groups_desired) do
+    test_count = Enum.count(all_tests)
+    tests_per_group = div(test_count, num_groups_desired)
+
+    Enum.chunk_every(all_tests, tests_per_group)
+  end
+
+  defp pass_or_fail({_name, test}, {passing, failing}, relative_path) do
+    case run_test(test) do
+      :pass ->
+        {[relative_path | passing], failing}
+
+      :fail ->
+        {passing, [relative_path | failing]}
+    end
+  end
+
+  defp fork_test?({_name, test_data}, hardfork) do
+    test_data["network"] == hardfork
   end
 
   defp close_io_device(:stdio), do: :ok
@@ -84,10 +114,9 @@ defmodule GenerateBlockchainTests do
     hardfork
   end
 
-  defp tests do
-    wildcard = @base_path <> "**/*.json"
-
-    wildcard
+  defp tests_files do
+    @base_path
+    |> Path.join("**/*.json")
     |> Path.wildcard()
     |> Enum.sort()
   end
@@ -113,7 +142,7 @@ defmodule GenerateBlockchainTests do
 
     best_block_hash = maybe_hex(json_test["lastblockhash"])
 
-    if blocktree.best_block.block_hash != best_block_hash, do: raise(RuntimeError)
+    if blocktree.best_block.block_hash == best_block_hash, do: :pass, else: :fail
   end
 
   defp load_chain(hardfork) do
