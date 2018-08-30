@@ -38,7 +38,7 @@ defmodule Blockchain.BlocktreeTest do
             state_root: child.header.state_root
           }
         }
-        |> Blockchain.Block.add_rewards(trie.db)
+        |> Blockchain.Block.add_rewards(trie.db, chain)
 
       tree = Blockchain.Blocktree.new_tree()
       {:ok, tree_1} = Blockchain.Blocktree.verify_and_add_block(tree, chain, block_1, trie.db)
