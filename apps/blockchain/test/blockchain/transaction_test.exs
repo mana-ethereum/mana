@@ -115,48 +115,6 @@ defmodule Blockchain.TransactionTest do
 
       assert tx == expected_tx
     end
-
-    test "for a transaction with a stop" do
-      beneficiary_address = <<0x05::160>>
-      private_key = <<1::256>>
-
-      # Based on simple private key.
-      sender_address =
-        <<126, 95, 69, 82, 9, 26, 105, 18, 93, 93, 252, 183, 184, 194, 101, 144, 41, 57, 91, 223>>
-
-      sender_account = %Account{balance: 400_000, nonce: 5}
-
-      contract_address = Account.Address.new(sender_address, 6)
-      machine_code = MachineCode.compile([:stop])
-
-      tx =
-        %Transaction{
-          nonce: 5,
-          gas_price: 3,
-          gas_limit: 100_000,
-          to: <<>>,
-          value: 5,
-          init: machine_code
-        }
-        |> Transaction.Signature.sign_transaction(private_key)
-
-      {state, gas_used, logs} =
-        MerklePatriciaTree.Test.random_ets_db()
-        |> Trie.new()
-        |> Account.put_account(sender_address, sender_account)
-        |> Transaction.execute(tx, %Block.Header{beneficiary: beneficiary_address})
-
-      expected_sender = %Account{balance: 336_983, nonce: 6}
-      expected_beneficiary = %Account{balance: 63_012}
-      expected_contract = %Account{balance: 5, nonce: 0}
-
-      assert gas_used == 21_004
-      assert logs == []
-
-      assert Account.get_account(state, sender_address) == expected_sender
-      assert Account.get_account(state, beneficiary_address) == expected_beneficiary
-      assert Account.get_account(state, contract_address) == expected_contract
-    end
   end
 
   describe "input_data/1" do
@@ -177,6 +135,7 @@ defmodule Blockchain.TransactionTest do
 
   describe "execute/3" do
     test "creates a new contract" do
+      success_status = 1
       beneficiary = <<0x05::160>>
       private_key = <<1::256>>
       # based on simple private key
@@ -214,7 +173,7 @@ defmodule Blockchain.TransactionTest do
 
       tx = Transaction.Signature.sign_transaction(unsigned_tx, private_key)
 
-      {state, gas, logs} =
+      {state, gas, logs, ^success_status} =
         MerklePatriciaTree.Test.random_ets_db()
         |> Trie.new()
         |> Account.put_account(sender, %Account{balance: 400_000, nonce: 5})
@@ -281,13 +240,14 @@ defmodule Blockchain.TransactionTest do
 
       db = MerklePatriciaTree.Test.random_ets_db()
 
-      {state, gas, logs} =
+      {state, gas, logs, status} =
         db
         |> Trie.new()
         |> Account.put_account(sender, %Account{balance: 400_000, nonce: 5})
         |> Account.put_code(contract_address, machine_code)
         |> Transaction.execute(tx, %Block.Header{beneficiary: beneficiary})
 
+      assert status == 1
       assert gas == 21_780
       assert logs == []
 
@@ -306,6 +266,177 @@ defmodule Blockchain.TransactionTest do
       ]
 
       assert actual_accounts == expected_accounts
+    end
+
+    test "for a transaction with a stop" do
+      success_status = 1
+      beneficiary_address = <<0x05::160>>
+      private_key = <<1::256>>
+
+      # Based on simple private key.
+      sender_address =
+        <<126, 95, 69, 82, 9, 26, 105, 18, 93, 93, 252, 183, 184, 194, 101, 144, 41, 57, 91, 223>>
+
+      sender_account = %Account{balance: 400_000, nonce: 5}
+
+      contract_address = Account.Address.new(sender_address, 6)
+      machine_code = MachineCode.compile([:stop])
+
+      tx =
+        %Transaction{
+          nonce: 5,
+          gas_price: 3,
+          gas_limit: 100_000,
+          to: <<>>,
+          value: 5,
+          init: machine_code
+        }
+        |> Transaction.Signature.sign_transaction(private_key)
+
+      {state, gas_used, logs, ^success_status} =
+        MerklePatriciaTree.Test.random_ets_db()
+        |> Trie.new()
+        |> Account.put_account(sender_address, sender_account)
+        |> Transaction.execute(tx, %Block.Header{beneficiary: beneficiary_address})
+
+      expected_sender = %Account{balance: 336_983, nonce: 6}
+      expected_beneficiary = %Account{balance: 63_012}
+      expected_contract = %Account{balance: 5, nonce: 0}
+
+      assert gas_used == 21_004
+      assert logs == []
+
+      assert Account.get_account(state, sender_address) == expected_sender
+      assert Account.get_account(state, beneficiary_address) == expected_beneficiary
+      assert Account.get_account(state, contract_address) == expected_contract
+    end
+  end
+
+  describe "execute transaction with revert (Byzantium)" do
+    test "reverts message call state except for gas used, increments nonce, and marks tx status as failed (0)" do
+      config = EVM.Configuration.Byzantium.new()
+      private_key = <<1::256>>
+      gas_price = 3
+      failure_status = 0
+
+      beneficiary = %{address: <<0x05::160>>}
+
+      sender = %{
+        address:
+          <<126, 95, 69, 82, 9, 26, 105, 18, 93, 93, 252, 183, 184, 194, 101, 144, 41, 57, 91,
+            223>>,
+        nonce: 6
+      }
+
+      contract_address = Contract.Address.new(sender.address, sender.nonce)
+
+      machine_code =
+        MachineCode.compile([
+          :push1,
+          3,
+          :push1,
+          5,
+          :add,
+          :push1,
+          0x00,
+          :revert
+        ])
+
+      unsigned_tx = %Transaction{
+        nonce: 5,
+        gas_price: gas_price,
+        gas_limit: 100_000,
+        to: contract_address,
+        value: 5,
+        data: machine_code
+      }
+
+      tx = Transaction.Signature.sign_transaction(unsigned_tx, private_key)
+
+      {state, gas, logs, status} =
+        MerklePatriciaTree.Test.random_ets_db()
+        |> Trie.new()
+        |> Account.put_account(sender.address, %Account{balance: 400_000, nonce: sender.nonce})
+        |> Account.put_code(contract_address, machine_code)
+        |> Transaction.execute(tx, %Block.Header{beneficiary: beneficiary.address}, config)
+
+      assert status == failure_status
+      assert gas == 21_495
+      assert logs == []
+
+      sender_account = Account.get_account(state, sender.address)
+      beneficiary_account = Account.get_account(state, beneficiary.address)
+      contract_account = Account.get_account(state, contract_address)
+
+      assert sender_account == %Account{
+               balance: 400_000 - gas * gas_price,
+               nonce: sender.nonce + 1
+             }
+
+      assert beneficiary_account == %Account{balance: gas * gas_price}
+      assert contract_account == %Account{balance: 0, code_hash: Keccak.kec(machine_code)}
+    end
+
+    test "reverts contract creation state except for gas used, increments nonce, and marks tx status as failed (0)" do
+      config = EVM.Configuration.Byzantium.new()
+      private_key = <<1::256>>
+      gas_price = 3
+      failure_status = 0
+
+      beneficiary = %{address: <<0x05::160>>}
+
+      sender = %{
+        address:
+          <<126, 95, 69, 82, 9, 26, 105, 18, 93, 93, 252, 183, 184, 194, 101, 144, 41, 57, 91,
+            223>>,
+        nonce: 6
+      }
+
+      machine_code =
+        MachineCode.compile([
+          :push1,
+          3,
+          :push1,
+          5,
+          :add,
+          :push1,
+          0x00,
+          :revert
+        ])
+
+      unsigned_tx = %Transaction{
+        nonce: 5,
+        gas_price: gas_price,
+        gas_limit: 100_000,
+        to: <<>>,
+        value: 5,
+        init: machine_code
+      }
+
+      tx = Transaction.Signature.sign_transaction(unsigned_tx, private_key)
+
+      {state, gas, logs, status} =
+        MerklePatriciaTree.Test.random_ets_db()
+        |> Trie.new()
+        |> Account.put_account(sender.address, %Account{balance: 400_000, nonce: sender.nonce})
+        |> Transaction.execute(tx, %Block.Header{beneficiary: beneficiary.address}, config)
+
+      assert status == failure_status
+      assert gas == 53_495
+      assert logs == []
+
+      sender_account = Account.get_account(state, sender.address)
+      beneficiary_account = Account.get_account(state, beneficiary.address)
+
+      assert sender_account == %Account{
+               balance: 400_000 - gas * gas_price,
+               nonce: sender.nonce + 1
+             }
+
+      assert beneficiary_account == %Account{balance: gas * gas_price}
+
+      contract_address = Contract.Address.new(sender.address, sender.nonce)
+      refute Account.exists?(Account.get_account(state, contract_address))
     end
   end
 end

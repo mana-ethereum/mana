@@ -273,7 +273,7 @@ defmodule Blockchain.StateTest do
 
       {state, logs} =
         case result do
-          {state, _, logs} -> {state, logs}
+          {state, _, logs, _tx_status} -> {state, logs}
           _ -> {pre_state, []}
         end
 

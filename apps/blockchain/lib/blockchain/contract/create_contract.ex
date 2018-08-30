@@ -45,7 +45,7 @@ defmodule Blockchain.Contract.CreateContract do
           config: EVM.Configuration.t()
         }
 
-  @spec execute(t()) :: {EVM.state(), EVM.Gas.t(), EVM.SubState.t()}
+  @spec execute(t()) :: {:ok | :error, {EVM.state(), EVM.Gas.t(), EVM.SubState.t()}}
   def execute(params) do
     sender_account = Account.get_account(params.state, params.sender)
     contract_address = Account.Address.new(params.sender, sender_account.nonce)
@@ -152,7 +152,7 @@ defmodule Blockchain.Contract.CreateContract do
           {EVM.Gas.t(), EVM.SubState.t(), EVM.ExecEnv.t(), EVM.VM.output()},
           t(),
           EVM.address()
-        ) :: {EVM.state(), EVM.Gas.t(), EVM.SubState.t()}
+        ) :: {:ok | :error, {EVM.state(), EVM.Gas.t(), EVM.SubState.t()}}
   defp finalize({remaining_gas, accrued_sub_state, exec_env, output}, params, address) do
     state_after_init = exec_env.account_interface.state
 

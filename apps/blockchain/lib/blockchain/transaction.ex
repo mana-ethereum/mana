@@ -44,6 +44,11 @@ defmodule Blockchain.Transaction do
           data: binary()
         }
 
+  @type status :: 0 | 1
+
+  @success_status 1
+  @failure_status 0
+
   @doc """
   Encodes a transaction such that it can be RLP-encoded.
   This is defined at L_T Eq.(15) in the Yellow Paper.
@@ -161,7 +166,7 @@ defmodule Blockchain.Transaction do
   Validates the validity of a transaction and then executes it if transaction is valid.
   """
   @spec execute_with_validation(EVM.state(), t, Header.t(), EVM.Configuration.t()) ::
-          {EVM.state(), Gas.t(), EVM.SubState.logs()}
+          {EVM.state(), Gas.t(), EVM.SubState.logs(), status()}
   def execute_with_validation(
         state,
         tx,
@@ -172,7 +177,7 @@ defmodule Blockchain.Transaction do
 
     case validation_result do
       :valid -> execute(state, tx, block_header, config)
-      {:invalid, _} -> {state, 0, []}
+      {:invalid, _} -> {state, 0, [], @failure_status}
     end
   end
 
@@ -185,13 +190,17 @@ defmodule Blockchain.Transaction do
   sender in the case of a message call or contract creation
   not directly triggered by a transaction but coming from
   the execution of EVM-code.
+
+  This function returns the final state, the total gas used, the logs created,
+  and the status code of this transaction. These are referred to as {σ', Υ^g,
+  Υ^l, Y^z} in the Transaction Execution section of the Yellow Paper.
   """
   @spec execute(EVM.state(), t, Header.t(), EVM.Configuration.t()) ::
-          {EVM.state(), Gas.t(), EVM.SubState.logs()}
+          {EVM.state(), Gas.t(), EVM.SubState.logs(), status()}
   def execute(state, tx, block_header, config \\ EVM.Configuration.Frontier.new()) do
     {:ok, sender} = Transaction.Signature.sender(tx)
 
-    {updated_state, remaining_gas, sub_state} =
+    {updated_state, remaining_gas, sub_state, status} =
       state
       |> begin_transaction(sender, tx)
       |> apply_transaction(tx, block_header, sender, config)
@@ -204,13 +213,21 @@ defmodule Blockchain.Transaction do
       |> clean_up_accounts_marked_for_destruction(sub_state, block_header)
       |> clean_touched_accounts(sub_state, config)
 
-    # { σ', Υ^g, Υ^l }, as defined in Eq.(79) and Eq.(80)
-    {final_state, expended_gas, sub_state.logs}
+    {final_state, expended_gas, sub_state.logs, status}
   end
 
+  @doc """
+  Performs the actual creation of a contract or message call. It returns a
+  four-tuple response {σ_P, g', A, z} designated as Λ_4 and Θ_4 in the Yellow
+  Paper
+
+  Note: the originator is always the same as the sender for transactions that
+  originate outside of the EVM.
+  """
+
   @spec apply_transaction(EVM.state(), t, Header.t(), EVM.address(), EVM.Configuration.t()) ::
-          {EVM.state(), Gas.t(), EVM.SubState.t()}
-  defp apply_transaction(state, tx, block_header, sender, config) do
+          {EVM.state(), Gas.t(), EVM.SubState.t(), status()}
+  def apply_transaction(state, tx, block_header, sender, config) do
     # sender and originator are the same for transaction execution
     originator = sender
     # stack depth starts at zero for transaction execution
@@ -220,9 +237,8 @@ defmodule Blockchain.Transaction do
     # gas is equal to what was just subtracted from sender account less intrinsic gas cost
     gas = tx.gas_limit - intrinsic_gas_cost(tx, config)
 
-    # TODO: Sender versus originator?
     if contract_creation?(tx) do
-      params = %Contract.CreateContract{
+      %Contract.CreateContract{
         state: state,
         sender: sender,
         originator: originator,
@@ -234,11 +250,10 @@ defmodule Blockchain.Transaction do
         block_header: block_header,
         config: config
       }
-
-      {_, result} = Contract.create(params)
-      result
+      |> Contract.create()
+      |> contract_creation_response()
     else
-      params = %Contract.MessageCall{
+      %Contract.MessageCall{
         state: state,
         sender: sender,
         originator: originator,
@@ -253,14 +268,31 @@ defmodule Blockchain.Transaction do
         block_header: block_header,
         config: config
       }
-
-      # Note, we only want to take the first 3 items from the tuples,
-      # as designated Θ_3 in the literature Θ_3
-      {state, remaining_gas_, sub_state_, _output} = Contract.message_call(params)
-      sub_state = SubState.add_touched_account(sub_state_, block_header.beneficiary)
-
-      {state, remaining_gas_, sub_state}
+      |> Contract.message_call()
+      |> message_call_response()
+      |> touch_beneficiary_account(block_header.beneficiary)
     end
+  end
+
+  defp touch_beneficiary_account({state, gas, sub_state, status}, beneficiary) do
+    new_sub_state = SubState.add_touched_account(sub_state, beneficiary)
+    {state, gas, new_sub_state, status}
+  end
+
+  defp contract_creation_response({:ok, {state, remaining_gas, sub_state}}) do
+    {state, remaining_gas, sub_state, @success_status}
+  end
+
+  defp contract_creation_response({:error, {state, remaining_gas, sub_state}}) do
+    {state, remaining_gas, sub_state, @failure_status}
+  end
+
+  defp message_call_response({:ok, {state, remaining_gas, sub_state, _output}}) do
+    {state, remaining_gas, sub_state, @success_status}
+  end
+
+  defp message_call_response({:error, {state, remaining_gas, sub_state, _output}}) do
+    {state, remaining_gas, sub_state, @failure_status}
   end
 
   @spec calculate_gas_usage(t, Gas.t(), EVM.SubState.t()) :: {Gas.t(), Gas.t()}

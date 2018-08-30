@@ -69,7 +69,7 @@ defmodule Blockchain.Block.HolisticValidity do
 
     child_block =
       base_block
-      |> Block.add_transactions(block.transactions, db, chain.evm_config)
+      |> Block.add_transactions(block.transactions, db, chain)
       |> Block.add_ommers(block.ommers)
       |> Block.add_rewards(db, chain)
 
