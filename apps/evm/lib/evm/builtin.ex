@@ -1,6 +1,6 @@
 defmodule EVM.Builtin do
   alias ExthCrypto.{Signature, Key}
-  alias EVM.Memory
+  alias EVM.{Memory, Helpers}
   alias BN.IntegerModP.Point
   alias BN.IntegerModP
   alias BN.BN128Arithmetic
@@ -190,32 +190,37 @@ defmodule EVM.Builtin do
     x2 = :binary.decode_unsigned(x2_bin)
     y2 = :binary.decode_unsigned(y2_bin)
 
-    if gas >= @g_ec_add do
-      if x1 > IntegerModP.default_modulus() || x2 > IntegerModP.default_modulus() ||
-           y1 > IntegerModP.default_modulus() || y2 > IntegerModP.default_modulus() do
+    cond do
+      gas < @g_ec_add ->
         {0, %EVM.SubState{}, exec_env, :failed}
-      else
-        {:ok, point1} = Point.new(x1, y1)
-        {:ok, point2} = Point.new(x2, y2)
 
-        if !BN128Arithmetic.on_curve?(point1) || !BN128Arithmetic.on_curve?(point2) do
-          {0, %EVM.SubState{}, exec_env, :failed}
-        else
-          {:ok, result} = BN128Arithmetic.add(point1, point2)
+      x1 > IntegerModP.default_modulus() || x2 > IntegerModP.default_modulus() ||
+        y1 > IntegerModP.default_modulus() || y2 > IntegerModP.default_modulus() ->
+        {0, %EVM.SubState{}, exec_env, :failed}
 
-          result_x = result.x.value |> :binary.encode_unsigned()
-          result_y = result.y.value |> :binary.encode_unsigned()
+      true ->
+        calculate_ec_add({x1, y1}, {x2, y2}, gas, exec_env)
+    end
+  end
 
-          output =
-            <<>>
-            |> Memory.write_zeroed_data(0, result_x, 32)
-            |> Memory.write_zeroed_data(32, result_y, 32)
+  @spec calculate_ec_add({integer, integer}, {integer, integer}, EVM.Gas.t(), EVM.ExecEnv.t()) ::
+          {EVM.Gas.t(), EVM.SubState.t(), EVM.ExecEnv.t(), EVM.VM.output()}
+  defp calculate_ec_add({x1, y1}, {x2, y2}, gas, exec_env) do
+    {:ok, point1} = Point.new(x1, y1)
+    {:ok, point2} = Point.new(x2, y2)
 
-          {gas - @g_ec_add, %EVM.SubState{}, exec_env, output}
-        end
-      end
-    else
+    if !BN128Arithmetic.on_curve?(point1) || !BN128Arithmetic.on_curve?(point2) do
       {0, %EVM.SubState{}, exec_env, :failed}
+    else
+      {:ok, result} = BN128Arithmetic.add(point1, point2)
+      result
+
+      result_x = :binary.encode_unsigned(result.x.value)
+      result_y = :binary.encode_unsigned(result.y.value)
+
+      output = Helpers.left_pad_bytes(result_x, 32) <> Helpers.left_pad_bytes(result_y, 32)
+
+      {gas - @g_ec_add, %EVM.SubState{}, exec_env, output}
     end
   end
 
