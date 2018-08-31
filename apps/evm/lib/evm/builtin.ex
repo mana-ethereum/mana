@@ -201,7 +201,7 @@ defmodule EVM.Builtin do
         if !BN128Arithmetic.on_curve?(point1) || !BN128Arithmetic.on_curve?(point2) do
           {0, %EVM.SubState{}, exec_env, :failed}
         else
-          result = BN128Arithmetic.add(point1, point2)
+          {:ok, result} = BN128Arithmetic.add(point1, point2)
 
           result_x = result.x.value |> :binary.encode_unsigned()
           result_y = result.y.value |> :binary.encode_unsigned()
