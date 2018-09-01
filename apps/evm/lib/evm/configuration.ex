@@ -85,6 +85,9 @@ defprotocol EVM.Configuration do
   @spec has_ec_add_builtin?(t) :: boolean()
   def has_ec_add_builtin?(t)
 
+  @spec has_ec_mult_builtin?(t) :: boolean()
+  def has_ec_mult_builtin?(t)
+
   # EIP198
   @spec has_mod_exp_builtin?(t) :: boolean()
   def has_mod_exp_builtin?(t)

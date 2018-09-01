@@ -21,6 +21,7 @@ defmodule EVM.Builtin do
   @g_ecrec 3000
   @g_quaddivisor 20
   @g_ec_add 500
+  @g_ec_mult 40_000
 
   @data_size_limit 24_577
 
@@ -200,6 +201,44 @@ defmodule EVM.Builtin do
 
       true ->
         calculate_ec_add({x1, y1}, {x2, y2}, gas, exec_env)
+    end
+  end
+
+  @spec ec_add(EVM.Gas.t(), EVM.ExecEnv.t()) ::
+          {EVM.Gas.t(), EVM.SubState.t(), EVM.ExecEnv.t(), EVM.VM.output()}
+  def ec_mult(gas, exec_env) do
+    data = Memory.read_zeroed_memory(exec_env.data, 0, 96)
+
+    <<x::binary-size(32), y::binary-size(32), scalar::binary-size(32)>> = data
+
+    cond do
+      gas < @g_ec_mult ->
+        {0, %EVM.SubState{}, exec_env, :failed}
+
+      x > IntegerModP.default_modulus() || y > IntegerModP.default_modulus() ->
+        {0, %EVM.SubState{}, exec_env, :failed}
+
+      true ->
+        calculate_ec_mult({x, y}, scalar, gas, exec_env)
+    end
+  end
+
+  @spec calculate_ec_add({integer, integer}, integer, EVM.Gas.t(), EVM.ExecEnv.t()) ::
+          {EVM.Gas.t(), EVM.SubState.t(), EVM.ExecEnv.t(), EVM.VM.output()}
+  defp calculate_ec_mult({x, y}, scalar, gas, exec_env) do
+    {:ok, point} = Point.new(x, y)
+
+    if BN128Arithmetic.on_curve?(point) do
+      {:ok, result} = BN128Arithmetic.mult(point, scalar)
+
+      result_x = :binary.encode_unsigned(result.x.value)
+      result_y = :binary.encode_unsigned(result.y.value)
+
+      output = Helpers.left_pad_bytes(result_x, 32) <> Helpers.left_pad_bytes(result_y, 32)
+
+      {gas - @g_ec_add, %EVM.SubState{}, exec_env, output}
+    else
+      {0, %EVM.SubState{}, exec_env, :failed}
     end
   end
 
