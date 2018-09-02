@@ -13,7 +13,7 @@ install_linux_deps() {
   echo $flavor
   case $flavor in
     debian|ubuntu)
-      sudo apt-get install -y $LINUX_DEPS libgmp-dev
+      sudo apt-get install -y $LINUX_DEPS libgmp-dev erlang-dev
       ;;
     fedora|centos)
       sudo yum install $LINUX_DEPS gmp-devel
