@@ -1,6 +1,9 @@
 defmodule EVM.Builtin do
   alias ExthCrypto.{Signature, Key}
-  alias EVM.Memory
+  alias EVM.{Memory, Helpers}
+  alias BN.IntegerModP.Point
+  alias BN.IntegerModP
+  alias BN.BN128Arithmetic
 
   @moduledoc """
   Implements the built-in functions as defined in Appendix E
@@ -17,6 +20,8 @@ defmodule EVM.Builtin do
   @g_identity_byte 3
   @g_ecrec 3000
   @g_quaddivisor 20
+  @g_ec_add 500
+  @g_ec_mult 40_000
 
   @data_size_limit 24_577
 
@@ -170,6 +175,94 @@ defmodule EVM.Builtin do
 
       true ->
         {0, %EVM.SubState{}, exec_env, :failed}
+    end
+  end
+
+  @spec ec_add(EVM.Gas.t(), EVM.ExecEnv.t()) ::
+          {EVM.Gas.t(), EVM.SubState.t(), EVM.ExecEnv.t(), EVM.VM.output()}
+  def ec_add(gas, exec_env) do
+    data = Memory.read_zeroed_memory(exec_env.data, 0, 128)
+
+    <<x1_bin::binary-size(32), y1_bin::binary-size(32), x2_bin::binary-size(32),
+      y2_bin::binary-size(32)>> = data
+
+    x1 = :binary.decode_unsigned(x1_bin)
+    y1 = :binary.decode_unsigned(y1_bin)
+    x2 = :binary.decode_unsigned(x2_bin)
+    y2 = :binary.decode_unsigned(y2_bin)
+
+    cond do
+      gas < @g_ec_add ->
+        {0, %EVM.SubState{}, exec_env, :failed}
+
+      x1 > IntegerModP.default_modulus() || x2 > IntegerModP.default_modulus() ||
+        y1 > IntegerModP.default_modulus() || y2 > IntegerModP.default_modulus() ->
+        {0, %EVM.SubState{}, exec_env, :failed}
+
+      true ->
+        calculate_ec_add({x1, y1}, {x2, y2}, gas, exec_env)
+    end
+  end
+
+  @spec ec_mult(EVM.Gas.t(), EVM.ExecEnv.t()) ::
+          {EVM.Gas.t(), EVM.SubState.t(), EVM.ExecEnv.t(), EVM.VM.output()}
+  def ec_mult(gas, exec_env) do
+    data = Memory.read_zeroed_memory(exec_env.data, 0, 96)
+
+    <<x_bin::binary-size(32), y_bin::binary-size(32), scalar_bin::binary-size(32)>> = data
+
+    x = :binary.decode_unsigned(x_bin)
+    y = :binary.decode_unsigned(y_bin)
+    scalar = :binary.decode_unsigned(scalar_bin)
+
+    cond do
+      gas < @g_ec_mult ->
+        {0, %EVM.SubState{}, exec_env, :failed}
+
+      x > IntegerModP.default_modulus() || y > IntegerModP.default_modulus() ->
+        {0, %EVM.SubState{}, exec_env, :failed}
+
+      true ->
+        calculate_ec_mult({x, y}, scalar, gas, exec_env)
+    end
+  end
+
+  @spec calculate_ec_add({integer, integer}, integer, EVM.Gas.t(), EVM.ExecEnv.t()) ::
+          {EVM.Gas.t(), EVM.SubState.t(), EVM.ExecEnv.t(), EVM.VM.output()}
+  defp calculate_ec_mult({x, y}, scalar, gas, exec_env) do
+    {:ok, point} = Point.new(x, y)
+
+    if BN128Arithmetic.on_curve?(point) do
+      {:ok, result} = BN128Arithmetic.mult(point, scalar)
+
+      result_x = :binary.encode_unsigned(result.x.value)
+      result_y = :binary.encode_unsigned(result.y.value)
+
+      output = Helpers.left_pad_bytes(result_x, 32) <> Helpers.left_pad_bytes(result_y, 32)
+
+      {gas - @g_ec_mult, %EVM.SubState{}, exec_env, output}
+    else
+      {0, %EVM.SubState{}, exec_env, :failed}
+    end
+  end
+
+  @spec calculate_ec_add({integer, integer}, {integer, integer}, EVM.Gas.t(), EVM.ExecEnv.t()) ::
+          {EVM.Gas.t(), EVM.SubState.t(), EVM.ExecEnv.t(), EVM.VM.output()}
+  defp calculate_ec_add({x1, y1}, {x2, y2}, gas, exec_env) do
+    {:ok, point1} = Point.new(x1, y1)
+    {:ok, point2} = Point.new(x2, y2)
+
+    if !BN128Arithmetic.on_curve?(point1) || !BN128Arithmetic.on_curve?(point2) do
+      {0, %EVM.SubState{}, exec_env, :failed}
+    else
+      {:ok, result} = BN128Arithmetic.add(point1, point2)
+
+      result_x = :binary.encode_unsigned(result.x.value)
+      result_y = :binary.encode_unsigned(result.y.value)
+
+      output = Helpers.left_pad_bytes(result_x, 32) <> Helpers.left_pad_bytes(result_y, 32)
+
+      {gas - @g_ec_add, %EVM.SubState{}, exec_env, output}
     end
   end
 

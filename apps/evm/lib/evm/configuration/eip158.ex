@@ -78,4 +78,10 @@ defimpl EVM.Configuration, for: EVM.Configuration.EIP158 do
 
   @spec has_mod_exp_builtin?(Configuration.t()) :: boolean()
   def has_mod_exp_builtin?(config), do: Configuration.has_mod_exp_builtin?(config.fallback_config)
+
+  @spec has_ec_add_builtin?(Configuration.t()) :: boolean()
+  def has_ec_add_builtin?(config), do: Configuration.has_ec_add_builtin?(config.fallback_config)
+
+  @spec has_ec_mult_builtin?(Configuration.t()) :: boolean()
+  def has_ec_mult_builtin?(config), do: Configuration.has_ec_mult_builtin?(config.fallback_config)
 end

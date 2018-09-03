@@ -252,6 +252,7 @@ defmodule EVM.MessageCall do
   @spec get_run_function(EVM.address(), EVM.Configuration.t()) ::
           (EVM.Gas.t(), EVM.ExecEnv.t() ->
              {EVM.state(), EVM.Gas.t(), EVM.SubState.t(), EVM.VM.output()})
+  # credo:disable-for-next-line
   def get_run_function(code_owner, config) do
     address = :binary.decode_unsigned(code_owner)
 
@@ -261,6 +262,8 @@ defmodule EVM.MessageCall do
       address == 3 -> &Builtin.run_rip160/2
       address == 4 -> &Builtin.run_id/2
       address == 5 && EVM.Configuration.has_mod_exp_builtin?(config) -> &Builtin.mod_exp/2
+      address == 6 && EVM.Configuration.has_ec_add_builtin?(config) -> &Builtin.ec_add/2
+      address == 7 && EVM.Configuration.has_ec_mult_builtin?(config) -> &Builtin.ec_mult/2
       true -> &VM.run/2
     end
   end

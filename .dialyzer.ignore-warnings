@@ -59,6 +59,9 @@ apps/evm/lib/evm/operation/environmental_information.ex:114: Function calldatalo
 apps/evm/lib/evm/operation/environmental_information.ex:117: The call 'Elixir.EVM.Helpers':decode_signed(binary()) breaks the contract (integer() | 'nil') -> 'Elixir.EVM':val() | 'nil'
 apps/evm/lib/evm/vm.ex:98: The pattern 'continue' can never match the type {'halt','invalid_instruction' | 'stack_underflow' | 'undefined_instruction'}
 apps/evm/lib/evm/vm.ex:133: Function cycle/3 has no local return
+apps/evm/lib/evm/builtin.ex:235: Guard test __@1::'true' =:= 'false' can never succeed
+apps/evm/lib/evm/builtin.ex:255: Guard test __@3::'true' =:= 'false' can never succeed
+apps/evm/lib/evm/builtin.ex:255: Guard test __@1::'true' =:= 'false' can never succeed
 
 -------------------------------
 # TODO: rewrite mocked protocol typespecs
