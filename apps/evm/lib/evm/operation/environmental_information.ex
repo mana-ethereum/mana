@@ -334,11 +334,15 @@ defmodule EVM.Operation.EnvironmentalInformation do
       }
   """
   @spec returndatacopy(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
-  def returndatacopy([memory_start, return_data_start, length], %{machine_state: machine_state}) do
-    data = Memory.read_zeroed_memory(machine_state.last_return_data, return_data_start, length)
+  def returndatacopy([memory_start, return_data_start, size], %{machine_state: machine_state}) do
+    if size == 0 || size + memory_start >= EVM.max_int() - 1 ||
+         return_data_start + size >= EVM.max_int() - 1 do
+      %{machine_state: machine_state}
+    else
+      data = Memory.read_zeroed_memory(machine_state.last_return_data, return_data_start, size)
+      machine_state = Memory.write(machine_state, memory_start, data)
 
-    machine_state = Memory.write(machine_state, memory_start, data)
-
-    %{machine_state: machine_state}
+      %{machine_state: machine_state}
+    end
   end
 end
