@@ -252,6 +252,7 @@ defmodule EVM.MessageCall do
   @spec get_run_function(EVM.address(), EVM.Configuration.t()) ::
           (EVM.Gas.t(), EVM.ExecEnv.t() ->
              {EVM.state(), EVM.Gas.t(), EVM.SubState.t(), EVM.VM.output()})
+  # credo:disable-for-next-line
   def get_run_function(code_owner, config) do
     address = :binary.decode_unsigned(code_owner)
 
