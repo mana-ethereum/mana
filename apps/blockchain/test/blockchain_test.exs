@@ -10,6 +10,8 @@ defmodule BlockchainTest do
 
   doctest Blockchain
 
+  @failing_byzantium_tests File.read!(System.cwd() <> "/test/support/byzantium_failing_tests.txt")
+
   @failing_tests %{
     "Frontier" => [],
     "Homestead" => [],
@@ -17,8 +19,8 @@ defmodule BlockchainTest do
     "EIP158" => [
       "GeneralStateTests/stSpecialTest/failed_tx_xcf416c53_d0g0v0.json"
     ],
+    "Byzantium" => String.split(@failing_byzantium_tests, "\n"),
     # the rest are not implemented yet
-    "Byzantium" => [],
     "Constantinople" => [],
     "EIP158ToByzantiumAt5" => [],
     "FrontierToHomesteadAt5" => [],
@@ -123,7 +125,7 @@ defmodule BlockchainTest do
 
     """
     Block hash mismatch for the following tests:
-    #{inspect(error_messages)}
+    #{error_messages}
     -----------------
     Total failures: #{inspect(total_failures)}
     """
@@ -153,6 +155,9 @@ defmodule BlockchainTest do
       "EIP158" ->
         Chain.load_chain(:eip150_test, config)
 
+      "Byzantium" ->
+        Chain.load_chain(:byzantium_test, config)
+
       _ ->
         nil
     end
@@ -171,6 +176,9 @@ defmodule BlockchainTest do
 
       "EIP158" ->
         EVM.Configuration.EIP158.new()
+
+      "Byzantium" ->
+        EVM.Configuration.Byzantium.new()
 
       _ ->
         nil

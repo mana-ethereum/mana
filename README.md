@@ -89,18 +89,19 @@ Ethereum common tests are created for all clients to test against. We plan to pr
 - [VMTests](https://github.com/ethereum/tests/tree/develop/VMTests/vmTests) = 100% passing
 - [x] Frontier
     - [BlockchainTests](https://github.com/ethereum/tests/tree/develop/BlockchainTests) (Includes GeneralStateTests) 1325/1325 = 100% passing
-    - [GeneralStateTests](https://github.com/ethereum/tests/tree/develop/GeneralStateTests) 1015/1027 = 98.8% passing
+    - [GeneralStateTests](https://github.com/ethereum/tests/tree/develop/GeneralStateTests) 1014/1026 = 98.8% passing
 - [x] Homestead
     - [BlockchainTests](https://github.com/ethereum/tests/tree/develop/BlockchainTests) (Includes GeneralStateTests) 2231/2231 = 100% passing
-    - [GeneralStateTests](https://github.com/ethereum/tests/tree/develop/GeneralStateTests) 2024/2062 = 98.2% passing
+    - [GeneralStateTests](https://github.com/ethereum/tests/tree/develop/GeneralStateTests) 2023/2061 = 98.2% passing
 - [x] EIP150
    - [BlockchainTests](https://github.com/ethereum/tests/tree/develop/BlockchainTests) (Includes GeneralStateTests) 1275/1275 = 100% passing
-   - [GeneralStateTests](https://github.com/ethereum/tests/tree/develop/GeneralStateTests) 1089/1114 = 97.8% passing
+   - [GeneralStateTests](https://github.com/ethereum/tests/tree/develop/GeneralStateTests) 1088/1113 = 97.8% passing
 - [x] EIP158
    - [BlockchainTests](https://github.com/ethereum/tests/tree/develop/BlockchainTests) (Includes GeneralStateTests) 1232/1233 = 99.9% passing
-   - [GeneralStateTests](https://github.com/ethereum/tests/tree/develop/GeneralStateTests) 1175/1181 = 99.5% passing
+   - [GeneralStateTests](https://github.com/ethereum/tests/tree/develop/GeneralStateTests) 1174/1180 = 99.5% passing
 - [x] Byzantium
-   - [GeneralStateTests](https://github.com/ethereum/tests/tree/develop/GeneralStateTests) 4564/4632 = 98.5% passing
+   - [BlockchainTests](https://github.com/ethereum/tests/tree/develop/BlockchainTests) (Includes GeneralStateTests) 3823/4959 = 77.1% passing
+   - [GeneralStateTests](https://github.com/ethereum/tests/tree/develop/GeneralStateTests) 1174/1180= 99.5% passing
 - [ ] Constantinople:  View the community [Constantinople Project Tracker](https://github.com/ethereum/pm/issues/53).
 
 

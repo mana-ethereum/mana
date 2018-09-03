@@ -57,42 +57,85 @@ defmodule Blockchain.BlockTest do
     |> Enum.into(%{})
   end
 
-  test "rewards the miner and ommers" do
-    db = MerklePatriciaTree.Test.random_ets_db()
-    miner = <<0x05::160>>
-    ommer = <<0x06::160>>
-    state = MerklePatriciaTree.Trie.new(db)
+  describe "add_rewards/3" do
+    test "rewards the miner and ommers" do
+      db = MerklePatriciaTree.Test.random_ets_db()
+      miner = <<0x05::160>>
+      ommer = <<0x06::160>>
+      state = MerklePatriciaTree.Trie.new(db)
+      chain = Chain.load_chain(:ropsten)
 
-    block = %Blockchain.Block{
-      header: %Header{
-        number: 3,
-        state_root: state.root_hash,
-        beneficiary: miner
-      },
-      ommers: [
-        %Header{
-          number: 1,
-          beneficiary: ommer
-        }
-      ]
-    }
+      block = %Blockchain.Block{
+        header: %Header{
+          number: 3,
+          state_root: state.root_hash,
+          beneficiary: miner
+        },
+        ommers: [
+          %Header{
+            number: 1,
+            beneficiary: ommer
+          }
+        ]
+      }
 
-    block = Blockchain.Block.add_rewards(block, db, 500_000)
+      block = Blockchain.Block.add_rewards(block, db, chain)
 
-    miner_balance =
-      block
-      |> Blockchain.Block.get_state(db)
-      |> Blockchain.Account.get_account(miner)
-      |> Map.get(:balance)
+      miner_balance =
+        block
+        |> Blockchain.Block.get_state(db)
+        |> Blockchain.Account.get_account(miner)
+        |> Map.get(:balance)
 
-    ommer_balance =
-      block
-      |> Blockchain.Block.get_state(db)
-      |> Blockchain.Account.get_account(ommer)
-      |> Map.get(:balance)
+      ommer_balance =
+        block
+        |> Blockchain.Block.get_state(db)
+        |> Blockchain.Account.get_account(ommer)
+        |> Map.get(:balance)
 
-    assert miner_balance == 515_625
-    assert ommer_balance == 375_000
+      assert miner_balance == round(515_625.0e13)
+      assert ommer_balance == round(375.0e16)
+    end
+
+    test "rewards the miner and ommers with Byzantium rewards" do
+      db = MerklePatriciaTree.Test.random_ets_db()
+      miner = <<0x05::160>>
+      ommer = <<0x06::160>>
+      state = MerklePatriciaTree.Trie.new(db)
+      chain = Chain.load_chain(:ropsten)
+      byzantium_block_number = chain.engine["Ethash"][:eip649_transition]
+
+      block = %Blockchain.Block{
+        header: %Header{
+          number: byzantium_block_number,
+          state_root: state.root_hash,
+          beneficiary: miner
+        },
+        ommers: [
+          %Header{
+            number: byzantium_block_number - 2,
+            beneficiary: ommer
+          }
+        ]
+      }
+
+      block = Blockchain.Block.add_rewards(block, db, chain)
+
+      miner_balance =
+        block
+        |> Blockchain.Block.get_state(db)
+        |> Blockchain.Account.get_account(miner)
+        |> Map.get(:balance)
+
+      ommer_balance =
+        block
+        |> Blockchain.Block.get_state(db)
+        |> Blockchain.Account.get_account(ommer)
+        |> Map.get(:balance)
+
+      assert miner_balance == round(309_375.0e13)
+      assert ommer_balance == round(225.0e16)
+    end
   end
 
   test "serialize and deserialize a block is lossless" do
@@ -152,6 +195,22 @@ defmodule Blockchain.BlockTest do
              block |> Block.serialize() |> ExRLP.encode() |> ExRLP.decode() |> Block.deserialize()
   end
 
+  test "validate" do
+    db = MerklePatriciaTree.Test.random_ets_db()
+    chain = Blockchain.Test.ropsten_chain()
+    parent = Blockchain.Genesis.create_block(chain, db)
+    beneficiary = <<0x05::160>>
+
+    child =
+      parent
+      |> Blockchain.Block.gen_child_block(chain, beneficiary: beneficiary)
+      |> Blockchain.Block.add_rewards(db, chain)
+
+    result = Blockchain.Block.validate(child, chain, parent, db)
+
+    assert result == :valid
+  end
+
   test "match genesis block on ropsten" do
     db = MerklePatriciaTree.Test.random_ets_db()
     chain = Blockchain.Test.ropsten_chain()
@@ -159,7 +218,7 @@ defmodule Blockchain.BlockTest do
     block =
       chain
       |> Genesis.create_block(db)
-      |> Block.add_rewards(db)
+      |> Block.add_rewards(db, chain)
       |> Block.put_header(:mix_hash, <<0::256>>)
       |> Block.put_header(:nonce, <<0x42::64>>)
 
@@ -211,7 +270,7 @@ defmodule Blockchain.BlockTest do
     result =
       chain
       |> Genesis.create_block(db)
-      |> Block.add_rewards(db)
+      |> Block.add_rewards(db, chain)
       |> Block.validate(chain, nil, db)
 
     assert result == :valid

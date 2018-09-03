@@ -69,6 +69,10 @@ defmodule Block.Header do
   # https://github.com/ethereum/EIPs/blob/master/EIPS/eip-606.md
   @homestead_block 1_150_000
 
+  # The start of the Byzantium block, as defined in EIP-609:
+  # https://github.com/ethereum/EIPs/blob/master/EIPS/eip-609.md
+  @byzantium_block 4_370_000
+
   # D_0 is the difficulty of the genesis block.
   # As defined in Eq.(42)
   @initial_difficulty 131_072
@@ -243,6 +247,32 @@ defmodule Block.Header do
   end
 
   @doc """
+  Returns true if a given block is before the
+  Homestead block.
+
+  ## Examples
+
+      iex> Block.Header.is_before_byzantium?(%Block.Header{number: 5})
+      true
+
+      iex> Block.Header.is_before_byzantium?(%Block.Header{number: 5_000_000})
+      false
+
+      iex> Block.Header.is_before_byzantium?(%Block.Header{number: 4_370_000})
+      false
+
+      iex> Block.Header.is_before_byzantium?(%Block.Header{number: 5}, 6)
+      true
+
+      iex> Block.Header.is_before_byzantium?(%Block.Header{number: 5}, 4)
+      false
+  """
+  @spec is_before_byzantium?(t, integer()) :: boolean()
+  def is_before_byzantium?(h, byzantium_block \\ @byzantium_block) do
+    h.number < byzantium_block
+  end
+
+  @doc """
   Returns true if a given block is at or after the
   Homestead block.
 
@@ -338,8 +368,80 @@ defmodule Block.Header do
   end
 
   @doc """
-  Calculates the difficulty of a new block header. This implements Eq.(41),
-  Eq.(42), Eq.(43), Eq.(44), Eq.(45) and Eq.(46) of the Yellow Paper.
+  Calculates the difficulty of a new block header for Byzantium. This implements
+  Eq.(41), Eq.(42), Eq.(43), Eq.(44), Eq.(45) and Eq.(46) of the Yellow Paper.
+
+  ## Examples
+
+      iex> Block.Header.get_byzantium_difficulty(
+      ...>   %Block.Header{number: 1, timestamp: 1479642530},
+      ...>   %Block.Header{number: 0, timestamp: 0, difficulty: 1_048_576}
+      ...> )
+      997_888
+  """
+  def get_byzantium_difficulty(
+        header,
+        parent_header,
+        initial_difficulty \\ @initial_difficulty,
+        minimum_difficulty \\ @minimum_difficulty,
+        difficulty_bound_divisor \\ @difficulty_bound_divisor
+      ) do
+    if header.number == 0 do
+      initial_difficulty
+    else
+      difficulty_delta =
+        difficulty_x(parent_header.difficulty, difficulty_bound_divisor) *
+          byzantium_difficulty_parameter(header, parent_header)
+
+      next_difficulty =
+        parent_header.difficulty + difficulty_delta + byzantium_difficulty_e(header)
+
+      max(minimum_difficulty, next_difficulty)
+    end
+  end
+
+  @doc """
+  Calculates the difficulty of a new block header for Homestead. This implements
+  Eq.(41), Eq.(42), Eq.(43), Eq.(44), Eq.(45) and Eq.(46) of the Yellow Paper.
+
+  ## Examples
+
+      iex> Block.Header.get_homestead_difficulty(
+      ...>  %Block.Header{number: 3_000_001, timestamp: 66},
+      ...>  %Block.Header{number: 3_000_000, timestamp: 55, difficulty: 300_000}
+      ...> )
+      268_735_456
+
+      iex> Block.Header.get_homestead_difficulty(
+      ...>  %Block.Header{number: 3_000_001, timestamp: 155},
+      ...>  %Block.Header{number: 3_000_000, timestamp: 55, difficulty: 300_000}
+      ...> )
+      268_734_142
+  """
+  @spec get_homestead_difficulty(t, t | nil, integer(), integer(), integer()) :: integer()
+  def get_homestead_difficulty(
+        header,
+        parent_header,
+        initial_difficulty \\ @initial_difficulty,
+        minimum_difficulty \\ @minimum_difficulty,
+        difficulty_bound_divisor \\ @difficulty_bound_divisor
+      ) do
+    if header.number == 0 do
+      initial_difficulty
+    else
+      difficulty_delta =
+        difficulty_x(parent_header.difficulty, difficulty_bound_divisor) *
+          homestead_difficulty_parameter(header, parent_header)
+
+      next_difficulty = parent_header.difficulty + difficulty_delta + difficulty_e(header)
+
+      max(minimum_difficulty, next_difficulty)
+    end
+  end
+
+  @doc """
+  Calculates the difficulty of a new block header for Frontier. This implements
+  Eq.(41), Eq.(42), Eq.(43), Eq.(44), Eq.(45) and Eq.(46) of the Yellow Paper.
 
   ## Examples
 
@@ -366,41 +468,7 @@ defmodule Block.Header do
       ...>  %Block.Header{number: 32, timestamp: 55, difficulty: 300_000}
       ...> )
       299_854
-
-      iex> Block.Header.get_homestead_difficulty(
-      ...>  %Block.Header{number: 3_000_001, timestamp: 66},
-      ...>  %Block.Header{number: 3_000_000, timestamp: 55, difficulty: 300_000}
-      ...> )
-      268_735_456
-
-      iex> Block.Header.get_homestead_difficulty(
-      ...>  %Block.Header{number: 3_000_001, timestamp: 155},
-      ...>  %Block.Header{number: 3_000_000, timestamp: 55, difficulty: 300_000}
-      ...> )
-      268_734_142
   """
-
-  @spec get_homestead_difficulty(t, t | nil, integer(), integer(), integer()) :: integer()
-  def get_homestead_difficulty(
-        header,
-        parent_header,
-        initial_difficulty \\ @initial_difficulty,
-        minimum_difficulty \\ @minimum_difficulty,
-        difficulty_bound_divisor \\ @difficulty_bound_divisor
-      ) do
-    if header.number == 0 do
-      initial_difficulty
-    else
-      difficulty_delta =
-        difficulty_x(parent_header.difficulty, difficulty_bound_divisor) *
-          homestead_difficulty_parameter(header, parent_header)
-
-      next_difficulty = parent_header.difficulty + difficulty_delta + difficulty_e(header)
-
-      max(minimum_difficulty, next_difficulty)
-    end
-  end
-
   @spec get_frontier_difficulty(t, t | nil, integer(), integer(), integer()) :: integer()
   def get_frontier_difficulty(
         header,
@@ -437,15 +505,33 @@ defmodule Block.Header do
     max(1 - s, -99)
   end
 
+  @spec byzantium_difficulty_parameter(t, t) :: integer()
+  defp byzantium_difficulty_parameter(header, parent_header) do
+    s = div(header.timestamp - parent_header.timestamp, 9)
+    y = if parent_header.ommers_hash == @empty_keccak, do: 1, else: 2
+    max(y - s, -99)
+  end
+
   # Eq.(41) x - Creates some multiplier for how much we should change difficulty based on previous difficulty
   @spec difficulty_x(integer(), integer()) :: integer()
   defp difficulty_x(parent_difficulty, difficulty_bound_divisor),
     do: div(parent_difficulty, difficulty_bound_divisor)
 
+  # Eq.(46) H' - ε non negative
+  @spec byzantium_difficulty_e(t) :: integer()
+  defp byzantium_difficulty_e(header) do
+    fake_block_number_to_delay_ice_age = max(header.number - 3_000_000, 0)
+    difficulty_exponent_calculation(fake_block_number_to_delay_ice_age)
+  end
+
   # Eq.(44) ε - Adds a delta to ensure we're increasing difficulty over time
   @spec difficulty_e(t) :: integer()
   defp difficulty_e(header) do
-    MathHelper.floor(:math.pow(2, div(header.number, 100_000) - 2))
+    difficulty_exponent_calculation(header.number)
+  end
+
+  defp difficulty_exponent_calculation(block_number) do
+    MathHelper.floor(:math.pow(2, div(block_number, 100_000) - 2))
   end
 
   @spec check_difficulty_validity([atom()], t, integer()) :: [atom()]

@@ -81,8 +81,8 @@ lib/trie/helper.ex:41: The variable _@1 can never match since previous clauses c
 -------------------------------
 # blockchain/block.ex warnings
 -------------------------------
-apps/blockchain/lib/blockchain/block.ex:438: Function gen_child_block/2 has no local return
-apps/blockchain/lib/blockchain/block.ex:438: Function gen_child_block/3 has no local return
+apps/blockchain/lib/blockchain/block.ex:436: Function gen_child_block/2 has no local return
+apps/blockchain/lib/blockchain/block.ex:436: Function gen_child_block/3 has no local return
 apps/blockchain/lib/blockchain/block.ex:443: The call 'Elixir.Blockchain.Block':set_block_number(#{'__s
 truct__':='Elixir.Blockchain.Block', 'block_hash':='nil', 'header':=#{'__struct__':='Elixir.Block.Heade
 r', 'beneficiary':=_, 'difficulty':='nil', 'extra_data':=_, 'gas_limit':=0, 'gas_used':=0, 'logs_bloom'
@@ -92,8 +92,8 @@ r', 'beneficiary':=_, 'difficulty':='nil', 'extra_data':=_, 'gas_limit':=0, 'gas
 apps/merkle_patricia_tree/lib/merkle_patricia_tree/trie/helper.ex:41: Guard test is_binary(__@1::<<_:4>
 >) can never succeed
 
-apps/blockchain/lib/blockchain/block.ex:691: Function add_transactions/3 has no local return
-apps/blockchain/lib/blockchain/block.ex:691: The call 'Elixir.Blockchain.Block':add_transactions(_@1
+apps/blockchain/lib/blockchain/block.ex:701: Function add_transactions/3 has no local return
+apps/blockchain/lib/blockchain/block.ex:701: The call 'Elixir.Blockchain.Block':add_transactions(_@1
 ::any(),_@2::any(),_@3::any(),#{'__struct__':='Elixir.EVM.Configuration.Frontier', 'contract_creatio
 n_cost':=21000, 'has_delegate_call':='false'}) will never return since the success typing is (#{'__s
 truct__':='Elixir.Blockchain.Block', 'block_hash':='nil' | <<_:256>>, 'header':=#{'__struct__':='Eli

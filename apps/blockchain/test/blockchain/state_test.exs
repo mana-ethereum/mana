@@ -10,7 +10,6 @@ defmodule Blockchain.StateTest do
 
   @failing_tests %{
     "Byzantium" => [
-      "stBugs/returndatacopyPythonBug_Tue_03_48_41-1432",
       "stCreateTest/CreateOOGafterInitCodeReturndata",
       "stRandom2/randomStatetest647",
       "stReturnDataTest/call_outsize_then_create_successful_then_returndatasize",
@@ -38,14 +37,12 @@ defmodule Blockchain.StateTest do
       "stRevertTest/RevertInCallCode",
       "stRevertTest/RevertInCreateInInit",
       "stRevertTest/RevertInDelegateCall",
-      "stRevertTest/RevertOpcodeInCallsOnNonEmptyReturnData",
       "stRevertTest/RevertOpcodeInCreateReturns",
       "stRevertTest/RevertOpcodeMultipleSubCalls",
       "stSpecialTest/failed_tx_xcf416c53",
       "stStaticCall/static_Call1024PreCalls2",
       "stStaticCall/static_CallEcrecover0_0input",
       "stStaticCall/static_PostToReturn1",
-      "stStaticCall/static_RevertOpcodeCalls",
       "stStaticCall/static_callWithHighValueAndOOGatTxLevel",
       "stTransactionTest/EmptyTransaction2",
       "stZeroKnowledge/ecpairing_bad_length_191",
