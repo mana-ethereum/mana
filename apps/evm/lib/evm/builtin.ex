@@ -209,7 +209,11 @@ defmodule EVM.Builtin do
   def ec_mult(gas, exec_env) do
     data = Memory.read_zeroed_memory(exec_env.data, 0, 96)
 
-    <<x::binary-size(32), y::binary-size(32), scalar::binary-size(32)>> = data
+    <<x_bin::binary-size(32), y_bin::binary-size(32), scalar_bin::binary-size(32)>> = data
+
+    x = :binary.decode_unsigned(x_bin)
+    y = :binary.decode_unsigned(y_bin)
+    scalar = :binary.decode_unsigned(scalar_bin)
 
     cond do
       gas < @g_ec_mult ->
@@ -236,7 +240,7 @@ defmodule EVM.Builtin do
 
       output = Helpers.left_pad_bytes(result_x, 32) <> Helpers.left_pad_bytes(result_y, 32)
 
-      {gas - @g_ec_add, %EVM.SubState{}, exec_env, output}
+      {gas - @g_ec_mult, %EVM.SubState{}, exec_env, output}
     else
       {0, %EVM.SubState{}, exec_env, :failed}
     end
@@ -252,7 +256,6 @@ defmodule EVM.Builtin do
       {0, %EVM.SubState{}, exec_env, :failed}
     else
       {:ok, result} = BN128Arithmetic.add(point1, point2)
-      result
 
       result_x = :binary.encode_unsigned(result.x.value)
       result_y = :binary.encode_unsigned(result.y.value)
