@@ -52,7 +52,7 @@ defmodule EVM.Mixfile do
       {:merkle_patricia_tree, in_umbrella: true},
       {:exth_crypto, in_umbrella: true},
       {:ex_rlp, "~> 0.3.0"},
-      {:bn, path: "/home/ayrat/Development/bn"}
+      {:bn, "~> 0.1.0"}
     ]
   end
 
