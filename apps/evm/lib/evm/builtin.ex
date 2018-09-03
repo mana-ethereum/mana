@@ -204,7 +204,7 @@ defmodule EVM.Builtin do
     end
   end
 
-  @spec ec_add(EVM.Gas.t(), EVM.ExecEnv.t()) ::
+  @spec ec_mult(EVM.Gas.t(), EVM.ExecEnv.t()) ::
           {EVM.Gas.t(), EVM.SubState.t(), EVM.ExecEnv.t(), EVM.VM.output()}
   def ec_mult(gas, exec_env) do
     data = Memory.read_zeroed_memory(exec_env.data, 0, 96)

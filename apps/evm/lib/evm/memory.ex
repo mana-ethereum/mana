@@ -75,14 +75,6 @@ defmodule EVM.Memory do
     do: write(machine_state, offset_bytes, :binary.encode_unsigned(data), size)
 
   def write(machine_state = %MachineState{}, offset_bytes, original_data, size) do
-    updated_memory = write_zeroed_data(machine_state.memory, offset_bytes, original_data, size)
-
-    %{machine_state | memory: updated_memory}
-    |> MachineState.maybe_set_active_words(get_active_words(byte_size(updated_memory)))
-  end
-
-  @spec write_zeroed_data(binary(), integer(), binary(), integer()) :: binary()
-  def write_zeroed_data(output, offset_bytes, original_data, size \\ nil) do
     data =
       if size do
         original_data
@@ -93,16 +85,20 @@ defmodule EVM.Memory do
         original_data
       end
 
-    memory_size = byte_size(output)
+    memory_size = byte_size(machine_state.memory)
     data_size = byte_size(data)
     final_pos = offset_bytes + data_size
     padding_bits = max(final_pos - memory_size, 0) * 8
     final_memory_byte = max(memory_size - final_pos, 0)
 
-    memory = output <> <<0::size(padding_bits)>>
+    memory = machine_state.memory <> <<0::size(padding_bits)>>
 
-    :binary.part(memory, 0, offset_bytes) <>
-      data <> :binary.part(memory, final_pos, final_memory_byte)
+    updated_memory =
+      :binary.part(memory, 0, offset_bytes) <>
+        data <> :binary.part(memory, final_pos, final_memory_byte)
+
+    %{machine_state | memory: updated_memory}
+    |> MachineState.maybe_set_active_words(get_active_words(offset_bytes + byte_size(data)))
   end
 
   @doc """
