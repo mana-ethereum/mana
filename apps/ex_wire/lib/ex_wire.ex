@@ -20,7 +20,7 @@ defmodule ExWire do
         db = MerklePatriciaTree.DB.RocksDB.init(db_name())
 
         [
-          worker(ExWire.PeerSupervisor, [ExWire.Config.bootnodes()]),
+          supervisor(ExWire.PeerSupervisor, [:ok]),
           worker(ExWire.Sync, [db])
         ]
       else

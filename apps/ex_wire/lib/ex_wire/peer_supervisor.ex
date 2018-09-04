@@ -1,45 +1,46 @@
 defmodule ExWire.PeerSupervisor do
   @moduledoc """
-  The Peer Supervisor is responsible for maintaining a set of peer TCP connections.
-
-  We should ask bootnodes for a set of potential peers via the Discovery Protocol, and then
-  we can connect to those nodes. Currently, we just connect to the Bootnodes themselves.
+  The Peer Supervisor is responsible for maintaining a set of peer TCP
+  connections.
   """
-
-  # TODO: We need to track and see which of these are up. We need to percolate messages on success.
-
-  use Supervisor
+  use DynamicSupervisor
 
   @name __MODULE__
 
-  def start_link(bootnodes) do
-    Supervisor.start_link(__MODULE__, bootnodes, name: @name)
+  def start_link(args) do
+    DynamicSupervisor.start_link(__MODULE__, args, name: @name)
   end
 
-  def init(bootnodes) do
-    # TODO: Ask for peers, etc.
+  @doc """
+  Creates an outbound connection with peer.
 
-    children =
-      for bootnode <- bootnodes do
-        {:ok, peer} = ExWire.Struct.Peer.from_uri(bootnode)
+  This function should be called when the Discovery portion of mana discovers new
+  nodes.
+  """
+  def start_child(peer_enode_url) do
+    {:ok, peer} = ExWire.Struct.Peer.from_uri(peer_enode_url)
 
-        worker(ExWire.P2P.Server, [:outbound, peer, [{:server, ExWire.Sync}]])
-      end
+    spec = {ExWire.P2P.Server, [:outbound, peer, [{:server, ExWire.Sync}]]}
 
-    Supervisor.init(children, strategy: :one_for_one)
+    DynamicSupervisor.start_child(@name, spec)
   end
 
   @doc """
   Sends a packet to all active TCP connections. This is useful when we want to, for instance,
   ask for a `GetBlockBody` from all peers for a given block hash.
   """
-  def send_packet(pid, packet) do
+  def send_packet(packet) do
     # Send to all of the Supervisor's children...
     # ... not the best.
 
-    for {_id, child, _type, _modules} <- Supervisor.which_children(pid) do
+    for {_id, child, _type, _modules} <- DynamicSupervisor.which_children(@name) do
       # Children which are being restarted by not have a child_pid at this time.
       if is_pid(child), do: ExWire.P2P.Server.send_packet(child, packet)
     end
+  end
+
+  @impl true
+  def init(_) do
+    DynamicSupervisor.init(strategy: :one_for_one)
   end
 end
