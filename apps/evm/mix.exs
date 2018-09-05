@@ -9,11 +9,11 @@ defmodule EVM.Mixfile do
       config_path: "../../config/config.exs",
       deps_path: "../../deps",
       lockfile: "../../mix.lock",
-      description: "Ethereum's Virtual Machine, in all its glory.",
+      description: "Ethereum's Virtual Machine",
       package: [
-        maintainers: ["Geoffrey Hayes", "Ayrat Badykov", "Mason Forest"],
-        licenses: ["MIT"],
-        links: %{"GitHub" => "https://github.com/exthereum/evm"}
+        maintainers: ["Ayrat Badykov", "Mason Forest"],
+        licenses: ["LGPL v3"],
+        links: %{"GitHub" => "https://github.com/poanetwork/mana/apps/evm"}
       ],
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,

@@ -35,19 +35,11 @@ create an update a trie.
     nil
 ```
 
+## Installation
+
+Installation is handled through the bin/setup procedure in the [Mana-Ethereum README](../../README.md).
+
+
 ## Contributing
 
-1. [Fork it!](https://github.com/exthereum/merkle_patricia_trie/fork)
-2. Create your feature branch (`git checkout -b my-new-feature`)
-3. Commit your changes (`git commit -am 'Add some feature'`)
-4. Push to the branch (`git push origin my-new-feature`)
-5. Create new Pull Request
-
-## Author
-
-Geoffrey Hayes (@hayesgm)
-Ayrat Badykov (@ayrat555)
-
-## License
-
-MerklePatriciaTree is released under the MIT License. See the LICENSE file for further details.
+See the [CONTRIBUTING](../../CONTRIBUTING.md) document for contribution, testing and pull request protocol.

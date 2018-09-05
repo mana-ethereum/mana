@@ -1,8 +1,8 @@
 # ExthCrypto
 
-ExthCrypto handles the majority of cryptographic operations for Exthereum. The goal of this project is to give each Exthereum project a common set of cryptographic functions where the backends can be swapped out as need be. Additionally, more complicated protocols (such as ECIES) can be implemented and tested in this project.
+ExthCrypto handles the majority of cryptographic operations for Mana-Ethereum. The goal of this project is to give each project a common set of cryptographic functions where the backend can be swapped as needed. Additionally, more complicated protocols (such as ECIES) can be implemented and tested in this project.
 
-Note: we opt, whenever possible, to use erlang core or open-source implementations for all functions. The goal of this project is to create a consistent API for cryptographic functions that can be referenced from Exthereum projects. The goal of this project is not to re-write such functions in native erlang or Elixir.
+Note: we opt, whenever possible, to use erlang core or open-source implementations for all functions. The goal of this project is to create a consistent API for cryptographic functions that can be referenced from Mana-Ethereum projects. The goal of this project is not to re-write such functions in native erlang or Elixir.
 
 We currently support:
 
@@ -21,7 +21,7 @@ by adding `exth_crypto` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
-  [{:exth_crypto, "~> 0.1.3"}]
+  [{:exth_crypto, "~> 0.1.4"}]
 end
 ```
 
