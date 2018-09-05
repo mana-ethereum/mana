@@ -22,6 +22,8 @@ defmodule EVM.Builtin do
   @g_quaddivisor 20
   @g_ec_add 500
   @g_ec_mult 40_000
+  @g_ec_pairing_point 80_000
+  @g_ec_pairing 100_000
 
   @data_size_limit 24_577
 
@@ -224,6 +226,34 @@ defmodule EVM.Builtin do
 
       true ->
         calculate_ec_mult({x, y}, scalar, gas, exec_env)
+    end
+  end
+
+  @spec ec_pairing(EVM.Gas.t(), EVM.ExecEnv.t()) ::
+          {EVM.Gas.t(), EVM.SubState.t(), EVM.ExecEnv.t(), EVM.VM.output()}
+  def ec_pairing(gas, exec_env) do
+    data = exec_env.data
+    pair_size = byte_size(exec_env.data)
+
+    gas_cost = @g_ec_pairing_point * div(pair_size, 192) + @g_ec_pairing
+
+    if rem(pair_size, 192) != 0 || gas < gas_cost do
+      {0, %EVM.SubState{}, exec_env, :failed}
+    else
+      binary_pairs = for <<chunk::binary-size(192) <- data>>, do: <<chunk::binary-size(192)>>
+
+      _pairs =
+        Enum.map(binary_pairs, fn binary_pair ->
+          <<x1::binary-size(32), y1::binary-size(32), x2_i::binary-size(32),
+            x2_r::binary-size(32), y2_i::binary-size(32), y2_r::binary-size(32)>> = binary_pair
+
+          {{x1, y1}, {x2_i, x2_r, y2_i, y2_r}}
+        end)
+
+      output = Helpers.left_pad_bytes(1, 32)
+      gas_cost = @g_ec_pairing_point * div(pair_size, 192) + @g_ec_pairing
+
+      {gas - gas_cost, %EVM.SubState{}, exec_env, output}
     end
   end
 

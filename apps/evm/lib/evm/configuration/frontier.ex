@@ -20,7 +20,8 @@ defmodule EVM.Configuration.Frontier do
             support_variable_length_return_value: false,
             has_mod_exp_builtin: false,
             has_ec_add_builtin: false,
-            has_ec_mult_builtin: false
+            has_ec_mult_builtin: false,
+            has_ec_pairing_builtin: false
 
   def new do
     %__MODULE__{}
@@ -96,4 +97,7 @@ defimpl EVM.Configuration, for: EVM.Configuration.Frontier do
 
   @spec has_ec_mult_builtin?(Configuration.t()) :: boolean()
   def has_ec_mult_builtin?(config), do: config.has_ec_mult_builtin
+
+  @spec has_ec_pairing_builtin?(Configuration.t()) :: boolean()
+  def has_ec_pairing_builtin?(config), do: config.has_ec_pairing_builtin
 end

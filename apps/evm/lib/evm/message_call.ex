@@ -264,6 +264,7 @@ defmodule EVM.MessageCall do
       address == 5 && EVM.Configuration.has_mod_exp_builtin?(config) -> &Builtin.mod_exp/2
       address == 6 && EVM.Configuration.has_ec_add_builtin?(config) -> &Builtin.ec_add/2
       address == 7 && EVM.Configuration.has_ec_mult_builtin?(config) -> &Builtin.ec_mult/2
+      address == 8 && EVM.Configuration.has_ec_pairing_builtin?(config) -> &Builtin.ec_pairing/2
       true -> &VM.run/2
     end
   end
