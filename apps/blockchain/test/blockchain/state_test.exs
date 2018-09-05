@@ -84,9 +84,6 @@ defmodule Blockchain.StateTest do
     ],
     "EIP158" => [
       "stRevertTest/RevertOpcodeMultipleSubCalls",
-      "stRevertTest/RevertPrecompiledTouch",
-      "stRevertTest/RevertPrecompiledTouchCC",
-      "stRevertTest/RevertPrecompiledTouchDC",
       "stSpecialTest/failed_tx_xcf416c53",
       "stTransactionTest/EmptyTransaction2"
     ],
@@ -137,8 +134,7 @@ defmodule Blockchain.StateTest do
       "stTransactionTest/UserTransactionGasLimitIsTooLowWhenZeroCost",
       "stTransitionTest/createNameRegistratorPerTxsNotEnoughGasAfter",
       "stTransitionTest/createNameRegistratorPerTxsNotEnoughGasAt",
-      "stTransitionTest/createNameRegistratorPerTxsNotEnoughGasBefore",
-      "stZeroKnowledge/pairingTest"
+      "stTransitionTest/createNameRegistratorPerTxsNotEnoughGasBefore"
     ]
   }
 

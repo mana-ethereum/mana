@@ -87,5 +87,6 @@ defimpl EVM.Configuration, for: EVM.Configuration.Homestead do
   def has_ec_mult_builtin?(config), do: Configuration.has_ec_mult_builtin?(config.fallback_config)
 
   @spec has_ec_pairing_builtin?(Configuration.t()) :: boolean()
-  def has_ec_pairing_builtin?(config), do: Configuration.has_ec_pairing_builtin?(config.fallback)
+  def has_ec_pairing_builtin?(config),
+    do: Configuration.has_ec_pairing_builtin?(config.fallback_config)
 end
