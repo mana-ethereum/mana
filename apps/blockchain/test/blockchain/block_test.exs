@@ -285,8 +285,6 @@ defmodule Blockchain.BlockTest do
       sender =
         <<126, 95, 69, 82, 9, 26, 105, 18, 93, 93, 252, 183, 184, 194, 101, 144, 41, 57, 91, 223>>
 
-      contract_address = Contract.Address.new(sender, 6)
-
       assembly = [
         :push1,
         3,
@@ -325,7 +323,8 @@ defmodule Blockchain.BlockTest do
 
       block_header = %Header{
         state_root: state.root_hash,
-        beneficiary: beneficiary
+        beneficiary: beneficiary,
+        gas_limit: 900_000_000
       }
 
       block = %Block{header: block_header, transactions: []}
@@ -359,6 +358,7 @@ defmodule Blockchain.BlockTest do
 
       assert Block.get_transaction(block, 0, db) == expected_transaction
 
+      contract_address = Contract.Address.new(sender, 6)
       addresses = [sender, beneficiary, contract_address]
 
       actual_accounts =

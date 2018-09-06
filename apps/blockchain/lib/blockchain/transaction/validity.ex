@@ -17,16 +17,26 @@ defmodule Blockchain.Transaction.Validity do
           :valid | {:invalid, atom()}
   def validate(state, trx, block_header, config) do
     with :ok <- validate_signature(trx, config),
-         {:ok, sender_address} <- Transaction.Signature.sender(trx),
-         {:ok, sender_account} <- retrieve_account(state, sender_address) do
+         {:ok, sender_address} <- Transaction.Signature.sender(trx) do
       errors =
         []
-        |> check_sender_nonce(trx, sender_account)
         |> check_intristic_gas(trx, config)
-        |> check_balance(trx, sender_account)
+        |> check_account_validity(trx, state, sender_address)
         |> check_gas_limit(trx, block_header)
 
       if errors == [], do: :valid, else: {:invalid, errors}
+    end
+  end
+
+  defp check_account_validity(errors, trx, state, sender_address) do
+    sender_account = Account.get_account(state, sender_address)
+
+    if sender_account do
+      errors
+      |> check_sender_nonce(trx, sender_account)
+      |> check_balance(trx, sender_account)
+    else
+      errors
     end
   end
 
@@ -39,18 +49,6 @@ defmodule Blockchain.Transaction.Validity do
       :ok
     else
       {:invalid, :invalid_sender}
-    end
-  end
-
-  @spec retrieve_account(Trie.t(), EVM.address()) ::
-          {:ok, Account.t()} | {:invalid, :missing_account}
-  defp retrieve_account(state, sender_address) do
-    case Account.get_account(state, sender_address) do
-      nil ->
-        {:invalid, :missing_account}
-
-      sender_account ->
-        {:ok, sender_account}
     end
   end
 

@@ -715,8 +715,8 @@ defmodule Blockchain.Block do
          config
        ) do
     state = Trie.new(db, header.state_root)
-    # TODO: How do we deal with invalid transactions
-    {new_state, gas_used, logs} = Transaction.execute(state, trx, header, config)
+
+    {new_state, gas_used, logs} = Transaction.execute_with_validation(state, trx, header, config)
 
     total_gas_used = block.header.gas_used + gas_used
 

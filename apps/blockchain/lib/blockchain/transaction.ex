@@ -160,8 +160,8 @@ defmodule Blockchain.Transaction do
   @doc """
   Validates the validity of a transaction and then executes it if transaction is valid.
   """
-  @spec execute_with_validation(EVM.state(), t, Header.t()) ::
-          {EVM.state(), Gas.t(), EVM.SubState.logs(), EVM.Configuration.t()}
+  @spec execute_with_validation(EVM.state(), t, Header.t(), EVM.Configuration.t()) ::
+          {EVM.state(), Gas.t(), EVM.SubState.logs()}
   def execute_with_validation(
         state,
         tx,
@@ -170,8 +170,9 @@ defmodule Blockchain.Transaction do
       ) do
     validation_result = Validity.validate(state, tx, block_header, config)
 
-    with :valid <- validation_result do
-      execute(state, tx, block_header, config)
+    case validation_result do
+      :valid -> execute(state, tx, block_header, config)
+      {:invalid, _} -> {state, 0, []}
     end
   end
 

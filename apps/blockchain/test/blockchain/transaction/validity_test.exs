@@ -52,29 +52,6 @@ defmodule Blockchain.Transaction.ValidityTest do
       assert result == {:invalid, :invalid_sender}
     end
 
-    test "invalidates transaction when sender account is nil" do
-      private_key = <<1::256>>
-
-      trx =
-        %Transaction{
-          data: <<>>,
-          gas_limit: 1_000,
-          gas_price: 1,
-          init: <<1>>,
-          nonce: 5,
-          to: <<>>,
-          value: 5
-        }
-        |> Transaction.Signature.sign_transaction(private_key)
-
-      result =
-        MerklePatriciaTree.Test.random_ets_db()
-        |> MerklePatriciaTree.Trie.new()
-        |> Validity.validate(trx, %Block.Header{}, EVM.Configuration.Frontier.new())
-
-      assert result == {:invalid, :missing_account}
-    end
-
     test "invalidates account when nonce mismatch" do
       private_key = <<1::256>>
       # based on simple private key
@@ -93,20 +70,13 @@ defmodule Blockchain.Transaction.ValidityTest do
         }
         |> Transaction.Signature.sign_transaction(private_key)
 
-      result =
+      {:invalid, errors} =
         MerklePatriciaTree.Test.random_ets_db()
         |> MerklePatriciaTree.Trie.new()
         |> Account.put_account(sender, %Account{balance: 1000, nonce: 5})
         |> Validity.validate(trx, %Block.Header{}, EVM.Configuration.Frontier.new())
 
-      assert result ==
-               {:invalid,
-                [
-                  :over_gas_limit,
-                  :insufficient_balance,
-                  :insufficient_intrinsic_gas,
-                  :nonce_mismatch
-                ]}
+      assert Enum.member?(errors, :nonce_mismatch)
     end
 
     test "invalidates account when insufficient starting gas" do
