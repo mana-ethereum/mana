@@ -2,6 +2,7 @@ defmodule ExWire.TCPListeningSupervisor do
   @moduledoc """
   Top level supervisor for all incoming TCP communications.
   """
+  require Logger
   use Supervisor
 
   def start_link(_) do
@@ -10,6 +11,7 @@ defmodule ExWire.TCPListeningSupervisor do
 
   @impl true
   def init(_) do
+    Logger.debug("Starting TCPListeningSupervisor")
     port = ExWire.Config.listen_port()
 
     children = [

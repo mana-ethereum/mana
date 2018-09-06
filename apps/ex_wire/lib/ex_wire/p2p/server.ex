@@ -85,15 +85,23 @@ defmodule ExWire.P2P.Server do
   Initialize by opening up a `gen_tcp` connection to given host and port.
   """
   def init(%{is_outbound: true, peer: peer}) do
-    {:ok, socket} = TCP.connect(peer.host, peer.port)
+    case TCP.connect(peer.host, peer.port) do
+      {:ok, socket} ->
+        Logger.debug(fn ->
+          "[Network] [#{peer}] Established outbound connection with #{peer.host}."
+        end)
 
-    Logger.debug(fn ->
-      "[Network] [#{peer}] Established outbound connection with #{peer.host}."
-    end)
+        state = P2P.new_outbound_connection(socket, peer)
 
-    state = P2P.new_outbound_connection(socket, peer)
+        {:ok, state}
 
-    {:ok, state}
+      {:error, error} ->
+        {:error, error}
+
+        Logger.debug(fn ->
+          "[Network] [#{peer}] failed to connect to #{peer.host}: #{error}."
+        end)
+    end
   end
 
   def init(%{is_outbound: false, socket: socket}) do
