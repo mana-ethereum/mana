@@ -79,7 +79,7 @@ defmodule ExWire.Sync do
           Logger.debug(fn -> "[Sync] Requesting block body #{header.number}" end)
 
           # TODO: Bulk up these requests?
-          PeerSupervisor.send_packet(PeerSupervisor, %ExWire.Packet.GetBlockBodies{
+          PeerSupervisor.send_packet(%ExWire.Packet.GetBlockBodies{
             hashes: [header_hash]
           })
         end
@@ -148,7 +148,7 @@ defmodule ExWire.Sync do
 
     Logger.debug(fn -> "[Sync] Requesting block #{next_number}" end)
 
-    ExWire.PeerSupervisor.send_packet(ExWire.PeerSupervisor, %ExWire.Packet.GetBlockHeaders{
+    ExWire.PeerSupervisor.send_packet(%ExWire.Packet.GetBlockHeaders{
       block_identifier: next_number,
       max_headers: 1,
       skip: 0,

@@ -12,7 +12,8 @@ defmodule ExWire.P2P do
             handshake: ExWire.Handshake.t(),
             secrets: ExWire.Framing.Secrets.t() | nil,
             queued_data: binary(),
-            session: ExWire.DEVp2p.Session.t()
+            session: ExWire.DEVp2p.Session.t(),
+            subscribers: [any()]
           }
 
     defstruct peer: nil,
@@ -20,7 +21,8 @@ defmodule ExWire.P2P do
               handshake: nil,
               secrets: nil,
               queued_data: <<>>,
-              session: nil
+              session: nil,
+              subscribers: []
   end
 
   @doc """
@@ -135,11 +137,37 @@ defmodule ExWire.P2P do
 
   defp handle_packet(packet, session, conn) do
     if DEVp2p.session_active?(session) do
-      notify_subscribers(packet, conn)
+      do_handle_packet(packet, conn)
       session
     else
       attempt_session_activation(session, packet)
     end
+  end
+
+  defp do_handle_packet(packet = %Packet.Status{}, conn) do
+    return_packet =
+      case Packet.Status.handle(packet) do
+        :ok ->
+          Packet.Status.new(packet)
+
+        {:disconnect, reason} ->
+          Packet.Disconnect.new(reason)
+      end
+
+    send_packet(conn, return_packet)
+  end
+
+  defp do_handle_packet(packet = %Packet.Disconnect{}, conn) do
+    TCP.shutdown(conn.socket)
+  end
+
+  defp do_handle_packet(packet = %Packet.Ping{}, conn) do
+    {:send, pong} = Packet.Ping.handle(packet)
+    send_packet(conn, pong)
+  end
+
+  defp do_handle_packet(packet, conn) do
+    notify_subscribers(packet, conn)
   end
 
   defp attempt_session_activation(session, packet) do

@@ -50,6 +50,25 @@ defmodule ExWire.Packet.Status do
   ]
 
   @doc """
+  Create a Status packet to return
+
+  Note: we are currently reflecting values based on the packet received, but
+  that should not be the case. We should provide the total difficulty of the
+  best chain found in the block header, the best hash, and the genesis hash of
+  our blockchain.
+  """
+  @spec new(t) :: t
+  def new(packet) do
+    %__MODULE__{
+      protocol_version: ExWire.Config.protocol_version(),
+      network_id: ExWire.Config.network_id(),
+      total_difficulty: packet.total_difficulty,
+      best_hash: packet.genesis_hash,
+      genesis_hash: packet.genesis_hash
+    }
+  end
+
+  @doc """
   Given a Status packet, serializes for transport over Eth Wire Protocol.
 
   ## Examples

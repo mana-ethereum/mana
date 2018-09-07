@@ -34,6 +34,20 @@ defmodule ExWire.P2P.Server do
   end
 
   @doc """
+  Child spec definition to be used by a supervisor when wanting to supervise an
+  outbound TCP connection.
+
+  We spawn a temporary child process for each outbound connection.
+  """
+  def child_spec([:outbound, peer, subscribers]) do
+    %{
+      id: ExWire.P2P.Outbound,
+      start: {__MODULE__, :start_link, [:outbound, peer, subscribers]},
+      restart: :temporary
+    }
+  end
+
+  @doc """
   Starts an outbound or inbound peer to peer connection.
   """
   def start_link(:outbound, peer, subscribers \\ []) do
