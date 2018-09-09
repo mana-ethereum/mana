@@ -76,10 +76,10 @@ defmodule EVM.Refunds do
 
   # `SELFDESTRUCT` operations produce a refund if the address has not already been suicided.
   def refund(:selfdestruct, _args, _machine_state, sub_state, exec_env) do
-    if exec_env.address not in sub_state.selfdestruct_list do
-      @selfdestruct_refund
-    else
+    if exec_env.address in sub_state.selfdestruct_list do
       0
+    else
+      @selfdestruct_refund
     end
   end
 

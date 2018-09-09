@@ -107,10 +107,7 @@ defmodule Blockchain.Chain do
   def load_chain(chain, evm_config \\ nil) do
     chain_data = read_chain!(chain)
 
-    engine =
-      chain_data["engine"]
-      |> Enum.map(&get_engine/1)
-      |> Enum.into(%{})
+    engine = Enum.into(chain_data["engine"], %{}, &get_engine/1)
 
     accounts =
       chain_data["accounts"]

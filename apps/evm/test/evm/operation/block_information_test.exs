@@ -40,11 +40,9 @@ defmodule EVM.Operation.BlockInformationTest do
 
   def build_block_interface(headers = [most_recent_header | _]) do
     block_map =
-      headers
-      |> Enum.map(fn header ->
+      Enum.into(headers, %{}, fn header ->
         {Block.Header.hash(header), header}
       end)
-      |> Enum.into(%{})
 
     EVM.Interface.Mock.MockBlockInterface.new(most_recent_header, block_map)
   end

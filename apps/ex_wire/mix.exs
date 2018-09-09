@@ -31,7 +31,6 @@ defmodule ExWire.Mixfile do
 
   defp deps do
     [
-      {:credo, "~> 0.9.1", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.16", only: :dev, runtime: false},
       {:ex_rlp, "~> 0.3.0"},
       {:blockchain, in_umbrella: true},

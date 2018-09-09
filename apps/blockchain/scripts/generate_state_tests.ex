@@ -66,11 +66,9 @@ defmodule GenerateStateTests do
   end
 
   defp dedup_tests(tests) do
-    tests
-    |> Enum.map(fn {fork, list_of_tests} ->
+    Enum.into(tests, %{}, fn {fork, list_of_tests} ->
       {fork, Enum.dedup(list_of_tests)}
     end)
-    |> Enum.into(%{})
   end
 
   defp run_group_tests(directory_path) do

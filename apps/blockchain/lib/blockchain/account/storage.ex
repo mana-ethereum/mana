@@ -54,9 +54,8 @@ defmodule Blockchain.Account.Storage do
     db
     |> Trie.new(root)
     |> Trie.Inspector.all_values()
-    |> Enum.map(fn {k, v} ->
+    |> Enum.into(%{}, fn {k, v} ->
       {BitHelper.decode_unsigned(k), BitHelper.decode_unsigned(v)}
     end)
-    |> Enum.into(%{})
   end
 end

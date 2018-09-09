@@ -49,7 +49,6 @@ defmodule Blockchain.Mixfile do
   # Type "mix help deps" for more examples and options
   defp deps do
     [
-      {:credo, "~>  0.9.1", only: [:dev, :test], runtime: false},
       {:ethereumex, "~> 0.3.2"},
       {:evm, in_umbrella: true},
       {:ex_rlp, "~> 0.3.0"},

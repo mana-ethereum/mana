@@ -33,10 +33,7 @@ defmodule EVM.Helpers do
   """
   @spec invert(map()) :: map()
   def invert(m) do
-    m
-    |> Enum.into([])
-    |> Enum.map(fn {a, b} -> {b, a} end)
-    |> Enum.into(%{})
+    Enum.into(m, %{}, fn {a, b} -> {b, a} end)
   end
 
   def bit_at(n, at), do: band(bsr(n, at), 1)

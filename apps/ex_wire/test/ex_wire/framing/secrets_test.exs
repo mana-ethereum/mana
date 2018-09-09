@@ -135,8 +135,7 @@ defmodule ExWire.Framing.SecretsTest do
         auth_2: auth_2(),
         ack_2: ack_2()
       }
-      |> Enum.map(fn {k, v} -> {k, bin_format(v)} end)
-      |> Enum.into(%{})
+      |> Enum.into(%{}, fn {k, v} -> {k, bin_format(v)} end)
 
     public_keys = %{
       ephemeral_public_key_a: public_key(eip8_creds.ephemeral_key_a),

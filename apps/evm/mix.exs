@@ -46,7 +46,6 @@ defmodule EVM.Mixfile do
   # Type "mix help deps" for more examples and options
   defp deps do
     [
-      {:credo, "~> 0.9.1", only: [:dev, :test], runtime: false},
       {:poison, "~> 3.1.0", only: [:dev, :test], runtime: false},
       {:decimal, "~>1.5.0"},
       {:merkle_patricia_tree, in_umbrella: true},
