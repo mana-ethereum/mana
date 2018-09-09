@@ -81,17 +81,15 @@ defmodule Blockchain.TransactionTest do
   defp organize_tests_by_fork(tests) do
     tests
     |> Map.take(@forks)
-    |> Enum.map(fn {fork, fork_tests} ->
+    |> Enum.into(%{}, fn {fork, fork_tests} ->
       {
         fork,
         fork_tests
-        |> Enum.map(fn {key_to_test, value} ->
+        |> Enum.into(%{}, fn {key_to_test, value} ->
           {String.to_atom(key_to_test), maybe_hex(value)}
         end)
-        |> Enum.into(%{})
       }
     end)
-    |> Enum.into(%{})
   end
 
   describe "when handling transactions" do

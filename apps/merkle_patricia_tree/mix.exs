@@ -42,9 +42,9 @@ defmodule MerklePatriciaTree.Mixfile do
   #   {:myapp, in_umbrella: true}
   #
   # Type `mix help deps` for more examples and options
+  #
   defp deps do
     [
-      {:credo, "~> 0.9.1", only: [:dev, :test], runtime: false},
       {:poison, "~> 3.1.0", only: [:dev, :test], runtime: false},
       {:ex_rlp, "~> 0.3.0"},
       {:exth_crypto, in_umbrella: true},
