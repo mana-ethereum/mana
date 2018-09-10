@@ -44,21 +44,6 @@ defmodule Blockchain.StateTest do
       "stStaticCall/static_PostToReturn1",
       "stStaticCall/static_callWithHighValueAndOOGatTxLevel",
       "stTransactionTest/EmptyTransaction2",
-      "stZeroKnowledge/ecpairing_one_point_fail",
-      "stZeroKnowledge/ecpairing_one_point_not_in_subgroup",
-      "stZeroKnowledge/ecpairing_one_point_with_g2_zero_and_g1_invalid",
-      "stZeroKnowledge/ecpairing_perturb_g2_by_curve_order",
-      "stZeroKnowledge/ecpairing_perturb_g2_by_field_modulus",
-      "stZeroKnowledge/ecpairing_perturb_g2_by_field_modulus_again",
-      "stZeroKnowledge/ecpairing_perturb_g2_by_one",
-      "stZeroKnowledge/ecpairing_perturb_zeropoint_by_curve_order",
-      "stZeroKnowledge/ecpairing_perturb_zeropoint_by_field_modulus",
-      "stZeroKnowledge/ecpairing_perturb_zeropoint_by_one",
-      "stZeroKnowledge/ecpairing_three_point_fail_1",
-      "stZeroKnowledge/ecpairing_two_point_fail_1",
-      "stZeroKnowledge/ecpairing_two_point_fail_2",
-      "stZeroKnowledge/ecpairing_two_points_with_one_g2_zero",
-      "stZeroKnowledge/pairingTest",
       "stZeroKnowledge2/ecmul_0-3_5616_28000_96"
     ],
     "EIP150" => [
@@ -144,7 +129,12 @@ defmodule Blockchain.StateTest do
   @tag :ethereum_common_tests
   @tag :state_common_tests
   test "Blockchain state tests" do
-    grouped_test_per_fork()
+    [
+      {"Byzantium",
+       [
+         "/home/ayrat/Development/mana/apps/blockchain/../../ethereum_common_tests/GeneralStateTests/stZeroKnowledge/ecpairing_one_point_not_in_subgroup.json"
+       ]}
+    ]
     |> Task.async_stream(&run_tests(&1), timeout: @fifteen_minutes)
     |> Enum.flat_map(fn {:ok, results} -> results end)
     |> make_assertions()
@@ -463,5 +453,8 @@ defmodule Blockchain.StateTest do
     |> Path.join("/GeneralStateTests/**/*.json")
     |> Path.wildcard()
     |> Enum.sort()
+    |> Enum.filter(fn path ->
+      String.contains?(path, "stZeroKnowledge/ecpairing_two_point_match_4")
+    end)
   end
 end

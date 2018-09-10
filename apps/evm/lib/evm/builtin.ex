@@ -2,7 +2,7 @@ defmodule EVM.Builtin do
   alias ExthCrypto.{Signature, Key}
   alias EVM.{Memory, Helpers}
   alias BN.BN128Arithmetic
-  alias BN.{FQ, FQ2}
+  alias BN.{FQ, FQ2, FQ12, Pairing}
 
   @moduledoc """
   Implements the built-in functions as defined in Appendix E
@@ -239,12 +239,19 @@ defmodule EVM.Builtin do
     if rem(pair_size, 192) != 0 || gas < gas_cost do
       {0, %EVM.SubState{}, exec_env, :failed}
     else
-      pairs = read_pairs(data)
+      case read_pairs(data) do
+        {:error, _} ->
+          {0, %EVM.SubState{}, exec_env, :failed}
 
-      output = Helpers.left_pad_bytes(1, 32)
-      gas_cost = @g_ec_pairing_point * div(pair_size, 192) + @g_ec_pairing
+        pairs ->
+          pairing_result = pairing(pairs)
+          result = if pairing_result == FQ12.one(), do: 1, else: 0
 
-      {gas - gas_cost, %EVM.SubState{}, exec_env, output}
+          output = Helpers.left_pad_bytes(result, 32)
+          gas_cost = @g_ec_pairing_point * div(pair_size, 192) + @g_ec_pairing
+
+          {gas - gas_cost, %EVM.SubState{}, exec_env, output}
+      end
     end
   end
 
@@ -289,7 +296,11 @@ defmodule EVM.Builtin do
             point1 = {FQ.new(x1), FQ.new(y1)}
             point2 = {FQ2.new([x2_r, x2_i]), FQ2.new([y2_r, y2_i])}
 
-            {point1, point2}
+            cond do
+              !BN128Arithmetic.on_curve?(point1) -> {:error, "point1 is not on the curve"}
+              !BN128Arithmetic.on_curve?(point2) -> {:error, "point2 is not on the curve"}
+              true -> {point1, point2}
+            end
         end
       end)
 
@@ -304,15 +315,21 @@ defmodule EVM.Builtin do
     first_error || pairs
   end
 
+  defp pairing(points) do
+    Enum.reduce(points, FQ12.one(), fn {point1, point2}, acc ->
+      pairing_result = Pairing.pairing(point2, point1)
+
+      FQ12.mult(acc, pairing_result)
+    end)
+  end
+
   @spec calculate_ec_add({integer, integer}, integer, EVM.Gas.t(), EVM.ExecEnv.t()) ::
           {EVM.Gas.t(), EVM.SubState.t(), EVM.ExecEnv.t(), EVM.VM.output()}
   defp calculate_ec_mult({x, y}, scalar, gas, exec_env) do
     point = {FQ.new(x), FQ.new(y)}
 
     if BN128Arithmetic.on_curve?(point) do
-      # IO.inspect(point)
       {:ok, {result_x, result_y}} = BN128Arithmetic.mult(point, scalar)
-      # IO.inspect({result_x, result_y})
 
       result_x = :binary.encode_unsigned(result_x.value)
       result_y = :binary.encode_unsigned(result_y.value)
