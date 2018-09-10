@@ -62,7 +62,6 @@ apps/evm/lib/evm/vm.ex:133: Function cycle/3 has no local return
 apps/evm/lib/evm/builtin.ex:235: Guard test __@1::'true' =:= 'false' can never succeed
 apps/evm/lib/evm/builtin.ex:255: Guard test __@3::'true' =:= 'false' can never succeed
 apps/evm/lib/evm/builtin.ex:255: Guard test __@1::'true' =:= 'false' can never succeed
-apps/evm/lib/evm/builtin.ex:307: The created fun has no local return
 
 -------------------------------
 # TODO: rewrite mocked protocol typespecs

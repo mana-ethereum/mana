@@ -4,6 +4,9 @@ defmodule EVM.Builtin do
   alias BN.BN128Arithmetic
   alias BN.{FQ, FQP, FQ2, FQ12, Pairing}
 
+  @type point :: BN128Arithmetic.point()
+  @type point_pair :: {point(), point()}
+
   @moduledoc """
   Implements the built-in functions as defined in Appendix E
   of the Yellow Paper. These are contract functions that
@@ -25,6 +28,8 @@ defmodule EVM.Builtin do
   @g_ec_pairing 100_000
 
   @data_size_limit 24_577
+
+  @dialyzer {:no_return, pairing: 1}
 
   @doc """
   A precompiled contract that recovers a public key from a signed hash
@@ -232,31 +237,36 @@ defmodule EVM.Builtin do
           {EVM.Gas.t(), EVM.SubState.t(), EVM.ExecEnv.t(), EVM.VM.output()}
   def ec_pairing(gas, exec_env) do
     data = exec_env.data
-    pair_size = byte_size(exec_env.data)
+    data_size = byte_size(data)
+    pair_size = 192
 
-    gas_cost = @g_ec_pairing_point * div(pair_size, 192) + @g_ec_pairing
+    number_of_pairs = div(data_size, pair_size)
+    required_gas = @g_ec_pairing_point * number_of_pairs + @g_ec_pairing
 
-    if rem(pair_size, 192) != 0 || gas < gas_cost do
-      {0, %EVM.SubState{}, exec_env, :failed}
-    else
-      case read_pairs(data) do
-        {:error, _} ->
-          {0, %EVM.SubState{}, exec_env, :failed}
+    cond do
+      rem(data_size, pair_size) != 0 ->
+        {0, %EVM.SubState{}, exec_env, :failed}
 
-        {:ok, pairs} ->
-          pairing_result = pairing(pairs)
-          result = if pairing_result == FQ12.one(), do: 1, else: 0
+      gas < required_gas ->
+        {0, %EVM.SubState{}, exec_env, :failed}
 
-          output = Helpers.left_pad_bytes(result, 32)
-          gas_cost = @g_ec_pairing_point * div(pair_size, 192) + @g_ec_pairing
+      true ->
+        case read_pairs(data) do
+          {:error, _} ->
+            {0, %EVM.SubState{}, exec_env, :failed}
 
-          {gas - gas_cost, %EVM.SubState{}, exec_env, output}
-      end
+          {:ok, pairs} ->
+            pairing_result = pairing(pairs)
+            result = if pairing_result == FQ12.one(), do: 1, else: 0
+
+            output = Helpers.left_pad_bytes(result, 32)
+
+            {gas - required_gas, %EVM.SubState{}, exec_env, output}
+        end
     end
   end
 
-  @spec read_pairs(binary()) ::
-          {:ok, [{{FQ.t(), FQ.t()}, {FQP.t(), FQP.t()}}]} | {:error, String.t()}
+  @spec read_pairs(binary()) :: {:ok, [point_pair()]} | {:error, String.t()}
   defp read_pairs(data) do
     binary_pairs = for <<chunk::binary-size(192) <- data>>, do: <<chunk::binary-size(192)>>
 
@@ -273,8 +283,7 @@ defmodule EVM.Builtin do
     first_error || {:ok, pairs}
   end
 
-  @spec deserialize_pair(binary()) ::
-          {:ok, {{FQ.t(), FQ.t()}, {FQP.t(), FQP.t()}}} | {:error, String.t()}
+  @spec deserialize_pair(binary()) :: {:ok, point_pair()} | {:error, String.t()}
   defp deserialize_pair(pair_data) do
     <<x1_bin::binary-size(32), y1_bin::binary-size(32), x2_i_bin::binary-size(32),
       x2_r_bin::binary-size(32), y2_i_bin::binary-size(32),
@@ -303,6 +312,7 @@ defmodule EVM.Builtin do
     end
   end
 
+  @spec pairing([point_pair]) :: FQP.t()
   defp pairing(points) do
     Enum.reduce(points, FQ12.one(), fn {point1, point2}, acc ->
       pairing_result = Pairing.pairing(point2, point1)
