@@ -1,9 +1,8 @@
 defmodule EVM.Builtin do
   alias ExthCrypto.{Signature, Key}
   alias EVM.{Memory, Helpers}
-  alias BN.IntegerModP.Point
-  alias BN.IntegerModP
   alias BN.BN128Arithmetic
+  alias BN.{FQ, FQ2}
 
   @moduledoc """
   Implements the built-in functions as defined in Appendix E
@@ -197,8 +196,8 @@ defmodule EVM.Builtin do
       gas < @g_ec_add ->
         {0, %EVM.SubState{}, exec_env, :failed}
 
-      x1 > IntegerModP.default_modulus() || x2 > IntegerModP.default_modulus() ||
-        y1 > IntegerModP.default_modulus() || y2 > IntegerModP.default_modulus() ->
+      x1 > FQ.default_modulus() || x2 > FQ.default_modulus() || y1 > FQ.default_modulus() ||
+          y2 > FQ.default_modulus() ->
         {0, %EVM.SubState{}, exec_env, :failed}
 
       true ->
@@ -221,7 +220,7 @@ defmodule EVM.Builtin do
       gas < @g_ec_mult ->
         {0, %EVM.SubState{}, exec_env, :failed}
 
-      x > IntegerModP.default_modulus() || y > IntegerModP.default_modulus() ->
+      x > FQ.default_modulus() || y > FQ.default_modulus() ->
         {0, %EVM.SubState{}, exec_env, :failed}
 
       true ->
@@ -240,15 +239,7 @@ defmodule EVM.Builtin do
     if rem(pair_size, 192) != 0 || gas < gas_cost do
       {0, %EVM.SubState{}, exec_env, :failed}
     else
-      binary_pairs = for <<chunk::binary-size(192) <- data>>, do: <<chunk::binary-size(192)>>
-
-      _pairs =
-        Enum.map(binary_pairs, fn binary_pair ->
-          <<x1::binary-size(32), y1::binary-size(32), x2_i::binary-size(32),
-            x2_r::binary-size(32), y2_i::binary-size(32), y2_r::binary-size(32)>> = binary_pair
-
-          {{x1, y1}, {x2_i, x2_r, y2_i, y2_r}}
-        end)
+      pairs = read_pairs(data)
 
       output = Helpers.left_pad_bytes(1, 32)
       gas_cost = @g_ec_pairing_point * div(pair_size, 192) + @g_ec_pairing
@@ -257,16 +248,74 @@ defmodule EVM.Builtin do
     end
   end
 
+  defp read_pairs(data) do
+    binary_pairs = for <<chunk::binary-size(192) <- data>>, do: <<chunk::binary-size(192)>>
+
+    pairs =
+      Enum.map(binary_pairs, fn binary_pair ->
+        <<x1_bin::binary-size(32), y1_bin::binary-size(32), x2_i_bin::binary-size(32),
+          x2_r_bin::binary-size(32), y2_i_bin::binary-size(32),
+          y2_r_bin::binary-size(32)>> = binary_pair
+
+        x1 = :binary.decode_unsigned(x1_bin)
+        y1 = :binary.decode_unsigned(y1_bin)
+        x2_i = :binary.decode_unsigned(x2_i_bin)
+        x2_r = :binary.decode_unsigned(x2_r_bin)
+        y2_i = :binary.decode_unsigned(y2_i_bin)
+        y2_r = :binary.decode_unsigned(y2_r_bin)
+
+        message = " is bigger than field modulus"
+
+        cond do
+          x1 >= FQ.default_modulus() ->
+            {:error, "x1" <> message}
+
+          y1 >= FQ.default_modulus() ->
+            {:error, "y1" <> message}
+
+          x2_i >= FQ.default_modulus() ->
+            {:error, "x2_i" <> message}
+
+          x2_r >= FQ.default_modulus() ->
+            {:error, "x2_r" <> message}
+
+          y2_i >= FQ.default_modulus() ->
+            {:error, "y2_i" <> message}
+
+          y2_r >= FQ.default_modulus() ->
+            {:error, "y2_r" <> message}
+
+          true ->
+            point1 = {FQ.new(x1), FQ.new(y1)}
+            point2 = {FQ2.new([x2_r, x2_i]), FQ2.new([y2_r, y2_i])}
+
+            {point1, point2}
+        end
+      end)
+
+    first_error =
+      Enum.find(pairs, fn result ->
+        case result do
+          {:error, _} -> true
+          _ -> false
+        end
+      end)
+
+    first_error || pairs
+  end
+
   @spec calculate_ec_add({integer, integer}, integer, EVM.Gas.t(), EVM.ExecEnv.t()) ::
           {EVM.Gas.t(), EVM.SubState.t(), EVM.ExecEnv.t(), EVM.VM.output()}
   defp calculate_ec_mult({x, y}, scalar, gas, exec_env) do
-    {:ok, point} = Point.new(x, y)
+    point = {FQ.new(x), FQ.new(y)}
 
     if BN128Arithmetic.on_curve?(point) do
-      {:ok, result} = BN128Arithmetic.mult(point, scalar)
+      # IO.inspect(point)
+      {:ok, {result_x, result_y}} = BN128Arithmetic.mult(point, scalar)
+      # IO.inspect({result_x, result_y})
 
-      result_x = :binary.encode_unsigned(result.x.value)
-      result_y = :binary.encode_unsigned(result.y.value)
+      result_x = :binary.encode_unsigned(result_x.value)
+      result_y = :binary.encode_unsigned(result_y.value)
 
       output = Helpers.left_pad_bytes(result_x, 32) <> Helpers.left_pad_bytes(result_y, 32)
 
@@ -279,16 +328,16 @@ defmodule EVM.Builtin do
   @spec calculate_ec_add({integer, integer}, {integer, integer}, EVM.Gas.t(), EVM.ExecEnv.t()) ::
           {EVM.Gas.t(), EVM.SubState.t(), EVM.ExecEnv.t(), EVM.VM.output()}
   defp calculate_ec_add({x1, y1}, {x2, y2}, gas, exec_env) do
-    {:ok, point1} = Point.new(x1, y1)
-    {:ok, point2} = Point.new(x2, y2)
+    point1 = {FQ.new(x1), FQ.new(y1)}
+    point2 = {FQ.new(x2), FQ.new(y2)}
 
     if !BN128Arithmetic.on_curve?(point1) || !BN128Arithmetic.on_curve?(point2) do
       {0, %EVM.SubState{}, exec_env, :failed}
     else
-      {:ok, result} = BN128Arithmetic.add(point1, point2)
+      {:ok, {result_x, result_y}} = BN128Arithmetic.add(point1, point2)
 
-      result_x = :binary.encode_unsigned(result.x.value)
-      result_y = :binary.encode_unsigned(result.y.value)
+      result_x = :binary.encode_unsigned(result_x.value)
+      result_y = :binary.encode_unsigned(result_y.value)
 
       output = Helpers.left_pad_bytes(result_x, 32) <> Helpers.left_pad_bytes(result_y, 32)
 
