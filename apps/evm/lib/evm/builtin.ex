@@ -243,7 +243,7 @@ defmodule EVM.Builtin do
         {:error, _} ->
           {0, %EVM.SubState{}, exec_env, :failed}
 
-        pairs ->
+        {:ok, pairs} ->
           pairing_result = pairing(pairs)
           result = if pairing_result == FQ12.one(), do: 1, else: 0
 
@@ -287,8 +287,8 @@ defmodule EVM.Builtin do
     y2_i = :binary.decode_unsigned(y2_i_bin)
     y2_r = :binary.decode_unsigned(y2_r_bin)
 
-    if x1 >= FQ.default_modulus() && y1 >= FQ.default_modulus() && x2_i >= FQ.default_modulus() &&
-         x2_r >= FQ.default_modulus() && y2_i >= FQ.default_modulus() &&
+    if x1 >= FQ.default_modulus() || y1 >= FQ.default_modulus() || x2_i >= FQ.default_modulus() ||
+         x2_r >= FQ.default_modulus() || y2_i >= FQ.default_modulus() ||
          y2_r >= FQ.default_modulus() do
       {:error, "some values are bigger than field modulus"}
     else
