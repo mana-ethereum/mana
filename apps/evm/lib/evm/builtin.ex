@@ -2,7 +2,7 @@ defmodule EVM.Builtin do
   alias ExthCrypto.{Signature, Key}
   alias EVM.{Memory, Helpers}
   alias BN.BN128Arithmetic
-  alias BN.{FQ, FQ2, FQ12, Pairing}
+  alias BN.{FQ, FQP, FQ2, FQ12, Pairing}
 
   @moduledoc """
   Implements the built-in functions as defined in Appendix E
@@ -255,54 +255,12 @@ defmodule EVM.Builtin do
     end
   end
 
+  @spec read_pairs(binary()) ::
+          {:ok, [{{FQ.t(), FQ.t()}, {FQP.t(), FQP.t()}}]} | {:error, String.t()}
   defp read_pairs(data) do
     binary_pairs = for <<chunk::binary-size(192) <- data>>, do: <<chunk::binary-size(192)>>
 
-    pairs =
-      Enum.map(binary_pairs, fn binary_pair ->
-        <<x1_bin::binary-size(32), y1_bin::binary-size(32), x2_i_bin::binary-size(32),
-          x2_r_bin::binary-size(32), y2_i_bin::binary-size(32),
-          y2_r_bin::binary-size(32)>> = binary_pair
-
-        x1 = :binary.decode_unsigned(x1_bin)
-        y1 = :binary.decode_unsigned(y1_bin)
-        x2_i = :binary.decode_unsigned(x2_i_bin)
-        x2_r = :binary.decode_unsigned(x2_r_bin)
-        y2_i = :binary.decode_unsigned(y2_i_bin)
-        y2_r = :binary.decode_unsigned(y2_r_bin)
-
-        message = " is bigger than field modulus"
-
-        cond do
-          x1 >= FQ.default_modulus() ->
-            {:error, "x1" <> message}
-
-          y1 >= FQ.default_modulus() ->
-            {:error, "y1" <> message}
-
-          x2_i >= FQ.default_modulus() ->
-            {:error, "x2_i" <> message}
-
-          x2_r >= FQ.default_modulus() ->
-            {:error, "x2_r" <> message}
-
-          y2_i >= FQ.default_modulus() ->
-            {:error, "y2_i" <> message}
-
-          y2_r >= FQ.default_modulus() ->
-            {:error, "y2_r" <> message}
-
-          true ->
-            point1 = {FQ.new(x1), FQ.new(y1)}
-            point2 = {FQ2.new([x2_r, x2_i]), FQ2.new([y2_r, y2_i])}
-
-            cond do
-              !BN128Arithmetic.on_curve?(point1) -> {:error, "point1 is not on the curve"}
-              !BN128Arithmetic.on_curve?(point2) -> {:error, "point2 is not on the curve"}
-              true -> {point1, point2}
-            end
-        end
-      end)
+    pairs = Enum.map(binary_pairs, &deserialize_pair/1)
 
     first_error =
       Enum.find(pairs, fn result ->
@@ -312,7 +270,37 @@ defmodule EVM.Builtin do
         end
       end)
 
-    first_error || pairs
+    first_error || {:ok, pairs}
+  end
+
+  @spec deserialize_pair(binary()) ::
+          {:ok, {{FQ.t(), FQ.t()}, {FQP.t(), FQP.t()}}} | {:error, String.t()}
+  defp deserialize_pair(pair_data) do
+    <<x1_bin::binary-size(32), y1_bin::binary-size(32), x2_i_bin::binary-size(32),
+      x2_r_bin::binary-size(32), y2_i_bin::binary-size(32),
+      y2_r_bin::binary-size(32)>> = pair_data
+
+    x1 = :binary.decode_unsigned(x1_bin)
+    y1 = :binary.decode_unsigned(y1_bin)
+    x2_i = :binary.decode_unsigned(x2_i_bin)
+    x2_r = :binary.decode_unsigned(x2_r_bin)
+    y2_i = :binary.decode_unsigned(y2_i_bin)
+    y2_r = :binary.decode_unsigned(y2_r_bin)
+
+    if x1 >= FQ.default_modulus() && y1 >= FQ.default_modulus() && x2_i >= FQ.default_modulus() &&
+         x2_r >= FQ.default_modulus() && y2_i >= FQ.default_modulus() &&
+         y2_r >= FQ.default_modulus() do
+      {:error, "some values are bigger than field modulus"}
+    else
+      point1 = {FQ.new(x1), FQ.new(y1)}
+      point2 = {FQ2.new([x2_r, x2_i]), FQ2.new([y2_r, y2_i])}
+
+      cond do
+        !BN128Arithmetic.on_curve?(point1) -> {:error, "point1 is not on the curve"}
+        !BN128Arithmetic.on_curve?(point2) -> {:error, "point2 is not on the curve"}
+        true -> {point1, point2}
+      end
+    end
   end
 
   defp pairing(points) do
