@@ -96,4 +96,8 @@ defprotocol EVM.Configuration do
   # EIP198
   @spec has_mod_exp_builtin?(t) :: boolean()
   def has_mod_exp_builtin?(t)
+
+  # EIP145
+  @spec has_shift_operations?(t) :: boolean()
+  def has_shift_operations?(t)
 end

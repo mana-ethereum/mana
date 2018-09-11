@@ -93,4 +93,8 @@ defimpl EVM.Configuration, for: EVM.Configuration.Byzantium do
 
   @spec has_ec_pairing_builtin?(Configuration.t()) :: boolean()
   def has_ec_pairing_builtin?(config), do: config.has_ec_pairing_builtin
+
+  @spec has_shift_operations?(Configuration.t()) :: boolean()
+  def has_shift_operations?(config),
+    do: Configuration.has_shift_operations?(config.fallback_config)
 end

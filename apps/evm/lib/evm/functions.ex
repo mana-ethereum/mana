@@ -4,7 +4,7 @@ defmodule EVM.Functions do
   fit in other modules.
   """
 
-  alias EVM.{ExecEnv, MachineCode, MachineState, Operation, Stack, Gas}
+  alias EVM.{ExecEnv, MachineCode, MachineState, Operation, Stack, Gas, Configuration}
   alias EVM.Operation.Metadata
 
   @max_stack 1024
@@ -146,21 +146,30 @@ defmodule EVM.Functions do
 
       case operation_metadata.sym do
         :delegatecall ->
-          if EVM.Configuration.has_delegate_call?(config), do: operation_metadata
+          if Configuration.has_delegate_call?(config), do: operation_metadata
 
         :revert ->
-          if EVM.Configuration.has_revert?(config), do: operation_metadata
+          if Configuration.has_revert?(config), do: operation_metadata
 
         :staticcall ->
-          if EVM.Configuration.has_static_call?(config), do: operation_metadata
+          if Configuration.has_static_call?(config), do: operation_metadata
 
         :returndatasize ->
-          if EVM.Configuration.support_variable_length_return_value?(config),
+          if Configuration.support_variable_length_return_value?(config),
             do: operation_metadata
 
         :returndatacopy ->
-          if EVM.Configuration.support_variable_length_return_value?(config),
+          if Configuration.support_variable_length_return_value?(config),
             do: operation_metadata
+
+        :shl ->
+          if Configuration.has_shift_operations?(config), do: operation_metadata
+
+        :shr ->
+          if Configuration.has_shift_operations?(config), do: operation_metadata
+
+        :sar ->
+          if Configuration.has_shift_operations?(config), do: operation_metadata
 
         _ ->
           operation_metadata

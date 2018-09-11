@@ -1,5 +1,6 @@
 defmodule EVM.Configuration.Constantinople do
-  defstruct fallback_config: EVM.Configuration.Byzantium.new()
+  defstruct fallback_config: EVM.Configuration.Byzantium.new(),
+            has_shift_operations: true
 
   def new do
     %__MODULE__{}
@@ -87,4 +88,8 @@ defimpl EVM.Configuration, for: EVM.Configuration.Constantinople do
   @spec has_ec_pairing_builtin?(Configuration.t()) :: boolean()
   def has_ec_pairing_builtin?(config),
     do: Configuration.has_ec_pairing_builtin?(config.fallback_config)
+
+  @spec has_shift_operations?(Configuration.t()) :: boolean()
+  def has_shift_operations?(config),
+    do: config.has_shift_operations
 end
