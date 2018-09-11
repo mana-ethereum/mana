@@ -29,6 +29,8 @@ defmodule EVM.Builtin do
 
   @data_size_limit 24_577
 
+  @dialyzer {:no_return, pairing: 1}
+
   @doc """
   A precompiled contract that recovers a public key from a signed hash
   (Elliptic curve digital signature algorithm public key recovery function)
