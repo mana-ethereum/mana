@@ -98,7 +98,7 @@ defmodule EVM.Operation.Metadata.StopAndArithmetic do
                     },
                     %{
                       id: 0x1B,
-                      description: "Shift left",
+                      description: "Logical shift left",
                       sym: :shl,
                       group: :stop_and_arithmetic,
                       input_count: 2,
