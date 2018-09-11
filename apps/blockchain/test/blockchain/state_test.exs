@@ -46,6 +46,13 @@ defmodule Blockchain.StateTest do
       "stTransactionTest/EmptyTransaction2",
       "stZeroKnowledge2/ecmul_0-3_5616_28000_96"
     ],
+    "Constantinople" => [
+      "stCreateTest/CreateOOGafterInitCodeReturndata",
+      "stReturnDataTest/returndatacopy_following_failing_call",
+      "stReturnDataTest/returndatacopy_initial_256",
+      "stRevertTest/RevertOpcodeMultipleSubCalls",
+      "stZeroKnowledge2/ecmul_0-3_5616_28000_96"
+    ],
     "EIP150" => [
       "stInitCodeTest/NotEnoughCashContractCreation",
       "stInitCodeTest/OutOfGasContractCreation",
@@ -358,6 +365,9 @@ defmodule Blockchain.StateTest do
 
       "Byzantium" ->
         EVM.Configuration.Byzantium.new()
+
+      "Constantinople" ->
+        EVM.Configuration.Constantinople.new()
 
       _ ->
         nil

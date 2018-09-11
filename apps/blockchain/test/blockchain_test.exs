@@ -20,8 +20,14 @@ defmodule BlockchainTest do
       "GeneralStateTests/stSpecialTest/failed_tx_xcf416c53_d0g0v0.json"
     ],
     "Byzantium" => String.split(@failing_byzantium_tests, "\n"),
+    "Constantinople" => [
+      "GeneralStateTests/stCreateTest/CreateOOGafterInitCodeReturndata_d0g1v0.json",
+      "GeneralStateTests/stReturnDataTest/modexp_modsize0_returndatasize_d0g1v0.json",
+      "GeneralStateTests/stReturnDataTest/modexp_modsize0_returndatasize_d0g2v0.json",
+      "GeneralStateTests/stReturnDataTest/modexp_modsize0_returndatasize_d0g3v0.json",
+      "bcStateTests/blockhashNonConstArg.json"
+    ],
     # the rest are not implemented yet
-    "Constantinople" => [],
     "EIP158ToByzantiumAt5" => [],
     "FrontierToHomesteadAt5" => [],
     "HomesteadToDaoAt5" => [],
@@ -158,6 +164,9 @@ defmodule BlockchainTest do
       "Byzantium" ->
         Chain.load_chain(:byzantium_test, config)
 
+      "Constantinople" ->
+        Chain.load_chain(:constantinople_test, config)
+
       _ ->
         nil
     end
@@ -179,6 +188,9 @@ defmodule BlockchainTest do
 
       "Byzantium" ->
         EVM.Configuration.Byzantium.new()
+
+      "Constantinople" ->
+        EVM.Configuration.Constantinople.new()
 
       _ ->
         nil

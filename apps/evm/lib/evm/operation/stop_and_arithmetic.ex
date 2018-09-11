@@ -164,4 +164,34 @@ defmodule EVM.Operation.StopAndArithmetic do
       band(s1, (1 <<< Helpers.bit_position(s0)) - 1)
     end
   end
+
+  @doc """
+  Logical shift left.
+  """
+  @spec shl(Operation.stack_args(), Operation.vm_map()) :: EVM.val()
+  def shl([s0, _s1], _) when s0 >= 256, do: 0
+
+  def shl([s0, s1], _), do: s1 <<< s0
+
+  @doc """
+  Logical shift right.
+  """
+  @spec shr(Operation.stack_args(), Operation.vm_map()) :: EVM.val()
+  def shr([s0, _s1], _) when s0 >= 256, do: 0
+
+  def shr([s0, s1], _), do: s1 >>> s0
+
+  @doc """
+  Arithmetic shift right.
+  """
+  @spec sar(Operation.stack_args(), Operation.vm_map()) :: EVM.val()
+  def sar([s0, s1], _) do
+    s1_signed = Helpers.decode_signed(s1)
+
+    if s0 >= 256 do
+      if s1_signed >= 0, do: 0, else: -1
+    else
+      s1_signed >>> s0
+    end
+  end
 end

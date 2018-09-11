@@ -113,7 +113,10 @@ defmodule EVM.Gas do
                       :calldataload,
                       :mload,
                       :mstore,
-                      :mstore8
+                      :mstore8,
+                      :shl,
+                      :shr,
+                      :sar
                     ] ++ @push_instrs ++ @dup_instrs ++ @swap_instrs
   @w_low_instr [:mul, :div, :sdiv, :mod, :smod, :signextend]
   @w_mid_instr [:addmod, :mulmod, :jump]

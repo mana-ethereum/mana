@@ -88,4 +88,8 @@ defimpl EVM.Configuration, for: EVM.Configuration.EIP158 do
   @spec has_ec_pairing_builtin?(Configuration.t()) :: boolean()
   def has_ec_pairing_builtin?(config),
     do: Configuration.has_ec_pairing_builtin?(config.fallback_config)
+
+  @spec has_shift_operations?(Configuration.t()) :: boolean()
+  def has_shift_operations?(config),
+    do: Configuration.has_shift_operations?(config.fallback_config)
 end

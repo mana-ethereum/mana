@@ -95,6 +95,30 @@ defmodule EVM.Operation.Metadata.StopAndArithmetic do
                       group: :stop_and_arithmetic,
                       input_count: 2,
                       output_count: 1
+                    },
+                    %{
+                      id: 0x1B,
+                      description: "Logical shift left",
+                      sym: :shl,
+                      group: :stop_and_arithmetic,
+                      input_count: 2,
+                      output_count: 1
+                    },
+                    %{
+                      id: 0x1C,
+                      description: "Logical shift right",
+                      sym: :shr,
+                      group: :stop_and_arithmetic,
+                      input_count: 2,
+                      output_count: 1
+                    },
+                    %{
+                      id: 0x1D,
+                      description: "Arithmetic shift right",
+                      sym: :sar,
+                      group: :stop_and_arithmetic,
+                      input_count: 2,
+                      output_count: 1
                     }
                   ],
                   do: struct(EVM.Operation.Metadata, operation)
