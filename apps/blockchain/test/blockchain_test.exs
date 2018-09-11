@@ -20,8 +20,54 @@ defmodule BlockchainTest do
       "GeneralStateTests/stSpecialTest/failed_tx_xcf416c53_d0g0v0.json"
     ],
     "Byzantium" => String.split(@failing_byzantium_tests, "\n"),
+    "Constantinople" => [
+      "GeneralStateTests/stCreateTest/CreateOOGafterInitCodeReturndata_d0g1v0.json",
+      "GeneralStateTests/stReturnDataTest/modexp_modsize0_returndatasize_d0g1v0.json",
+      "GeneralStateTests/stReturnDataTest/modexp_modsize0_returndatasize_d0g2v0.json",
+      "GeneralStateTests/stReturnDataTest/modexp_modsize0_returndatasize_d0g3v0.json",
+      "GeneralStateTests/stShift/sar00_d0g0v0.json",
+      "GeneralStateTests/stShift/sar01_d0g0v0.json",
+      "GeneralStateTests/stShift/sar10_d0g0v0.json",
+      "GeneralStateTests/stShift/sar11_d0g0v0.json",
+      "GeneralStateTests/stShift/sar_0_256-1_d0g0v0.json",
+      "GeneralStateTests/stShift/sar_2^254_254_d0g0v0.json",
+      "GeneralStateTests/stShift/sar_2^255-1_248_d0g0v0.json",
+      "GeneralStateTests/stShift/sar_2^255-1_254_d0g0v0.json",
+      "GeneralStateTests/stShift/sar_2^255-1_255_d0g0v0.json",
+      "GeneralStateTests/stShift/sar_2^255-1_256_d0g0v0.json",
+      "GeneralStateTests/stShift/sar_2^255_1_d0g0v0.json",
+      "GeneralStateTests/stShift/sar_2^255_255_d0g0v0.json",
+      "GeneralStateTests/stShift/sar_2^255_256_d0g0v0.json",
+      "GeneralStateTests/stShift/sar_2^255_257_d0g0v0.json",
+      "GeneralStateTests/stShift/sar_2^256-1_0_d0g0v0.json",
+      "GeneralStateTests/stShift/sar_2^256-1_1_d0g0v0.json",
+      "GeneralStateTests/stShift/sar_2^256-1_255_d0g0v0.json",
+      "GeneralStateTests/stShift/sar_2^256-1_256_d0g0v0.json",
+      "GeneralStateTests/stShift/shl01-0100_d0g0v0.json",
+      "GeneralStateTests/stShift/shl01-0101_d0g0v0.json",
+      "GeneralStateTests/stShift/shl01-ff_d0g0v0.json",
+      "GeneralStateTests/stShift/shl01_d0g0v0.json",
+      "GeneralStateTests/stShift/shl10_d0g0v0.json",
+      "GeneralStateTests/stShift/shl11_d0g0v0.json",
+      "GeneralStateTests/stShift/shl7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff-01_d0g0v0.json",
+      "GeneralStateTests/stShift/shlffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff-00_d0g0v0.json",
+      "GeneralStateTests/stShift/shlffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff-0100_d0g0v0.json",
+      "GeneralStateTests/stShift/shlffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff-01_d0g0v0.json",
+      "GeneralStateTests/stShift/shlffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff-ff_d0g0v0.json",
+      "GeneralStateTests/stShift/shr01_d0g0v0.json",
+      "GeneralStateTests/stShift/shr10_d0g0v0.json",
+      "GeneralStateTests/stShift/shr11_d0g0v0.json",
+      "GeneralStateTests/stShift/shr_-1_0_d0g0v0.json",
+      "GeneralStateTests/stShift/shr_-1_1_d0g0v0.json",
+      "GeneralStateTests/stShift/shr_-1_255_d0g0v0.json",
+      "GeneralStateTests/stShift/shr_-1_256_d0g0v0.json",
+      "GeneralStateTests/stShift/shr_2^255_1_d0g0v0.json",
+      "GeneralStateTests/stShift/shr_2^255_255_d0g0v0.json",
+      "GeneralStateTests/stShift/shr_2^255_256_d0g0v0.json",
+      "GeneralStateTests/stShift/shr_2^255_257_d0g0v0.json",
+      "bcStateTests/blockhashNonConstArg.json"
+    ],
     # the rest are not implemented yet
-    "Constantinople" => [],
     "EIP158ToByzantiumAt5" => [],
     "FrontierToHomesteadAt5" => [],
     "HomesteadToDaoAt5" => [],
@@ -158,6 +204,9 @@ defmodule BlockchainTest do
       "Byzantium" ->
         Chain.load_chain(:byzantium_test, config)
 
+      "Constantinople" ->
+        Chain.load_chain(:constantinople_test, config)
+
       _ ->
         nil
     end
@@ -179,6 +228,9 @@ defmodule BlockchainTest do
 
       "Byzantium" ->
         EVM.Configuration.Byzantium.new()
+
+      "Constantinople" ->
+        EVM.Configuration.Constantinople.new()
 
       _ ->
         nil

@@ -7,7 +7,7 @@ defmodule GenerateBlockchainTests do
   alias Block.Header
 
   @base_path System.cwd() <> "/../../ethereum_common_tests/BlockchainTests/"
-  @allowed_forks ["Byzantium", "Frontier", "Homestead", "EIP150", "EIP158"]
+  @allowed_forks ["Constantinople", "Byzantium", "Frontier", "Homestead", "EIP150", "EIP158"]
   @byzantium_failing_tests_path System.cwd() <> "/test/support/byzantium_failing_tests.txt"
   @initial_pass_fail {[], []}
   @number_of_test_groups 20
@@ -164,6 +164,9 @@ defmodule GenerateBlockchainTests do
       "Byzantium" ->
         Chain.load_chain(:byzantium_test, config)
 
+      "Constantinople" ->
+        Chain.load_chain(:constantinople_test, config)
+
       _ ->
         nil
     end
@@ -185,6 +188,9 @@ defmodule GenerateBlockchainTests do
 
       "Byzantium" ->
         EVM.Configuration.Byzantium.new()
+
+      "Constantinople" ->
+        EVM.Configuration.Constantinople.new()
 
       _ ->
         nil
