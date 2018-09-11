@@ -14,7 +14,7 @@ set -e
 if [ $CI_NODE -eq 2 ]; then
   echo_and_run mix cmd --app blockchain mix test --only blockchain_common_tests
 elif [ $CI_NODE -eq 1 ]; then
-  echo_and_run mix cmd --app blockchain mix test --only state_common_tests --case_load_timeout 120_000
+  echo_and_run mix cmd --app blockchain mix test --only state_common_tests
 else
   echo_and_run mix test --exclude network --exclude pending --exclude ethereum_common_tests
 fi
