@@ -46,6 +46,53 @@ defmodule Blockchain.StateTest do
       "stTransactionTest/EmptyTransaction2",
       "stZeroKnowledge2/ecmul_0-3_5616_28000_96"
     ],
+    "Constantinople" => [
+      "stCreateTest/CreateOOGafterInitCodeReturndata",
+      "stReturnDataTest/returndatacopy_following_failing_call",
+      "stReturnDataTest/returndatacopy_initial_256",
+      "stRevertTest/RevertOpcodeMultipleSubCalls",
+      "stShift/sar00",
+      "stShift/sar01",
+      "stShift/sar10",
+      "stShift/sar11",
+      "stShift/sar_0_256-1",
+      "stShift/sar_2^254_254",
+      "stShift/sar_2^255-1_248",
+      "stShift/sar_2^255-1_254",
+      "stShift/sar_2^255-1_255",
+      "stShift/sar_2^255-1_256",
+      "stShift/sar_2^255_1",
+      "stShift/sar_2^255_255",
+      "stShift/sar_2^255_256",
+      "stShift/sar_2^255_257",
+      "stShift/sar_2^256-1_0",
+      "stShift/sar_2^256-1_1",
+      "stShift/sar_2^256-1_255",
+      "stShift/sar_2^256-1_256",
+      "stShift/shl01",
+      "stShift/shl01-0100",
+      "stShift/shl01-0101",
+      "stShift/shl01-ff",
+      "stShift/shl10",
+      "stShift/shl11",
+      "stShift/shl_-1_0",
+      "stShift/shl_-1_1",
+      "stShift/shl_-1_255",
+      "stShift/shl_-1_256",
+      "stShift/shl_2^255-1_1",
+      "stShift/shr01",
+      "stShift/shr10",
+      "stShift/shr11",
+      "stShift/shr_-1_0",
+      "stShift/shr_-1_1",
+      "stShift/shr_-1_255",
+      "stShift/shr_-1_256",
+      "stShift/shr_2^255_1",
+      "stShift/shr_2^255_255",
+      "stShift/shr_2^255_256",
+      "stShift/shr_2^255_257",
+      "stZeroKnowledge2/ecmul_0-3_5616_28000_96"
+    ],
     "EIP150" => [
       "stInitCodeTest/NotEnoughCashContractCreation",
       "stInitCodeTest/OutOfGasContractCreation",
@@ -358,6 +405,9 @@ defmodule Blockchain.StateTest do
 
       "Byzantium" ->
         EVM.Configuration.Byzantium.new()
+
+      "Constantinople" ->
+        EVM.Configuration.Constantinople.new()
 
       _ ->
         nil
