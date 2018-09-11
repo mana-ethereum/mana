@@ -6,7 +6,7 @@ defmodule Blockchain.StateTest do
   alias ExthCrypto.Hash.Keccak
 
   use EthCommonTest.Harness
-  use ExUnit.Case, async: true, case_load_timeout: 120_000
+  use ExUnit.Case, async: true
 
   @failing_tests %{
     "Byzantium" => [
