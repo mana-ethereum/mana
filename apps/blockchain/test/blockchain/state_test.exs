@@ -130,7 +130,7 @@ defmodule Blockchain.StateTest do
     ]
   }
 
-  @fifteen_minutes 1000 * 60 * 18
+  @fifteen_minutes 1000 * 60 * 15
   @num_test_groups 10
 
   @tag :ethereum_common_tests
