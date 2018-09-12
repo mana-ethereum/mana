@@ -13,7 +13,7 @@ defmodule ExWire.Mixfile do
       package: [
         maintainers: ["Mason Fischer", "Geoffrey Hayes", "Ayrat Badykov"],
         licenses: ["MIT"],
-        links: %{"GitHub" => "https://github.com/exthereum/ex_wire"}
+        links: %{"GitHub" => "https://github.com/poanetwork/mana/tree/master/apps/ex_wire"}
       ],
       elixirc_paths: elixirc_paths(Mix.env()),
       build_embedded: Mix.env() == :prod,

@@ -13,7 +13,9 @@ defmodule MerklePatriciaTree.Mixfile do
       package: [
         maintainers: ["Geoffrey Hayes", "Ayrat Badykov", "Mason Forest"],
         licenses: ["MIT"],
-        links: %{"GitHub" => "https://github.com/exthereum/merkle_patricia_tree"}
+        links: %{
+          "GitHub" => "https://github.com/poanetwork/mana/tree/master/apps/merkle_patricia_tree"
+        }
       ],
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
