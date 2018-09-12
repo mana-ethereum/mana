@@ -62,9 +62,9 @@ defmodule Blockchain.Contract.MessageCall do
 
   TODO: Determine whether or not we should be passing in the block header directly.
   TODO: Add serious (less trivial) test cases in `contract_test.exs`
-
   """
-  @spec execute(t()) :: {EVM.state(), EVM.Gas.t(), EVM.SubState.t(), EVM.VM.output()}
+  @spec execute(t()) ::
+          {:ok | :error, {EVM.state(), EVM.Gas.t(), EVM.SubState.t(), EVM.VM.output()}}
   def execute(params) do
     run = MessageCall.get_run_function(params.recipient, params.config)
 
@@ -106,13 +106,13 @@ defmodule Blockchain.Contract.MessageCall do
     # point immediately prior to balance transfer.
     case output do
       :failed ->
-        {params.state, 0, SubState.empty(), :failed}
+        {:error, {params.state, 0, SubState.empty(), :failed}}
 
       {:revert, _output} ->
-        {params.state, gas, SubState.empty(), :failed}
+        {:error, {params.state, gas, SubState.empty(), :failed}}
 
       _ ->
-        {exec_env.account_interface.state, gas, sub_state, output}
+        {:ok, {exec_env.account_interface.state, gas, sub_state, output}}
     end
   end
 end

@@ -697,14 +697,14 @@ defmodule Blockchain.Block do
 
       # Create a contract
   """
-  @spec add_transactions(t, [Transaction.t()], DB.db(), EVM.Configuration.t()) :: t
-  def add_transactions(block, transactions, db, config \\ EVM.Configuration.Frontier.new()) do
+  @spec add_transactions(t, [Transaction.t()], DB.db(), Chain.t()) :: t
+  def add_transactions(block, transactions, db, chain) do
     trx_count = get_transaction_count(block)
 
-    do_add_transactions(block, transactions, db, trx_count, config)
+    do_add_transactions(block, transactions, db, trx_count, chain)
   end
 
-  @spec do_add_transactions(t, [Transaction.t()], DB.db(), integer(), EVM.Configuration.t()) :: t
+  @spec do_add_transactions(t, [Transaction.t()], DB.db(), integer(), Chain.t()) :: t
   defp do_add_transactions(block, [], _, _, _), do: block
 
   defp do_add_transactions(
@@ -712,20 +712,16 @@ defmodule Blockchain.Block do
          [trx | transactions],
          db,
          trx_count,
-         config
+         chain
        ) do
     state = Trie.new(db, header.state_root)
 
-    {new_state, gas_used, logs} = Transaction.execute_with_validation(state, trx, header, config)
+    {new_state, gas_used, logs, tx_status} =
+      Transaction.execute_with_validation(state, trx, header, chain.evm_config)
 
     total_gas_used = block.header.gas_used + gas_used
 
-    # TODO: Add bloom filter
-    receipt = %Receipt{
-      state: new_state.root_hash,
-      cumulative_gas: total_gas_used,
-      logs: logs
-    }
+    receipt = create_receipt(block.header, new_state, total_gas_used, logs, tx_status, chain)
 
     updated_block =
       block
@@ -734,7 +730,24 @@ defmodule Blockchain.Block do
       |> put_receipt(trx_count, receipt, db)
       |> put_transaction(trx_count, trx, db)
 
-    do_add_transactions(updated_block, transactions, db, trx_count + 1, config)
+    do_add_transactions(updated_block, transactions, db, trx_count + 1, chain)
+  end
+
+  defp create_receipt(block_header, new_state, total_gas_used, logs, tx_status, chain) do
+    eip658_transition = chain.params[:eip658_transition]
+
+    state =
+      if Header.is_before_byzantium?(block_header, eip658_transition) do
+        new_state.root_hash
+      else
+        tx_status
+      end
+
+    %Receipt{
+      state: state,
+      cumulative_gas: total_gas_used,
+      logs: logs
+    }
   end
 
   # Updates a block to have a new state root given a state object

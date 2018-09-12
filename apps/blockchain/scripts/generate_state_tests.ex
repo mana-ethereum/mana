@@ -59,9 +59,7 @@ defmodule GenerateStateTests do
         %{acc | passing: passing, failing: failing}
       end)
 
-    IO.puts("Failing tests")
-    deduped_tests = dedup_tests(completed_tests[:failing])
-    IO.puts(inspect(deduped_tests), limit: :infinity)
+    log_failing_tests(completed_tests[:failing])
 
     for hardfork <- @hardforks do
       passing_tests = length(completed_tests[:passing][hardfork])
@@ -74,6 +72,15 @@ defmodule GenerateStateTests do
         }%"
       )
     end
+  end
+
+  defp log_failing_tests(failing_tests) do
+    IO.puts("Failing tests")
+
+    failing_tests
+    |> dedup_tests()
+    # credo:disable-for-next-line Credo.Check.Warning.IoInspect
+    |> IO.inspect(limit: :infinity)
   end
 
   defp dedup_tests(tests) do
@@ -167,7 +174,7 @@ defmodule GenerateStateTests do
 
           {state, logs} =
             case result do
-              {state, _, logs} -> {state, logs}
+              {state, _, logs, _tx_status} -> {state, logs}
               _ -> {pre_state, []}
             end
 

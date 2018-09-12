@@ -352,7 +352,7 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
       block_header: block_header
     }
 
-    {state, gas, sub_state, output} = Contract.message_call(params)
+    {_, {state, gas, sub_state, output}} = Contract.message_call(params)
 
     {Map.put(account_interface, :state, state), gas, sub_state, output}
   end

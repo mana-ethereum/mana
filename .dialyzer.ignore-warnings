@@ -132,6 +132,11 @@ ain.Block':put_state/2. The success typing is (#{'__struct__':='Elixir.Blockchai
 }) -> #{'__struct__':='Elixir.Blockchain.Block', 'header':=#{'__struct__':='Elixir.Block.Header', 's
 tate_root':=_, _=>_}, _=>_}
 
+# We ignore this becuase we cannot reproduce it locally. It may be because CI is
+# using erlang 21 while we are using erlang 20. But we cannot yet update to
+# erlang 21 because we need rox to update
+apps/blockchain/lib/blockchain/block.ex:736: Function create_receipt/6 will never be called
+
 -------------------------------
 # blockchain/chain.ex
 -------------------------------
