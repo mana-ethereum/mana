@@ -1,6 +1,6 @@
 # EVM
 
-The EVM is a fully working Ethereum Virtual Machine which follows _Section 9: Execution Model_ of the [Yellow Paper](http://yellowpaper.io/). The EVM handles all transaction processing (messages sent between accounts) and serves as a runtime environment for smart contracts. For more information on our Elixir implementation, please see [Ethereum Virtual Machine in Elixir](https://www.badykov.com/elixir/2018/04/29/evm-basics/).
+The EVM is a fully working Ethereum Virtual Machine which follows _Section 9: Execution Model_ of the [Yellow Paper](https://github.com/ethereum/yellowpaper). The EVM handles all transaction processing (messages sent between accounts) and serves as a runtime environment for smart contracts. For more information on our Elixir implementation, please see [Ethereum Virtual Machine in Elixir](https://www.badykov.com/elixir/2018/04/29/evm-basics/).
 
 ## Data Structures
 

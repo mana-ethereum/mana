@@ -62,8 +62,9 @@ If running properly, you will see a timestamp in hr/min/sec/millisec and a runni
 Run:
 
 ```
-mix test
+mix test --exclude network
 ```
+Tests tagged with 'network' integrate with other nodes and cannot run unless another node is running in parallel. Use the'--exclude network' flag to exclude these tests.
 
 If you want to only run [Ethereum common
 tests](https://github.com/ethereum/tests), we currently have:
