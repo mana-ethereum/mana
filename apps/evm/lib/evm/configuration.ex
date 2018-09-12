@@ -100,4 +100,8 @@ defprotocol EVM.Configuration do
   # EIP145
   @spec has_shift_operations?(t) :: boolean()
   def has_shift_operations?(t)
+
+  # EIP1052
+  @spec has_extcodehash?(t) :: boolean()
+  def has_extcodehash?(t)
 end

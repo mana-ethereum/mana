@@ -100,4 +100,7 @@ defimpl EVM.Configuration, for: EVM.Configuration.EIP150 do
   @spec has_shift_operations?(Configuration.t()) :: boolean()
   def has_shift_operations?(config),
     do: Configuration.has_shift_operations?(config.fallback_config)
+
+  @spec has_extcodehash?(Configuration.t()) :: boolean()
+  def has_extcodehash?(config), do: Configuration.has_extcodehash?(config.fallback_config)
 end

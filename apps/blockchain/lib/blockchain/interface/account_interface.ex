@@ -111,6 +111,13 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
     end
   end
 
+  @spec get_account_code_hash(AccountInterface.t(), EVM.address()) :: binary() | nil
+  def get_account_code_hash(account_interface, address) do
+    account = Account.get_account(account_interface.state, address)
+
+    unless is_nil(account), do: account.code_hash
+  end
+
   @doc """
   Given an account interface and an address, increments the nonce on the account,
   returning both a new `AccountInterface` and the previous nonce value.
