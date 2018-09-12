@@ -6,7 +6,7 @@ defmodule Blockchain.Account do
 
   alias ExthCrypto.Hash.Keccak
   alias MerklePatriciaTree.Trie
-  alias Blockchain.Account.Storage
+  alias Blockchain.Account.{Address, Storage}
 
   @empty_keccak Keccak.kec(<<>>)
   @empty_trie Trie.empty_trie_root_hash()
@@ -123,9 +123,8 @@ defmodule Blockchain.Account do
       ...> |> Blockchain.Account.get_account(<<0x01::160>>)
       nil
   """
-  @spec get_account(Trie.t(), EVM.address()) :: t | nil
+  @spec get_account(Trie.t(), Address.t()) :: t | nil
   def get_account(state, address) do
-    address = if is_binary(address), do: address, else: :binary.encode_unsigned(address)
     trie = Trie.get(state, Keccak.kec(address))
 
     case trie do
@@ -168,7 +167,7 @@ defmodule Blockchain.Account do
         nil
       ]
   """
-  @spec get_accounts(EVM.state(), [EVM.address()]) :: [t | nil]
+  @spec get_accounts(EVM.state(), [Address.t()]) :: [t | nil]
   def get_accounts(state, addresses) do
     for address <- addresses, do: get_account(state, address)
   end
@@ -183,7 +182,7 @@ defmodule Blockchain.Account do
       iex> MerklePatriciaTree.Trie.get(state, <<0x01::160>> |> ExthCrypto.Hash.Keccak.kec()) |> ExRLP.decode
       [<<5>>, <<6>>, <<0x01>>, <<0x02>>]
   """
-  @spec put_account(EVM.state(), EVM.address(), t) :: EVM.state()
+  @spec put_account(EVM.state(), Address.t(), t) :: EVM.state()
   def put_account(state, address, account) do
     encoded_account =
       account
@@ -211,7 +210,7 @@ defmodule Blockchain.Account do
       ...>   |> Blockchain.Account.get_account(<<0x01::160>>)
       nil
   """
-  @spec del_account(EVM.state(), EVM.address()) :: EVM.state()
+  @spec del_account(EVM.state(), Address.t()) :: EVM.state()
   def del_account(state, address) do
     account = get_account(state, address)
 
@@ -252,7 +251,7 @@ defmodule Blockchain.Account do
       ...>   |> Blockchain.Account.get_account(<<0x01::160>>)
       %Blockchain.Account{nonce: 1}
   """
-  @spec update_account(EVM.state(), EVM.address(), (t -> t), boolean()) ::
+  @spec update_account(EVM.state(), Address.t(), (t -> t), boolean()) ::
           EVM.state() | {EVM.state(), t, t}
   def update_account(state, address, fun, return_accounts \\ false) do
     account = get_account(state, address) || %__MODULE__{}
@@ -285,8 +284,7 @@ defmodule Blockchain.Account do
       iex> after_acct.nonce
       11
   """
-  @spec increment_nonce(EVM.state(), EVM.address(), boolean()) ::
-          EVM.state() | {EVM.state(), t, t}
+  @spec increment_nonce(EVM.state(), Address.t(), boolean()) :: EVM.state() | {EVM.state(), t, t}
   def increment_nonce(state, address, return_accounts \\ false) do
     update_account(
       state,
@@ -326,7 +324,7 @@ defmodule Blockchain.Account do
       ...> |> Blockchain.Account.get_account(<<0x01::160>>)
       ** (RuntimeError) wei reduced to less than zero
   """
-  @spec add_wei(EVM.state(), EVM.address(), EVM.Wei.t()) :: EVM.state()
+  @spec add_wei(EVM.state(), Address.t(), EVM.Wei.t()) :: EVM.state()
   def add_wei(state, address, delta_wei) do
     update_account(state, address, fn acct ->
       updated_balance = acct.balance + delta_wei
@@ -365,7 +363,7 @@ defmodule Blockchain.Account do
       ...> |> Blockchain.Account.get_account(<<0x01::160>>)
       %Blockchain.Account{balance: 13}
   """
-  @spec dec_wei(EVM.state(), EVM.address(), EVM.Wei.t()) :: EVM.state()
+  @spec dec_wei(EVM.state(), Address.t(), EVM.Wei.t()) :: EVM.state()
   def dec_wei(state, address, delta_wei), do: add_wei(state, address, -1 * delta_wei)
 
   @doc """
@@ -405,7 +403,7 @@ defmodule Blockchain.Account do
       iex> Blockchain.Account.transfer(MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db()), <<0x01::160>>, <<0x02::160>>, -3)
       {:error, "wei transfer cannot be negative"}
   """
-  @spec transfer(EVM.state(), EVM.address(), EVM.address(), EVM.Wei.t()) ::
+  @spec transfer(EVM.state(), Address.t(), Address.t(), EVM.Wei.t()) ::
           {:ok, EVM.state()} | {:error, String.t()}
   def transfer(state, from, to, wei) do
     # TODO: Decide if we want to waste the cycles to pull
@@ -442,7 +440,7 @@ defmodule Blockchain.Account do
       iex> {Blockchain.Account.get_account(state, <<0x01::160>>), Blockchain.Account.get_account(state, <<0x02::160>>)}
       {%Blockchain.Account{balance: 7}, %Blockchain.Account{balance: 8}}
   """
-  @spec transfer!(EVM.state(), EVM.address(), EVM.address(), EVM.Wei.t()) :: EVM.state()
+  @spec transfer!(EVM.state(), Address.t(), Address.t(), EVM.Wei.t()) :: EVM.state()
   def transfer!(state, from, to, wei) do
     case transfer(state, from, to, wei) do
       {:ok, state} -> state
@@ -472,7 +470,7 @@ defmodule Blockchain.Account do
       iex> MerklePatriciaTree.DB.get(state.db, ExthCrypto.Hash.Keccak.kec(<<1, 2, 3>>))
       {:ok, <<1, 2, 3>>}
   """
-  @spec put_code(EVM.state(), EVM.address(), EVM.MachineCode.t()) :: EVM.state()
+  @spec put_code(EVM.state(), Address.t(), EVM.MachineCode.t()) :: EVM.state()
   def put_code(state, contract_address, machine_code) do
     kec = Keccak.kec(machine_code)
 
@@ -509,7 +507,7 @@ defmodule Blockchain.Account do
       ...> |> Blockchain.Account.get_machine_code(<<0x01::160>>)
       {:ok, <<1, 2, 3>>}
   """
-  @spec get_machine_code(EVM.state(), EVM.address()) :: {:ok, binary()} | :not_found
+  @spec get_machine_code(EVM.state(), Address.t()) :: {:ok, binary()} | :not_found
   def get_machine_code(state, contract_address) do
     # TODO: Do we have a standard for default account values
     account = get_account(state, contract_address) || %__MODULE__{}
@@ -538,7 +536,7 @@ defmodule Blockchain.Account do
       iex> Blockchain.Account.get_storage(updated_state, <<01::160>>, 5)
       {:ok, 9}
   """
-  @spec put_storage(EVM.state(), EVM.address(), integer(), integer()) :: EVM.state()
+  @spec put_storage(EVM.state(), Address.t(), integer(), integer()) :: EVM.state()
   def put_storage(state, address, key, value) do
     update_account(state, address, fn acct ->
       updated_storage_trie = Storage.put(state.db, acct.storage_root, key, value)
@@ -547,7 +545,7 @@ defmodule Blockchain.Account do
     end)
   end
 
-  @spec remove_storage(EVM.state(), EVM.address(), integer()) :: EVM.state()
+  @spec remove_storage(EVM.state(), Address.t(), integer()) :: EVM.state()
   def remove_storage(state, address, key) do
     update_account(state, address, fn acct ->
       updated_storage_trie = Storage.remove(state.db, acct.storage_root, key)
@@ -576,7 +574,7 @@ defmodule Blockchain.Account do
       iex> Blockchain.Account.get_storage(updated_state, <<01::160>>, 55)
       :key_not_found
   """
-  @spec get_storage(EVM.state(), EVM.address(), integer()) ::
+  @spec get_storage(EVM.state(), Address.t(), integer()) ::
           {:ok, integer()} | :account_not_found | :key_not_found
   def get_storage(state, address, key) do
     case get_account(state, address) do
@@ -603,7 +601,7 @@ defmodule Blockchain.Account do
       ...> |> Blockchain.Account.get_account(<<0x01::160>>)
       %Blockchain.Account{balance: 0}
   """
-  @spec clear_balance(EVM.state(), EVM.address()) :: EVM.state()
+  @spec clear_balance(EVM.state(), Address.t()) :: EVM.state()
   def clear_balance(state, address) do
     update_account(state, address, fn acct ->
       %{acct | balance: 0}
@@ -622,7 +620,7 @@ defmodule Blockchain.Account do
       ...> |> Blockchain.Account.get_account(<<0x01::160>>)
       %Blockchain.Account{}
   """
-  @spec reset_account(EVM.state(), EVM.address()) :: EVM.state()
+  @spec reset_account(EVM.state(), Address.t()) :: EVM.state()
   def reset_account(state, address) do
     put_account(state, address, %__MODULE__{})
   end

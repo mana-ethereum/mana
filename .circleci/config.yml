@@ -17,21 +17,21 @@ jobs:
 
       - restore_cache:
           keys:
-            - v3-env-cache-{{ arch }}-{{ .Branch }}
-            - v3-env-cache-{{ .Branch }}
-            - v3-env-cache
+            - v4-env-cache-{{ arch }}-{{ .Branch }}
+            - v4-env-cache-{{ .Branch }}
+            - v4-env-cache
 
       - restore_cache:
           keys:
-            - v3-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
-            - v3-mix-cache-{{ .Branch }}
-            - v3-mix-cache
+            - v4-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
+            - v4-mix-cache-{{ .Branch }}
+            - v4-mix-cache
 
       - restore_cache:
           keys:
-            - v3-build-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
-            - v3-build-cache-{{ .Branch }}
-            - v3-build-cache
+            - v4-build-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
+            - v4-build-cache-{{ .Branch }}
+            - v4-build-cache
 
       - run: echo 'export PATH=~/.cargo/bin:$PATH' >> $BASH_ENV
 
@@ -40,41 +40,41 @@ jobs:
           no_output_timeout: 2400
 
       - save_cache:
-          key: v3-env-cache-{{ arch }}-{{ .Branch }}
+          key: v4-env-cache-{{ arch }}-{{ .Branch }}
           paths:
             - $HOME/.cargo
             - $HOME/.rustup
 
       - save_cache:
-          key: v3-env-cache-{{ .Branch }}
+          key: v4-env-cache-{{ .Branch }}
           paths:
             - $HOME/.cargo
             - $HOME/.rustup
 
       - save_cache:
-          key: v3-env-cache
+          key: v4-env-cache
           paths:
             - $HOME/.cargo
             - $HOME/.rustup
 
       - save_cache:
-          key: v3-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
+          key: v4-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
           paths: "deps"
       - save_cache:
-          key: v3-mix-cache-{{ .Branch }}
+          key: v4-mix-cache-{{ .Branch }}
           paths: "deps"
       - save_cache:
-          key: v3-mix-cache
+          key: v4-mix-cache
           paths: "deps"
 
       - save_cache:
-          key: v3-build-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
+          key: v4-build-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
           paths: "_build"
       - save_cache:
-          key: v3-build-cache-{{ .Branch }}
+          key: v4-build-cache-{{ .Branch }}
           paths: "_build"
       - save_cache:
-          key: v3-build-cache
+          key: v4-build-cache
           paths: "_build"
 
       - run:
@@ -123,26 +123,26 @@ jobs:
 
       - restore_cache:
           keys:
-            - v3-build-cache-{{ .Branch }}
-            - v3-build-cache
+            - v4-build-cache-{{ .Branch }}
+            - v4-build-cache
 
       - restore_cache:
           keys:
-            - v3-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
-            - v3-mix-cache-{{ .Branch }}
-            - v3-mix-cache
+            - v4-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
+            - v4-mix-cache-{{ .Branch }}
+            - v4-mix-cache
 
       - restore_cache:
           keys:
-            - v3-env-cache-{{ arch }}-{{ .Branch }}
-            - v3-env-cache-{{ .Branch }}
-            - v3-env-cache
+            - v4-env-cache-{{ arch }}-{{ .Branch }}
+            - v4-env-cache-{{ .Branch }}
+            - v4-env-cache
 
       - restore_cache:
           keys:
-            - v3-plt-cache-{{ ".tool-versions" }}-{{ checksum "mix.lock" }}
-            - v3-plt-cache-{{ ".tool-versions" }}-{{ checksum "mix.exs" }}
-            - v3-plt-cache-{{ ".tool-versions" }}
+            - v4-plt-cache-{{ ".tool-versions" }}-{{ checksum "mix.lock" }}
+            - v4-plt-cache-{{ ".tool-versions" }}-{{ checksum "mix.exs" }}
+            - v4-plt-cache-{{ ".tool-versions" }}
 
       - run:
           name: Unpack PLT cache
@@ -162,17 +162,17 @@ jobs:
             cp ~/.mix/dialyxir*.plt plts/
 
       - save_cache:
-          key: v3-plt-cache-{{ ".tool-versions" }}-{{ checksum "mix.lock" }}
+          key: v4-plt-cache-{{ ".tool-versions" }}-{{ checksum "mix.lock" }}
           paths:
             - plts
 
       - save_cache:
-          key: v3-plt-cache-{{ ".tool-versions" }}-{{ checksum "mix.exs" }}
+          key: v4-plt-cache-{{ ".tool-versions" }}-{{ checksum "mix.exs" }}
           paths:
             - plts
 
       - save_cache:
-          key: v3-plt-cache-{{ ".tool-versions" }}
+          key: v4-plt-cache-{{ ".tool-versions" }}
           paths:
             - plts
 

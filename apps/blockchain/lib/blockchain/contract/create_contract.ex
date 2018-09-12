@@ -6,7 +6,6 @@ defmodule Blockchain.Contract.CreateContract do
 
   alias Blockchain.Interface.{BlockInterface, AccountInterface}
   alias Block.Header
-  alias Blockchain.Contract.Address
   alias Blockchain.Account
   alias EVM.{SubState, Gas}
 
@@ -49,7 +48,7 @@ defmodule Blockchain.Contract.CreateContract do
   @spec execute(t()) :: {EVM.state(), EVM.Gas.t(), EVM.SubState.t()}
   def execute(params) do
     sender_account = Account.get_account(params.state, params.sender)
-    contract_address = Address.new(params.sender, sender_account.nonce)
+    contract_address = Account.Address.new(params.sender, sender_account.nonce)
     account = Account.get_account(params.state, contract_address)
 
     if Account.exists?(account) do

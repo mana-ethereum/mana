@@ -77,18 +77,20 @@ defmodule EVM.Operation.System do
       end
 
     # Note if was exception halt or other failure on stack
-    result =
+    new_address =
       if status == :ok do
         nonce = AccountInterface.get_account_nonce(exec_env.account_interface, exec_env.address)
 
         Address.new(exec_env.address, nonce)
       else
-        0
+        <<0>>
       end
+
+    new_address_for_machine_state = :binary.decode_unsigned(new_address)
 
     machine_state = %{
       machine_state
-      | stack: Stack.push(machine_state.stack, result),
+      | stack: Stack.push(machine_state.stack, new_address_for_machine_state),
         gas: n_gas + remaining_gas
     }
 
@@ -97,7 +99,7 @@ defmodule EVM.Operation.System do
     sub_state =
       n_sub_state
       |> SubState.merge(sub_state)
-      |> SubState.add_touched_account(result)
+      |> SubState.add_touched_account(new_address)
 
     %{
       machine_state: machine_state,

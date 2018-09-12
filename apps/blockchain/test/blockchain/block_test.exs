@@ -5,7 +5,7 @@ defmodule Blockchain.BlockTest do
   doctest Blockchain.Block
 
   alias Block.Header
-  alias Blockchain.{Chain, Account, Contract, Block, Transaction, Genesis}
+  alias Blockchain.{Chain, Account, Block, Transaction, Genesis}
   alias EVM.MachineCode
   alias MerklePatriciaTree.Trie
 
@@ -358,7 +358,7 @@ defmodule Blockchain.BlockTest do
 
       assert Block.get_transaction(block, 0, db) == expected_transaction
 
-      contract_address = Contract.Address.new(sender, 6)
+      contract_address = Account.Address.new(sender, 6)
       addresses = [sender, beneficiary, contract_address]
 
       actual_accounts =

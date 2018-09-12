@@ -42,7 +42,7 @@ defmodule Blockchain.Contract.CreateContractTest do
       assert gas == 99_993_576
       assert SubState.empty?(sub_state)
 
-      addresses = [<<0x10::160>>, Contract.Address.new(<<0x10::160>>, 5)]
+      addresses = [<<0x10::160>>, Account.Address.new(<<0x10::160>>, 5)]
       actual_accounts = Account.get_accounts(state, addresses)
 
       expected_accounts = [
@@ -58,7 +58,7 @@ defmodule Blockchain.Contract.CreateContractTest do
 
       assert actual_accounts == expected_accounts
 
-      contract_address = Contract.Address.new(<<0x10::160>>, 5)
+      contract_address = Account.Address.new(<<0x10::160>>, 5)
       assert Account.get_machine_code(state, contract_address) == {:ok, <<0x08::256>>}
       assert state |> Trie.Inspector.all_keys() |> Enum.count() == 2
     end
@@ -67,7 +67,7 @@ defmodule Blockchain.Contract.CreateContractTest do
       account = %Account{balance: 11, nonce: 5}
       account_address = <<0x10::160>>
       collision_account = %Account{nonce: 1}
-      collision_account_address = Contract.Address.new(account_address, account.nonce)
+      collision_account_address = Account.Address.new(account_address, account.nonce)
 
       state =
         db
@@ -95,7 +95,7 @@ defmodule Blockchain.Contract.CreateContractTest do
       account = %Account{balance: 11, nonce: 5}
       account_address = <<0x10::160>>
       collision_account = %Account{code_hash: build_sample_code(), nonce: 0}
-      collision_account_address = Contract.Address.new(account_address, account.nonce)
+      collision_account_address = Account.Address.new(account_address, account.nonce)
 
       state =
         db
