@@ -5,7 +5,7 @@ defmodule Blockchain.TransactionTest do
   doctest Blockchain.Transaction
 
   alias ExthCrypto.Hash.Keccak
-  alias Blockchain.{Account, Transaction, Contract}
+  alias Blockchain.{Account, Transaction}
   alias Blockchain.Transaction.Signature
   alias MerklePatriciaTree.Trie
   alias EVM.MachineCode
@@ -328,7 +328,7 @@ defmodule Blockchain.TransactionTest do
         nonce: 6
       }
 
-      contract_address = Contract.Address.new(sender.address, sender.nonce)
+      contract_address = Account.Address.new(sender.address, sender.nonce)
 
       machine_code =
         MachineCode.compile([
@@ -435,7 +435,7 @@ defmodule Blockchain.TransactionTest do
 
       assert beneficiary_account == %Account{balance: gas * gas_price}
 
-      contract_address = Contract.Address.new(sender.address, sender.nonce)
+      contract_address = Account.Address.new(sender.address, sender.nonce)
       refute Account.exists?(Account.get_account(state, contract_address))
     end
   end
