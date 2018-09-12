@@ -4,10 +4,19 @@ defmodule GenerateStateTests do
   alias Blockchain.Interface.AccountInterface
   alias Blockchain.Account.Storage
   alias ExthCrypto.Hash.Keccak
+  alias EVM.Configuration.{Frontier, Homestead, EIP150, EIP158, Byzantium, Constantinople}
 
   use EthCommonTest.Harness
 
-  @hardforks ["EIP158", "EIP150", "Homestead", "Frontier", "Byzantium", "Constantinople"]
+  @hardforks [
+    "EIP158",
+    "EIP150",
+    "Homestead",
+    "Frontier",
+    "Byzantium",
+    "Constantinople"
+  ]
+
   @twenty_minutes 60 * 20 * 1000
   @initial_state %{
     passing: %{
@@ -192,22 +201,22 @@ defmodule GenerateStateTests do
   def configuration(hardfork) do
     case hardfork do
       "Frontier" ->
-        EVM.Configuration.Frontier.new()
+        Frontier.new()
 
       "Homestead" ->
-        EVM.Configuration.Homestead.new()
+        Homestead.new()
 
       "EIP150" ->
-        EVM.Configuration.EIP150.new()
+        EIP150.new()
 
       "EIP158" ->
-        EVM.Configuration.EIP158.new()
+        EIP158.new()
 
       "Byzantium" ->
-        EVM.Configuration.Byzantium.new()
+        Byzantium.new()
 
       "Constantinople" ->
-        EVM.Configuration.Constantinople.new()
+        Constantinople.new()
 
       _ ->
         nil
