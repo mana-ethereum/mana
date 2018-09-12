@@ -38,13 +38,12 @@ defmodule EVM.Address do
   @doc """
   Returns an address given an address and a nonce.
   """
-  @spec new(integer(), integer()) :: non_neg_integer()
+  @spec new(integer(), integer()) :: binary()
   def new(address, nonce) do
     [address, nonce]
     |> ExRLP.encode()
     |> Keccak.kec()
     |> EVM.Helpers.take_n_last_bytes(@size)
-    |> :binary.decode_unsigned()
   end
 
   @doc """

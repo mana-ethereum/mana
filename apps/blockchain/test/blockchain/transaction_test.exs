@@ -126,7 +126,7 @@ defmodule Blockchain.TransactionTest do
 
       sender_account = %Account{balance: 400_000, nonce: 5}
 
-      contract_address = Contract.Address.new(sender_address, 6)
+      contract_address = Account.Address.new(sender_address, 6)
       machine_code = MachineCode.compile([:stop])
 
       tx =
@@ -183,7 +183,7 @@ defmodule Blockchain.TransactionTest do
       sender =
         <<126, 95, 69, 82, 9, 26, 105, 18, 93, 93, 252, 183, 184, 194, 101, 144, 41, 57, 91, 223>>
 
-      contract_address = Contract.Address.new(sender, 6)
+      contract_address = Account.Address.new(sender, 6)
 
       assembly = [
         :push1,
@@ -248,7 +248,7 @@ defmodule Blockchain.TransactionTest do
       sender =
         <<126, 95, 69, 82, 9, 26, 105, 18, 93, 93, 252, 183, 184, 194, 101, 144, 41, 57, 91, 223>>
 
-      contract_address = Contract.Address.new(sender, 6)
+      contract_address = Account.Address.new(sender, 6)
 
       assembly = [
         :push1,

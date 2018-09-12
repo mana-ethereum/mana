@@ -54,7 +54,7 @@ If running properly, you will see a timestamp in hr/min/sec/millisec and a runni
 
 ### Infura sync issues
 
-- When running the script mainnet fails on block [116523](https://etherscan.io/txs?block=116524) with a `state_root_mismatch` error. We believe [this transaction](https://etherscan.io/tx/0x5dd753ec16e8bf9429f7583b7cf7d4302daeb9616660051b8038da0f4b9f3e41) is causing the issue.
+- When running the script mainnet fails on block [179098](https://etherscan.io/txs?block=179098) with a `gas_used_mismatch` and `state_root_mismatch` errors.
 - Ropsten fails on block [11](https://ropsten.etherscan.io/txs?block=11) with a `state_root_mismatch` error as well.
 
 # Testing
