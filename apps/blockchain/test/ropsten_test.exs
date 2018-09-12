@@ -2,7 +2,7 @@ defmodule RopstenTest do
   @moduledoc """
   This test case has the first n blocks of Ropsten, which we
   will verify and add to a block tree. As we process in our
-  progress with Exthereum, we will be able to load and verify
+  progress with Mana, we will be able to load and verify
   more of the Ropsten chain.
   """
 

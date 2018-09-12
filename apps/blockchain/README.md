@@ -1,4 +1,4 @@
-# Mana-Ethereum Blockchain [![CircleCI](https://circleci.com/gh/exthereum/blockchain.svg?style=svg)](https://circleci.com/gh/exthereum/blockchain)
+# Mana-Ethereum Blockchain
 
 An Elixir implementation of the Ethereum Blockchain.
 This includes functionality to build and verify a chain of Ethereum blocks that may be advertised from any peer.
@@ -14,4 +14,3 @@ Installation is handled through the bin/setup procedure in the [Mana-Ethereum RE
 ## Contributing
 
 See the [CONTRIBUTING](../../CONTRIBUTING.md) document for contribution, testing and pull request protocol.
-

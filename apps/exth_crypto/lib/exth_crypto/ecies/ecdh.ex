@@ -1,6 +1,6 @@
 defmodule ExthCrypto.ECIES.ECDH do
   @moduledoc """
-  Implements Elliptic Curve Diffie-Hellman, as it pertains to Exthereum.
+  Implements Elliptic Curve Diffie-Hellman, as it pertains to Mana.
   """
 
   @default_curve :secp256k1

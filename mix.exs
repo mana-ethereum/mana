@@ -1,4 +1,4 @@
-defmodule Exthereum.MixProject do
+defmodule Mana.MixProject do
   use Mix.Project
   @root_path File.cwd!()
 
