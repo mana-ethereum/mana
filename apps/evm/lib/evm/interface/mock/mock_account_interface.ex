@@ -78,6 +78,13 @@ defimpl EVM.Interface.AccountInterface, for: EVM.Interface.Mock.MockAccountInter
     end
   end
 
+  @spec get_account_code_hash(EVM.Interface.AccountInterface.t(), EVM.address()) :: binary() | nil
+  def get_account_code_hash(mock_account_interface, address) do
+    account = get_account(mock_account_interface, address)
+
+    unless is_nil(account), do: account.code_hash
+  end
+
   defp get_account(mock_account_interface, address) do
     Map.get(mock_account_interface.account_map, address)
   end

@@ -70,6 +70,7 @@ defmodule EVM.Gas do
   @g_copy 3
   # Payment for BLOCKHASH operation
   @g_blockhash 20
+  @g_extcodehash 400
 
   @w_zero_instr [:stop, :return, :revert]
   @w_base_instr [
@@ -484,6 +485,9 @@ defmodule EVM.Gas do
 
       operation == :jumpdest ->
         @g_jumpdest
+
+      operation == :extcodehash ->
+        @g_extcodehash
 
       true ->
         0

@@ -171,6 +171,9 @@ defmodule EVM.Functions do
         :sar ->
           if Configuration.has_shift_operations?(config), do: operation_metadata
 
+        :extcodehash ->
+          if Configuration.has_extcodehash?(config), do: operation_metadata
+
         _ ->
           operation_metadata
       end

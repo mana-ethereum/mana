@@ -22,7 +22,8 @@ defmodule EVM.Configuration.Frontier do
             has_ec_add_builtin: false,
             has_ec_mult_builtin: false,
             has_ec_pairing_builtin: false,
-            has_shift_operations: false
+            has_shift_operations: false,
+            has_extcodehash: false
 
   def new do
     %__MODULE__{}
@@ -104,4 +105,7 @@ defimpl EVM.Configuration, for: EVM.Configuration.Frontier do
 
   @spec has_shift_operations?(Configuration.t()) :: boolean()
   def has_shift_operations?(config), do: config.has_shift_operations
+
+  @spec has_extcodehash?(Configuration.t()) :: boolean()
+  def has_extcodehash?(config), do: config.has_extcodehash
 end

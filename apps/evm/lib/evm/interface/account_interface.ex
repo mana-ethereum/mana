@@ -28,6 +28,9 @@ defprotocol EVM.Interface.AccountInterface do
   @spec get_account_nonce(EVM.Interface.AccountInterface.t(), EVM.address()) :: integer()
   def get_account_nonce(mock_account_interface, address)
 
+  @spec get_account_code_hash(t, EVM.address()) :: binary() | nil
+  def get_account_code_hash(t, address)
+
   @spec increment_account_nonce(t, EVM.address()) :: {t(), integer()}
   def increment_account_nonce(t, address)
 

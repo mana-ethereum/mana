@@ -297,6 +297,18 @@ defmodule EVM.Operation.EnvironmentalInformation do
     end
   end
 
+  @spec extcodehash(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
+  def extcodehash([address], %{exec_env: exec_env}) do
+    wrapped_address = Helpers.wrap_address(address)
+    hash = AccountInterface.get_account_code_hash(exec_env.account_interface, wrapped_address)
+
+    if is_nil(hash) do
+      0
+    else
+      hash
+    end
+  end
+
   @doc """
   Get size of output data from the previous call from the current environment.
 

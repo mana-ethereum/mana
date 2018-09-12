@@ -121,6 +121,14 @@ defmodule EVM.Operation.Metadata.EnvironmentalInformation do
                       input_count: 3,
                       output_count: 0,
                       group: :environmental_information
+                    },
+                    %{
+                      id: 0x3F,
+                      description: "Returns the keccak256 hash of a contract’s code",
+                      sym: :extcodehash,
+                      input_count: 1,
+                      output_count: 1,
+                      group: :environmental_information
                     }
                   ],
                   do: struct(EVM.Operation.Metadata, operation)
