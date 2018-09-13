@@ -76,6 +76,14 @@ defmodule EVM.Operation.Metadata.System do
                       input_count: 0,
                       output_count: 0,
                       group: :system
+                    },
+                    %{
+                      id: 0xFF,
+                      description: "Halt execution and register account for later deletion.",
+                      sym: :selfdestruct,
+                      input_count: 1,
+                      output_count: 0,
+                      group: :system
                     }
                   ],
                   do: struct(EVM.Operation.Metadata, operation)

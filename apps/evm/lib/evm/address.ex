@@ -47,6 +47,22 @@ defmodule EVM.Address do
   end
 
   @doc """
+  Returns an address for create2 opcode.
+  """
+  @spec new(integer() | binary(), integer() | binary(), binary() | integer()) :: binary()
+  def new(address, salt, init_code) do
+    binary_address = new(address)
+    binary_salt = if is_binary(salt), do: salt, else: :binary.encode_unsigned(salt)
+
+    binary_init_code =
+      if is_binary(init_code), do: init_code, else: :binary.encode_unsigned(init_code)
+
+    (binary_address <> binary_salt <> binary_init_code)
+    |> Keccak.kec()
+    |> EVM.Helpers.take_n_last_bytes(@size)
+  end
+
+  @doc """
   Returns an address given a private key
   ## Examples
 

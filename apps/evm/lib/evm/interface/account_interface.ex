@@ -86,6 +86,7 @@ defprotocol EVM.Interface.AccountInterface do
           EVM.MachineCode.t(),
           integer(),
           Header.t(),
+          EVM.address(),
           EVM.Configuration.t()
         ) :: {:ok | :error, {t, EVM.Gas.t(), EVM.SubState.t()}}
   def create_contract(
@@ -98,6 +99,7 @@ defprotocol EVM.Interface.AccountInterface do
         init_code,
         stack_depth,
         block_header,
+        new_account_address,
         config
       )
 

@@ -382,6 +382,7 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
           EVM.MachineCode.t(),
           integer(),
           Block.Header.t(),
+          EVM.address(),
           EVM.Configuration.t()
         ) :: {:ok | :error, {AccountInterface.t(), EVM.Gas.t(), EVM.SubState.t()}}
   def create_contract(
@@ -394,6 +395,7 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
         init_code,
         stack_depth,
         block_header,
+        new_account_address,
         config
       ) do
     sender = Account.Address.from(evm_sender)
@@ -409,6 +411,7 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
       init_code: init_code,
       stack_depth: stack_depth,
       block_header: block_header,
+      new_account_address: new_account_address,
       config: config
     }
 
