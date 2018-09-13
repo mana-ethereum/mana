@@ -98,5 +98,5 @@ defimpl EVM.Configuration, for: EVM.Configuration.Homestead do
   def has_extcodehash?(config), do: Configuration.has_extcodehash?(config.fallback_config)
 
   @spec has_create2?(Configuration.t()) :: boolean()
-  def has_create2?(config), do: Configuration.has_create?(config.fallback_config)
+  def has_create2?(config), do: Configuration.has_create2?(config.fallback_config)
 end
