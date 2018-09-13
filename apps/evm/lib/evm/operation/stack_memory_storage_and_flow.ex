@@ -96,14 +96,21 @@ defmodule EVM.Operation.StackMemoryStorageAndFlow do
   """
   @spec sload(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def sload([key], %{exec_env: exec_env}) do
+    IO.puts("sload!")
+    IO.puts("key: #{inspect(key)}")
+    IO.puts("address: #{inspect(exec_env.address |> Base.encode16(case: :lower))}")
+
     case ExecEnv.get_storage(exec_env, key) do
       :account_not_found ->
+        IO.puts("account not found")
         0
 
       :key_not_found ->
+        IO.puts("key not found")
         0
 
       {:ok, value} ->
+        IO.puts("found value #{inspect(value)}")
         value
     end
   end
@@ -134,6 +141,10 @@ defmodule EVM.Operation.StackMemoryStorageAndFlow do
   """
   @spec sstore(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def sstore([key, value], %{exec_env: exec_env}) do
+    IO.puts("storing via SSTORE")
+    IO.puts("key: #{inspect(Base.encode16(:binary.encode_unsigned(key), case: :lower))}")
+    IO.puts("value: #{inspect(Base.encode16(:binary.encode_unsigned(value), case: :lower))}")
+
     if value == 0 do
       case ExecEnv.get_storage(exec_env, key) do
         {:ok, _value} -> %{exec_env: ExecEnv.remove_storage(exec_env, key)}

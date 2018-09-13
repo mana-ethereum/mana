@@ -30,6 +30,9 @@ defmodule Blockchain.Account.Storage do
   def fetch(db, root, key) do
     k = encode_key(key)
 
+    Trie.new(db, root)
+    |> Trie.Inspector.inspect_trie()
+
     result =
       db
       |> Trie.new(root)

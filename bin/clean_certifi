@@ -1,0 +1,5 @@
+#!/usr/bin/env sh
+
+set -e
+
+mix deps.clean certifi && mix deps.get && mix deps.compile

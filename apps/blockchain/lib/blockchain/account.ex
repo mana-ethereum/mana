@@ -577,11 +577,16 @@ defmodule Blockchain.Account do
   @spec get_storage(EVM.state(), Address.t(), integer()) ::
           {:ok, integer()} | :account_not_found | :key_not_found
   def get_storage(state, address, key) do
+    IO.puts("address in get_storage: #{inspect(address |> Base.encode16(case: :lower))}")
+
     case get_account(state, address) do
       nil ->
         :account_not_found
 
       account ->
+        IO.puts("account found: #{inspect(account)}")
+        IO.puts("storage root: #{inspect(account.storage_root |> Base.encode16(case: :lower))}")
+
         case Storage.fetch(state.db, account.storage_root, key) do
           nil -> :key_not_found
           value -> {:ok, value |> :binary.decode_unsigned()}

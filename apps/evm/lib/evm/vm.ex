@@ -142,6 +142,10 @@ defmodule EVM.VM do
 
     final_machine_state = MachineState.move_program_counter(n_machine_state, operation, inputs)
 
+    final_machine_state
+    |> EVM.Logger.log_state(operation)
+    |> EVM.Logger.log_stack()
+
     {final_machine_state, n_sub_state, n_exec_env}
   end
 end
