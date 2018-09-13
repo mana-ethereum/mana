@@ -2,7 +2,7 @@
 
 Elixir implementation of Ethereum's Merkle Patricia Tries.
 
-The encoding's specification can be found in [the yellow paper](http://yellowpaper.io/) or in the [ethereum wiki](https://github.com/ethereum/wiki/wiki/RLP) under Appendix D.
+The encoding's specification can be found in [the yellow paper](https://github.com/ethereum/yellowpaper) or in the [ethereum wiki](https://github.com/ethereum/wiki/wiki/RLP) under Appendix D.
 
 The modified patricia merkle trie allows arbitrary storage of key, value pairs with the benefits of a merkle trie in O(n*log(n)) time for insert, lookup and delete.
 
