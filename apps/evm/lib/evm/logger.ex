@@ -3,15 +3,24 @@ defmodule EVM.Logger do
   alias EVM.{Operation, MachineState}
 
   @doc """
+  Helper function to log the stack given the machine state
+  """
+  @spec log_stack(MachineState.t()) :: MachineState.t()
+  def log_stack(machine_state) do
+    Logger.debug(fn -> "Stack: #{inspect(machine_state.stack)}" end)
+    machine_state
+  end
+
+  @doc """
   This function logs state in the same format as Parity's `evm-debug` function. This makes comparing implementations and debugging easier.
 
   `cargo test --features "json-tests evm/evm-debug-tests" --release -- BlockchainTests_GeneralStateTest_stSystemOperationsTest --nocapture`
   """
-
-  @spec log_state(EVM.Operation.Metadata.t(), MachineState.t()) :: nil
-  def log_state(operation, machine_state) do
+  @spec log_state(MachineState.t(), EVM.Operation.Metadata.t()) :: MachineState.t()
+  def log_state(machine_state, operation) do
     log_opcode_and_gas_left(operation, machine_state)
     log_inputs(operation, machine_state)
+    machine_state
   end
 
   defp log_opcode_and_gas_left(operation, machine_state) do

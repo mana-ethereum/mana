@@ -39,16 +39,19 @@ The following example is from [Ethereum Virtual Machine in Elixir](https://www.b
 2. Add the input/output code to print debugging information.
    - Go to `lib/evm/vm.ex`.
 
-   - Find the `cycle/3` method and **add the IO code**.
+   - Find the `cycle/3` method and **add the logger code** before the return value
       ```elixir
       def cycle(machine_state, sub_state, exec_env) do
       operation = MachineCode.current_operation(machine_state, exec_env)
       inputs = Operation.inputs(operation, machine_state)
-      
-      IO.puts("stack:")
-      IO.inspect(machine_state.stack)
-      IO.puts("operation: #{operation.sym}")
-      
+
+      # more code
+
+      final_machine_state
+      |> EVM.Logger.log_stack()
+      |> EVM.Logger.log_state(operation)
+
+      {final_machine_state, n_sub_state, n_exec_env}
       ```
    - Save the file.
 
@@ -80,7 +83,7 @@ iex> env = %EVM.ExecEnv{
 }
 ```
 
-For this test, we are only interested in the `machine_code` field. It is represented as a binary. 
+For this test, we are only interested in the `machine_code` field. It is represented as a binary.
 
 ### Decompile the Code to View the Machine Operations
 
