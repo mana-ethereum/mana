@@ -64,7 +64,7 @@ Run:
 ```
 mix test --exclude network
 ```
-Tests tagged with 'network' integrate with other nodes and cannot run unless another node is running in parallel. Use the'--exclude network' flag to exclude these tests.
+Tests tagged with network integrate with other nodes and cannot run unless another node is running in parallel. Use the `--exclude network` flag to exclude these tests.
 
 If you want to only run [Ethereum common
 tests](https://github.com/ethereum/tests), we currently have:
