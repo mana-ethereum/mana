@@ -57,6 +57,33 @@ If running properly, you will see a timestamp in hr/min/sec/millisec and a runni
 - When running the script mainnet fails on block [179098](https://etherscan.io/txs?block=179098) with a `gas_used_mismatch` and `state_root_mismatch` errors.
 - Ropsten fails on block [11](https://ropsten.etherscan.io/txs?block=11) with a `state_root_mismatch` error as well.
 
+### Helpful debugging tools
+
+When trying to debug why the `sync_with_infura` script is failing to verify a
+block, we have found [etherscan] to be very helpful. Take block `177610` for
+example,
+
+We can look at the [block information], and dive into the [transaction
+information]. From that page, the "Tools & Utilities" dropdown provides very
+helpful debugging tools. Two of the most valuable are [Geth DebugTrace] and
+[Remix Debugger],
+
+- `Geth DebugTrace` allows us to compare each operation and its gas consumption
+against our implementation.
+
+- `Remix Debugger` allows us to compare the stack against our implementation's
+  stack for each cycle of the virtual machine.
+
+To log the operation, gas consumption, and stack in our application, please see
+the EVM README's [example setup].
+
+[etherscan]: https://etherscan.io/
+[block information]: https://etherscan.io/block/177610
+[transaction information]: https://etherscan.io/tx/0x7f79a541615694029d845e31f2f362484679c1b9a3fd8588822a33a0e13383f4
+[Geth DebugTrace]: https://etherscan.io/vmtrace?txhash=0x7f79a541615694029d845e31f2f362484679c1b9a3fd8588822a33a0e13383f4
+[Remix Debugger]: http://etherscan.io/remix?txhash=0x7f79a541615694029d845e31f2f362484679c1b9a3fd8588822a33a0e13383f4
+[example setup]: https://github.com/poanetwork/mana/tree/master/apps/evm#example-setup
+
 # Testing
 
 Run:
