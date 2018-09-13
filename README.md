@@ -10,21 +10,20 @@ Mana-Ethereum is currently in development. See the [Project Status](#project-sta
 
 # Dependencies
 
- * Elixir ~> 1.7.2
- * Rust ~> 1.26.0 (as a dependency of [Rox](https://github.com/urbint/rox))
-
+- Elixir ~> 1.7.2
+- Rust ~> 1.26.0 (as a dependency of [Rox](https://github.com/urbint/rox))
 
 # Installation
 
-* Clone repo with submodules (to access the Ethereum common tests)
+- Clone repo with submodules (to access the Ethereum common tests)
 
 ```
 git clone --recurse-submodules https://github.com/poanetwork/mana.git
 ```
 
-* Go to the mana subdirectory `cd mana`
+- Go to the mana subdirectory `cd mana`
 
-* Run `bin/setup`
+- Run `bin/setup`
 
 # Running a node
 
@@ -37,18 +36,18 @@ Infura](https://github.com/poanetwork/mana/blob/master/apps/blockchain/scripts/s
 `sync_with_infura` pulls blocks from nodes hosted by
 [Infura.io](https://infura.io/). You will need an Infura API key to run.
 
-1. Sign up with [Infura](https://infura.io/register).
-2. Create a new project.
-3. Copy your project API KEY.
-4. Paste your key into the dev.secret file for the blockchain app.
-    1. Go to apps/blockchain/config/dev.secret.exs
-    2. Paste your key to replace `<your api key here>` in the url string.
+1.  Sign up with [Infura](https://infura.io/register).
+2.  Create a new project.
+3.  Copy your project API KEY.
+4.  Paste your key into the dev.secret file for the blockchain app.
+    1.  Go to apps/blockchain/config/dev.secret.exs
+    2.  Paste your key to replace `<your api key here>` in the url string.
     ```Use Mix.Config
        config :ethereumex, url: "https://mainnet.infura.io/<your api key here>
-     ```
-5. Save the file and return to the mana home directory.
-6. Run the script.
-`mix run apps/blockchain/scripts/sync_with_infura.ex`
+    ```
+5.  Save the file and return to the mana home directory.
+6.  Run the script.
+    `mix run apps/blockchain/scripts/sync_with_infura.ex`
 
 If running properly, you will see a timestamp in hr/min/sec/millisec and a running list of Verified Blocks.
 
@@ -69,7 +68,7 @@ helpful debugging tools. Two of the most valuable are [Geth DebugTrace] and
 [Remix Debugger],
 
 - `Geth DebugTrace` allows us to compare each operation and its gas consumption
-against our implementation.
+  against our implementation.
 
 - `Remix Debugger` allows us to compare the stack against our implementation's
   stack for each cycle of the virtual machine.
@@ -83,8 +82,8 @@ the EVM README's [example setup].
 [etherscan]: https://etherscan.io/
 [block information]: https://etherscan.io/block/177610
 [transaction information]: https://etherscan.io/tx/0x7f79a541615694029d845e31f2f362484679c1b9a3fd8588822a33a0e13383f4
-[Geth DebugTrace]: https://etherscan.io/vmtrace?txhash=0x7f79a541615694029d845e31f2f362484679c1b9a3fd8588822a33a0e13383f4
-[Remix Debugger]: http://etherscan.io/remix?txhash=0x7f79a541615694029d845e31f2f362484679c1b9a3fd8588822a33a0e13383f4
+[geth debugtrace]: https://etherscan.io/vmtrace?txhash=0x7f79a541615694029d845e31f2f362484679c1b9a3fd8588822a33a0e13383f4
+[remix debugger]: http://etherscan.io/remix?txhash=0x7f79a541615694029d845e31f2f362484679c1b9a3fd8588822a33a0e13383f4
 [example setup]: https://github.com/poanetwork/mana/tree/master/apps/evm#example-setup
 
 # Testing
@@ -94,6 +93,7 @@ Run:
 ```
 mix test --exclude network
 ```
+
 Tests tagged with network integrate with other nodes and cannot run unless another node is running in parallel. Use the `--exclude network` flag to exclude these tests.
 
 If you want to only run [Ethereum common
@@ -119,40 +119,50 @@ Ethereum common tests are created for all clients to test against. We plan to pr
 
 - [VMTests](https://github.com/ethereum/tests/tree/develop/VMTests/vmTests) = 100% passing
 - [x] Frontier
-    - [BlockchainTests](https://github.com/ethereum/tests/tree/develop/BlockchainTests) (Includes GeneralStateTests) 1325/1325 = 100% passing
-    - [GeneralStateTests](https://github.com/ethereum/tests/tree/develop/GeneralStateTests) 1014/1026 = 98.8% passing
+  - [BlockchainTests](https://github.com/ethereum/tests/tree/develop/BlockchainTests) (Includes GeneralStateTests) 1325/1325 = 100% passing
+  - [GeneralStateTests](https://github.com/ethereum/tests/tree/develop/GeneralStateTests) 1014/1026 = 98.8% passing
 - [x] Homestead
-    - [BlockchainTests](https://github.com/ethereum/tests/tree/develop/BlockchainTests) (Includes GeneralStateTests) 2231/2231 = 100% passing
-    - [GeneralStateTests](https://github.com/ethereum/tests/tree/develop/GeneralStateTests) 2023/2061 = 98.2% passing
+  - [BlockchainTests](https://github.com/ethereum/tests/tree/develop/BlockchainTests) (Includes GeneralStateTests) 2231/2231 = 100% passing
+  - [GeneralStateTests](https://github.com/ethereum/tests/tree/develop/GeneralStateTests) 2023/2061 = 98.2% passing
 - [x] EIP150
-   - [BlockchainTests](https://github.com/ethereum/tests/tree/develop/BlockchainTests) (Includes GeneralStateTests) 1275/1275 = 100% passing
-   - [GeneralStateTests](https://github.com/ethereum/tests/tree/develop/GeneralStateTests) 1088/1113 = 97.8% passing
+  - [BlockchainTests](https://github.com/ethereum/tests/tree/develop/BlockchainTests) (Includes GeneralStateTests) 1275/1275 = 100% passing
+  - [GeneralStateTests](https://github.com/ethereum/tests/tree/develop/GeneralStateTests) 1088/1113 = 97.8% passing
 - [x] EIP158
-   - [BlockchainTests](https://github.com/ethereum/tests/tree/develop/BlockchainTests) (Includes GeneralStateTests) 1232/1233 = 99.9% passing
-   - [GeneralStateTests](https://github.com/ethereum/tests/tree/develop/GeneralStateTests) 1174/1180 = 99.5% passing
+  - [BlockchainTests](https://github.com/ethereum/tests/tree/develop/BlockchainTests) (Includes GeneralStateTests) 1232/1233 = 99.9% passing
+  - [GeneralStateTests](https://github.com/ethereum/tests/tree/develop/GeneralStateTests) 1174/1180 = 99.5% passing
 - [x] Byzantium
-   - [BlockchainTests](https://github.com/ethereum/tests/tree/develop/BlockchainTests) (Includes GeneralStateTests) 4961/4992 = 99.4% passing
-   - [GeneralStateTests](https://github.com/ethereum/tests/tree/develop/GeneralStateTests) 4754/4784 = 99.4% passing
-- [ ] Constantinople:  View the community [Constantinople Project Tracker](https://github.com/ethereum/pm/issues/53).
+  - [BlockchainTests](https://github.com/ethereum/tests/tree/develop/BlockchainTests) (Includes GeneralStateTests) 4915/4959 = 99.1% passing
+  - [GeneralStateTests](https://github.com/ethereum/tests/tree/develop/GeneralStateTests) 4741/4784 = 99.1% passing
+- [ ] Constantinople: View the community [Constantinople Project Tracker](https://github.com/ethereum/pm/issues/53).
 
+## Updating the Common test
+
+The Ethereum common tests are in a submodule. To update you'll want to:
+
+```bash
+% cd ethereum_common_tests
+% git checkout develop
+% git pull
+```
 
 # Project Status
 
-| Functionality | Status          |
-| ------------- |-------------- |
-| Encoding and Hashing | The [RLP](https://hex.pm/packages/ex_rlp) encoding protocol and the [Merkle Patricia Tree](https://github.com/poanetwork/mana/tree/master/apps/merkle_patricia_tree) data structure are fully implemented.|
-| [Ethereum Virtual Machine](https://github.com/poanetwork/mana/tree/master/apps/evm) | Our EVM currently passes 100% of the common [VM tests](https://github.com/ethereum/tests/tree/develop/VMTests). We are still discovering subtle differences in our implementation such as the [“vanishing Ether” issue](https://github.com/poanetwork/mana/commit/aa3056efe341dd548a750c6f5b4c8962ccef2518). This component is for the most part complete.    |
-| Peer to Peer Networking | Currently we can connect to one of the Ethereum bootnodes, get a list of peers, and add them to a list of known peers. We have fully implemented the modified [kademlia DHT](https://github.com/poanetwork/mana/tree/master/apps/ex_wire/lib/ex_wire/kademlia). <br /><br />We can also successfully perform the encrypted handshake with peer nodes and derive secrets to frame the rest of the messages. We have not yet implemented the ability to send [multi-frame packets](https://github.com/ethereum/devp2p/blob/master/rlpx.md#framing). See Issue [#97](https://github.com/poanetwork/mana/issues/97).  |
-| DEVp2p Protocol and Ethereum Wire Protocol | These are partially implemented but need to be completed. See Issue [#166](https://github.com/poanetwork/mana/issues/166) and Issue [#167](https://github.com/poanetwork/mana/issues/167). |
+| Functionality                                                                       | Status                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| ----------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Encoding and Hashing                                                                | The [RLP](https://hex.pm/packages/ex_rlp) encoding protocol and the [Merkle Patricia Tree](https://github.com/poanetwork/mana/tree/master/apps/merkle_patricia_tree) data structure are fully implemented.                                                                                                                                                                                                                                                                                                                                                                                                       |
+| [Ethereum Virtual Machine](https://github.com/poanetwork/mana/tree/master/apps/evm) | Our EVM currently passes 100% of the common [VM tests](https://github.com/ethereum/tests/tree/develop/VMTests). We are still discovering subtle differences in our implementation such as the [“vanishing Ether” issue](https://github.com/poanetwork/mana/commit/aa3056efe341dd548a750c6f5b4c8962ccef2518). This component is for the most part complete.                                                                                                                                                                                                                                                       |
+| Peer to Peer Networking                                                             | Currently we can connect to one of the Ethereum bootnodes, get a list of peers, and add them to a list of known peers. We have fully implemented the modified [kademlia DHT](https://github.com/poanetwork/mana/tree/master/apps/ex_wire/lib/ex_wire/kademlia). <br /><br />We can also successfully perform the encrypted handshake with peer nodes and derive secrets to frame the rest of the messages. We have not yet implemented the ability to send [multi-frame packets](https://github.com/ethereum/devp2p/blob/master/rlpx.md#framing). See Issue [#97](https://github.com/poanetwork/mana/issues/97). |
+| DEVp2p Protocol and Ethereum Wire Protocol                                          | These are partially implemented but need to be completed. See Issue [#166](https://github.com/poanetwork/mana/issues/166) and Issue [#167](https://github.com/poanetwork/mana/issues/167).                                                                                                                                                                                                                                                                                                                                                                                                                       |
 
 # Documentation
+
 To view module and reference documentation:
 
-1. Generate documentation.
-`mix docs`
+1.  Generate documentation.
+    `mix docs`
 
-2. View the generated docs.
-`open doc/index.html`
+2.  View the generated docs.
+    `open doc/index.html`
 
 # License
 
@@ -160,21 +170,19 @@ To view module and reference documentation:
 
 This project is licensed under the GNU Lesser General Public License v3.0. See the [LICENSE](LICENSE) file for details.
 
-
 # Contributing
 
 See the [CONTRIBUTING](CONTRIBUTING.md) document for contribution, testing and pull request protocol.
 
-
 # References
 
-* [Ethereum yellow paper](https://ethereum.github.io/yellowpaper/paper.pdf)(Ethereum: A Secure Decentralised Generalised Transaction Ledger Byzantium Version)
+- [Ethereum yellow paper](https://ethereum.github.io/yellowpaper/paper.pdf)(Ethereum: A Secure Decentralised Generalised Transaction Ledger Byzantium Version)
 
-* [Message Calls in Ethereum](http://www.badykov.com/ethereum/2018/06/17/message-calls-in-ethereum/)
+- [Message Calls in Ethereum](http://www.badykov.com/ethereum/2018/06/17/message-calls-in-ethereum/)
 
 Additional Ethereum Implementations
 
-* [Parity-Ethereum](https://github.com/paritytech/parity-ethereum)
-* [Go-Ethereum (Geth)](https://github.com/ethereum/go-ethereum/)
-* [EthereumJS](https://github.com/ethereumjs/ethereumjs-vm)
-* [Py-EVM](https://github.com/ethereum/py-evm)
+- [Parity-Ethereum](https://github.com/paritytech/parity-ethereum)
+- [Go-Ethereum (Geth)](https://github.com/ethereum/go-ethereum/)
+- [EthereumJS](https://github.com/ethereumjs/ethereumjs-vm)
+- [Py-EVM](https://github.com/ethereum/py-evm)
