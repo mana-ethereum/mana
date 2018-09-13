@@ -52,12 +52,26 @@ defmodule EVM.Address do
   @spec new(integer() | binary(), integer() | binary(), binary() | integer()) :: binary()
   def new(address, salt, init_code) do
     binary_address = new(address)
-    binary_salt = if is_binary(salt), do: salt, else: :binary.encode_unsigned(salt)
+
+    binary_salt =
+      if is_binary(salt) do
+        EVM.Helpers.left_pad_bytes(salt, 32)
+      else
+        salt
+        |> :binary.encode_unsigned()
+        |> EVM.Helpers.left_pad_bytes(32)
+      end
 
     binary_init_code =
-      if is_binary(init_code), do: init_code, else: :binary.encode_unsigned(init_code)
+      if is_binary(init_code) do
+        init_code
+      else
+        :binary.encode_unsigned(init_code)
+      end
 
-    (binary_address <> binary_salt <> binary_init_code)
+    code_hash = Keccak.kec(binary_init_code)
+
+    (<<255>> <> binary_address <> binary_salt <> code_hash)
     |> Keccak.kec()
     |> EVM.Helpers.take_n_last_bytes(@size)
   end

@@ -37,7 +37,7 @@ defmodule EVM.Operation.System do
         }
       ) do
     {init_code, _machine_state} = EVM.Memory.read(machine_state, input_offset, input_size)
-    new_account_address = Address.new(exec_env.address, init_code, salt) |> IO.inspect()
+    new_account_address = Address.new(exec_env.address, init_code, salt)
 
     create_account([value, input_offset, input_size], vm_map, new_account_address)
   end

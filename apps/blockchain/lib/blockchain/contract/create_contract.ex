@@ -202,12 +202,10 @@ defmodule Blockchain.Contract.CreateContract do
 
   defp new_account_address(params) do
     if params.new_account_address do
-      IO.inspect("in new account address")
-      params.new_account_address |> IO.inspect()
       params.new_account_address
     else
       sender_account = Account.get_account(params.state, params.sender)
-      contract_address = Account.Address.new(params.sender, sender_account.nonce)
+      Account.Address.new(params.sender, sender_account.nonce)
     end
   end
 end
