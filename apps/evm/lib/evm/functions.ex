@@ -177,6 +177,9 @@ defmodule EVM.Functions do
         :extcodehash ->
           if Configuration.has_extcodehash?(config), do: operation_metadata
 
+        :create2 ->
+          if Configuration.has_create2?(config), do: operation_metadata
+
         _ ->
           operation_metadata
       end

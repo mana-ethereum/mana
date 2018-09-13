@@ -44,6 +44,14 @@ defmodule EVM.Operation.Metadata.System do
                       group: :system
                     },
                     %{
+                      id: 0xF5,
+                      description: "Skinny CREATE2. EIP-1014",
+                      sym: :create2,
+                      input_count: 4,
+                      output_count: 1,
+                      group: :system
+                    },
+                    %{
                       id: 0xFA,
                       description: "Static message-call into an account",
                       sym: :staticcall,
@@ -66,14 +74,6 @@ defmodule EVM.Operation.Metadata.System do
                         "Designated invalid instruction. It can be used to abort the execution.",
                       sym: :invalid,
                       input_count: 0,
-                      output_count: 0,
-                      group: :system
-                    },
-                    %{
-                      id: 0xFF,
-                      description: "Halt execution and register account for later deletion.",
-                      sym: :selfdestruct,
-                      input_count: 1,
                       output_count: 0,
                       group: :system
                     }

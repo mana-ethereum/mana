@@ -23,7 +23,8 @@ defmodule EVM.Configuration.Frontier do
             has_ec_mult_builtin: false,
             has_ec_pairing_builtin: false,
             has_shift_operations: false,
-            has_extcodehash: false
+            has_extcodehash: false,
+            has_create2: false
 
   def new do
     %__MODULE__{}
@@ -108,4 +109,7 @@ defimpl EVM.Configuration, for: EVM.Configuration.Frontier do
 
   @spec has_extcodehash?(Configuration.t()) :: boolean()
   def has_extcodehash?(config), do: config.has_extcodehash
+
+  @spec has_create2?(Configuration.t()) :: boolean()
+  def has_create2?(config), do: config.has_create2
 end

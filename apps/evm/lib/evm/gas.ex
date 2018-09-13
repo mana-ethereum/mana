@@ -217,6 +217,10 @@ defmodule EVM.Gas do
     memory_expansion_cost(machine_state, in_offset, in_length)
   end
 
+  def memory_cost(:create2, [_value, in_offset, in_length, _salt], machine_state) do
+    memory_expansion_cost(machine_state, in_offset, in_length)
+  end
+
   def memory_cost(:return, [offset, length], machine_state) do
     memory_expansion_cost(machine_state, offset, length)
   end
@@ -472,6 +476,9 @@ defmodule EVM.Gas do
         Configuration.extcodecopy_cost(exec_env.config)
 
       operation == :create ->
+        @g_create
+
+      operation == :create2 ->
         @g_create
 
       operation == :blockhash ->

@@ -1,7 +1,8 @@
 defmodule EVM.Configuration.Constantinople do
   defstruct fallback_config: EVM.Configuration.Byzantium.new(),
             has_shift_operations: true,
-            has_extcodehash: true
+            has_extcodehash: true,
+            has_create2: true
 
   def new do
     %__MODULE__{}
@@ -96,4 +97,7 @@ defimpl EVM.Configuration, for: EVM.Configuration.Constantinople do
 
   @spec has_extcodehash?(Configuration.t()) :: boolean()
   def has_extcodehash?(config), do: config.has_extcodehash
+
+  @spec has_create2?(Configuration.t()) :: boolean()
+  def has_create2?(config), do: config.has_create2
 end
