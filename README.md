@@ -74,6 +74,9 @@ against our implementation.
 - `Remix Debugger` allows us to compare the stack against our implementation's
   stack for each cycle of the virtual machine.
 
+NOTE: for the `Remix Debugger`, you may want to add the block number at the top
+before pressing the play button.
+
 To log the operation, gas consumption, and stack in our application, please see
 the EVM README's [example setup].
 
