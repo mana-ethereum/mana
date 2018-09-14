@@ -236,6 +236,8 @@ defmodule EVM.Functions do
 
   defp static_state_modification?(:create, _), do: true
 
+  defp static_state_modification?(:create2, _), do: true
+
   defp static_state_modification?(:sstore, _), do: true
 
   defp static_state_modification?(_, _), do: false
