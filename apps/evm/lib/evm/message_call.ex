@@ -63,15 +63,6 @@ defmodule EVM.MessageCall do
           %{machine_state: MachineState.t(), exec_env: ExecEnv.t(), sub_state: SubState.t()}
           | %{machine_state: MachineState.t()}
   def call(message_call) do
-    {out_offset, out_size} = message_call.output_params
-
-    words = Memory.get_active_words(out_offset + out_size)
-
-    updated_machine_state =
-      MachineState.maybe_set_active_words(message_call.current_machine_state, words)
-
-    message_call = %{message_call | current_machine_state: updated_machine_state}
-
     if valid_stack_depth?(message_call) && sufficient_funds?(message_call) do
       execute(message_call)
     else
@@ -165,7 +156,7 @@ defmodule EVM.MessageCall do
          {gas_remaining, n_sub_state, n_exec_env, output},
          message_call
        ) do
-    {out_offset, _out_size} = message_call.output_params
+    {out_offset, out_size} = message_call.output_params
 
     machine_state =
       message_call.current_machine_state
@@ -176,9 +167,10 @@ defmodule EVM.MessageCall do
       if output == :invalid_input do
         %{machine_state | last_return_data: <<>>}
       else
-        updated_machine_state = Memory.write(machine_state, out_offset, output)
+        updated_machine_state = Memory.write(machine_state, out_offset, output, out_size)
+        last_return_data = Memory.read(output, out_offset, out_size)
 
-        %{updated_machine_state | last_return_data: output}
+        %{updated_machine_state | last_return_data: last_return_data}
       end
 
     exec_env =
