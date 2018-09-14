@@ -132,6 +132,9 @@ defmodule EVM.Functions do
       exec_env.static && static_state_modification?(operation_metadata.sym, inputs) ->
         {:halt, :static_state_modification}
 
+      out_of_memory_bounds?(operation_metadata.sym, machine_state, inputs) ->
+        {:halt, :out_of_memory_bounds}
+
       true ->
         :continue
     end
@@ -186,6 +189,17 @@ defmodule EVM.Functions do
 
     cost > machine_state.gas
   end
+
+  @spec out_of_memory_bounds?(atom(), MachineState.t(), [EVM.val()]) :: boolean()
+  defp out_of_memory_bounds?(:returndatacopy, machine_state, [
+         _memory_start,
+         return_data_start,
+         size
+       ]) do
+    return_data_start + size > byte_size(machine_state.last_return_data)
+  end
+
+  defp out_of_memory_bounds?(_, _, _), do: false
 
   @spec is_invalid_instruction?(Metadata.t()) :: boolean()
   defp is_invalid_instruction?(%Metadata{sym: :invalid}), do: true
