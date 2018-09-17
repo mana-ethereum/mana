@@ -270,10 +270,7 @@ defmodule EVM.Operation.System do
   """
   @spec return(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def return([_mem_start, mem_end], %{machine_state: machine_state}) do
-    # We may have to bump up number of active words
-
     words = Memory.get_active_words(mem_end)
-
     MachineState.maybe_set_active_words(machine_state, words)
   end
 
@@ -282,10 +279,7 @@ defmodule EVM.Operation.System do
   """
   @spec revert(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def revert([_mem_start, mem_end], %{machine_state: machine_state}) do
-    # We may have to bump up number of active words
-
     words = Memory.get_active_words(mem_end)
-
     MachineState.maybe_set_active_words(machine_state, words)
   end
 
