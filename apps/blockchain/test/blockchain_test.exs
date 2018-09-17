@@ -79,6 +79,8 @@ defmodule BlockchainTest do
       "GeneralStateTests/stCreate2/create2InitCodes_d6g0v0.json",
       "GeneralStateTests/stCreate2/create2InitCodes_d7g0v0.json",
       "GeneralStateTests/stCreate2/create2InitCodes_d8g0v0.json",
+      "GeneralStateTests/stCreate2/create2SmartInitCode_d0g0v0.json",
+      "GeneralStateTests/stCreate2/create2SmartInitCode_d1g0v0.json",
       "GeneralStateTests/stCreate2/create2callPrecompiles_d0g0v0.json",
       "GeneralStateTests/stCreate2/create2callPrecompiles_d1g0v0.json",
       "GeneralStateTests/stCreate2/create2callPrecompiles_d2g0v0.json",

@@ -54,6 +54,7 @@ defmodule Blockchain.StateTest do
       "stCreate2/call_outsize_then_create2_successful_then_returndatasize",
       "stCreate2/call_then_create2_successful_then_returndatasize",
       "stCreate2/create2InitCodes",
+      "stCreate2/create2SmartInitCode",
       "stCreate2/create2callPrecompiles",
       "stCreate2/create2checkFieldsInInitcode",
       "stCreate2/create2collisionBalance",
