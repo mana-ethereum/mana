@@ -30,8 +30,6 @@ defmodule Blockchain.StateTest do
       "stRevertTest/RevertOpcodeMultipleSubCalls",
       "stSpecialTest/failed_tx_xcf416c53",
       "stStaticCall/static_Call1024PreCalls2",
-      "stStaticCall/static_PostToReturn1",
-      "stStaticCall/static_callWithHighValueAndOOGatTxLevel",
       "stTransactionTest/EmptyTransaction2",
       "stZeroKnowledge2/ecmul_0-3_5616_28000_96"
     ],

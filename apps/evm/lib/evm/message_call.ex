@@ -64,11 +64,13 @@ defmodule EVM.MessageCall do
           | %{machine_state: MachineState.t()}
   def call(message_call) do
     {out_offset, out_size} = message_call.output_params
-
     words = Memory.get_active_words(out_offset + out_size)
 
     updated_machine_state =
-      MachineState.maybe_set_active_words(message_call.current_machine_state, words)
+      MachineState.maybe_set_active_words(
+        message_call.current_machine_state,
+        words
+      )
 
     message_call = %{message_call | current_machine_state: updated_machine_state}
 
@@ -145,16 +147,21 @@ defmodule EVM.MessageCall do
          {gas_remaining, _n_sub_state, _ren_exec_env, {:revert, output}},
          message_call
        ) do
-    {out_offset, _out_size} = message_call.output_params
+    {out_offset, out_size} = message_call.output_params
 
     machine_state =
       message_call.current_machine_state
       |> push_failure_on_stack()
       |> MachineState.refund_gas(gas_remaining)
 
-    updated_machine_state = Memory.write(machine_state, out_offset, output)
+    updated_machine_state =
+      if out_size == 0 do
+        %{machine_state | last_return_data: output}
+      else
+        machine_state = Memory.write(machine_state, out_offset, output)
 
-    updated_machine_state = %{updated_machine_state | last_return_data: output}
+        %{machine_state | last_return_data: output}
+      end
 
     %{
       machine_state: updated_machine_state
@@ -165,7 +172,7 @@ defmodule EVM.MessageCall do
          {gas_remaining, n_sub_state, n_exec_env, output},
          message_call
        ) do
-    {out_offset, _out_size} = message_call.output_params
+    {out_offset, out_size} = message_call.output_params
 
     machine_state =
       message_call.current_machine_state
@@ -173,12 +180,17 @@ defmodule EVM.MessageCall do
       |> MachineState.refund_gas(gas_remaining)
 
     machine_state =
-      if output == :invalid_input do
-        %{machine_state | last_return_data: <<>>}
-      else
-        updated_machine_state = Memory.write(machine_state, out_offset, output)
+      cond do
+        output == :invalid_input ->
+          %{machine_state | last_return_data: <<>>}
 
-        %{updated_machine_state | last_return_data: output}
+        out_size == 0 ->
+          %{machine_state | last_return_data: output}
+
+        true ->
+          machine_state = Memory.write(machine_state, out_offset, output)
+
+          %{machine_state | last_return_data: output}
       end
 
     exec_env =

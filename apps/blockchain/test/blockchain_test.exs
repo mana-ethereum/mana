@@ -127,7 +127,6 @@ defmodule BlockchainTest do
       "GeneralStateTests/stCreate2/returndatacopy_following_revert_in_create_d0g0v0.json",
       "GeneralStateTests/stCreate2/returndatacopy_following_successful_create_d0g0v0.json",
       "GeneralStateTests/stCreate2/returndatasize_following_successful_create_d0g0v0.json",
-      "GeneralStateTests/stCreateTest/CreateOOGafterInitCodeReturndata_d0g1v0.json",
       "GeneralStateTests/stEIP158Specific/callToEmptyThenCallError_d0g0v0.json",
       "GeneralStateTests/stReturnDataTest/modexp_modsize0_returndatasize_d0g1v0.json",
       "GeneralStateTests/stReturnDataTest/modexp_modsize0_returndatasize_d0g2v0.json",
