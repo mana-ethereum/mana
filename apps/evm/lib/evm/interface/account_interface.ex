@@ -86,7 +86,7 @@ defprotocol EVM.Interface.AccountInterface do
           EVM.MachineCode.t(),
           integer(),
           Header.t(),
-          EVM.address(),
+          EVM.address() | nil,
           EVM.Configuration.t()
         ) :: {:ok | :error, {t, EVM.Gas.t(), EVM.SubState.t()}}
   def create_contract(

@@ -20,7 +20,7 @@ defmodule EVM.Operation.System do
   @doc """
   Create a new account with associated code.
   """
-  @spec create(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
+  @spec create(Operation.stack_args(), map()) :: Operation.op_result()
   def create([value, input_offset, input_size], vm_map = %{exec_env: exec_env}) do
     nonce = AccountInterface.get_account_nonce(exec_env.account_interface, exec_env.address)
     new_account_address = Address.new(exec_env.address, nonce)
@@ -28,7 +28,7 @@ defmodule EVM.Operation.System do
     create_account([value, input_offset, input_size], vm_map, new_account_address)
   end
 
-  @spec create2(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
+  @spec create2(Operation.stack_args(), map()) :: Operation.op_result()
   def create2(
         [value, input_offset, input_size, salt],
         vm_map = %{
@@ -250,8 +250,7 @@ defmodule EVM.Operation.System do
     %{exec_env: new_exec_env, sub_state: new_substate}
   end
 
-  @spec create_account(Operation.stack_args(), Operation.vm_map(), Address.t()) ::
-          Operation.op_result()
+  @spec create_account(Operation.stack_args(), map(), Address.t()) :: Operation.op_result()
   defp create_account(
          [value, input_offset, input_size],
          %{

@@ -231,7 +231,7 @@ defimpl EVM.Interface.AccountInterface, for: EVM.Interface.Mock.MockAccountInter
           EVM.MachineCode.t(),
           integer(),
           Header.t(),
-          EVM.address(),
+          EVM.address() | nil,
           EVM.Configuration.t()
         ) :: {:ok | :error, {EVM.Gas.t(), EVM.Interface.AccountInterface.t(), EVM.SubState.t()}}
   def create_contract(

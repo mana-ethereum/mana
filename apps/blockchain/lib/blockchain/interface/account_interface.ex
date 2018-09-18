@@ -382,7 +382,7 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
           EVM.MachineCode.t(),
           integer(),
           Block.Header.t(),
-          EVM.address(),
+          EVM.address() | nil,
           EVM.Configuration.t()
         ) :: {:ok | :error, {AccountInterface.t(), EVM.Gas.t(), EVM.SubState.t()}}
   def create_contract(
