@@ -44,6 +44,14 @@ defmodule EVM.Operation.Metadata.System do
                       group: :system
                     },
                     %{
+                      id: 0xF5,
+                      description: "Skinny CREATE2. EIP-1014",
+                      sym: :create2,
+                      input_count: 4,
+                      output_count: 1,
+                      group: :system
+                    },
+                    %{
                       id: 0xFA,
                       description: "Static message-call into an account",
                       sym: :staticcall,

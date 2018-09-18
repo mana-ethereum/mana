@@ -18,6 +18,7 @@ defmodule Blockchain.Contract.CreateContract do
             init_code: <<>>,
             stack_depth: 0,
             block_header: nil,
+            new_account_address: nil,
             config: EVM.Configuration.Frontier.new()
 
   @typedoc """
@@ -42,13 +43,13 @@ defmodule Blockchain.Contract.CreateContract do
           init_code: EVM.MachineCode.t(),
           stack_depth: integer(),
           block_header: Header.t(),
+          new_account_address: nil | EVM.address(),
           config: EVM.Configuration.t()
         }
 
   @spec execute(t()) :: {:ok | :error, {EVM.state(), EVM.Gas.t(), EVM.SubState.t()}}
   def execute(params) do
-    sender_account = Account.get_account(params.state, params.sender)
-    contract_address = Account.Address.new(params.sender, sender_account.nonce)
+    contract_address = new_account_address(params)
     account = Account.get_account(params.state, contract_address)
 
     if Account.exists?(account) do
@@ -197,5 +198,14 @@ defmodule Blockchain.Contract.CreateContract do
       |> Enum.count()
 
     data_size * Gas.codedeposit_cost()
+  end
+
+  defp new_account_address(params) do
+    if params.new_account_address do
+      params.new_account_address
+    else
+      sender_account = Account.get_account(params.state, params.sender)
+      Account.Address.new(params.sender, sender_account.nonce)
+    end
   end
 end

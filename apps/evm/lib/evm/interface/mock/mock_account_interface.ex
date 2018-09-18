@@ -231,6 +231,7 @@ defimpl EVM.Interface.AccountInterface, for: EVM.Interface.Mock.MockAccountInter
           EVM.MachineCode.t(),
           integer(),
           Header.t(),
+          EVM.address() | nil,
           EVM.Configuration.t()
         ) :: {:ok | :error, {EVM.Gas.t(), EVM.Interface.AccountInterface.t(), EVM.SubState.t()}}
   def create_contract(
@@ -243,6 +244,7 @@ defimpl EVM.Interface.AccountInterface, for: EVM.Interface.Mock.MockAccountInter
         _init_code,
         _stack_depth,
         _block_header,
+        _new_account_address,
         _config
       ) do
     {:ok,

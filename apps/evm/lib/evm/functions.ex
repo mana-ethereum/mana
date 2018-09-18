@@ -177,6 +177,9 @@ defmodule EVM.Functions do
         :extcodehash ->
           if Configuration.has_extcodehash?(config), do: operation_metadata
 
+        :create2 ->
+          if Configuration.has_create2?(config), do: operation_metadata
+
         _ ->
           operation_metadata
       end
@@ -232,6 +235,8 @@ defmodule EVM.Functions do
   defp static_state_modification?(:selfdestruct, _), do: true
 
   defp static_state_modification?(:create, _), do: true
+
+  defp static_state_modification?(:create2, _), do: true
 
   defp static_state_modification?(:sstore, _), do: true
 

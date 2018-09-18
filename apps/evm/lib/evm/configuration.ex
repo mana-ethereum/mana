@@ -104,4 +104,8 @@ defprotocol EVM.Configuration do
   # EIP1052
   @spec has_extcodehash?(t) :: boolean()
   def has_extcodehash?(t)
+
+  # EIP1014
+  @spec has_create2?(t) :: boolean()
+  def has_create2?(t)
 end

@@ -37,7 +37,7 @@ defmodule EVM.Operation do
           optional(:account_interface) => EVM.Interface.AccountInterface.t()
         }
   @type noop :: :noop
-  @type op_result :: any()
+  @type op_result :: any() | nil
 
   @operations StopAndArithmeticMetadata.operations() ++
                 ComparisonAndBitwiseLogicMetadata.operations() ++
