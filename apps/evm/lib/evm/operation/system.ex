@@ -231,10 +231,7 @@ defmodule EVM.Operation.System do
   `GeneralStateTests/stSystemOperationsTest/suicideSendEtherPostDeath.json`.
   """
   @spec selfdestruct(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
-  def selfdestruct(
-        [refund_address],
-        %{exec_env: exec_env, sub_state: sub_state}
-      ) do
+  def selfdestruct([refund_address], %{exec_env: exec_env, sub_state: sub_state}) do
     to = Address.new(refund_address)
 
     new_exec_env =
