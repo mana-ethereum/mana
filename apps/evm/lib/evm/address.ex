@@ -53,6 +53,8 @@ defmodule EVM.Address do
   def new(address, salt, init_code) do
     binary_address = new(address)
 
+    new_address_start = <<255>>
+
     binary_salt =
       if is_binary(salt) do
         EVM.Helpers.left_pad_bytes(salt, 32)
@@ -71,7 +73,7 @@ defmodule EVM.Address do
 
     code_hash = Keccak.kec(binary_init_code)
 
-    (<<255>> <> binary_address <> binary_salt <> code_hash)
+    (new_address_start <> binary_address <> binary_salt <> code_hash)
     |> Keccak.kec()
     |> EVM.Helpers.take_n_last_bytes(@size)
   end
