@@ -250,6 +250,8 @@ defmodule EVM.Operation.System do
     %{exec_env: new_exec_env, sub_state: new_substate}
   end
 
+  @spec create_account(Operation.stack_args(), Operation.vm_map(), Address.t()) ::
+          Operation.op_result()
   defp create_account(
          [value, input_offset, input_size],
          %{
