@@ -132,13 +132,14 @@ defmodule Blockchain.AccountTest do
 
   test "deleting account does not remove storage root hash equal to another account's" do
     db = MerklePatriciaTree.Test.random_ets_db()
+    initial_state = Trie.new(db)
     address = <<0x01::160>>
     address2 = <<0x02::160>>
     key = 0
     value = 1
 
     state =
-      Trie.new(db)
+      initial_state
       |> Account.put_account(address, build_account())
       |> Account.put_account(address2, build_account())
       |> Account.put_storage(address, key, value)
