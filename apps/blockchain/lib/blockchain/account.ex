@@ -218,9 +218,7 @@ defmodule Blockchain.Account do
       nil ->
         state
 
-      acc ->
-        storage_trie = Trie.new(state.db, acc.storage_root)
-        Trie.Storage.delete(storage_trie)
+      _acc ->
         Trie.remove(state, Keccak.kec(address))
     end
   end

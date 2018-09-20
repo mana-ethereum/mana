@@ -6,7 +6,6 @@ defmodule Blockchain.AccountTest do
   alias ExthCrypto.Hash.Keccak
   alias MerklePatriciaTree.Trie
   alias Blockchain.Account
-  alias Blockchain.Account.Storage
 
   test "serialize and deserialize" do
     acct = %Account{
@@ -22,30 +21,6 @@ defmodule Blockchain.AccountTest do
              |> ExRLP.encode()
              |> ExRLP.decode()
              |> Account.deserialize()
-  end
-
-  test "cleans up storage when account is deleted" do
-    db = MerklePatriciaTree.Test.random_ets_db()
-    address = <<0x01::160>>
-
-    account = %Account{
-      nonce: 0,
-      balance: 0,
-      code_hash: Keccak.kec(<<>>),
-      storage_root: Trie.empty_trie_root_hash()
-    }
-
-    state =
-      db
-      |> Trie.new()
-      |> Account.put_account(address, account)
-      |> Account.put_storage(address, 42, 1)
-
-    account = Account.get_account(state, address)
-    Account.del_account(state, address)
-    value = Storage.fetch(db, account.storage_root, 42)
-
-    assert value == nil
   end
 
   test "valid empty state_root" do
@@ -153,5 +128,35 @@ defmodule Blockchain.AccountTest do
     assert state.root_hash ==
              <<192, 238, 234, 193, 139, 21, 7, 152, 194, 188, 80, 192, 211, 109, 186, 215, 229,
                222, 21, 222, 121, 230, 139, 179, 23, 132, 217, 128, 6, 17, 167, 54>>
+  end
+
+  test "deleting account does not remove storage root hash equal to another account's" do
+    db = MerklePatriciaTree.Test.random_ets_db()
+    initial_state = Trie.new(db)
+    address = <<0x01::160>>
+    address2 = <<0x02::160>>
+    key = 0
+    value = 1
+
+    state =
+      initial_state
+      |> Account.put_account(address, build_account())
+      |> Account.put_account(address2, build_account())
+      |> Account.put_storage(address, key, value)
+      |> Account.put_storage(address2, key, value)
+      |> Account.del_account(address2)
+
+    {:ok, storage} = Account.get_storage(state, address, key)
+
+    assert storage == value
+  end
+
+  defp build_account() do
+    %Account{
+      nonce: 0,
+      balance: 10,
+      code_hash: Keccak.kec(<<>>),
+      storage_root: Trie.empty_trie_root_hash()
+    }
   end
 end
