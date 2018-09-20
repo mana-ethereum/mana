@@ -2,7 +2,8 @@ defmodule EVM.Configuration.Constantinople do
   defstruct fallback_config: EVM.Configuration.Byzantium.new(),
             has_shift_operations: true,
             has_extcodehash: true,
-            has_create2: true
+            has_create2: true,
+            eip1283_sstore_gas_cost_changed: true
 
   def new do
     %__MODULE__{}
@@ -100,4 +101,8 @@ defimpl EVM.Configuration, for: EVM.Configuration.Constantinople do
 
   @spec has_create2?(Configuration.t()) :: boolean()
   def has_create2?(config), do: config.has_create2
+
+  @spec eip1283_sstore_gas_cost_changed?(Configuration.t()) :: boolean()
+  def eip1283_sstore_gas_cost_changed?(config),
+    do: config.eip1283_sstore_gas_cost_changed
 end

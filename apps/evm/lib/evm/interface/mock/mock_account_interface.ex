@@ -98,7 +98,6 @@ defimpl EVM.Interface.AccountInterface, for: EVM.Interface.Mock.MockAccountInter
     }
   end
 
-  # TODO: Integrate new interface
   @spec get_storage(EVM.Interface.AccountInterface.t(), EVM.address(), integer()) ::
           {:ok, integer()} | :account_not_found | :key_not_found
   def get_storage(mock_account_interface, address, key) do
@@ -112,6 +111,12 @@ defimpl EVM.Interface.AccountInterface, for: EVM.Interface.Mock.MockAccountInter
           value -> {:ok, value}
         end
     end
+  end
+
+  @spec get_initial_storage(EVM.Interface.AccountInterface.t(), EVM.address(), integer()) ::
+          {:ok, integer()} | :account_not_found | :key_not_found
+  def get_initial_storage(mock_account_interface, address, key) do
+    get_storage(mock_account_interface, address, key)
   end
 
   @spec put_storage(EVM.Interface.AccountInterface.t(), EVM.address(), integer(), integer()) ::

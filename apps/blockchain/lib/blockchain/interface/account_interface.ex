@@ -38,7 +38,7 @@ defmodule Blockchain.Interface.AccountInterface do
     }
   end
 
-  @spec commit_storage(t()) :: t()
+  @spec commit_storage(t()) :: EVM.state()
   def commit_storage(account_interface) do
     account_interface.cache
     |> Cache.to_list()
@@ -217,10 +217,18 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
     end
   end
 
-  # @spec get_storage(AccountInterface.t(), EVM.address(), integer()) ::
-  #         {:ok, integer()} | :account_not_found | :key_not_found
-  # def get_initial_storage(account_interface, evm_address, key) do
-  # end
+  @spec get_initial_storage(AccountInterface.t(), EVM.address(), integer()) ::
+          {:ok, integer()} | :account_not_found | :key_not_found
+  def get_initial_storage(account_interface, evm_address, key) do
+    address = Account.Address.from(evm_address)
+    cached_value = Cache.get_initial_value(account_interface.cache, address, key)
+
+    case cached_value do
+      nil -> Account.get_storage(account_interface.state, address, key)
+      :deleted -> :key_not_found
+      _ -> {:ok, cached_value}
+    end
+  end
 
   @spec account_exists?(AccountInterface.t(), EVM.address()) :: boolean()
   def account_exists?(account_interface, evm_address) do
