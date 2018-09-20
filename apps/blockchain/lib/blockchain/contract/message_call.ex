@@ -112,7 +112,8 @@ defmodule Blockchain.Contract.MessageCall do
         {:error, {params.state, gas, SubState.empty(), :failed}}
 
       _ ->
-        {:ok, {exec_env.account_interface.state, gas, sub_state, output}}
+        commited_state = AccountInterface.commit_storage(exec_env.account_interface)
+        {:ok, {commited_state, gas, sub_state, output}}
     end
   end
 end

@@ -155,8 +155,6 @@ defmodule Blockchain.Contract.CreateContract do
           EVM.address()
         ) :: {:ok | :error, {EVM.state(), EVM.Gas.t(), EVM.SubState.t()}}
   defp finalize({remaining_gas, accrued_sub_state, exec_env, output}, params, address) do
-    state_after_init = exec_env.account_interface.state
-
     contract_creation_cost = creation_cost(output)
     insufficient_gas = remaining_gas < contract_creation_cost
 
@@ -168,6 +166,8 @@ defmodule Blockchain.Contract.CreateContract do
         {:error, {params.state, 0, SubState.empty()}}
 
       true ->
+        commited_state = AccountInterface.commit_storage(exec_env.account_interface)
+
         resultant_gas =
           if insufficient_gas do
             remaining_gas
@@ -177,9 +177,9 @@ defmodule Blockchain.Contract.CreateContract do
 
         resultant_state =
           if insufficient_gas do
-            state_after_init
+            commited_state
           else
-            Account.put_code(state_after_init, address, output)
+            Account.put_code(commited_state, address, output)
           end
 
         sub_state = SubState.add_touched_account(accrued_sub_state, address)
