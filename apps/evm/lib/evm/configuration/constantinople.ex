@@ -3,7 +3,8 @@ defmodule EVM.Configuration.Constantinople do
             has_shift_operations: true,
             has_extcodehash: true,
             has_create2: true,
-            eip1283_sstore_gas_cost_changed: true
+            # temporarily disabled (no common tests yet) https://github.com/ethereum/tests/issues/483
+            eip1283_sstore_gas_cost_changed: false
 
   def new do
     %__MODULE__{}
