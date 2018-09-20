@@ -26,14 +26,15 @@ defmodule Blockchain.Interface.AccountInterface do
         state: %MerklePatriciaTree.Trie{
           db: { MerklePatriciaTree.DB.ETS, :account_interface_new },
           root_hash: <<86, 232, 31, 23, 27, 204, 85, 166, 255, 131, 69, 230, 146, 192, 248, 110, 91, 72, 224, 27, 153, 108, 173, 192, 1, 98, 47, 181, 227, 99, 180, 33>>
-        }
+        },
+        cache: %Blockchain.Interface.AccountInterface.Cache{cache: %{}}
       }
   """
-  @spec new(EVM.state()) :: t
-  def new(state) do
+  @spec new(EVM.state(), Cache.t()) :: t
+  def new(state, cache \\ %Cache{}) do
     %__MODULE__{
       state: state,
-      cache: %Cache{}
+      cache: cache
     }
   end
 
@@ -371,7 +372,7 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
     contract = Account.Address.from(evm_contract)
 
     params = %Contract.MessageCall{
-      state: account_interface.state,
+      account_interface: account_interface,
       sender: sender,
       originator: originator,
       recipient: recipient,
@@ -435,7 +436,7 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
     originator = Account.Address.from(evm_originator)
 
     params = %Contract.CreateContract{
-      state: account_interface.state,
+      account_interface: account_interface,
       sender: sender,
       originator: originator,
       available_gas: available_gas,

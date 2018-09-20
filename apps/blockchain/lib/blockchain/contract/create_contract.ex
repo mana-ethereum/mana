@@ -9,7 +9,7 @@ defmodule Blockchain.Contract.CreateContract do
   alias Blockchain.Account
   alias EVM.{SubState, Gas}
 
-  defstruct state: %{},
+  defstruct account_interface: %AccountInterface{},
             sender: <<>>,
             originator: <<>>,
             available_gas: 0,
@@ -34,7 +34,7 @@ defmodule Blockchain.Contract.CreateContract do
   - e: stack_depth
   """
   @type t :: %__MODULE__{
-          state: EVM.state(),
+          account_interface: AccountInterface.t(),
           sender: EVM.address(),
           originator: EVM.address(),
           available_gas: EVM.Gas.t(),
@@ -49,23 +49,24 @@ defmodule Blockchain.Contract.CreateContract do
 
   @spec execute(t()) :: {:ok | :error, {EVM.state(), EVM.Gas.t(), EVM.SubState.t()}}
   def execute(params) do
+    original_state = params.account_interface.state
     contract_address = new_account_address(params)
-    account = Account.get_account(params.state, contract_address)
+    account = Account.get_account(original_state, contract_address)
 
     if Account.exists?(account) do
       cond do
         account_will_collide?(account) ->
-          error(params.state)
+          error(original_state)
 
         account.nonce == 0 && Account.is_simple_account?(account) &&
             not_in_contract_create_transaction?(params) ->
           new_state =
-            increment_nonce_of_touched_account(params.state, params.config, contract_address)
+            increment_nonce_of_touched_account(original_state, params.config, contract_address)
 
           {:ok, {new_state, params.available_gas, SubState.empty()}}
 
         true ->
-          {:ok, {params.state, 0, SubState.empty()}}
+          {:ok, {original_state, 0, SubState.empty()}}
       end
     else
       result = {rem_gas, _, _, output} = create(params, contract_address)
@@ -78,8 +79,8 @@ defmodule Blockchain.Contract.CreateContract do
       # point immediately prior to balance transfer.
       #
       case output do
-        :failed -> error(params.state)
-        {:revert, _} -> {:error, {params.state, rem_gas, SubState.empty()}}
+        :failed -> error(original_state)
+        {:revert, _} -> {:error, {original_state, rem_gas, SubState.empty()}}
         _ -> finalize(result, params, contract_address)
       end
     end
@@ -120,7 +121,8 @@ defmodule Blockchain.Contract.CreateContract do
       |> init_blank_account(address)
       |> increment_nonce_of_touched_account(params.config, address)
 
-    account_interface = AccountInterface.new(state_with_blank_contract)
+    account_interface =
+      AccountInterface.new(state_with_blank_contract, params.account_interface.cache)
 
     # Create an execution environment for a create contract call.
     # This is defined in Eq.(88), Eq.(89), Eq.(90), Eq.(91), Eq.(92),
@@ -144,7 +146,7 @@ defmodule Blockchain.Contract.CreateContract do
 
   @spec init_blank_account(t, EVM.address()) :: EVM.state()
   defp init_blank_account(params, address) do
-    params.state
+    params.account_interface.state
     |> Account.put_account(address, %Account{nonce: 0})
     |> Account.transfer!(params.sender, address, params.endowment)
   end
@@ -155,15 +157,16 @@ defmodule Blockchain.Contract.CreateContract do
           EVM.address()
         ) :: {:ok | :error, {EVM.state(), EVM.Gas.t(), EVM.SubState.t()}}
   defp finalize({remaining_gas, accrued_sub_state, exec_env, output}, params, address) do
+    original_state = params.account_interface.state
     contract_creation_cost = creation_cost(output)
     insufficient_gas = remaining_gas < contract_creation_cost
 
     cond do
       insufficient_gas && EVM.Configuration.fail_contract_creation_lack_of_gas?(params.config) ->
-        {:error, {params.state, 0, SubState.empty()}}
+        {:error, {original_state, 0, SubState.empty()}}
 
       EVM.Configuration.limit_contract_code_size?(params.config, byte_size(output)) ->
-        {:error, {params.state, 0, SubState.empty()}}
+        {:error, {original_state, 0, SubState.empty()}}
 
       true ->
         commited_state = AccountInterface.commit_storage(exec_env.account_interface)
@@ -204,7 +207,7 @@ defmodule Blockchain.Contract.CreateContract do
     if params.new_account_address do
       params.new_account_address
     else
-      sender_account = Account.get_account(params.state, params.sender)
+      sender_account = Account.get_account(params.account_interface.state, params.sender)
       Account.Address.new(params.sender, sender_account.nonce)
     end
   end

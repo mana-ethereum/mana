@@ -10,7 +10,7 @@ defmodule Blockchain.Contract.MessageCall do
   alias EVM.SubState
   alias EVM.MessageCall
 
-  defstruct state: %{},
+  defstruct account_interface: %AccountInterface{},
             sender: <<>>,
             originator: <<>>,
             recipient: <<>>,
@@ -39,7 +39,7 @@ defmodule Blockchain.Contract.MessageCall do
   e: stack_depth
   """
   @type t :: %__MODULE__{
-          state: EVM.state(),
+          account_interface: AccountInterface.t(),
           sender: EVM.address(),
           originator: EVM.address(),
           recipient: EVM.address(),
@@ -66,17 +66,18 @@ defmodule Blockchain.Contract.MessageCall do
   @spec execute(t()) ::
           {:ok | :error, {EVM.state(), EVM.Gas.t(), EVM.SubState.t(), EVM.VM.output()}}
   def execute(params) do
+    original_state = params.account_interface.state
     run = MessageCall.get_run_function(params.recipient, params.config)
 
     # Note, this could fail if machine code is not in state
-    {:ok, machine_code} = Account.get_machine_code(params.state, params.contract)
+    {:ok, machine_code} = Account.get_machine_code(original_state, params.contract)
 
     # Initiates message call by transfering balance from sender to receiver.
     # This covers Eq.(101), Eq.(102), Eq.(103) and Eq.(104) of the Yellow Paper.
     # TODO: make copy of original state or use cache for making changes
-    state = Account.transfer!(params.state, params.sender, params.recipient, params.value)
+    state = Account.transfer!(original_state, params.sender, params.recipient, params.value)
 
-    account_interace = AccountInterface.new(state)
+    account_interface = AccountInterface.new(state, params.account_interface.cache)
 
     # Create an execution environment for a message call.
     # This is defined in Eq.(107), Eq.(108), Eq.(109), Eq.(110),
@@ -91,7 +92,7 @@ defmodule Blockchain.Contract.MessageCall do
       machine_code: machine_code,
       stack_depth: params.stack_depth,
       block_interface: BlockInterface.new(params.block_header, state.db),
-      account_interface: account_interace,
+      account_interface: account_interface,
       config: params.config
     }
 
@@ -106,10 +107,10 @@ defmodule Blockchain.Contract.MessageCall do
     # point immediately prior to balance transfer.
     case output do
       :failed ->
-        {:error, {params.state, 0, SubState.empty(), :failed}}
+        {:error, {original_state, 0, SubState.empty(), :failed}}
 
       {:revert, _output} ->
-        {:error, {params.state, gas, SubState.empty(), :failed}}
+        {:error, {original_state, gas, SubState.empty(), :failed}}
 
       _ ->
         commited_state = AccountInterface.commit_storage(exec_env.account_interface)

@@ -5,6 +5,7 @@ defmodule Blockchain.Contract.MessageCallTest do
   alias Blockchain.{Account, Contract}
   alias EVM.{SubState, MachineCode}
   alias MerklePatriciaTree.{Trie, DB}
+  alias Blockchain.Interface.AccountInterface
 
   setup do
     db = MerklePatriciaTree.Test.random_ets_db(:message_call_test)
@@ -39,7 +40,7 @@ defmodule Blockchain.Contract.MessageCallTest do
         |> Account.put_code(<<0x20::160>>, code)
 
       params = %Contract.MessageCall{
-        state: state,
+        account_interface: AccountInterface.new(state),
         sender: <<0x10::160>>,
         originator: <<0x10::160>>,
         recipient: <<0x20::160>>,
@@ -97,7 +98,7 @@ defmodule Blockchain.Contract.MessageCallTest do
         |> Account.put_code(<<0x20::160>>, code)
 
       params = %Contract.MessageCall{
-        state: state,
+        account_interface: AccountInterface.new(state),
         sender: <<0x10::160>>,
         originator: <<0x10::160>>,
         recipient: <<0x20::160>>,
@@ -138,7 +139,7 @@ defmodule Blockchain.Contract.MessageCallTest do
         |> Account.put_code(<<0x20::160>>, code)
 
       params = %Contract.MessageCall{
-        state: state,
+        account_interface: AccountInterface.new(state),
         sender: <<0x10::160>>,
         originator: <<0x10::160>>,
         recipient: <<0x20::160>>,
