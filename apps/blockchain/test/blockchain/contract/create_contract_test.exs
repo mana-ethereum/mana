@@ -5,6 +5,7 @@ defmodule Blockchain.Contract.CreateContractTest do
   alias Blockchain.{Account, Contract}
   alias EVM.{SubState, MachineCode}
   alias MerklePatriciaTree.{Trie, DB}
+  alias Blockchain.Interface.AccountInterface
 
   setup do
     db = MerklePatriciaTree.Test.random_ets_db(:contract_test)
@@ -21,7 +22,7 @@ defmodule Blockchain.Contract.CreateContractTest do
         |> Account.put_account(<<0x10::160>>, account)
 
       params = %Contract.CreateContract{
-        state: state,
+        account_interface: AccountInterface.new(state),
         sender: <<0x10::160>>,
         originator: <<0x10::160>>,
         available_gas: 100_000_000,
@@ -76,7 +77,7 @@ defmodule Blockchain.Contract.CreateContractTest do
         |> Account.put_account(collision_account_address, collision_account)
 
       params = %Contract.CreateContract{
-        state: state,
+        account_interface: AccountInterface.new(state),
         sender: account_address,
         originator: account_address,
         available_gas: 100_000_000,
@@ -104,7 +105,7 @@ defmodule Blockchain.Contract.CreateContractTest do
         |> Account.put_account(collision_account_address, collision_account)
 
       params = %Contract.CreateContract{
-        state: state,
+        account_interface: AccountInterface.new(state),
         sender: account_address,
         originator: account_address,
         available_gas: 100_000_000,

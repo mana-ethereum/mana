@@ -2,13 +2,17 @@ defmodule Blockchain.Interface.AccountInterface do
   @moduledoc """
   Defines an interface for methods to interact with contracts and accounts.
   """
+  alias Blockchain.Interface.AccountInterface.Cache
+  alias Blockchain.Account
 
   @type t :: %__MODULE__{
-          state: EVM.state()
+          state: EVM.state(),
+          cache: Cache.t()
         }
 
   defstruct [
-    :state
+    :state,
+    :cache
   ]
 
   @doc """
@@ -22,14 +26,32 @@ defmodule Blockchain.Interface.AccountInterface do
         state: %MerklePatriciaTree.Trie{
           db: { MerklePatriciaTree.DB.ETS, :account_interface_new },
           root_hash: <<86, 232, 31, 23, 27, 204, 85, 166, 255, 131, 69, 230, 146, 192, 248, 110, 91, 72, 224, 27, 153, 108, 173, 192, 1, 98, 47, 181, 227, 99, 180, 33>>
-        }
+        },
+        cache: %Blockchain.Interface.AccountInterface.Cache{cache: %{}}
       }
   """
-  @spec new(EVM.state()) :: t
-  def new(state) do
+  @spec new(EVM.state(), Cache.t()) :: t
+  def new(state, cache \\ %Cache{}) do
     %__MODULE__{
-      state: state
+      state: state,
+      cache: cache
     }
+  end
+
+  @spec commit_storage(t()) :: EVM.state()
+  def commit_storage(account_interface) do
+    account_interface.cache
+    |> Cache.to_list()
+    |> Enum.reduce(account_interface.state, fn {address, account_cache}, acc_state ->
+      account_cache
+      |> Map.to_list()
+      |> Enum.reduce(acc_state, fn {key, key_cache}, key_acc_state ->
+        case Map.get(key_cache, :current_value) do
+          :deleted -> Account.remove_storage(key_acc_state, address, key)
+          value -> Account.put_storage(key_acc_state, address, key, value)
+        end
+      end)
+    end)
   end
 end
 
@@ -37,6 +59,7 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
   alias MerklePatriciaTree.Trie
   alias Blockchain.{Account, Contract}
   alias EVM.Interface.AccountInterface
+  alias Blockchain.Interface.AccountInterface.Cache
 
   @doc """
   Given an account interface and an address, returns the balance at that address.
@@ -185,7 +208,26 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
           {:ok, integer()} | :account_not_found | :key_not_found
   def get_storage(account_interface, evm_address, key) do
     address = Account.Address.from(evm_address)
-    Account.get_storage(account_interface.state, address, key)
+    cached_value = Cache.get_current_value(account_interface.cache, address, key)
+
+    case cached_value do
+      nil -> Account.get_storage(account_interface.state, address, key)
+      :deleted -> :key_not_found
+      _ -> {:ok, cached_value}
+    end
+  end
+
+  @spec get_initial_storage(AccountInterface.t(), EVM.address(), integer()) ::
+          {:ok, integer()} | :account_not_found | :key_not_found
+  def get_initial_storage(account_interface, evm_address, key) do
+    address = Account.Address.from(evm_address)
+    cached_value = Cache.get_initial_value(account_interface.cache, address, key)
+
+    case cached_value do
+      nil -> Account.get_storage(account_interface.state, address, key)
+      :deleted -> :key_not_found
+      _ -> {:ok, cached_value}
+    end
   end
 
   @spec account_exists?(AccountInterface.t(), EVM.address()) :: boolean()
@@ -223,9 +265,9 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
     address = Account.Address.from(evm_address)
 
     if Account.get_account(account_interface.state, address) do
-      updated_state = Account.put_storage(account_interface.state, address, key, value)
+      updated_cache = Cache.update_current_value(account_interface.cache, address, key, value)
 
-      %{account_interface | state: updated_state}
+      %{account_interface | cache: updated_cache}
     else
       account_interface
     end
@@ -236,9 +278,9 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
     address = Account.Address.from(evm_address)
 
     if Account.get_account(account_interface.state, address) do
-      updated_state = Account.remove_storage(account_interface.state, address, key)
+      updated_cache = Cache.remove_current_value(account_interface.cache, address, key)
 
-      %{account_interface | state: updated_state}
+      %{account_interface | cache: updated_cache}
     else
       account_interface
     end
@@ -338,7 +380,7 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
     contract = Account.Address.from(evm_contract)
 
     params = %Contract.MessageCall{
-      state: account_interface.state,
+      account_interface: account_interface,
       sender: sender,
       originator: originator,
       recipient: recipient,
@@ -402,7 +444,7 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
     originator = Account.Address.from(evm_originator)
 
     params = %Contract.CreateContract{
-      state: account_interface.state,
+      account_interface: account_interface,
       sender: sender,
       originator: originator,
       available_gas: available_gas,

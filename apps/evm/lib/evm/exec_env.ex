@@ -70,6 +70,11 @@ defmodule EVM.ExecEnv do
     AccountInterface.get_storage(account_interface, address, key)
   end
 
+  @spec get_initial_storage(t(), integer()) :: atom() | {:ok, integer()}
+  def get_initial_storage(%{account_interface: account_interface, address: address}, key) do
+    AccountInterface.get_initial_storage(account_interface, address, key)
+  end
+
   @spec get_balance(t()) :: EVM.Wei.t()
   def get_balance(%{account_interface: account_interface, address: address}) do
     AccountInterface.get_account_balance(account_interface, address)

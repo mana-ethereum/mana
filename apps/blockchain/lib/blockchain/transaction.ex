@@ -9,6 +9,7 @@ defmodule Blockchain.Transaction do
   alias Blockchain.Transaction.Validity
   alias Block.Header
   alias EVM.{Gas, Configuration, SubState}
+  alias Blockchain.Interface.AccountInterface
 
   # nonce: T_n
   # gas_price: T_p
@@ -237,9 +238,11 @@ defmodule Blockchain.Transaction do
     # gas is equal to what was just subtracted from sender account less intrinsic gas cost
     gas = tx.gas_limit - intrinsic_gas_cost(tx, config)
 
+    account_interface = AccountInterface.new(state)
+
     if contract_creation?(tx) do
       %Contract.CreateContract{
-        state: state,
+        account_interface: account_interface,
         sender: sender,
         originator: originator,
         available_gas: gas,
@@ -254,7 +257,7 @@ defmodule Blockchain.Transaction do
       |> contract_creation_response()
     else
       %Contract.MessageCall{
-        state: state,
+        account_interface: account_interface,
         sender: sender,
         originator: originator,
         recipient: tx.to,

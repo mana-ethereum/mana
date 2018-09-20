@@ -13,8 +13,6 @@ defmodule EVM.Refunds do
 
   @type t :: EVM.val()
 
-  # Refund given (added into refund counter) when the storage value is set to zero from non-zero.
-  @storage_refund 15_000
   # Refund given (added into refund counter) for destroying an account.
   @selfdestruct_refund 24_000
 
@@ -85,17 +83,7 @@ defmodule EVM.Refunds do
 
   # `SSTORE` operations produce a refund when storage is set to zero from some non-zero value.
   def refund(:sstore, [key, new_value], _machine_state, _sub_state, exec_env) do
-    case ExecEnv.get_storage(exec_env, key) do
-      {:ok, value} ->
-        if value != 0 && new_value == 0 do
-          @storage_refund
-        else
-          0
-        end
-
-      _ ->
-        0
-    end
+    EVM.Refunds.Sstore.refund({key, new_value}, exec_env)
   end
 
   def refund(_opcode, _stack, _machine_state, _sub_state, _exec_env), do: 0

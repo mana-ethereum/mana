@@ -38,6 +38,10 @@ defprotocol EVM.Interface.AccountInterface do
           {:ok, integer()} | :account_not_found | :key_not_found
   def get_storage(t, address, key)
 
+  @spec get_initial_storage(t, EVM.address(), integer()) ::
+          {:ok, integer()} | :account_not_found | :key_not_found
+  def get_initial_storage(t, address, key)
+
   @spec put_storage(t, EVM.address(), integer(), integer()) :: t
   def put_storage(t, address, key, value)
 

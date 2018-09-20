@@ -24,7 +24,8 @@ defmodule EVM.Configuration.Frontier do
             has_ec_pairing_builtin: false,
             has_shift_operations: false,
             has_extcodehash: false,
-            has_create2: false
+            has_create2: false,
+            eip1283_sstore_gas_cost_changed: false
 
   def new do
     %__MODULE__{}
@@ -112,4 +113,7 @@ defimpl EVM.Configuration, for: EVM.Configuration.Frontier do
 
   @spec has_create2?(Configuration.t()) :: boolean()
   def has_create2?(config), do: config.has_create2
+
+  @spec eip1283_sstore_gas_cost_changed?(Configuration.t()) :: boolean()
+  def eip1283_sstore_gas_cost_changed?(config), do: config.eip1283_sstore_gas_cost_changed
 end

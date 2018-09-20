@@ -108,4 +108,8 @@ defprotocol EVM.Configuration do
   # EIP1014
   @spec has_create2?(t) :: boolean()
   def has_create2?(t)
+
+  # EIP1283
+  @spec eip1283_sstore_gas_cost_changed?(t) :: boolean()
+  def eip1283_sstore_gas_cost_changed?(t)
 end

@@ -98,4 +98,8 @@ defimpl EVM.Configuration, for: EVM.Configuration.EIP158 do
 
   @spec has_create2?(Configuration.t()) :: boolean()
   def has_create2?(config), do: Configuration.has_create2?(config.fallback_config)
+
+  @spec eip1283_sstore_gas_cost_changed?(Configuration.t()) :: boolean()
+  def eip1283_sstore_gas_cost_changed?(config),
+    do: Configuration.eip1283_sstore_gas_cost_changed?(config.fallback_config)
 end
