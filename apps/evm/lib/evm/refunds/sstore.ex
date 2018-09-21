@@ -7,24 +7,28 @@ defmodule EVM.Refunds.Sstore do
   @spec refund({integer(), integer()}, ExecEnv.t()) :: integer()
   def refund({key, new_value}, exec_env) do
     if Configuration.eip1283_sstore_gas_cost_changed?(exec_env.config) do
-      eip1283_sstore_refund([key, new_value], exec_env)
+      eip1283_sstore_refund({key, new_value}, exec_env)
     else
-      case ExecEnv.get_storage(exec_env, key) do
-        {:ok, value} ->
-          if value != 0 && new_value == 0 do
-            @storage_refund
-          else
-            0
-          end
+      basic_sstore_refund({key, new_value}, exec_env)
+    end
+  end
 
-        _ ->
+  defp basic_sstore_refund({key, new_value}, exec_env) do
+    case ExecEnv.get_storage(exec_env, key) do
+      {:ok, value} ->
+        if value != 0 && new_value == 0 do
+          @storage_refund
+        else
           0
-      end
+        end
+
+      _ ->
+        0
     end
   end
 
   # credo:disable-for-next-line
-  defp eip1283_sstore_refund([key, new_value], exec_env) do
+  defp eip1283_sstore_refund({key, new_value}, exec_env) do
     initial_value = get_initial_value(exec_env, key)
     current_value = get_current_value(exec_env, key)
 

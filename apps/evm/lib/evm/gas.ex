@@ -350,24 +350,7 @@ defmodule EVM.Gas do
     if Configuration.eip1283_sstore_gas_cost_changed?(exec_env.config) do
       eip1283_sstore_gas_cost([key, new_value], exec_env)
     else
-      case ExecEnv.get_storage(exec_env, key) do
-        :account_not_found ->
-          @g_sset
-
-        :key_not_found ->
-          if new_value != 0 do
-            @g_sset
-          else
-            @g_sreset
-          end
-
-        {:ok, value} ->
-          if new_value != 0 && value == 0 do
-            @g_sset
-          else
-            @g_sreset
-          end
-      end
+      basic_sstore_gas_cost([key, new_value], exec_env)
     end
   end
 
@@ -612,6 +595,27 @@ defmodule EVM.Gas do
       initial_value == current_value && initial_value == 0 -> 20_000
       initial_value == current_value && initial_value != 0 -> 5_000
       true -> 200
+    end
+  end
+
+  defp basic_sstore_gas_cost([key, new_value], exec_env) do
+    case ExecEnv.get_storage(exec_env, key) do
+      :account_not_found ->
+        @g_sset
+
+      :key_not_found ->
+        if new_value != 0 do
+          @g_sset
+        else
+          @g_sreset
+        end
+
+      {:ok, value} ->
+        if new_value != 0 && value == 0 do
+          @g_sset
+        else
+          @g_sreset
+        end
     end
   end
 
