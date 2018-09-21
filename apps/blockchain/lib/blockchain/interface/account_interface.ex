@@ -3,7 +3,6 @@ defmodule Blockchain.Interface.AccountInterface do
   Defines an interface for methods to interact with contracts and accounts.
   """
   alias Blockchain.Interface.AccountInterface.Cache
-  alias Blockchain.Account
 
   @type t :: %__MODULE__{
           state: EVM.state(),
@@ -40,18 +39,7 @@ defmodule Blockchain.Interface.AccountInterface do
 
   @spec commit_storage(t()) :: EVM.state()
   def commit_storage(account_interface) do
-    account_interface.cache
-    |> Cache.to_list()
-    |> Enum.reduce(account_interface.state, fn {address, account_cache}, acc_state ->
-      account_cache
-      |> Map.to_list()
-      |> Enum.reduce(acc_state, fn {key, key_cache}, key_acc_state ->
-        case Map.get(key_cache, :current_value) do
-          :deleted -> Account.remove_storage(key_acc_state, address, key)
-          value -> Account.put_storage(key_acc_state, address, key, value)
-        end
-      end)
-    end)
+    Cache.commit(account_interface.cache, account_interface.state)
   end
 end
 
