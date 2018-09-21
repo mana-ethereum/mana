@@ -39,23 +39,35 @@ defmodule EVM.Refunds.Sstore do
       initial_value == current_value && initial_value == 0 ->
         0
 
-      initial_value == current_value && initial_value != 0 && new_value == 0 ->
+      initial_value == current_value && new_value == 0 ->
         15_000
-
-      initial_value != current_value && initial_value != 0 && current_value == 0 ->
-        -15_000
-
-      initial_value != current_value && initial_value != 0 && new_value == 0 ->
-        15_000
-
-      initial_value != current_value && initial_value == new_value && initial_value == 0 ->
-        19_800
-
-      initial_value != current_value && initial_value == new_value && initial_value != 0 ->
-        4_800
 
       true ->
-        0
+        first_refund =
+          cond do
+            initial_value != 0 && current_value == 0 ->
+              -15_000
+
+            initial_value != 0 && new_value == 0 ->
+              15_000
+
+            true ->
+              0
+          end
+
+        second_refund =
+          cond do
+            initial_value == new_value && initial_value == 0 ->
+              19_800
+
+            initial_value == new_value ->
+              4_800
+
+            true ->
+              0
+          end
+
+        first_refund + second_refund
     end
   end
 
