@@ -160,4 +160,322 @@ defmodule Blockchain.Contract.MessageCallTest do
       assert output == :failed
     end
   end
+
+  # https://github.com/ethereum/EIPs/blob/master/EIPS/eip-1283.md#test-cases
+  describe "eip1283 sstore gas cost changes" do
+    setup do
+      db = MerklePatriciaTree.Test.random_ets_db(:eip1283_test)
+
+      state =
+        db
+        |> Trie.new()
+        |> Account.put_account(<<0x10::160>>, %Account{balance: 1_000_000})
+        |> Account.put_account(<<0x20::160>>, %Account{balance: 1_000_000})
+
+      config = EVM.Configuration.Constantinople.new()
+      updated_config = %{config | eip1283_sstore_gas_cost_changed: true}
+
+      available_gas = 10_000_000
+
+      params = %Contract.MessageCall{
+        sender: <<0x20::160>>,
+        originator: <<0x20::160>>,
+        recipient: <<0x10::160>>,
+        contract: <<0x10::160>>,
+        available_gas: available_gas,
+        gas_price: 1,
+        value: 5,
+        apparent_value: 5,
+        data: <<1, 2, 3>>,
+        stack_depth: 5,
+        block_header: %Block.Header{nonce: 1},
+        config: updated_config
+      }
+
+      {:ok, %{state: state, available_gas: available_gas, params: params}}
+    end
+
+    test "case 1", %{state: state, available_gas: available_gas, params: params} do
+      code = MachineCode.compile([:push1, 0, :push1, 0, :sstore, :push1, 0, :push1, 0, :sstore])
+
+      state = Account.put_code(state, params.recipient, code)
+      params = %{params | account_interface: AccountInterface.new(state)}
+
+      {:ok, {_state, result_gas, sub_state, _output}} = Contract.message_call(params)
+
+      assert sub_state.refund == 0
+      assert available_gas - result_gas == 412
+    end
+
+    test "case 2", %{state: state, available_gas: available_gas, params: params} do
+      code = MachineCode.compile([:push1, 0, :push1, 0, :sstore, :push1, 1, :push1, 0, :sstore])
+
+      state = Account.put_code(state, params.recipient, code)
+      params = %{params | account_interface: AccountInterface.new(state)}
+
+      {:ok, {_state, result_gas, sub_state, _output}} = Contract.message_call(params)
+
+      assert sub_state.refund == 0
+      assert available_gas - result_gas == 20_212
+    end
+
+    test "case 3", %{state: state, available_gas: available_gas, params: params} do
+      code = MachineCode.compile([:push1, 1, :push1, 0, :sstore, :push1, 0, :push1, 0, :sstore])
+
+      state = Account.put_code(state, params.recipient, code)
+      params = %{params | account_interface: AccountInterface.new(state)}
+
+      {:ok, {_state, result_gas, sub_state, _output}} = Contract.message_call(params)
+
+      assert sub_state.refund == 19_800
+      assert available_gas - result_gas == 20_212
+    end
+
+    test "case 4", %{state: state, available_gas: available_gas, params: params} do
+      code = MachineCode.compile([:push1, 1, :push1, 0, :sstore, :push1, 2, :push1, 0, :sstore])
+
+      state = Account.put_code(state, params.recipient, code)
+      params = %{params | account_interface: AccountInterface.new(state)}
+
+      {:ok, {_state, result_gas, sub_state, _output}} = Contract.message_call(params)
+
+      assert sub_state.refund == 0
+      assert available_gas - result_gas == 20_212
+    end
+
+    test "case 5", %{state: state, available_gas: available_gas, params: params} do
+      code = MachineCode.compile([:push1, 1, :push1, 0, :sstore, :push1, 1, :push1, 0, :sstore])
+
+      state = Account.put_code(state, params.recipient, code)
+      params = %{params | account_interface: AccountInterface.new(state)}
+
+      {:ok, {_state, result_gas, sub_state, _output}} = Contract.message_call(params)
+
+      assert sub_state.refund == 0
+      assert available_gas - result_gas == 20_212
+    end
+
+    test "case 6", %{state: state, available_gas: available_gas, params: params} do
+      code = MachineCode.compile([:push1, 0, :push1, 0, :sstore, :push1, 0, :push1, 0, :sstore])
+
+      state =
+        state
+        |> Account.put_code(params.recipient, code)
+        |> Account.put_storage(params.recipient, 0, 1)
+
+      params = %{params | account_interface: AccountInterface.new(state)}
+
+      {:ok, {_state, result_gas, sub_state, _output}} = Contract.message_call(params)
+
+      assert sub_state.refund == 15_000
+      assert available_gas - result_gas == 5212
+    end
+
+    test "case 7", %{state: state, available_gas: available_gas, params: params} do
+      code = MachineCode.compile([:push1, 0, :push1, 0, :sstore, :push1, 1, :push1, 0, :sstore])
+
+      state =
+        state
+        |> Account.put_code(params.recipient, code)
+        |> Account.put_storage(params.recipient, 0, 1)
+
+      params = %{params | account_interface: AccountInterface.new(state)}
+
+      {:ok, {_state, result_gas, sub_state, _output}} = Contract.message_call(params)
+
+      assert sub_state.refund == 4_800
+      assert available_gas - result_gas == 5212
+    end
+
+    test "case 8", %{state: state, available_gas: available_gas, params: params} do
+      code = MachineCode.compile([:push1, 0, :push1, 0, :sstore, :push1, 2, :push1, 0, :sstore])
+
+      state =
+        state
+        |> Account.put_code(params.recipient, code)
+        |> Account.put_storage(params.recipient, 0, 1)
+
+      params = %{params | account_interface: AccountInterface.new(state)}
+
+      {:ok, {_state, result_gas, sub_state, _output}} = Contract.message_call(params)
+
+      assert sub_state.refund == 0
+      assert available_gas - result_gas == 5212
+    end
+
+    test "case 9", %{state: state, available_gas: available_gas, params: params} do
+      code = MachineCode.compile([:push1, 2, :push1, 0, :sstore, :push1, 0, :push1, 0, :sstore])
+
+      state =
+        state
+        |> Account.put_code(params.recipient, code)
+        |> Account.put_storage(params.recipient, 0, 1)
+
+      params = %{params | account_interface: AccountInterface.new(state)}
+
+      {:ok, {_state, result_gas, sub_state, _output}} = Contract.message_call(params)
+
+      assert sub_state.refund == 15_000
+      assert available_gas - result_gas == 5212
+    end
+
+    test "case 10", %{state: state, available_gas: available_gas, params: params} do
+      code = MachineCode.compile([:push1, 2, :push1, 0, :sstore, :push1, 3, :push1, 0, :sstore])
+
+      state =
+        state
+        |> Account.put_code(params.recipient, code)
+        |> Account.put_storage(params.recipient, 0, 1)
+
+      params = %{params | account_interface: AccountInterface.new(state)}
+
+      {:ok, {_state, result_gas, sub_state, _output}} = Contract.message_call(params)
+
+      assert sub_state.refund == 0
+      assert available_gas - result_gas == 5212
+    end
+
+    test "case 11", %{state: state, available_gas: available_gas, params: params} do
+      code = MachineCode.compile([:push1, 2, :push1, 0, :sstore, :push1, 1, :push1, 0, :sstore])
+
+      state =
+        state
+        |> Account.put_code(params.recipient, code)
+        |> Account.put_storage(params.recipient, 0, 1)
+
+      params = %{params | account_interface: AccountInterface.new(state)}
+
+      {:ok, {_state, result_gas, sub_state, _output}} = Contract.message_call(params)
+
+      assert sub_state.refund == 4_800
+      assert available_gas - result_gas == 5212
+    end
+
+    test "case 12", %{state: state, available_gas: available_gas, params: params} do
+      code = MachineCode.compile([:push1, 2, :push1, 0, :sstore, :push1, 2, :push1, 0, :sstore])
+
+      state =
+        state
+        |> Account.put_code(params.recipient, code)
+        |> Account.put_storage(params.recipient, 0, 1)
+
+      params = %{params | account_interface: AccountInterface.new(state)}
+
+      {:ok, {_state, result_gas, sub_state, _output}} = Contract.message_call(params)
+
+      assert sub_state.refund == 0
+      assert available_gas - result_gas == 5212
+    end
+
+    test "case 13", %{state: state, available_gas: available_gas, params: params} do
+      code = MachineCode.compile([:push1, 1, :push1, 0, :sstore, :push1, 0, :push1, 0, :sstore])
+
+      state =
+        state
+        |> Account.put_code(params.recipient, code)
+        |> Account.put_storage(params.recipient, 0, 1)
+
+      params = %{params | account_interface: AccountInterface.new(state)}
+
+      {:ok, {_state, result_gas, sub_state, _output}} = Contract.message_call(params)
+
+      assert sub_state.refund == 15_000
+      assert available_gas - result_gas == 5212
+    end
+
+    test "case 14", %{state: state, available_gas: available_gas, params: params} do
+      code = MachineCode.compile([:push1, 1, :push1, 0, :sstore, :push1, 2, :push1, 0, :sstore])
+
+      state =
+        state
+        |> Account.put_code(params.recipient, code)
+        |> Account.put_storage(params.recipient, 0, 1)
+
+      params = %{params | account_interface: AccountInterface.new(state)}
+
+      {:ok, {_state, result_gas, sub_state, _output}} = Contract.message_call(params)
+
+      assert sub_state.refund == 0
+      assert available_gas - result_gas == 5212
+    end
+
+    test "case 15", %{state: state, available_gas: available_gas, params: params} do
+      code = MachineCode.compile([:push1, 1, :push1, 0, :sstore, :push1, 1, :push1, 0, :sstore])
+
+      state =
+        state
+        |> Account.put_code(params.recipient, code)
+        |> Account.put_storage(params.recipient, 0, 1)
+
+      params = %{params | account_interface: AccountInterface.new(state)}
+
+      {:ok, {_state, result_gas, sub_state, _output}} = Contract.message_call(params)
+
+      assert sub_state.refund == 0
+      assert available_gas - result_gas == 412
+    end
+
+    test "case 16", %{state: state, available_gas: available_gas, params: params} do
+      code =
+        MachineCode.compile([
+          :push1,
+          1,
+          :push1,
+          0,
+          :sstore,
+          :push1,
+          0,
+          :push1,
+          0,
+          :sstore,
+          :push1,
+          1,
+          :push1,
+          0,
+          :sstore
+        ])
+
+      state = Account.put_code(state, params.recipient, code)
+
+      params = %{params | account_interface: AccountInterface.new(state)}
+
+      {:ok, {_state, result_gas, sub_state, _output}} = Contract.message_call(params)
+
+      assert sub_state.refund == 19_800
+      assert available_gas - result_gas == 40_218
+    end
+
+    test "case 17", %{state: state, available_gas: available_gas, params: params} do
+      code =
+        MachineCode.compile([
+          :push1,
+          0,
+          :push1,
+          0,
+          :sstore,
+          :push1,
+          1,
+          :push1,
+          0,
+          :sstore,
+          :push1,
+          0,
+          :push1,
+          0,
+          :sstore
+        ])
+
+      state =
+        state
+        |> Account.put_code(params.recipient, code)
+        |> Account.put_storage(params.recipient, 0, 1)
+
+      params = %{params | account_interface: AccountInterface.new(state)}
+
+      {:ok, {_state, result_gas, sub_state, _output}} = Contract.message_call(params)
+
+      assert sub_state.refund == 19_800
+      assert available_gas - result_gas == 10_218
+    end
+  end
 end
