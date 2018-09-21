@@ -139,11 +139,16 @@ defmodule Blockchain.Account do
   end
 
   @doc """
-  Checks that an account is neither nil nor empty
+  Checks for an empty code hash and a zero nonce. This is the equivalent of
+  any empty account check regardless of whether the account has a balance.
+  This check is needed when an account hides money in one of it's contract
+  addresses and later creates a contract to get the money out. This technique
+  is documented as `Quirk #1 - hiding in plain sight` in the [Ethereum quirks and vulns](http://swende.se/blog/Ethereum_quirks_and_vulns.html)
+  blog post.
   """
-  @spec exists?(t() | nil) :: boolean()
-  def exists?(account) do
-    !(is_nil(account) || empty?(account))
+  @spec uninitialized_contract?(t()) :: boolean()
+  def uninitialized_contract?(account) do
+    account.nonce == 0 && account.code_hash == @empty_keccak
   end
 
   @doc """

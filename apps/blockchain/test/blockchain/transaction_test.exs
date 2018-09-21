@@ -436,7 +436,7 @@ defmodule Blockchain.TransactionTest do
       assert beneficiary_account == %Account{balance: gas * gas_price}
 
       contract_address = Account.Address.new(sender.address, sender.nonce)
-      refute Account.exists?(Account.get_account(state, contract_address))
+      assert is_nil(Account.get_account(state, contract_address))
     end
   end
 end

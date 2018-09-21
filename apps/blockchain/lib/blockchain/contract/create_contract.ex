@@ -53,26 +53,7 @@ defmodule Blockchain.Contract.CreateContract do
     contract_address = new_account_address(params)
     account = Account.get_account(original_account_interface.state, contract_address)
 
-    if Account.exists?(account) do
-      cond do
-        account_will_collide?(account) ->
-          error(original_account_interface)
-
-        account.nonce == 0 && Account.is_simple_account?(account) &&
-            not_in_contract_create_transaction?(params) ->
-          new_state =
-            increment_nonce_of_touched_account(
-              original_account_interface.state,
-              params.config,
-              contract_address
-            )
-
-          {:ok, {AccountInterface.new(new_state), params.available_gas, SubState.empty()}}
-
-        true ->
-          {:ok, {original_account_interface, 0, SubState.empty()}}
-      end
-    else
+    if is_nil(account) || Account.uninitialized_contract?(account) do
       result = {rem_gas, _, _, output} = create(params, contract_address)
 
       # From the Yellow Paper:
@@ -87,6 +68,12 @@ defmodule Blockchain.Contract.CreateContract do
         {:revert, _} -> {:error, {original_account_interface, rem_gas, SubState.empty()}}
         _ -> finalize(result, params, contract_address)
       end
+    else
+      if account_will_collide?(account) do
+        error(original_account_interface)
+      else
+        {:ok, {original_account_interface, 0, SubState.empty()}}
+      end
     end
   end
 
@@ -98,14 +85,6 @@ defmodule Blockchain.Contract.CreateContract do
     else
       state
     end
-  end
-
-  @spec not_in_contract_create_transaction?(t) :: boolean()
-  defp not_in_contract_create_transaction?(params) do
-    # params.stack_depth != 0 means that we're not in contract creation transaction
-    # because `create` evm instruction should have parameters on the stack that are pushed to it so
-    # it never is zero
-    params.stack_depth != 0
   end
 
   @spec account_will_collide?(Account.t()) :: boolean()
@@ -122,7 +101,7 @@ defmodule Blockchain.Contract.CreateContract do
   defp create(params, address) do
     state_with_blank_contract =
       params
-      |> init_blank_account(address)
+      |> init_account(address)
       |> increment_nonce_of_touched_account(params.config, address)
 
     account_interface =
@@ -148,10 +127,19 @@ defmodule Blockchain.Contract.CreateContract do
     EVM.VM.run(params.available_gas, exec_env)
   end
 
-  @spec init_blank_account(t, EVM.address()) :: EVM.state()
-  defp init_blank_account(params, address) do
-    params.account_interface.state
-    |> Account.put_account(address, %Account{nonce: 0})
+  @spec init_account(t, EVM.address()) :: EVM.state()
+  defp init_account(params, address) do
+    account = Account.get_account(params.account_interface.state, address)
+
+    state =
+      if is_nil(account) do
+        params.account_interface.state
+        |> Account.put_account(address, %Account{})
+      else
+        params.account_interface.state
+      end
+
+    state
     |> Account.transfer!(params.sender, address, params.endowment)
   end
 

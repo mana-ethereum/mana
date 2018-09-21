@@ -18,6 +18,9 @@ defmodule BlockchainTest do
     ],
     "Byzantium" => String.split(@failing_byzantium_tests, "\n"),
     "Constantinople" => [
+      "GeneralStateTests/stCreate2/create2collisionStorage_d0g0v0.json",
+      "GeneralStateTests/stCreate2/create2collisionStorage_d1g0v0.json",
+      "GeneralStateTests/stCreate2/create2collisionStorage_d2g0v0.json",
       "GeneralStateTests/stCreate2/Create2OnDepth1023_d0g0v0.json",
       "GeneralStateTests/stCreate2/Create2OnDepth1024_d0g0v0.json",
       "GeneralStateTests/stCreate2/Create2Recursive_d0g0v0.json",

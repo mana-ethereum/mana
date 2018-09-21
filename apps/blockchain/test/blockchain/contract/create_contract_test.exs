@@ -2,6 +2,7 @@ defmodule Blockchain.Contract.CreateContractTest do
   use ExUnit.Case
   doctest Blockchain.Contract.CreateContract
 
+  alias ExthCrypto.Hash.Keccak
   alias Blockchain.{Account, Contract}
   alias EVM.{SubState, MachineCode}
   alias MerklePatriciaTree.{Trie, DB}
@@ -28,13 +29,12 @@ defmodule Blockchain.Contract.CreateContractTest do
         available_gas: 100_000_000,
         gas_price: 1,
         endowment: 5,
-        init_code: build_sample_code(),
+        init_code: init_code(),
         stack_depth: 5,
         block_header: %Block.Header{nonce: 1}
       }
 
-      {_, {account_interface, gas, sub_state}} = Contract.create(params)
-      state = account_interface.state
+      {_, {%{state: state}, gas, sub_state}} = Contract.create(params)
 
       expected_root_hash =
         <<9, 235, 32, 146, 153, 242, 209, 192, 224, 61, 214, 174, 48, 24, 148, 28, 51, 254, 7, 82,
@@ -68,7 +68,7 @@ defmodule Blockchain.Contract.CreateContractTest do
     test "does not create contract if address already exists with nonce", %{db: db} do
       account = %Account{balance: 11, nonce: 5}
       account_address = <<0x10::160>>
-      collision_account = %Account{nonce: 1}
+      collision_account = %Account{nonce: 1, code_hash: init_code_result_hash()}
       collision_account_address = Account.Address.new(account_address, account.nonce)
 
       state =
@@ -84,7 +84,7 @@ defmodule Blockchain.Contract.CreateContractTest do
         available_gas: 100_000_000,
         gas_price: 1,
         endowment: 5,
-        init_code: build_sample_code(),
+        init_code: init_code(),
         stack_depth: 5,
         block_header: %Block.Header{nonce: 1}
       }
@@ -98,7 +98,7 @@ defmodule Blockchain.Contract.CreateContractTest do
     test "does not create contract if address has code", %{db: db} do
       account = %Account{balance: 11, nonce: 5}
       account_address = <<0x10::160>>
-      collision_account = %Account{code_hash: build_sample_code(), nonce: 0}
+      collision_account = %Account{code_hash: init_code_result_hash(), nonce: 0}
       collision_account_address = Account.Address.new(account_address, account.nonce)
 
       state =
@@ -114,7 +114,7 @@ defmodule Blockchain.Contract.CreateContractTest do
         available_gas: 100_000_000,
         gas_price: 1,
         endowment: 5,
-        init_code: build_sample_code(),
+        init_code: init_code(),
         stack_depth: 5,
         block_header: %Block.Header{nonce: 1}
       }
@@ -124,9 +124,56 @@ defmodule Blockchain.Contract.CreateContractTest do
 
       assert SubState.empty?(sub_state)
     end
+
+    test "creates a contract even if the address already has a balance", %{db: db} do
+      account = %Account{balance: 10, nonce: 2}
+      contract_account = %Account{balance: 10}
+
+      contract_address = Account.Address.new(<<0x10::160>>, account.nonce)
+
+      state =
+        db
+        |> Trie.new()
+        |> Account.put_account(<<0x10::160>>, account)
+        |> Account.put_account(contract_address, contract_account)
+
+      params = %Contract.CreateContract{
+        account_interface: AccountInterface.new(state),
+        sender: <<0x10::160>>,
+        originator: <<0x10::160>>,
+        available_gas: 100_000_000,
+        gas_price: 1,
+        endowment: 5,
+        init_code: init_code(),
+        stack_depth: 5,
+        block_header: %Block.Header{nonce: 1}
+      }
+
+      {_, {%{state: state}, gas, sub_state}} = Contract.create(params)
+
+      addresses = [<<0x10::160>>, Account.Address.new(<<0x10::160>>, 2)]
+      actual_accounts = Account.get_accounts(state, addresses)
+
+      expected_accounts = [
+        %Account{
+          balance: 5,
+          nonce: 2
+        },
+        %Account{
+          balance: 15,
+          code_hash: init_code_result_hash()
+        }
+      ]
+
+      assert actual_accounts == expected_accounts
+    end
   end
 
-  defp build_sample_code do
+  defp init_code_result_hash do
+    Keccak.kec(<<8::256>>)
+  end
+
+  defp init_code do
     assembly = [
       :push1,
       3,

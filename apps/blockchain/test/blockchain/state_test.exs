@@ -46,6 +46,7 @@ defmodule Blockchain.StateTest do
       "stCreate2/create2callPrecompiles",
       "stCreate2/create2checkFieldsInInitcode",
       "stCreate2/create2collisionBalance",
+      "stCreate2/create2collisionStorage",
       "stCreate2/returndatacopy_afterFailing_create",
       "stCreate2/returndatacopy_following_revert_in_create",
       "stRevertTest/RevertOpcodeMultipleSubCalls",
