@@ -34,6 +34,7 @@ defmodule EVM.Gas do
   @g_sset 20_000
   # Paid for an SSTORE operation when the storage value’s zeroness remains unchanged or is set to zero.
   @g_sreset 5000
+  @g_sload 200
   # Paid for a CREATE operation.
   @g_create 32_000
   # Paid per byte for a CREATE operation to succeed in placing code into state.
@@ -555,6 +556,15 @@ defmodule EVM.Gas do
   @spec g_transaction() :: t
   def g_transaction, do: @g_transaction
 
+  @spec g_sreset() :: t
+  def g_sreset, do: @g_sreset
+
+  @spec g_sset() :: t
+  def g_sset, do: @g_sset
+
+  @spec g_sload() :: t
+  def g_sload, do: @g_sload
+
   # EIP150
   @spec gas_cost_for_nested_operation(atom(), keyword()) :: {atom(), integer()}
   defp gas_cost_for_nested_operation(
@@ -591,10 +601,10 @@ defmodule EVM.Gas do
     current_value = get_current_value(exec_env, key)
 
     cond do
-      current_value == new_value -> 200
-      initial_value == current_value && initial_value == 0 -> 20_000
-      initial_value == current_value && initial_value != 0 -> 5_000
-      true -> 200
+      current_value == new_value -> @g_sload
+      initial_value == current_value && initial_value == 0 -> @g_sset
+      initial_value == current_value && initial_value != 0 -> @g_sreset
+      true -> @g_sload
     end
   end
 

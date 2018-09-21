@@ -1,5 +1,5 @@
 defmodule EVM.Refunds.Sstore do
-  alias EVM.{ExecEnv, Configuration}
+  alias EVM.{ExecEnv, Configuration, Gas}
 
   # Refund given (added into refund counter) when the storage value is set to zero from non-zero.
   @storage_refund 15_000
@@ -40,16 +40,16 @@ defmodule EVM.Refunds.Sstore do
         0
 
       initial_value == current_value && new_value == 0 ->
-        15_000
+        @storage_refund
 
       true ->
         first_refund =
           cond do
             initial_value != 0 && current_value == 0 ->
-              -15_000
+              -@storage_refund
 
             initial_value != 0 && new_value == 0 ->
-              15_000
+              @storage_refund
 
             true ->
               0
@@ -58,10 +58,10 @@ defmodule EVM.Refunds.Sstore do
         second_refund =
           cond do
             initial_value == new_value && initial_value == 0 ->
-              19_800
+              Gas.g_sset() - Gas.g_sload()
 
             initial_value == new_value ->
-              4_800
+              Gas.g_sreset() - Gas.g_sload()
 
             true ->
               0
