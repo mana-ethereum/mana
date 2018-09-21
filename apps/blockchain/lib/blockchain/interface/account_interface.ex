@@ -196,7 +196,7 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
           {:ok, integer()} | :account_not_found | :key_not_found
   def get_storage(account_interface, evm_address, key) do
     address = Account.Address.from(evm_address)
-    cached_value = Cache.get_current_value(account_interface.cache, address, key)
+    cached_value = Cache.current_value(account_interface.cache, address, key)
 
     case cached_value do
       nil -> Account.get_storage(account_interface.state, address, key)
@@ -209,7 +209,7 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
           {:ok, integer()} | :account_not_found | :key_not_found
   def get_initial_storage(account_interface, evm_address, key) do
     address = Account.Address.from(evm_address)
-    cached_value = Cache.get_initial_value(account_interface.cache, address, key)
+    cached_value = Cache.initial_value(account_interface.cache, address, key)
 
     case cached_value do
       nil -> Account.get_storage(account_interface.state, address, key)

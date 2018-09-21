@@ -11,14 +11,14 @@ defmodule Blockchain.Interface.AccountInterface.Cache do
           cache: account_cache()
         }
 
-  @spec get_current_value(t(), Address.t(), integer()) :: integer() | nil
-  def get_current_value(cache_struct, address, key) do
-    get_key_value(cache_struct.cache, address, key, :current_value)
+  @spec current_value(t(), Address.t(), integer()) :: integer() | nil
+  def current_value(cache_struct, address, key) do
+    key_value(cache_struct.cache, address, key, :current_value)
   end
 
-  @spec get_initial_value(t(), Address.t(), integer()) :: integer() | nil
-  def get_initial_value(cache_struct, address, key) do
-    get_key_value(cache_struct.cache, address, key, :initial_value)
+  @spec initial_value(t(), Address.t(), integer()) :: integer() | nil
+  def initial_value(cache_struct, address, key) do
+    key_value(cache_struct.cache, address, key, :initial_value)
   end
 
   @spec update_current_value(t(), Address.t(), integer(), integer()) :: t()
@@ -60,7 +60,7 @@ defmodule Blockchain.Interface.AccountInterface.Cache do
     Map.to_list(cache_struct.cache)
   end
 
-  defp get_key_value(cache, address, key, value_name) do
+  defp key_value(cache, address, key, value_name) do
     with account_cache = %{} <- Map.get(cache, address),
          key_cache = %{} <- Map.get(account_cache, key) do
       Map.get(key_cache, value_name)
