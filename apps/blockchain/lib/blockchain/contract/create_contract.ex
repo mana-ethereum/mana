@@ -113,9 +113,9 @@ defmodule Blockchain.Contract.CreateContract do
     account.nonce > 0 || !Account.is_simple_account?(account)
   end
 
-  @spec error(EVM.state()) :: {:error, EVM.state(), 0, SubState.t()}
-  defp error(state) do
-    {:error, {state, 0, SubState.empty()}}
+  @spec error(AccountInterface.t()) :: {:error, {AccountInterface.t(), 0, SubState.t()}}
+  defp error(account_interface) do
+    {:error, {account_interface, 0, SubState.empty()}}
   end
 
   @spec create(t(), EVM.address()) :: {EVM.state(), EVM.Gas.t(), EVM.SubState.t()}
@@ -159,7 +159,7 @@ defmodule Blockchain.Contract.CreateContract do
           {EVM.Gas.t(), EVM.SubState.t(), EVM.ExecEnv.t(), EVM.VM.output()},
           t(),
           EVM.address()
-        ) :: {:ok | :error, {EVM.state(), EVM.Gas.t(), EVM.SubState.t()}}
+        ) :: {:ok | :error, {AccountInterface.t(), EVM.Gas.t(), EVM.SubState.t()}}
   defp finalize({remaining_gas, accrued_sub_state, exec_env, output}, params, address) do
     original_account_interface = params.account_interface
     contract_creation_cost = creation_cost(output)
