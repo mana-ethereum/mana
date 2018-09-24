@@ -3,6 +3,8 @@ defmodule Blockchain.Interface.AccountInterface do
   Defines an interface for methods to interact with contracts and accounts.
   """
   alias Blockchain.Interface.AccountInterface.Cache
+  alias Blockchain.Account.Address
+  alias Blockchain.Account
 
   @type t :: %__MODULE__{
           state: EVM.state(),
@@ -26,7 +28,7 @@ defmodule Blockchain.Interface.AccountInterface do
           db: { MerklePatriciaTree.DB.ETS, :account_interface_new },
           root_hash: <<86, 232, 31, 23, 27, 204, 85, 166, 255, 131, 69, 230, 146, 192, 248, 110, 91, 72, 224, 27, 153, 108, 173, 192, 1, 98, 47, 181, 227, 99, 180, 33>>
         },
-        cache: %Blockchain.Interface.AccountInterface.Cache{cache: %{}}
+        cache: %Blockchain.Interface.AccountInterface.Cache{storage_cache: %{}, accounts_cache: %{}}
       }
   """
   @spec new(EVM.state(), Cache.t()) :: t
@@ -40,6 +42,33 @@ defmodule Blockchain.Interface.AccountInterface do
   @spec commit_storage(t()) :: EVM.state()
   def commit_storage(account_interface) do
     Cache.commit(account_interface.cache, account_interface.state)
+  end
+
+  @spec increment_account_nonce(t(), Address.t()) :: t()
+  def increment_account_nonce(account_interface, address) do
+    updated_account =
+      case account(account_interface, address) do
+        {account, code} -> {%{account | nonce: account.nonce + 1}, code}
+        account -> %{account | nonce: account.nonce + 1}
+      end
+
+    updated_cache = Cache.update_account(account_interface.cache, address, updated_account)
+
+    %{account_interface | cache: updated_cache}
+  end
+
+  @spec account(t(), Address.t()) :: Account.t() | {Account.t(), EVM.MachineCode.t()} | nil
+  def account(account_interface, address) do
+    account_from_cache(account_interface.cache, address) ||
+      account_from_storage(account_interface.state, address)
+  end
+
+  defp account_from_storage(state, address) do
+    Account.get_account(state, address)
+  end
+
+  defp account_from_cache(cache, address) do
+    Cache.account(cache, address)
   end
 end
 

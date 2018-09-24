@@ -15,11 +15,11 @@ defmodule Blockchain.Interface.AccountInterface.CacheTest do
       result = Cache.update_current_value(cache, address, key, value)
       expected_result = %{<<1>> => %{2 => %{current_value: 5}}}
 
-      assert result.cache == expected_result
+      assert result.storage_cache == expected_result
     end
 
     test "updates current_value" do
-      cache = %Cache{cache: %{<<1>> => %{2 => %{current_value: 5}}}}
+      cache = %Cache{storage_cache: %{<<1>> => %{2 => %{current_value: 5}}}}
 
       address = <<1>>
       key = 2
@@ -28,7 +28,7 @@ defmodule Blockchain.Interface.AccountInterface.CacheTest do
       result = Cache.update_current_value(cache, address, key, value)
       expected_result = %{<<1>> => %{2 => %{current_value: 6}}}
 
-      assert result.cache == expected_result
+      assert result.storage_cache == expected_result
     end
   end
 
@@ -43,11 +43,11 @@ defmodule Blockchain.Interface.AccountInterface.CacheTest do
       result = Cache.add_initial_value(cache, address, key, value)
       expected_result = %{<<1>> => %{2 => %{initial_value: 5}}}
 
-      assert result.cache == expected_result
+      assert result.storage_cache == expected_result
     end
 
     test "updates initial_value" do
-      cache = %Cache{cache: %{<<1>> => %{2 => %{initial_value: 5}}}}
+      cache = %Cache{storage_cache: %{<<1>> => %{2 => %{initial_value: 5}}}}
 
       address = <<1>>
       key = 2
@@ -56,13 +56,13 @@ defmodule Blockchain.Interface.AccountInterface.CacheTest do
       result = Cache.add_initial_value(cache, address, key, value)
       expected_result = %{<<1>> => %{2 => %{initial_value: 6}}}
 
-      assert result.cache == expected_result
+      assert result.storage_cache == expected_result
     end
   end
 
   describe "current_value/3" do
     test "gets current_value when key cache exists" do
-      cache = %Cache{cache: %{<<1>> => %{2 => %{current_value: 5}}}}
+      cache = %Cache{storage_cache: %{<<1>> => %{2 => %{current_value: 5}}}}
 
       address = <<1>>
       key = 2
@@ -73,7 +73,7 @@ defmodule Blockchain.Interface.AccountInterface.CacheTest do
     end
 
     test "gets current_value when key cache does not exist" do
-      cache = %Cache{cache: %{<<1>> => %{9 => %{current_value: 5}}}}
+      cache = %Cache{storage_cache: %{<<1>> => %{9 => %{current_value: 5}}}}
 
       address = <<1>>
       key = 2
@@ -86,7 +86,7 @@ defmodule Blockchain.Interface.AccountInterface.CacheTest do
 
   describe "initial_current/3" do
     test "gets initial_value when key cache exists" do
-      cache = %Cache{cache: %{<<1>> => %{2 => %{initial_value: 5}}}}
+      cache = %Cache{storage_cache: %{<<1>> => %{2 => %{initial_value: 5}}}}
 
       address = <<1>>
       key = 2
@@ -97,7 +97,7 @@ defmodule Blockchain.Interface.AccountInterface.CacheTest do
     end
 
     test "gets initial_value when key cache does not exist" do
-      cache = %Cache{cache: %{<<1>> => %{9 => %{initial_value: 5}}}}
+      cache = %Cache{storage_cache: %{<<1>> => %{9 => %{initial_value: 5}}}}
 
       address = <<1>>
       key = 2
@@ -110,7 +110,7 @@ defmodule Blockchain.Interface.AccountInterface.CacheTest do
 
   describe "remove_current_value/3" do
     test "deleted current value" do
-      cache = %Cache{cache: %{<<1>> => %{2 => %{initial_value: 5}}}}
+      cache = %Cache{storage_cache: %{<<1>> => %{2 => %{initial_value: 5}}}}
 
       address = <<1>>
       key = 2
@@ -121,6 +121,43 @@ defmodule Blockchain.Interface.AccountInterface.CacheTest do
         |> Cache.current_value(address, key)
 
       assert result == :deleted
+    end
+  end
+
+  describe "update_account/3" do
+    test "adds new account to the cache" do
+      account = %Account{
+        nonce: 5,
+        balance: 10,
+        storage_root: <<0x00, 0x01>>,
+        code_hash: <<0x01, 0x02>>
+      }
+
+      address = <<1>>
+
+      cache = %Cache{}
+
+      updated_cache = Cache.update_account(cache, address, account)
+
+      assert updated_cache.accounts_cache == %{address => account}
+    end
+
+    test "updates the account in the cache" do
+      account = %Account{
+        nonce: 5,
+        balance: 10,
+        storage_root: <<0x00, 0x01>>,
+        code_hash: <<0x01, 0x02>>
+      }
+
+      address = <<1>>
+      code = <<5>>
+
+      cache = %Cache{accounts_cache: %{address => account}}
+
+      updated_cache = Cache.update_account(cache, address, {account, code})
+
+      assert updated_cache.accounts_cache == %{address => {account, code}}
     end
   end
 
@@ -135,7 +172,7 @@ defmodule Blockchain.Interface.AccountInterface.CacheTest do
       # we need to create a blank account
       state_with_account = Account.reset_account(state, address)
 
-      cache = %Cache{cache: %{address => %{key => %{current_value: value}}}}
+      cache = %Cache{storage_cache: %{address => %{key => %{current_value: value}}}}
 
       updated_state = Cache.commit(cache, state_with_account)
 
@@ -159,7 +196,7 @@ defmodule Blockchain.Interface.AccountInterface.CacheTest do
 
       {:ok, ^value} = Account.get_storage(state_with_account, address, key)
 
-      cache = %Cache{cache: %{address => %{key => %{current_value: :deleted}}}}
+      cache = %Cache{storage_cache: %{address => %{key => %{current_value: :deleted}}}}
 
       updated_state = Cache.commit(cache, state_with_account)
 
