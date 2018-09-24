@@ -64,7 +64,7 @@ defmodule Blockchain.Contract.MessageCall do
   TODO: Add serious (less trivial) test cases in `contract_test.exs`
   """
   @spec execute(t()) ::
-          {:ok | :error, {EVM.state(), EVM.Gas.t(), EVM.SubState.t(), EVM.VM.output()}}
+          {:ok | :error, {AccountInterface.t(), EVM.Gas.t(), EVM.SubState.t(), EVM.VM.output()}}
   def execute(params) do
     original_state = params.account_interface.state
     run = MessageCall.get_run_function(params.recipient, params.config)
@@ -107,14 +107,13 @@ defmodule Blockchain.Contract.MessageCall do
     # point immediately prior to balance transfer.
     case output do
       :failed ->
-        {:error, {original_state, 0, SubState.empty(), :failed}}
+        {:error, {params.account_interface, 0, SubState.empty(), :failed}}
 
       {:revert, _output} ->
-        {:error, {original_state, gas, SubState.empty(), :failed}}
+        {:error, {params.account_interface, gas, SubState.empty(), :failed}}
 
       _ ->
-        commited_state = AccountInterface.commit_storage(exec_env.account_interface)
-        {:ok, {commited_state, gas, sub_state, output}}
+        {:ok, {exec_env.account_interface, gas, sub_state, output}}
     end
   end
 end
