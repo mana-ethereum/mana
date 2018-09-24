@@ -19,6 +19,8 @@ defmodule BlockchainTestRunner do
     |> Poison.decode!()
   end
 
+  defp fork_test?(_, :all), do: true
+
   defp fork_test?({_test_name, json_test}, fork) do
     fork == json_test["network"]
   end
@@ -39,7 +41,7 @@ defmodule BlockchainTestRunner do
     result({fork, test_name, expected_block_hash, blocktree.best_block.block_hash})
   end
 
-  defp result({_fork, _name, expected, actual} = result) do
+  defp result(result = {_fork, _name, expected, actual}) do
     if expected == actual do
       {:pass, result}
     else
@@ -54,9 +56,10 @@ defmodule BlockchainTestRunner do
   defp add_genesis_block(blocktree, json_test, state, chain) do
     block =
       if json_test["genesisRLP"] do
-        {:ok, block} = Blockchain.Block.decode_rlp(json_test["genesisRLP"])
-
-        block
+        case Blockchain.Block.decode_rlp(json_test["genesisRLP"]) do
+          {:ok, block} -> block
+          {:error, error} -> raise error
+        end
       end
 
     genesis_block = block_from_json(block, json_test["genesisBlockHeader"])

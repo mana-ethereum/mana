@@ -130,7 +130,7 @@ defmodule Blockchain.Chain do
 
   ## Examples
 
-      iex> Blockchain.Chain.get_config("Frontier").name
+      iex> Blockchain.Chain.test_config("Frontier").name
       "Frontier (Test)"
   """
   def test_config(hardfork) when is_binary(hardfork) do
