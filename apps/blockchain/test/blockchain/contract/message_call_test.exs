@@ -54,7 +54,8 @@ defmodule Blockchain.Contract.MessageCallTest do
         block_header: %Block.Header{nonce: 1}
       }
 
-      {:ok, {state, gas, sub_state, output}} = Contract.message_call(params)
+      {:ok, {account_interface, gas, sub_state, output}} = Contract.message_call(params)
+      state = account_interface.state
 
       expected_root_hash =
         <<163, 151, 95, 0, 149, 63, 81, 220, 74, 101, 219, 175, 240, 97, 153, 167, 249, 229, 144,
@@ -112,7 +113,9 @@ defmodule Blockchain.Contract.MessageCallTest do
         block_header: %Block.Header{nonce: 1}
       }
 
-      assert {:error, {^state, gas, sub_state, output}} = Contract.message_call(params)
+      assert {:error, {account_interface, gas, sub_state, output}} = Contract.message_call(params)
+      assert account_interface.state == state
+
       assert gas == 0
       assert SubState.empty?(sub_state)
       assert output == :failed
@@ -154,7 +157,9 @@ defmodule Blockchain.Contract.MessageCallTest do
         config: EVM.Configuration.Byzantium.new()
       }
 
-      assert {:error, {^state, gas, sub_state, output}} = Contract.message_call(params)
+      assert {:error, {account_interface, gas, sub_state, output}} = Contract.message_call(params)
+      assert account_interface.state == state
+
       assert gas == 985
       assert SubState.empty?(sub_state)
       assert output == :failed
