@@ -124,6 +124,67 @@ defmodule Blockchain.Chain do
     }
   end
 
+  @doc """
+  Gets a test chain configuration (along with the respective EVM configuration)
+  based on a hardfork.
+
+  ## Examples
+
+      iex> Blockchain.Chain.get_config("Frontier").name
+      "Frontier (Test)"
+  """
+  def test_config(hardfork) when is_binary(hardfork) do
+    config = evm_config(hardfork)
+
+    case hardfork do
+      "Frontier" ->
+        load_chain(:frontier_test, config)
+
+      "Homestead" ->
+        load_chain(:homestead_test, config)
+
+      "EIP150" ->
+        load_chain(:eip150_test, config)
+
+      "EIP158" ->
+        load_chain(:eip150_test, config)
+
+      "Byzantium" ->
+        load_chain(:byzantium_test, config)
+
+      "Constantinople" ->
+        load_chain(:constantinople_test, config)
+
+      _ ->
+        nil
+    end
+  end
+
+  defp evm_config(hardfork) do
+    case hardfork do
+      "Frontier" ->
+        EVM.Configuration.Frontier.new()
+
+      "Homestead" ->
+        EVM.Configuration.Homestead.new()
+
+      "EIP150" ->
+        EVM.Configuration.EIP150.new()
+
+      "EIP158" ->
+        EVM.Configuration.EIP158.new()
+
+      "Byzantium" ->
+        EVM.Configuration.Byzantium.new()
+
+      "Constantinople" ->
+        EVM.Configuration.Constantinople.new()
+
+      _ ->
+        nil
+    end
+  end
+
   @spec get_engine({String.t(), map}) :: {String.t(), engine()}
   defp get_engine({engine, %{"params" => params}}) do
     config = %{
