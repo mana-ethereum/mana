@@ -33,7 +33,8 @@ defmodule Blockchain.Contract.CreateContractTest do
         block_header: %Block.Header{nonce: 1}
       }
 
-      {_, {state, gas, sub_state}} = Contract.create(params)
+      {_, {account_interface, gas, sub_state}} = Contract.create(params)
+      state = account_interface.state
 
       expected_root_hash =
         <<9, 235, 32, 146, 153, 242, 209, 192, 224, 61, 214, 174, 48, 24, 148, 28, 51, 254, 7, 82,
@@ -88,7 +89,9 @@ defmodule Blockchain.Contract.CreateContractTest do
         block_header: %Block.Header{nonce: 1}
       }
 
-      assert {:error, {^state, 0, sub_state}} = Contract.create(params)
+      {:error, {account_interface, 0, sub_state}} = Contract.create(params)
+      assert state == account_interface.state
+
       assert SubState.empty?(sub_state)
     end
 
@@ -116,7 +119,9 @@ defmodule Blockchain.Contract.CreateContractTest do
         block_header: %Block.Header{nonce: 1}
       }
 
-      assert {:error, {^state, 0, sub_state}} = Contract.create(params)
+      {:error, {account_interface, 0, sub_state}} = Contract.create(params)
+      assert state == account_interface.state
+
       assert SubState.empty?(sub_state)
     end
   end

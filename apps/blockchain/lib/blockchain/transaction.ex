@@ -282,20 +282,24 @@ defmodule Blockchain.Transaction do
     {state, gas, new_sub_state, status}
   end
 
-  defp contract_creation_response({:ok, {state, remaining_gas, sub_state}}) do
+  defp contract_creation_response({:ok, {account_interface, remaining_gas, sub_state}}) do
+    state = AccountInterface.commit_storage(account_interface)
+
     {state, remaining_gas, sub_state, @success_status}
   end
 
-  defp contract_creation_response({:error, {state, remaining_gas, sub_state}}) do
-    {state, remaining_gas, sub_state, @failure_status}
+  defp contract_creation_response({:error, {account_interface, remaining_gas, sub_state}}) do
+    {account_interface.state, remaining_gas, sub_state, @failure_status}
   end
 
-  defp message_call_response({:ok, {state, remaining_gas, sub_state, _output}}) do
+  defp message_call_response({:ok, {account_interface, remaining_gas, sub_state, _output}}) do
+    state = AccountInterface.commit_storage(account_interface)
+
     {state, remaining_gas, sub_state, @success_status}
   end
 
-  defp message_call_response({:error, {state, remaining_gas, sub_state, _output}}) do
-    {state, remaining_gas, sub_state, @failure_status}
+  defp message_call_response({:error, {account_interface, remaining_gas, sub_state, _output}}) do
+    {account_interface.state, remaining_gas, sub_state, @failure_status}
   end
 
   @spec calculate_gas_usage(t, Gas.t(), EVM.SubState.t()) :: {Gas.t(), Gas.t()}
