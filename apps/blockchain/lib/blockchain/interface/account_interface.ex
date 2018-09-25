@@ -5,6 +5,7 @@ defmodule Blockchain.Interface.AccountInterface do
   alias Blockchain.Interface.AccountInterface.Cache
   alias Blockchain.Account.Address
   alias Blockchain.Account
+  alias ExthCrypto.Hash.Keccak
 
   @type t :: %__MODULE__{
           state: EVM.state(),
@@ -46,21 +47,68 @@ defmodule Blockchain.Interface.AccountInterface do
 
   @spec increment_account_nonce(t(), Address.t()) :: t()
   def increment_account_nonce(account_interface, address) do
-    updated_account =
-      case account(account_interface, address) do
-        {account, code} -> {%{account | nonce: account.nonce + 1}, code}
-        account -> %{account | nonce: account.nonce + 1}
-      end
+    {account, code} = account(account_interface, address)
+    updated_account = %{account | nonce: account.nonce + 1}
 
-    updated_cache = Cache.update_account(account_interface.cache, address, updated_account)
+    updated_cache =
+      Cache.update_account(account_interface.cache, address, {updated_account, code})
+
+    %{account_interface | cache: updated_cache}
+  end
+
+  @spec transfer_wei!(t(), Address.t(), Address.t(), EVM.Wei.t()) :: t()
+  def transfer_wei!(account_interface, from, to, wei) do
+    {from_account, from_account_code} = account(account_interface, from)
+
+    cond do
+      wei < 0 ->
+        raise("wei transfer cannot be negative")
+
+      from_account == nil ->
+        raise("sender account does not exist")
+
+      from_account.balance < wei ->
+        raise("sender account insufficient wei")
+
+      true ->
+        {to_account, to_account_code} = account(account_interface, to)
+
+        new_from_account = %{from_account | balance: from_account.balance - wei}
+        new_to_account = %{to_account | balance: to_account.balance + wei}
+
+        updated_cache =
+          account_interface.cache
+          |> Cache.update_account(from, {new_from_account, from_account_code})
+          |> Cache.update_account(to, {new_to_account, to_account_code})
+
+        %{account_interface | cache: updated_cache}
+    end
+  end
+
+  @spec put_code(t(), Address.t(), EVM.MachineCode.t()) :: t()
+  def put_code(account_interface, address, machine_code) do
+    kec = Keccak.kec(machine_code)
+
+    {account, _} = account(account_interface, address)
+
+    updated_account = %{account | code_hash: kec}
+
+    updated_cache =
+      Cache.update_account(account_interface.cache, address, {updated_account, machine_code})
 
     %{account_interface | cache: updated_cache}
   end
 
   @spec account(t(), Address.t()) :: Account.t() | {Account.t(), EVM.MachineCode.t()} | nil
   def account(account_interface, address) do
-    account_from_cache(account_interface.cache, address) ||
-      account_from_storage(account_interface.state, address)
+    found_account =
+      account_from_cache(account_interface.cache, address) ||
+        account_from_storage(account_interface.state, address)
+
+    case found_account do
+      {account, code} -> {account, code}
+      account -> {account, nil}
+    end
   end
 
   defp account_from_storage(state, address) do
