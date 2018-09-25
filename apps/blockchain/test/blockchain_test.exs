@@ -161,7 +161,7 @@ defmodule BlockchainTest do
     """
   end
 
-  defp single_error_message({fork, test_name, expected, actual}) do
+  defp single_error_message({:fail, {fork, test_name, expected, actual}}) do
     "[#{fork}] #{test_name}: expected #{inspect(expected)}, but received #{inspect(actual)}"
   end
 
