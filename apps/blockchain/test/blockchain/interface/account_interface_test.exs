@@ -166,6 +166,28 @@ defmodule Blockchain.Interface.AccountInterfaceTest do
     end
   end
 
+  describe "add_wei/2" do
+    test "adds wei to account's balance", %{state: state} do
+      address = <<1>>
+
+      account = %Account{
+        nonce: 5,
+        balance: 10,
+        storage_root: <<0x00, 0x01>>,
+        code_hash: <<0x01, 0x02>>
+      }
+
+      {found_account, _} =
+        state
+        |> Account.put_account(address, account)
+        |> AccountInterface.new()
+        |> AccountInterface.add_wei(address, 100)
+        |> AccountInterface.account(address)
+
+      assert found_account.balance == 110
+    end
+  end
+
   describe "account/2" do
     test "fetches account from cache", %{state: state} do
       account = %Account{

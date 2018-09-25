@@ -62,16 +62,28 @@ defmodule Blockchain.Interface.AccountInterface.Cache do
     %{cache_struct | accounts_cache: updated_accounts_cache}
   end
 
-  @spec commit(t(), EVM.state()) :: EVM.state()
-  def commit(cache_struct, state) do
+  @spec commit_storage(t(), EVM.state()) :: EVM.state()
+  def commit_storage(cache_struct, state) do
     cache_struct
-    |> to_list()
+    |> storage_to_list()
+    |> Enum.reduce(state, &commit_account_storage_cache/2)
+  end
+
+  @spec commit_accounts(t(), EVM.state()) :: EVM.state()
+  def commit_accounts(cache_struct, state) do
+    cache_struct
+    |> accounts_to_list()
     |> Enum.reduce(state, &commit_account_cache/2)
   end
 
-  @spec to_list(t()) :: list()
-  def to_list(cache_struct) do
+  @spec storage_to_list(t()) :: list()
+  def storage_to_list(cache_struct) do
     Map.to_list(cache_struct.storage_cache)
+  end
+
+  @spec accounts_to_list(t()) :: list()
+  def accounts_to_list(cache_struct) do
+    Map.to_list(cache_struct.accounts_cache)
   end
 
   defp key_value(cache, address, key, value_name) do
@@ -91,7 +103,13 @@ defmodule Blockchain.Interface.AccountInterface.Cache do
     end)
   end
 
-  defp commit_account_cache({address, account_cache}, state) do
+  defp commit_account_cache({address, {account, code}}, state) do
+    state_with_account = Account.put_account(state, address, account)
+
+    if code, do: Account.put_code(state_with_account, address, code), else: state_with_account
+  end
+
+  defp commit_account_storage_cache({address, account_cache}, state) do
     account_cache
     |> Map.to_list()
     |> Enum.reduce(state, &commit_key_cache(address, &1, &2))

@@ -40,9 +40,25 @@ defmodule Blockchain.Interface.AccountInterface do
     }
   end
 
-  @spec commit_storage(t()) :: EVM.state()
+  @spec commit(t()) :: t()
+  def commit(account_interface) do
+    account_interface
+    |> commit_accounts()
+    |> commit_storage()
+  end
+
+  @spec commit_storage(t()) :: t()
   def commit_storage(account_interface) do
-    Cache.commit(account_interface.cache, account_interface.state)
+    new_state = Cache.commit_storage(account_interface.cache, account_interface.state)
+
+    new(new_state, %Cache{accounts_cache: account_interface.cache.accounts_cache})
+  end
+
+  @spec commit_accounts(t()) :: t()
+  def commit_accounts(account_interface) do
+    new_state = Cache.commit_accounts(account_interface.cache, account_interface.state)
+
+    new(new_state, %Cache{storage_cache: account_interface.cache.storage_cache})
   end
 
   @spec increment_account_nonce(t(), Address.t()) :: t()
@@ -72,6 +88,7 @@ defmodule Blockchain.Interface.AccountInterface do
 
       true ->
         {to_account, to_account_code} = account(account_interface, to)
+        to_account = to_account || %Account{}
 
         new_from_account = %{from_account | balance: from_account.balance - wei}
         new_to_account = %{to_account | balance: to_account.balance + wei}
@@ -83,6 +100,18 @@ defmodule Blockchain.Interface.AccountInterface do
 
         %{account_interface | cache: updated_cache}
     end
+  end
+
+  @spec add_wei(t(), Address.t(), EVM.Wei.t()) :: t()
+  def add_wei(account_interface, address, value) do
+    {account, code} = account(account_interface, address)
+
+    updated_account = %{account | balance: account.balance + value}
+
+    updated_cache =
+      Cache.update_account(account_interface.cache, address, {updated_account, code})
+
+    %{account_interface | cache: updated_cache}
   end
 
   @spec put_code(t(), Address.t(), EVM.MachineCode.t()) :: t()
@@ -122,8 +151,8 @@ defmodule Blockchain.Interface.AccountInterface do
   end
 
   @spec reset_account(t(), Address.t()) :: t()
-  def reset_account(account_interface, address) do
-    updated_cache = Cache.update_account(account_interface.cache, address, {%Account{}, nil})
+  def reset_account(account_interface, address, account \\ %Account{}) do
+    updated_cache = Cache.update_account(account_interface.cache, address, {account, nil})
 
     %{account_interface | cache: updated_cache}
   end
@@ -154,6 +183,7 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
   alias Blockchain.{Account, Contract}
   alias EVM.Interface.AccountInterface
   alias Blockchain.Interface.AccountInterface.Cache
+  alias Blockchain.Interface.AccountInterface, as: BlockchainAccountInterface
 
   @doc """
   Given an account interface and an address, returns the balance at that address.
@@ -180,7 +210,9 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
   def get_account_balance(account_interface, evm_address) do
     address = Account.Address.from(evm_address)
 
-    case Account.get_account(account_interface.state, address) do
+    {account, _code} = BlockchainAccountInterface.account(account_interface, address)
+
+    case account do
       nil -> nil
       account -> account.balance
     end
@@ -190,9 +222,7 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
   def add_wei(account_interface, evm_address, value) do
     address = Account.Address.from(evm_address)
 
-    state = Account.add_wei(account_interface.state, address, value)
-
-    Map.put(account_interface, :state, state)
+    BlockchainAccountInterface.add_wei(account_interface, address, value)
   end
 
   @spec transfer(AccountInterface.t(), EVM.address(), EVM.address(), integer()) ::
@@ -200,9 +230,8 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
   def transfer(account_interface, evm_from, evm_to, value) do
     from = Account.Address.from(evm_from)
     to = Account.Address.from(evm_to)
-    {:ok, state} = Account.transfer(account_interface.state, from, to, value)
 
-    Map.put(account_interface, :state, state)
+    BlockchainAccountInterface.transfer_wei!(account_interface, from, to, value)
   end
 
   @doc """
@@ -230,7 +259,7 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
   def get_account_code(account_interface, evm_address) do
     address = Account.Address.from(evm_address)
 
-    case Account.get_machine_code(account_interface.state, address) do
+    case BlockchainAccountInterface.machine_code(account_interface, address) do
       {:ok, machine_code} -> machine_code
       :not_found -> nil
     end
@@ -238,7 +267,7 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
 
   @spec get_account_code_hash(AccountInterface.t(), EVM.address()) :: binary() | nil
   def get_account_code_hash(account_interface, address) do
-    account = Account.get_account(account_interface.state, address)
+    {account, _} = BlockchainAccountInterface.account(account_interface, address)
 
     unless is_nil(account), do: account.code_hash
   end
@@ -265,10 +294,12 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
   def increment_account_nonce(account_interface, evm_address) do
     address = Account.Address.from(evm_address)
 
-    {state, before_acct, _after_acct} =
-      Account.increment_nonce(account_interface.state, address, true)
+    updated_account_interface =
+      BlockchainAccountInterface.increment_account_nonce(account_interface, address)
 
-    {Map.put(account_interface, :state, state), before_acct.nonce}
+    {account, _code} = BlockchainAccountInterface.account(account_interface, address)
+
+    {updated_account_interface, account.nonce}
   end
 
   @doc """
@@ -327,7 +358,7 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
   @spec account_exists?(AccountInterface.t(), EVM.address()) :: boolean()
   def account_exists?(account_interface, evm_address) do
     address = Account.Address.from(evm_address)
-    account = Account.get_account(account_interface.state, address)
+    {account, _code} = BlockchainAccountInterface.account(account_interface, address)
 
     !is_nil(account)
   end
@@ -335,7 +366,7 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
   @spec empty_account?(AccountInterface.t(), EVM.address()) :: boolean()
   def empty_account?(account_interface, evm_address) do
     address = Account.Address.from(evm_address)
-    account = Account.get_account(account_interface.state, address)
+    {account, _code} = BlockchainAccountInterface.account(account_interface, address)
 
     !is_nil(account) && Account.empty?(account)
   end
@@ -400,7 +431,8 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
   @spec get_account_nonce(AccountInterface.t(), EVM.address()) :: integer() | nil
   def get_account_nonce(account_interface, evm_address) do
     address = Account.Address.from(evm_address)
-    account = Account.get_account(account_interface.state, address)
+    {account, _code} = BlockchainAccountInterface.account(account_interface, address)
+
     if account, do: account.nonce, else: nil
   end
 
@@ -576,8 +608,7 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
   @spec clear_balance(AccountInterface.t(), EVM.address()) :: AccountInterface.t()
   def clear_balance(account_interface, evm_address) do
     address = Account.Address.from(evm_address)
-    state = Account.clear_balance(account_interface.state, address)
 
-    Map.put(account_interface, :state, state)
+    BlockchainAccountInterface.clear_balance(account_interface, address)
   end
 end

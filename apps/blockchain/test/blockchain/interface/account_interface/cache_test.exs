@@ -161,7 +161,7 @@ defmodule Blockchain.Interface.AccountInterface.CacheTest do
     end
   end
 
-  describe "commit/2" do
+  describe "commit_storage/2" do
     test "saves value to state" do
       ets_db = MerklePatriciaTree.Test.random_ets_db()
       state = MerklePatriciaTree.Trie.new(ets_db)
@@ -174,7 +174,7 @@ defmodule Blockchain.Interface.AccountInterface.CacheTest do
 
       cache = %Cache{storage_cache: %{address => %{key => %{current_value: value}}}}
 
-      updated_state = Cache.commit(cache, state_with_account)
+      updated_state = Cache.commit_storage(cache, state_with_account)
 
       {:ok, found_value} = Account.get_storage(updated_state, address, key)
 
@@ -198,11 +198,61 @@ defmodule Blockchain.Interface.AccountInterface.CacheTest do
 
       cache = %Cache{storage_cache: %{address => %{key => %{current_value: :deleted}}}}
 
-      updated_state = Cache.commit(cache, state_with_account)
+      updated_state = Cache.commit_storage(cache, state_with_account)
 
       result = Account.get_storage(updated_state, address, key)
 
       assert result == :key_not_found
+    end
+  end
+
+  describe "commit_accounts/2" do
+    test "updates account with code" do
+      ets_db = MerklePatriciaTree.Test.random_ets_db()
+      state = MerklePatriciaTree.Trie.new(ets_db)
+      address = <<1>>
+
+      # we need to create a blank account with storage
+      state_with_account = Account.reset_account(state, address)
+
+      new_account = %Account{
+        nonce: 5,
+        balance: 10,
+        storage_root: <<0x00, 0x01>>,
+        code_hash: <<0x01, 0x02>>
+      }
+
+      code = <<2, 99>>
+
+      cache = %Cache{accounts_cache: %{address => {new_account, code}}}
+
+      committed_state = Cache.commit_accounts(cache, state_with_account)
+
+      found_account = Account.get_account(committed_state, address)
+      assert %{found_account | code_hash: new_account.code_hash} == new_account
+
+      {:ok, found_code} = Account.get_machine_code(committed_state, address)
+      assert found_code == code
+    end
+
+    test "creates new account from cache" do
+      ets_db = MerklePatriciaTree.Test.random_ets_db()
+      state = MerklePatriciaTree.Trie.new(ets_db)
+      address = <<1>>
+
+      new_account = %Account{
+        nonce: 5,
+        balance: 10,
+        storage_root: <<0x00, 0x01>>,
+        code_hash: <<0x01, 0x02>>
+      }
+
+      cache = %Cache{accounts_cache: %{address => new_account}}
+
+      committed_state = Cache.commit_accounts(cache, state)
+
+      found_account = Account.get_account(committed_state, address)
+      assert %{found_account | code_hash: new_account.code_hash} == new_account
     end
   end
 end

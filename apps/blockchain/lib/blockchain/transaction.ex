@@ -283,7 +283,7 @@ defmodule Blockchain.Transaction do
   end
 
   defp contract_creation_response({:ok, {account_interface, remaining_gas, sub_state}}) do
-    state = AccountInterface.commit_storage(account_interface)
+    state = AccountInterface.commit(account_interface).state
 
     {state, remaining_gas, sub_state, @success_status}
   end
@@ -293,7 +293,7 @@ defmodule Blockchain.Transaction do
   end
 
   defp message_call_response({:ok, {account_interface, remaining_gas, sub_state, _output}}) do
-    state = AccountInterface.commit_storage(account_interface)
+    state = AccountInterface.commit(account_interface).state
 
     {state, remaining_gas, sub_state, @success_status}
   end
