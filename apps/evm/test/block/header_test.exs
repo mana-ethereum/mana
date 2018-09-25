@@ -41,7 +41,7 @@ defmodule Block.HeaderTest do
 
     {header, parent_header} = build_headers(test_data)
 
-    difficulty = Header.get_byzantium_difficulty(header, parent_header)
+    difficulty = Header.get_byzantium_difficulty(header, parent_header, 3_000_000)
 
     {name, expected_difficulty, difficulty}
   end

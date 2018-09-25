@@ -103,7 +103,10 @@ defmodule Blockchain.BlockTest do
       ommer = <<0x06::160>>
       state = MerklePatriciaTree.Trie.new(db)
       chain = Chain.load_chain(:ropsten)
-      byzantium_block_number = chain.engine["Ethash"][:eip649_transition]
+
+      {byzantium_block_number, _} =
+        chain.engine["Ethash"][:block_rewards]
+        |> Enum.at(1)
 
       block = %Blockchain.Block{
         header: %Header{

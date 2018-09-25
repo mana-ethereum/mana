@@ -517,20 +517,20 @@ defmodule Blockchain.Block do
   end
 
   defp get_difficulty(block, parent_block, chain) do
-    homestead_block = chain.engine["Ethash"][:homestead_transition]
-    byzantium_block = chain.engine["Ethash"][:eip100b_transition]
-
     cond do
-      Header.is_before_homestead?(block.header, homestead_block) ->
-        Header.get_frontier_difficulty(
+      Chain.after_bomb_delays?(chain, block.header.number) ->
+        delay_factor = Chain.bomb_delay_factor_for_block(chain, block.header.number)
+
+        Header.get_byzantium_difficulty(
           block.header,
           if(parent_block, do: parent_block.header, else: nil),
+          delay_factor,
           chain.genesis[:difficulty],
           chain.engine["Ethash"][:minimum_difficulty],
           chain.engine["Ethash"][:difficulty_bound_divisor]
         )
 
-      Header.is_before_byzantium?(block.header, byzantium_block) ->
+      Chain.after_homestead?(chain, block.header.number) ->
         Header.get_homestead_difficulty(
           block.header,
           if(parent_block, do: parent_block.header, else: nil),
@@ -540,7 +540,7 @@ defmodule Blockchain.Block do
         )
 
       true ->
-        Header.get_byzantium_difficulty(
+        Header.get_frontier_difficulty(
           block.header,
           if(parent_block, do: parent_block.header, else: nil),
           chain.genesis[:difficulty],
@@ -734,13 +734,11 @@ defmodule Blockchain.Block do
   end
 
   defp create_receipt(block_header, new_state, total_gas_used, logs, tx_status, chain) do
-    eip658_transition = chain.params[:eip658_transition]
-
     state =
-      if Header.is_before_byzantium?(block_header, eip658_transition) do
-        new_state.root_hash
-      else
+      if Chain.after_byzantium?(chain, block_header.number) do
         tx_status
+      else
+        new_state.root_hash
       end
 
     %Receipt{
@@ -860,7 +858,7 @@ defmodule Blockchain.Block do
       do: block
 
   def add_rewards(block, db, chain) do
-    base_reward = calculate_base_reward(block, chain)
+    base_reward = Chain.block_reward_for_block(chain, block.header.number)
 
     state =
       block
@@ -869,16 +867,6 @@ defmodule Blockchain.Block do
       |> add_ommer_rewards(block, base_reward)
 
     set_state(block, state)
-  end
-
-  defp calculate_base_reward(block, chain) do
-    byzantium_transition = chain.engine["Ethash"][:eip649_transition]
-
-    if Header.is_before_byzantium?(block.header, byzantium_transition) do
-      chain.engine["Ethash"][:block_reward]
-    else
-      chain.engine["Ethash"][:eip649_reward]
-    end
   end
 
   defp add_miner_reward(state, block, base_reward) do

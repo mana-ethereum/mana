@@ -221,80 +221,6 @@ defmodule Block.Header do
   end
 
   @doc """
-  Returns true if a given block is before the
-  Homestead block.
-
-  ## Examples
-
-      iex> Block.Header.is_before_homestead?(%Block.Header{number: 5})
-      true
-
-      iex> Block.Header.is_before_homestead?(%Block.Header{number: 5_000_000})
-      false
-
-      iex> Block.Header.is_before_homestead?(%Block.Header{number: 1_150_000})
-      false
-
-      iex> Block.Header.is_before_homestead?(%Block.Header{number: 5}, 6)
-      true
-
-      iex> Block.Header.is_before_homestead?(%Block.Header{number: 5}, 4)
-      false
-  """
-  @spec is_before_homestead?(t, integer()) :: boolean()
-  def is_before_homestead?(h, homestead_block \\ @homestead_block) do
-    h.number < homestead_block
-  end
-
-  @doc """
-  Returns true if a given block is before the
-  Homestead block.
-
-  ## Examples
-
-      iex> Block.Header.is_before_byzantium?(%Block.Header{number: 5})
-      true
-
-      iex> Block.Header.is_before_byzantium?(%Block.Header{number: 5_000_000})
-      false
-
-      iex> Block.Header.is_before_byzantium?(%Block.Header{number: 4_370_000})
-      false
-
-      iex> Block.Header.is_before_byzantium?(%Block.Header{number: 5}, 6)
-      true
-
-      iex> Block.Header.is_before_byzantium?(%Block.Header{number: 5}, 4)
-      false
-  """
-  @spec is_before_byzantium?(t, integer()) :: boolean()
-  def is_before_byzantium?(h, byzantium_block \\ @byzantium_block) do
-    h.number < byzantium_block
-  end
-
-  @doc """
-  Returns true if a given block is at or after the
-  Homestead block.
-
-  ## Examples
-
-      iex> Block.Header.is_after_homestead?(%Block.Header{number: 5})
-      false
-
-      iex> Block.Header.is_after_homestead?(%Block.Header{number: 5_000_000})
-      true
-
-      iex> Block.Header.is_after_homestead?(%Block.Header{number: 1_150_000})
-      true
-
-      iex> Block.Header.is_after_homestead?(%Block.Header{number: 5}, 6)
-      false
-  """
-  @spec is_after_homestead?(t, integer()) :: boolean()
-  def is_after_homestead?(h, homestead_block \\ @homestead_block),
-    do: not is_before_homestead?(h, homestead_block)
-
-  @doc """
   Returns true if the block header is valid.
   This defines Eq.(50) of the Yellow Paper,
   commonly referred to as V(H).
@@ -375,13 +301,15 @@ defmodule Block.Header do
 
       iex> Block.Header.get_byzantium_difficulty(
       ...>   %Block.Header{number: 1, timestamp: 1479642530},
-      ...>   %Block.Header{number: 0, timestamp: 0, difficulty: 1_048_576}
+      ...>   %Block.Header{number: 0, timestamp: 0, difficulty: 1_048_576},
+      ...>   3_000_000
       ...> )
       997_888
   """
   def get_byzantium_difficulty(
         header,
         parent_header,
+        delay_factor,
         initial_difficulty \\ @initial_difficulty,
         minimum_difficulty \\ @minimum_difficulty,
         difficulty_bound_divisor \\ @difficulty_bound_divisor
@@ -394,7 +322,7 @@ defmodule Block.Header do
           byzantium_difficulty_parameter(header, parent_header)
 
       next_difficulty =
-        parent_header.difficulty + difficulty_delta + byzantium_difficulty_e(header)
+        parent_header.difficulty + difficulty_delta + byzantium_difficulty_e(header, delay_factor)
 
       max(minimum_difficulty, next_difficulty)
     end
@@ -518,9 +446,9 @@ defmodule Block.Header do
     do: div(parent_difficulty, difficulty_bound_divisor)
 
   # Eq.(46) H' - ε non negative
-  @spec byzantium_difficulty_e(t) :: integer()
-  defp byzantium_difficulty_e(header) do
-    fake_block_number_to_delay_ice_age = max(header.number - 3_000_000, 0)
+  @spec byzantium_difficulty_e(t, integer()) :: integer()
+  defp byzantium_difficulty_e(header, delay_factor) do
+    fake_block_number_to_delay_ice_age = max(header.number - delay_factor, 0)
     difficulty_exponent_calculation(fake_block_number_to_delay_ice_age)
   end
 

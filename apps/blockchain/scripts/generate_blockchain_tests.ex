@@ -9,6 +9,8 @@ defmodule GenerateBlockchainTests do
   @base_path System.cwd() <> "/../../ethereum_common_tests/BlockchainTests/"
   @allowed_forks ["Constantinople", "Byzantium", "Frontier", "Homestead", "EIP150", "EIP158"]
   @byzantium_failing_tests_path System.cwd() <> "/test/support/byzantium_failing_tests.txt"
+  @constantinople_failing_tests_path System.cwd() <>
+                                       "/test/support/constantinople_failing_tests.txt"
   @initial_pass_fail {[], []}
   @number_of_test_groups 20
   @ten_minutes 1000 * 60 * 10
@@ -99,6 +101,9 @@ defmodule GenerateBlockchainTests do
     case hardfork do
       "Byzantium" ->
         File.open!(@byzantium_failing_tests_path, [:write])
+
+      "Constantinople" ->
+        File.open!(@constantinople_failing_tests_path, [:write])
 
       _ ->
         :stdio

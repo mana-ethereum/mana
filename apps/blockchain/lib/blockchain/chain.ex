@@ -26,11 +26,12 @@ defmodule Blockchain.Chain do
           minimum_difficulty: integer(),
           difficulty_bound_divisor: integer(),
           duration_limit: integer(),
-          block_reward: integer(),
+          block_rewards: [{integer(), integer()}],
           homestead_transition: integer(),
           eip649_reward: integer(),
           eip100b_transition: integer(),
-          eip649_transition: integer()
+          eip649_transition: integer(),
+          difficulty_bomb_delays: [{integer(), integer()}]
         }
 
   @type params :: %{
@@ -185,20 +186,111 @@ defmodule Blockchain.Chain do
     end
   end
 
+  @doc """
+  Convenience function to determine whether a block number is after the
+  bomb delays introduced in Byzantium and Constantinople
+  """
+  @spec after_bomb_delays?(t(), integer()) :: boolean()
+  def after_bomb_delays?(chain = %__MODULE__{}, block_number) do
+    bomb_delays = chain.engine["Ethash"][:difficulty_bomb_delays]
+
+    Enum.any?(bomb_delays, fn {hard_fork_number, _delay} ->
+      block_number >= hard_fork_number
+    end)
+  end
+
+  @doc """
+  Function to determine what the bomb delay is for a block number.
+
+  Note: This function should not be called on a block number that happens before
+  bomb delays. Before bomb delays were introduced, the difficulty calculation
+  was different and thus we do not expect a bomb delay at all.
+  """
+  @spec bomb_delay_factor_for_block(t, integer()) :: integer()
+  def bomb_delay_factor_for_block(chain = %__MODULE__{}, block_number) do
+    bomb_delays = chain.engine["Ethash"][:difficulty_bomb_delays]
+
+    {_, delay} =
+      bomb_delays
+      |> Enum.sort(fn {k1, _}, {k2, _} -> k1 < k2 end)
+      |> Enum.take_while(fn {k, _} -> k <= block_number end)
+      |> List.last()
+
+    delay
+  end
+
+  @doc """
+  Determines the base reward for a block number. The reward changed was lowered
+  in Byzantium and again in Constantinople
+  """
+  @spec block_reward_for_block(t, integer()) :: integer()
+  def block_reward_for_block(chain = %__MODULE__{}, block_number) do
+    {_k, reward} =
+      chain.engine["Ethash"][:block_rewards]
+      |> Enum.sort(fn {k, _}, {k2, _} -> k < k2 end)
+      |> Enum.take_while(fn {k, _} -> k <= block_number end)
+      |> List.last()
+
+    reward
+  end
+
+  @doc """
+  Helper function to determine if block number is after the homestead transition
+  based on the chain configuration.
+  """
+  @spec after_homestead?(t, integer()) :: boolean()
+  def after_homestead?(chain, block_number) do
+    homestead_block = chain.engine["Ethash"][:homestead_transition]
+
+    block_number >= homestead_block
+  end
+
+  @doc """
+  Helper function to determine if block number is after the byzantium transition
+  based on the chain configuration.
+  """
+  @spec after_byzantium?(t, integer()) :: boolean()
+  def after_byzantium?(chain, block_number) do
+    eip658_transition = chain.params[:eip658_transition]
+
+    block_number >= eip658_transition
+  end
+
   @spec get_engine({String.t(), map}) :: {String.t(), engine()}
   defp get_engine({engine, %{"params" => params}}) do
     config = %{
       minimum_difficulty: params["minimumDifficulty"] |> load_hex(),
       difficulty_bound_divisor: params["difficultyBoundDivisor"] |> load_hex(),
       duration_limit: params["durationLimit"] |> load_hex(),
-      block_reward: params["blockReward"] |> load_hex(),
+      block_rewards: params["blockReward"] |> parse_reward(),
       homestead_transition: params["homesteadTransition"] |> load_hex(),
       eip649_reward: params["eip649Reward"] |> load_hex(),
       eip100b_transition: params["eip100bTransition"] |> load_hex(),
-      eip649_transition: params["eip649Transition"] |> load_hex()
+      eip649_transition: params["eip649Transition"] |> load_hex(),
+      difficulty_bomb_delays: params["difficultyBombDelays"] |> parse_bomb_delays()
     }
 
     {engine, config}
+  end
+
+  defp parse_reward(block_reward) when is_binary(block_reward) do
+    [{load_hex("0x00"), load_hex(block_reward)}]
+  end
+
+  defp parse_reward(block_rewards) do
+    Enum.map(block_rewards, fn {k, v} ->
+      {block_number, _} = Integer.parse(k)
+      {block_number, load_hex(v)}
+    end)
+  end
+
+  defp parse_bomb_delays(nil), do: []
+
+  defp parse_bomb_delays(bomb_delays) do
+    Enum.map(bomb_delays, fn {k, v} ->
+      {block_number, _} = Integer.parse(k)
+      {block_number, v}
+    end)
   end
 
   @spec get_params(map) :: params()
