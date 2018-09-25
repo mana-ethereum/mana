@@ -86,6 +86,86 @@ defmodule Blockchain.Interface.AccountInterfaceTest do
     end
   end
 
+  describe "machine_code/2" do
+    test "returns machine code from cache", %{state: state} do
+      account = %Account{
+        nonce: 5,
+        balance: 10,
+        storage_root: <<0x00, 0x01>>,
+        code_hash: <<0x01, 0x02>>
+      }
+
+      address = <<1>>
+      code = <<5>>
+      cache = %Cache{accounts_cache: %{address => {account, code}}}
+
+      {:ok, found_code} =
+        state
+        |> AccountInterface.new(cache)
+        |> AccountInterface.machine_code(address)
+
+      assert code == found_code
+    end
+
+    test "returns machine code from storage", %{state: state} do
+      address = <<1>>
+      code = <<5>>
+
+      {:ok, found_code} =
+        state
+        |> Account.reset_account(address)
+        |> Account.put_code(address, code)
+        |> AccountInterface.new()
+        |> AccountInterface.machine_code(address)
+
+      assert found_code == code
+    end
+  end
+
+  describe "clear_balance/2" do
+    test "clears account's balance", %{state: state} do
+      address = <<1>>
+
+      account = %Account{
+        nonce: 5,
+        balance: 10,
+        storage_root: <<0x00, 0x01>>,
+        code_hash: <<0x01, 0x02>>
+      }
+
+      {found_account, _} =
+        state
+        |> Account.put_account(address, account)
+        |> AccountInterface.new()
+        |> AccountInterface.clear_balance(address)
+        |> AccountInterface.account(address)
+
+      assert found_account.balance == 0
+    end
+  end
+
+  describe "reset_account/2" do
+    test "resets account", %{state: state} do
+      address = <<1>>
+
+      account = %Account{
+        nonce: 5,
+        balance: 10,
+        storage_root: <<0x00, 0x01>>,
+        code_hash: <<0x01, 0x02>>
+      }
+
+      {found_account, _} =
+        state
+        |> Account.put_account(address, account)
+        |> AccountInterface.new()
+        |> AccountInterface.reset_account(address)
+        |> AccountInterface.account(address)
+
+      assert found_account == %Account{}
+    end
+  end
+
   describe "account/2" do
     test "fetches account from cache", %{state: state} do
       account = %Account{

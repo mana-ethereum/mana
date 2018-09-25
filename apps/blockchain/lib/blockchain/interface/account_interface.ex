@@ -99,6 +99,35 @@ defmodule Blockchain.Interface.AccountInterface do
     %{account_interface | cache: updated_cache}
   end
 
+  @spec machine_code(t(), Address.t()) :: {:ok, binary()} | :not_found
+  def machine_code(account_interface, address) do
+    {_account, code} = account(account_interface, address)
+
+    case code do
+      nil -> Account.get_machine_code(account_interface.state, address)
+      code -> {:ok, code}
+    end
+  end
+
+  @spec clear_balance(t(), Address.t()) :: t()
+  def clear_balance(account_interface, address) do
+    {account, code} = account(account_interface, address)
+
+    updated_account = %{account | balance: 0}
+
+    updated_cache =
+      Cache.update_account(account_interface.cache, address, {updated_account, code})
+
+    %{account_interface | cache: updated_cache}
+  end
+
+  @spec reset_account(t(), Address.t()) :: t()
+  def reset_account(account_interface, address) do
+    updated_cache = Cache.update_account(account_interface.cache, address, {%Account{}, nil})
+
+    %{account_interface | cache: updated_cache}
+  end
+
   @spec account(t(), Address.t()) :: Account.t() | {Account.t(), EVM.MachineCode.t()} | nil
   def account(account_interface, address) do
     found_account =
