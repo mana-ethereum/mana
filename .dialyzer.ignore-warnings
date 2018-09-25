@@ -164,6 +164,10 @@ apps/blockchain/lib/blockchain/transaction.ex
 apps/blockchain/lib/blockchain/application.ex:14: The call 'Elixir.EVM.Debugger':break_on([{'address',binary()},...]) will never return since the success typing is (['address']) -> integer() and the contract is (elixir:keyword('Elixir.EVM.Debugger.Breakpoint':conditions())) -> 'Elixir.EVM.Debugger.Breakpoint':id()
 
 -------------------------------
+# apps/blockchain/lib/mix/tasks/sync/from_file.ex
+-------------------------------
+apps/blockchain/lib/mix/tasks/sync/from_file.ex
+-------------------------------
 # Ignores the whole contract and account_interface file
 -------------------------------
 apps/blockchain/lib/blockchain/contract.ex
