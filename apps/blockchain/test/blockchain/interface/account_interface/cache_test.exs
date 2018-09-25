@@ -247,7 +247,7 @@ defmodule Blockchain.Interface.AccountInterface.CacheTest do
         code_hash: <<0x01, 0x02>>
       }
 
-      cache = %Cache{accounts_cache: %{address => new_account}}
+      cache = %Cache{accounts_cache: %{address => {new_account, nil}}}
 
       committed_state = Cache.commit_accounts(cache, state)
 

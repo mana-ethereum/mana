@@ -281,6 +281,7 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
       iex> {account_interface, nonce} =
       ...> MerklePatriciaTree.Test.random_ets_db()
       ...> |> MerklePatriciaTree.Trie.new()
+      ...> |> Blockchain.Account.reset_account(<<1::160>>)
       ...> |> Blockchain.Interface.AccountInterface.new()
       ...> |> EVM.Interface.AccountInterface.increment_account_nonce(<<1::160>>)
       iex> nonce
@@ -297,9 +298,9 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
     updated_account_interface =
       BlockchainAccountInterface.increment_account_nonce(account_interface, address)
 
-    {account, _code} = BlockchainAccountInterface.account(account_interface, address)
+    {account, _code} = BlockchainAccountInterface.account(updated_account_interface, address)
 
-    {updated_account_interface, account.nonce}
+    {updated_account_interface, account.nonce - 1}
   end
 
   @doc """
@@ -469,7 +470,7 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
       ...> |> Blockchain.Account.put_code(<<0x20::160>>, EVM.MachineCode.compile([:push1, 3, :push1, 5, :add, :push1, 0x00, :mstore, :push1, 32, :push1, 0, :return]))
       ...> |> Blockchain.Interface.AccountInterface.new()
       ...> |> EVM.Interface.AccountInterface.message_call(<<0x10::160>>, <<0x10::160>>, <<0x20::160>>, <<0x20::160>>, 1000, 1, 5, 5, <<1, 2, 3>>, 5, %Block.Header{nonce: 1})
-      iex> account_interface.state.root_hash
+      iex> Blockchain.Interface.AccountInterface.commit(account_interface).state.root_hash
       <<163, 151, 95, 0, 149, 63, 81, 220, 74, 101, 219, 175, 240, 97, 153, 167, 249, 229, 144, 75, 101, 233, 126, 177, 8, 188, 105, 165, 28, 248, 67, 156>>
   """
   @spec message_call(
@@ -535,7 +536,7 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
       ...> |> Blockchain.Account.put_account(<<0x10::160>>, %Blockchain.Account{balance: 11, nonce: 5})
       ...> |> Blockchain.Interface.AccountInterface.new()
       ...> |> EVM.Interface.AccountInterface.create_contract(<<0x10::160>>, <<0x10::160>>, 1000, 1, 5, EVM.MachineCode.compile([:push1, 3, :push1, 5, :add, :push1, 0x00, :mstore, :push1, 32, :push1, 0, :return]), 5, %Block.Header{nonce: 1}, nil,  EVM.Configuration.Frontier.new())
-      iex> account_interface.state.root_hash
+      ...> Blockchain.Interface.AccountInterface.commit(account_interface).state.root_hash
       <<226, 121, 240, 77, 157, 98, 127, 111, 137, 201, 186, 41, 100, 239,
               227, 209, 92, 247, 21, 58, 119, 4, 191, 255, 84, 144, 86, 99, 178,
               157, 145, 31>>
