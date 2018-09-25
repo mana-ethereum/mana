@@ -86,6 +86,9 @@ defmodule Blockchain.Interface.AccountInterface do
       from_account.balance < wei ->
         raise("sender account insufficient wei")
 
+      from == to ->
+        account_interface
+
       true ->
         {to_account, to_account_code} = account(account_interface, to)
         to_account = to_account || %Account{}
