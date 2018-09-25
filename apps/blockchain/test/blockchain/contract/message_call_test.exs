@@ -55,7 +55,7 @@ defmodule Blockchain.Contract.MessageCallTest do
       }
 
       {:ok, {account_interface, gas, sub_state, output}} = Contract.message_call(params)
-      state = account_interface.state
+      state = AccountInterface.commit(account_interface).state
 
       expected_root_hash =
         <<163, 151, 95, 0, 149, 63, 81, 220, 74, 101, 219, 175, 240, 97, 153, 167, 249, 229, 144,

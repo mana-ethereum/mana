@@ -389,8 +389,9 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
           AccountInterface.t()
   def put_storage(account_interface, evm_address, key, value) do
     address = Account.Address.from(evm_address)
+    {account, _code} = BlockchainAccountInterface.account(account_interface, address)
 
-    if Account.get_account(account_interface.state, address) do
+    if account do
       updated_cache = Cache.update_current_value(account_interface.cache, address, key, value)
 
       %{account_interface | cache: updated_cache}
@@ -402,8 +403,9 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
   @spec remove_storage(AccountInterface.t(), EVM.address(), integer()) :: AccountInterface.t()
   def remove_storage(account_interface, evm_address, key) do
     address = Account.Address.from(evm_address)
+    {account, _code} = BlockchainAccountInterface.account(account_interface, address)
 
-    if Account.get_account(account_interface.state, address) do
+    if account do
       updated_cache = Cache.remove_current_value(account_interface.cache, address, key)
 
       %{account_interface | cache: updated_cache}
