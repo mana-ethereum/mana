@@ -1,6 +1,7 @@
 require Logger
 
 defmodule SyncWithInfura do
+  @save_block_interval 1000
   require Logger
 
   def setup() do
@@ -13,16 +14,19 @@ defmodule SyncWithInfura do
   def add_block_to_tree(db, chain, tree, n) do
     next_block = get_block(n)
 
+    if rem(n, @save_block_interval) == 0 do
+      Logger.info("Saved progress at block #{n}")
+      MerklePatriciaTree.DB.put!(db, "current_block_hash", Blockchain.Block.hash(next_block))
+      MerklePatriciaTree.DB.put!(db, "current_block_tree", :erlang.term_to_binary(tree))
+    end
+
     case Blockchain.Blocktree.verify_and_add_block(tree, chain, next_block, db) do
       {:ok, next_tree} ->
-        Logger.info("Verified Block #{n}")
-        MerklePatriciaTree.DB.put!(db, "current_block_hash", Blockchain.Block.hash(next_block))
         add_block_to_tree(db, chain, next_tree, n + 1)
 
       {:invalid, error} ->
         Logger.info("Failed to Verify Block #{n}")
         Logger.error(inspect(error))
-        MerklePatriciaTree.DB.put!(db, "current_block_tree", :erlang.term_to_binary(tree))
     end
   end
 
