@@ -22,7 +22,12 @@ defmodule EVM.LogEntry do
       %EVM.LogEntry{
         address: <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0>>,
         data: <<1>>,
-        topics: [0, 0, 0, 0]
+        topics: [
+         <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0>>,
+         <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0>>,
+         <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0>>,
+         <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0>>
+        ]
       }
 
       iex> EVM.LogEntry.new( <<15, 87, 46, 82, 149, 197, 127, 21, 136, 111, 155, 38, 62, 47, 109, 45, 108, 123, 94, 198>>, [0, 0, 0, 0], <<1>>)
@@ -30,7 +35,12 @@ defmodule EVM.LogEntry do
         address: <<15, 87, 46, 82, 149, 197, 127, 21, 136, 111, 155, 38, 62, 47, 109,
           45, 108, 123, 94, 198>>,
         data: <<1>>,
-        topics: [0, 0, 0, 0]
+        topics: [
+         <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0>>,
+         <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0>>,
+         <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0>>,
+         <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0>>
+        ]
       }
   """
   @spec new(integer() | binary(), [integer()], binary()) :: t()
@@ -40,9 +50,11 @@ defmodule EVM.LogEntry do
         do: Address.new(address),
         else: address
 
+    normalized_topics = normalize_topics(topics)
+
     %__MODULE__{
       address: address,
-      topics: topics,
+      topics: normalized_topics,
       data: data
     }
   end
@@ -64,14 +76,7 @@ defmodule EVM.LogEntry do
       [
         <<15, 87, 46, 82, 149, 197, 127, 21, 136, 111, 155, 38, 62, 47, 109, 45, 108,
           123, 94, 198>>,
-        [
-          <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0>>,
-          <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0>>,
-          <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0>>
-        ],
+        [0, 0, 0],
         <<255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
           255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
           255, 255>>
@@ -80,9 +85,23 @@ defmodule EVM.LogEntry do
   """
   @spec to_list(t()) :: [binary()]
   def to_list(log) do
-    topics = Enum.map(log.topics, &Helpers.left_pad_bytes/1)
+    [log.address, log.topics, log.data]
+  end
 
-    [log.address, topics, log.data]
+  defp normalize_topics(topics, acc \\ [])
+
+  defp normalize_topics([], acc), do: acc
+
+  defp normalize_topics([topic | tail], acc) when is_integer(topic) do
+    bin_topic = :binary.encode_unsigned(topic)
+
+    normalize_topics([bin_topic | tail], acc)
+  end
+
+  defp normalize_topics([topic | tail], acc) do
+    padded_topic = Helpers.left_pad_bytes(topic)
+
+    normalize_topics(tail, acc ++ [padded_topic])
   end
 end
 
