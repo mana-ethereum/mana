@@ -25,17 +25,6 @@
 :0: Unknown function 'Elixir.EVM.Interface.BlockInterface.Port':'__impl__'/1
 :0: Unknown function 'Elixir.EVM.Interface.BlockInterface.Reference':'__impl__'/1
 :0: Unknown function 'Elixir.EVM.Interface.BlockInterface.Tuple':'__impl__'/1
-:0: Unknown function 'Elixir.EVM.Configuration.Atom':'__impl__'/1
-:0: Unknown function 'Elixir.EVM.Configuration.BitString':'__impl__'/1
-:0: Unknown function 'Elixir.EVM.Configuration.Float':'__impl__'/1
-:0: Unknown function 'Elixir.EVM.Configuration.Function':'__impl__'/1
-:0: Unknown function 'Elixir.EVM.Configuration.Integer':'__impl__'/1
-:0: Unknown function 'Elixir.EVM.Configuration.List':'__impl__'/1
-:0: Unknown function 'Elixir.EVM.Configuration.Map':'__impl__'/1
-:0: Unknown function 'Elixir.EVM.Configuration.PID':'__impl__'/1
-:0: Unknown function 'Elixir.EVM.Configuration.Port':'__impl__'/1
-:0: Unknown function 'Elixir.EVM.Configuration.Reference':'__impl__'/1
-:0: Unknown function 'Elixir.EVM.Configuration.Tuple':'__impl__'/1
 
 # evm warnings
 
@@ -45,7 +34,7 @@ apps/evm/lib/evm/functions.ex:213: Function 'is_invalid_jump_destination?'/3 wil
 apps/evm/lib/evm/functions.ex:223: Function 'static_state_modification?'/2 will never be called
 apps/evm/lib/evm/gas.ex:139: Function cost/2 has no local return
 apps/evm/lib/evm/gas.ex:139: Function cost/3 has no local return
-apps/evm/lib/evm/gas.ex:144: The call 'Elixir.EVM.Gas':operation_cost(atom(),_inputs@1::[integer()],_machine_state@1::#{'__struct__':='Elixir.EVM.MachineState', 'active_words':=integer(), 'gas':=integer(), 'last_return_data':=binary(), 'memory':=binary(), 'previously_active_words':=integer(), 'program_counter':=integer(), 'stack':=[integer()]},_exec_env@1::#{'__struct__':='Elixir.EVM.ExecEnv', 'account_interface':=atom(), 'address':=<<_:160>>, 'block_interface':=atom(), 'config':=atom(), 'data':=binary(), 'gas_price':=integer(), 'machine_code':=binary(), 'originator':=<<_:160>>, 'sender':=<<_:160>>, 'stack_depth':=integer(), 'static':=boolean(), 'value_in_wei':=integer()}) breaks the contract (atom(),['Elixir.EVM':val()],['Elixir.EVM':val()],'Elixir.EVM.MachineState':t()) -> t() | 'nil'
+apps/evm/lib/evm/gas.ex:144: The call 'Elixir.EVM.Gas':operation_cost(atom(),_inputs@1::[integer()],_machine_state@1::#{'__struct__':='Elixir.EVM.MachineState', 'active_words':=integer(), 'gas':=integer(), 'last_return_data':=binary(), 'memory':=binary(), 'previously_active_words':=integer(), 'program_counter':=integer(), 'stack':=[integer()]},_exec_env@1::#{'__struct__':='Elixir.EVM.ExecEnv', 'account_interface':=atom(), 'address':=<<_:160>>, 'block_interface':=atom(), 'config':=#{'__struct__':=atom(), atom()=>_}, 'data':=binary(), 'gas_price':=integer(), 'machine_code':=binary(), 'originator':=<<_:160>>, 'sender':=<<_:160>>, 'stack_depth':=integer(), 'static':=boolean(), 'value_in_wei':=integer()}) breaks the contract (atom(),['Elixir.EVM':val()],['Elixir.EVM':val()],'Elixir.EVM.MachineState':t()) -> t() | 'nil'
 apps/evm/lib/evm/gas.ex:309: Function operation_cost/0 has no local return
 apps/evm/lib/evm/gas.ex:309: The call 'Elixir.EVM.Gas':operation_cost('nil','nil','nil','nil') breaks the contract (atom(),['Elixir.EVM':val()],['Elixir.EVM':val()],'Elixir.EVM.MachineState':t()) -> t() | 'nil'
 apps/evm/lib/evm/gas.ex:309: Function operation_cost/1 has no local return
@@ -54,7 +43,7 @@ apps/evm/lib/evm/gas.ex:309: Function operation_cost/2 has no local return
 apps/evm/lib/evm/gas.ex:309: The call 'Elixir.EVM.Gas':operation_cost(__@1::any(),__@2::any(),'nil','nil') breaks the contract (atom(),['Elixir.EVM':val()],['Elixir.EVM':val()],'Elixir.EVM.MachineState':t()) -> t() | 'nil'
 apps/evm/lib/evm/gas.ex:309: Function operation_cost/3 has no local return
 apps/evm/lib/evm/gas.ex:309: The call 'Elixir.EVM.Gas':operation_cost(__@1::any(),__@2::any(),__@3::any(),'nil') breaks the contract (atom(),['Elixir.EVM':val()],['Elixir.EVM':val()],'Elixir.EVM.MachineState':t()) -> t() | 'nil'
-apps/evm/lib/evm/gas.ex:570: Function gas_cost_for_nested_operation/2 will never be called
+apps/evm/lib/evm/gas.ex:576: Function gas_cost_for_nested_operation/2 will never be called
 apps/evm/lib/evm/machine_state.ex:53: Function subtract_gas/2 has no local return
 apps/evm/lib/evm/operation/environmental_information.ex:114: Function calldataload/2 has no local return
 apps/evm/lib/evm/operation/environmental_information.ex:117: The call 'Elixir.EVM.Helpers':decode_signed(binary()) breaks the contract (integer() | 'nil') -> 'Elixir.EVM':val() | 'nil'
@@ -137,11 +126,6 @@ tate_root':=_, _=>_}, _=>_}
 # using erlang 21 while we are using erlang 20. But we cannot yet update to
 # erlang 21 because we need rox to update
 apps/blockchain/lib/blockchain/block.ex:736: Function create_receipt/6 will never be called
-
--------------------------------
-# blockchain/chain.ex
--------------------------------
-apps/blockchain/lib/blockchain/chain.ex:94: Invalid type specification for function 'Elixir.Blockchain.Chain':load_chain/1. The success typing is (atom()) -> #{'__struct__':='Elixir.Blockchain.Chain', 'accounts':=map(), 'engine':=map(), 'genesis':=#{'author':=binary(), 'difficulty':=non_neg_integer(), 'extra_data':=binary(), 'gas_limit':=non_neg_integer(), 'parent_hash':=binary(), 'timestamp':=non_neg_integer()}, 'name':=_, 'nodes':=_, 'params':=#{'account_start_nonce':=non_neg_integer(), 'block_reward':=non_neg_integer(), 'eip155_transition':=_, 'eip86_transition':=non_neg_integer(), 'eip98_transition':=non_neg_integer(), 'gas_limit_bound_divisor':=non_neg_integer(), 'maximum_extra_data_size':=non_neg_integer(), 'min_gas_limit':=non_neg_integer()}}
 
 -------------------------------
 # blockchain/genesis.ex

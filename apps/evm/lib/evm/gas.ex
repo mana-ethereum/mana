@@ -146,7 +146,7 @@ defmodule EVM.Gas do
 
     gas_cost = memory_cost + operation_cost
 
-    if Configuration.fail_nested_operation_lack_of_gas?(exec_env.config) do
+    if Configuration.for(exec_env.config).fail_nested_operation_lack_of_gas?(exec_env.config) do
       if with_status, do: {:original, gas_cost}, else: gas_cost
     else
       cost_change_result =
@@ -309,7 +309,9 @@ defmodule EVM.Gas do
   def operation_cost(operation \\ nil, inputs \\ nil, machine_state \\ nil, exec_env \\ nil)
 
   def operation_cost(:exp, [_base, exponent], _machine_state, exec_env) do
-    @g_exp + Configuration.exp_byte_cost(exec_env.config) * MathHelper.integer_byte_size(exponent)
+    @g_exp +
+      Configuration.for(exec_env.config).exp_byte_cost(exec_env.config) *
+        MathHelper.integer_byte_size(exponent)
   end
 
   def operation_cost(:codecopy, [_memory_offset, _code_offset, length], _machine_state, _exec_env) do
@@ -331,7 +333,8 @@ defmodule EVM.Gas do
         _machine_state,
         exec_env
       ) do
-    Configuration.extcodecopy_cost(exec_env.config) + @g_copy * MathHelper.bits_to_words(length)
+    Configuration.for(exec_env.config).extcodecopy_cost(exec_env.config) +
+      @g_copy * MathHelper.bits_to_words(length)
   end
 
   def operation_cost(
@@ -348,7 +351,7 @@ defmodule EVM.Gas do
   end
 
   def operation_cost(:sstore, [key, new_value], _machine_state, exec_env) do
-    if Configuration.eip1283_sstore_gas_cost_changed?(exec_env.config) do
+    if Configuration.for(exec_env.config).eip1283_sstore_gas_cost_changed?(exec_env.config) do
       eip1283_sstore_gas_cost([key, new_value], exec_env)
     else
       basic_sstore_gas_cost([key, new_value], exec_env)
@@ -360,11 +363,11 @@ defmodule EVM.Gas do
 
     is_new_account =
       cond do
-        !Configuration.empty_account_value_transfer?(exec_env.config) &&
+        !Configuration.for(exec_env.config).empty_account_value_transfer?(exec_env.config) &&
             ExecEnv.non_existent_account?(exec_env, address) ->
           true
 
-        Configuration.empty_account_value_transfer?(exec_env.config) &&
+        Configuration.for(exec_env.config).empty_account_value_transfer?(exec_env.config) &&
           ExecEnv.non_existent_or_empty_account?(exec_env, address) &&
             ExecEnv.get_balance(exec_env) > 0 ->
           true
@@ -373,7 +376,9 @@ defmodule EVM.Gas do
           false
       end
 
-    Configuration.selfdestruct_cost(exec_env.config, new_account: is_new_account)
+    Configuration.for(exec_env.config).selfdestruct_cost(exec_env.config,
+      new_account: is_new_account
+    )
   end
 
   def operation_cost(
@@ -384,7 +389,7 @@ defmodule EVM.Gas do
       ) do
     to_address = Address.new(to_address)
 
-    Configuration.call_cost(exec_env.config) + call_value_cost(value) +
+    Configuration.for(exec_env.config).call_cost(exec_env.config) + call_value_cost(value) +
       new_account_cost(exec_env, to_address, value) + call_gas
   end
 
@@ -397,8 +402,8 @@ defmodule EVM.Gas do
     to_address = Address.new(to_address)
     value = 0
 
-    Configuration.call_cost(exec_env.config) + new_account_cost(exec_env, to_address, value) +
-      gas_limit
+    Configuration.for(exec_env.config).call_cost(exec_env.config) +
+      new_account_cost(exec_env, to_address, value) + gas_limit
   end
 
   def operation_cost(
@@ -407,7 +412,7 @@ defmodule EVM.Gas do
         _machine_state,
         exec_env
       ) do
-    Configuration.call_cost(exec_env.config) + gas_limit
+    Configuration.for(exec_env.config).call_cost(exec_env.config) + gas_limit
   end
 
   def operation_cost(
@@ -416,7 +421,8 @@ defmodule EVM.Gas do
         _machine_state,
         exec_env
       ) do
-    Configuration.call_cost(exec_env.config) + call_value_cost(value) + gas_limit
+    Configuration.for(exec_env.config).call_cost(exec_env.config) + call_value_cost(value) +
+      gas_limit
   end
 
   def operation_cost(:log0, [_offset, size | _], _machine_state, _exec_env) do
@@ -461,7 +467,7 @@ defmodule EVM.Gas do
         @g_high
 
       operation == :extcodesize ->
-        Configuration.extcodecopy_cost(exec_env.config)
+        Configuration.for(exec_env.config).extcodecopy_cost(exec_env.config)
 
       operation == :create ->
         @g_create
@@ -473,10 +479,10 @@ defmodule EVM.Gas do
         @g_blockhash
 
       operation == :balance ->
-        Configuration.balance_cost(exec_env.config)
+        Configuration.for(exec_env.config).balance_cost(exec_env.config)
 
       operation == :sload ->
-        Configuration.sload_cost(exec_env.config)
+        Configuration.for(exec_env.config).sload_cost(exec_env.config)
 
       operation == :jumpdest ->
         @g_jumpdest
@@ -504,12 +510,12 @@ defmodule EVM.Gas do
 
   defp new_account_cost(exec_env, address, value) do
     cond do
-      !Configuration.empty_account_value_transfer?(exec_env.config) &&
+      !Configuration.for(exec_env.config).empty_account_value_transfer?(exec_env.config) &&
           ExecEnv.non_existent_account?(exec_env, address) ->
         @g_newaccount
 
-      Configuration.empty_account_value_transfer?(exec_env.config) && value > 0 &&
-          ExecEnv.non_existent_or_empty_account?(exec_env, address) ->
+      Configuration.for(exec_env.config).empty_account_value_transfer?(exec_env.config) &&
+        value > 0 && ExecEnv.non_existent_or_empty_account?(exec_env, address) ->
         @g_newaccount
 
       true ->

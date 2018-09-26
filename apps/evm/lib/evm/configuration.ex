@@ -1,115 +1,119 @@
-defprotocol EVM.Configuration do
+defmodule EVM.Configuration do
   @moduledoc """
-  Protocol for defining hardfork configurations.
+  Behaviour for hardfork configurations.
   """
 
-  @type t :: module()
+  @type t :: struct()
 
   # EIP2
-  @spec contract_creation_cost(t) :: integer()
-  def contract_creation_cost(t)
+  @callback contract_creation_cost(t) :: integer()
 
   # EIP2
-  @spec fail_contract_creation_lack_of_gas?(t) :: boolean()
-  def fail_contract_creation_lack_of_gas?(t)
+  @callback fail_contract_creation_lack_of_gas?(t) :: boolean()
 
   # EIP2
-  @spec max_signature_s(t) :: atom()
-  def max_signature_s(t)
+  @callback max_signature_s(t) :: atom()
 
   # EIP7
-  @spec has_delegate_call?(t) :: boolean()
-  def has_delegate_call?(t)
+  @callback has_delegate_call?(t) :: boolean()
 
   # EIP150
-  @spec extcodesize_cost(t) :: integer()
-  def extcodesize_cost(t)
+  @callback extcodesize_cost(t) :: integer()
 
   # EIP150
-  @spec extcodecopy_cost(t) :: integer()
-  def extcodecopy_cost(t)
+  @callback extcodecopy_cost(t) :: integer()
 
   # EIP150
-  @spec balance_cost(t) :: integer()
-  def balance_cost(t)
+  @callback balance_cost(t) :: integer()
 
   # EIP150
-  @spec sload_cost(t) :: integer()
-  def sload_cost(t)
+  @callback sload_cost(t) :: integer()
 
   # EIP150
-  @spec call_cost(t) :: integer()
-  def call_cost(t)
+  @callback call_cost(t) :: integer()
 
   # EIP150
-  @spec selfdestruct_cost(t, keyword()) :: integer()
-  def selfdestruct_cost(t, params \\ [])
+  @callback selfdestruct_cost(t, keyword()) :: integer()
 
   # EIP150
-  @spec fail_nested_operation_lack_of_gas?(t) :: boolean()
-  def fail_nested_operation_lack_of_gas?(t)
+  @callback fail_nested_operation_lack_of_gas?(t) :: boolean()
 
   # EIP160
-  @spec exp_byte_cost(t) :: integer()
-  def exp_byte_cost(t)
+  @callback exp_byte_cost(t) :: integer()
 
   # EIP161-a
-  @spec increment_nonce_on_create?(t) :: boolean()
-  def increment_nonce_on_create?(t)
+  @callback increment_nonce_on_create?(t) :: boolean()
 
   # EIP161-b
-  @spec empty_account_value_transfer?(t) :: boolean()
-  def empty_account_value_transfer?(t)
+  @callback empty_account_value_transfer?(t) :: boolean()
 
   # EIP161-cd
-  @spec clean_touched_accounts?(t) :: boolean()
-  def clean_touched_accounts?(t)
+  @callback clean_touched_accounts?(t) :: boolean()
 
   # EIP170
-  @spec limit_contract_code_size?(t, integer) :: boolean()
-  def limit_contract_code_size?(t, size \\ 0)
+  @callback limit_contract_code_size?(t, integer) :: boolean()
 
   # EIP140
-  @spec has_revert?(t) :: boolean()
-  def has_revert?(t)
+  @callback has_revert?(t) :: boolean()
 
   # EIP211
-  @spec support_variable_length_return_value?(t) :: boolean()
-  def support_variable_length_return_value?(t)
+  @callback support_variable_length_return_value?(t) :: boolean()
 
   # EIP214
-  @spec has_static_call?(t) :: boolean()
-  def has_static_call?(t)
+  @callback has_static_call?(t) :: boolean()
 
   # EIP196
-  @spec has_ec_add_builtin?(t) :: boolean()
-  def has_ec_add_builtin?(t)
+  @callback has_ec_add_builtin?(t) :: boolean()
 
   # EIP196
-  @spec has_ec_mult_builtin?(t) :: boolean()
-  def has_ec_mult_builtin?(t)
+  @callback has_ec_mult_builtin?(t) :: boolean()
 
   # EIP197
-  @spec has_ec_pairing_builtin?(t) :: boolean()
-  def has_ec_pairing_builtin?(t)
+  @callback has_ec_pairing_builtin?(t) :: boolean()
 
   # EIP198
-  @spec has_mod_exp_builtin?(t) :: boolean()
-  def has_mod_exp_builtin?(t)
+  @callback has_mod_exp_builtin?(t) :: boolean()
 
   # EIP145
-  @spec has_shift_operations?(t) :: boolean()
-  def has_shift_operations?(t)
+  @callback has_shift_operations?(t) :: boolean()
 
   # EIP1052
-  @spec has_extcodehash?(t) :: boolean()
-  def has_extcodehash?(t)
+  @callback has_extcodehash?(t) :: boolean()
 
   # EIP1014
-  @spec has_create2?(t) :: boolean()
-  def has_create2?(t)
+  @callback has_create2?(t) :: boolean()
 
   # EIP1283
-  @spec eip1283_sstore_gas_cost_changed?(t) :: boolean()
-  def eip1283_sstore_gas_cost_changed?(t)
+  @callback eip1283_sstore_gas_cost_changed?(t) :: boolean()
+
+  @spec for(t) :: module()
+  def for(config) do
+    config.__struct__
+  end
+
+  @spec hardfork_config(String.t()) :: t()
+  def hardfork_config(hardfork) do
+    case hardfork do
+      "Frontier" ->
+        EVM.Configuration.Frontier.new()
+
+      "Homestead" ->
+        EVM.Configuration.Homestead.new()
+
+      "EIP150" ->
+        EVM.Configuration.EIP150.new()
+
+      "EIP158" ->
+        EVM.Configuration.EIP158.new()
+
+      "Byzantium" ->
+        EVM.Configuration.Byzantium.new()
+
+      "Constantinople" ->
+        EVM.Configuration.Constantinople.new()
+
+      _ ->
+        nil
+    end
+  end
 end

@@ -1,4 +1,8 @@
 defmodule EVM.Configuration.EIP150 do
+  @behaviour EVM.Configuration
+
+  alias EVM.Configuration.Homestead
+
   defstruct extcodesize_cost: 700,
             extcodecopy_cost: 700,
             balance_cost: 400,
@@ -7,107 +11,114 @@ defmodule EVM.Configuration.EIP150 do
             selfdestruct_cost: 5_000,
             new_account_destruction_cost: 25_000,
             fail_nested_operation: false,
-            fallback_config: EVM.Configuration.Homestead.new()
+            fallback_config: Homestead.new()
+
+  @type t :: %__MODULE__{}
 
   def new do
     %__MODULE__{}
   end
-end
 
-defimpl EVM.Configuration, for: EVM.Configuration.EIP150 do
-  alias EVM.Configuration
-
-  @spec contract_creation_cost(Configuration.t()) :: integer()
+  @impl true
   def contract_creation_cost(config), do: config.fallback_config.contract_creation_cost
 
-  @spec has_delegate_call?(Configuration.t()) :: boolean()
+  @impl true
   def has_delegate_call?(config), do: config.fallback_config.has_delegate_call
 
-  @spec max_signature_s(Configuration.t()) :: atom()
-  def max_signature_s(config), do: Configuration.max_signature_s(config.fallback_config)
+  @impl true
+  def max_signature_s(config), do: Homestead.max_signature_s(config.fallback_config)
 
-  @spec fail_contract_creation_lack_of_gas?(Configuration.t()) :: boolean()
-  def fail_contract_creation_lack_of_gas?(config),
-    do: config.fallback_config.fail_contract_creation
+  @impl true
+  def fail_contract_creation_lack_of_gas?(config) do
+    config.fallback_config.fail_contract_creation
+  end
 
-  @spec extcodesize_cost(Configuration.t()) :: integer()
+  @impl true
   def extcodesize_cost(config), do: config.extcodesize_cost
 
-  @spec extcodecopy_cost(Configuration.t()) :: integer()
+  @impl true
   def extcodecopy_cost(config), do: config.extcodecopy_cost
 
-  @spec balance_cost(Configuration.t()) :: integer()
+  @impl true
   def balance_cost(config), do: config.balance_cost
 
-  @spec sload_cost(Configuration.t()) :: integer()
+  @impl true
   def sload_cost(config), do: config.sload_cost
 
-  @spec call_cost(Configuration.t()) :: integer()
+  @impl true
   def call_cost(config), do: config.call_cost
 
-  @spec selfdestruct_cost(Configuration.t(), keyword()) :: integer()
+  @impl true
   def selfdestruct_cost(config, new_account: false), do: config.selfdestruct_cost
 
   def selfdestruct_cost(config, new_account: true) do
     config.selfdestruct_cost + config.new_account_destruction_cost
   end
 
-  @spec fail_nested_operation_lack_of_gas?(Configuration.t()) :: boolean()
+  @impl true
   def fail_nested_operation_lack_of_gas?(config), do: config.fail_nested_operation
 
-  @spec exp_byte_cost(Configuration.t()) :: integer()
-  def exp_byte_cost(config), do: Configuration.exp_byte_cost(config.fallback_config)
+  @impl true
+  def exp_byte_cost(config), do: Homestead.exp_byte_cost(config.fallback_config)
 
-  @spec limit_contract_code_size?(Configuration.t(), integer()) :: boolean()
-  def limit_contract_code_size?(config, _),
-    do: Configuration.limit_contract_code_size?(config.fallback_config)
+  @impl true
+  def limit_contract_code_size?(config, size) do
+    Homestead.limit_contract_code_size?(config.fallback_config, size)
+  end
 
-  @spec increment_nonce_on_create?(Configuration.t()) :: boolean()
-  def increment_nonce_on_create?(config),
-    do: Configuration.increment_nonce_on_create?(config.fallback_config)
+  @impl true
+  def increment_nonce_on_create?(config) do
+    Homestead.increment_nonce_on_create?(config.fallback_config)
+  end
 
-  @spec empty_account_value_transfer?(Configuration.t()) :: boolean()
-  def empty_account_value_transfer?(config),
-    do: Configuration.empty_account_value_transfer?(config.fallback_config)
+  @impl true
+  def empty_account_value_transfer?(config) do
+    Homestead.empty_account_value_transfer?(config.fallback_config)
+  end
 
-  @spec clean_touched_accounts?(Configuration.t()) :: boolean()
-  def clean_touched_accounts?(config),
-    do: Configuration.clean_touched_accounts?(config.fallback_config)
+  @impl true
+  def clean_touched_accounts?(config) do
+    Homestead.clean_touched_accounts?(config.fallback_config)
+  end
 
-  @spec has_revert?(Configuration.t()) :: boolean()
-  def has_revert?(config), do: Configuration.has_revert?(config.fallback_config)
+  @impl true
+  def has_revert?(config), do: Homestead.has_revert?(config.fallback_config)
 
-  @spec has_static_call?(Configuration.t()) :: boolean()
-  def has_static_call?(config), do: Configuration.has_static_call?(config.fallback_config)
+  @impl true
+  def has_static_call?(config), do: Homestead.has_static_call?(config.fallback_config)
 
-  @spec support_variable_length_return_value?(Configuration.t()) :: boolean()
-  def support_variable_length_return_value?(config),
-    do: Configuration.support_variable_length_return_value?(config.fallback_config)
+  @impl true
+  def support_variable_length_return_value?(config) do
+    Homestead.support_variable_length_return_value?(config.fallback_config)
+  end
 
-  @spec has_mod_exp_builtin?(Configuration.t()) :: boolean()
-  def has_mod_exp_builtin?(config), do: Configuration.has_mod_exp_builtin?(config.fallback_config)
+  @impl true
+  def has_mod_exp_builtin?(config), do: Homestead.has_mod_exp_builtin?(config.fallback_config)
 
-  @spec has_ec_add_builtin?(Configuration.t()) :: boolean()
-  def has_ec_add_builtin?(config), do: Configuration.has_ec_add_builtin?(config.fallback_config)
+  @impl true
+  def has_ec_add_builtin?(config), do: Homestead.has_ec_add_builtin?(config.fallback_config)
 
-  @spec has_ec_mult_builtin?(Configuration.t()) :: boolean()
-  def has_ec_mult_builtin?(config), do: Configuration.has_ec_mult_builtin?(config.fallback_config)
+  @impl true
+  def has_ec_mult_builtin?(config), do: Homestead.has_ec_mult_builtin?(config.fallback_config)
 
-  @spec has_ec_pairing_builtin?(Configuration.t()) :: boolean()
-  def has_ec_pairing_builtin?(config),
-    do: Configuration.has_ec_pairing_builtin?(config.fallback_config)
+  @impl true
+  def has_ec_pairing_builtin?(config) do
+    Homestead.has_ec_pairing_builtin?(config.fallback_config)
+  end
 
-  @spec has_shift_operations?(Configuration.t()) :: boolean()
-  def has_shift_operations?(config),
-    do: Configuration.has_shift_operations?(config.fallback_config)
+  @impl true
+  def has_shift_operations?(config) do
+    Homestead.has_shift_operations?(config.fallback_config)
+  end
 
-  @spec has_extcodehash?(Configuration.t()) :: boolean()
-  def has_extcodehash?(config), do: Configuration.has_extcodehash?(config.fallback_config)
+  @impl true
+  def has_extcodehash?(config), do: Homestead.has_extcodehash?(config.fallback_config)
 
-  @spec has_create2?(Configuration.t()) :: boolean()
-  def has_create2?(config), do: Configuration.has_create2?(config.fallback_config)
+  @impl true
+  def has_create2?(config), do: Homestead.has_create2?(config.fallback_config)
 
-  @spec eip1283_sstore_gas_cost_changed?(Configuration.t()) :: boolean()
-  def eip1283_sstore_gas_cost_changed?(config),
-    do: Configuration.eip1283_sstore_gas_cost_changed?(config.fallback_config)
+  @impl true
+  def eip1283_sstore_gas_cost_changed?(config) do
+    Homestead.eip1283_sstore_gas_cost_changed?(config.fallback_config)
+  end
 end

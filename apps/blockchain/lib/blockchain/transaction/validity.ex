@@ -43,7 +43,7 @@ defmodule Blockchain.Transaction.Validity do
   @spec validate_signature(Transaction.t(), EVM.Configuration.t()) ::
           :ok | {:invalid, :invalid_signature}
   defp validate_signature(trx, config) do
-    max_s_value = EVM.Configuration.max_signature_s(config)
+    max_s_value = EVM.Configuration.for(config).max_signature_s(config)
 
     if Transaction.Signature.is_signature_valid?(trx.r, trx.s, trx.v, max_s: max_s_value) do
       :ok

@@ -6,7 +6,7 @@ defmodule EVM.Refunds.Sstore do
 
   @spec refund({integer(), integer()}, ExecEnv.t()) :: integer()
   def refund({key, new_value}, exec_env) do
-    if Configuration.eip1283_sstore_gas_cost_changed?(exec_env.config) do
+    if Configuration.for(exec_env.config).eip1283_sstore_gas_cost_changed?(exec_env.config) do
       eip1283_sstore_refund({key, new_value}, exec_env)
     else
       basic_sstore_refund({key, new_value}, exec_env)

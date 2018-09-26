@@ -1,4 +1,6 @@
 defmodule EVM.Configuration.Frontier do
+  @behaviour EVM.Configuration
+
   defstruct contract_creation_cost: 21_000,
             has_delegate_call: false,
             fail_contract_creation: false,
@@ -27,93 +29,91 @@ defmodule EVM.Configuration.Frontier do
             has_create2: false,
             eip1283_sstore_gas_cost_changed: false
 
+  @type t :: %__MODULE__{}
+
   def new do
     %__MODULE__{}
   end
-end
 
-defimpl EVM.Configuration, for: EVM.Configuration.Frontier do
-  alias EVM.Configuration
-
-  @spec contract_creation_cost(Configuration.t()) :: integer()
+  @impl true
   def contract_creation_cost(config), do: config.contract_creation_cost
 
-  @spec has_delegate_call?(Configuration.t()) :: boolean()
+  @impl true
   def has_delegate_call?(config), do: config.has_delegate_call
 
-  @spec max_signature_s(Configuration.t()) :: atom()
+  @impl true
   def max_signature_s(config), do: config.max_signature_s
 
-  @spec fail_contract_creation_lack_of_gas?(Configuration.t()) :: boolean()
+  @impl true
   def fail_contract_creation_lack_of_gas?(config), do: config.fail_contract_creation
 
-  @spec extcodesize_cost(Configuration.t()) :: integer()
+  @impl true
   def extcodesize_cost(config), do: config.extcodesize_cost
 
-  @spec extcodecopy_cost(Configuration.t()) :: integer()
+  @impl true
   def extcodecopy_cost(config), do: config.extcodecopy_cost
 
-  @spec balance_cost(Configuration.t()) :: integer()
+  @impl true
   def balance_cost(config), do: config.balance_cost
 
-  @spec sload_cost(Configuration.t()) :: integer()
+  @impl true
   def sload_cost(config), do: config.sload_cost
 
-  @spec call_cost(Configuration.t()) :: integer()
+  @impl true
   def call_cost(config), do: config.call_cost
 
-  @spec selfdestruct_cost(Configuration.t(), keyword()) :: integer()
+  @impl true
   def selfdestruct_cost(config, _params), do: config.selfdestruct_cost
 
-  @spec fail_nested_operation_lack_of_gas?(Configuration.t()) :: boolean()
+  @impl true
   def fail_nested_operation_lack_of_gas?(config), do: config.fail_nested_operation
 
-  @spec exp_byte_cost(Configuration.t()) :: integer()
+  @impl true
   def exp_byte_cost(config), do: config.exp_byte_cost
 
-  @spec limit_contract_code_size?(Configuration.t(), integer()) :: boolean()
+  @impl true
   def limit_contract_code_size?(config, _), do: config.limit_contract_code_size
 
-  @spec increment_nonce_on_create?(Configuration.t()) :: boolean()
+  @impl true
   def increment_nonce_on_create?(config), do: config.increment_nonce_on_create
 
-  @spec empty_account_value_transfer?(Configuration.t()) :: boolean()
+  @impl true
   def empty_account_value_transfer?(config), do: config.empty_account_value_transfer
 
-  @spec clean_touched_accounts?(Configuration.t()) :: boolean()
+  @impl true
   def clean_touched_accounts?(config), do: config.clean_touched_accounts
 
-  @spec has_revert?(Configuration.t()) :: boolean()
+  @impl true
   def has_revert?(config), do: config.has_revert
 
-  @spec has_static_call?(Configuration.t()) :: boolean()
+  @impl true
   def has_static_call?(config), do: config.has_static_call
 
-  @spec support_variable_length_return_value?(Configuration.t()) :: boolean()
+  @impl true
   def support_variable_length_return_value?(config),
     do: config.support_variable_length_return_value
 
-  @spec has_mod_exp_builtin?(Configuration.t()) :: boolean()
+  @impl true
   def has_mod_exp_builtin?(config), do: config.has_mod_exp_builtin
 
-  @spec has_ec_add_builtin?(Configuration.t()) :: boolean()
+  @impl true
   def has_ec_add_builtin?(config), do: config.has_ec_add_builtin
 
-  @spec has_ec_mult_builtin?(Configuration.t()) :: boolean()
+  @impl true
   def has_ec_mult_builtin?(config), do: config.has_ec_mult_builtin
 
-  @spec has_ec_pairing_builtin?(Configuration.t()) :: boolean()
+  @impl true
   def has_ec_pairing_builtin?(config), do: config.has_ec_pairing_builtin
 
-  @spec has_shift_operations?(Configuration.t()) :: boolean()
+  @impl true
   def has_shift_operations?(config), do: config.has_shift_operations
 
-  @spec has_extcodehash?(Configuration.t()) :: boolean()
+  @impl true
   def has_extcodehash?(config), do: config.has_extcodehash
 
-  @spec has_create2?(Configuration.t()) :: boolean()
+  @impl true
   def has_create2?(config), do: config.has_create2
 
-  @spec eip1283_sstore_gas_cost_changed?(Configuration.t()) :: boolean()
+  @impl true
   def eip1283_sstore_gas_cost_changed?(config), do: config.eip1283_sstore_gas_cost_changed
 end
