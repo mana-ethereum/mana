@@ -21,7 +21,7 @@ defmodule Blockchain.Interface.AccountInterfaceTest do
       address = <<1>>
       state_with_account = Account.reset_account(state, address)
 
-      {result, nil} =
+      result =
         state_with_account
         |> AccountInterface.new()
         |> AccountInterface.increment_account_nonce(address)
@@ -56,13 +56,11 @@ defmodule Blockchain.Interface.AccountInterfaceTest do
         |> AccountInterface.new()
         |> AccountInterface.transfer_wei!(from_account_address, to_account_address, transfer_wei)
 
-      {new_from_account, nil} =
-        AccountInterface.account(updated_account_interface, from_account_address)
+      new_from_account = AccountInterface.account(updated_account_interface, from_account_address)
 
       assert new_from_account.balance == from_account_balance - transfer_wei
 
-      {new_to_account, nil} =
-        AccountInterface.account(updated_account_interface, to_account_address)
+      new_to_account = AccountInterface.account(updated_account_interface, to_account_address)
 
       assert new_to_account.balance == transfer_wei
     end
@@ -78,7 +76,7 @@ defmodule Blockchain.Interface.AccountInterfaceTest do
         |> Account.reset_account(address)
         |> AccountInterface.new()
         |> AccountInterface.put_code(address, code)
-        |> AccountInterface.account(address)
+        |> AccountInterface.account_with_code(address)
 
       assert account.code_hash ==
                <<241, 136, 94, 218, 84, 183, 160, 83, 49, 140, 212, 30, 32, 147, 34, 13, 171, 21,
@@ -133,7 +131,7 @@ defmodule Blockchain.Interface.AccountInterfaceTest do
         code_hash: <<0x01, 0x02>>
       }
 
-      {found_account, _} =
+      found_account =
         state
         |> Account.put_account(address, account)
         |> AccountInterface.new()
@@ -155,7 +153,7 @@ defmodule Blockchain.Interface.AccountInterfaceTest do
         code_hash: <<0x01, 0x02>>
       }
 
-      {found_account, _} =
+      found_account =
         state
         |> Account.put_account(address, account)
         |> AccountInterface.new()
@@ -177,7 +175,7 @@ defmodule Blockchain.Interface.AccountInterfaceTest do
         code_hash: <<0x01, 0x02>>
       }
 
-      {found_account, _} =
+      found_account =
         state
         |> Account.put_account(address, account)
         |> AccountInterface.new()
@@ -206,7 +204,7 @@ defmodule Blockchain.Interface.AccountInterfaceTest do
         |> Account.reset_account(address)
         |> AccountInterface.new(cache)
 
-      assert AccountInterface.account(account_interface, address) == {account, code}
+      assert AccountInterface.account_with_code(account_interface, address) == {account, code}
     end
 
     test "fetches account from storage", %{state: state} do
@@ -217,7 +215,7 @@ defmodule Blockchain.Interface.AccountInterfaceTest do
         |> Account.reset_account(address)
         |> AccountInterface.new()
 
-      {result, nil} = AccountInterface.account(account_interface, address)
+      result = AccountInterface.account(account_interface, address)
 
       assert result == %Blockchain.Account{
                balance: 0,

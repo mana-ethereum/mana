@@ -51,7 +51,7 @@ defmodule Blockchain.Contract.CreateContract do
   def execute(params) do
     original_account_interface = params.account_interface
     contract_address = new_account_address(params)
-    {account, _} = AccountInterface.account(original_account_interface, contract_address)
+    account = AccountInterface.account(original_account_interface, contract_address)
 
     if is_nil(account) || Account.uninitialized_contract?(account) do
       result = {rem_gas, _, _, output} = create(params, contract_address)
@@ -129,7 +129,7 @@ defmodule Blockchain.Contract.CreateContract do
 
   @spec init_account(t, EVM.address()) :: AccountInterface.t()
   defp init_account(params, address) do
-    {account, _code} = AccountInterface.account(params.account_interface, address)
+    account = AccountInterface.account(params.account_interface, address)
 
     account_interface =
       if is_nil(account) do
@@ -197,7 +197,7 @@ defmodule Blockchain.Contract.CreateContract do
     if params.new_account_address do
       params.new_account_address
     else
-      {sender_account, _} = AccountInterface.account(params.account_interface, params.sender)
+      sender_account = AccountInterface.account(params.account_interface, params.sender)
       Account.Address.new(params.sender, sender_account.nonce)
     end
   end

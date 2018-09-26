@@ -150,7 +150,7 @@ defmodule Blockchain.Contract.CreateContractTest do
         block_header: %Block.Header{nonce: 1}
       }
 
-      {_, {account_interface, gas, sub_state}} = Contract.create(params)
+      {_, {account_interface, _gas, _sub_state}} = Contract.create(params)
       state = AccountInterface.commit(account_interface).state
 
       addresses = [<<0x10::160>>, Account.Address.new(<<0x10::160>>, 2)]
