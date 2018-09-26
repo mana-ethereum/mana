@@ -1,7 +1,7 @@
 defmodule Blockchain.Account do
   @moduledoc """
   Represents the account state,
-  as defined in Section 4.1 of the Yellow Paper.
+  as defined in Section 4.1 of the Yellow Paper
   """
 
   alias ExthCrypto.Hash.Keccak
@@ -14,7 +14,7 @@ defmodule Blockchain.Account do
   # State defined in Section 4.1 of the Yellow Paper:
   # nonce: σ_n
   # balance: σ_b
-  # storate_root: σ_s
+  # storage_root: σ_s
   # code_hash: σ_c
   defstruct nonce: 0,
             balance: 0,
@@ -29,8 +29,10 @@ defmodule Blockchain.Account do
         }
 
   @doc """
-  Checks whether or not an account is a non-contract account.
-  This is defined in the latter part of Section 4.1 of the Yellow Paper.
+  Checks whether or not an account is a non-contract account. 
+  If the codeHash field is the Keccak-256 hash of the empty string, then the 
+  node represents a simple account, sometimes referred to as a “non-contract” 
+  account. This is defined in the latter part of Section 4.1 of the Yellow Paper.
 
   ## Examples
 
@@ -105,7 +107,8 @@ defmodule Blockchain.Account do
   end
 
   @doc """
-  Loads an account from an address, as defined in Eq.(9), Eq.(10), and Eq.(12) of the Yellow Paper.
+  Loads an account from an address, as defined in Eq.(9), Eq.(10), and Eq.(12) 
+  of the Yellow Paper.
 
   ## Examples
 
@@ -139,12 +142,12 @@ defmodule Blockchain.Account do
   end
 
   @doc """
-  Checks for an empty code hash and a zero nonce. This is the equivalent of
-  any empty account check regardless of whether the account has a balance.
-  This check is needed when an account hides money in one of it's contract
-  addresses and later creates a contract to get the money out. This technique
-  is documented as `Quirk #1 - hiding in plain sight` in the [Ethereum quirks and vulns](http://swende.se/blog/Ethereum_quirks_and_vulns.html)
-  blog post.
+  Checks for an empty code hash and a zero nonce. This is the equivalent of any
+  empty account check regardless of whether the account has a balance. This
+  check is needed when an account hides money in one of it's contract addresses
+  and later creates a contract to get the money out. This technique is
+  documented as `Quirk #1 - hiding in plain sight` in the [Ethereum quirks and
+  vulns](http://swende.se/blog/Ethereum_quirks_and_vulns.html) blog post.
   """
   @spec uninitialized_contract?(t()) :: boolean()
   def uninitialized_contract?(account) do
@@ -300,9 +303,9 @@ defmodule Blockchain.Account do
   end
 
   @doc """
-  Simple helper function to adjust wei in an account. Wei may be
-  positive (to add wei) or negative (to remove it). This function
-  will raise if we attempt to reduce wei in an account to less than zero.
+  Simple helper function to adjust wei in an account. Wei may be positive (to
+  add wei) or negative (to remove it). This function will raise if we attempt to
+  reduce wei in an account to less than zero.
 
   ## Examples
 
@@ -339,9 +342,9 @@ defmodule Blockchain.Account do
   end
 
   @doc """
-  Even simpler helper function to adjust wei in an account negatively. Wei
-  may be positive (to subtract wei) or negative (to add it). This function
-  will raise if we attempt to reduce wei in an account to less than zero.
+  Even simpler helper function to adjust wei in an account negatively. Wei may
+  be positive (to subtract wei) or negative (to add it). This function will
+  raise if we attempt to reduce wei in an account to less than zero.
 
   ## Examples
 
@@ -374,14 +377,14 @@ defmodule Blockchain.Account do
   This handles the fact that a new account may be shadow-created if
   it receives eth. See Section 8, Eq.(100-104) of the Yellow Paper.
 
-  The Yellow Paper assumes this function will always succeed
-  (as the checks occur before this function is called),
-  but we'll check just in case this function is not properly called.
-  The only case will be if the sending account is nil or has an insufficient balance,
-  but we add a few extra checks just in case.
+  The Yellow Paper assumes this function will always succeed (as the checks
+  occur before this function is called), but we'll check just in case this
+  function is not properly called. The only case will be if the sending account
+  is nil or has an insufficient balance, but we add a few extra checks just in
+  case.
 
-  Note: transferring value to an empty account still adds value to said account,
-        even though it's effectively a zombie.
+  **Note**: transferring value to an empty account still adds value to said 
+  account, even though it's effectively a zombie.
 
   ## Examples
 
@@ -453,11 +456,10 @@ defmodule Blockchain.Account do
 
   @doc """
   Puts code into a given account.
-  Note, this will handle the aspect that we need to store the
-  `code_hash` outside of the contract itself and
-  only store the KEC of the code_hash.
 
-  This is defined in Section 4.1 under `codeHash` in the Yellow Paper.
+  **Note**: we need to store the `code_hash` outside of the contract itself and
+  only store the KEC of the code_hash. See Section 4.1 under `codeHash` in the 
+  Yellow Paper.
 
   All such code fragments are contained in the
   state database under their corresponding hashes for later retrieval.
@@ -485,19 +487,18 @@ defmodule Blockchain.Account do
   end
 
   @doc """
-  Returns the machine code associated with the account at the given
-  address. This will return nil if the contract has
-  no associated code (i.e. it is a simple account).
+  Returns the machine code associated with the account at the given address.
+  This will return nil if the contract has no associated code (i.e. it is a
+  simple account).
 
-  We may return `:not_found`, indicating that we were not able to
-  find the given code hash in the state trie.
+  We may return `:not_found`, indicating that we were not able to find the given
+  code hash in the state trie.
 
-  Alternatively, we will return `{:ok, machine_code}` where `machine_code`
-  may be the empty string `<<>>`.
+  Alternatively, we will return `{:ok, machine_code}` where `machine_code` may
+  be the empty string `<<>>`.
 
-  Note from Yellow Paper:
-    > "it is assumed that the client will have stored the pair (KEC(I_b), I_b)
-       at some point prior in order to make the determinatio of Ib feasible"
+  **Note**: "it is assumed that the client will have stored the pair  (KEC(I_b),
+  I_b) at some point prior in order to make the determination of Ib feasible"
 
   ## Examples
 

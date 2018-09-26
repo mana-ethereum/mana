@@ -1,6 +1,8 @@
 defmodule Blockchain do
   @moduledoc """
-  The Blockchain application is responsible for Ethereum blockchain processes and capabilities as defined in the [Ethereum yellow paper](https://ethereum.github.io/yellowpaper/paper.pdf)
+  The Blockchain application is responsible for Ethereum blockchain processes
+  and capabilities as defined in the 
+  [Ethereum yellow paper](https://ethereum.github.io/yellowpaper/paper.pdf). Equation references are based on the Yellow Paper - Byzantium Version e94ebda.
 
   Application functionality includes:
   * Block encoding

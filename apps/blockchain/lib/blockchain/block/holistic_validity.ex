@@ -1,7 +1,7 @@
 defmodule Blockchain.Block.HolisticValidity do
   @moduledoc """
-  This module is responsible for holistic validity check,
-  as defined in Eq.(29) of the Yellow Paper.
+  This module is responsible for holistic validity check, as defined in Eq.(31),
+  section 4.3.2, of the Yellow Paper - Byzantium Version e94ebda.
   """
 
   alias Blockchain.{Block, Genesis, Chain}
@@ -11,9 +11,8 @@ defmodule Blockchain.Block.HolisticValidity do
   Determines whether or not a block is valid. This is
   defined in Eq.(29) of the Yellow Paper.
 
-  Note, this is a serious intensive operation, and not
-  faint of heart (since we need to run all transaction
-  in the block to validate the block).
+  This is an intensive operation because we must run all transactions in the 
+  block to validate it
 
   ## Examples
 
@@ -133,3 +132,4 @@ defmodule Blockchain.Block.HolisticValidity do
     end
   end
 end
+

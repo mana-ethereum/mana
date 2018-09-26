@@ -108,9 +108,8 @@ defmodule BitHelper do
 
   @doc """
   Similar to `:binary.encode_unsigned/1`, except we encode `0` as
-  `<<>>`, the empty string. This is because the specification says that
-  we cannot have any leading zeros, and so having <<0>> by itself is
-  leading with a zero and prohibited.
+  `<<>>`, the empty string. The specification does not allow leading zeros; 
+  <<0>> by itself is leading with a zero and prohibited.
 
   ## Examples
 

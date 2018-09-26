@@ -2,6 +2,10 @@ defmodule Blockchain.Account.Storage do
   @moduledoc """
   Represents the account storage,
   as defined in Section 4.1 of the Yellow Paper.
+
+  A mapping between addresses and account states is stored in a modified Merkle 
+  Patricia tree.  The trie requires a simple database backend 
+  (the state database) that maintains a mapping of bytearrays to bytearrays.
   """
 
   alias ExthCrypto.Hash.Keccak
