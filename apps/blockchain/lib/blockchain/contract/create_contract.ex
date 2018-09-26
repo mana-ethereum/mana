@@ -135,7 +135,7 @@ defmodule Blockchain.Contract.CreateContract do
       if is_nil(account) do
         AccountInterface.reset_account(params.account_interface, address)
       else
-        params.account_interface.state
+        params.account_interface
       end
 
     AccountInterface.transfer_wei!(account_interface, params.sender, address, params.endowment)
