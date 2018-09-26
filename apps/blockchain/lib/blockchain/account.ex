@@ -627,4 +627,14 @@ defmodule Blockchain.Account do
   def reset_account(state, address) do
     put_account(state, address, %__MODULE__{})
   end
+
+  @spec empty_keccak() :: binary()
+  def empty_keccak do
+    @empty_keccak
+  end
+
+  @spec empty_trie() :: binary()
+  def empty_trie do
+    @empty_trie
+  end
 end

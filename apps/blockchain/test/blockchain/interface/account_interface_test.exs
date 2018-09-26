@@ -221,13 +221,9 @@ defmodule Blockchain.Interface.AccountInterfaceTest do
 
       assert result == %Blockchain.Account{
                balance: 0,
-               code_hash:
-                 <<197, 210, 70, 1, 134, 247, 35, 60, 146, 126, 125, 178, 220, 199, 3, 192, 229,
-                   0, 182, 83, 202, 130, 39, 59, 123, 250, 216, 4, 93, 133, 164, 112>>,
+               code_hash: Account.empty_keccak(),
                nonce: 0,
-               storage_root:
-                 <<86, 232, 31, 23, 27, 204, 85, 166, 255, 131, 69, 230, 146, 192, 248, 110, 91,
-                   72, 224, 27, 153, 108, 173, 192, 1, 98, 47, 181, 227, 99, 180, 33>>
+               storage_root: Account.empty_trie()
              }
     end
   end
