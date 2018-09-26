@@ -107,7 +107,7 @@ defmodule GenerateStateTests do
     completed_tests =
       test["post"]
       |> Enum.reduce(completed_tests, fn {hardfork, _test_data}, completed_tests ->
-        hardfork_configuration = configuration(hardfork)
+        hardfork_configuration = EVM.Configuration.hardfork_config(hardfork)
 
         if hardfork_configuration do
           run_transaction(
@@ -203,31 +203,6 @@ defmodule GenerateStateTests do
       end)
 
     completed_tests
-  end
-
-  def configuration(hardfork) do
-    case hardfork do
-      "Frontier" ->
-        Frontier.new()
-
-      "Homestead" ->
-        Homestead.new()
-
-      "EIP150" ->
-        EIP150.new()
-
-      "EIP158" ->
-        EIP158.new()
-
-      "Byzantium" ->
-        Byzantium.new()
-
-      "Constantinople" ->
-        Constantinople.new()
-
-      _ ->
-        nil
-    end
   end
 
   defp populate_init_or_data(tx, data) do

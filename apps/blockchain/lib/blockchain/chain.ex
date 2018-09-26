@@ -104,7 +104,7 @@ defmodule Blockchain.Chain do
       iex> Blockchain.Chain.load_chain(:ropsten).genesis.difficulty
       0x100000
   """
-  @spec load_chain(atom(), EVM.Configuration.t()) :: t
+  @spec load_chain(atom(), EVM.Configuration.t() | nil) :: t
   def load_chain(chain, evm_config \\ nil) do
     chain_data = read_chain!(chain)
 
@@ -135,7 +135,7 @@ defmodule Blockchain.Chain do
       "Frontier (Test)"
   """
   def test_config(hardfork) when is_binary(hardfork) do
-    config = evm_config(hardfork)
+    config = EVM.Configuration.hardfork_config(hardfork)
 
     case hardfork do
       "Frontier" ->
@@ -155,31 +155,6 @@ defmodule Blockchain.Chain do
 
       "Constantinople" ->
         load_chain(:constantinople_test, config)
-
-      _ ->
-        nil
-    end
-  end
-
-  def evm_config(hardfork) do
-    case hardfork do
-      "Frontier" ->
-        EVM.Configuration.Frontier.new()
-
-      "Homestead" ->
-        EVM.Configuration.Homestead.new()
-
-      "EIP150" ->
-        EVM.Configuration.EIP150.new()
-
-      "EIP158" ->
-        EVM.Configuration.EIP158.new()
-
-      "Byzantium" ->
-        EVM.Configuration.Byzantium.new()
-
-      "Constantinople" ->
-        EVM.Configuration.Constantinople.new()
 
       _ ->
         nil

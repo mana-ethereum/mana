@@ -27,7 +27,7 @@ defmodule StateTestRunner do
   end
 
   defp run_test({test_name, test}, hardfork) do
-    hardfork_configuration = configuration(hardfork)
+    hardfork_configuration = EVM.Configuration.hardfork_config(hardfork)
 
     test["post"][hardfork]
     |> Enum.with_index()
@@ -91,31 +91,6 @@ defmodule StateTestRunner do
         logs_hash_actual: logs_hash
       }
     end)
-  end
-
-  def configuration(hardfork) do
-    case hardfork do
-      "Frontier" ->
-        EVM.Configuration.Frontier.new()
-
-      "Homestead" ->
-        EVM.Configuration.Homestead.new()
-
-      "EIP150" ->
-        EVM.Configuration.EIP150.new()
-
-      "EIP158" ->
-        EVM.Configuration.EIP158.new()
-
-      "Byzantium" ->
-        EVM.Configuration.Byzantium.new()
-
-      "Constantinople" ->
-        EVM.Configuration.Constantinople.new()
-
-      _ ->
-        nil
-    end
   end
 
   defp populate_init_or_data(tx, data) do

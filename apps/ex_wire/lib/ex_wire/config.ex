@@ -101,7 +101,10 @@ defmodule ExWire.Config do
 
   @spec chain() :: Chain.t()
   def chain do
-    get_env!(:chain) |> Chain.load_chain()
+    case get_env!(:chain) do
+      chain when is_atom(chain) -> Chain.load_chain(chain)
+      _ -> raise "Chain config should be an atom"
+    end
   end
 
   @spec commitment_count() :: integer()

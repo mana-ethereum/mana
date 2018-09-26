@@ -149,36 +149,36 @@ defmodule EVM.Functions do
 
       case operation_metadata.sym do
         :delegatecall ->
-          if Configuration.has_delegate_call?(config), do: operation_metadata
+          if Configuration.for(config).has_delegate_call?(config), do: operation_metadata
 
         :revert ->
-          if Configuration.has_revert?(config), do: operation_metadata
+          if Configuration.for(config).has_revert?(config), do: operation_metadata
 
         :staticcall ->
-          if Configuration.has_static_call?(config), do: operation_metadata
+          if Configuration.for(config).has_static_call?(config), do: operation_metadata
 
         :returndatasize ->
-          if Configuration.support_variable_length_return_value?(config),
+          if Configuration.for(config).support_variable_length_return_value?(config),
             do: operation_metadata
 
         :returndatacopy ->
-          if Configuration.support_variable_length_return_value?(config),
+          if Configuration.for(config).support_variable_length_return_value?(config),
             do: operation_metadata
 
         :shl ->
-          if Configuration.has_shift_operations?(config), do: operation_metadata
+          if Configuration.for(config).has_shift_operations?(config), do: operation_metadata
 
         :shr ->
-          if Configuration.has_shift_operations?(config), do: operation_metadata
+          if Configuration.for(config).has_shift_operations?(config), do: operation_metadata
 
         :sar ->
-          if Configuration.has_shift_operations?(config), do: operation_metadata
+          if Configuration.for(config).has_shift_operations?(config), do: operation_metadata
 
         :extcodehash ->
-          if Configuration.has_extcodehash?(config), do: operation_metadata
+          if Configuration.for(config).has_extcodehash?(config), do: operation_metadata
 
         :create2 ->
-          if Configuration.has_create2?(config), do: operation_metadata
+          if Configuration.for(config).has_create2?(config), do: operation_metadata
 
         _ ->
           operation_metadata

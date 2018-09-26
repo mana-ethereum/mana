@@ -380,7 +380,7 @@ defmodule Blockchain.Transaction do
   end
 
   defp clean_touched_accounts(state, sub_state, config) do
-    if Configuration.clean_touched_accounts?(config) do
+    if Configuration.for(config).clean_touched_accounts?(config) do
       Enum.reduce(sub_state.touched_accounts, state, fn address, new_state ->
         account = Account.get_account(state, address)
 
@@ -433,7 +433,7 @@ defmodule Blockchain.Transaction do
 
   defp transaction_cost(tx, config) do
     if contract_creation?(tx) do
-      Configuration.contract_creation_cost(config)
+      Configuration.for(config).contract_creation_cost(config)
     else
       Gas.g_transaction()
     end

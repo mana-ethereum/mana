@@ -151,7 +151,7 @@ defmodule GenerateBlockchainTests do
   end
 
   defp load_chain(hardfork) do
-    config = evm_config(hardfork)
+    config = EVM.Configuration.hardfork_config(hardfork)
 
     case hardfork do
       "Frontier" ->
@@ -171,31 +171,6 @@ defmodule GenerateBlockchainTests do
 
       "Constantinople" ->
         Chain.load_chain(:constantinople_test, config)
-
-      _ ->
-        nil
-    end
-  end
-
-  defp evm_config(hardfork) do
-    case hardfork do
-      "Frontier" ->
-        EVM.Configuration.Frontier.new()
-
-      "Homestead" ->
-        EVM.Configuration.Homestead.new()
-
-      "EIP150" ->
-        EVM.Configuration.EIP150.new()
-
-      "EIP158" ->
-        EVM.Configuration.EIP158.new()
-
-      "Byzantium" ->
-        EVM.Configuration.Byzantium.new()
-
-      "Constantinople" ->
-        EVM.Configuration.Constantinople.new()
 
       _ ->
         nil

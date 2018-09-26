@@ -268,7 +268,7 @@ defmodule EVM.Operation.System do
       value <= account_balance and exec_env.stack_depth < EVM.Functions.max_stack_depth()
 
     available_gas =
-      if Configuration.fail_nested_operation_lack_of_gas?(exec_env.config) do
+      if Configuration.for(exec_env.config).fail_nested_operation_lack_of_gas?(exec_env.config) do
         machine_state.gas
       else
         EVM.Helpers.all_but_one_64th(machine_state.gas)
