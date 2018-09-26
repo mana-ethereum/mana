@@ -181,6 +181,7 @@ apps/blockchain/lib/blockchain/interface/account_interface.ex
 apps/blockchain/scripts/generate_state_tests.ex
 
 -------------------------------
-# Ignores blockchain test runner
+# Ignores test runners
 -------------------------------
 apps/blockchain/test/support/blockchain_test_runner.ex
+apps/blockchain/test/support/state_test_runner.ex

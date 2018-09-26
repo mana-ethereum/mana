@@ -161,7 +161,7 @@ defmodule Blockchain.Chain do
     end
   end
 
-  defp evm_config(hardfork) do
+  def evm_config(hardfork) do
     case hardfork do
       "Frontier" ->
         EVM.Configuration.Frontier.new()

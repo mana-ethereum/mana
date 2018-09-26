@@ -21,6 +21,7 @@ defmodule Mix.Tasks.CommonTests.Run do
   ## Command line options
 
   * `--fork` - the name of the hardfork to run (optional)
+  * `--hardfork` - alias for `--fork`
   """
 
   @preferred_cli_env :test
