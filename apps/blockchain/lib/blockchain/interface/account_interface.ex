@@ -340,9 +340,25 @@ defimpl EVM.Interface.AccountInterface, for: Blockchain.Interface.AccountInterfa
     cached_value = Cache.current_value(account_interface.cache, address, key)
 
     case cached_value do
-      nil -> Account.get_storage(account_interface.state, address, key)
-      :deleted -> :key_not_found
-      _ -> {:ok, cached_value}
+      nil ->
+        stored_value = Account.get_storage(account_interface.state, address, key)
+
+        case stored_value do
+          :account_not_found ->
+            {cached_account, _code} =
+              BlockchainAccountInterface.account(account_interface, address)
+
+            if cached_account, do: :key_not_found, else: :account_not_found
+
+          stored_value ->
+            stored_value
+        end
+
+      :deleted ->
+        :key_not_found
+
+      _ ->
+        {:ok, cached_value}
     end
   end
 

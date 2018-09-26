@@ -197,7 +197,7 @@ defmodule Blockchain.Contract.CreateContract do
     if params.new_account_address do
       params.new_account_address
     else
-      sender_account = Account.get_account(params.account_interface.state, params.sender)
+      {sender_account, _} = AccountInterface.account(params.account_interface, params.sender)
       Account.Address.new(params.sender, sender_account.nonce)
     end
   end
