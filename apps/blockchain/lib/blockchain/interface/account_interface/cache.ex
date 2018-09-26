@@ -64,9 +64,9 @@ defmodule Blockchain.Interface.AccountInterface.Cache do
 
   @spec commit(t(), EVM.state()) :: EVM.state()
   def commit(cache_struct, state) do
-    committed_storage = commit_storage(cache_struct, state)
+    committed_accounts = commit_accounts(cache_struct, state)
 
-    commit_accounts(cache_struct, committed_storage)
+    commit_storage(cache_struct, committed_accounts)
   end
 
   @spec commit_storage(t(), EVM.state()) :: EVM.state()
