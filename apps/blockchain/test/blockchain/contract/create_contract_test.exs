@@ -34,7 +34,8 @@ defmodule Blockchain.Contract.CreateContractTest do
         block_header: %Block.Header{nonce: 1}
       }
 
-      {_, {%{state: state}, gas, sub_state}} = Contract.create(params)
+      {_, {account_interface, gas, sub_state}} = Contract.create(params)
+      state = AccountInterface.commit(account_interface).state
 
       expected_root_hash =
         <<9, 235, 32, 146, 153, 242, 209, 192, 224, 61, 214, 174, 48, 24, 148, 28, 51, 254, 7, 82,
@@ -149,7 +150,8 @@ defmodule Blockchain.Contract.CreateContractTest do
         block_header: %Block.Header{nonce: 1}
       }
 
-      {_, {%{state: state}, gas, sub_state}} = Contract.create(params)
+      {_, {account_interface, _gas, _sub_state}} = Contract.create(params)
+      state = AccountInterface.commit(account_interface).state
 
       addresses = [<<0x10::160>>, Account.Address.new(<<0x10::160>>, 2)]
       actual_accounts = Account.get_accounts(state, addresses)

@@ -1,63 +1,96 @@
 defmodule Blockchain.Interface.AccountInterface.Cache do
   alias Blockchain.Account
   alias Blockchain.Account.Address
-  defstruct cache: %{}
+  defstruct storage_cache: %{}, accounts_cache: %{}
 
   @type key_cache() :: %{
           integer() => %{current_value: integer() | :deleted, initial_value: integer() | nil}
         }
-  @type account_cache :: %{Address.t() => key_cache()}
+  @type storage_cache :: %{Address.t() => key_cache()}
+  @type accounts_cache :: %{Address.t() => Account.t() | {Account.t() | EVM.MachineCode.t()}}
   @type t :: %__MODULE__{
-          cache: account_cache()
+          storage_cache: storage_cache(),
+          accounts_cache: accounts_cache()
         }
 
   @spec current_value(t(), Address.t(), integer()) :: integer() | nil
   def current_value(cache_struct, address, key) do
-    key_value(cache_struct.cache, address, key, :current_value)
+    key_value(cache_struct.storage_cache, address, key, :current_value)
   end
 
   @spec initial_value(t(), Address.t(), integer()) :: integer() | nil
   def initial_value(cache_struct, address, key) do
-    key_value(cache_struct.cache, address, key, :initial_value)
+    key_value(cache_struct.storage_cache, address, key, :initial_value)
   end
 
   @spec update_current_value(t(), Address.t(), integer(), integer()) :: t()
   def update_current_value(cache_struct, address, key, value) do
     cache_update = %{key => %{current_value: value}}
 
-    updated_cache = update_key_cache(cache_struct.cache, address, cache_update)
+    updated_cache = update_key_cache(cache_struct.storage_cache, address, cache_update)
 
-    %{cache_struct | cache: updated_cache}
+    %{cache_struct | storage_cache: updated_cache}
   end
 
   @spec add_initial_value(t(), Address.t(), integer(), integer()) :: t()
   def add_initial_value(cache_struct, address, key, value) do
     cache_update = %{key => %{initial_value: value}}
 
-    updated_cache = update_key_cache(cache_struct.cache, address, cache_update)
+    updated_cache = update_key_cache(cache_struct.storage_cache, address, cache_update)
 
-    %{cache_struct | cache: updated_cache}
+    %{cache_struct | storage_cache: updated_cache}
   end
 
   @spec remove_current_value(t(), Address.t(), integer()) :: t()
   def remove_current_value(cache_struct, address, key) do
     cache_update = %{key => %{current_value: :deleted}}
 
-    updated_cache = update_key_cache(cache_struct.cache, address, cache_update)
+    updated_cache = update_key_cache(cache_struct.storage_cache, address, cache_update)
 
-    %{cache_struct | cache: updated_cache}
+    %{cache_struct | storage_cache: updated_cache}
+  end
+
+  @spec account(t(), Address.t()) :: Account.t() | {Account.t(), EVM.MachineCode.t()}
+  def account(cache_struct, address) do
+    Map.get(cache_struct.accounts_cache, address)
+  end
+
+  @spec update_account(t(), Address.t(), Account.t() | {Account.t(), EVM.MachineCode.t()}) :: t()
+  def update_account(cache_struct, address, account) do
+    updated_accounts_cache = Map.put(cache_struct.accounts_cache, address, account)
+
+    %{cache_struct | accounts_cache: updated_accounts_cache}
   end
 
   @spec commit(t(), EVM.state()) :: EVM.state()
   def commit(cache_struct, state) do
+    committed_accounts = commit_accounts(cache_struct, state)
+
+    commit_storage(cache_struct, committed_accounts)
+  end
+
+  @spec commit_storage(t(), EVM.state()) :: EVM.state()
+  def commit_storage(cache_struct, state) do
     cache_struct
-    |> to_list()
+    |> storage_to_list()
+    |> Enum.reduce(state, &commit_account_storage_cache/2)
+  end
+
+  @spec commit_accounts(t(), EVM.state()) :: EVM.state()
+  def commit_accounts(cache_struct, state) do
+    cache_struct
+    |> accounts_to_list()
     |> Enum.reduce(state, &commit_account_cache/2)
   end
 
-  @spec to_list(t()) :: list()
-  def to_list(cache_struct) do
-    Map.to_list(cache_struct.cache)
+  @spec storage_to_list(t()) :: list()
+  def storage_to_list(cache_struct) do
+    Map.to_list(cache_struct.storage_cache)
+  end
+
+  @spec accounts_to_list(t()) :: list()
+  def accounts_to_list(cache_struct) do
+    Map.to_list(cache_struct.accounts_cache)
   end
 
   defp key_value(cache, address, key, value_name) do
@@ -77,7 +110,13 @@ defmodule Blockchain.Interface.AccountInterface.Cache do
     end)
   end
 
-  defp commit_account_cache({address, account_cache}, state) do
+  defp commit_account_cache({address, {account, code}}, state) do
+    state_with_account = Account.put_account(state, address, account)
+
+    if code, do: Account.put_code(state_with_account, address, code), else: state_with_account
+  end
+
+  defp commit_account_storage_cache({address, account_cache}, state) do
     account_cache
     |> Map.to_list()
     |> Enum.reduce(state, &commit_key_cache(address, &1, &2))

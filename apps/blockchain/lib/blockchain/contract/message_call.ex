@@ -6,7 +6,6 @@ defmodule Blockchain.Contract.MessageCall do
 
   alias Blockchain.Interface.{BlockInterface, AccountInterface}
   alias Block.Header
-  alias Blockchain.Account
   alias EVM.SubState
   alias EVM.MessageCall
 
@@ -66,18 +65,20 @@ defmodule Blockchain.Contract.MessageCall do
   @spec execute(t()) ::
           {:ok | :error, {AccountInterface.t(), EVM.Gas.t(), EVM.SubState.t(), EVM.VM.output()}}
   def execute(params) do
-    original_state = params.account_interface.state
     run = MessageCall.get_run_function(params.recipient, params.config)
 
     # Note, this could fail if machine code is not in state
-    {:ok, machine_code} = Account.get_machine_code(original_state, params.contract)
+    {:ok, machine_code} = AccountInterface.machine_code(params.account_interface, params.contract)
 
     # Initiates message call by transfering balance from sender to receiver.
     # This covers Eq.(101), Eq.(102), Eq.(103) and Eq.(104) of the Yellow Paper.
-    # TODO: make copy of original state or use cache for making changes
-    state = Account.transfer!(original_state, params.sender, params.recipient, params.value)
-
-    account_interface = AccountInterface.new(state, params.account_interface.cache)
+    account_interface =
+      AccountInterface.transfer_wei!(
+        params.account_interface,
+        params.sender,
+        params.recipient,
+        params.value
+      )
 
     # Create an execution environment for a message call.
     # This is defined in Eq.(107), Eq.(108), Eq.(109), Eq.(110),
@@ -91,7 +92,7 @@ defmodule Blockchain.Contract.MessageCall do
       value_in_wei: params.apparent_value,
       machine_code: machine_code,
       stack_depth: params.stack_depth,
-      block_interface: BlockInterface.new(params.block_header, state.db),
+      block_interface: BlockInterface.new(params.block_header, account_interface.state.db),
       account_interface: account_interface,
       config: params.config
     }

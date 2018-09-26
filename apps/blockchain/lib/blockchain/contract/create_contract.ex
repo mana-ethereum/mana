@@ -51,7 +51,7 @@ defmodule Blockchain.Contract.CreateContract do
   def execute(params) do
     original_account_interface = params.account_interface
     contract_address = new_account_address(params)
-    account = Account.get_account(original_account_interface.state, contract_address)
+    account = AccountInterface.account(original_account_interface, contract_address)
 
     if is_nil(account) || Account.uninitialized_contract?(account) do
       result = {rem_gas, _, _, output} = create(params, contract_address)
@@ -77,13 +77,16 @@ defmodule Blockchain.Contract.CreateContract do
     end
   end
 
-  @spec increment_nonce_of_touched_account(EVM.state(), EVM.Configuration.t(), EVM.address()) ::
-          EVM.state()
-  defp increment_nonce_of_touched_account(state, config, address) do
+  @spec increment_nonce_of_touched_account(
+          AccountInterface.t(),
+          EVM.Configuration.t(),
+          EVM.address()
+        ) :: AccountInterface.t()
+  defp increment_nonce_of_touched_account(account_interface, config, address) do
     if EVM.Configuration.increment_nonce_on_create?(config) do
-      Account.increment_nonce(state, address)
+      AccountInterface.increment_account_nonce(account_interface, address)
     else
-      state
+      account_interface
     end
   end
 
@@ -99,13 +102,10 @@ defmodule Blockchain.Contract.CreateContract do
 
   @spec create(t(), EVM.address()) :: {EVM.state(), EVM.Gas.t(), EVM.SubState.t()}
   defp create(params, address) do
-    state_with_blank_contract =
+    account_interface =
       params
       |> init_account(address)
       |> increment_nonce_of_touched_account(params.config, address)
-
-    account_interface =
-      AccountInterface.new(state_with_blank_contract, params.account_interface.cache)
 
     # Create an execution environment for a create contract call.
     # This is defined in Eq.(88), Eq.(89), Eq.(90), Eq.(91), Eq.(92),
@@ -119,7 +119,7 @@ defmodule Blockchain.Contract.CreateContract do
       value_in_wei: params.endowment,
       machine_code: params.init_code,
       stack_depth: params.stack_depth,
-      block_interface: BlockInterface.new(params.block_header, state_with_blank_contract.db),
+      block_interface: BlockInterface.new(params.block_header, account_interface.state.db),
       account_interface: account_interface,
       config: params.config
     }
@@ -127,20 +127,18 @@ defmodule Blockchain.Contract.CreateContract do
     EVM.VM.run(params.available_gas, exec_env)
   end
 
-  @spec init_account(t, EVM.address()) :: EVM.state()
+  @spec init_account(t, EVM.address()) :: AccountInterface.t()
   defp init_account(params, address) do
-    account = Account.get_account(params.account_interface.state, address)
+    account = AccountInterface.account(params.account_interface, address)
 
-    state =
+    account_interface =
       if is_nil(account) do
-        params.account_interface.state
-        |> Account.put_account(address, %Account{})
+        AccountInterface.reset_account(params.account_interface, address)
       else
-        params.account_interface.state
+        params.account_interface
       end
 
-    state
-    |> Account.transfer!(params.sender, address, params.endowment)
+    AccountInterface.transfer_wei!(account_interface, params.sender, address, params.endowment)
   end
 
   @spec finalize(
@@ -174,9 +172,7 @@ defmodule Blockchain.Contract.CreateContract do
           if insufficient_gas do
             modified_account_interface
           else
-            new_state = Account.put_code(modified_account_interface.state, address, output)
-
-            AccountInterface.new(new_state, modified_account_interface.cache)
+            AccountInterface.put_code(modified_account_interface, address, output)
           end
 
         sub_state = SubState.add_touched_account(accrued_sub_state, address)
@@ -201,7 +197,7 @@ defmodule Blockchain.Contract.CreateContract do
     if params.new_account_address do
       params.new_account_address
     else
-      sender_account = Account.get_account(params.account_interface.state, params.sender)
+      sender_account = AccountInterface.account(params.account_interface, params.sender)
       Account.Address.new(params.sender, sender_account.nonce)
     end
   end
