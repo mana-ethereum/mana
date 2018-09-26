@@ -42,9 +42,9 @@ defmodule Blockchain.Interface.AccountInterface do
 
   @spec commit(t()) :: t()
   def commit(account_interface) do
-    account_interface
-    |> commit_accounts()
-    |> commit_storage()
+    account_interface.cache
+    |> Cache.commit(account_interface.state)
+    |> new()
   end
 
   @spec commit_storage(t()) :: t()
