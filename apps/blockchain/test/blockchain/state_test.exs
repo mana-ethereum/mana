@@ -1,6 +1,6 @@
 defmodule Blockchain.StateTest do
   alias MerklePatriciaTree.Trie
-  alias Blockchain.Account
+  alias Blockchain.{Account, Chain}
 
   use EthCommonTest.Harness
   use ExUnit.Case, async: true
@@ -167,33 +167,8 @@ defmodule Blockchain.StateTest do
 
   defp fork_without_implementation?(fork) do
     fork
-    |> configuration()
+    |> Chain.evm_config()
     |> is_nil()
-  end
-
-  def configuration(hardfork) do
-    case hardfork do
-      "Frontier" ->
-        EVM.Configuration.Frontier.new()
-
-      "Homestead" ->
-        EVM.Configuration.Homestead.new()
-
-      "EIP150" ->
-        EVM.Configuration.EIP150.new()
-
-      "EIP158" ->
-        EVM.Configuration.EIP158.new()
-
-      "Byzantium" ->
-        EVM.Configuration.Byzantium.new()
-
-      "Constantinople" ->
-        EVM.Configuration.Constantinople.new()
-
-      _ ->
-        nil
-    end
   end
 
   defp known_fork_failure?(json_test_path, hardfork) do
