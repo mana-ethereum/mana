@@ -148,7 +148,7 @@ defmodule Blockchain.Chain do
         load_chain(:eip150_test, config)
 
       "EIP158" ->
-        load_chain(:eip150_test, config)
+        load_chain(:eip161_test, config)
 
       "Byzantium" ->
         load_chain(:byzantium_test, config)
