@@ -26,13 +26,16 @@ defmodule StateTestRunner do
     end
   end
 
-  defp run_test({test_name, test}, hardfork) do
+  def run_test({test_name, test}, hardfork) do
     hardfork_configuration = EVM.Configuration.hardfork_config(hardfork)
 
     test["post"][hardfork]
     |> Enum.with_index()
     |> Enum.map(fn {post, index} ->
-      pre_state = account_interface(test).state
+      pre_state =
+        test
+        |> setup_state()
+        |> create_accounts(test)
 
       indexes = post["indexes"]
       gas_limit_index = indexes["gas"]
@@ -50,7 +53,7 @@ defmodule StateTestRunner do
         |> populate_init_or_data(maybe_hex(Enum.at(test["transaction"]["data"], data_index)))
         |> Transaction.Signature.sign_transaction(maybe_hex(test["transaction"]["secretKey"]))
 
-      result =
+      {account_interface, _, receipt} =
         Transaction.execute_with_validation(
           pre_state,
           transaction,
@@ -65,14 +68,12 @@ defmodule StateTestRunner do
           hardfork_configuration
         )
 
-      {state, logs} =
-        case result do
-          {account_interface, _, receipt} ->
-            {AccountInterface.commit(account_interface).state, receipt.logs}
+      account_interface =
+        account_interface
+        |> simulate_miner_reward(test)
+        |> simulate_account_cleaning(test, hardfork_configuration)
 
-          _ ->
-            {pre_state, []}
-        end
+      state = AccountInterface.commit(account_interface).state
 
       expected_hash =
         test["post"][hardfork]
@@ -81,11 +82,12 @@ defmodule StateTestRunner do
         |> maybe_hex()
 
       expected_logs = test["post"][hardfork] |> Enum.at(index) |> Map.fetch!("logs")
-      logs_hash = logs_hash(logs)
+      logs_hash = logs_hash(receipt.logs)
 
       %{
         hardfork: hardfork,
         test_name: test_name,
+        test_source: test["_info"]["source"],
         state_root_mismatch: state.root_hash != expected_hash,
         state_root_expected: expected_hash,
         state_root_actual: state.root_hash,
@@ -104,44 +106,45 @@ defmodule StateTestRunner do
     end
   end
 
-  def account_interface(test) do
+  defp setup_state(test) do
     db = MerklePatriciaTree.Test.random_ets_db()
 
     state = %Trie{
       db: db,
       root_hash: maybe_hex(test["env"]["previousHash"])
     }
+  end
 
-    state =
-      Enum.reduce(test["pre"], state, fn {address, account}, state ->
-        storage = %Trie{
-          root_hash: Trie.empty_trie_root_hash(),
-          db: db
-        }
+  defp create_accounts(state, test) do
+    db = state.db
 
-        storage =
-          Enum.reduce(account["storage"], storage, fn {key, value}, trie ->
-            value = load_integer(value)
+    Enum.reduce(test["pre"], state, fn {address, account}, state ->
+      storage = %Trie{
+        root_hash: Trie.empty_trie_root_hash(),
+        db: db
+      }
 
-            if value == 0 do
-              trie
-            else
-              Storage.put(trie.db, trie.root_hash, load_integer(key), value)
-            end
-          end)
+      storage =
+        Enum.reduce(account["storage"], storage, fn {key, value}, trie ->
+          value = load_integer(value)
 
-        new_account = %Account{
-          nonce: load_integer(account["nonce"]),
-          balance: load_integer(account["balance"]),
-          storage_root: storage.root_hash
-        }
+          if value == 0 do
+            trie
+          else
+            Storage.put(trie.db, trie.root_hash, load_integer(key), value)
+          end
+        end)
 
-        state
-        |> Account.put_account(maybe_hex(address), new_account)
-        |> Account.put_code(maybe_hex(address), maybe_hex(account["code"]))
-      end)
+      new_account = %Account{
+        nonce: load_integer(account["nonce"]),
+        balance: load_integer(account["balance"]),
+        storage_root: storage.root_hash
+      }
 
-    AccountInterface.new(state)
+      state
+      |> Account.put_account(maybe_hex(address), new_account)
+      |> Account.put_code(maybe_hex(address), maybe_hex(account["code"]))
+    end)
   end
 
   defp logs_hash(logs) do
@@ -154,5 +157,20 @@ defmodule StateTestRunner do
     test_path
     |> File.read!()
     |> Poison.decode!()
+  end
+
+  defp simulate_miner_reward(account_interface, test) do
+    coinbase = maybe_hex(test["env"]["currentCoinbase"])
+    AccountInterface.add_wei(account_interface, coinbase, 0)
+  end
+
+  defp simulate_account_cleaning(account_interface, test, hardfork_configuration) do
+    coinbase = maybe_hex(test["env"]["currentCoinbase"])
+
+    Blockchain.Transaction.AccountCleaner.clean_touched_accounts(
+      account_interface,
+      [coinbase],
+      hardfork_configuration
+    )
   end
 end

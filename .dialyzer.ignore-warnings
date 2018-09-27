@@ -143,6 +143,11 @@ apps/blockchain/lib/blockchain/account.ex
 apps/blockchain/lib/blockchain/transaction.ex
 
 -------------------------------
+# blockchain/transaction/account_cleaner.ex
+-------------------------------
+apps/blockchain/lib/blockchain/transaction/account_cleaner.ex:11: Guard test __@2::#{'__struct__':='Elixir.Blockchain.Account', 'balance':=integer(), 'code_hash':=binary() | [integer()], 'nonce':=integer(), 'storage_root':=binary()} =:= 'false' can never succeed
+
+-------------------------------
 # blockchain/application.ex
 -------------------------------
 apps/blockchain/lib/blockchain/application.ex:14: The call 'Elixir.EVM.Debugger':break_on([{'address',binary()},...]) will never return since the success typing is (['address']) -> integer() and the contract is (elixir:keyword('Elixir.EVM.Debugger.Breakpoint':conditions())) -> 'Elixir.EVM.Debugger.Breakpoint':id()

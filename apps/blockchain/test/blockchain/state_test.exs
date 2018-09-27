@@ -26,9 +26,7 @@ defmodule Blockchain.StateTest do
       "stRevertTest/RevertOpcodeInCreateReturns",
       "stRevertTest/RevertOpcodeMultipleSubCalls",
       "stSpecialTest/failed_tx_xcf416c53",
-      "stStaticCall/static_Call1024PreCalls2",
-      "stTransactionTest/EmptyTransaction2",
-      "stZeroKnowledge2/ecmul_0-3_5616_28000_96"
+      "stStaticCall/static_Call1024PreCalls2"
     ],
     "Constantinople" => [
       "stCreate2/RevertDepthCreate2OOG",
@@ -42,88 +40,15 @@ defmodule Blockchain.StateTest do
       "stCreate2/create2SmartInitCode",
       "stCreate2/create2callPrecompiles",
       "stCreate2/create2checkFieldsInInitcode",
-      "stCreate2/create2collisionBalance",
       "stCreate2/create2collisionStorage",
       "stCreate2/returndatacopy_afterFailing_create",
       "stCreate2/returndatacopy_following_revert_in_create",
-      "stRevertTest/RevertOpcodeMultipleSubCalls",
-      "stZeroKnowledge2/ecmul_0-3_5616_28000_96"
+      "stRevertTest/RevertOpcodeMultipleSubCalls"
     ],
-    "EIP150" => [
-      "stInitCodeTest/NotEnoughCashContractCreation",
-      "stInitCodeTest/OutOfGasContractCreation",
-      "stInitCodeTest/OutOfGasPrefundedContractCreation",
-      "stRandom2/201503110226PYTHON_DUP6",
-      "stRevertTest/RevertOpcodeInInit",
-      "stRevertTest/RevertOpcodeMultipleSubCalls",
-      "stRevertTest/RevertOpcodeWithBigOutputInInit",
-      "stTransactionTest/CreateTransactionReverted",
-      "stTransactionTest/EmptyTransaction",
-      "stTransactionTest/OverflowGasRequire",
-      "stTransactionTest/RefundOverflow",
-      "stTransactionTest/RefundOverflow2",
-      "stTransactionTest/TransactionNonceCheck",
-      "stTransactionTest/TransactionNonceCheck2",
-      "stTransactionTest/TransactionToItselfNotEnoughFounds",
-      "stTransactionTest/UserTransactionGasLimitIsTooLowWhenZeroCost",
-      "stTransitionTest/createNameRegistratorPerTxsNotEnoughGasAfter",
-      "stTransitionTest/createNameRegistratorPerTxsNotEnoughGasAt",
-      "stTransitionTest/createNameRegistratorPerTxsNotEnoughGasBefore"
-    ],
-    "EIP158" => [
-      "stRevertTest/RevertOpcodeMultipleSubCalls",
-      "stSpecialTest/failed_tx_xcf416c53",
-      "stTransactionTest/EmptyTransaction2"
-    ],
-    "Frontier" => [
-      "stCallCreateCallCodeTest/createNameRegistratorPerTxsNotEnoughGas",
-      "stInitCodeTest/NotEnoughCashContractCreation",
-      "stRandom2/201503110226PYTHON_DUP6",
-      "stTransactionTest/CreateTransactionReverted",
-      "stTransactionTest/EmptyTransaction",
-      "stTransactionTest/OverflowGasRequire",
-      "stTransactionTest/RefundOverflow",
-      "stTransactionTest/RefundOverflow2",
-      "stTransactionTest/TransactionNonceCheck",
-      "stTransactionTest/TransactionNonceCheck2",
-      "stTransactionTest/TransactionToItselfNotEnoughFounds",
-      "stTransactionTest/UserTransactionGasLimitIsTooLowWhenZeroCost"
-    ],
-    "Homestead" => [
-      "stDelegatecallTestHomestead/callOutput1",
-      "stDelegatecallTestHomestead/callOutput2",
-      "stDelegatecallTestHomestead/callOutput3",
-      "stDelegatecallTestHomestead/callOutput3Fail",
-      "stDelegatecallTestHomestead/callOutput3partial",
-      "stDelegatecallTestHomestead/callOutput3partialFail",
-      "stDelegatecallTestHomestead/callcodeOutput1",
-      "stDelegatecallTestHomestead/callcodeOutput2",
-      "stDelegatecallTestHomestead/callcodeOutput3",
-      "stDelegatecallTestHomestead/callcodeOutput3Fail",
-      "stDelegatecallTestHomestead/callcodeOutput3partial",
-      "stDelegatecallTestHomestead/callcodeOutput3partialFail",
-      "stInitCodeTest/NotEnoughCashContractCreation",
-      "stInitCodeTest/OutOfGasContractCreation",
-      "stInitCodeTest/OutOfGasPrefundedContractCreation",
-      "stRandom/randomStatetest184",
-      "stRandom/randomStatetest347",
-      "stRandom2/201503110226PYTHON_DUP6",
-      "stRevertTest/RevertOpcodeInInit",
-      "stRevertTest/RevertOpcodeMultipleSubCalls",
-      "stRevertTest/RevertOpcodeWithBigOutputInInit",
-      "stTransactionTest/CreateTransactionReverted",
-      "stTransactionTest/EmptyTransaction",
-      "stTransactionTest/OverflowGasRequire",
-      "stTransactionTest/RefundOverflow",
-      "stTransactionTest/RefundOverflow2",
-      "stTransactionTest/TransactionNonceCheck",
-      "stTransactionTest/TransactionNonceCheck2",
-      "stTransactionTest/TransactionToItselfNotEnoughFounds",
-      "stTransactionTest/UserTransactionGasLimitIsTooLowWhenZeroCost",
-      "stTransitionTest/createNameRegistratorPerTxsNotEnoughGasAfter",
-      "stTransitionTest/createNameRegistratorPerTxsNotEnoughGasAt",
-      "stTransitionTest/createNameRegistratorPerTxsNotEnoughGasBefore"
-    ]
+    "EIP150" => ["stRevertTest/RevertOpcodeMultipleSubCalls"],
+    "EIP158" => ["stRevertTest/RevertOpcodeMultipleSubCalls", "stSpecialTest/failed_tx_xcf416c53"],
+    "Frontier" => [],
+    "Homestead" => ["stRevertTest/RevertOpcodeMultipleSubCalls"]
   }
 
   @fifteen_minutes 1000 * 60 * 15
@@ -219,7 +144,7 @@ defmodule Blockchain.StateTest do
 
     """
     State root mismatch for the following tests:
-    #{inspect(state_root_error_messages)}
+    #{state_root_error_messages}
     -----------------
     Total state root failures: #{inspect(total_count)}
     """
@@ -247,23 +172,23 @@ defmodule Blockchain.StateTest do
   defp single_logs_hash_error_message(test_result) do
     %{
       hardfork: hardfork,
-      test_name: test_name,
+      test_source: test_source,
       logs_hash_expected: expected,
       logs_hash_actual: actual
     } = test_result
 
-    "[#{hardfork}] #{test_name}: expected #{inspect(expected)}, but received #{inspect(actual)}"
+    "[#{hardfork}] #{test_source}: expected #{inspect(expected)}, but received #{inspect(actual)}"
   end
 
   defp single_state_root_error_message(test_result) do
     %{
       hardfork: hardfork,
-      test_name: test_name,
+      test_source: test_source,
       state_root_expected: expected,
       state_root_actual: actual
     } = test_result
 
-    "[#{hardfork}] #{test_name}: expected #{inspect(expected)}, but received #{inspect(actual)}"
+    "[#{hardfork}] #{test_source}: expected #{inspect(expected)}, but received #{inspect(actual)}"
   end
 
   def dump_state(state) do

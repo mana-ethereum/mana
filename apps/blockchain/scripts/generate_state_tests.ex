@@ -4,7 +4,6 @@ defmodule GenerateStateTests do
   alias Blockchain.Interface.AccountInterface
   alias Blockchain.Account.Storage
   alias ExthCrypto.Hash.Keccak
-  alias EVM.Configuration.{Frontier, Homestead, EIP150, EIP158, Byzantium, Constantinople}
 
   use EthCommonTest.Harness
 
@@ -134,75 +133,15 @@ defmodule GenerateStateTests do
          hardfork,
          hardfork_configuration
        ) do
-    completed_tests =
-      test["post"][hardfork]
-      |> Enum.with_index()
-      |> Enum.reduce(completed_tests, fn {post, index}, completed_tests ->
-        try do
-          pre_state = account_interface(test).state
-
-          indexes = post["indexes"]
-          gas_limit_index = indexes["gas"]
-          value_index = indexes["value"]
-          data_index = indexes["data"]
-
-          transaction =
-            %Transaction{
-              nonce: load_integer(test["transaction"]["nonce"]),
-              gas_price: load_integer(test["transaction"]["gasPrice"]),
-              gas_limit: load_integer(Enum.at(test["transaction"]["gasLimit"], gas_limit_index)),
-              to: maybe_hex(test["transaction"]["to"]),
-              value: load_integer(Enum.at(test["transaction"]["value"], value_index))
-            }
-            |> populate_init_or_data(maybe_hex(Enum.at(test["transaction"]["data"], data_index)))
-            |> Transaction.Signature.sign_transaction(maybe_hex(test["transaction"]["secretKey"]))
-
-          result =
-            Transaction.execute_with_validation(
-              pre_state,
-              transaction,
-              %Block.Header{
-                beneficiary: maybe_hex(test["env"]["currentCoinbase"]),
-                difficulty: load_integer(test["env"]["currentDifficulty"]),
-                timestamp: load_integer(test["env"]["currentTimestamp"]),
-                number: load_integer(test["env"]["currentNumber"]),
-                gas_limit: load_integer(test["env"]["currentGasLimit"]),
-                parent_hash: maybe_hex(test["env"]["previousHash"])
-              },
-              hardfork_configuration
-            )
-
-          {state, logs} =
-            case result do
-              {state, _, logs, _tx_status} -> {state, logs}
-              _ -> {pre_state, []}
-            end
-
-          expected_hash =
-            test["post"][hardfork]
-            |> Enum.at(index)
-            |> Map.fetch!("hash")
-            |> maybe_hex()
-
-          valid_root_hash = state.root_hash == expected_hash
-
-          expected_logs = test["post"][hardfork] |> Enum.at(index) |> Map.fetch!("logs")
-          logs_hash = logs_hash(logs)
-
-          valid_logs_hash = maybe_hex(expected_logs) == logs_hash
-
-          if valid_root_hash && valid_logs_hash do
-            update_in(completed_tests, [:passing, hardfork], &["#{test_group}/#{test_name}" | &1])
-          else
-            update_in(completed_tests, [:failing, hardfork], &["#{test_group}/#{test_name}" | &1])
-          end
-        rescue
-          _ ->
-            update_in(completed_tests, [:failing, hardfork], &["#{test_group}/#{test_name}" | &1])
-        end
-      end)
-
-    completed_tests
+    {test_name, test}
+    |> StateTestRunner.run_test(hardfork)
+    |> Enum.reduce(completed_tests, fn result, completed_tests ->
+      if result.state_root_mismatch || result.logs_hash_mismatch do
+        update_in(completed_tests, [:failing, hardfork], &["#{test_group}/#{test_name}" | &1])
+      else
+        update_in(completed_tests, [:passing, hardfork], &["#{test_group}/#{test_name}" | &1])
+      end
+    end)
   end
 
   defp populate_init_or_data(tx, data) do

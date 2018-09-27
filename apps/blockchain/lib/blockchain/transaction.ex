@@ -6,8 +6,7 @@ defmodule Blockchain.Transaction do
   """
 
   alias Blockchain.{Account, Contract, Transaction, MathHelper}
-  alias Blockchain.Transaction.Validity
-  alias Blockchain.Transaction.Receipt
+  alias Blockchain.Transaction.{Validity, Receipt, AccountCleaner}
   alias Block.Header
   alias EVM.{Gas, Configuration, SubState}
   alias Blockchain.Interface.AccountInterface
@@ -198,7 +197,7 @@ defmodule Blockchain.Transaction do
   Υ^l, Y^z} in the Transaction Execution section of the Yellow Paper.
   """
   @spec execute(EVM.state(), t, Header.t(), EVM.Configuration.t()) ::
-          {EVM.state(), Gas.t(), Receipt.t()}
+          {AccountInterface.t(), Gas.t(), Receipt.t()}
   def execute(state, tx, block_header, config \\ EVM.Configuration.Frontier.new()) do
     {:ok, sender} = Transaction.Signature.sender(tx)
 
@@ -410,20 +409,9 @@ defmodule Blockchain.Transaction do
   end
 
   defp clean_touched_accounts(account_interface, sub_state, config) do
-    if Configuration.for(config).clean_touched_accounts?(config) do
-      Enum.reduce(sub_state.touched_accounts, account_interface, fn address,
-                                                                    new_account_interface ->
-        account = AccountInterface.account(account_interface, address)
+    accounts = sub_state.touched_accounts
 
-        if account && Account.empty?(account) do
-          AccountInterface.del_account(new_account_interface, address)
-        else
-          new_account_interface
-        end
-      end)
-    else
-      account_interface
-    end
+    AccountCleaner.clean_touched_accounts(account_interface, accounts, config)
   end
 
   @doc """
