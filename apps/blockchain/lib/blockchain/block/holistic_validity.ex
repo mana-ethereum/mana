@@ -132,4 +132,3 @@ defmodule Blockchain.Block.HolisticValidity do
     end
   end
 end
-
