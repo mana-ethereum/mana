@@ -124,6 +124,20 @@ defmodule Blockchain.Interface.AccountInterface.CacheTest do
     end
   end
 
+  describe "reset_account_storage_cache/2" do
+    test "resets account's storage cache" do
+      address = <<1>>
+      key = 9
+      cache = %Cache{storage_cache: %{address => %{key => %{current_value: 5}}}}
+
+      refute is_nil(Cache.current_value(cache, address, key))
+
+      updated_cache = Cache.reset_account_storage_cache(cache, address)
+
+      assert is_nil(Cache.current_value(updated_cache, address, key))
+    end
+  end
+
   describe "update_account/3" do
     test "adds new account to the cache" do
       account = %Account{

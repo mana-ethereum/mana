@@ -47,6 +47,11 @@ defmodule Blockchain.Interface.AccountInterface do
     |> new()
   end
 
+  @spec reset_cache(t()) :: t()
+  def reset_cache(account_interface) do
+    new(account_interface.state)
+  end
+
   @spec increment_account_nonce(t(), Address.t()) :: t()
   def increment_account_nonce(account_interface, address) do
     {account, code} = account_with_code(account_interface, address)
@@ -95,12 +100,31 @@ defmodule Blockchain.Interface.AccountInterface do
   def add_wei(account_interface, address, value) do
     {account, code} = account_with_code(account_interface, address)
 
+    account = account || %Account{}
+
     updated_account = %{account | balance: account.balance + value}
+
+    if updated_account.balance < 0, do: raise("wei reduced to less than zero")
 
     updated_cache =
       Cache.update_account(account_interface.cache, address, {updated_account, code})
 
     %{account_interface | cache: updated_cache}
+  end
+
+  @spec del_account(t(), Address.t()) :: t()
+  def del_account(account_interface, address) do
+    updated_cache =
+      account_interface.cache
+      |> Cache.update_account(address, {nil, nil})
+      |> Cache.reset_account_storage_cache(address)
+
+    %{account_interface | cache: updated_cache}
+  end
+
+  @spec dec_wei(t(), Address.t(), EVM.Wei.t()) :: t()
+  def dec_wei(account_interface, address, value) do
+    add_wei(account_interface, address, -1 * value)
   end
 
   @spec put_code(t(), Address.t(), EVM.MachineCode.t()) :: t()
@@ -109,7 +133,7 @@ defmodule Blockchain.Interface.AccountInterface do
 
     {account, _} = account_with_code(account_interface, address)
 
-    updated_account = %{account | code_hash: kec}
+    updated_account = %{(account || %Account{}) | code_hash: kec}
 
     updated_cache =
       Cache.update_account(account_interface.cache, address, {updated_account, machine_code})

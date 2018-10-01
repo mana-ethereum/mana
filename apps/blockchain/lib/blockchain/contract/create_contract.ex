@@ -64,9 +64,14 @@ defmodule Blockchain.Contract.CreateContract do
       # point immediately prior to balance transfer.
       #
       case output do
-        :failed -> error(original_account_interface)
-        {:revert, _} -> {:error, {original_account_interface, rem_gas, SubState.empty()}}
-        _ -> finalize(result, params, contract_address)
+        :failed ->
+          error(original_account_interface)
+
+        {:revert, _} ->
+          {:error, {original_account_interface, rem_gas, SubState.empty()}}
+
+        _ ->
+          finalize(result, params, contract_address)
       end
     else
       if account_will_collide?(account) do
