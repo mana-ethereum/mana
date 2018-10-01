@@ -167,7 +167,7 @@ defmodule Blockchain.Transaction do
   Validates the validity of a transaction and then executes it if transaction is valid.
   """
   @spec execute_with_validation(EVM.state(), t, Header.t(), EVM.Configuration.t()) ::
-          {EVM.state(), Gas.t(), EVM.SubState.logs(), status()}
+          {AccountInterface.t(), Gas.t(), EVM.SubState.logs(), status()}
   def execute_with_validation(
         state,
         tx,
@@ -178,7 +178,7 @@ defmodule Blockchain.Transaction do
 
     case validation_result do
       :valid -> execute(state, tx, block_header, config)
-      {:invalid, _} -> {state, 0, [], @failure_status}
+      {:invalid, _} -> {AccountInterface.new(state), 0, [], @failure_status}
     end
   end
 
@@ -201,20 +201,22 @@ defmodule Blockchain.Transaction do
   def execute(state, tx, block_header, config \\ EVM.Configuration.Frontier.new()) do
     {:ok, sender} = Transaction.Signature.sender(tx)
 
-    {updated_state, remaining_gas, sub_state, status} =
-      state
+    initial_account_interface = AccountInterface.new(state)
+
+    {updated_account_interface, remaining_gas, sub_state, status} =
+      initial_account_interface
       |> begin_transaction(sender, tx)
       |> apply_transaction(tx, block_header, sender, config)
 
     {expended_gas, refund} = calculate_gas_usage(tx, remaining_gas, sub_state)
 
-    final_state =
-      updated_state
+    final_account_interface =
+      updated_account_interface
       |> pay_and_refund_gas(sender, tx, refund, block_header)
       |> clean_up_accounts_marked_for_destruction(sub_state, block_header)
       |> clean_touched_accounts(sub_state, config)
 
-    {final_state, expended_gas, sub_state.logs, status}
+    {final_account_interface, expended_gas, sub_state.logs, status}
   end
 
   @doc """
@@ -226,9 +228,14 @@ defmodule Blockchain.Transaction do
   originate outside of the EVM.
   """
 
-  @spec apply_transaction(EVM.state(), t, Header.t(), EVM.address(), EVM.Configuration.t()) ::
-          {EVM.state(), Gas.t(), EVM.SubState.t(), status()}
-  def apply_transaction(state, tx, block_header, sender, config) do
+  @spec apply_transaction(
+          AccountInterface.t(),
+          t,
+          Header.t(),
+          EVM.address(),
+          EVM.Configuration.t()
+        ) :: {AccountInterface.t(), Gas.t(), EVM.SubState.t(), status()}
+  def apply_transaction(account_interface, tx, block_header, sender, config) do
     # sender and originator are the same for transaction execution
     originator = sender
     # stack depth starts at zero for transaction execution
@@ -237,8 +244,6 @@ defmodule Blockchain.Transaction do
     apparent_value = tx.value
     # gas is equal to what was just subtracted from sender account less intrinsic gas cost
     gas = tx.gas_limit - intrinsic_gas_cost(tx, config)
-
-    account_interface = AccountInterface.new(state)
 
     if contract_creation?(tx) do
       %Contract.CreateContract{
@@ -283,23 +288,19 @@ defmodule Blockchain.Transaction do
   end
 
   defp contract_creation_response({:ok, {account_interface, remaining_gas, sub_state}}) do
-    state = AccountInterface.commit(account_interface).state
-
-    {state, remaining_gas, sub_state, @success_status}
+    {account_interface, remaining_gas, sub_state, @success_status}
   end
 
   defp contract_creation_response({:error, {account_interface, remaining_gas, sub_state}}) do
-    {account_interface.state, remaining_gas, sub_state, @failure_status}
+    {account_interface, remaining_gas, sub_state, @failure_status}
   end
 
   defp message_call_response({:ok, {account_interface, remaining_gas, sub_state, _output}}) do
-    state = AccountInterface.commit(account_interface).state
-
-    {state, remaining_gas, sub_state, @success_status}
+    {account_interface, remaining_gas, sub_state, @success_status}
   end
 
   defp message_call_response({:error, {account_interface, remaining_gas, sub_state, _output}}) do
-    {account_interface.state, remaining_gas, sub_state, @failure_status}
+    {account_interface, remaining_gas, sub_state, @failure_status}
   end
 
   @spec calculate_gas_usage(t, Gas.t(), EVM.SubState.t()) :: {Gas.t(), Gas.t()}
@@ -323,17 +324,18 @@ defmodule Blockchain.Transaction do
 
   ## Examples
 
-      iex> state = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
-      ...>   |> Blockchain.Account.put_account(<<0x01::160>>, %Blockchain.Account{balance: 1000, nonce: 7})
-      iex> state = Blockchain.Transaction.begin_transaction(state, <<0x01::160>>, %Blockchain.Transaction{gas_price: 3, gas_limit: 100})
-      iex> Blockchain.Account.get_account(state, <<0x01::160>>)
+      iex> MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
+      ...> |> Blockchain.Interface.AccountInterface.new()
+      ...> |> Blockchain.Interface.AccountInterface.put_account(<<0x01::160>>, %Blockchain.Account{balance: 1000, nonce: 7})
+      ...> |> Blockchain.Transaction.begin_transaction(<<0x01::160>>, %Blockchain.Transaction{gas_price: 3, gas_limit: 100})
+      ...> |> Blockchain.Interface.AccountInterface.account(<<0x01::160>>)
       %Blockchain.Account{balance: 700, nonce: 8}
   """
-  @spec begin_transaction(EVM.state(), EVM.address(), t) :: EVM.state()
-  def begin_transaction(state, sender, trx) do
-    state
-    |> Account.dec_wei(sender, trx.gas_limit * trx.gas_price)
-    |> Account.increment_nonce(sender)
+  @spec begin_transaction(AccountInterface.t(), EVM.address(), t) :: AccountInterface.t()
+  def begin_transaction(account_interface, sender, trx) do
+    account_interface
+    |> AccountInterface.dec_wei(sender, trx.gas_limit * trx.gas_price)
+    |> AccountInterface.increment_account_nonce(sender)
   end
 
   @doc """
@@ -347,51 +349,59 @@ defmodule Blockchain.Transaction do
   ## Examples
 
       iex> trx = %Blockchain.Transaction{gas_price: 10, gas_limit: 30}
-      iex> state = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
+      iex> account_interface = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
       ...>   |> Blockchain.Account.put_account(<<0x01::160>>, %Blockchain.Account{balance: 11})
       ...>   |> Blockchain.Account.put_account(<<0x02::160>>, %Blockchain.Account{balance: 22})
-      iex> Blockchain.Transaction.pay_and_refund_gas(state, <<0x01::160>>, trx, 5, %Block.Header{beneficiary: <<0x02::160>>})
-      ...>   |> Blockchain.Account.get_accounts([<<0x01::160>>, <<0x02::160>>])
-      [
-        %Blockchain.Account{balance: 61},
-        %Blockchain.Account{balance: 272},
-      ]
+      ...>   |> Blockchain.Interface.AccountInterface.new()
+      ...>   |> Blockchain.Transaction.pay_and_refund_gas(<<0x01::160>>, trx, 5, %Block.Header{beneficiary: <<0x02::160>>})
+      ...>   Blockchain.Interface.AccountInterface.account(account_interface, <<0x01::160>>)
+      %Blockchain.Account{balance: 61}
+      ...>   Blockchain.Interface.AccountInterface.account(account_interface, <<0x02::160>>)
+      %Blockchain.Account{balance: 272}
   """
-  @spec pay_and_refund_gas(EVM.state(), EVM.address(), t, Gas.t(), Block.Header.t()) ::
-          EVM.state()
-  def pay_and_refund_gas(state, sender, trx, total_refund, block_header) do
+  @spec pay_and_refund_gas(AccountInterface.t(), EVM.address(), t, Gas.t(), Block.Header.t()) ::
+          AccountInterface.t()
+  def pay_and_refund_gas(account_interface, sender, trx, total_refund, block_header) do
     # Eq.(74)
     # Eq.(75)
-    state
-    |> Account.add_wei(sender, total_refund * trx.gas_price)
-    |> Account.add_wei(block_header.beneficiary, (trx.gas_limit - total_refund) * trx.gas_price)
+    account_interface
+    |> AccountInterface.add_wei(sender, total_refund * trx.gas_price)
+    |> AccountInterface.add_wei(
+      block_header.beneficiary,
+      (trx.gas_limit - total_refund) * trx.gas_price
+    )
   end
 
-  @spec clean_up_accounts_marked_for_destruction(EVM.state(), EVM.SubState.t(), Block.Header.t()) ::
-          EVM.state()
-  defp clean_up_accounts_marked_for_destruction(state, sub_state, block_header) do
-    Enum.reduce(sub_state.selfdestruct_list, state, fn address, new_state ->
+  @spec clean_up_accounts_marked_for_destruction(
+          AccountInterface.t(),
+          EVM.SubState.t(),
+          Block.Header.t()
+        ) :: AccountInterface.t()
+  defp(clean_up_accounts_marked_for_destruction(account_interface, sub_state, block_header)) do
+    Enum.reduce(sub_state.selfdestruct_list, account_interface, fn address,
+                                                                   new_account_interface ->
       if Header.mined_by?(block_header, address) do
-        Account.reset_account(new_state, address)
+        AccountInterface.reset_account(new_account_interface, address)
       else
-        Account.del_account(new_state, address)
+        AccountInterface.del_account(new_account_interface, address)
       end
     end)
   end
 
-  defp clean_touched_accounts(state, sub_state, config) do
+  defp clean_touched_accounts(account_interface, sub_state, config) do
     if Configuration.for(config).clean_touched_accounts?(config) do
-      Enum.reduce(sub_state.touched_accounts, state, fn address, new_state ->
-        account = Account.get_account(state, address)
+      Enum.reduce(sub_state.touched_accounts, account_interface, fn address,
+                                                                    new_account_interface ->
+        account = AccountInterface.account(account_interface, address)
 
         if account && Account.empty?(account) do
-          Account.del_account(new_state, address)
+          AccountInterface.del_account(new_account_interface, address)
         else
-          new_state
+          new_account_interface
         end
       end)
     else
-      state
+      account_interface
     end
   end
 

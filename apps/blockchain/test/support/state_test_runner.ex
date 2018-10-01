@@ -67,8 +67,11 @@ defmodule StateTestRunner do
 
       {state, logs} =
         case result do
-          {state, _, logs, _tx_status} -> {state, logs}
-          _ -> {pre_state, []}
+          {account_interface, _, logs, _tx_status} ->
+            {AccountInterface.commit(account_interface).state, logs}
+
+          _ ->
+            {pre_state, []}
         end
 
       expected_hash =

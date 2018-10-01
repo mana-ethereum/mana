@@ -16,6 +16,29 @@ defmodule Blockchain.Interface.AccountInterfaceTest do
     {:ok, %{state: state}}
   end
 
+  describe "reset_cache/1" do
+    test "resets cache", %{state: state} do
+      account = %Account{
+        nonce: 5,
+        balance: 10,
+        storage_root: <<0x00, 0x01>>,
+        code_hash: <<0x01, 0x02>>
+      }
+
+      address = <<1>>
+      code = <<5>>
+
+      cache = %Cache{accounts_cache: %{address => {account, code}}}
+
+      account_interface =
+        state
+        |> AccountInterface.new(cache)
+        |> AccountInterface.reset_cache()
+
+      assert account_interface.cache == %Cache{}
+    end
+  end
+
   describe "increment_account_nonce/2" do
     test "increments nonce of the account in the casge", %{state: state} do
       address = <<1>>
@@ -183,6 +206,64 @@ defmodule Blockchain.Interface.AccountInterfaceTest do
         |> AccountInterface.account(address)
 
       assert found_account.balance == 110
+    end
+  end
+
+  describe "del_account/2" do
+    test "removes account from cache", %{state: state} do
+      account = %Account{
+        nonce: 5,
+        balance: 10,
+        storage_root: <<0x00, 0x01>>,
+        code_hash: <<0x01, 0x02>>
+      }
+
+      address = <<1>>
+      code = <<5>>
+
+      cache = %Cache{
+        accounts_cache: %{address => {account, code}},
+        storage_cache: %{address => %{<<10>> => %{current_value: 5}}}
+      }
+
+      account_interface =
+        state
+        |> AccountInterface.new(cache)
+        |> AccountInterface.del_account(address)
+
+      {found_account, found_code} = AccountInterface.account_with_code(account_interface, address)
+
+      assert is_nil(found_account)
+      assert is_nil(found_code)
+    end
+
+    test "removes account from cache even when account is in trie storage", %{state: state} do
+      account = %Account{
+        nonce: 5,
+        balance: 10,
+        storage_root: <<0x00, 0x01>>,
+        code_hash: <<0x01, 0x02>>
+      }
+
+      address = <<1>>
+      code = <<5>>
+
+      cache = %Cache{accounts_cache: %{address => {account, code}}}
+
+      account_interface =
+        state
+        |> Account.reset_account(address)
+        |> AccountInterface.new(cache)
+        |> AccountInterface.del_account(address)
+
+      {found_account, found_code} = AccountInterface.account_with_code(account_interface, address)
+
+      assert is_nil(found_account)
+      assert is_nil(found_code)
+
+      storage_account = Account.get_account(account_interface.state, address)
+
+      refute is_nil(storage_account)
     end
   end
 

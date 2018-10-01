@@ -50,6 +50,13 @@ defmodule Blockchain.Interface.AccountInterface.Cache do
     %{cache_struct | storage_cache: updated_cache}
   end
 
+  @spec reset_account_storage_cache(t(), Address.t()) :: t()
+  def reset_account_storage_cache(cache_struct, address) do
+    updated_storage_cache = Map.delete(cache_struct.storage_cache, address)
+
+    %{cache_struct | storage_cache: updated_storage_cache}
+  end
+
   @spec account(t(), Address.t()) :: Account.t() | {Account.t(), EVM.MachineCode.t()}
   def account(cache_struct, address) do
     Map.get(cache_struct.accounts_cache, address)
@@ -111,9 +118,13 @@ defmodule Blockchain.Interface.AccountInterface.Cache do
   end
 
   defp commit_account_cache({address, {account, code}}, state) do
-    state_with_account = Account.put_account(state, address, account)
+    if is_nil(account) do
+      Account.del_account(state, address)
+    else
+      state_with_account = Account.put_account(state, address, account)
 
-    if code, do: Account.put_code(state_with_account, address, code), else: state_with_account
+      if code, do: Account.put_code(state_with_account, address, code), else: state_with_account
+    end
   end
 
   defp commit_account_storage_cache({address, account_cache}, state) do

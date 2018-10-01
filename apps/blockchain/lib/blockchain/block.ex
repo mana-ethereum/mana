@@ -11,6 +11,7 @@ defmodule Blockchain.Block do
   alias Blockchain.{Account, Transaction, Chain}
   alias Blockchain.Block.HolisticValidity
   alias Blockchain.Transaction.Receipt
+  alias Blockchain.Interface.AccountInterface
   alias MerklePatriciaTree.{Trie, DB}
 
   # Defined in Eq.(19)
@@ -699,25 +700,27 @@ defmodule Blockchain.Block do
   """
   @spec add_transactions(t, [Transaction.t()], DB.db(), Chain.t()) :: t
   def add_transactions(block, transactions, db, chain) do
-    trx_count = get_transaction_count(block)
-
-    do_add_transactions(block, transactions, db, trx_count, chain)
+    do_add_transactions(block, transactions, db, chain)
   end
 
-  @spec do_add_transactions(t, [Transaction.t()], DB.db(), integer(), Chain.t()) :: t
+  @spec do_add_transactions(t, [Transaction.t()], DB.db(), Chain.t(), integer()) :: t
+  defp do_add_transactions(block, transactions, db, chain, trx_count \\ 0)
+
   defp do_add_transactions(block, [], _, _, _), do: block
 
   defp do_add_transactions(
          block = %__MODULE__{header: header},
          [trx | transactions],
          db,
-         trx_count,
-         chain
+         chain,
+         trx_count
        ) do
     state = Trie.new(db, header.state_root)
 
-    {new_state, gas_used, logs, tx_status} =
+    {new_account_interface, gas_used, logs, tx_status} =
       Transaction.execute_with_validation(state, trx, header, chain.evm_config)
+
+    new_state = AccountInterface.commit(new_account_interface).state
 
     total_gas_used = block.header.gas_used + gas_used
 
@@ -730,7 +733,7 @@ defmodule Blockchain.Block do
       |> put_receipt(trx_count, receipt, db)
       |> put_transaction(trx_count, trx, db)
 
-    do_add_transactions(updated_block, transactions, db, trx_count + 1, chain)
+    do_add_transactions(updated_block, transactions, db, chain, trx_count + 1)
   end
 
   defp create_receipt(block_header, new_state, total_gas_used, logs, tx_status, chain) do
