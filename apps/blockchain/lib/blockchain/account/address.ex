@@ -1,6 +1,8 @@
 defmodule Blockchain.Account.Address do
   @moduledoc """
-  Represents an account's address
+  Represents an account's address. The address of the new account is defined as
+  being the rightmost 160 bits of the Keccak hash of the RLP encoding of the 
+  structure containing only the sender and the account nonce. 
   """
 
   alias ExthCrypto.Hash.Keccak
@@ -11,11 +13,10 @@ defmodule Blockchain.Account.Address do
 
   @doc """
   Determines the address of a new contract
-  based on the sender and the sender's current nonce.
+  based on the sender and the sender's current nonce. See Eq.(77) in the Yellow 
+  Paper.
 
-  This is defined as Eq.(77) in the Yellow Paper.
-
-  Note: Nonce should be already pre-incremented when calling this function.
+  **Note**: Nonce should be already pre-incremented when calling this function.
 
   ## Examples
 
