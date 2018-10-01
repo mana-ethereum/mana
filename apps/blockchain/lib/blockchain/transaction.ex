@@ -7,6 +7,7 @@ defmodule Blockchain.Transaction do
 
   alias Blockchain.{Account, Contract, Transaction, MathHelper}
   alias Blockchain.Transaction.Validity
+  alias Blockchain.Transaction.Receipt
   alias Block.Header
   alias EVM.{Gas, Configuration, SubState}
   alias Blockchain.Interface.AccountInterface
@@ -167,7 +168,7 @@ defmodule Blockchain.Transaction do
   Validates the validity of a transaction and then executes it if transaction is valid.
   """
   @spec execute_with_validation(EVM.state(), t, Header.t(), EVM.Configuration.t()) ::
-          {AccountInterface.t(), Gas.t(), EVM.SubState.logs(), status()}
+          {AccountInterface.t(), Gas.t(), Receipt.t()}
   def execute_with_validation(
         state,
         tx,
@@ -178,7 +179,7 @@ defmodule Blockchain.Transaction do
 
     case validation_result do
       :valid -> execute(state, tx, block_header, config)
-      {:invalid, _} -> {AccountInterface.new(state), 0, [], @failure_status}
+      {:invalid, _} -> {AccountInterface.new(state), 0, %Receipt{}}
     end
   end
 
@@ -197,7 +198,7 @@ defmodule Blockchain.Transaction do
   Υ^l, Y^z} in the Transaction Execution section of the Yellow Paper.
   """
   @spec execute(EVM.state(), t, Header.t(), EVM.Configuration.t()) ::
-          {EVM.state(), Gas.t(), EVM.SubState.logs(), status()}
+          {EVM.state(), Gas.t(), Receipt.t()}
   def execute(state, tx, block_header, config \\ EVM.Configuration.Frontier.new()) do
     {:ok, sender} = Transaction.Signature.sender(tx)
 
@@ -216,7 +217,15 @@ defmodule Blockchain.Transaction do
       |> clean_up_accounts_marked_for_destruction(sub_state, block_header)
       |> clean_touched_accounts(sub_state, config)
 
-    {final_account_interface, expended_gas, sub_state.logs, status}
+    receipt =
+      create_receipt(
+        final_account_interface.state.root_hash,
+        expended_gas,
+        sub_state.logs,
+        status
+      )
+
+    {final_account_interface, expended_gas, receipt}
   end
 
   @doc """
@@ -388,6 +397,18 @@ defmodule Blockchain.Transaction do
     end)
   end
 
+  @spec maybe_reset_coinbase(EVM.state(), EVM.SubState.t(), Header.t()) :: EVM.state()
+  defp maybe_reset_coinbase(state, sub_state, header) do
+    suicided_coinbase =
+      Enum.find(sub_state.selfdestruct_list, fn address -> Header.mined_by?(header, address) end)
+
+    if suicided_coinbase do
+      Account.reset_account(state, suicided_coinbase)
+    else
+      state
+    end
+  end
+
   defp clean_touched_accounts(account_interface, sub_state, config) do
     if Configuration.for(config).clean_touched_accounts?(config) do
       Enum.reduce(sub_state.touched_accounts, account_interface, fn address,
@@ -447,6 +468,10 @@ defmodule Blockchain.Transaction do
     else
       Gas.g_transaction()
     end
+  end
+
+  defp create_receipt(state_root_hash, gas_used, logs, _status_code) do
+    Receipt.new(state_root_hash, gas_used, logs)
   end
 
   def contract_creation?(%Blockchain.Transaction{to: <<>>}), do: true

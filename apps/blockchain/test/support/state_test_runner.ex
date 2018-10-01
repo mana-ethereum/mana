@@ -67,8 +67,8 @@ defmodule StateTestRunner do
 
       {state, logs} =
         case result do
-          {account_interface, _, logs, _tx_status} ->
-            {AccountInterface.commit(account_interface).state, logs}
+          {account_interface, _, receipt} ->
+            {AccountInterface.commit(account_interface).state, receipt.logs}
 
           _ ->
             {pre_state, []}

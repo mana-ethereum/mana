@@ -274,14 +274,14 @@ defmodule Blockchain.Block do
 
       iex> trie = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
       iex> %Blockchain.Block{}
-      ...> |> Blockchain.Block.put_receipt(6, %Blockchain.Transaction.Receipt{state: <<1, 2, 3>>, cumulative_gas: 10, bloom_filter: <<2, 3, 4>>, logs: "hi mom"}, trie.db)
-      ...> |> Blockchain.Block.put_receipt(7, %Blockchain.Transaction.Receipt{state: <<4, 5, 6>>, cumulative_gas: 11, bloom_filter: <<5, 6, 7>>, logs: "hi dad"}, trie.db)
+      ...> |> Blockchain.Block.put_receipt(6, %Blockchain.Transaction.Receipt{state: <<1, 2, 3>>, cumulative_gas: 10, bloom_filter: <<2, 3, 4>>, logs: []}, trie.db)
+      ...> |> Blockchain.Block.put_receipt(7, %Blockchain.Transaction.Receipt{state: <<4, 5, 6>>, cumulative_gas: 11, bloom_filter: <<5, 6, 7>>, logs: []}, trie.db)
       ...> |> Blockchain.Block.get_receipt(6, trie.db)
-      %Blockchain.Transaction.Receipt{state: <<1, 2, 3>>, cumulative_gas: 10, bloom_filter: <<2, 3, 4>>, logs: "hi mom"}
+      %Blockchain.Transaction.Receipt{state: <<1, 2, 3>>, cumulative_gas: 10, bloom_filter: <<2, 3, 4>>, logs: []}
 
       iex> trie = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
       iex> %Blockchain.Block{}
-      ...> |> Blockchain.Block.put_receipt(6, %Blockchain.Transaction.Receipt{state: <<1, 2, 3>>, cumulative_gas: 10, bloom_filter: <<2, 3, 4>>, logs: "hi mom"}, trie.db)
+      ...> |> Blockchain.Block.put_receipt(6, %Blockchain.Transaction.Receipt{state: <<1, 2, 3>>, cumulative_gas: 10, bloom_filter: <<2, 3, 4>>, logs: []}, trie.db)
       ...> |> Blockchain.Block.get_receipt(7, trie.db)
       nil
   """
@@ -293,8 +293,13 @@ defmodule Blockchain.Block do
       |> Trie.get(i |> ExRLP.encode())
 
     case serialized_receipt do
-      nil -> nil
-      _ -> Receipt.deserialize(serialized_receipt |> ExRLP.decode())
+      nil ->
+        nil
+
+      _ ->
+        serialized_receipt
+        |> ExRLP.decode()
+        |> Receipt.deserialize()
     end
   end
 
@@ -353,15 +358,15 @@ defmodule Blockchain.Block do
 
       iex> trie = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
       iex> %Blockchain.Block{transactions: [1,2,3,4,5,6,7]}
-      ...> |> Blockchain.Block.put_receipt(6, %Blockchain.Transaction.Receipt{state: <<1, 2, 3>>, cumulative_gas: 10, bloom_filter: <<2, 3, 4>>, logs: "hi mom"}, trie.db)
-      ...> |> Blockchain.Block.put_receipt(7, %Blockchain.Transaction.Receipt{state: <<4, 5, 6>>, cumulative_gas: 11, bloom_filter: <<5, 6, 7>>, logs: "hi dad"}, trie.db)
+      ...> |> Blockchain.Block.put_receipt(6, %Blockchain.Transaction.Receipt{state: <<1, 2, 3>>, cumulative_gas: 10, bloom_filter: <<2, 3, 4>>, logs: []}, trie.db)
+      ...> |> Blockchain.Block.put_receipt(7, %Blockchain.Transaction.Receipt{state: <<4, 5, 6>>, cumulative_gas: 11, bloom_filter: <<5, 6, 7>>, logs: []}, trie.db)
       ...> |> Blockchain.Block.get_cumulative_gas(trie.db)
       11
 
       iex> trie = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
       iex> %Blockchain.Block{transactions: [1,2,3,4,5,6]}
-      ...> |> Blockchain.Block.put_receipt(6, %Blockchain.Transaction.Receipt{state: <<1, 2, 3>>, cumulative_gas: 10, bloom_filter: <<2, 3, 4>>, logs: "hi mom"}, trie.db)
-      ...> |> Blockchain.Block.put_receipt(7, %Blockchain.Transaction.Receipt{state: <<4, 5, 6>>, cumulative_gas: 11, bloom_filter: <<5, 6, 7>>, logs: "hi dad"}, trie.db)
+      ...> |> Blockchain.Block.put_receipt(6, %Blockchain.Transaction.Receipt{state: <<1, 2, 3>>, cumulative_gas: 10, bloom_filter: <<2, 3, 4>>, logs: []}, trie.db)
+      ...> |> Blockchain.Block.put_receipt(7, %Blockchain.Transaction.Receipt{state: <<4, 5, 6>>, cumulative_gas: 11, bloom_filter: <<5, 6, 7>>, logs: []}, trie.db)
       ...> |> Blockchain.Block.get_cumulative_gas(trie.db)
       10
 
@@ -372,8 +377,8 @@ defmodule Blockchain.Block do
 
       iex> trie = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
       iex> %Blockchain.Block{transactions: [1,2,3,4,5,6,7,8]}
-      ...> |> Blockchain.Block.put_receipt(6, %Blockchain.Transaction.Receipt{state: <<1, 2, 3>>, cumulative_gas: 10, bloom_filter: <<2, 3, 4>>, logs: "hi mom"}, trie.db)
-      ...> |> Blockchain.Block.put_receipt(7, %Blockchain.Transaction.Receipt{state: <<4, 5, 6>>, cumulative_gas: 11, bloom_filter: <<5, 6, 7>>, logs: "hi dad"}, trie.db)
+      ...> |> Blockchain.Block.put_receipt(6, %Blockchain.Transaction.Receipt{state: <<1, 2, 3>>, cumulative_gas: 10, bloom_filter: <<2, 3, 4>>, logs: []}, trie.db)
+      ...> |> Blockchain.Block.put_receipt(7, %Blockchain.Transaction.Receipt{state: <<4, 5, 6>>, cumulative_gas: 11, bloom_filter: <<5, 6, 7>>, logs: []}, trie.db)
       ...> |> Blockchain.Block.get_cumulative_gas(trie.db)
       ** (RuntimeError) cannot find receipt
   """
@@ -717,14 +722,12 @@ defmodule Blockchain.Block do
        ) do
     state = Trie.new(db, header.state_root)
 
-    {new_account_interface, gas_used, logs, tx_status} =
+    {new_account_interface, gas_used, receipt} =
       Transaction.execute_with_validation(state, trx, header, chain.evm_config)
 
     new_state = AccountInterface.commit(new_account_interface).state
 
     total_gas_used = block.header.gas_used + gas_used
-
-    receipt = create_receipt(block.header, new_state, total_gas_used, logs, tx_status, chain)
 
     updated_block =
       block
@@ -734,21 +737,6 @@ defmodule Blockchain.Block do
       |> put_transaction(trx_count, trx, db)
 
     do_add_transactions(updated_block, transactions, db, chain, trx_count + 1)
-  end
-
-  defp create_receipt(block_header, new_state, total_gas_used, logs, tx_status, chain) do
-    state =
-      if Chain.after_byzantium?(chain, block_header.number) do
-        tx_status
-      else
-        new_state.root_hash
-      end
-
-    %Receipt{
-      state: state,
-      cumulative_gas: total_gas_used,
-      logs: logs
-    }
   end
 
   # Updates a block to have a new state root given a state object

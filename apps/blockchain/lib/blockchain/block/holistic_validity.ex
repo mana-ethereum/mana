@@ -69,8 +69,8 @@ defmodule Blockchain.Block.HolisticValidity do
 
     child_block =
       base_block
-      |> Block.add_transactions(block.transactions, db, chain)
       |> Block.add_ommers(block.ommers)
+      |> Block.add_transactions(block.transactions, db, chain)
       |> Block.add_rewards(db, chain)
 
     # The following checks Holistic Validity,
@@ -82,7 +82,6 @@ defmodule Blockchain.Block.HolisticValidity do
       |> check_transactions_root_validity(child_block, block)
       |> check_gas_used(child_block, block)
 
-    # TODO: Check receipts after resolving https://github.com/poanetwork/mana/issues/66
     # |> check_receipts_root_validity(child_block, block)
 
     if errors == [], do: :valid, else: {:invalid, errors}

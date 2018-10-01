@@ -337,11 +337,12 @@ defmodule Blockchain.BlockTest do
 
       assert Enum.count(block.transactions) == 1
 
-      expected_receipt = %Transaction.Receipt{
-        bloom_filter: "",
+      expected_receipt = %Blockchain.Transaction.Receipt{
         cumulative_gas: 28_180,
         logs: [],
-        state: block.header.state_root
+        state:
+          <<244, 63, 228, 175, 232, 45, 220, 109, 96, 139, 147, 185, 78, 198, 37, 21, 157, 249,
+            94, 201, 235, 18, 91, 153, 250, 91, 63, 43, 27, 197, 69, 225>>
       }
 
       assert Block.get_receipt(block, 0, db) == expected_receipt

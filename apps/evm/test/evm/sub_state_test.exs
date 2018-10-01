@@ -21,7 +21,10 @@ defmodule EVM.SubStateTest do
       expected_last_log_entry = %EVM.LogEntry{
         address: <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1>>,
         data: "zxcz",
-        topics: [5]
+        topics: [
+          <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 5>>
+        ]
       }
 
       assert expected_last_log_entry == List.last(new_substate.logs)
