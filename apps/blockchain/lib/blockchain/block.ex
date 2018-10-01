@@ -11,6 +11,7 @@ defmodule Blockchain.Block do
   alias Blockchain.{Account, Transaction, Chain}
   alias Blockchain.Block.HolisticValidity
   alias Blockchain.Transaction.Receipt
+  alias Blockchain.Interface.AccountInterface
   alias MerklePatriciaTree.{Trie, DB}
 
   # Defined in Eq.(19)
@@ -716,8 +717,10 @@ defmodule Blockchain.Block do
        ) do
     state = Trie.new(db, header.state_root)
 
-    {new_state, gas_used, logs, tx_status} =
+    {new_account_interface, gas_used, logs, tx_status} =
       Transaction.execute_with_validation(state, trx, header, chain.evm_config)
+
+    new_state = AccountInterface.commit(new_account_interface).state
 
     total_gas_used = block.header.gas_used + gas_used
 
