@@ -3,8 +3,8 @@ defmodule EVM.GasTest do
   doctest EVM.Gas
 
   describe "cost/3" do
-    test "returns modified call cost and call gas if not enough gas is provided (EIP150)" do
-      config = EVM.Configuration.EIP150.new()
+    test "returns modified call cost and call gas if not enough gas is provided (TangerineWhistle)" do
+      config = EVM.Configuration.TangerineWhistle.new()
       inputs = [100_000, 1, 0, 0, 32, 32, 32]
 
       machine_state = %EVM.MachineState{

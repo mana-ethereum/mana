@@ -1,4 +1,4 @@
-defmodule EVM.Configuration.EIP150 do
+defmodule EVM.Configuration.TangerineWhistle do
   @behaviour EVM.Configuration
 
   alias EVM.Configuration.Homestead

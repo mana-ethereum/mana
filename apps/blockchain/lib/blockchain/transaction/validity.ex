@@ -16,11 +16,13 @@ defmodule Blockchain.Transaction.Validity do
   @spec validate(Trie.t(), Transaction.t(), Block.Header.t(), Chain.t()) ::
           :valid | {:invalid, atom()}
   def validate(state, trx, block_header, chain) do
-    with :ok <- validate_signature(trx, chain),
+    evm_config = Chain.evm_config(chain, block_header.number)
+
+    with :ok <- validate_signature(trx, chain, evm_config),
          {:ok, sender_address} <- Transaction.Signature.sender(trx, chain.params.network_id) do
       errors =
         []
-        |> check_intristic_gas(trx, chain.evm_config)
+        |> check_intristic_gas(trx, evm_config)
         |> check_account_validity(trx, state, sender_address)
         |> check_gas_limit(trx, block_header)
 
@@ -40,11 +42,8 @@ defmodule Blockchain.Transaction.Validity do
     end
   end
 
-  @spec validate_signature(Transaction.t(), Chain.t()) :: :ok | {:invalid, :invalid_signature}
-  defp validate_signature(trx, chain) do
-    config = chain.evm_config
-
-    max_s_value = EVM.Configuration.for(config).max_signature_s(config)
+  defp validate_signature(trx, chain, evm_config) do
+    max_s_value = EVM.Configuration.for(evm_config).max_signature_s(evm_config)
 
     if Transaction.Signature.is_signature_valid?(trx.r, trx.s, trx.v, chain.params.network_id,
          max_s: max_s_value

@@ -46,8 +46,11 @@ defmodule Blockchain.StateTest do
       "stCreate2/returndatacopy_following_revert_in_create",
       "stRevertTest/RevertOpcodeMultipleSubCalls"
     ],
-    "EIP150" => ["stRevertTest/RevertOpcodeMultipleSubCalls"],
-    "EIP158" => ["stRevertTest/RevertOpcodeMultipleSubCalls", "stSpecialTest/failed_tx_xcf416c53"],
+    "TangerineWhistle" => ["stRevertTest/RevertOpcodeMultipleSubCalls"],
+    "SpuriousDragon" => [
+      "stRevertTest/RevertOpcodeMultipleSubCalls",
+      "stSpecialTest/failed_tx_xcf416c53"
+    ],
     "Frontier" => [],
     "Homestead" => ["stRevertTest/RevertOpcodeMultipleSubCalls"]
   }

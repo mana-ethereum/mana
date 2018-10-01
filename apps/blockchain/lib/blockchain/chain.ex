@@ -55,7 +55,11 @@ defmodule Blockchain.Chain do
           eip140_transition: integer(),
           eip211_transition: integer(),
           eip214_transition: integer(),
-          eip658_transition: integer()
+          eip658_transition: integer(),
+          eip145_transition: integer(),
+          eip1014_transition: integer(),
+          eip1052_transition: integer(),
+          eip1283_transition: integer()
         }
 
   @type account :: %{
@@ -121,7 +125,7 @@ defmodule Blockchain.Chain do
       genesis: get_genesis(chain_data["genesis"]),
       nodes: chain_data["nodes"],
       accounts: accounts,
-      evm_config: evm_config || EVM.Configuration.Frontier.new()
+      evm_config: evm_config
     }
   end
 
@@ -144,10 +148,10 @@ defmodule Blockchain.Chain do
       "Homestead" ->
         load_chain(:homestead_test, config)
 
-      "EIP150" ->
+      "TangerineWhistle" ->
         load_chain(:eip150_test, config)
 
-      "EIP158" ->
+      "SpuriousDragon" ->
         load_chain(:eip161_test, config)
 
       "Byzantium" ->
@@ -158,6 +162,35 @@ defmodule Blockchain.Chain do
 
       _ ->
         nil
+    end
+  end
+
+  @doc """
+  Get the EVM configuration based on the chain and block number
+  """
+  def evm_config(chain = %__MODULE__{}, block_number \\ nil) do
+    if block_number do
+      cond do
+        block_number >= chain.params.eip1283_transition ->
+          EVM.Configuration.Constantinople.new()
+
+        block_number >= chain.params.eip658_transition ->
+          EVM.Configuration.Byzantium.new()
+
+        block_number >= chain.params.eip160_transition ->
+          EVM.Configuration.SpuriousDragon.new()
+
+        block_number >= chain.params.eip150_transition ->
+          EVM.Configuration.TangerineWhistle.new()
+
+        block_number >= chain.engine["Ethash"].homestead_transition ->
+          EVM.Configuration.Homestead.new()
+
+        true ->
+          EVM.Configuration.Frontier.new()
+      end
+    else
+      chain.evm_config
     end
   end
 
@@ -291,7 +324,11 @@ defmodule Blockchain.Chain do
       eip140_transition: map["eip140Transition"] |> load_hex(),
       eip211_transition: map["eip211Transition"] |> load_hex(),
       eip214_transition: map["eip214Transition"] |> load_hex(),
-      eip658_transition: map["eip658Transition"] |> load_hex()
+      eip658_transition: map["eip658Transition"] |> load_hex(),
+      eip145_transition: map["eip145Transition"] |> load_hex(),
+      eip1014_transition: map["eip1014Transition"] |> load_hex(),
+      eip1052_transition: map["eip1052Transition"] |> load_hex(),
+      eip1283_transition: map["eip1283Transition"] |> load_hex()
     }
   end
 
