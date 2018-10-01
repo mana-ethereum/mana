@@ -324,10 +324,11 @@ defmodule Blockchain.Transaction do
 
   ## Examples
 
-      iex> state = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
-      ...>   |> Blockchain.Account.put_account(<<0x01::160>>, %Blockchain.Account{balance: 1000, nonce: 7})
-      iex> state = Blockchain.Transaction.begin_transaction(state, <<0x01::160>>, %Blockchain.Transaction{gas_price: 3, gas_limit: 100})
-      iex> Blockchain.Account.get_account(state, <<0x01::160>>)
+      iex> MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
+      ...> |> Blockchain.Interface.AccountInterface.new()
+      ...> |> Blockchain.Interface.AccountInterface.put_account(<<0x01::160>>, %Blockchain.Account{balance: 1000, nonce: 7})
+      ...> |> Blockchain.Transaction.begin_transaction(<<0x01::160>>, %Blockchain.Transaction{gas_price: 3, gas_limit: 100})
+      ...> |> Blockchain.Interface.AccountInterface.account(<<0x01::160>>)
       %Blockchain.Account{balance: 700, nonce: 8}
   """
   @spec begin_transaction(AccountInterface.t(), EVM.address(), t) :: AccountInterface.t()
@@ -348,15 +349,15 @@ defmodule Blockchain.Transaction do
   ## Examples
 
       iex> trx = %Blockchain.Transaction{gas_price: 10, gas_limit: 30}
-      iex> state = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
+      iex> account_interface = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
       ...>   |> Blockchain.Account.put_account(<<0x01::160>>, %Blockchain.Account{balance: 11})
       ...>   |> Blockchain.Account.put_account(<<0x02::160>>, %Blockchain.Account{balance: 22})
-      iex> Blockchain.Transaction.pay_and_refund_gas(state, <<0x01::160>>, trx, 5, %Block.Header{beneficiary: <<0x02::160>>})
-      ...>   |> Blockchain.Account.get_accounts([<<0x01::160>>, <<0x02::160>>])
-      [
-        %Blockchain.Account{balance: 61},
-        %Blockchain.Account{balance: 272},
-      ]
+      ...>   |> Blockchain.Interface.AccountInterface.new()
+      ...>   |> Blockchain.Transaction.pay_and_refund_gas(<<0x01::160>>, trx, 5, %Block.Header{beneficiary: <<0x02::160>>})
+      ...>   Blockchain.Interface.AccountInterface.account(account_interface, <<0x01::160>>)
+      %Blockchain.Account{balance: 61}
+      ...>   Blockchain.Interface.AccountInterface.account(account_interface, <<0x02::160>>)
+      %Blockchain.Account{balance: 272}
   """
   @spec pay_and_refund_gas(AccountInterface.t(), EVM.address(), t, Gas.t(), Block.Header.t()) ::
           AccountInterface.t()

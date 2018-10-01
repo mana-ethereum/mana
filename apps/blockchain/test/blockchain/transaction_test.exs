@@ -174,11 +174,13 @@ defmodule Blockchain.TransactionTest do
 
       tx = Transaction.Signature.sign_transaction(unsigned_tx, private_key)
 
-      {state, gas, logs, ^success_status} =
+      {account_interface, gas, logs, ^success_status} =
         MerklePatriciaTree.Test.random_ets_db()
         |> Trie.new()
         |> Account.put_account(sender, %Account{balance: 400_000, nonce: 5})
         |> Transaction.execute(tx, %Block.Header{beneficiary: beneficiary})
+
+      state = AccountInterface.commit(account_interface).state
 
       assert gas == 28_180
       assert logs == []

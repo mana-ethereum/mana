@@ -47,6 +47,13 @@ defmodule Blockchain.Interface.AccountInterface do
     |> new()
   end
 
+  @spec put_account(t(), Address.t(), Account.t()) :: t()
+  def put_account(account_interface, address, account) do
+    updated_cache = Cache.update_account(account_interface.cache, address, {account, nil})
+
+    %{account_interface | cache: updated_cache}
+  end
+
   @spec reset_cache(t()) :: t()
   def reset_cache(account_interface) do
     new(account_interface.state)
