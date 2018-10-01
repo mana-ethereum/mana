@@ -703,7 +703,7 @@ defmodule Blockchain.Block do
     do_add_transactions(block, transactions, db, chain)
   end
 
-  @spec do_add_transactions(t, [Transaction.t()], DB.db(), integer(), Chain.t()) :: t
+  @spec do_add_transactions(t, [Transaction.t()], DB.db(), Chain.t(), integer()) :: t
   defp do_add_transactions(block, transactions, db, chain, trx_count \\ 0)
 
   defp do_add_transactions(block, [], _, _, _), do: block

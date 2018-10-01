@@ -74,8 +74,8 @@ lib/trie/helper.ex:41: The variable _@1 can never match since previous clauses c
 -------------------------------
 # blockchain/block.ex warnings
 -------------------------------
-apps/blockchain/lib/blockchain/block.ex:436: Function gen_child_block/2 has no local return
-apps/blockchain/lib/blockchain/block.ex:436: Function gen_child_block/3 has no local return
+apps/blockchain/lib/blockchain/block.ex:437: Function gen_child_block/2 has no local return
+apps/blockchain/lib/blockchain/block.ex:437: Function gen_child_block/3 has no local return
 apps/blockchain/lib/blockchain/block.ex:443: The call 'Elixir.Blockchain.Block':set_block_number(#{'__s
 truct__':='Elixir.Blockchain.Block', 'block_hash':='nil', 'header':=#{'__struct__':='Elixir.Block.Heade
 r', 'beneficiary':=_, 'difficulty':='nil', 'extra_data':=_, 'gas_limit':=0, 'gas_used':=0, 'logs_bloom'
@@ -125,7 +125,7 @@ tate_root':=_, _=>_}, _=>_}
 # We ignore this becuase we cannot reproduce it locally. It may be because CI is
 # using erlang 21 while we are using erlang 20. But we cannot yet update to
 # erlang 21 because we need rox to update
-apps/blockchain/lib/blockchain/block.ex:736: Function create_receipt/6 will never be called
+apps/blockchain/lib/blockchain/block.ex:739: Function create_receipt/6 will never be called
 
 -------------------------------
 # blockchain/genesis.ex
