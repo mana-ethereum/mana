@@ -7,6 +7,7 @@ defmodule Blockchain.TransactionTest do
   alias ExthCrypto.Hash.Keccak
   alias Blockchain.{Account, Transaction}
   alias Blockchain.Transaction.Signature
+  alias Blockchain.Interface.AccountInterface
   alias MerklePatriciaTree.Trie
   alias EVM.MachineCode
 
@@ -240,12 +241,14 @@ defmodule Blockchain.TransactionTest do
 
       db = MerklePatriciaTree.Test.random_ets_db()
 
-      {state, gas, logs, status} =
+      {account_interface, gas, logs, status} =
         db
         |> Trie.new()
         |> Account.put_account(sender, %Account{balance: 400_000, nonce: 5})
         |> Account.put_code(contract_address, machine_code)
         |> Transaction.execute(tx, %Block.Header{beneficiary: beneficiary})
+
+      state = AccountInterface.commit(account_interface).state
 
       assert status == 1
       assert gas == 21_780
@@ -293,11 +296,13 @@ defmodule Blockchain.TransactionTest do
         }
         |> Transaction.Signature.sign_transaction(private_key)
 
-      {state, gas_used, logs, ^success_status} =
+      {account_interface, gas_used, logs, ^success_status} =
         MerklePatriciaTree.Test.random_ets_db()
         |> Trie.new()
         |> Account.put_account(sender_address, sender_account)
         |> Transaction.execute(tx, %Block.Header{beneficiary: beneficiary_address})
+
+      state = AccountInterface.commit(account_interface).state
 
       expected_sender = %Account{balance: 336_983, nonce: 6}
       expected_beneficiary = %Account{balance: 63_012}
@@ -353,12 +358,14 @@ defmodule Blockchain.TransactionTest do
 
       tx = Transaction.Signature.sign_transaction(unsigned_tx, private_key)
 
-      {state, gas, logs, status} =
+      {account_interface, gas, logs, status} =
         MerklePatriciaTree.Test.random_ets_db()
         |> Trie.new()
         |> Account.put_account(sender.address, %Account{balance: 400_000, nonce: sender.nonce})
         |> Account.put_code(contract_address, machine_code)
         |> Transaction.execute(tx, %Block.Header{beneficiary: beneficiary.address}, config)
+
+      state = AccountInterface.commit(account_interface).state
 
       assert status == failure_status
       assert gas == 21_495
@@ -415,11 +422,13 @@ defmodule Blockchain.TransactionTest do
 
       tx = Transaction.Signature.sign_transaction(unsigned_tx, private_key)
 
-      {state, gas, logs, status} =
+      {account_interface, gas, logs, status} =
         MerklePatriciaTree.Test.random_ets_db()
         |> Trie.new()
         |> Account.put_account(sender.address, %Account{balance: 400_000, nonce: sender.nonce})
         |> Transaction.execute(tx, %Block.Header{beneficiary: beneficiary.address}, config)
+
+      state = AccountInterface.commit(account_interface).state
 
       assert status == failure_status
       assert gas == 53_495

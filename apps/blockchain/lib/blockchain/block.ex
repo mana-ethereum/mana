@@ -700,20 +700,20 @@ defmodule Blockchain.Block do
   """
   @spec add_transactions(t, [Transaction.t()], DB.db(), Chain.t()) :: t
   def add_transactions(block, transactions, db, chain) do
-    trx_count = get_transaction_count(block)
-
-    do_add_transactions(block, transactions, db, trx_count, chain)
+    do_add_transactions(block, transactions, db, chain)
   end
 
   @spec do_add_transactions(t, [Transaction.t()], DB.db(), integer(), Chain.t()) :: t
+  defp do_add_transactions(block, transactions, db, chain, trx_count \\ 0)
+
   defp do_add_transactions(block, [], _, _, _), do: block
 
   defp do_add_transactions(
          block = %__MODULE__{header: header},
          [trx | transactions],
          db,
-         trx_count,
-         chain
+         chain,
+         trx_count
        ) do
     state = Trie.new(db, header.state_root)
 
@@ -733,7 +733,7 @@ defmodule Blockchain.Block do
       |> put_receipt(trx_count, receipt, db)
       |> put_transaction(trx_count, trx, db)
 
-    do_add_transactions(updated_block, transactions, db, trx_count + 1, chain)
+    do_add_transactions(updated_block, transactions, db, chain, trx_count + 1)
   end
 
   defp create_receipt(block_header, new_state, total_gas_used, logs, tx_status, chain) do
