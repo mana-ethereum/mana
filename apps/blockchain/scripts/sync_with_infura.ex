@@ -104,8 +104,8 @@ defmodule SyncWithInfura do
       end
 
     Blockchain.Block.add_ommers(block, ommers)
-  catch
-    :exit, error ->
+  rescue
+    error ->
       Logger.info("error:  #{inspect(error)}")
       Logger.info("Retrying")
       get_block(n)
