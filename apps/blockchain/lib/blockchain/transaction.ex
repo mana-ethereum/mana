@@ -215,6 +215,7 @@ defmodule Blockchain.Transaction do
       |> pay_and_refund_gas(sender, tx, refund, block_header)
       |> clean_up_accounts_marked_for_destruction(sub_state, block_header)
       |> clean_touched_accounts(sub_state, config)
+      |> AccountInterface.commit()
 
     receipt =
       create_receipt(
@@ -223,6 +224,11 @@ defmodule Blockchain.Transaction do
         sub_state.logs,
         status
       )
+
+    final_account_interface =
+      final_account_interface
+      |> maybe_reset_coinbase(sub_state, block_header)
+      |> AccountInterface.commit()
 
     {final_account_interface, expended_gas, receipt}
   end
@@ -388,23 +394,20 @@ defmodule Blockchain.Transaction do
   defp(clean_up_accounts_marked_for_destruction(account_interface, sub_state, block_header)) do
     Enum.reduce(sub_state.selfdestruct_list, account_interface, fn address,
                                                                    new_account_interface ->
-      if Header.mined_by?(block_header, address) do
-        AccountInterface.reset_account(new_account_interface, address)
-      else
-        AccountInterface.del_account(new_account_interface, address)
-      end
+      AccountInterface.del_account(new_account_interface, address)
     end)
   end
 
-  @spec maybe_reset_coinbase(EVM.state(), EVM.SubState.t(), Header.t()) :: EVM.state()
-  defp maybe_reset_coinbase(state, sub_state, header) do
+  @spec maybe_reset_coinbase(AccountInterface.t(), EVM.SubState.t(), Header.t()) ::
+          AccountInterface.t()
+  defp maybe_reset_coinbase(account_interface, sub_state, header) do
     suicided_coinbase =
       Enum.find(sub_state.selfdestruct_list, fn address -> Header.mined_by?(header, address) end)
 
     if suicided_coinbase do
-      Account.reset_account(state, suicided_coinbase)
+      AccountInterface.reset_account(account_interface, suicided_coinbase)
     else
-      state
+      account_interface
     end
   end
 

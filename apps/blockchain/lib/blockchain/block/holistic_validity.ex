@@ -11,7 +11,7 @@ defmodule Blockchain.Block.HolisticValidity do
   Determines whether or not a block is valid. This is
   defined in Eq.(29) of the Yellow Paper.
 
-  This is an intensive operation because we must run all transactions in the 
+  This is an intensive operation because we must run all transactions in the
   block to validate it
 
   ## Examples
@@ -80,8 +80,7 @@ defmodule Blockchain.Block.HolisticValidity do
       |> check_ommers_hash_validity(child_block, block)
       |> check_transactions_root_validity(child_block, block)
       |> check_gas_used(child_block, block)
-
-    # |> check_receipts_root_validity(child_block, block)
+      |> check_receipts_root_validity(child_block, block)
 
     if errors == [], do: :valid, else: {:invalid, errors}
   end
