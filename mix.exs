@@ -6,7 +6,6 @@ defmodule Mana.MixProject do
     [
       apps_path: "apps",
       apps: [
-        :abi,
         :blockchain,
         :evm,
         :ex_rlp,

@@ -109,7 +109,7 @@ defmodule StateTestRunner do
   defp setup_state(test) do
     db = MerklePatriciaTree.Test.random_ets_db()
 
-    state = %Trie{
+    %Trie{
       db: db,
       root_hash: maybe_hex(test["env"]["previousHash"])
     }
