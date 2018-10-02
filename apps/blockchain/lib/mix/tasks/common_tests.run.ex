@@ -3,12 +3,14 @@ defmodule Mix.Tasks.CommonTests.Run do
 
   require Logger
 
+  alias EthCommonTest.BlockchainTestRunner
+
   @shortdoc "Runs a single blockchain common test"
 
   @moduledoc """
   Runs a single blockchain common test.
 
-  Note that this must be run with `MIX_ENV=test`.
+  Note that this should be run with `MIX_ENV=test`.
 
   ## Example
 

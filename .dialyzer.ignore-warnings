@@ -172,5 +172,5 @@ apps/blockchain/scripts/generate_state_tests.ex
 -------------------------------
 # Ignores test runners
 -------------------------------
-apps/blockchain/test/support/blockchain_test_runner.ex
-apps/blockchain/test/support/state_test_runner.ex
+apps/blockchain/lib/eth_common_test/blockchain_test_runner.ex
+apps/blockchain/lib/eth_common_test/state_test_runner.ex
