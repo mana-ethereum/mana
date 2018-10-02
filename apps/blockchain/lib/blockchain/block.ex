@@ -728,6 +728,7 @@ defmodule Blockchain.Block do
     new_state = AccountInterface.commit(new_account_interface).state
 
     total_gas_used = block.header.gas_used + gas_used
+    receipt = %{receipt | cumulative_gas: total_gas_used}
 
     updated_block =
       block
