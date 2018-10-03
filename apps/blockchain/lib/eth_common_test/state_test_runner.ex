@@ -1,6 +1,6 @@
-defmodule StateTestRunner do
+defmodule EthCommonTest.StateTestRunner do
   alias MerklePatriciaTree.Trie
-  alias Blockchain.{Account, Transaction}
+  alias Blockchain.{Account, Chain, Transaction}
   alias Blockchain.Interface.AccountInterface
   alias Blockchain.Account.Storage
   alias ExthCrypto.Hash.Keccak
@@ -27,7 +27,7 @@ defmodule StateTestRunner do
   end
 
   def run_test({test_name, test}, hardfork) do
-    hardfork_configuration = EVM.Configuration.hardfork_config(hardfork)
+    chain = Chain.test_config(hardfork)
 
     test["post"][hardfork]
     |> Enum.with_index()
@@ -65,13 +65,13 @@ defmodule StateTestRunner do
             gas_limit: load_integer(test["env"]["currentGasLimit"]),
             parent_hash: maybe_hex(test["env"]["previousHash"])
           },
-          hardfork_configuration
+          chain
         )
 
       account_interface =
         account_interface
         |> simulate_miner_reward(test)
-        |> simulate_account_cleaning(test, hardfork_configuration)
+        |> simulate_account_cleaning(test, chain.evm_config)
 
       state = AccountInterface.commit(account_interface).state
 
@@ -109,7 +109,7 @@ defmodule StateTestRunner do
   defp setup_state(test) do
     db = MerklePatriciaTree.Test.random_ets_db()
 
-    state = %Trie{
+    %Trie{
       db: db,
       root_hash: maybe_hex(test["env"]["previousHash"])
     }

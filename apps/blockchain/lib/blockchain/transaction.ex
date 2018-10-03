@@ -5,7 +5,7 @@ defmodule Blockchain.Transaction do
   We are focused on implementing 𝛶, as defined in Eq.(1).
   """
 
-  alias Blockchain.{Account, Contract, Transaction, MathHelper}
+  alias Blockchain.{Account, Chain, Contract, Transaction, MathHelper}
   alias Blockchain.Transaction.{Validity, Receipt, AccountCleaner}
   alias Block.Header
   alias EVM.{Gas, Configuration, SubState}
@@ -166,18 +166,18 @@ defmodule Blockchain.Transaction do
   @doc """
   Validates the validity of a transaction and then executes it if transaction is valid.
   """
-  @spec execute_with_validation(EVM.state(), t, Header.t(), EVM.Configuration.t()) ::
+  @spec execute_with_validation(EVM.state(), t, Header.t(), Chain.t()) ::
           {AccountInterface.t(), Gas.t(), Receipt.t()}
   def execute_with_validation(
         state,
         tx,
         block_header,
-        config \\ EVM.Configuration.Frontier.new()
+        chain
       ) do
-    validation_result = Validity.validate(state, tx, block_header, config)
+    validation_result = Validity.validate(state, tx, block_header, chain)
 
     case validation_result do
-      :valid -> execute(state, tx, block_header, config)
+      :valid -> execute(state, tx, block_header, chain)
       {:invalid, _} -> {AccountInterface.new(state), 0, %Receipt{}}
     end
   end
@@ -196,17 +196,18 @@ defmodule Blockchain.Transaction do
   and the status code of this transaction. These are referred to as {σ', Υ^g,
   Υ^l, Y^z} in the Transaction Execution section of the Yellow Paper.
   """
-  @spec execute(EVM.state(), t, Header.t(), EVM.Configuration.t()) ::
+  @spec execute(EVM.state(), t, Header.t(), Chain.t()) ::
           {AccountInterface.t(), Gas.t(), Receipt.t()}
-  def execute(state, tx, block_header, config \\ EVM.Configuration.Frontier.new()) do
-    {:ok, sender} = Transaction.Signature.sender(tx)
+  def execute(state, tx, block_header, chain) do
+    {:ok, sender} = Transaction.Signature.sender(tx, chain.params.network_id)
 
+    evm_config = Chain.evm_config(chain, block_header.number)
     initial_account_interface = AccountInterface.new(state)
 
     {updated_account_interface, remaining_gas, sub_state, status} =
       initial_account_interface
       |> begin_transaction(sender, tx)
-      |> apply_transaction(tx, block_header, sender, config)
+      |> apply_transaction(tx, block_header, sender, evm_config)
 
     {expended_gas, refund} = calculate_gas_usage(tx, remaining_gas, sub_state)
 
@@ -214,7 +215,7 @@ defmodule Blockchain.Transaction do
       updated_account_interface
       |> pay_and_refund_gas(sender, tx, refund, block_header)
       |> clean_up_accounts_marked_for_destruction(sub_state, block_header)
-      |> clean_touched_accounts(sub_state, config)
+      |> clean_touched_accounts(sub_state, evm_config)
 
     receipt =
       create_receipt(

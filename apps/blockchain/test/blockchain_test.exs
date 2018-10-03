@@ -4,6 +4,7 @@ defmodule BlockchainTest do
   import EthCommonTest.Helpers
 
   alias Blockchain.Chain
+  alias EthCommonTest.BlockchainTestRunner
 
   doctest Blockchain
 

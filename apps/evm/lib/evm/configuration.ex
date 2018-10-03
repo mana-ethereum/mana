@@ -100,11 +100,11 @@ defmodule EVM.Configuration do
       "Homestead" ->
         EVM.Configuration.Homestead.new()
 
-      "EIP150" ->
-        EVM.Configuration.EIP150.new()
+      "TangerineWhistle" ->
+        EVM.Configuration.TangerineWhistle.new()
 
-      "EIP158" ->
-        EVM.Configuration.EIP158.new()
+      "SpuriousDragon" ->
+        EVM.Configuration.SpuriousDragon.new()
 
       "Byzantium" ->
         EVM.Configuration.Byzantium.new()

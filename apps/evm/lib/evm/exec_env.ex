@@ -23,7 +23,7 @@ defmodule EVM.ExecEnv do
             stack_depth: 0,
             account_interface: nil,
             block_interface: nil,
-            config: EVM.Configuration.Frontier.new(),
+            config: Configuration.Frontier.new(),
             static: false
 
   @typedoc """

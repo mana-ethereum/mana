@@ -40,74 +40,77 @@ defmodule Blockchain.BlocktreeTest do
         }
         |> Blockchain.Block.add_rewards(trie.db, chain)
 
+      tree = Blocktree.new_tree()
+      {:ok, tree_1} = Blocktree.verify_and_add_block(tree, chain, block_1, trie.db)
+      {:ok, tree_2} = Blocktree.verify_and_add_block(tree_1, chain, block_2, trie.db)
+
+      assert tree_2.best_block.header.number == block_2.header.number
+    end
+
+    test "adds a genesis block" do
+      trie = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
+      chain = Blockchain.Chain.load_chain(:ropsten)
+
+      gen_block = %Blockchain.Block{
+        header: %Block.Header{
+          number: 0,
+          parent_hash: <<0::256>>,
+          beneficiary: <<2, 3, 4>>,
+          difficulty: 0x100000,
+          gas_limit: 0x1000000,
+          timestamp: 11,
+          mix_hash: <<1>>,
+          nonce: <<2>>,
+          state_root:
+            <<33, 123, 11, 188, 251, 114, 226, 213, 126, 40, 243, 60, 179, 97, 185, 152, 53, 19,
+              23, 119, 85, 220, 63, 51, 206, 62, 112, 34, 237, 98, 183, 123>>
+        }
+      }
+
+      tree = Blockchain.Blocktree.new_tree()
+      {:ok, tree_1} = Blockchain.Blocktree.verify_and_add_block(tree, chain, gen_block, trie.db)
+
+      assert tree_1.best_block.header.number == 0
+    end
+
+    test "adds invalid block" do
+      trie = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
+      chain = Blockchain.Chain.load_chain(:ropsten)
+      parent = Blockchain.Genesis.create_block(chain, trie.db)
+
+      block_1 = %Blockchain.Block{
+        header: %Block.Header{
+          number: 0,
+          parent_hash: <<0::256>>,
+          beneficiary: <<2, 3, 4>>,
+          difficulty: 1_048_576,
+          timestamp: 11,
+          gas_limit: 200_000,
+          mix_hash: <<1>>,
+          nonce: <<2>>,
+          state_root: parent.header.state_root
+        }
+      }
+
+      block_2 = %Blockchain.Block{
+        header: %Block.Header{
+          number: 1,
+          parent_hash: block_1 |> Blockchain.Block.hash(),
+          beneficiary: <<2, 3, 4>>,
+          difficulty: 110,
+          timestamp: 11,
+          mix_hash: <<1>>,
+          nonce: <<2>>
+        }
+      }
+
       tree = Blockchain.Blocktree.new_tree()
       {:ok, tree_1} = Blockchain.Blocktree.verify_and_add_block(tree, chain, block_1, trie.db)
-      {:ok, tree_2} = Blockchain.Blocktree.verify_and_add_block(tree_1, chain, block_2, trie.db)
 
-      inspected_tree = Blockchain.Blocktree.inspect_tree(tree_2)
+      result = Blockchain.Blocktree.verify_and_add_block(tree_1, chain, block_2, trie.db)
 
-      assert inspected_tree == [
-               :root,
-               [
-                 {0, Blockchain.Block.hash(block_1)},
-                 [
-                   {1, Blockchain.Block.hash(block_2)}
-                 ]
-               ]
-             ]
+      assert result ==
+               {:invalid, [:invalid_difficulty, :invalid_gas_limit, :child_timestamp_invalid]}
     end
-  end
-
-  test "multi-level tree" do
-    block_10 = %Blockchain.Block{
-      block_hash: <<10>>,
-      header: %Block.Header{number: 0, parent_hash: <<0::256>>, difficulty: 100}
-    }
-
-    block_20 = %Blockchain.Block{
-      block_hash: <<20>>,
-      header: %Block.Header{number: 1, parent_hash: <<10>>, difficulty: 110}
-    }
-
-    block_21 = %Blockchain.Block{
-      block_hash: <<21>>,
-      header: %Block.Header{number: 1, parent_hash: <<10>>, difficulty: 120}
-    }
-
-    block_30 = %Blockchain.Block{
-      block_hash: <<30>>,
-      header: %Block.Header{number: 2, parent_hash: <<20>>, difficulty: 120}
-    }
-
-    block_40 = %Blockchain.Block{
-      block_hash: <<40>>,
-      header: %Block.Header{number: 3, parent_hash: <<30>>, difficulty: 120}
-    }
-
-    tree =
-      Blocktree.new_tree()
-      |> Blocktree.add_block(block_10)
-      |> Blocktree.add_block(block_20)
-      |> Blocktree.add_block(block_21)
-      |> Blocktree.add_block(block_30)
-      |> Blocktree.add_block(block_40)
-
-    assert Blocktree.inspect_tree(tree) ==
-             [
-               :root,
-               [
-                 {0, <<10>>},
-                 [
-                   {1, <<20>>},
-                   [
-                     {2, <<30>>},
-                     [{3, <<40>>}]
-                   ]
-                 ],
-                 [
-                   {1, <<21>>}
-                 ]
-               ]
-             ]
   end
 end

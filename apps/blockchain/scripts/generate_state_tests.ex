@@ -4,6 +4,7 @@ defmodule GenerateStateTests do
   alias Blockchain.Interface.AccountInterface
   alias Blockchain.Account.Storage
   alias ExthCrypto.Hash.Keccak
+  alias EthCommonTest.StateTestRunner
 
   use EthCommonTest.Harness
 

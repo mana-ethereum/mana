@@ -1,4 +1,4 @@
-defmodule BlockchainTestRunner do
+defmodule EthCommonTest.BlockchainTestRunner do
   import EthCommonTest.Helpers
 
   alias Blockchain.{Blocktree, Account, Transaction, Chain}

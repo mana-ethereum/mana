@@ -5,7 +5,7 @@ defmodule Blockchain.TransactionTest do
   doctest Blockchain.Transaction
 
   alias ExthCrypto.Hash.Keccak
-  alias Blockchain.{Account, Transaction}
+  alias Blockchain.{Account, Chain, Transaction}
   alias Blockchain.Transaction.Signature
   alias Blockchain.Interface.AccountInterface
   alias MerklePatriciaTree.Trie
@@ -173,11 +173,13 @@ defmodule Blockchain.TransactionTest do
 
       tx = Transaction.Signature.sign_transaction(unsigned_tx, private_key)
 
+      chain = Chain.test_config("Frontier")
+
       {account_interface, gas, receipt} =
         MerklePatriciaTree.Test.random_ets_db()
         |> Trie.new()
         |> Account.put_account(sender, %Account{balance: 400_000, nonce: 5})
-        |> Transaction.execute(tx, %Block.Header{beneficiary: beneficiary})
+        |> Transaction.execute(tx, %Block.Header{beneficiary: beneficiary}, chain)
 
       state = AccountInterface.commit(account_interface).state
 
@@ -242,12 +244,14 @@ defmodule Blockchain.TransactionTest do
 
       db = MerklePatriciaTree.Test.random_ets_db()
 
+      chain = Chain.test_config("Frontier")
+
       {account_interface, gas, receipt} =
         db
         |> Trie.new()
         |> Account.put_account(sender, %Account{balance: 400_000, nonce: 5})
         |> Account.put_code(contract_address, machine_code)
-        |> Transaction.execute(tx, %Block.Header{beneficiary: beneficiary})
+        |> Transaction.execute(tx, %Block.Header{beneficiary: beneficiary}, chain)
 
       state = AccountInterface.commit(account_interface).state
 
@@ -295,11 +299,13 @@ defmodule Blockchain.TransactionTest do
         }
         |> Transaction.Signature.sign_transaction(private_key)
 
+      chain = Chain.test_config("Frontier")
+
       {account_interface, gas_used, receipt} =
         MerklePatriciaTree.Test.random_ets_db()
         |> Trie.new()
         |> Account.put_account(sender_address, sender_account)
-        |> Transaction.execute(tx, %Block.Header{beneficiary: beneficiary_address})
+        |> Transaction.execute(tx, %Block.Header{beneficiary: beneficiary_address}, chain)
 
       state = AccountInterface.commit(account_interface).state
 
@@ -318,7 +324,7 @@ defmodule Blockchain.TransactionTest do
 
   describe "execute transaction with revert (Byzantium)" do
     test "reverts message call state except for gas used, increments nonce, and marks tx status as failed (0)" do
-      config = EVM.Configuration.Byzantium.new()
+      chain = Chain.test_config("Byzantium")
       private_key = <<1::256>>
       gas_price = 3
 
@@ -361,7 +367,7 @@ defmodule Blockchain.TransactionTest do
         |> Trie.new()
         |> Account.put_account(sender.address, %Account{balance: 400_000, nonce: sender.nonce})
         |> Account.put_code(contract_address, machine_code)
-        |> Transaction.execute(tx, %Block.Header{beneficiary: beneficiary.address}, config)
+        |> Transaction.execute(tx, %Block.Header{beneficiary: beneficiary.address}, chain)
 
       state = AccountInterface.commit(account_interface).state
 
@@ -382,7 +388,7 @@ defmodule Blockchain.TransactionTest do
     end
 
     test "reverts contract creation state except for gas used, increments nonce, and marks tx status as failed (0)" do
-      config = EVM.Configuration.Byzantium.new()
+      chain = Chain.test_config("Byzantium")
       private_key = <<1::256>>
       gas_price = 3
 
@@ -422,7 +428,7 @@ defmodule Blockchain.TransactionTest do
         MerklePatriciaTree.Test.random_ets_db()
         |> Trie.new()
         |> Account.put_account(sender.address, %Account{balance: 400_000, nonce: sender.nonce})
-        |> Transaction.execute(tx, %Block.Header{beneficiary: beneficiary.address}, config)
+        |> Transaction.execute(tx, %Block.Header{beneficiary: beneficiary.address}, chain)
 
       state = AccountInterface.commit(account_interface).state
 
