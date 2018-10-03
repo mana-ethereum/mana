@@ -5,7 +5,7 @@ defmodule Blockchain.Transaction do
   We are focused on implementing 𝛶, as defined in Eq.(1).
   """
 
-  alias Blockchain.{Account, Chain, Contract, Transaction, MathHelper}
+  alias Blockchain.{Chain, Contract, Transaction, MathHelper}
   alias Blockchain.Transaction.{Validity, Receipt, AccountCleaner}
   alias Block.Header
   alias EVM.{Gas, Configuration, SubState}
@@ -210,23 +210,47 @@ defmodule Blockchain.Transaction do
 
     {expended_gas, refund} = calculate_gas_usage(tx, remaining_gas, sub_state)
 
-    final_account_interface =
-      updated_account_interface
-      |> pay_and_refund_gas(sender, tx, refund, block_header)
-      |> clean_up_accounts_marked_for_destruction(sub_state, block_header)
-      |> clean_touched_accounts(sub_state, chain.evm_config)
-      |> AccountInterface.commit()
+    {account_interface_after_receipt, receipt} =
+      if empty_contract_creation?(tx) &&
+           Configuration.for(chain.evm_config).clean_touched_accounts?(chain.evm_config) do
+        account_interface_after_execution = AccountInterface.commit(updated_account_interface)
 
-    receipt =
-      create_receipt(
-        final_account_interface.state.root_hash,
-        expended_gas,
-        sub_state.logs,
-        status
-      )
+        receipt =
+          create_receipt(
+            account_interface_after_execution.state.root_hash,
+            expended_gas,
+            sub_state.logs,
+            status
+          )
+
+        account_interface =
+          account_interface_after_execution
+          |> pay_and_refund_gas(sender, tx, refund, block_header)
+          |> clean_up_accounts_marked_for_destruction(sub_state)
+          |> clean_touched_accounts(sub_state, chain.evm_config)
+
+        {account_interface, receipt}
+      else
+        account_interface_after_execution =
+          updated_account_interface
+          |> pay_and_refund_gas(sender, tx, refund, block_header)
+          |> clean_up_accounts_marked_for_destruction(sub_state)
+          |> clean_touched_accounts(sub_state, chain.evm_config)
+          |> AccountInterface.commit()
+
+        receipt =
+          create_receipt(
+            account_interface_after_execution.state.root_hash,
+            expended_gas,
+            sub_state.logs,
+            status
+          )
+
+        {account_interface_after_execution, receipt}
+      end
 
     final_account_interface =
-      final_account_interface
+      account_interface_after_receipt
       |> maybe_reset_coinbase(sub_state, block_header)
       |> AccountInterface.commit()
 
@@ -294,6 +318,10 @@ defmodule Blockchain.Transaction do
       |> message_call_response()
       |> touch_beneficiary_account(block_header.beneficiary)
     end
+  end
+
+  defp empty_contract_creation?(tx) do
+    contract_creation?(tx) && tx.init == <<>> && tx.value == 0 && tx.gas_price == 0
   end
 
   defp touch_beneficiary_account({state, gas, sub_state, status}, beneficiary) do
@@ -386,12 +414,9 @@ defmodule Blockchain.Transaction do
     )
   end
 
-  @spec clean_up_accounts_marked_for_destruction(
-          AccountInterface.t(),
-          EVM.SubState.t(),
-          Block.Header.t()
-        ) :: AccountInterface.t()
-  defp(clean_up_accounts_marked_for_destruction(account_interface, sub_state, block_header)) do
+  @spec clean_up_accounts_marked_for_destruction(AccountInterface.t(), EVM.SubState.t()) ::
+          AccountInterface.t()
+  defp clean_up_accounts_marked_for_destruction(account_interface, sub_state) do
     Enum.reduce(sub_state.selfdestruct_list, account_interface, fn address,
                                                                    new_account_interface ->
       AccountInterface.del_account(new_account_interface, address)

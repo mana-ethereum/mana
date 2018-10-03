@@ -340,9 +340,7 @@ defmodule Blockchain.BlockTest do
       expected_receipt = %Blockchain.Transaction.Receipt{
         cumulative_gas: 28_180,
         logs: [],
-        state:
-          <<244, 63, 228, 175, 232, 45, 220, 109, 96, 139, 147, 185, 78, 198, 37, 21, 157, 249,
-            94, 201, 235, 18, 91, 153, 250, 91, 63, 43, 27, 197, 69, 225>>
+        state: block.header.state_root
       }
 
       assert Block.get_receipt(block, 0, db) == expected_receipt
