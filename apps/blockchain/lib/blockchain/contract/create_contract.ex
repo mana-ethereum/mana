@@ -4,9 +4,9 @@ defmodule Blockchain.Contract.CreateContract do
   as defined in Section 7, Eq.(76) of the Yellow Paper.
   """
 
-  alias Blockchain.Interface.{BlockInterface, AccountInterface}
+  alias Blockchain.Interface.AccountInterface
   alias Block.Header
-  alias Blockchain.Account
+  alias Blockchain.{Account, BlockHeaderInfo}
   alias EVM.{SubState, Gas}
 
   defstruct account_interface: %AccountInterface{},
@@ -119,7 +119,7 @@ defmodule Blockchain.Contract.CreateContract do
       value_in_wei: params.endowment,
       machine_code: params.init_code,
       stack_depth: params.stack_depth,
-      block_interface: BlockInterface.new(params.block_header, account_interface.state.db),
+      block_header_info: BlockHeaderInfo.new(params.block_header, account_interface.state.db),
       account_interface: account_interface,
       config: params.config
     }
