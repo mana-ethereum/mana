@@ -3,6 +3,7 @@ defmodule Blockchain.ChainTest do
   doctest Blockchain.Chain
 
   alias Blockchain.Chain
+  alias EVM.Configuration
 
   describe "after_bomb_delays?/2" do
     test "checks if the block number is after any of the bomb delays were introduced" do
@@ -63,6 +64,34 @@ defmodule Blockchain.ChainTest do
       assert Chain.after_byzantium?(chain, byzantium_transition)
       assert Chain.after_byzantium?(chain, byzantium_transition + 1)
       refute Chain.after_byzantium?(chain, byzantium_transition - 1)
+    end
+  end
+
+  describe "evm_config/2" do
+    test "it returns the correct `evm_config` based on block number for mainnet" do
+      for {block, expected_configuration} <- %{
+            0 => Configuration.Frontier,
+            1_149_999 => Configuration.Frontier,
+            1_150_000 => Configuration.Homestead,
+            2_463_000 => Configuration.TangerineWhistle,
+            2_675_000 => Configuration.SpuriousDragon,
+            4_370_000 => Configuration.Byzantium,
+            4_370_001 => Configuration.Byzantium
+          } do
+        chain = Chain.load_chain(:foundation)
+        assert Chain.evm_config(chain, block).__struct__ == expected_configuration
+      end
+    end
+
+    test "it returns the correct `evm_config` based on block number for ropsten" do
+      for {block, expected_configuration} <- %{
+            0 => Configuration.TangerineWhistle,
+            10 => Configuration.SpuriousDragon,
+            1_700_000 => Configuration.Byzantium
+          } do
+        chain = Chain.load_chain(:ropsten)
+        assert Chain.evm_config(chain, block).__struct__ == expected_configuration
+      end
     end
   end
 end

@@ -281,7 +281,7 @@ defmodule Blockchain.BlockTest do
 
   describe "add_transactions/3" do
     test "creates contract account" do
-      chain = Blockchain.Test.ropsten_chain()
+      chain = Blockchain.Test.frontier_chain()
       db = MerklePatriciaTree.Test.random_ets_db()
       beneficiary = <<0x05::160>>
       private_key = <<1::256>>
@@ -326,7 +326,7 @@ defmodule Blockchain.BlockTest do
         |> Account.put_account(sender, account)
 
       block_header = %Header{
-        number: 23,
+        number: 0,
         state_root: state.root_hash,
         beneficiary: beneficiary,
         gas_limit: 900_000_000

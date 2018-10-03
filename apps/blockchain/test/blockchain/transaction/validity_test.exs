@@ -47,7 +47,7 @@ defmodule Blockchain.Transaction.ValidityTest do
       result =
         MerklePatriciaTree.Test.random_ets_db()
         |> MerklePatriciaTree.Trie.new()
-        |> Validity.validate(trx, %Block.Header{}, Chain.load_chain(:frontier_test))
+        |> Validity.validate(trx, %Block.Header{}, Chain.test_config("Frontier"))
 
       assert result == {:invalid, :invalid_sender}
     end
@@ -74,7 +74,7 @@ defmodule Blockchain.Transaction.ValidityTest do
         MerklePatriciaTree.Test.random_ets_db()
         |> MerklePatriciaTree.Trie.new()
         |> Account.put_account(sender, %Account{balance: 1000, nonce: 5})
-        |> Validity.validate(trx, %Block.Header{}, Chain.load_chain(:frontier_test))
+        |> Validity.validate(trx, %Block.Header{}, Chain.test_config("Frontier"))
 
       assert Enum.member?(errors, :nonce_mismatch)
     end
@@ -101,7 +101,7 @@ defmodule Blockchain.Transaction.ValidityTest do
         MerklePatriciaTree.Test.random_ets_db()
         |> MerklePatriciaTree.Trie.new()
         |> Account.put_account(sender, %Account{balance: 1000, nonce: 5})
-        |> Validity.validate(trx, %Block.Header{}, Chain.load_chain(:frontier_test))
+        |> Validity.validate(trx, %Block.Header{}, Chain.test_config("Frontier"))
 
       assert result ==
                {:invalid, [:over_gas_limit, :insufficient_balance, :insufficient_intrinsic_gas]}
@@ -129,7 +129,7 @@ defmodule Blockchain.Transaction.ValidityTest do
         MerklePatriciaTree.Test.random_ets_db()
         |> MerklePatriciaTree.Trie.new()
         |> Account.put_account(sender, %Account{balance: 1000, nonce: 5})
-        |> Validity.validate(trx, %Block.Header{}, Chain.load_chain(:frontier_test))
+        |> Validity.validate(trx, %Block.Header{}, Chain.test_config("Frontier"))
 
       assert result == {:invalid, [:over_gas_limit, :insufficient_balance]}
     end
@@ -159,7 +159,7 @@ defmodule Blockchain.Transaction.ValidityTest do
         |> Validity.validate(
           trx,
           %Block.Header{gas_limit: 50_000, gas_used: 49_999},
-          Chain.load_chain(:frontier_test)
+          Chain.test_config("Frontier")
         )
 
       assert result == {:invalid, [:over_gas_limit]}
@@ -190,7 +190,7 @@ defmodule Blockchain.Transaction.ValidityTest do
         |> Validity.validate(
           trx,
           %Block.Header{gas_limit: 500_000, gas_used: 49_999},
-          Chain.load_chain(:frontier_test)
+          Chain.test_config("Frontier")
         )
 
       assert result == :valid

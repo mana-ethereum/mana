@@ -201,12 +201,13 @@ defmodule Blockchain.Transaction do
   def execute(state, tx, block_header, chain) do
     {:ok, sender} = Transaction.Signature.sender(tx, chain.params.network_id)
 
+    evm_config = Chain.evm_config(chain, block_header.number)
     initial_account_interface = AccountInterface.new(state)
 
     {updated_account_interface, remaining_gas, sub_state, status} =
       initial_account_interface
       |> begin_transaction(sender, tx)
-      |> apply_transaction(tx, block_header, sender, chain.evm_config)
+      |> apply_transaction(tx, block_header, sender, evm_config)
 
     {expended_gas, refund} = calculate_gas_usage(tx, remaining_gas, sub_state)
 
