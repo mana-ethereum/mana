@@ -156,44 +156,46 @@ defmodule Blockchain.Transaction.Signature do
 
   ## Examples
 
-    iex> Blockchain.Transaction.Signature.is_signature_valid?(1, 1, 27, max_s: :secp256k1n)
+    iex> Blockchain.Transaction.Signature.is_signature_valid?(1, 1, 27, 1, max_s: :secp256k1n)
     true
 
-    iex> Blockchain.Transaction.Signature.is_signature_valid?(1, 1, 20, max_s: :secp256k1n) # invalid v
+    iex> Blockchain.Transaction.Signature.is_signature_valid?(1, 1, 20, 1, max_s: :secp256k1n) # invalid v
     false
 
     iex> secp256k1n = 115792089237316195423570985008687907852837564279074904382605163141518161494337
-    iex> Blockchain.Transaction.Signature.is_signature_valid?(secp256k1n - 1, 1, 28, max_s: :secp256k1n) # r okay
+    iex> Blockchain.Transaction.Signature.is_signature_valid?(secp256k1n - 1, 1, 28, 1, max_s: :secp256k1n) # r okay
     true
 
     iex> secp256k1n = 115792089237316195423570985008687907852837564279074904382605163141518161494337
-    iex> Blockchain.Transaction.Signature.is_signature_valid?(secp256k1n + 1, 1, 28, max_s: :secp256k1n) # r too high
+    iex> Blockchain.Transaction.Signature.is_signature_valid?(secp256k1n + 1, 1, 28, 1, max_s: :secp256k1n) # r too high
     false
 
     iex> secp256k1n = 115792089237316195423570985008687907852837564279074904382605163141518161494337
-    iex> Blockchain.Transaction.Signature.is_signature_valid?(1, secp256k1n + 1, 28, max_s: :secp256k1n) # s too high for non-homestead
+    iex> Blockchain.Transaction.Signature.is_signature_valid?(1, secp256k1n + 1, 28, 1, max_s: :secp256k1n) # s too high for non-homestead
     false
 
     iex> secp256k1n = 115792089237316195423570985008687907852837564279074904382605163141518161494337
-    iex> Blockchain.Transaction.Signature.is_signature_valid?(1, secp256k1n - 1, 28, max_s: :secp256k1n) # s okay for non-homestead
+    iex> Blockchain.Transaction.Signature.is_signature_valid?(1, secp256k1n - 1, 28, 1, max_s: :secp256k1n) # s okay for non-homestead
     true
 
     iex> secp256k1n = 115792089237316195423570985008687907852837564279074904382605163141518161494337
-    iex> Blockchain.Transaction.Signature.is_signature_valid?(1, secp256k1n - 1, 28, max_s: :secp256k1n_2) # s too high for homestead
+    iex> Blockchain.Transaction.Signature.is_signature_valid?(1, secp256k1n - 1, 28, 1, max_s: :secp256k1n_2) # s too high for homestead
     false
 
     iex> secp256k1n = 115792089237316195423570985008687907852837564279074904382605163141518161494337
     iex> secp256k1n_2 = round(:math.floor(secp256k1n / 2))
-    iex> Blockchain.Transaction.Signature.is_signature_valid?(secp256k1n_2 - 1, 1, 28, max_s: :secp256k1n_2) # s okay for homestead
+    iex> Blockchain.Transaction.Signature.is_signature_valid?(secp256k1n_2 - 1, 1, 28, 1, max_s: :secp256k1n_2) # s okay for homestead
     true
   """
-  @spec is_signature_valid?(integer(), integer(), integer(), max_s: atom()) :: boolean()
-  def is_signature_valid?(r, s, v, max_s: :secp256k1n) do
+  @spec is_signature_valid?(integer(), integer(), integer(), integer(), max_s: atom()) ::
+          boolean()
+  def is_signature_valid?(r, s, v, _, max_s: :secp256k1n) do
     r > 0 and r < @secp256k1n and s > 0 and s < @secp256k1n and (v == 27 || v == 28)
   end
 
-  def is_signature_valid?(r, s, v, max_s: :secp256k1n_2) do
-    r > 0 and r < @secp256k1n and s > 0 and s <= @secp256k1n_2 and (v == 27 || v == 28)
+  def is_signature_valid?(r, s, v, chain_id, max_s: :secp256k1n_2) do
+    r > 0 and r < @secp256k1n and s > 0 and s <= @secp256k1n_2 and
+      (v == 27 || v == 28 || v == chain_id * 2 + 35 || v == chain_id * 2 + 36)
   end
 
   @doc """

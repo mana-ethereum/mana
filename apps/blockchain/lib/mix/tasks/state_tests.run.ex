@@ -3,12 +3,14 @@ defmodule Mix.Tasks.StateTests.Run do
 
   require Logger
 
+  alias EthCommonTest.StateTestRunner
+
   @shortdoc "Runs a single state common test"
 
   @moduledoc """
   Runs a single state common test.
 
-  Note that this must be run with `MIX_ENV=test`.
+  Note that this should be run with `MIX_ENV=test`.
 
   ## Example
 

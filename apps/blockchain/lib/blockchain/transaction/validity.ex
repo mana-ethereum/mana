@@ -4,7 +4,7 @@ defmodule Blockchain.Transaction.Validity do
   as defined in the Yellow Paper.
   """
 
-  alias Blockchain.{Account, Transaction}
+  alias Blockchain.{Account, Chain, Transaction}
   alias Block.Header
   alias MerklePatriciaTree.Trie
 
@@ -13,14 +13,14 @@ defmodule Blockchain.Transaction.Validity do
   true before we're willing to execute a transaction. This is
   specified in Section 6.2 of the Yellow Paper Eq.(65) and Eq.(66).
   """
-  @spec validate(Trie.t(), Transaction.t(), Block.Header.t(), EVM.Configuration.t()) ::
+  @spec validate(Trie.t(), Transaction.t(), Block.Header.t(), Chain.t()) ::
           :valid | {:invalid, atom()}
-  def validate(state, trx, block_header, config) do
-    with :ok <- validate_signature(trx, config),
-         {:ok, sender_address} <- Transaction.Signature.sender(trx) do
+  def validate(state, trx, block_header, chain) do
+    with :ok <- validate_signature(trx, chain),
+         {:ok, sender_address} <- Transaction.Signature.sender(trx, chain.params.network_id) do
       errors =
         []
-        |> check_intristic_gas(trx, config)
+        |> check_intristic_gas(trx, chain.evm_config)
         |> check_account_validity(trx, state, sender_address)
         |> check_gas_limit(trx, block_header)
 
@@ -40,12 +40,15 @@ defmodule Blockchain.Transaction.Validity do
     end
   end
 
-  @spec validate_signature(Transaction.t(), EVM.Configuration.t()) ::
-          :ok | {:invalid, :invalid_signature}
-  defp validate_signature(trx, config) do
+  @spec validate_signature(Transaction.t(), Chain.t()) :: :ok | {:invalid, :invalid_signature}
+  defp validate_signature(trx, chain) do
+    config = chain.evm_config
+
     max_s_value = EVM.Configuration.for(config).max_signature_s(config)
 
-    if Transaction.Signature.is_signature_valid?(trx.r, trx.s, trx.v, max_s: max_s_value) do
+    if Transaction.Signature.is_signature_valid?(trx.r, trx.s, trx.v, chain.params.network_id,
+         max_s: max_s_value
+       ) do
       :ok
     else
       {:invalid, :invalid_sender}
