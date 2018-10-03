@@ -225,18 +225,28 @@ defmodule Blockchain.Transaction do
           )
 
         account_interface =
-          account_interface_after_execution
-          |> pay_and_refund_gas(sender, tx, refund, block_header)
-          |> clean_up_accounts_marked_for_destruction(sub_state)
-          |> clean_touched_accounts(sub_state, chain.evm_config)
+          refund_gas_and_clean_accounts(
+            account_interface_after_execution,
+            sender,
+            tx,
+            refund,
+            block_header,
+            sub_state,
+            chain.evm_config
+          )
 
         {account_interface, receipt}
       else
         account_interface_after_execution =
           updated_account_interface
-          |> pay_and_refund_gas(sender, tx, refund, block_header)
-          |> clean_up_accounts_marked_for_destruction(sub_state)
-          |> clean_touched_accounts(sub_state, chain.evm_config)
+          |> refund_gas_and_clean_accounts(
+            sender,
+            tx,
+            refund,
+            block_header,
+            sub_state,
+            chain.evm_config
+          )
           |> AccountInterface.commit()
 
         receipt =
@@ -319,6 +329,21 @@ defmodule Blockchain.Transaction do
       |> message_call_response()
       |> touch_beneficiary_account(block_header.beneficiary)
     end
+  end
+
+  defp refund_gas_and_clean_accounts(
+         account_interface,
+         sender,
+         tx,
+         refund,
+         block_header,
+         sub_state,
+         config
+       ) do
+    account_interface
+    |> pay_and_refund_gas(sender, tx, refund, block_header)
+    |> clean_up_accounts_marked_for_destruction(sub_state)
+    |> clean_touched_accounts(sub_state, config)
   end
 
   defp empty_contract_creation?(tx) do
