@@ -5,18 +5,23 @@ defmodule Mix.Tasks.Sync.WithInfura do
 
   You will need an Infura API key to run.
 
-  1.  Sign up with Infura.
-  2.  Create a new project.
-  3.  Copy your project API KEY.
-  4.  Paste your key into the dev.secret file for the blockchain app.
-    1.  Go to apps/blockchain/config/dev.secret.exs
-    2.  Paste your key to replace `<your api key here>` in the url string.
-    ```Use Mix.Config
-       config :ethereumex, url: "https://mainnet.infura.io/<your api key here>
+  1. Sign up with Infura.
+  2. Create a new project.
+  3. Copy your project API KEY.
+  4. Paste your key into the dev.secret file for the blockchain app.
+    1. Go to apps/blockchain/config/dev.secret.exs
+    2. Paste your key to replace `<your api key here>` in the url string.
     ```
-  5.  Save the file and return to the mana home directory.
-  6.  Run the script.
-    `mix run apps/blockchain/scripts/sync_with_infura.ex`
+    Use Mix.Config
+    config :ethereumex, url: "https://mainnet.infura.io/<your api key here>
+    ```
+  5. Save the file and return to the mana home directory.
+  6. Compile the project.
+
+    `mix compile`
+  7. Run the mix task.
+
+    `mix sync.with_infura`
 
   If running properly, you will see a timestamp in hr/min/sec/millisec
   and a running list of Verified Blocks.
@@ -27,6 +32,7 @@ defmodule Mix.Tasks.Sync.WithInfura do
   @save_block_interval 1000
 
   def run(_) do
+    {:ok, _apps} = Application.ensure_all_started(:ethereumex)
     {db, chain} = setup()
 
     current_block =
