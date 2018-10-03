@@ -6,7 +6,7 @@ defmodule Blockchain.Test do
   """
 
   @chain Blockchain.Chain.load_chain(:ropsten)
-  @frontier_chain Blockchain.Chain.load_chain(:frontier_test)
+  @frontier_chain Blockchain.Chain.load_chain(:frontier_test, EVM.Configuration.Frontier.new())
 
   @doc """
   Returns a test chain similar to Ropsten.
