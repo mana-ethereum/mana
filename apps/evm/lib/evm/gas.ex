@@ -135,7 +135,8 @@ defmodule EVM.Gas do
       iex> EVM.Gas.cost(%EVM.MachineState{}, %EVM.ExecEnv{})
       0
   """
-  @spec cost(MachineState.t(), ExecEnv.t(), keyword()) :: t | nil | {atom(), t | nil}
+  @spec cost(MachineState.t(), ExecEnv.t(), keyword()) ::
+          t | nil | {:original, t | nil} | {:changed, t | nil, t | nil}
   def cost(machine_state, exec_env, params \\ []) do
     with_status = Keyword.get(params, :with_status)
 
@@ -158,8 +159,11 @@ defmodule EVM.Gas do
         )
 
       case cost_change_result do
-        {status, value} -> if with_status, do: {status, value}, else: value
-        {status, value, call_gass} -> if with_status, do: {status, value, call_gass}, else: value
+        {:original, value} ->
+          if with_status, do: {:original, value}, else: value
+
+        {:changed, value, call_gass} ->
+          if with_status, do: {:changed, value, call_gass}, else: value
       end
     end
   end
@@ -577,7 +581,8 @@ defmodule EVM.Gas do
   def g_sload, do: @g_sload
 
   # EIP150
-  @spec gas_cost_for_nested_operation(atom(), keyword()) :: {atom(), integer()}
+  @spec gas_cost_for_nested_operation(atom(), keyword()) ::
+          {:original, t()} | {:changed, t(), t()}
   defp gas_cost_for_nested_operation(
          operation,
          inputs: inputs,
