@@ -305,13 +305,8 @@ defmodule EVM.Gas do
   Returns the operation cost for every possible operation.
   This is defined in Appendix H of the Yellow Paper.
   """
-  @spec operation_cost(
-          atom() | nil,
-          list(EVM.val()) | nil,
-          MachineState.t() | nil,
-          ExecEnv.t() | nil
-        ) :: t | nil
-  def operation_cost(operation \\ nil, inputs \\ nil, machine_state \\ nil, exec_env \\ nil)
+  @spec operation_cost(atom(), list(EVM.val()), MachineState.t(), ExecEnv.t()) :: t | nil
+  def operation_cost(operation, inputs, machine_state, exec_env)
 
   def operation_cost(:exp, [_base, exponent], _machine_state, exec_env) do
     @g_exp +
