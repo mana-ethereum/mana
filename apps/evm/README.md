@@ -68,7 +68,7 @@ iex> env = %EVM.ExecEnv{
     contract_result: %{gas: nil, output: nil, sub_state: nil}
   },
   address: 87579061662017136990230301793909925042452127430,
-  block_interface: %EVM.Interface.Mock.MockBlockInterface{
+  block_header_info: %EVM.Mock.MockBlockHeaderInfo{
     block_header: nil,
     block_map: %{}
   },
@@ -141,7 +141,7 @@ Within the execution environment, you will see the new storage value: `storage: 
      contract_result: %{gas: nil, output: nil, sub_state: nil}
    },
    address: 87579061662017136990230301793909925042452127430,
-   block_interface: %EVM.Interface.Mock.MockBlockInterface{
+   block_header_info: %EVM.Mock.MockBlockHeaderInfo{
      block_header: nil,
      block_map: %{}
    },

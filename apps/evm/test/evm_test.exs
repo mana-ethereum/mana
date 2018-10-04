@@ -2,7 +2,8 @@ defmodule EvmTest do
   import ExthCrypto.Math, only: [hex_to_bin: 1, hex_to_int: 1]
 
   alias ExthCrypto.Hash.Keccak
-  alias EVM.Interface.Mock.{MockAccountInterface, MockBlockInterface}
+  alias EVM.Interface.Mock.MockAccountInterface
+  alias EVM.Mock.MockBlockHeaderInfo
 
   use ExUnit.Case, async: true
 
@@ -84,7 +85,7 @@ defmodule EvmTest do
     %EVM.ExecEnv{
       account_interface: account_interface,
       address: hex_to_bin(test["exec"]["address"]),
-      block_interface: block_interface(test),
+      block_header_info: block_header_info(test),
       data: hex_to_bin(test["exec"]["data"]),
       gas_price: hex_to_bin(test["exec"]["gasPrice"]),
       machine_code: hex_to_bin(test["exec"]["code"]),
@@ -134,7 +135,7 @@ defmodule EvmTest do
     )
   end
 
-  def block_interface(test) do
+  def block_header_info(test) do
     genisis_block_header = %Block.Header{
       number: 0,
       mix_hash: 0
@@ -173,7 +174,7 @@ defmodule EvmTest do
       last_block_header.mix_hash => last_block_header
     }
 
-    MockBlockInterface.new(
+    MockBlockHeaderInfo.new(
       last_block_header,
       block_map
     )

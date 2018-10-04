@@ -14,17 +14,6 @@
 :0: Unknown function 'Elixir.EVM.Interface.AccountInterface.Port':'__impl__'/1
 :0: Unknown function 'Elixir.EVM.Interface.AccountInterface.Reference':'__impl__'/1
 :0: Unknown function 'Elixir.EVM.Interface.AccountInterface.Tuple':'__impl__'/1
-:0: Unknown function 'Elixir.EVM.Interface.BlockInterface.Atom':'__impl__'/1
-:0: Unknown function 'Elixir.EVM.Interface.BlockInterface.BitString':'__impl__'/1
-:0: Unknown function 'Elixir.EVM.Interface.BlockInterface.Float':'__impl__'/1
-:0: Unknown function 'Elixir.EVM.Interface.BlockInterface.Function':'__impl__'/1
-:0: Unknown function 'Elixir.EVM.Interface.BlockInterface.Integer':'__impl__'/1
-:0: Unknown function 'Elixir.EVM.Interface.BlockInterface.List':'__impl__'/1
-:0: Unknown function 'Elixir.EVM.Interface.BlockInterface.Map':'__impl__'/1
-:0: Unknown function 'Elixir.EVM.Interface.BlockInterface.PID':'__impl__'/1
-:0: Unknown function 'Elixir.EVM.Interface.BlockInterface.Port':'__impl__'/1
-:0: Unknown function 'Elixir.EVM.Interface.BlockInterface.Reference':'__impl__'/1
-:0: Unknown function 'Elixir.EVM.Interface.BlockInterface.Tuple':'__impl__'/1
 
 # evm warnings
 
@@ -34,7 +23,7 @@ apps/evm/lib/evm/functions.ex:213: Function 'is_invalid_jump_destination?'/3 wil
 apps/evm/lib/evm/functions.ex:223: Function 'static_state_modification?'/2 will never be called
 apps/evm/lib/evm/gas.ex:139: Function cost/2 has no local return
 apps/evm/lib/evm/gas.ex:139: Function cost/3 has no local return
-apps/evm/lib/evm/gas.ex:144: The call 'Elixir.EVM.Gas':operation_cost(atom(),_inputs@1::[integer()],_machine_state@1::#{'__struct__':='Elixir.EVM.MachineState', 'active_words':=integer(), 'gas':=integer(), 'last_return_data':=binary(), 'memory':=binary(), 'previously_active_words':=integer(), 'program_counter':=integer(), 'stack':=[integer()]},_exec_env@1::#{'__struct__':='Elixir.EVM.ExecEnv', 'account_interface':=atom(), 'address':=<<_:160>>, 'block_interface':=atom(), 'config':=#{'__struct__':=atom(), atom()=>_}, 'data':=binary(), 'gas_price':=integer(), 'machine_code':=binary(), 'originator':=<<_:160>>, 'sender':=<<_:160>>, 'stack_depth':=integer(), 'static':=boolean(), 'value_in_wei':=integer()}) breaks the contract (atom(),['Elixir.EVM':val()],['Elixir.EVM':val()],'Elixir.EVM.MachineState':t()) -> t() | 'nil'
+apps/evm/lib/evm/gas.ex:162: The pattern {_status@2, _value@2, _call_gass@1} can never match the type {'original',integer()}
 apps/evm/lib/evm/gas.ex:309: Function operation_cost/0 has no local return
 apps/evm/lib/evm/gas.ex:309: The call 'Elixir.EVM.Gas':operation_cost('nil','nil','nil','nil') breaks the contract (atom(),['Elixir.EVM':val()],['Elixir.EVM':val()],'Elixir.EVM.MachineState':t()) -> t() | 'nil'
 apps/evm/lib/evm/gas.ex:309: Function operation_cost/1 has no local return
@@ -45,6 +34,8 @@ apps/evm/lib/evm/gas.ex:309: Function operation_cost/3 has no local return
 apps/evm/lib/evm/gas.ex:309: The call 'Elixir.EVM.Gas':operation_cost(__@1::any(),__@2::any(),__@3::any(),'nil') breaks the contract (atom(),['Elixir.EVM':val()],['Elixir.EVM':val()],'Elixir.EVM.MachineState':t()) -> t() | 'nil'
 apps/evm/lib/evm/gas.ex:576: Function gas_cost_for_nested_operation/2 will never be called
 apps/evm/lib/evm/machine_state.ex:53: Function subtract_gas/2 has no local return
+apps/evm/lib/evm/machine_state.ex:55: The pattern {'changed', _cost@1, _new_call_gas@1} can never match the type number() | {'original',number()}
+apps/evm/lib/evm/machine_state.ex:55: The pattern {'changed', _cost@1, _new_call_gas@1} can never match the type integer() | {'original',integer()}
 apps/evm/lib/evm/operation/environmental_information.ex:114: Function calldataload/2 has no local return
 apps/evm/lib/evm/operation/environmental_information.ex:117: The call 'Elixir.EVM.Helpers':decode_signed(binary()) breaks the contract (integer() | 'nil') -> 'Elixir.EVM':val() | 'nil'
 apps/evm/lib/evm/vm.ex:98: The pattern 'continue' can never match the type {'halt','invalid_instruction' | 'stack_underflow' | 'undefined_instruction'}
@@ -57,7 +48,6 @@ apps/evm/lib/evm/builtin.ex:255: Guard test __@1::'true' =:= 'false' can never s
 # TODO: rewrite mocked protocol typespecs
 -------------------------------
 lib/evm/interface/mock/mock_account_interface
-lib/evm/interface/mock/mock_block_interface
 lib/evm/machine_code
 
 -------------------------------

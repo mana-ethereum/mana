@@ -31,7 +31,7 @@ defmodule EVM.Operation do
           optional(:machine_state) => MachineState.t(),
           optional(:sub_state) => SubState.t(),
           optional(:exec_env) => ExecEnv.t(),
-          optional(:block_interface) => EVM.Interface.BlockInterface.t(),
+          optional(:block_header_info) => EVM.BlockHeaderInfo.t(),
           # EVM.Interface.ContractInterface.t()
           optional(:contract_interface) => any(),
           optional(:account_interface) => EVM.Interface.AccountInterface.t()

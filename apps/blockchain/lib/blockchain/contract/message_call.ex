@@ -4,7 +4,8 @@ defmodule Blockchain.Contract.MessageCall do
   as defined in Section 8, Eq.(98) of the Yellow Paper.
   """
 
-  alias Blockchain.Interface.{BlockInterface, AccountInterface}
+  alias Blockchain.Interface.AccountInterface
+  alias Blockchain.BlockHeaderInfo
   alias Block.Header
   alias EVM.SubState
   alias EVM.MessageCall
@@ -92,7 +93,7 @@ defmodule Blockchain.Contract.MessageCall do
       value_in_wei: params.apparent_value,
       machine_code: machine_code,
       stack_depth: params.stack_depth,
-      block_interface: BlockInterface.new(params.block_header, account_interface.state.db),
+      block_header_info: BlockHeaderInfo.new(params.block_header, account_interface.state.db),
       account_interface: account_interface,
       config: params.config
     }

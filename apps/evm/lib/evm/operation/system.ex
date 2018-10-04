@@ -1,5 +1,6 @@
 defmodule EVM.Operation.System do
-  alias EVM.Interface.{AccountInterface, BlockInterface}
+  alias EVM.Interface.AccountInterface
+  alias EVM.BlockHeaderInfo
 
   alias EVM.{
     MachineState,
@@ -262,7 +263,7 @@ defmodule EVM.Operation.System do
     account_balance =
       AccountInterface.get_account_balance(exec_env.account_interface, exec_env.address)
 
-    block_header = BlockInterface.get_block_header(exec_env.block_interface)
+    block_header = BlockHeaderInfo.block_header(exec_env.block_header_info)
 
     is_allowed =
       value <= account_balance and exec_env.stack_depth < EVM.Functions.max_stack_depth()

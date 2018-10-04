@@ -9,7 +9,7 @@ defmodule EVM.Operation.Logging do
       iex> env = %EVM.ExecEnv{
       ...>  account_interface: %EVM.Interface.Mock.MockAccountInterface{},
       ...>  address: 87579061662017136990230301793909925042452127430,
-      ...>  block_interface: %EVM.Interface.Mock.MockBlockInterface{}
+      ...>  block_header_info: %EVM.Mock.MockBlockHeaderInfo{}
       ...> }
       iex> machine_state = %EVM.MachineState{
       ...>   active_words: 1,
@@ -52,7 +52,7 @@ defmodule EVM.Operation.Logging do
       iex> env = %EVM.ExecEnv{
       ...>   account_interface: %EVM.Interface.Mock.MockAccountInterface{},
       ...>   address: 87579061662017136990230301793909925042452127430,
-      ...>   block_interface: %EVM.Interface.Mock.MockBlockInterface{}
+      ...>   block_header_info: %EVM.Mock.MockBlockHeaderInfo{}
       ...> }
       iex> machine_state = %EVM.MachineState{
       ...>   active_words: 1,
@@ -98,7 +98,7 @@ defmodule EVM.Operation.Logging do
       iex> env = %EVM.ExecEnv{
       ...>   account_interface: %EVM.Interface.Mock.MockAccountInterface{},
       ...>   address: 87579061662017136990230301793909925042452127430,
-      ...>   block_interface: %EVM.Interface.Mock.MockBlockInterface{}
+      ...>   block_header_info: %EVM.Mock.MockBlockHeaderInfo{}
       ...> }
       iex> machine_state = %EVM.MachineState{
       ...>   active_words: 1,
@@ -148,7 +148,7 @@ defmodule EVM.Operation.Logging do
       iex> env = %EVM.ExecEnv{
       ...>   account_interface: %EVM.Interface.Mock.MockAccountInterface{},
       ...>   address: 87579061662017136990230301793909925042452127430,
-      ...>   block_interface: %EVM.Interface.Mock.MockBlockInterface{}
+      ...>   block_header_info: %EVM.Mock.MockBlockHeaderInfo{}
       ...> }
       iex> machine_state = %EVM.MachineState{
       ...>   active_words: 1,
@@ -194,7 +194,7 @@ defmodule EVM.Operation.Logging do
       iex> env = %EVM.ExecEnv{
       ...>   account_interface: %EVM.Interface.Mock.MockAccountInterface{},
       ...>   address: 87579061662017136990230301793909925042452127430,
-      ...>   block_interface: %EVM.Interface.Mock.MockBlockInterface{}
+      ...>   block_header_info: %EVM.Mock.MockBlockHeaderInfo{}
       ...> }
       iex> machine_state = %EVM.MachineState{
       ...>   active_words: 1,
