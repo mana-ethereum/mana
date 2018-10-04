@@ -8,8 +8,8 @@ defmodule GenerateStateTests do
   use EthCommonTest.Harness
 
   @hardforks [
-    "EIP158",
-    "EIP150",
+    "TangerineWhistle",
+    "SpuriousDragon",
     "Homestead",
     "Frontier",
     "Byzantium",
@@ -21,16 +21,16 @@ defmodule GenerateStateTests do
     passing: %{
       "Homestead" => [],
       "Frontier" => [],
-      "EIP150" => [],
-      "EIP158" => [],
+      "TangerineWhistle" => [],
+      "SpuriousDragon" => [],
       "Byzantium" => [],
       "Constantinople" => []
     },
     failing: %{
       "Homestead" => [],
       "Frontier" => [],
-      "EIP150" => [],
-      "EIP158" => [],
+      "TangerineWhistle" => [],
+      "SpuriousDragon" => [],
       "Byzantium" => [],
       "Constantinople" => []
     }

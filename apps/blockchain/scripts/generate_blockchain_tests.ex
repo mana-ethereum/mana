@@ -5,9 +5,10 @@ defmodule GenerateBlockchainTests do
   alias MerklePatriciaTree.Trie
   alias Blockchain.Account.Storage
   alias Block.Header
+  import EthCommonTest.Helpers
 
   @base_path System.cwd() <> "/../../ethereum_common_tests/BlockchainTests/"
-  @allowed_forks ["Constantinople", "Byzantium", "Frontier", "Homestead", "EIP150", "EIP158"]
+  @allowed_forks ["Constantinople", "Byzantium", "Frontier", "Homestead", "TangerineWhistle", "SpuriousDragon"]
   @byzantium_failing_tests_path System.cwd() <> "/test/support/byzantium_failing_tests.txt"
   @constantinople_failing_tests_path System.cwd() <>
                                        "/test/support/constantinople_failing_tests.txt"
@@ -91,7 +92,7 @@ defmodule GenerateBlockchainTests do
   end
 
   defp fork_test?({_name, test_data}, hardfork) do
-    test_data["network"] == hardfork
+    human_readable_fork_name(test_data["network"]) == hardfork
   end
 
   defp close_io_device(:stdio), do: :ok
@@ -138,7 +139,7 @@ defmodule GenerateBlockchainTests do
   defp run_test(json_test) do
     state = populate_prestate(json_test)
 
-    chain = load_chain(json_test["network"])
+    chain = load_chain(human_readable_fork_name(json_test["network"]))
 
     blocktree =
       create_blocktree()
@@ -160,10 +161,10 @@ defmodule GenerateBlockchainTests do
       "Homestead" ->
         Chain.load_chain(:homestead_test, config)
 
-      "EIP150" ->
+      "TangerineWhistle" ->
         Chain.load_chain(:eip150_test, config)
 
-      "EIP158" ->
+      "SpuriousDragon" ->
         Chain.load_chain(:eip150_test, config)
 
       "Byzantium" ->

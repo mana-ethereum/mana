@@ -14,8 +14,8 @@ defmodule Blockchain.TransactionTest do
   @forks ~w(
     Byzantium
     Constantinople
-    EIP150
-    EIP158
+    TangerineWhistle
+    SpuriousDragon
     Frontier
     Homestead
   )

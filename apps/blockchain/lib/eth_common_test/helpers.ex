@@ -83,6 +83,20 @@ defmodule EthCommonTest.Helpers do
     "src/#{filler_type}" |> test_file_name(filler) |> read_test_file()
   end
 
+  @doc """
+  The Ethereum common tests use EIP numbers to refer to forks in some cases.
+
+  Once [this issue](https://github.com/ethereum/tests/issues/488) is closed we can remove this helper.
+  """
+
+  def human_readable_fork_name(fork) do
+    case fork do
+      "EIP150" -> "TangerineWhistle"
+      "EIP158" -> "SpuriousDragon"
+      fork -> fork
+    end
+  end
+
   @spec ethereum_common_tests_path :: String.t()
   def ethereum_common_tests_path do
     Path.join(System.cwd(), "/../../ethereum_common_tests")

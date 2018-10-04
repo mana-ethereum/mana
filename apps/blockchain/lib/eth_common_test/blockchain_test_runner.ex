@@ -22,11 +22,11 @@ defmodule EthCommonTest.BlockchainTestRunner do
   defp fork_test?(_, :all), do: true
 
   defp fork_test?({_test_name, json_test}, fork) do
-    fork == json_test["network"]
+    fork == human_readable_fork_name(json_test["network"])
   end
 
   defp run_test({test_name, json_test}) do
-    fork = json_test["network"]
+    fork = human_readable_fork_name(json_test["network"])
     chain = Chain.test_config(fork)
 
     state = populate_prestate(json_test)

@@ -8,7 +8,7 @@ defmodule EthCommonTest.StateTestRunner do
   import EthCommonTest.Helpers
 
   def run(test_path, :all) do
-    ["Byzantium", "Constantinople", "EIP150", "EIP158", "Frontier", "Homestead"]
+    ["Byzantium", "Constantinople", "TangerineWhistle", "SpuriousDragon", "Frontier", "Homestead"]
     |> Enum.flat_map(&run(test_path, &1))
   end
 

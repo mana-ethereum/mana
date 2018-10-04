@@ -16,8 +16,8 @@ defmodule BlockchainTest do
   @failing_tests %{
     "Frontier" => [],
     "Homestead" => [],
-    "EIP150" => [],
-    "EIP158" => [
+    "TangerineWhistle" => [],
+    "SpuriousDragon" => [
       "GeneralStateTests/stSpecialTest/failed_tx_xcf416c53_d0g0v0.json"
     ],
     "Byzantium" => String.split(@failing_byzantium_tests, "\n"),
