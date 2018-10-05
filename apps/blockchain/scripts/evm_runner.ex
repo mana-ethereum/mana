@@ -14,7 +14,7 @@ defmodule EVMRunner do
   require Logger
   alias EVM.{VM, ExecEnv}
   alias EVM.Interface.Mock.MockAccountInterface
-  alias EVM.Interface.Mock.MockBlockInterface
+  alias EVM.Mock.MockBlockHeaderInfo
 
   def run() do
     {
@@ -29,7 +29,7 @@ defmodule EVMRunner do
                                                  gas_limit: :integer,
                                                ])
     account_interface = MockAccountInterface.new()
-    block_interface = MockBlockInterface.new(%{
+    block_header_info = MockBlockHeaderInfo.new(%{
       timestamp: Keyword.get(args, :timestamp, 0),
     })
 
@@ -48,7 +48,7 @@ defmodule EVMRunner do
       address: Keyword.get(args, :address, "") |> Base.decode16,
       originator: Keyword.get(args, :originator, "") |> Base.decode16,
       account_interface: account_interface,
-      block_interface: block_interface,
+      block_header_info: block_header_info
     }
 
     {gas_remaining, _sub_state, _exec_env, result} = VM.run(gas_limit, exec_env)

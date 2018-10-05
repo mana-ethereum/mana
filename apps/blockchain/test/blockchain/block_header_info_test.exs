@@ -1,7 +1,6 @@
-defmodule Blockchain.Interface.BlockInterfaceTest do
+defmodule Blockchain.BlockHeaderInfoTest do
   use ExUnit.Case, async: true
-  doctest Blockchain.Interface.BlockInterface
-  doctest EVM.Interface.BlockInterface.Blockchain.Interface.BlockInterface
+  doctest Blockchain.BlockHeaderInfo
 
   describe ".get_ancestor_header/2" do
     test "returns the parent header if passed 1" do
@@ -40,8 +39,8 @@ defmodule Blockchain.Interface.BlockInterfaceTest do
 
       ancestor_header =
         block.header
-        |> Blockchain.Interface.BlockInterface.new(db)
-        |> EVM.Interface.BlockInterface.get_ancestor_header(1)
+        |> Blockchain.BlockHeaderInfo.new(db)
+        |> Blockchain.BlockHeaderInfo.get_ancestor_header(1)
 
       assert parent_header == ancestor_header
     end
@@ -97,8 +96,8 @@ defmodule Blockchain.Interface.BlockInterfaceTest do
 
       ancestor_header =
         block.header
-        |> Blockchain.Interface.BlockInterface.new(db)
-        |> EVM.Interface.BlockInterface.get_ancestor_header(2)
+        |> Blockchain.BlockHeaderInfo.new(db)
+        |> Blockchain.BlockHeaderInfo.get_ancestor_header(2)
 
       assert grand_parent_header == ancestor_header
     end
@@ -109,8 +108,8 @@ defmodule Blockchain.Interface.BlockInterfaceTest do
 
       ancestor_header =
         header
-        |> Blockchain.Interface.BlockInterface.new(db)
-        |> EVM.Interface.BlockInterface.get_ancestor_header(257)
+        |> Blockchain.BlockHeaderInfo.new(db)
+        |> Blockchain.BlockHeaderInfo.get_ancestor_header(257)
 
       assert is_nil(ancestor_header)
     end
@@ -121,8 +120,8 @@ defmodule Blockchain.Interface.BlockInterfaceTest do
 
       ancestor_header =
         header
-        |> Blockchain.Interface.BlockInterface.new(db)
-        |> EVM.Interface.BlockInterface.get_ancestor_header(-1)
+        |> Blockchain.BlockHeaderInfo.new(db)
+        |> Blockchain.BlockHeaderInfo.get_ancestor_header(-1)
 
       assert is_nil(ancestor_header)
     end
@@ -134,8 +133,8 @@ defmodule Blockchain.Interface.BlockInterfaceTest do
 
       ancestor_header =
         header
-        |> Blockchain.Interface.BlockInterface.new(db)
-        |> EVM.Interface.BlockInterface.get_ancestor_header(0)
+        |> Blockchain.BlockHeaderInfo.new(db)
+        |> Blockchain.BlockHeaderInfo.get_ancestor_header(0)
 
       assert is_nil(ancestor_header)
     end
