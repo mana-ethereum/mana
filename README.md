@@ -31,23 +31,29 @@ Currently, peer-to-peer communication is incomplete, but if you would like
 to partially sync blocks, you can use an experimental script to [sync with
 Infura](https://github.com/poanetwork/mana/blob/master/apps/blockchain/scripts/sync_with_infura.ex). This script downloads blocks from Infura, runs the transactions inside them then verifies the block.
 
-## Running the sync_with_infura script
+## Running the SyncWithInfura mix task
 
-`sync_with_infura` pulls blocks from nodes hosted by
-[Infura.io](https://infura.io/). You will need an Infura API key to run.
+SyncWithInfura pulls blocks from nodes hosted by Infura.io
 
-1.  Sign up with [Infura](https://infura.io/register).
-2.  Create a new project.
-3.  Copy your project API KEY.
-4.  Paste your key into the dev.secret file for the blockchain app.
-    1.  Go to apps/blockchain/config/dev.secret.exs
-    2.  Paste your key to replace `<your api key here>` in the url string.
-    ```Use Mix.Config
-       config :ethereumex, url: "https://mainnet.infura.io/<your api key here>
+You will need an Infura API key to run.
+
+  1. Sign up with Infura.
+  2. Create a new project.
+  3. Copy your project API KEY.
+  4. Paste your key into the dev.secret file for the blockchain app.
+    1. Go to apps/blockchain/config/dev.secret.exs
+    2. Paste your key to replace `<your api key here>` in the url string.
     ```
-5.  Save the file and return to the mana home directory.
-6.  Run the script.
-    `mix run apps/blockchain/scripts/sync_with_infura.ex`
+    Use Mix.Config
+    config :ethereumex, url: "https://mainnet.infura.io/<your api key here>
+    ```
+  5. Save the file and return to the mana home directory.
+  6. Compile the project.
+
+    `mix compile`
+  7. Run the mix task.
+
+    `mix sync.with_infura`
 
 If running properly, you will see a timestamp in hr/min/sec/millisec and a running list of Verified Blocks.
 

@@ -1,8 +1,61 @@
-require Logger
+defmodule Mix.Tasks.Sync.WithInfura do
+  @shortdoc "Allows users to sync the blockchain using Infura"
+  @moduledoc """
+  SyncWithInfura pulls blocks from nodes hosted by Infura.io
 
-defmodule SyncWithInfura do
-  @save_block_interval 1000
+  You will need an Infura API key to run.
+
+  1. Sign up with Infura.
+  2. Create a new project.
+  3. Copy your project API KEY.
+  4. Paste your key into the dev.secret file for the blockchain app.
+    1. Go to apps/blockchain/config/dev.secret.exs
+    2. Paste your key to replace `<your api key here>` in the url string.
+    ```
+    Use Mix.Config
+    config :ethereumex, url: "https://mainnet.infura.io/<your api key here>
+    ```
+  5. Save the file and return to the mana home directory.
+  6. Compile the project.
+
+    `mix compile`
+  7. Run the mix task.
+
+    `mix sync.with_infura`
+
+  If running properly, you will see a timestamp in hr/min/sec/millisec
+  and a running list of Verified Blocks.
+  """
+  use Mix.Task
   require Logger
+
+  @save_block_interval 1000
+
+  def run(_) do
+    {:ok, _apps} = Application.ensure_all_started(:ethereumex)
+    {db, chain} = setup()
+
+    current_block =
+      case MerklePatriciaTree.DB.get(db, "current_block_hash") do
+        {:ok, current_block_hash} ->
+          {:ok, current_block} = Blockchain.Block.get_block(current_block_hash, db)
+          current_block
+
+        _ ->
+          Blockchain.Genesis.create_block(chain, db)
+      end
+
+    tree =
+      case MerklePatriciaTree.DB.get(db, "current_block_tree") do
+        {:ok, current_block_tree} ->
+          :erlang.binary_to_term(current_block_tree)
+
+        _ ->
+          Blockchain.Blocktree.new_tree()
+      end
+
+    add_block_to_tree(db, chain, tree, current_block.header.number)
+  end
 
   def setup() do
     db = MerklePatriciaTree.DB.RocksDB.init(db_name())
@@ -131,26 +184,3 @@ defmodule SyncWithInfura do
     end
   end
 end
-
-{db, chain} = SyncWithInfura.setup()
-
-current_block =
-  case MerklePatriciaTree.DB.get(db, "current_block_hash") do
-    {:ok, current_block_hash} ->
-      {:ok, current_block} = Blockchain.Block.get_block(current_block_hash, db)
-      current_block
-
-    _ ->
-      Blockchain.Genesis.create_block(chain, db)
-  end
-
-tree =
-  case MerklePatriciaTree.DB.get(db, "current_block_tree") do
-    {:ok, current_block_tree} ->
-      :erlang.binary_to_term(current_block_tree)
-
-    _ ->
-      Blockchain.Blocktree.new_tree()
-  end
-
-SyncWithInfura.add_block_to_tree(db, chain, tree, current_block.header.number)
