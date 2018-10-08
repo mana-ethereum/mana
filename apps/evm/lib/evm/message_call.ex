@@ -88,7 +88,7 @@ defmodule EVM.MessageCall do
         message_call.sender
       )
 
-    sender_balance >= message_call.value
+    sender_balance >= message_call.value || recipient_is_current_account?(message_call)
   end
 
   defp valid_stack_depth?(message_call) do
