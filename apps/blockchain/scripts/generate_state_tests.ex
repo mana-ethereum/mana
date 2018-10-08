@@ -1,9 +1,8 @@
 defmodule GenerateStateTests do
   alias MerklePatriciaTree.Trie
-  alias Blockchain.{Account, Transaction}
+  alias Blockchain.Account
   alias Blockchain.Interface.AccountInterface
   alias Blockchain.Account.Storage
-  alias ExthCrypto.Hash.Keccak
   alias EthCommonTest.StateTestRunner
 
   use EthCommonTest.Harness
@@ -66,11 +65,10 @@ defmodule GenerateStateTests do
       failing_tests = length(completed_tests[:failing][hardfork])
       total_tests = passing_tests + failing_tests
 
-      IO.puts(
-        "Passing #{hardfork} tests tests #{passing_tests}/#{total_tests}= #{
-          round(passing_tests / total_tests * 1000) / 10
-        }%"
-      )
+      percentage =
+        if total_tests == 0, do: 0, else: round(passing_tests / total_tests * 1000) / 10
+
+      IO.puts("Passing #{hardfork} tests tests #{passing_tests}/#{total_tests}= #{percentage}%")
     end
   end
 
@@ -115,8 +113,7 @@ defmodule GenerateStateTests do
             test_group,
             test_name,
             test,
-            hardfork,
-            hardfork_configuration
+            hardfork
           )
         else
           completed_tests
@@ -131,8 +128,7 @@ defmodule GenerateStateTests do
          test_group,
          test_name,
          test,
-         hardfork,
-         hardfork_configuration
+         hardfork
        ) do
     {test_name, test}
     |> StateTestRunner.run_test(hardfork)
@@ -143,14 +139,6 @@ defmodule GenerateStateTests do
         update_in(completed_tests, [:passing, hardfork], &["#{test_group}/#{test_name}" | &1])
       end
     end)
-  end
-
-  defp populate_init_or_data(tx, data) do
-    if Transaction.contract_creation?(tx) do
-      %{tx | init: data}
-    else
-      %{tx | data: data}
-    end
   end
 
   def dump_state(state) do
@@ -225,12 +213,6 @@ defmodule GenerateStateTests do
       end)
 
     AccountInterface.new(state)
-  end
-
-  defp logs_hash(logs) do
-    logs
-    |> ExRLP.encode()
-    |> Keccak.kec()
   end
 
   defp test_directories do

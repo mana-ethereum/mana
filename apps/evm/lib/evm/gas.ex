@@ -219,7 +219,8 @@ defmodule EVM.Gas do
   end
 
   def memory_cost(:create2, [_value, in_offset, in_length, _salt], machine_state) do
-    memory_expansion_cost(machine_state, in_offset, in_length)
+    memory_expansion_cost(machine_state, in_offset, in_length) +
+      @g_sha3word * MathHelper.bits_to_words(in_length)
   end
 
   def memory_cost(:return, [offset, length], machine_state) do
