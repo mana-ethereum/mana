@@ -135,10 +135,16 @@ defmodule EVM.Gas do
       iex> EVM.Gas.cost(%EVM.MachineState{}, %EVM.ExecEnv{})
       0
   """
-  @spec cost(MachineState.t(), ExecEnv.t(), keyword()) :: t | nil | {atom(), t | nil}
-  def cost(machine_state, exec_env, params \\ []) do
-    with_status = Keyword.get(params, :with_status)
+  @spec cost(MachineState.t(), ExecEnv.t()) :: t
+  def cost(machine_state, exec_env) do
+    case cost_with_status(machine_state, exec_env) do
+      {:original, cost} -> cost
+      {:changed, value, _} -> value
+    end
+  end
 
+  @spec cost_with_status(MachineState.t(), ExecEnv.t()) :: {:original, t} | {:changed, t, t}
+  def cost_with_status(machine_state, exec_env) do
     operation = MachineCode.current_operation(machine_state, exec_env)
     inputs = Operation.inputs(operation, machine_state)
     operation_cost = operation_cost(operation.sym, inputs, machine_state, exec_env)
@@ -147,20 +153,13 @@ defmodule EVM.Gas do
     gas_cost = memory_cost + operation_cost
 
     if Configuration.for(exec_env.config).fail_nested_operation_lack_of_gas?(exec_env.config) do
-      if with_status, do: {:original, gas_cost}, else: gas_cost
+      {:original, gas_cost}
     else
-      cost_change_result =
-        gas_cost_for_nested_operation(
-          operation.sym,
-          inputs: inputs,
-          original_cost: gas_cost,
-          machine_state: machine_state
-        )
-
-      case cost_change_result do
-        {status, value} -> if with_status, do: {status, value}, else: value
-        {status, value, call_gass} -> if with_status, do: {status, value, call_gass}, else: value
-      end
+      gas_cost_for_nested_operation(operation.sym,
+        inputs: inputs,
+        original_cost: gas_cost,
+        machine_state: machine_state
+      )
     end
   end
 
@@ -573,7 +572,8 @@ defmodule EVM.Gas do
   def g_sload, do: @g_sload
 
   # EIP150
-  @spec gas_cost_for_nested_operation(atom(), keyword()) :: {atom(), integer()}
+  @spec gas_cost_for_nested_operation(atom(), keyword()) ::
+          {:original, t()} | {:changed, t(), t()}
   defp gas_cost_for_nested_operation(
          operation,
          inputs: inputs,

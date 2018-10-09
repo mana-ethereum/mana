@@ -22,8 +22,7 @@ defmodule EVM.GasTest do
         config: config
       }
 
-      assert {:changed, 39_777, 14_071} ==
-               EVM.Gas.cost(machine_state, exec_env, with_status: true)
+      assert {:changed, 39_777, 14_071} == EVM.Gas.cost_with_status(machine_state, exec_env)
     end
   end
 
