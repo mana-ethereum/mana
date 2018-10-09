@@ -1,28 +1,14 @@
 :0: Unknown function 'Elixir.Poison':'decode!'/1
 :0: Unknown function 'Elixir.Poison':'encode!'/1
 
-# protocol warnings
-
-:0: Unknown function 'Elixir.EVM.Interface.AccountInterface.Atom':'__impl__'/1
-:0: Unknown function 'Elixir.EVM.Interface.AccountInterface.BitString':'__impl__'/1
-:0: Unknown function 'Elixir.EVM.Interface.AccountInterface.Float':'__impl__'/1
-:0: Unknown function 'Elixir.EVM.Interface.AccountInterface.Function':'__impl__'/1
-:0: Unknown function 'Elixir.EVM.Interface.AccountInterface.Integer':'__impl__'/1
-:0: Unknown function 'Elixir.EVM.Interface.AccountInterface.List':'__impl__'/1
-:0: Unknown function 'Elixir.EVM.Interface.AccountInterface.Map':'__impl__'/1
-:0: Unknown function 'Elixir.EVM.Interface.AccountInterface.PID':'__impl__'/1
-:0: Unknown function 'Elixir.EVM.Interface.AccountInterface.Port':'__impl__'/1
-:0: Unknown function 'Elixir.EVM.Interface.AccountInterface.Reference':'__impl__'/1
-:0: Unknown function 'Elixir.EVM.Interface.AccountInterface.Tuple':'__impl__'/1
-
 # evm warnings
 
 apps/evm/lib/evm/functions.ex:190: Function 'not_enough_gas?'/2 has no local return
 apps/evm/lib/evm/functions.ex:197: Function 'out_of_memory_bounds?'/3 will never be called
 apps/evm/lib/evm/functions.ex:213: Function 'is_invalid_jump_destination?'/3 will never be called
 apps/evm/lib/evm/functions.ex:223: Function 'static_state_modification?'/2 will never be called
-apps/evm/lib/evm/operation/environmental_information.ex:114: Function calldataload/2 has no local return
-apps/evm/lib/evm/operation/environmental_information.ex:117: The call 'Elixir.EVM.Helpers':decode_signed(binary()) breaks the contract (integer() | 'nil') -> 'Elixir.EVM':val() | 'nil'
+apps/evm/lib/evm/operation/environmental_information.ex:116: Function calldataload/2 has no local return
+apps/evm/lib/evm/operation/environmental_information.ex:119: The call 'Elixir.EVM.Helpers':decode_signed(binary()) breaks the contract (integer() | 'nil') -> 'Elixir.EVM':val() | 'nil'
 apps/evm/lib/evm/vm.ex:98: The pattern 'continue' can never match the type {'halt','invalid_instruction' | 'stack_underflow' | 'undefined_instruction'}
 apps/evm/lib/evm/vm.ex:133: Function cycle/3 has no local return
 apps/evm/lib/evm/builtin.ex:235: Guard test __@1::'true' =:= 'false' can never succeed
@@ -32,7 +18,6 @@ apps/evm/lib/evm/builtin.ex:255: Guard test __@1::'true' =:= 'false' can never s
 -------------------------------
 # TODO: rewrite mocked protocol typespecs
 -------------------------------
-lib/evm/interface/mock/mock_account_interface
 lib/evm/machine_code
 
 -------------------------------
@@ -137,7 +122,12 @@ apps/blockchain/lib/mix/tasks/sync/from_file.ex
 apps/blockchain/lib/blockchain/contract.ex
 apps/blockchain/lib/blockchain/contract/create_contract.ex
 apps/blockchain/lib/blockchain/contract/message_call.ex
-apps/blockchain/lib/blockchain/interface/account_interface.ex
+
+-------------------------------
+# Ignores AccountRepo implementations because we were ignoring the account interface
+-------------------------------
+apps/blockchain/lib/blockchain/account/repo.ex
+apps/evm/lib/evm/mock/mock_account_repo
 
 -------------------------------
 # Ignores state test generation script

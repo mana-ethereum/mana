@@ -1,7 +1,7 @@
-defmodule Blockchain.Interface.AccountInterface.CacheTest do
+defmodule Blockchain.Account.Repo.CacheTest do
   use ExUnit.Case, async: true
 
-  alias Blockchain.Interface.AccountInterface.Cache
+  alias Blockchain.Account.Repo.Cache
   alias Blockchain.Account
 
   describe "update_current_value/4" do

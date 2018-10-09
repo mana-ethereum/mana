@@ -80,18 +80,18 @@ defmodule EVM.Operation.StackMemoryStorageAndFlow do
       iex> address = 0x0000000000000000000000000000000000000001
       iex> key = 0x11223344556677889900
       iex> value = 0x111222333444555
-      iex> account_interface = EVM.Interface.Mock.MockAccountInterface.new()
-      iex> account_interface = EVM.Operation.StackMemoryStorageAndFlow.sstore([key, value], %{exec_env: %EVM.ExecEnv{address: address, account_interface: account_interface}})[:exec_env].account_interface
-      iex> EVM.Operation.StackMemoryStorageAndFlow.sload([key], %{exec_env: %EVM.ExecEnv{account_interface: account_interface, address: address}})
+      iex> account_repo = EVM.Mock.MockAccountRepo.new()
+      iex> account_repo = EVM.Operation.StackMemoryStorageAndFlow.sstore([key, value], %{exec_env: %EVM.ExecEnv{address: address, account_repo: account_repo}})[:exec_env].account_repo
+      iex> EVM.Operation.StackMemoryStorageAndFlow.sload([key], %{exec_env: %EVM.ExecEnv{account_repo: account_repo, address: address}})
       0x111222333444555
 
       iex> address = 0x0000000000000000000000000000000000000001
       iex> key = 0x11223344556677889900
       iex> other_key = 0x1234
       iex> value = 0x111222333444555
-      iex> account_interface = EVM.Interface.Mock.MockAccountInterface.new()
-      iex> account_interface = EVM.Operation.StackMemoryStorageAndFlow.sstore([key, value], %{exec_env: %EVM.ExecEnv{address: address, account_interface: account_interface}})[:exec_env].account_interface
-      iex> EVM.Operation.StackMemoryStorageAndFlow.sload([other_key], %{exec_env: %EVM.ExecEnv{account_interface: account_interface}})
+      iex> account_repo = EVM.Mock.MockAccountRepo.new()
+      iex> account_repo = EVM.Operation.StackMemoryStorageAndFlow.sstore([key, value], %{exec_env: %EVM.ExecEnv{address: address, account_repo: account_repo}})[:exec_env].account_repo
+      iex> EVM.Operation.StackMemoryStorageAndFlow.sload([other_key], %{exec_env: %EVM.ExecEnv{account_repo: account_repo}})
       0x0
   """
   @spec sload(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
@@ -121,14 +121,14 @@ defmodule EVM.Operation.StackMemoryStorageAndFlow do
       iex> address = 0x0000000000000000000000000000000000000001
       iex> key = 0x11223344556677889900
       iex> value = 0x111222333444555
-      iex> account_interface = EVM.Interface.Mock.MockAccountInterface.new()
-      iex> EVM.Operation.StackMemoryStorageAndFlow.sstore([key, value], %{exec_env: %EVM.ExecEnv{address: address, account_interface: account_interface}})[:exec_env].account_interface
-      ...> |> EVM.Interface.AccountInterface.get_storage(address, key)
+      iex> account_repo = EVM.Mock.MockAccountRepo.new()
+      iex> EVM.Operation.StackMemoryStorageAndFlow.sstore([key, value], %{exec_env: %EVM.ExecEnv{address: address, account_repo: account_repo}})[:exec_env].account_repo
+      ...> |> EVM.AccountRepo.repo(account_repo).get_storage(address, key)
       {:ok, 0x111222333444555}
 
       iex> address = 0x0000000000000000000000000000000000000001
-      iex> account_interface = EVM.Interface.Mock.MockAccountInterface.new()
-      iex> EVM.Operation.StackMemoryStorageAndFlow.sstore([0x0, 0x0], %{exec_env: %EVM.ExecEnv{address: address, account_interface: account_interface}})[:exec_env].account_interface |> EVM.Interface.AccountInterface.dump_storage()
+      iex> account_repo = EVM.Mock.MockAccountRepo.new()
+      iex> EVM.Operation.StackMemoryStorageAndFlow.sstore([0x0, 0x0], %{exec_env: %EVM.ExecEnv{address: address, account_repo: account_repo}})[:exec_env].account_repo |> EVM.AccountRepo.repo(account_repo).dump_storage()
       %{}
 
   """

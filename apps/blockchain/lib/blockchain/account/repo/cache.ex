@@ -1,4 +1,4 @@
-defmodule Blockchain.Interface.AccountInterface.Cache do
+defmodule Blockchain.Account.Repo.Cache do
   alias Blockchain.Account
   alias Blockchain.Account.Address
   defstruct storage_cache: %{}, accounts_cache: %{}

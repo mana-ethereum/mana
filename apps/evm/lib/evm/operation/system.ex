@@ -1,5 +1,5 @@
 defmodule EVM.Operation.System do
-  alias EVM.Interface.AccountInterface
+  alias EVM.AccountRepo
   alias EVM.BlockHeaderInfo
 
   alias EVM.{
@@ -23,7 +23,12 @@ defmodule EVM.Operation.System do
   """
   @spec create(Operation.stack_args(), map()) :: Operation.op_result()
   def create([value, input_offset, input_size], vm_map = %{exec_env: exec_env}) do
-    nonce = AccountInterface.get_account_nonce(exec_env.account_interface, exec_env.address)
+    nonce =
+      AccountRepo.repo(exec_env.account_repo).get_account_nonce(
+        exec_env.account_repo,
+        exec_env.address
+      )
+
     new_account_address = Address.new(exec_env.address, nonce)
 
     create_account([value, input_offset, input_size], vm_map, new_account_address)
@@ -152,9 +157,9 @@ defmodule EVM.Operation.System do
 
     ## Examples
 
-        iex> account_interface = EVM.Interface.Mock.MockAccountInterface.new(%{})
+        iex> account_repo = EVM.Mock.MockAccountRepo.new(%{})
         iex> exec_env = %EVM.ExecEnv{
-        ...>   account_interface: account_interface,
+        ...>   account_repo: account_repo,
         ...>   sender: <<0::160>>,
         ...>   address: <<5::160>>
         ...> }
@@ -265,7 +270,10 @@ defmodule EVM.Operation.System do
     {data, machine_state} = EVM.Memory.read(machine_state, input_offset, input_size)
 
     account_balance =
-      AccountInterface.get_account_balance(exec_env.account_interface, exec_env.address)
+      AccountRepo.repo(exec_env.account_repo).get_account_balance(
+        exec_env.account_repo,
+        exec_env.address
+      )
 
     block_header = BlockHeaderInfo.block_header(exec_env.block_header_info)
 
@@ -281,15 +289,18 @@ defmodule EVM.Operation.System do
 
     remaining_gas = machine_state.gas - available_gas
 
-    {status, {updated_account_interface, n_gas, n_sub_state}} =
+    {status, {updated_account_repo, n_gas, n_sub_state}} =
       if is_allowed do
-        {account_interface, _nonce} =
-          AccountInterface.increment_account_nonce(exec_env.account_interface, exec_env.address)
+        account_repo =
+          AccountRepo.repo(exec_env.account_repo).increment_account_nonce(
+            exec_env.account_repo,
+            exec_env.address
+          )
 
-        n_exec_env = %{exec_env | account_interface: account_interface}
+        n_exec_env = %{exec_env | account_repo: account_repo}
 
-        AccountInterface.create_contract(
-          n_exec_env.account_interface,
+        AccountRepo.repo(exec_env.account_repo).create_contract(
+          n_exec_env.account_repo,
           # sender
           n_exec_env.address,
           # originator
@@ -310,7 +321,7 @@ defmodule EVM.Operation.System do
           exec_env.config
         )
       else
-        {:error, {exec_env.account_interface, available_gas, SubState.empty()}}
+        {:error, {exec_env.account_repo, available_gas, SubState.empty()}}
       end
 
     # Note if was exception halt or other failure on stack
@@ -329,7 +340,7 @@ defmodule EVM.Operation.System do
         gas: n_gas + remaining_gas
     }
 
-    exec_env = %{exec_env | account_interface: updated_account_interface}
+    exec_env = %{exec_env | account_repo: updated_account_repo}
 
     sub_state =
       n_sub_state

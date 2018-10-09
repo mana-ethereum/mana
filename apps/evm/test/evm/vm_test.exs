@@ -3,11 +3,11 @@ defmodule EVM.VMTest do
   doctest EVM.VM
 
   alias EVM.{VM, ExecEnv, SubState, MachineCode}
-  alias EVM.Interface.Mock.MockAccountInterface
+  alias EVM.Mock.MockAccountRepo
 
   setup do
-    account_interface = MockAccountInterface.new()
-    {:ok, %{account_interface: account_interface}}
+    account_repo = MockAccountRepo.new()
+    {:ok, %{account_repo: account_repo}}
   end
 
   test "simple program with return value", %{} do
@@ -36,7 +36,7 @@ defmodule EVM.VMTest do
     assert result == expected
   end
 
-  test "simple program with block storage", %{account_interface: account_interface} do
+  test "simple program with block storage", %{account_repo: account_repo} do
     address = 0x0000000000000000000000000000000000000001
 
     instructions = [
@@ -51,7 +51,7 @@ defmodule EVM.VMTest do
     exec_env = %ExecEnv{
       machine_code: MachineCode.compile(instructions),
       address: address,
-      account_interface: account_interface
+      account_repo: account_repo
     }
 
     result = VM.run(20_006, exec_env)
@@ -65,8 +65,8 @@ defmodule EVM.VMTest do
       }
     }
 
-    expected_account_interface = MockAccountInterface.new(expected_account_state)
-    expected_exec_env = Map.put(exec_env, :account_interface, expected_account_interface)
+    expected_account_repo = MockAccountRepo.new(expected_account_state)
+    expected_exec_env = Map.put(exec_env, :account_repo, expected_account_repo)
     expected_sub_state = %SubState{logs: [], refund: 0, selfdestruct_list: []}
 
     expected = {0, expected_sub_state, expected_exec_env, ""}

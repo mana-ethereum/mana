@@ -1,6 +1,6 @@
 defmodule EVM.TestFactory do
   alias EVM.{MessageCall, MachineState, ExecEnv, SubState}
-  alias EVM.Interface.Mock.MockAccountInterface
+  alias EVM.Mock.MockAccountRepo
 
   @doc """
   Main function to interact with factory. This will
@@ -56,7 +56,7 @@ defmodule EVM.TestFactory do
     EVM.MachineCode.compile(assembly)
   end
 
-  def factory(:mock_account_interface, opts) do
+  def factory(:mock_account_repo, opts) do
     default_accounts = %{
       <<0x10::160>> => %{balance: 10, code: <<>>},
       <<0x20::160>> => %{balance: 20, code: build(:machine_code)}
@@ -64,12 +64,12 @@ defmodule EVM.TestFactory do
 
     account_map = Map.get(opts, :account_map, default_accounts)
 
-    MockAccountInterface.new(account_map)
+    MockAccountRepo.new(account_map)
   end
 
   def factory(:exec_env, opts) do
     defaults = %{
-      account_interface: build(:mock_account_interface),
+      account_repo: build(:mock_account_repo),
       address: <<0x10::160>>,
       originator: <<0x10::160>>,
       gas_price: 1,

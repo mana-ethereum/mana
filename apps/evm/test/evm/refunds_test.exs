@@ -3,15 +3,15 @@ defmodule EVM.RefundsTest do
   doctest EVM.Refunds
 
   setup do
-    account_interface = EVM.Interface.Mock.MockAccountInterface.new()
+    account_repo = EVM.Mock.MockAccountRepo.new()
 
     {:ok,
      %{
-       account_interface: account_interface
+       account_repo: account_repo
      }}
   end
 
-  test "Refund: SSTORE", %{account_interface: account_interface} do
+  test "Refund: SSTORE", %{account_repo: account_repo} do
     address = 0x0000000000000000000000000000000000000001
 
     instructions = [:push1, 3, :push1, 5, :sstore, :push1, 0, :push1, 5, :sstore, :stop]
@@ -19,7 +19,7 @@ defmodule EVM.RefundsTest do
     exec_env = %EVM.ExecEnv{
       machine_code: EVM.MachineCode.compile(instructions),
       address: address,
-      account_interface: account_interface
+      account_repo: account_repo
     }
 
     result = EVM.VM.run(25_012, exec_env)
@@ -33,10 +33,9 @@ defmodule EVM.RefundsTest do
       }
     }
 
-    expected_account_interface =
-      EVM.Interface.Mock.MockAccountInterface.new(expected_account_state)
+    expected_account_repo = EVM.Mock.MockAccountRepo.new(expected_account_state)
 
-    expected_exec_env = Map.put(exec_env, :account_interface, expected_account_interface)
+    expected_exec_env = Map.put(exec_env, :account_repo, expected_account_repo)
 
     assert result ==
              {0, %EVM.SubState{logs: [], refund: 15_000, selfdestruct_list: []},

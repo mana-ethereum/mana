@@ -13,52 +13,54 @@ defmodule EVMRunner do
   """
   require Logger
   alias EVM.{VM, ExecEnv}
-  alias EVM.Interface.Mock.MockAccountInterface
+  alias EVM.Mock.MockAccountRepo
   alias EVM.Mock.MockBlockHeaderInfo
 
   def run() do
     {
       args,
       _
-    } = OptionParser.parse!(System.argv(),
-                                               switches: [
-                                                 code: :string,
-                                                 address: :string,
-                                                 originator: :string,
-                                                 timestamp: :integer,
-                                                 gas_limit: :integer,
-                                               ])
-    account_interface = MockAccountInterface.new()
-    block_header_info = MockBlockHeaderInfo.new(%{
-      timestamp: Keyword.get(args, :timestamp, 0),
-    })
+    } =
+      OptionParser.parse!(System.argv(),
+        switches: [
+          code: :string,
+          address: :string,
+          originator: :string,
+          timestamp: :integer,
+          gas_limit: :integer
+        ]
+      )
+
+    account_repo = MockAccountRepo.new()
+
+    block_header_info =
+      MockBlockHeaderInfo.new(%{
+        timestamp: Keyword.get(args, :timestamp, 0)
+      })
 
     gas_limit = Keyword.get(args, :gas_limit, 2_000_000)
     code_hex = Keyword.get(args, :code, "")
     machine_code = Base.decode16!(code_hex, case: :mixed)
-    address = args
-      |> Keyword.get(:address, "")
-      |> Base.decode16,
-      originator = args
-      |> Keyword.get(:originator, "")
-      |> Base.decode16,
+    address = args |> Keyword.get(:address, "") |> Base.decode16()
+    originator = args |> Keyword.get(:originator, "") |> Base.decode16()
 
     exec_env = %ExecEnv{
       machine_code: machine_code,
-      address: Keyword.get(args, :address, "") |> Base.decode16,
-      originator: Keyword.get(args, :originator, "") |> Base.decode16,
-      account_interface: account_interface,
+      address: address,
+      originator: originator,
+      account_repo: account_repo,
       block_header_info: block_header_info
     }
 
     {gas_remaining, _sub_state, _exec_env, result} = VM.run(gas_limit, exec_env)
-    Logger.debug fn ->
-      "Gas Remaining: #{gas_remaining}"
-    end
 
-    Logger.debug fn ->
-      "Result: #{inspect result}"
-    end
+    Logger.debug(fn ->
+      "Gas Remaining: #{gas_remaining}"
+    end)
+
+    Logger.debug(fn ->
+      "Result: #{inspect(result)}"
+    end)
   end
 end
 

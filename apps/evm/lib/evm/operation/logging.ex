@@ -7,7 +7,7 @@ defmodule EVM.Operation.Logging do
   ## Examples
 
       iex> env = %EVM.ExecEnv{
-      ...>  account_interface: %EVM.Interface.Mock.MockAccountInterface{},
+      ...>  account_repo: %EVM.Mock.MockAccountRepo{},
       ...>  address: 87579061662017136990230301793909925042452127430,
       ...>  block_header_info: %EVM.Mock.MockBlockHeaderInfo{}
       ...> }
@@ -50,7 +50,7 @@ defmodule EVM.Operation.Logging do
   ## Examples
 
       iex> env = %EVM.ExecEnv{
-      ...>   account_interface: %EVM.Interface.Mock.MockAccountInterface{},
+      ...>   account_repo: %EVM.Mock.MockAccountRepo{},
       ...>   address: 87579061662017136990230301793909925042452127430,
       ...>   block_header_info: %EVM.Mock.MockBlockHeaderInfo{}
       ...> }
@@ -96,7 +96,7 @@ defmodule EVM.Operation.Logging do
   ## Examples
 
       iex> env = %EVM.ExecEnv{
-      ...>   account_interface: %EVM.Interface.Mock.MockAccountInterface{},
+      ...>   account_repo: %EVM.Mock.MockAccountRepo{},
       ...>   address: 87579061662017136990230301793909925042452127430,
       ...>   block_header_info: %EVM.Mock.MockBlockHeaderInfo{}
       ...> }
@@ -146,7 +146,7 @@ defmodule EVM.Operation.Logging do
   ## Examples
 
       iex> env = %EVM.ExecEnv{
-      ...>   account_interface: %EVM.Interface.Mock.MockAccountInterface{},
+      ...>   account_repo: %EVM.Mock.MockAccountRepo{},
       ...>   address: 87579061662017136990230301793909925042452127430,
       ...>   block_header_info: %EVM.Mock.MockBlockHeaderInfo{}
       ...> }
@@ -192,7 +192,7 @@ defmodule EVM.Operation.Logging do
   ## Examples
 
       iex> env = %EVM.ExecEnv{
-      ...>   account_interface: %EVM.Interface.Mock.MockAccountInterface{},
+      ...>   account_repo: %EVM.Mock.MockAccountRepo{},
       ...>   address: 87579061662017136990230301793909925042452127430,
       ...>   block_header_info: %EVM.Mock.MockBlockHeaderInfo{}
       ...> }

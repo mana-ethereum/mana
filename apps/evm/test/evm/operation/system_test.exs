@@ -3,8 +3,8 @@ defmodule EVM.Operation.SystemTest do
   doctest EVM.Operation.System
 
   alias EVM.{ExecEnv, Stack, Address, Operation, MachineState, SubState, MachineCode, VM}
-  alias EVM.Interface.AccountInterface
-  alias EVM.Interface.Mock.MockAccountInterface
+  alias EVM.AccountRepo
+  alias EVM.Mock.MockAccountRepo
   alias EVM.Mock.MockBlockHeaderInfo
 
   describe "selfdestruct/2" do
@@ -12,11 +12,11 @@ defmodule EVM.Operation.SystemTest do
       selfdestruct_address = 0x0000000000000000000000000000000000000001
       refund_address = 0x0000000000000000000000000000000000000002
       account_map = %{selfdestruct_address => %{balance: 5_000, nonce: 5}}
-      account_interface = MockAccountInterface.new(account_map)
-      exec_env = %ExecEnv{address: selfdestruct_address, account_interface: account_interface}
+      account_repo = MockAccountRepo.new(account_map)
+      exec_env = %ExecEnv{address: selfdestruct_address, account_repo: account_repo}
       vm_opts = %{stack: [], exec_env: exec_env, sub_state: SubState.empty()}
       new_exec_env = Operation.System.selfdestruct([refund_address], vm_opts)[:exec_env]
-      accounts = new_exec_env.account_interface.account_map
+      accounts = new_exec_env.account_repo.account_map
 
       expected_refund_account = %{balance: 5000, code: <<>>, nonce: 0, storage: %{}}
       assert Map.get(accounts, Address.new(refund_address)) == expected_refund_account
@@ -27,7 +27,7 @@ defmodule EVM.Operation.SystemTest do
   describe "revert" do
     test "halts execution reverting state changes but returning data and remaining gas" do
       account =
-        MockAccountInterface.new(
+        MockAccountRepo.new(
           %{
             1 => %{
               balance: 0,
@@ -61,7 +61,7 @@ defmodule EVM.Operation.SystemTest do
         ])
 
       exec_env = %ExecEnv{
-        account_interface: account,
+        account_repo: account,
         address: 1,
         machine_code: machine_code,
         config: EVM.Configuration.Byzantium.new()
@@ -75,7 +75,7 @@ defmodule EVM.Operation.SystemTest do
 
       assert updated_machine_state.gas == 79_985
 
-      assert updated_exec_env.account_interface.account_map == %{
+      assert updated_exec_env.account_repo.account_map == %{
                1 => %{balance: 0, code: "", nonce: 0, storage: %{}}
              }
 
@@ -86,7 +86,7 @@ defmodule EVM.Operation.SystemTest do
   describe "return" do
     test "halts execution returning output data" do
       account =
-        MockAccountInterface.new(
+        MockAccountRepo.new(
           %{
             1 => %{
               balance: 0,
@@ -119,7 +119,7 @@ defmodule EVM.Operation.SystemTest do
           :pop
         ])
 
-      exec_env = %ExecEnv{account_interface: account, address: 1, machine_code: machine_code}
+      exec_env = %ExecEnv{account_repo: account, address: 1, machine_code: machine_code}
       machine_state = %MachineState{program_counter: 0, gas: 100_000, stack: []}
       substate = %SubState{}
 
@@ -128,7 +128,7 @@ defmodule EVM.Operation.SystemTest do
 
       assert updated_machine_state.gas == 79_985
 
-      assert updated_exec_env.account_interface.account_map == %{
+      assert updated_exec_env.account_repo.account_map == %{
                1 => %{balance: 0, code: "", nonce: 0, storage: %{10 => 2}}
              }
 
@@ -141,12 +141,12 @@ defmodule EVM.Operation.SystemTest do
       block_header_info = MockBlockHeaderInfo.new(%Block.Header{})
       account_map = %{<<100::160>> => %{balance: 5_000, nonce: 5}}
       contract_result = %{gas: 500, sub_state: nil, output: "output"}
-      account_interface = MockAccountInterface.new(account_map, contract_result)
+      account_repo = MockAccountRepo.new(account_map, contract_result)
 
       exec_env = %ExecEnv{
         stack_depth: 0,
         address: <<100::160>>,
-        account_interface: account_interface,
+        account_repo: account_repo,
         block_header_info: block_header_info
       }
 
@@ -182,10 +182,10 @@ defmodule EVM.Operation.SystemTest do
         <<2::160>> => %{balance: 100, nonce: 5, code: <<>>}
       }
 
-      account_interface = MockAccountInterface.new(account_map)
+      account_repo = MockAccountRepo.new(account_map)
 
       exec_env = %ExecEnv{
-        account_interface: account_interface,
+        account_repo: account_repo,
         sender: <<0::160>>,
         address: <<0::160>>
       }
@@ -200,8 +200,16 @@ defmodule EVM.Operation.SystemTest do
         })
 
       assert Stack.peek(machine_state.stack) == 0
-      assert AccountInterface.get_account_balance(exec_env.account_interface, <<0::160>>) == 100
-      assert AccountInterface.get_account_balance(exec_env.account_interface, <<1::160>>) == 100
+
+      assert AccountRepo.repo(exec_env.account_repo).get_account_balance(
+               exec_env.account_repo,
+               <<0::160>>
+             ) == 100
+
+      assert AccountRepo.repo(exec_env.account_repo).get_account_balance(
+               exec_env.account_repo,
+               <<1::160>>
+             ) == 100
     end
   end
 end

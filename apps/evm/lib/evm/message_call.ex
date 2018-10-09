@@ -1,6 +1,5 @@
 defmodule EVM.MessageCall do
-  alias EVM.{ExecEnv, Memory, Builtin, VM, Functions, MachineState, SubState}
-  alias EVM.Interface.AccountInterface
+  alias EVM.{AccountRepo, ExecEnv, Memory, Builtin, VM, Functions, MachineState, SubState}
 
   @moduledoc """
   Describes a message call function that used for all call operations (call, delegatecall, callcode, staticcall).
@@ -93,9 +92,11 @@ defmodule EVM.MessageCall do
   end
 
   defp sufficient_funds?(message_call) do
+    account_repo = message_call.current_exec_env.account_repo
+
     sender_balance =
-      AccountInterface.get_account_balance(
-        message_call.current_exec_env.account_interface,
+      AccountRepo.repo(account_repo).get_account_balance(
+        account_repo,
         message_call.sender
       )
 
@@ -204,8 +205,7 @@ defmodule EVM.MessageCall do
           %{machine_state | last_return_data: output}
       end
 
-    exec_env =
-      Map.put(message_call.current_exec_env, :account_interface, n_exec_env.account_interface)
+    exec_env = Map.put(message_call.current_exec_env, :account_repo, n_exec_env.account_repo)
 
     sub_state =
       message_call.current_sub_state
@@ -220,9 +220,11 @@ defmodule EVM.MessageCall do
   end
 
   defp prepare_call_execution_env(message_call) do
+    account_repo = message_call.current_exec_env.account_repo
+
     machine_code =
-      AccountInterface.get_account_code(
-        message_call.current_exec_env.account_interface,
+      AccountRepo.repo(account_repo).get_account_code(
+        account_repo,
         message_call.code_owner
       )
 
@@ -235,7 +237,7 @@ defmodule EVM.MessageCall do
       value_in_wei: message_call.value,
       machine_code: machine_code,
       stack_depth: message_call.stack_depth + 1,
-      account_interface: message_call.current_exec_env.account_interface,
+      account_repo: message_call.current_exec_env.account_repo,
       block_header_info: message_call.current_exec_env.block_header_info,
       config: message_call.current_exec_env.config,
       static: message_call.static

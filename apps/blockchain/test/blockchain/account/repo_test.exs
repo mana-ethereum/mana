@@ -1,15 +1,14 @@
-defmodule Blockchain.Interface.AccountInterfaceTest do
+defmodule Blockchain.Account.RepoTest do
   use ExUnit.Case, async: true
-  doctest Blockchain.Interface.AccountInterface
-  doctest EVM.Interface.AccountInterface.Blockchain.Interface.AccountInterface
+  doctest Blockchain.Account.Repo
 
   alias Blockchain.Account
-  alias Blockchain.Interface.AccountInterface
-  alias Blockchain.Interface.AccountInterface.Cache
+  alias Blockchain.Account.Repo
+  alias Blockchain.Account.Repo.Cache
 
   setup do
     state =
-      :account_interface_test
+      :account_repo_test
       |> MerklePatriciaTree.Test.random_ets_db()
       |> MerklePatriciaTree.Trie.new()
 
@@ -30,26 +29,26 @@ defmodule Blockchain.Interface.AccountInterfaceTest do
 
       cache = %Cache{accounts_cache: %{address => {account, code}}}
 
-      account_interface =
+      account_repo =
         state
-        |> AccountInterface.new(cache)
-        |> AccountInterface.reset_cache()
+        |> Repo.new(cache)
+        |> Repo.reset_cache()
 
-      assert account_interface.cache == %Cache{}
+      assert account_repo.cache == %Cache{}
     end
   end
 
   describe "increment_account_nonce/2" do
-    test "increments nonce of the account in the casge", %{state: state} do
-      address = <<1>>
+    test "increments nonce of the account in the cache", %{state: state} do
+      address = <<1::160>>
       state_with_account = Account.reset_account(state, address)
 
       result =
         state_with_account
-        |> AccountInterface.new()
-        |> AccountInterface.increment_account_nonce(address)
-        |> AccountInterface.increment_account_nonce(address)
-        |> AccountInterface.account(address)
+        |> Repo.new()
+        |> Repo.increment_account_nonce(address)
+        |> Repo.increment_account_nonce(address)
+        |> Repo.account(address)
 
       assert result.nonce == 2
     end
@@ -72,18 +71,18 @@ defmodule Blockchain.Interface.AccountInterfaceTest do
 
       to_account_address = <<2>>
 
-      updated_account_interface =
+      updated_account_repo =
         state
         |> Account.reset_account(to_account_address)
         |> Account.put_account(from_account_address, from_account)
-        |> AccountInterface.new()
-        |> AccountInterface.transfer_wei!(from_account_address, to_account_address, transfer_wei)
+        |> Repo.new()
+        |> Repo.transfer_wei!(from_account_address, to_account_address, transfer_wei)
 
-      new_from_account = AccountInterface.account(updated_account_interface, from_account_address)
+      new_from_account = Repo.account(updated_account_repo, from_account_address)
 
       assert new_from_account.balance == from_account_balance - transfer_wei
 
-      new_to_account = AccountInterface.account(updated_account_interface, to_account_address)
+      new_to_account = Repo.account(updated_account_repo, to_account_address)
 
       assert new_to_account.balance == transfer_wei
     end
@@ -97,9 +96,9 @@ defmodule Blockchain.Interface.AccountInterfaceTest do
       {account, ^code} =
         state
         |> Account.reset_account(address)
-        |> AccountInterface.new()
-        |> AccountInterface.put_code(address, code)
-        |> AccountInterface.account_with_code(address)
+        |> Repo.new()
+        |> Repo.put_code(address, code)
+        |> Repo.account_with_code(address)
 
       assert account.code_hash ==
                <<241, 136, 94, 218, 84, 183, 160, 83, 49, 140, 212, 30, 32, 147, 34, 13, 171, 21,
@@ -122,8 +121,8 @@ defmodule Blockchain.Interface.AccountInterfaceTest do
 
       {:ok, found_code} =
         state
-        |> AccountInterface.new(cache)
-        |> AccountInterface.machine_code(address)
+        |> Repo.new(cache)
+        |> Repo.machine_code(address)
 
       assert code == found_code
     end
@@ -136,8 +135,8 @@ defmodule Blockchain.Interface.AccountInterfaceTest do
         state
         |> Account.reset_account(address)
         |> Account.put_code(address, code)
-        |> AccountInterface.new()
-        |> AccountInterface.machine_code(address)
+        |> Repo.new()
+        |> Repo.machine_code(address)
 
       assert found_code == code
     end
@@ -145,7 +144,7 @@ defmodule Blockchain.Interface.AccountInterfaceTest do
 
   describe "clear_balance/2" do
     test "clears account's balance", %{state: state} do
-      address = <<1>>
+      address = <<1::160>>
 
       account = %Account{
         nonce: 5,
@@ -157,9 +156,9 @@ defmodule Blockchain.Interface.AccountInterfaceTest do
       found_account =
         state
         |> Account.put_account(address, account)
-        |> AccountInterface.new()
-        |> AccountInterface.clear_balance(address)
-        |> AccountInterface.account(address)
+        |> Repo.new()
+        |> Repo.clear_balance(address)
+        |> Repo.account(address)
 
       assert found_account.balance == 0
     end
@@ -179,9 +178,9 @@ defmodule Blockchain.Interface.AccountInterfaceTest do
       found_account =
         state
         |> Account.put_account(address, account)
-        |> AccountInterface.new()
-        |> AccountInterface.reset_account(address)
-        |> AccountInterface.account(address)
+        |> Repo.new()
+        |> Repo.reset_account(address)
+        |> Repo.account(address)
 
       assert found_account == %Account{}
     end
@@ -189,7 +188,7 @@ defmodule Blockchain.Interface.AccountInterfaceTest do
 
   describe "add_wei/2" do
     test "adds wei to account's balance", %{state: state} do
-      address = <<1>>
+      address = <<1::160>>
 
       account = %Account{
         nonce: 5,
@@ -201,9 +200,9 @@ defmodule Blockchain.Interface.AccountInterfaceTest do
       found_account =
         state
         |> Account.put_account(address, account)
-        |> AccountInterface.new()
-        |> AccountInterface.add_wei(address, 100)
-        |> AccountInterface.account(address)
+        |> Repo.new()
+        |> Repo.add_wei(address, 100)
+        |> Repo.account(address)
 
       assert found_account.balance == 110
     end
@@ -226,12 +225,12 @@ defmodule Blockchain.Interface.AccountInterfaceTest do
         storage_cache: %{address => %{<<10>> => %{current_value: 5}}}
       }
 
-      account_interface =
+      account_repo =
         state
-        |> AccountInterface.new(cache)
-        |> AccountInterface.del_account(address)
+        |> Repo.new(cache)
+        |> Repo.del_account(address)
 
-      {found_account, found_code} = AccountInterface.account_with_code(account_interface, address)
+      {found_account, found_code} = Repo.account_with_code(account_repo, address)
 
       assert is_nil(found_account)
       assert is_nil(found_code)
@@ -250,18 +249,18 @@ defmodule Blockchain.Interface.AccountInterfaceTest do
 
       cache = %Cache{accounts_cache: %{address => {account, code}}}
 
-      account_interface =
+      account_repo =
         state
         |> Account.reset_account(address)
-        |> AccountInterface.new(cache)
-        |> AccountInterface.del_account(address)
+        |> Repo.new(cache)
+        |> Repo.del_account(address)
 
-      {found_account, found_code} = AccountInterface.account_with_code(account_interface, address)
+      {found_account, found_code} = Repo.account_with_code(account_repo, address)
 
       assert is_nil(found_account)
       assert is_nil(found_code)
 
-      storage_account = Account.get_account(account_interface.state, address)
+      storage_account = Account.get_account(account_repo.state, address)
 
       refute is_nil(storage_account)
     end
@@ -280,23 +279,23 @@ defmodule Blockchain.Interface.AccountInterfaceTest do
       code = <<5>>
       cache = %Cache{accounts_cache: %{address => {account, code}}}
 
-      account_interface =
+      account_repo =
         state
         |> Account.reset_account(address)
-        |> AccountInterface.new(cache)
+        |> Repo.new(cache)
 
-      assert AccountInterface.account_with_code(account_interface, address) == {account, code}
+      assert Repo.account_with_code(account_repo, address) == {account, code}
     end
 
     test "fetches account from storage", %{state: state} do
       address = <<1>>
 
-      account_interface =
+      account_repo =
         state
         |> Account.reset_account(address)
-        |> AccountInterface.new()
+        |> Repo.new()
 
-      result = AccountInterface.account(account_interface, address)
+      result = Repo.account(account_repo, address)
 
       assert result == %Blockchain.Account{
                balance: 0,

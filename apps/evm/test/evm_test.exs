@@ -2,7 +2,7 @@ defmodule EvmTest do
   import ExthCrypto.Math, only: [hex_to_bin: 1, hex_to_int: 1]
 
   alias ExthCrypto.Hash.Keccak
-  alias EVM.Interface.Mock.MockAccountInterface
+  alias EVM.Mock.MockAccountRepo
   alias EVM.Mock.MockBlockHeaderInfo
 
   use ExUnit.Case, async: true
@@ -51,7 +51,7 @@ defmodule EvmTest do
 
         context = %{
           test_name: test_name,
-          account_interface: exec_env.account_interface,
+          account_repo: exec_env.account_repo,
           sub_state: sub_state,
           addresses: %{
             pre: get_addresses(test, "pre"),
@@ -80,10 +80,10 @@ defmodule EvmTest do
   end
 
   defp get_exec_env(test) do
-    account_interface = account_interface(test)
+    account_repo = account_repo(test)
 
     %EVM.ExecEnv{
-      account_interface: account_interface,
+      account_repo: account_repo,
       address: hex_to_bin(test["exec"]["address"]),
       block_header_info: block_header_info(test),
       data: hex_to_bin(test["exec"]["data"]),
@@ -95,7 +95,7 @@ defmodule EvmTest do
     }
   end
 
-  def account_interface(test) do
+  def account_repo(test) do
     account_map = %{
       hex_to_bin(test["exec"]["caller"]) => %{
         balance: 0,
@@ -129,7 +129,7 @@ defmodule EvmTest do
       output: <<>>
     }
 
-    MockAccountInterface.new(
+    MockAccountRepo.new(
       account_map,
       contract_result
     )
@@ -252,7 +252,7 @@ defmodule EvmTest do
     caller = hex_to_bin(test["exec"]["caller"])
     # exclude caller's account from the actual state
     # if it isn't in the "pre" or "post" addresses
-    context.account_interface.account_map
+    context.account_repo.account_map
     |> Enum.reject(fn {address, _} ->
       Enum.member?(context.sub_state.selfdestruct_list, address)
     end)

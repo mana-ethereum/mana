@@ -13,12 +13,12 @@ defmodule EVM.GasTest do
         gas: 40_000
       }
 
-      account_interface = EVM.Interface.Mock.MockAccountInterface.new()
+      account_repo = EVM.Mock.MockAccountRepo.new()
 
       exec_env = %EVM.ExecEnv{
         machine_code: EVM.MachineCode.compile([:call]),
         address: 1,
-        account_interface: account_interface,
+        account_repo: account_repo,
         config: config
       }
 
@@ -30,12 +30,12 @@ defmodule EVM.GasTest do
     to_address = 0x0F572E5295C57F15886F9B263E2F6D2D6C7B5EC6
     inputs = [3000, to_address, 0, 0, 32, 32, 32]
     machine_state = %EVM.MachineState{program_counter: 0, stack: inputs}
-    account_interface = EVM.Interface.Mock.MockAccountInterface.new()
+    account_repo = EVM.Mock.MockAccountRepo.new()
 
     exec_env = %EVM.ExecEnv{
       machine_code: EVM.MachineCode.compile([:call]),
       address: to_address,
-      account_interface: account_interface
+      account_repo: account_repo
     }
 
     cost = EVM.Gas.cost(machine_state, exec_env)
@@ -46,11 +46,11 @@ defmodule EVM.GasTest do
   describe "operation_cost/4" do
     test "calculated different costs for Frontier" do
       address = 0x0000000000000000000000000000000000000001
-      account_interface = EVM.Interface.Mock.MockAccountInterface.new()
+      account_repo = EVM.Mock.MockAccountRepo.new()
 
       exec_env = %EVM.ExecEnv{
         address: address,
-        account_interface: account_interface,
+        account_repo: account_repo,
         config: EVM.Configuration.Frontier.new()
       }
 

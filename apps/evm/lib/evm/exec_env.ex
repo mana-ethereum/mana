@@ -1,5 +1,5 @@
 defmodule EVM.ExecEnv do
-  alias EVM.Interface.AccountInterface
+  alias EVM.AccountRepo
   alias EVM.{Configuration, BlockHeaderInfo}
 
   @moduledoc """
@@ -21,7 +21,7 @@ defmodule EVM.ExecEnv do
             value_in_wei: nil,
             machine_code: <<>>,
             stack_depth: 0,
-            account_interface: nil,
+            account_repo: nil,
             block_header_info: nil,
             config: Configuration.Frontier.new(),
             static: false
@@ -49,79 +49,88 @@ defmodule EVM.ExecEnv do
           machine_code: EVM.MachineCode.t(),
           stack_depth: integer(),
           block_header_info: BlockHeaderInfo.t(),
-          account_interface: AccountInterface.t(),
+          account_repo: AccountRepo.t(),
           config: Configuration.t(),
           static: boolean()
         }
 
   @spec put_storage(t(), integer(), integer()) :: t()
   def put_storage(
-        exec_env = %{account_interface: account_interface, address: address},
+        exec_env = %{account_repo: account_repo, address: address},
         key,
         value
       ) do
-    account_interface = AccountInterface.put_storage(account_interface, address, key, value)
+    account_repo = AccountRepo.repo(account_repo).put_storage(account_repo, address, key, value)
 
-    Map.put(exec_env, :account_interface, account_interface)
+    Map.put(exec_env, :account_repo, account_repo)
   end
 
   @spec get_storage(t(), integer()) :: atom() | {:ok, integer()}
-  def get_storage(%{account_interface: account_interface, address: address}, key) do
-    AccountInterface.get_storage(account_interface, address, key)
+  def get_storage(%{account_repo: account_repo, address: address}, key) do
+    AccountRepo.repo(account_repo).get_storage(account_repo, address, key)
   end
 
   @spec get_initial_storage(t(), integer()) :: atom() | {:ok, integer()}
-  def get_initial_storage(%{account_interface: account_interface, address: address}, key) do
-    AccountInterface.get_initial_storage(account_interface, address, key)
+  def get_initial_storage(%{account_repo: account_repo, address: address}, key) do
+    AccountRepo.repo(account_repo).get_initial_storage(account_repo, address, key)
   end
 
   @spec get_balance(t()) :: EVM.Wei.t()
-  def get_balance(%{account_interface: account_interface, address: address}) do
-    AccountInterface.get_account_balance(account_interface, address)
+  def get_balance(%{account_repo: account_repo, address: address}) do
+    AccountRepo.repo(account_repo).get_account_balance(account_repo, address)
   end
 
   @spec remove_storage(t(), integer()) :: t()
-  def remove_storage(exec_env = %{account_interface: account_interface, address: address}, key) do
-    account_interface = AccountInterface.remove_storage(account_interface, address, key)
+  def remove_storage(exec_env = %{account_repo: account_repo, address: address}, key) do
+    account_repo = AccountRepo.repo(account_repo).remove_storage(account_repo, address, key)
 
-    Map.put(exec_env, :account_interface, account_interface)
+    Map.put(exec_env, :account_repo, account_repo)
   end
 
   @spec clear_account_balance(t()) :: t()
-  def clear_account_balance(exec_env = %{account_interface: account_interface, address: address}) do
-    account_interface = AccountInterface.clear_balance(account_interface, address)
+  def clear_account_balance(exec_env = %{account_repo: account_repo, address: address}) do
+    account_repo = AccountRepo.repo(account_repo).clear_balance(account_repo, address)
 
-    Map.put(exec_env, :account_interface, account_interface)
+    Map.put(exec_env, :account_repo, account_repo)
   end
 
   @spec transfer_balance_to(t(), EVM.Address.t()) :: t()
   def transfer_balance_to(exec_env, to) do
-    %{account_interface: account_interface, address: address} = exec_env
+    %{account_repo: account_repo, address: address} = exec_env
 
-    balance = AccountInterface.get_account_balance(account_interface, address)
+    balance = AccountRepo.repo(account_repo).get_account_balance(account_repo, address)
 
     transfer_wei_to(exec_env, to, balance)
   end
 
   @spec transfer_wei_to(t(), EVM.Address.t(), integer()) :: t()
   def transfer_wei_to(exec_env, to, value) do
-    account_interface =
-      AccountInterface.transfer(exec_env.account_interface, exec_env.address, to, value)
+    account_repo =
+      AccountRepo.repo(exec_env.account_repo).transfer(
+        exec_env.account_repo,
+        exec_env.address,
+        to,
+        value
+      )
 
-    %{exec_env | account_interface: account_interface}
+    %{exec_env | account_repo: account_repo}
   end
 
   @spec non_existent_account?(t(), EVM.Address.t()) :: boolean()
   def non_existent_account?(exec_env, address) do
-    !AccountInterface.account_exists?(
-      exec_env.account_interface,
+    !AccountRepo.repo(exec_env.account_repo).account_exists?(
+      exec_env.account_repo,
       address
     )
   end
 
   @spec non_existent_or_empty_account?(t(), EVM.Address.t()) :: boolean()
   def non_existent_or_empty_account?(exec_env, address) do
-    is_empty_account = AccountInterface.empty_account?(exec_env.account_interface, address)
+    is_empty_account =
+      AccountRepo.repo(exec_env.account_repo).empty_account?(
+        exec_env.account_repo,
+        address
+      )
 
     is_empty_account || non_existent_account?(exec_env, address)
   end

@@ -77,10 +77,10 @@ defmodule EVM.SubState do
 
   ## Examples
 
-      iex> account_interface = EVM.Interface.Mock.MockAccountInterface.new()
+      iex> account_repo = EVM.Mock.MockAccountRepo.new()
       iex> machine_code = <<EVM.Operation.metadata(:sstore).id>>
       iex> exec_env = %EVM.ExecEnv{
-      ...>   account_interface: account_interface,
+      ...>   account_repo: account_repo,
       ...>   machine_code: machine_code,
       ...> } |> EVM.ExecEnv.put_storage(5, 4)
       iex> machine_state = %EVM.MachineState{gas: 10, stack: [5 , 0], program_counter: 0}

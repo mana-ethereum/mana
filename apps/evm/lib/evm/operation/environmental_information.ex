@@ -1,6 +1,5 @@
 defmodule EVM.Operation.EnvironmentalInformation do
-  alias EVM.{Operation, Stack, Helpers, Memory, Stack}
-  alias EVM.Interface.AccountInterface
+  alias EVM.{AccountRepo, Operation, Stack, Helpers, Memory, Stack}
 
   @doc """
   Get address of currently executing account.
@@ -23,15 +22,15 @@ defmodule EVM.Operation.EnvironmentalInformation do
       iex> db = MerklePatriciaTree.Test.random_ets_db()
       iex> state = MerklePatriciaTree.Trie.new(db)
       iex> account_map = %{123 => %{balance: nil}}
-      iex> account_interface = EVM.Interface.Mock.MockAccountInterface.new(%{account_map: account_map})
-      iex> exec_env = %EVM.ExecEnv{account_interface: account_interface}
+      iex> account_repo = EVM.Mock.MockAccountRepo.new(%{account_map: account_map})
+      iex> exec_env = %EVM.ExecEnv{account_repo: account_repo}
       iex> EVM.Operation.EnvironmentalInformation.balance([123], %{state: state, exec_env: exec_env, machine_state: %EVM.MachineState{}}).machine_state.stack
       [0]
 
       iex> db = MerklePatriciaTree.Test.random_ets_db()
       iex> state = MerklePatriciaTree.Trie.new(db)
-      iex> account_interface = EVM.Interface.Mock.MockAccountInterface.new(%{123 => %{balance: 500}})
-      iex> exec_env = %EVM.ExecEnv{account_interface: account_interface}
+      iex> account_repo = EVM.Mock.MockAccountRepo.new(%{123 => %{balance: 500}})
+      iex> exec_env = %EVM.ExecEnv{account_repo: account_repo}
       iex> EVM.Operation.EnvironmentalInformation.balance([123], %{state: state, exec_env: exec_env, machine_state: %EVM.MachineState{}}).machine_state.stack
       [500]
   """
@@ -40,7 +39,10 @@ defmodule EVM.Operation.EnvironmentalInformation do
     wrapped_address = Helpers.wrap_address(address)
 
     balance =
-      case AccountInterface.get_account_balance(exec_env.account_interface, wrapped_address) do
+      case AccountRepo.repo(exec_env.account_repo).get_account_balance(
+             exec_env.account_repo,
+             wrapped_address
+           ) do
         nil -> 0
         balance -> balance
       end
@@ -229,10 +231,10 @@ defmodule EVM.Operation.EnvironmentalInformation do
 
   ## Examples
 
-      iex> account_interface = EVM.Interface.Mock.MockAccountInterface.new(%{0x01 => %{code: <<0x11, 0x22, 0x33, 0x44>>}})
+      iex> account_repo = EVM.Mock.MockAccountRepo.new(%{0x01 => %{code: <<0x11, 0x22, 0x33, 0x44>>}})
       iex> db = MerklePatriciaTree.Test.random_ets_db()
       iex> state = MerklePatriciaTree.Trie.new(db)
-      iex> exec_env = %EVM.ExecEnv{account_interface: account_interface}
+      iex> exec_env = %EVM.ExecEnv{account_repo: account_repo}
       iex> EVM.Operation.EnvironmentalInformation.extcodesize([0x01], %{exec_env: exec_env, state: state, machine_state: %EVM.MachineState{}}).machine_state.stack
       [4]
   """
@@ -240,7 +242,11 @@ defmodule EVM.Operation.EnvironmentalInformation do
   def extcodesize([address], %{exec_env: exec_env, machine_state: machine_state}) do
     wrapped_address = Helpers.wrap_address(address)
 
-    account_code = AccountInterface.get_account_code(exec_env.account_interface, wrapped_address)
+    account_code =
+      AccountRepo.repo(exec_env.account_repo).get_account_code(
+        exec_env.account_repo,
+        wrapped_address
+      )
 
     extcodesize =
       if account_code do
@@ -263,8 +269,8 @@ defmodule EVM.Operation.EnvironmentalInformation do
       iex> state = MerklePatriciaTree.Trie.new(db)
       iex> code = <<54>>
       iex> account_map = %{<<0::160>> => %{code: code}}
-      iex> account_interface = EVM.Interface.Mock.MockAccountInterface.new(account_map)
-      iex> EVM.Operation.EnvironmentalInformation.extcodecopy([<<0::160>>, 0, 0, 1], %{exec_env: %EVM.ExecEnv{account_interface: account_interface}, machine_state: %EVM.MachineState{}, state: state})
+      iex> account_repo = EVM.Mock.MockAccountRepo.new(account_map)
+      iex> EVM.Operation.EnvironmentalInformation.extcodecopy([<<0::160>>, 0, 0, 1], %{exec_env: %EVM.ExecEnv{account_repo: account_repo}, machine_state: %EVM.MachineState{}, state: state})
       %{
         machine_state:
           %EVM.MachineState{
@@ -285,7 +291,11 @@ defmodule EVM.Operation.EnvironmentalInformation do
       }) do
     wrapped_address = Helpers.wrap_address(address)
 
-    account_code = AccountInterface.get_account_code(exec_env.account_interface, wrapped_address)
+    account_code =
+      AccountRepo.repo(exec_env.account_repo).get_account_code(
+        exec_env.account_repo,
+        wrapped_address
+      )
 
     if size == 0 || size + mem_offset > EVM.max_int() || (code_offset == 0 && account_code == "") do
       0
@@ -300,7 +310,12 @@ defmodule EVM.Operation.EnvironmentalInformation do
   @spec extcodehash(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def extcodehash([address], %{exec_env: exec_env}) do
     wrapped_address = Helpers.wrap_address(address)
-    hash = AccountInterface.get_account_code_hash(exec_env.account_interface, wrapped_address)
+
+    hash =
+      AccountRepo.repo(exec_env.account_repo).get_account_code_hash(
+        exec_env.account_repo,
+        wrapped_address
+      )
 
     if is_nil(hash) do
       0

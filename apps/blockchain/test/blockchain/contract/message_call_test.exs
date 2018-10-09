@@ -5,7 +5,7 @@ defmodule Blockchain.Contract.MessageCallTest do
   alias Blockchain.{Account, Contract}
   alias EVM.{SubState, MachineCode}
   alias MerklePatriciaTree.{Trie, DB}
-  alias Blockchain.Interface.AccountInterface
+  alias Blockchain.Account.Repo
 
   setup do
     db = MerklePatriciaTree.Test.random_ets_db(:message_call_test)
@@ -40,7 +40,7 @@ defmodule Blockchain.Contract.MessageCallTest do
         |> Account.put_code(<<0x20::160>>, code)
 
       params = %Contract.MessageCall{
-        account_interface: AccountInterface.new(state),
+        account_repo: Repo.new(state),
         sender: <<0x10::160>>,
         originator: <<0x10::160>>,
         recipient: <<0x20::160>>,
@@ -54,8 +54,8 @@ defmodule Blockchain.Contract.MessageCallTest do
         block_header: %Block.Header{nonce: 1}
       }
 
-      {:ok, {account_interface, gas, sub_state, output}} = Contract.message_call(params)
-      state = AccountInterface.commit(account_interface).state
+      {:ok, {account_repo, gas, sub_state, output}} = Contract.message_call(params)
+      state = Repo.commit(account_repo).state
 
       expected_root_hash =
         <<163, 151, 95, 0, 149, 63, 81, 220, 74, 101, 219, 175, 240, 97, 153, 167, 249, 229, 144,
@@ -99,7 +99,7 @@ defmodule Blockchain.Contract.MessageCallTest do
         |> Account.put_code(<<0x20::160>>, code)
 
       params = %Contract.MessageCall{
-        account_interface: AccountInterface.new(state),
+        account_repo: Repo.new(state),
         sender: <<0x10::160>>,
         originator: <<0x10::160>>,
         recipient: <<0x20::160>>,
@@ -113,8 +113,8 @@ defmodule Blockchain.Contract.MessageCallTest do
         block_header: %Block.Header{nonce: 1}
       }
 
-      assert {:error, {account_interface, gas, sub_state, output}} = Contract.message_call(params)
-      assert account_interface.state == state
+      assert {:error, {account_repo, gas, sub_state, output}} = Contract.message_call(params)
+      assert account_repo.state == state
 
       assert gas == 0
       assert SubState.empty?(sub_state)
@@ -142,7 +142,7 @@ defmodule Blockchain.Contract.MessageCallTest do
         |> Account.put_code(<<0x20::160>>, code)
 
       params = %Contract.MessageCall{
-        account_interface: AccountInterface.new(state),
+        account_repo: Repo.new(state),
         sender: <<0x10::160>>,
         originator: <<0x10::160>>,
         recipient: <<0x20::160>>,
@@ -157,8 +157,8 @@ defmodule Blockchain.Contract.MessageCallTest do
         config: EVM.Configuration.Byzantium.new()
       }
 
-      assert {:error, {account_interface, gas, sub_state, output}} = Contract.message_call(params)
-      assert account_interface.state == state
+      assert {:error, {account_repo, gas, sub_state, output}} = Contract.message_call(params)
+      assert account_repo.state == state
 
       assert gas == 985
       assert SubState.empty?(sub_state)
@@ -204,7 +204,7 @@ defmodule Blockchain.Contract.MessageCallTest do
       code = MachineCode.compile([:push1, 0, :push1, 0, :sstore, :push1, 0, :push1, 0, :sstore])
 
       state = Account.put_code(state, params.recipient, code)
-      params = %{params | account_interface: AccountInterface.new(state)}
+      params = %{params | account_repo: Repo.new(state)}
 
       {:ok, {_state, result_gas, sub_state, _output}} = Contract.message_call(params)
 
@@ -216,7 +216,7 @@ defmodule Blockchain.Contract.MessageCallTest do
       code = MachineCode.compile([:push1, 0, :push1, 0, :sstore, :push1, 1, :push1, 0, :sstore])
 
       state = Account.put_code(state, params.recipient, code)
-      params = %{params | account_interface: AccountInterface.new(state)}
+      params = %{params | account_repo: Repo.new(state)}
 
       {:ok, {_state, result_gas, sub_state, _output}} = Contract.message_call(params)
 
@@ -228,7 +228,7 @@ defmodule Blockchain.Contract.MessageCallTest do
       code = MachineCode.compile([:push1, 1, :push1, 0, :sstore, :push1, 0, :push1, 0, :sstore])
 
       state = Account.put_code(state, params.recipient, code)
-      params = %{params | account_interface: AccountInterface.new(state)}
+      params = %{params | account_repo: Repo.new(state)}
 
       {:ok, {_state, result_gas, sub_state, _output}} = Contract.message_call(params)
 
@@ -240,7 +240,7 @@ defmodule Blockchain.Contract.MessageCallTest do
       code = MachineCode.compile([:push1, 1, :push1, 0, :sstore, :push1, 2, :push1, 0, :sstore])
 
       state = Account.put_code(state, params.recipient, code)
-      params = %{params | account_interface: AccountInterface.new(state)}
+      params = %{params | account_repo: Repo.new(state)}
 
       {:ok, {_state, result_gas, sub_state, _output}} = Contract.message_call(params)
 
@@ -252,7 +252,7 @@ defmodule Blockchain.Contract.MessageCallTest do
       code = MachineCode.compile([:push1, 1, :push1, 0, :sstore, :push1, 1, :push1, 0, :sstore])
 
       state = Account.put_code(state, params.recipient, code)
-      params = %{params | account_interface: AccountInterface.new(state)}
+      params = %{params | account_repo: Repo.new(state)}
 
       {:ok, {_state, result_gas, sub_state, _output}} = Contract.message_call(params)
 
@@ -268,7 +268,7 @@ defmodule Blockchain.Contract.MessageCallTest do
         |> Account.put_code(params.recipient, code)
         |> Account.put_storage(params.recipient, 0, 1)
 
-      params = %{params | account_interface: AccountInterface.new(state)}
+      params = %{params | account_repo: Repo.new(state)}
 
       {:ok, {_state, result_gas, sub_state, _output}} = Contract.message_call(params)
 
@@ -284,7 +284,7 @@ defmodule Blockchain.Contract.MessageCallTest do
         |> Account.put_code(params.recipient, code)
         |> Account.put_storage(params.recipient, 0, 1)
 
-      params = %{params | account_interface: AccountInterface.new(state)}
+      params = %{params | account_repo: Repo.new(state)}
 
       {:ok, {_state, result_gas, sub_state, _output}} = Contract.message_call(params)
 
@@ -300,7 +300,7 @@ defmodule Blockchain.Contract.MessageCallTest do
         |> Account.put_code(params.recipient, code)
         |> Account.put_storage(params.recipient, 0, 1)
 
-      params = %{params | account_interface: AccountInterface.new(state)}
+      params = %{params | account_repo: Repo.new(state)}
 
       {:ok, {_state, result_gas, sub_state, _output}} = Contract.message_call(params)
 
@@ -316,7 +316,7 @@ defmodule Blockchain.Contract.MessageCallTest do
         |> Account.put_code(params.recipient, code)
         |> Account.put_storage(params.recipient, 0, 1)
 
-      params = %{params | account_interface: AccountInterface.new(state)}
+      params = %{params | account_repo: Repo.new(state)}
 
       {:ok, {_state, result_gas, sub_state, _output}} = Contract.message_call(params)
 
@@ -332,7 +332,7 @@ defmodule Blockchain.Contract.MessageCallTest do
         |> Account.put_code(params.recipient, code)
         |> Account.put_storage(params.recipient, 0, 1)
 
-      params = %{params | account_interface: AccountInterface.new(state)}
+      params = %{params | account_repo: Repo.new(state)}
 
       {:ok, {_state, result_gas, sub_state, _output}} = Contract.message_call(params)
 
@@ -348,7 +348,7 @@ defmodule Blockchain.Contract.MessageCallTest do
         |> Account.put_code(params.recipient, code)
         |> Account.put_storage(params.recipient, 0, 1)
 
-      params = %{params | account_interface: AccountInterface.new(state)}
+      params = %{params | account_repo: Repo.new(state)}
 
       {:ok, {_state, result_gas, sub_state, _output}} = Contract.message_call(params)
 
@@ -364,7 +364,7 @@ defmodule Blockchain.Contract.MessageCallTest do
         |> Account.put_code(params.recipient, code)
         |> Account.put_storage(params.recipient, 0, 1)
 
-      params = %{params | account_interface: AccountInterface.new(state)}
+      params = %{params | account_repo: Repo.new(state)}
 
       {:ok, {_state, result_gas, sub_state, _output}} = Contract.message_call(params)
 
@@ -380,7 +380,7 @@ defmodule Blockchain.Contract.MessageCallTest do
         |> Account.put_code(params.recipient, code)
         |> Account.put_storage(params.recipient, 0, 1)
 
-      params = %{params | account_interface: AccountInterface.new(state)}
+      params = %{params | account_repo: Repo.new(state)}
 
       {:ok, {_state, result_gas, sub_state, _output}} = Contract.message_call(params)
 
@@ -396,7 +396,7 @@ defmodule Blockchain.Contract.MessageCallTest do
         |> Account.put_code(params.recipient, code)
         |> Account.put_storage(params.recipient, 0, 1)
 
-      params = %{params | account_interface: AccountInterface.new(state)}
+      params = %{params | account_repo: Repo.new(state)}
 
       {:ok, {_state, result_gas, sub_state, _output}} = Contract.message_call(params)
 
@@ -412,7 +412,7 @@ defmodule Blockchain.Contract.MessageCallTest do
         |> Account.put_code(params.recipient, code)
         |> Account.put_storage(params.recipient, 0, 1)
 
-      params = %{params | account_interface: AccountInterface.new(state)}
+      params = %{params | account_repo: Repo.new(state)}
 
       {:ok, {_state, result_gas, sub_state, _output}} = Contract.message_call(params)
 
@@ -442,7 +442,7 @@ defmodule Blockchain.Contract.MessageCallTest do
 
       state = Account.put_code(state, params.recipient, code)
 
-      params = %{params | account_interface: AccountInterface.new(state)}
+      params = %{params | account_repo: Repo.new(state)}
 
       {:ok, {_state, result_gas, sub_state, _output}} = Contract.message_call(params)
 
@@ -475,7 +475,7 @@ defmodule Blockchain.Contract.MessageCallTest do
         |> Account.put_code(params.recipient, code)
         |> Account.put_storage(params.recipient, 0, 1)
 
-      params = %{params | account_interface: AccountInterface.new(state)}
+      params = %{params | account_repo: Repo.new(state)}
 
       {:ok, {_state, result_gas, sub_state, _output}} = Contract.message_call(params)
 

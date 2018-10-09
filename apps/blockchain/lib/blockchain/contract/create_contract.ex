@@ -4,12 +4,12 @@ defmodule Blockchain.Contract.CreateContract do
   as defined in Section 7, Eq.(76) of the Yellow Paper.
   """
 
-  alias Blockchain.Interface.AccountInterface
+  alias Blockchain.Account.Repo
   alias Block.Header
   alias Blockchain.{Account, BlockHeaderInfo}
   alias EVM.{SubState, Gas}
 
-  defstruct account_interface: %AccountInterface{},
+  defstruct account_repo: %Repo{},
             sender: <<>>,
             originator: <<>>,
             available_gas: 0,
@@ -34,7 +34,7 @@ defmodule Blockchain.Contract.CreateContract do
   - e: stack_depth
   """
   @type t :: %__MODULE__{
-          account_interface: AccountInterface.t(),
+          account_repo: Repo.t(),
           sender: EVM.address(),
           originator: EVM.address(),
           available_gas: EVM.Gas.t(),
@@ -47,11 +47,11 @@ defmodule Blockchain.Contract.CreateContract do
           config: EVM.Configuration.t()
         }
 
-  @spec execute(t()) :: {:ok | :error, {AccountInterface.t(), EVM.Gas.t(), EVM.SubState.t()}}
+  @spec execute(t()) :: {:ok | :error, {Repo.t(), EVM.Gas.t(), EVM.SubState.t()}}
   def execute(params) do
-    original_account_interface = params.account_interface
+    original_account_repo = params.account_repo
     contract_address = new_account_address(params)
-    account = AccountInterface.account(original_account_interface, contract_address)
+    account = Repo.account(original_account_repo, contract_address)
 
     if is_nil(account) || Account.uninitialized_contract?(account) do
       result = {rem_gas, _, _, output} = create(params, contract_address)
@@ -64,29 +64,29 @@ defmodule Blockchain.Contract.CreateContract do
       # point immediately prior to balance transfer.
       #
       case output do
-        :failed -> error(original_account_interface)
-        {:revert, _} -> {:error, {original_account_interface, rem_gas, SubState.empty()}}
+        :failed -> error(original_account_repo)
+        {:revert, _} -> {:error, {original_account_repo, rem_gas, SubState.empty()}}
         _ -> finalize(result, params, contract_address)
       end
     else
       if account_will_collide?(account) do
-        error(original_account_interface)
+        error(original_account_repo)
       else
-        {:ok, {original_account_interface, 0, SubState.empty()}}
+        {:ok, {original_account_repo, 0, SubState.empty()}}
       end
     end
   end
 
   @spec increment_nonce_of_touched_account(
-          AccountInterface.t(),
+          Repo.t(),
           EVM.Configuration.t(),
           EVM.address()
-        ) :: AccountInterface.t()
-  defp increment_nonce_of_touched_account(account_interface, config, address) do
+        ) :: Repo.t()
+  defp increment_nonce_of_touched_account(account_repo, config, address) do
     if EVM.Configuration.for(config).increment_nonce_on_create?(config) do
-      AccountInterface.increment_account_nonce(account_interface, address)
+      Repo.increment_account_nonce(account_repo, address)
     else
-      account_interface
+      account_repo
     end
   end
 
@@ -95,14 +95,14 @@ defmodule Blockchain.Contract.CreateContract do
     account.nonce > 0 || !Account.is_simple_account?(account)
   end
 
-  @spec error(AccountInterface.t()) :: {:error, {AccountInterface.t(), 0, SubState.t()}}
-  defp error(account_interface) do
-    {:error, {account_interface, 0, SubState.empty()}}
+  @spec error(Repo.t()) :: {:error, {Repo.t(), 0, SubState.t()}}
+  defp error(account_repo) do
+    {:error, {account_repo, 0, SubState.empty()}}
   end
 
   @spec create(t(), EVM.address()) :: {EVM.state(), EVM.Gas.t(), EVM.SubState.t()}
   defp create(params, address) do
-    account_interface =
+    account_repo =
       params
       |> init_account(address)
       |> increment_nonce_of_touched_account(params.config, address)
@@ -119,51 +119,51 @@ defmodule Blockchain.Contract.CreateContract do
       value_in_wei: params.endowment,
       machine_code: params.init_code,
       stack_depth: params.stack_depth,
-      block_header_info: BlockHeaderInfo.new(params.block_header, account_interface.state.db),
-      account_interface: account_interface,
+      block_header_info: BlockHeaderInfo.new(params.block_header, account_repo.state.db),
+      account_repo: account_repo,
       config: params.config
     }
 
     EVM.VM.run(params.available_gas, exec_env)
   end
 
-  @spec init_account(t, EVM.address()) :: AccountInterface.t()
+  @spec init_account(t, EVM.address()) :: Repo.t()
   defp init_account(params, address) do
-    account = AccountInterface.account(params.account_interface, address)
+    account = Repo.account(params.account_repo, address)
 
-    account_interface =
+    account_repo =
       if is_nil(account) do
-        AccountInterface.reset_account(params.account_interface, address)
+        Repo.reset_account(params.account_repo, address)
       else
-        params.account_interface
+        params.account_repo
       end
 
-    AccountInterface.transfer_wei!(account_interface, params.sender, address, params.endowment)
+    Repo.transfer_wei!(account_repo, params.sender, address, params.endowment)
   end
 
   @spec finalize(
           {EVM.Gas.t(), EVM.SubState.t(), EVM.ExecEnv.t(), EVM.VM.output()},
           t(),
           EVM.address()
-        ) :: {:ok | :error, {AccountInterface.t(), EVM.Gas.t(), EVM.SubState.t()}}
+        ) :: {:ok | :error, {Repo.t(), EVM.Gas.t(), EVM.SubState.t()}}
   defp finalize({remaining_gas, accrued_sub_state, exec_env, output}, params, address) do
-    original_account_interface = params.account_interface
+    original_account_repo = params.account_repo
     contract_creation_cost = creation_cost(output)
     insufficient_gas = remaining_gas < contract_creation_cost
 
     cond do
       insufficient_gas &&
           EVM.Configuration.for(params.config).fail_contract_creation_lack_of_gas?(params.config) ->
-        {:error, {original_account_interface, 0, SubState.empty()}}
+        {:error, {original_account_repo, 0, SubState.empty()}}
 
       EVM.Configuration.for(params.config).limit_contract_code_size?(
         params.config,
         byte_size(output)
       ) ->
-        {:error, {original_account_interface, 0, SubState.empty()}}
+        {:error, {original_account_repo, 0, SubState.empty()}}
 
       true ->
-        modified_account_interface = exec_env.account_interface
+        modified_account_repo = exec_env.account_repo
 
         resultant_gas =
           if insufficient_gas do
@@ -172,16 +172,16 @@ defmodule Blockchain.Contract.CreateContract do
             remaining_gas - contract_creation_cost
           end
 
-        resultant_account_interface =
+        resultant_account_repo =
           if insufficient_gas do
-            modified_account_interface
+            modified_account_repo
           else
-            AccountInterface.put_code(modified_account_interface, address, output)
+            Repo.put_code(modified_account_repo, address, output)
           end
 
         sub_state = SubState.add_touched_account(accrued_sub_state, address)
 
-        {:ok, {resultant_account_interface, resultant_gas, sub_state}}
+        {:ok, {resultant_account_repo, resultant_gas, sub_state}}
     end
   end
 
@@ -201,7 +201,7 @@ defmodule Blockchain.Contract.CreateContract do
     if params.new_account_address do
       params.new_account_address
     else
-      sender_account = AccountInterface.account(params.account_interface, params.sender)
+      sender_account = Repo.account(params.account_repo, params.sender)
       Account.Address.new(params.sender, sender_account.nonce)
     end
   end

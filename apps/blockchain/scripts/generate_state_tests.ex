@@ -1,7 +1,7 @@
 defmodule GenerateStateTests do
   alias MerklePatriciaTree.Trie
   alias Blockchain.Account
-  alias Blockchain.Interface.AccountInterface
+  alias Blockchain.Account.Repo
   alias Blockchain.Account.Storage
   alias EthCommonTest.StateTestRunner
   alias EthCommonTest.Helpers
@@ -189,7 +189,7 @@ defmodule GenerateStateTests do
     |> Path.expand()
   end
 
-  def account_interface(test) do
+  def account_repo(test) do
     db = MerklePatriciaTree.Test.random_ets_db()
 
     state = %Trie{
@@ -226,7 +226,7 @@ defmodule GenerateStateTests do
         |> Account.put_code(maybe_hex(address), maybe_hex(account["code"]))
       end)
 
-    AccountInterface.new(state)
+    Repo.new(state)
   end
 
   defp test_directories do

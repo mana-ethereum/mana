@@ -63,7 +63,7 @@ Copy in the following code to create a mock environment with the fields required
 
 ```
 iex> env = %EVM.ExecEnv{
-  account_interface: %EVM.Interface.Mock.MockAccountInterface{
+  account_interface: %EVM.Mock.MockAccountRepo{
     account_map: %{},
     contract_result: %{gas: nil, output: nil, sub_state: nil}
   },
@@ -130,7 +130,7 @@ Within the execution environment, you will see the new storage value: `storage: 
 ```
 {..., %EVM.SubState{logs: [], refund: 0, suicide_list: []},
  %EVM.ExecEnv{
-   account_interface: %EVM.Interface.Mock.MockAccountInterface{
+   account_interface: %EVM.Mock.MockAccountRepo{
      account_map: %{
        87579061662017136990230301793909925042452127430 => %{
          balance: 0,

@@ -4,13 +4,13 @@ defmodule Blockchain.Contract.MessageCall do
   as defined in Section 8, Eq.(98) of the Yellow Paper.
   """
 
-  alias Blockchain.Interface.AccountInterface
+  alias Blockchain.Account.Repo
   alias Blockchain.BlockHeaderInfo
   alias Block.Header
   alias EVM.SubState
   alias EVM.MessageCall
 
-  defstruct account_interface: %AccountInterface{},
+  defstruct account_repo: %Repo{},
             sender: <<>>,
             originator: <<>>,
             recipient: <<>>,
@@ -39,7 +39,7 @@ defmodule Blockchain.Contract.MessageCall do
   e: stack_depth
   """
   @type t :: %__MODULE__{
-          account_interface: AccountInterface.t(),
+          account_repo: Repo.t(),
           sender: EVM.address(),
           originator: EVM.address(),
           recipient: EVM.address(),
@@ -63,19 +63,18 @@ defmodule Blockchain.Contract.MessageCall do
   TODO: Determine whether or not we should be passing in the block header directly.
   TODO: Add serious (less trivial) test cases in `contract_test.exs`
   """
-  @spec execute(t()) ::
-          {:ok | :error, {AccountInterface.t(), EVM.Gas.t(), EVM.SubState.t(), EVM.VM.output()}}
+  @spec execute(t()) :: {:ok | :error, {Repo.t(), EVM.Gas.t(), EVM.SubState.t(), EVM.VM.output()}}
   def execute(params) do
     run = MessageCall.get_run_function(params.recipient, params.config)
 
     # Note, this could fail if machine code is not in state
-    {:ok, machine_code} = AccountInterface.machine_code(params.account_interface, params.contract)
+    {:ok, machine_code} = Repo.machine_code(params.account_repo, params.contract)
 
     # Initiates message call by transfering balance from sender to receiver.
     # This covers Eq.(101), Eq.(102), Eq.(103) and Eq.(104) of the Yellow Paper.
-    account_interface =
-      AccountInterface.transfer_wei!(
-        params.account_interface,
+    account_repo =
+      Repo.transfer_wei!(
+        params.account_repo,
         params.sender,
         params.recipient,
         params.value
@@ -93,8 +92,8 @@ defmodule Blockchain.Contract.MessageCall do
       value_in_wei: params.apparent_value,
       machine_code: machine_code,
       stack_depth: params.stack_depth,
-      block_header_info: BlockHeaderInfo.new(params.block_header, account_interface.state.db),
-      account_interface: account_interface,
+      block_header_info: BlockHeaderInfo.new(params.block_header, account_repo.state.db),
+      account_repo: account_repo,
       config: params.config
     }
 
@@ -109,13 +108,13 @@ defmodule Blockchain.Contract.MessageCall do
     # point immediately prior to balance transfer.
     case output do
       :failed ->
-        {:error, {params.account_interface, 0, SubState.empty(), :failed}}
+        {:error, {params.account_repo, 0, SubState.empty(), :failed}}
 
       {:revert, _output} ->
-        {:error, {params.account_interface, gas, SubState.empty(), :failed}}
+        {:error, {params.account_repo, gas, SubState.empty(), :failed}}
 
       _ ->
-        {:ok, {exec_env.account_interface, gas, sub_state, output}}
+        {:ok, {exec_env.account_repo, gas, sub_state, output}}
     end
   end
 end

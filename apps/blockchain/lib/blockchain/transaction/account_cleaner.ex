@@ -1,21 +1,21 @@
 defmodule Blockchain.Transaction.AccountCleaner do
   alias Blockchain.Account
-  alias Blockchain.Interface.AccountInterface
+  alias Blockchain.Account.Repo
   alias EVM.Configuration
 
-  def clean_touched_accounts(account_interface, accounts, config) do
+  def clean_touched_accounts(account_repo, accounts, config) do
     if Configuration.for(config).clean_touched_accounts?(config) do
-      Enum.reduce(accounts, account_interface, fn address, new_account_interface ->
-        account = AccountInterface.account(new_account_interface, address)
+      Enum.reduce(accounts, account_repo, fn address, new_account_repo ->
+        account = Repo.account(new_account_repo, address)
 
         if account && Account.empty?(account) do
-          AccountInterface.del_account(new_account_interface, address)
+          Repo.del_account(new_account_repo, address)
         else
-          new_account_interface
+          new_account_repo
         end
       end)
     else
-      account_interface
+      account_repo
     end
   end
 end

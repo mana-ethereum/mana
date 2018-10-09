@@ -32,9 +32,8 @@ defmodule EVM.Operation do
           optional(:sub_state) => SubState.t(),
           optional(:exec_env) => ExecEnv.t(),
           optional(:block_header_info) => EVM.BlockHeaderInfo.t(),
-          # EVM.Interface.ContractInterface.t()
           optional(:contract_interface) => any(),
-          optional(:account_interface) => EVM.Interface.AccountInterface.t()
+          optional(:account_repo) => EVM.AccountRepo.t()
         }
   @type noop :: :noop
   @type op_result :: any() | nil

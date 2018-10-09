@@ -3,8 +3,8 @@ defmodule EVM.MessageCallTest do
   doctest EVM.MessageCall
 
   alias EVM.MessageCall
-  alias EVM.Interface.Mock.MockAccountInterface
-  alias EVM.Interface.AccountInterface
+  alias EVM.Mock.MockAccountRepo
+  alias EVM.AccountRepo
 
   import EVM.TestFactory, only: [build: 1, build: 2]
 
@@ -21,13 +21,13 @@ defmodule EVM.MessageCallTest do
 
     recipient = %{address: <<0x9::160>>, code: code}
 
-    account_interface =
-      build(:mock_account_interface)
-      |> MockAccountInterface.add_account(recipient.address, %{balance: 10, code: recipient.code})
+    account_repo =
+      build(:mock_account_repo)
+      |> MockAccountRepo.add_account(recipient.address, %{balance: 10, code: recipient.code})
 
     pre_exec_env =
       build(:exec_env,
-        account_interface: account_interface
+        account_repo: account_repo
       )
 
     pre_machine_state = build(:machine_state)
@@ -55,8 +55,8 @@ defmodule EVM.MessageCallTest do
     current_account = %{address: <<0x80::160>>, balance: 100}
     recipient_account = %{address: <<0x90::160>>, balance: 0}
 
-    account_interface =
-      build(:mock_account_interface,
+    account_repo =
+      build(:mock_account_repo,
         account_map: %{
           current_account.address => %{balance: current_account.balance},
           recipient_account.address => %{balance: recipient_account.balance}
@@ -66,7 +66,7 @@ defmodule EVM.MessageCallTest do
     pre_exec_env =
       build(:exec_env,
         address: current_account.address,
-        account_interface: account_interface
+        account_repo: account_repo
       )
 
     message_call =
@@ -77,13 +77,17 @@ defmodule EVM.MessageCallTest do
       )
 
     %{exec_env: exec_env} = MessageCall.call(message_call)
-    account_interface = exec_env.account_interface
+    account_repo = exec_env.account_repo
 
-    assert AccountInterface.get_account_balance(account_interface, recipient_account.address) ==
-             recipient_account.balance + message_call.value
+    assert AccountRepo.repo(account_repo).get_account_balance(
+             account_repo,
+             recipient_account.address
+           ) == recipient_account.balance + message_call.value
 
-    assert AccountInterface.get_account_balance(account_interface, current_account.address) ==
-             current_account.balance - message_call.value
+    assert AccountRepo.repo(account_repo).get_account_balance(
+             account_repo,
+             current_account.address
+           ) == current_account.balance - message_call.value
   end
 
   test "fails if stack is too deep, only returning the machine state" do

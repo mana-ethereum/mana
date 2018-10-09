@@ -1,7 +1,7 @@
 defmodule EthCommonTest.StateTestRunner do
   alias MerklePatriciaTree.Trie
   alias Blockchain.{Account, Chain, Transaction}
-  alias Blockchain.Interface.AccountInterface
+  alias Blockchain.Account.Repo
   alias Blockchain.Account.Storage
   alias ExthCrypto.Hash.Keccak
 
@@ -57,7 +57,7 @@ defmodule EthCommonTest.StateTestRunner do
         |> populate_init_or_data(maybe_hex(Enum.at(test["transaction"]["data"], data_index)))
         |> Transaction.Signature.sign_transaction(maybe_hex(test["transaction"]["secretKey"]))
 
-      {account_interface, _, receipt} =
+      {account_repo, _, receipt} =
         Transaction.execute_with_validation(
           pre_state,
           transaction,
@@ -72,12 +72,12 @@ defmodule EthCommonTest.StateTestRunner do
           chain
         )
 
-      account_interface =
-        account_interface
+      account_repo =
+        account_repo
         |> simulate_miner_reward(test)
         |> simulate_account_cleaning(test, chain.evm_config)
 
-      state = AccountInterface.commit(account_interface).state
+      state = Repo.commit(account_repo).state
 
       expected_hash =
         test["post"][hardfork]
@@ -163,16 +163,16 @@ defmodule EthCommonTest.StateTestRunner do
     |> Poison.decode!()
   end
 
-  defp simulate_miner_reward(account_interface, test) do
+  defp simulate_miner_reward(account_repo, test) do
     coinbase = maybe_hex(test["env"]["currentCoinbase"])
-    AccountInterface.add_wei(account_interface, coinbase, 0)
+    Repo.add_wei(account_repo, coinbase, 0)
   end
 
-  defp simulate_account_cleaning(account_interface, test, hardfork_configuration) do
+  defp simulate_account_cleaning(account_repo, test, hardfork_configuration) do
     coinbase = maybe_hex(test["env"]["currentCoinbase"])
 
     Blockchain.Transaction.AccountCleaner.clean_touched_accounts(
-      account_interface,
+      account_repo,
       [coinbase],
       hardfork_configuration
     )
