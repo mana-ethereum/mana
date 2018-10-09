@@ -33,9 +33,6 @@ apps/evm/lib/evm/gas.ex:310: The call 'Elixir.EVM.Gas':operation_cost(__@1::any(
 apps/evm/lib/evm/gas.ex:310: Function operation_cost/3 has no local return
 apps/evm/lib/evm/gas.ex:310: The call 'Elixir.EVM.Gas':operation_cost(__@1::any(),__@2::any(),__@3::any(),'nil') breaks the contract (atom(),['Elixir.EVM':val()],['Elixir.EVM':val()],'Elixir.EVM.MachineState':t()) -> t() | 'nil'
 apps/evm/lib/evm/gas.ex:577: Function gas_cost_for_nested_operation/2 will never be called
-apps/evm/lib/evm/machine_state.ex:53: Function subtract_gas/2 has no local return
-apps/evm/lib/evm/machine_state.ex:55: The pattern {'changed', _cost@1, _new_call_gas@1} can never match the type number() | {'original',number()}
-apps/evm/lib/evm/machine_state.ex:55: The pattern {'changed', _cost@1, _new_call_gas@1} can never match the type integer() | {'original',integer()}
 apps/evm/lib/evm/operation/environmental_information.ex:114: Function calldataload/2 has no local return
 apps/evm/lib/evm/operation/environmental_information.ex:117: The call 'Elixir.EVM.Helpers':decode_signed(binary()) breaks the contract (integer() | 'nil') -> 'Elixir.EVM':val() | 'nil'
 apps/evm/lib/evm/vm.ex:98: The pattern 'continue' can never match the type {'halt','invalid_instruction' | 'stack_underflow' | 'undefined_instruction'}

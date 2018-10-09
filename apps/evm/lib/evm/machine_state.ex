@@ -51,7 +51,7 @@ defmodule EVM.MachineState do
   """
   @spec subtract_gas(MachineState.t(), ExecEnv.t()) :: MachineState.t()
   def subtract_gas(machine_state, exec_env) do
-    case Gas.cost(machine_state, exec_env, with_status: true) do
+    case Gas.cost_with_status(machine_state, exec_env) do
       {:changed, cost, new_call_gas} ->
         new_stack = Stack.replace(machine_state.stack, 0, new_call_gas)
 
