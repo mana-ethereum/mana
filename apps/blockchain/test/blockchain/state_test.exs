@@ -2,6 +2,7 @@ defmodule Blockchain.StateTest do
   alias MerklePatriciaTree.Trie
   alias Blockchain.Account
   alias EthCommonTest.StateTestRunner
+  alias EthCommonTest.Helpers
 
   use EthCommonTest.Harness
   use ExUnit.Case, async: true
@@ -60,13 +61,13 @@ defmodule Blockchain.StateTest do
       "stCreate2/returndatasize_following_successful_create",
       "stRevertTest/RevertOpcodeMultipleSubCalls"
     ],
-    "TangerineWhistle" => ["stRevertTest/RevertOpcodeMultipleSubCalls"],
+    "Frontier" => [],
+    "Homestead" => ["stRevertTest/RevertOpcodeMultipleSubCalls"],
     "SpuriousDragon" => [
       "stRevertTest/RevertOpcodeMultipleSubCalls",
       "stSpecialTest/failed_tx_xcf416c53"
     ],
-    "Frontier" => [],
-    "Homestead" => ["stRevertTest/RevertOpcodeMultipleSubCalls"]
+    "TangerineWhistle" => ["stRevertTest/RevertOpcodeMultipleSubCalls"]
   }
 
   @fifteen_minutes 1000 * 60 * 15
@@ -110,6 +111,7 @@ defmodule Blockchain.StateTest do
 
   defp fork_without_implementation?(fork) do
     fork
+    |> Helpers.human_readable_fork_name()
     |> EVM.Configuration.hardfork_config()
     |> is_nil()
   end

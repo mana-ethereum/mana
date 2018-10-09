@@ -4,6 +4,7 @@ defmodule GenerateStateTests do
   alias Blockchain.Interface.AccountInterface
   alias Blockchain.Account.Storage
   alias EthCommonTest.StateTestRunner
+  alias EthCommonTest.Helpers
 
   use EthCommonTest.Harness
 
@@ -105,7 +106,10 @@ defmodule GenerateStateTests do
     completed_tests =
       test["post"]
       |> Enum.reduce(completed_tests, fn {hardfork, _test_data}, completed_tests ->
-        hardfork_configuration = EVM.Configuration.hardfork_config(hardfork)
+        hardfork_configuration =
+          hardfork
+          |> Helpers.human_readable_fork_name()
+          |> EVM.Configuration.hardfork_config()
 
         if hardfork_configuration do
           run_transaction(
@@ -130,13 +134,23 @@ defmodule GenerateStateTests do
          test,
          hardfork
        ) do
+    human_readable = Helpers.human_readable_fork_name(hardfork)
+
     {test_name, test}
     |> StateTestRunner.run_test(hardfork)
     |> Enum.reduce(completed_tests, fn result, completed_tests ->
       if result.state_root_mismatch || result.logs_hash_mismatch do
-        update_in(completed_tests, [:failing, hardfork], &["#{test_group}/#{test_name}" | &1])
+        update_in(
+          completed_tests,
+          [:failing, human_readable],
+          &["#{test_group}/#{test_name}" | &1]
+        )
       else
-        update_in(completed_tests, [:passing, hardfork], &["#{test_group}/#{test_name}" | &1])
+        update_in(
+          completed_tests,
+          [:passing, human_readable],
+          &["#{test_group}/#{test_name}" | &1]
+        )
       end
     end)
   end
