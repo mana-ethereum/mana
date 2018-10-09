@@ -71,7 +71,8 @@ defmodule EVM.Operation.System do
       execution_value: call_gas,
       data: data,
       stack_depth: exec_env.stack_depth,
-      static: exec_env.static
+      static: exec_env.static,
+      type: :call
     }
 
     MessageCall.call(message_call)
@@ -105,7 +106,7 @@ defmodule EVM.Operation.System do
       data: data,
       stack_depth: exec_env.stack_depth,
       static: exec_env.static,
-      delegatecall: true
+      type: :delegate_call
     }
 
     MessageCall.call(message_call)
@@ -138,7 +139,8 @@ defmodule EVM.Operation.System do
       execution_value: call_gas,
       data: data,
       stack_depth: exec_env.stack_depth,
-      static: true
+      static: true,
+      type: :static_call
     }
 
     MessageCall.call(message_call)
@@ -186,7 +188,8 @@ defmodule EVM.Operation.System do
       execution_value: call_gas,
       data: data,
       stack_depth: exec_env.stack_depth,
-      static: exec_env.static
+      static: exec_env.static,
+      type: :callcode
     }
 
     MessageCall.call(message_call)

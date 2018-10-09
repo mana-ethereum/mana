@@ -20,7 +20,7 @@ defmodule EVM.MessageCall do
     :data,
     :stack_depth,
     :static,
-    :delegatecall
+    :type
   ]
 
   @type out_size :: integer()
@@ -55,7 +55,7 @@ defmodule EVM.MessageCall do
           data: binary(),
           stack_depth: integer(),
           static: boolean(),
-          delegatecall: boolean()
+          type: atom()
         }
 
   @doc """
@@ -90,7 +90,7 @@ defmodule EVM.MessageCall do
         message_call.sender
       )
 
-    sender_balance >= message_call.value || message_call.delegatecall
+    sender_balance >= message_call.value || message_call.type == :delegate_call
   end
 
   defp valid_stack_depth?(message_call) do
