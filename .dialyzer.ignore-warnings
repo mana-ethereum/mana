@@ -21,18 +21,6 @@ apps/evm/lib/evm/functions.ex:190: Function 'not_enough_gas?'/2 has no local ret
 apps/evm/lib/evm/functions.ex:197: Function 'out_of_memory_bounds?'/3 will never be called
 apps/evm/lib/evm/functions.ex:213: Function 'is_invalid_jump_destination?'/3 will never be called
 apps/evm/lib/evm/functions.ex:223: Function 'static_state_modification?'/2 will never be called
-apps/evm/lib/evm/gas.ex:139: Function cost/2 has no local return
-apps/evm/lib/evm/gas.ex:139: Function cost/3 has no local return
-apps/evm/lib/evm/gas.ex:162: The pattern {_status@2, _value@2, _call_gass@1} can never match the type {'original',integer()}
-apps/evm/lib/evm/gas.ex:310: Function operation_cost/0 has no local return
-apps/evm/lib/evm/gas.ex:310: The call 'Elixir.EVM.Gas':operation_cost('nil','nil','nil','nil') breaks the contract (atom(),['Elixir.EVM':val()],['Elixir.EVM':val()],'Elixir.EVM.MachineState':t()) -> t() | 'nil'
-apps/evm/lib/evm/gas.ex:310: Function operation_cost/1 has no local return
-apps/evm/lib/evm/gas.ex:310: The call 'Elixir.EVM.Gas':operation_cost(__@1::any(),'nil','nil','nil') breaks the contract (atom(),['Elixir.EVM':val()],['Elixir.EVM':val()],'Elixir.EVM.MachineState':t()) -> t() | 'nil'
-apps/evm/lib/evm/gas.ex:310: Function operation_cost/2 has no local return
-apps/evm/lib/evm/gas.ex:310: The call 'Elixir.EVM.Gas':operation_cost(__@1::any(),__@2::any(),'nil','nil') breaks the contract (atom(),['Elixir.EVM':val()],['Elixir.EVM':val()],'Elixir.EVM.MachineState':t()) -> t() | 'nil'
-apps/evm/lib/evm/gas.ex:310: Function operation_cost/3 has no local return
-apps/evm/lib/evm/gas.ex:310: The call 'Elixir.EVM.Gas':operation_cost(__@1::any(),__@2::any(),__@3::any(),'nil') breaks the contract (atom(),['Elixir.EVM':val()],['Elixir.EVM':val()],'Elixir.EVM.MachineState':t()) -> t() | 'nil'
-apps/evm/lib/evm/gas.ex:577: Function gas_cost_for_nested_operation/2 will never be called
 apps/evm/lib/evm/operation/environmental_information.ex:114: Function calldataload/2 has no local return
 apps/evm/lib/evm/operation/environmental_information.ex:117: The call 'Elixir.EVM.Helpers':decode_signed(binary()) breaks the contract (integer() | 'nil') -> 'Elixir.EVM':val() | 'nil'
 apps/evm/lib/evm/vm.ex:98: The pattern 'continue' can never match the type {'halt','invalid_instruction' | 'stack_underflow' | 'undefined_instruction'}
