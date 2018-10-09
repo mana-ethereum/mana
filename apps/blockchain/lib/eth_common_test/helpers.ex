@@ -97,6 +97,14 @@ defmodule EthCommonTest.Helpers do
     end
   end
 
+  def test_suite_fork_name(fork) do
+    case fork do
+      "TangerineWhistle" -> "EIP150"
+      "SpuriousDragon" -> "EIP158"
+      fork -> fork
+    end
+  end
+
   @spec ethereum_common_tests_path :: String.t()
   def ethereum_common_tests_path do
     Path.join(System.cwd(), "/../../ethereum_common_tests")

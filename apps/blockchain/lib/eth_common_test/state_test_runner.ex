@@ -20,14 +20,18 @@ defmodule EthCommonTest.StateTestRunner do
   end
 
   defp fork_test?({_test_name, test_data}, fork) do
-    case Map.fetch(test_data["post"], fork) do
+    tests_suite_fork = test_suite_fork_name(fork)
+
+    case Map.fetch(test_data["post"], tests_suite_fork) do
       {:ok, _test_data} -> true
       _ -> false
     end
   end
 
   def run_test({test_name, test}, hardfork) do
-    chain = Chain.test_config(hardfork)
+    hardfork = test_suite_fork_name(hardfork)
+    human_readable_hardfork = human_readable_fork_name(hardfork)
+    chain = Chain.test_config(human_readable_hardfork)
 
     test["post"][hardfork]
     |> Enum.with_index()
@@ -85,7 +89,7 @@ defmodule EthCommonTest.StateTestRunner do
       logs_hash = logs_hash(receipt.logs)
 
       %{
-        hardfork: hardfork,
+        hardfork: human_readable_hardfork,
         test_name: test_name,
         test_source: test["_info"]["source"],
         state_root_mismatch: state.root_hash != expected_hash,
