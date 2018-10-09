@@ -40,7 +40,7 @@ defmodule SyncWithInfura do
   end
 
   def get_block(n) do
-    {:ok, b} = Ethereumex.HttpClient.eth_get_block_by_number(to_hex(n), true)
+    {:ok, b} = Ethereumex.IpcClient.eth_get_block_by_number(to_hex(n), true)
 
     block = %Blockchain.Block{
       block_hash: b["hash"] |> load_hex(),
@@ -82,7 +82,7 @@ defmodule SyncWithInfura do
     ommers =
       for {_ommer_hash, index} <- Stream.with_index(b["uncles"]) do
         {:ok, ommer} =
-          Ethereumex.HttpClient.eth_get_uncle_by_block_hash_and_index(b["hash"], to_hex(index))
+          Ethereumex.IpcClient.eth_get_uncle_by_block_hash_and_index(b["hash"], to_hex(index))
 
         %Block.Header{
           parent_hash: ommer["parentHash"] |> load_hex(),
