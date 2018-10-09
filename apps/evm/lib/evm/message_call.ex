@@ -65,21 +65,30 @@ defmodule EVM.MessageCall do
           %{machine_state: MachineState.t(), exec_env: ExecEnv.t(), sub_state: SubState.t()}
           | %{machine_state: MachineState.t()}
   def call(message_call) do
-    {out_offset, out_size} = message_call.output_params
-    words = Memory.get_active_words(out_offset + out_size)
-
-    updated_machine_state =
-      MachineState.maybe_set_active_words(
-        message_call.current_machine_state,
-        words
-      )
-
-    message_call = %{message_call | current_machine_state: updated_machine_state}
+    message_call = set_active_words(message_call)
 
     if valid_stack_depth?(message_call) && sufficient_funds?(message_call) do
       execute(message_call)
     else
       failed_call(message_call, message_call.execution_value)
+    end
+  end
+
+  defp set_active_words(message_call) do
+    {out_offset, out_size} = message_call.output_params
+
+    if out_size == 0 do
+      message_call
+    else
+      words = Memory.get_active_words(out_offset + out_size)
+
+      updated_machine_state =
+        MachineState.maybe_set_active_words(
+          message_call.current_machine_state,
+          words
+        )
+
+      message_call = %{message_call | current_machine_state: updated_machine_state}
     end
   end
 

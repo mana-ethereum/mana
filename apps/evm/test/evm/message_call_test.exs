@@ -114,4 +114,32 @@ defmodule EVM.MessageCallTest do
     assert machine_state.gas == pre_machine_state.gas + message_call.execution_value
     assert machine_state.stack == pre_machine_state.stack ++ [0]
   end
+
+  test "sets machine_state.active_words" do
+    pre_machine_state = build(:machine_state)
+
+    message_call =
+      build(:message_call,
+        current_machine_state: pre_machine_state,
+        output_params: {256, 32}
+      )
+
+    %{machine_state: %{active_words: active_words}} = MessageCall.call(message_call)
+
+    assert active_words == 9
+  end
+
+  test "doesn't set machine_state.active_words if out_size is zero" do
+    pre_machine_state = build(:machine_state)
+
+    message_call =
+      build(:message_call,
+        current_machine_state: pre_machine_state,
+        output_params: {256, 0}
+      )
+
+    %{machine_state: %{active_words: active_words}} = MessageCall.call(message_call)
+
+    assert active_words == 0
+  end
 end
