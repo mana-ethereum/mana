@@ -88,7 +88,7 @@ defmodule EVM.MessageCall do
           words
         )
 
-      message_call = %{message_call | current_machine_state: updated_machine_state}
+      %{message_call | current_machine_state: updated_machine_state}
     end
   end
 

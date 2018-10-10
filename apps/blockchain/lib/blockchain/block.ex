@@ -22,12 +22,14 @@ defmodule Blockchain.Block do
   defstruct block_hash: nil,
             header: %Header{},
             transactions: [],
+            receipts: [],
             ommers: []
 
   @type t :: %__MODULE__{
           block_hash: EVM.hash() | nil,
           header: Header.t(),
           transactions: [Transaction.t()],
+          receipts: [Receipt.t()],
           ommers: [Header.t()]
         }
 
@@ -705,7 +707,9 @@ defmodule Blockchain.Block do
   """
   @spec add_transactions(t, [Transaction.t()], DB.db(), Chain.t()) :: t
   def add_transactions(block, transactions, db, chain) do
-    do_add_transactions(block, transactions, db, chain)
+    block
+    |> do_add_transactions(transactions, db, chain)
+    |> calculate_logs_bloom()
   end
 
   @spec do_add_transactions(t, [Transaction.t()], DB.db(), Chain.t(), integer()) :: t
@@ -738,6 +742,10 @@ defmodule Blockchain.Block do
       |> put_transaction(trx_count, trx, db)
 
     do_add_transactions(updated_block, transactions, db, chain, trx_count + 1)
+  end
+
+  defp calculate_logs_bloom(bloom) do
+    bloom
   end
 
   # Updates a block to have a new state root given a state object
@@ -773,7 +781,10 @@ defmodule Blockchain.Block do
       |> Trie.new(block.header.receipts_root)
       |> Trie.update(ExRLP.encode(i), encoded_receipt)
 
-    %{block | header: %{block.header | receipts_root: updated_receipts_root.root_hash}}
+    updated_header = %{block.header | receipts_root: updated_receipts_root.root_hash}
+    updated_receipts = block.receipts ++ [receipt]
+
+    %{block | header: updated_header, receipts: updated_receipts}
   end
 
   @doc """
