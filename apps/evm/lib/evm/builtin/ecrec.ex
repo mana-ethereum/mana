@@ -1,6 +1,6 @@
 defmodule EVM.Builtin.Ecrec do
   alias ExthCrypto.{Signature, Key}
-  alias EVM.{Memory, Helpers}
+  alias EVM.Memory
 
   @g_ecrec 3000
 
