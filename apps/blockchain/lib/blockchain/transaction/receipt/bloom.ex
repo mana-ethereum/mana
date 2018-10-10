@@ -56,6 +56,7 @@ defmodule Blockchain.Transaction.Receipt.Bloom do
     |> Enum.reduce(empty(), fn receipt, acc ->
       merge(receipt.bloom_filter, acc)
     end)
+    |> :binary.list_to_bin()
   end
 
   def log_entry_bloom(log_entry) do
