@@ -81,6 +81,7 @@ defmodule Blockchain.Block.HolisticValidity do
       |> check_transactions_root_validity(child_block, block)
       |> check_gas_used(child_block, block)
       |> check_receipts_root_validity(child_block, block)
+      |> check_logs_bloom(child_block, block)
 
     if errors == [], do: :valid, else: {:invalid, errors}
   end
@@ -127,6 +128,15 @@ defmodule Blockchain.Block.HolisticValidity do
       errors
     else
       [:gas_used_mismatch | errors]
+    end
+  end
+
+  @spec check_logs_bloom([atom()], Block.t(), Block.t()) :: [atom()]
+  defp check_logs_bloom(errors, child_block, block) do
+    if child_block.header.logs_bloom == block.header.logs_bloom do
+      errors
+    else
+      [:logs_bloom_mismatch | errors]
     end
   end
 end

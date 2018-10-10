@@ -30,12 +30,12 @@ defmodule Blockchain.Transaction.Receipt.Bloom do
   def merge(bloom1, bloom2) do
     b1 =
       bloom1
-      |> :binary.list_to_bin()
+      |> to_bin()
       |> :binary.decode_unsigned()
 
     b2 =
       bloom2
-      |> :binary.list_to_bin()
+      |> to_bin()
       |> :binary.decode_unsigned()
 
     normalize(b2 ||| b1)
@@ -49,6 +49,13 @@ defmodule Blockchain.Transaction.Receipt.Bloom do
       |> merge(acc)
     end)
     |> :binary.list_to_bin()
+  end
+
+  def from_receipts(receipts) do
+    receipts
+    |> Enum.reduce(empty(), fn receipt, acc ->
+      merge(receipt.bloom_filter, acc)
+    end)
   end
 
   def log_entry_bloom(log_entry) do
@@ -97,5 +104,13 @@ defmodule Blockchain.Transaction.Receipt.Bloom do
       end)
 
     result
+  end
+
+  defp to_bin(bloom) when is_list(bloom) do
+    :binary.list_to_bin(bloom)
+  end
+
+  defp to_bin(bloom) do
+    bloom
   end
 end

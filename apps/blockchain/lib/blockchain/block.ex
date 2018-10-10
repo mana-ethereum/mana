@@ -12,6 +12,7 @@ defmodule Blockchain.Block do
   alias Blockchain.Block.HolisticValidity
   alias Blockchain.Transaction.Receipt
   alias Blockchain.Interface.AccountInterface
+  alias Blockchain.Transaction.Receipt.Bloom
   alias MerklePatriciaTree.{Trie, DB}
 
   # Defined in Eq.(19)
@@ -744,8 +745,13 @@ defmodule Blockchain.Block do
     do_add_transactions(updated_block, transactions, db, chain, trx_count + 1)
   end
 
-  defp calculate_logs_bloom(bloom) do
-    bloom
+  @spec calculate_logs_bloom(t()) :: t()
+  defp calculate_logs_bloom(block) do
+    logs_bloom = Bloom.from_receipts(block.receipts)
+
+    updated_header = %{block.header | logs_bloom: logs_bloom}
+
+    %{block | header: updated_header}
   end
 
   # Updates a block to have a new state root given a state object
