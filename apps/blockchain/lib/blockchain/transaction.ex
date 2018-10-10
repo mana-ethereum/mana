@@ -213,7 +213,7 @@ defmodule Blockchain.Transaction do
 
     {account_interface_after_receipt, receipt} =
       if empty_contract_creation?(tx) &&
-           Configuration.for(chain.evm_config).clean_touched_accounts?(chain.evm_config) do
+           Configuration.for(evm_config).clean_touched_accounts?(evm_config) do
         account_interface_after_execution = AccountInterface.commit(updated_account_interface)
 
         receipt =
@@ -232,7 +232,7 @@ defmodule Blockchain.Transaction do
             refund,
             block_header,
             sub_state,
-            chain.evm_config
+            evm_config
           )
 
         {account_interface, receipt}
@@ -245,7 +245,7 @@ defmodule Blockchain.Transaction do
             refund,
             block_header,
             sub_state,
-            chain.evm_config
+            evm_config
           )
           |> AccountInterface.commit()
 
