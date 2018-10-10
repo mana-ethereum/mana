@@ -1,19 +1,24 @@
 defmodule Blockchain.Account.Repo.Cache do
   alias Blockchain.Account
   alias Blockchain.Account.Address
+
   defstruct storage_cache: %{}, accounts_cache: %{}
 
   @type key_cache() :: %{
           integer() => %{current_value: integer() | :deleted, initial_value: integer() | nil}
         }
+  @type maybe_code :: EVM.MachineCode.t() | nil
+  @type maybe_account :: Account.t() | nil
+  @type account_code_tuple :: {maybe_account, maybe_code}
   @type storage_cache :: %{Address.t() => key_cache()}
-  @type accounts_cache :: %{Address.t() => Account.t() | {Account.t() | EVM.MachineCode.t()}}
+  @type cached_account_info :: Account.t() | account_code_tuple | nil
+  @type accounts_cache :: %{Address.t() => cached_account_info}
   @type t :: %__MODULE__{
           storage_cache: storage_cache(),
           accounts_cache: accounts_cache()
         }
 
-  @spec current_value(t(), Address.t(), integer()) :: integer() | nil
+  @spec current_value(t(), Address.t(), integer()) :: integer() | :deleted | nil
   def current_value(cache_struct, address, key) do
     key_value(cache_struct.storage_cache, address, key, :current_value)
   end
@@ -57,12 +62,16 @@ defmodule Blockchain.Account.Repo.Cache do
     %{cache_struct | storage_cache: updated_storage_cache}
   end
 
-  @spec account(t(), Address.t()) :: Account.t() | {Account.t(), EVM.MachineCode.t()}
+  @spec account(t(), Address.t()) :: cached_account_info()
   def account(cache_struct, address) do
     Map.get(cache_struct.accounts_cache, address)
   end
 
-  @spec update_account(t(), Address.t(), Account.t() | {Account.t(), EVM.MachineCode.t()}) :: t()
+  @spec update_account(
+          t(),
+          Address.t(),
+          cached_account_info()
+        ) :: t()
   def update_account(cache_struct, address, account) do
     updated_accounts_cache = Map.put(cache_struct.accounts_cache, address, account)
 

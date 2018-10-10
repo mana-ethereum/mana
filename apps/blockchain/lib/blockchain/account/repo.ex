@@ -11,7 +11,7 @@ defmodule Blockchain.Account.Repo do
   @behaviour EVM.AccountRepo
 
   @type t :: %__MODULE__{
-          state: EVM.state(),
+          state: Trie.t(),
           cache: Cache.t()
         }
 
@@ -35,7 +35,7 @@ defmodule Blockchain.Account.Repo do
         cache: %Blockchain.Account.Repo.Cache{storage_cache: %{}, accounts_cache: %{}}
       }
   """
-  @spec new(EVM.state(), Cache.t()) :: t
+  @spec new(Trie.t(), Cache.t()) :: t
   def new(state, cache \\ %Cache{}) do
     %__MODULE__{
       state: state,
@@ -107,7 +107,7 @@ defmodule Blockchain.Account.Repo do
     end
   end
 
-  @impl true
+  @spec add_wei(t, EVM.address(), integer()) :: t
   def add_wei(account_repo, evm_address, value) do
     address = Account.Address.from(evm_address)
 
@@ -182,8 +182,7 @@ defmodule Blockchain.Account.Repo do
     %{account_repo | cache: updated_cache}
   end
 
-  @spec account_with_code(t(), Address.t()) ::
-          Account.t() | {Account.t(), EVM.MachineCode.t()} | nil
+  @spec account_with_code(t(), Address.t()) :: Account.t() | Cache.account_code_tuple() | nil
   def account_with_code(account_repo, address) do
     found_account =
       account_from_cache(account_repo.cache, address) ||
@@ -195,7 +194,7 @@ defmodule Blockchain.Account.Repo do
     end
   end
 
-  @spec account_with_code(t(), Address.t()) :: Account.t() | nil
+  @spec account(t(), Address.t()) :: Account.t() | nil
   def account(account_repo, address) do
     found_account =
       account_from_cache(account_repo.cache, address) ||
@@ -207,10 +206,12 @@ defmodule Blockchain.Account.Repo do
     end
   end
 
+  @spec account_from_storage(Trie.t(), Address.t()) :: Account.t() | nil
   defp account_from_storage(state, address) do
     Account.get_account(state, address)
   end
 
+  @spec account_from_cache(Cache.t(), Address.t()) :: Cache.cached_account_info()
   defp account_from_cache(cache, address) do
     Cache.account(cache, address)
   end
@@ -355,7 +356,6 @@ defmodule Blockchain.Account.Repo do
 
     case cached_value do
       nil -> Account.get_storage(account_repo.state, address, key)
-      :deleted -> :key_not_found
       _ -> {:ok, cached_value}
     end
   end
@@ -463,62 +463,6 @@ defmodule Blockchain.Account.Repo do
   end
 
   @doc """
-  Runs a complete message call function, returning a new account interface,
-  gas, sub state and output.
-
-  ## Examples
-
-      iex> db = MerklePatriciaTree.Test.random_ets_db()
-      iex> {account_repo, _gas, _sub_state, _output} = MerklePatriciaTree.Trie.new(db)
-      ...> |> Blockchain.Account.put_account(<<0x10::160>>, %Blockchain.Account{balance: 10})
-      ...> |> Blockchain.Account.put_account(<<0x20::160>>, %Blockchain.Account{balance: 20})
-      ...> |> Blockchain.Account.put_code(<<0x20::160>>, EVM.MachineCode.compile([:push1, 3, :push1, 5, :add, :push1, 0x00, :mstore, :push1, 32, :push1, 0, :return]))
-      ...> |> Blockchain.Account.Repo.new()
-      ...> |> Blockchain.Account.Repo.message_call(<<0x10::160>>, <<0x10::160>>, <<0x20::160>>, <<0x20::160>>, 1000, 1, 5, 5, <<1, 2, 3>>, 5, %Block.Header{nonce: 1})
-      iex> Blockchain.Account.Repo.commit(account_repo).state.root_hash
-      <<163, 151, 95, 0, 149, 63, 81, 220, 74, 101, 219, 175, 240, 97, 153, 167, 249, 229, 144, 75, 101, 233, 126, 177, 8, 188, 105, 165, 28, 248, 67, 156>>
-  """
-  @impl true
-  def message_call(
-        account_repo,
-        evm_sender,
-        evm_originator,
-        evm_recipient,
-        evm_contract,
-        available_gas,
-        gas_price,
-        value,
-        apparent_value,
-        data,
-        stack_depth,
-        block_header
-      ) do
-    sender = Account.Address.from(evm_sender)
-    originator = Account.Address.from(evm_originator)
-    recipient = Account.Address.from(evm_recipient)
-    contract = Account.Address.from(evm_contract)
-
-    params = %Contract.MessageCall{
-      account_repo: account_repo,
-      sender: sender,
-      originator: originator,
-      recipient: recipient,
-      contract: contract,
-      available_gas: available_gas,
-      gas_price: gas_price,
-      value: value,
-      apparent_value: apparent_value,
-      data: data,
-      stack_depth: stack_depth,
-      block_header: block_header
-    }
-
-    {_status, result} = Contract.message_call(params)
-
-    result
-  end
-
-  @doc """
   Creates a new contract on the blockchain.
 
   ## Examples
@@ -565,24 +509,5 @@ defmodule Blockchain.Account.Repo do
     }
 
     Contract.create(params)
-  end
-
-  @doc """
-  Determines the address of a new contract based on the sender and
-  the sender's current nonce.
-
-  ## Examples
-
-      iex> MerklePatriciaTree.Test.random_ets_db()
-      ...> |> MerklePatriciaTree.Trie.new()
-      ...> |> Blockchain.Account.Repo.new()
-      ...> |> Blockchain.Account.Repo.new_contract_address(<<0x01::160>>, 1)
-      <<82, 43, 50, 148, 230, 208, 106, 162, 90, 208, 241, 184, 137, 18, 66, 227, 53, 211, 180, 89>>
-  """
-  @impl true
-  def new_contract_address(_account_repo, evm_address, nonce) do
-    evm_address
-    |> Account.Address.from()
-    |> Account.Address.new(nonce)
   end
 end

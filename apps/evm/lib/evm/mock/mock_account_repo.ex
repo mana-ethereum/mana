@@ -49,17 +49,16 @@ defmodule EVM.Mock.MockAccountRepo do
   end
 
   @impl true
-  def add_wei(mock_account_repo, address, value) do
-    account = get_account(mock_account_repo, address) || new_account()
-
-    put_account(mock_account_repo, address, %{account | balance: account.balance + value})
-  end
-
-  @impl true
   def transfer(mock_account_repo, from, to, value) do
     mock_account_repo
     |> add_wei(from, -value)
     |> add_wei(to, value)
+  end
+
+  defp add_wei(mock_account_repo, address, value) do
+    account = get_account(mock_account_repo, address) || new_account()
+
+    put_account(mock_account_repo, address, %{account | balance: account.balance + value})
   end
 
   @impl true
@@ -182,29 +181,6 @@ defmodule EVM.Mock.MockAccountRepo do
   end
 
   @impl true
-  def message_call(
-        mock_account_repo,
-        _sender,
-        _originator,
-        _recipient,
-        _contract,
-        _available_gas,
-        _gas_price,
-        _value,
-        _apparent_value,
-        _data,
-        _stack_depth,
-        _block_header
-      ) do
-    {
-      mock_account_repo,
-      mock_account_repo.contract_result[:gas],
-      mock_account_repo.contract_result[:sub_state],
-      mock_account_repo.contract_result[:output]
-    }
-  end
-
-  @impl true
   def create_contract(
         mock_account_repo,
         _sender,
@@ -224,11 +200,6 @@ defmodule EVM.Mock.MockAccountRepo do
        mock_account_repo.contract_result[:gas],
        mock_account_repo.contract_result[:sub_state] || EVM.SubState.empty()
      }}
-  end
-
-  @impl true
-  def new_contract_address(_mock_account_repo, address, _nonce) do
-    address
   end
 
   @impl true

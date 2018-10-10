@@ -13,9 +13,7 @@ defmodule EVM.AccountRepo do
 
   @callback get_account_balance(t, EVM.address()) :: nil | EVM.Wei.t()
 
-  @callback add_wei(t, EVM.address(), integer()) :: nil | EVM.Wei.t()
-
-  @callback transfer(t, EVM.address(), EVM.address(), integer()) :: nil | EVM.Wei.t()
+  @callback transfer(t, EVM.address(), EVM.address(), integer()) :: t
 
   @callback get_account_code(t, EVM.address()) :: nil | binary()
 
@@ -37,21 +35,6 @@ defmodule EVM.AccountRepo do
 
   @callback dump_storage(t) :: %{EVM.address() => EVM.val()}
 
-  @callback message_call(
-              t,
-              EVM.address(),
-              EVM.address(),
-              EVM.address(),
-              EVM.address(),
-              EVM.Gas.t(),
-              EVM.Gas.gas_price(),
-              EVM.Wei.t(),
-              EVM.Wei.t(),
-              binary(),
-              integer(),
-              Header.t()
-            ) :: {t, EVM.Gas.t(), EVM.SubState.t(), EVM.VM.output()}
-
   @callback create_contract(
               t,
               EVM.address(),
@@ -65,8 +48,6 @@ defmodule EVM.AccountRepo do
               EVM.address() | nil,
               EVM.Configuration.t()
             ) :: {:ok | :error, {t, EVM.Gas.t(), EVM.SubState.t()}}
-
-  @callback new_contract_address(t, EVM.address(), integer()) :: EVM.address()
 
   @doc "Sets the balance of the account at the given address to zero"
   @callback clear_balance(t, EVM.address()) :: t

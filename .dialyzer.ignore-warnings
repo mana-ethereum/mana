@@ -16,7 +16,7 @@ apps/evm/lib/evm/builtin.ex:255: Guard test __@3::'true' =:= 'false' can never s
 apps/evm/lib/evm/builtin.ex:255: Guard test __@1::'true' =:= 'false' can never succeed
 
 -------------------------------
-# TODO: rewrite mocked protocol typespecs
+# Machine code
 -------------------------------
 lib/evm/machine_code
 
@@ -86,6 +86,8 @@ tate_root':=_, _=>_}, _=>_}
 # using erlang 21 while we are using erlang 20. But we cannot yet update to
 # erlang 21 because we need rox to update
 apps/blockchain/lib/blockchain/block.ex:739: Function create_receipt/6 will never be called
+apps/blockchain/lib/blockchain/account/repo.ex:47: Function commit/1 has no local return
+apps/blockchain/lib/blockchain/account/repo.ex:50: The call 'Elixir.Blockchain.Account.Repo':new(#{<<_:160>>=>#{'balance':=integer(), 'code':=binary(), 'nonce':=integer(), 'storage':=#{'__struct__':='Elixir.MerklePatriciaTree.Trie', 'db':={atom(),_}, 'root_hash':=binary()}}}) will never return since it differs in the 1st argument from the success typing arguments: (#{'__struct__':='Elixir.MerklePatriciaTree.Trie', 'db':={atom(),_}, 'root_hash':=binary()})
 
 -------------------------------
 # blockchain/genesis.ex
@@ -117,17 +119,11 @@ apps/blockchain/lib/blockchain/application.ex:14: The call 'Elixir.EVM.Debugger'
 -------------------------------
 apps/blockchain/lib/mix/tasks/sync/from_file.ex
 -------------------------------
-# Ignores the whole contract and account_interface file
+# Ignores the whole contract
 -------------------------------
 apps/blockchain/lib/blockchain/contract.ex
 apps/blockchain/lib/blockchain/contract/create_contract.ex
 apps/blockchain/lib/blockchain/contract/message_call.ex
-
--------------------------------
-# Ignores AccountRepo implementations because we were ignoring the account interface
--------------------------------
-apps/blockchain/lib/blockchain/account/repo.ex
-apps/evm/lib/evm/mock/mock_account_repo
 
 -------------------------------
 # Ignores state test generation script
