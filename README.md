@@ -53,8 +53,14 @@ If running properly, you will see a timestamp in hr/min/sec/millisec and a runni
 
 ### Infura sync issues
 
-- When running the script mainnet fails on block [179098](https://etherscan.io/txs?block=179098) with a `gas_used_mismatch` and `state_root_mismatch` errors.
-- Ropsten fails on block [11](https://ropsten.etherscan.io/txs?block=11) with a `state_root_mismatch` error as well.
+- When running the script mainnet fails due to an as of yet undiagnoised issue
+  (see [this issue]). The current highest block we've reached is [1660868].
+- Ropsten fails on block [295311] with `receipts_root_mismatch`,
+  `gas_used_mismatch` and `state_root_mismatch` errors.
+
+[this issue]: https://github.com/poanetwork/mana/issues/492
+[1660868]: https://etherscan.io/txs?block=1660868
+[295311]: https://ropsten.etherscan.io/txs?block=295311
 
 ### Helpful debugging tools
 
