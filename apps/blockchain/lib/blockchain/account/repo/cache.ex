@@ -67,11 +67,7 @@ defmodule Blockchain.Account.Repo.Cache do
     Map.get(cache_struct.accounts_cache, address)
   end
 
-  @spec update_account(
-          t(),
-          Address.t(),
-          cached_account_info()
-        ) :: t()
+  @spec update_account(t(), Address.t(), cached_account_info()) :: t()
   def update_account(cache_struct, address, account) do
     updated_accounts_cache = Map.put(cache_struct.accounts_cache, address, account)
 
