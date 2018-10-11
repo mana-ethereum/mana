@@ -10,6 +10,7 @@ defmodule Blockchain.Transaction do
   alias Block.Header
   alias EVM.{Gas, Configuration, SubState}
   alias Blockchain.Account.Repo
+  alias MerklePatriciaTree.Trie
 
   # nonce: T_n
   # gas_price: T_p
@@ -166,7 +167,7 @@ defmodule Blockchain.Transaction do
   @doc """
   Validates the validity of a transaction and then executes it if transaction is valid.
   """
-  @spec execute_with_validation(EVM.state(), t, Header.t(), Chain.t()) ::
+  @spec execute_with_validation(Trie.t(), t, Header.t(), Chain.t()) ::
           {Repo.t(), Gas.t(), Receipt.t()}
   def execute_with_validation(
         state,
@@ -196,7 +197,7 @@ defmodule Blockchain.Transaction do
   and the status code of this transaction. These are referred to as {σ', Υ^g,
   Υ^l, Y^z} in the Transaction Execution section of the Yellow Paper.
   """
-  @spec execute(EVM.state(), t, Header.t(), Chain.t()) :: {Repo.t(), Gas.t(), Receipt.t()}
+  @spec execute(Trie.t(), t, Header.t(), Chain.t()) :: {Repo.t(), Gas.t(), Receipt.t()}
   def execute(state, tx, block_header, chain) do
     {:ok, sender} = Transaction.Signature.sender(tx, chain.params.network_id)
 

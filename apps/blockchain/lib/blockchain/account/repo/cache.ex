@@ -1,6 +1,7 @@
 defmodule Blockchain.Account.Repo.Cache do
   alias Blockchain.Account
   alias Blockchain.Account.Address
+  alias MerklePatriciaTree.Trie
 
   defstruct storage_cache: %{}, accounts_cache: %{}
 
@@ -74,21 +75,21 @@ defmodule Blockchain.Account.Repo.Cache do
     %{cache_struct | accounts_cache: updated_accounts_cache}
   end
 
-  @spec commit(t(), EVM.state()) :: EVM.state()
+  @spec commit(t(), Trie.t()) :: Trie.t()
   def commit(cache_struct, state) do
     committed_accounts = commit_accounts(cache_struct, state)
 
     commit_storage(cache_struct, committed_accounts)
   end
 
-  @spec commit_storage(t(), EVM.state()) :: EVM.state()
+  @spec commit_storage(t(), Trie.t()) :: Trie.t()
   def commit_storage(cache_struct, state) do
     cache_struct
     |> storage_to_list()
     |> Enum.reduce(state, &commit_account_storage_cache/2)
   end
 
-  @spec commit_accounts(t(), EVM.state()) :: EVM.state()
+  @spec commit_accounts(t(), Trie.t()) :: Trie.t()
   def commit_accounts(cache_struct, state) do
     cache_struct
     |> accounts_to_list()

@@ -755,7 +755,7 @@ defmodule Blockchain.Block do
   end
 
   # Updates a block to have a new state root given a state object
-  @spec put_state(t, EVM.state() | EVM.trie_root()) :: t
+  @spec put_state(t, Trie.t()) :: t
   def put_state(block = %__MODULE__{header: header = %Header{}}, new_state) do
     %{block | header: %{header | state_root: new_state.root_hash}}
   end

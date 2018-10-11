@@ -15,6 +15,30 @@ defmodule Blockchain.Account.RepoTest do
     {:ok, %{state: state}}
   end
 
+  describe "commit/1" do
+    test "persists cached state into storage", %{state: state} do
+      account = %Account{
+        nonce: 5,
+        balance: 10,
+        storage_root: <<0x00, 0x01>>,
+        code_hash: <<0x01, 0x02>>
+      }
+
+      address = <<1::160>>
+      code = <<5>>
+
+      cache = %Cache{accounts_cache: %{address => {account, code}}}
+
+      account_repo =
+        state
+        |> Repo.new(cache)
+        |> Repo.commit()
+
+      assert account_repo.cache == %Cache{}
+      assert account_repo.state.root_hash != state.root_hash
+    end
+  end
+
   describe "reset_cache/1" do
     test "resets cache", %{state: state} do
       account = %Account{
