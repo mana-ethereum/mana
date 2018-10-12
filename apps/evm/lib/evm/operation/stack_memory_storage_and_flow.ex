@@ -65,7 +65,12 @@ defmodule EVM.Operation.StackMemoryStorageAndFlow do
   """
   @spec mstore8(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def mstore8([offset, value], %{machine_state: machine_state}) do
-    machine_state = Memory.write(machine_state, offset, value, EVM.byte_size())
+    byte_value =
+      value
+      |> rem(8 * EVM.word_size())
+      |> :binary.encode_unsigned()
+
+    machine_state = Memory.write(machine_state, offset, byte_value)
 
     %{machine_state: machine_state}
   end
