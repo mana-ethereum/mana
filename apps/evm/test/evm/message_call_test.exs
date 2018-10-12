@@ -153,13 +153,13 @@ defmodule EVM.MessageCallTest do
 
     recipient = %{address: <<0x9::160>>, code: code}
 
-    account_interface =
-      build(:mock_account_interface)
-      |> MockAccountInterface.add_account(recipient.address, %{balance: 10, code: recipient.code})
+    account_repo =
+      build(:mock_account_repo)
+      |> MockAccountRepo.add_account(recipient.address, %{balance: 10, code: recipient.code})
 
     pre_exec_env =
       build(:exec_env,
-        account_interface: account_interface
+        account_repo: account_repo
       )
 
     pre_machine_state = build(:machine_state)
