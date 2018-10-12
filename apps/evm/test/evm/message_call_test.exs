@@ -38,7 +38,8 @@ defmodule EVM.MessageCallTest do
         current_machine_state: pre_machine_state,
         recipient: recipient.address,
         code_owner: recipient.address,
-        execution_value: 100
+        execution_value: 100,
+        output_params: {0, 256}
       )
 
     %{machine_state: machine_state, exec_env: _exec_env, sub_state: _sub_state} =
@@ -47,7 +48,7 @@ defmodule EVM.MessageCallTest do
     # Code was to add 1 + 3 = 4 and store in memory.
     assert machine_state.memory == <<0x4::256>>
     assert machine_state.gas == message_call.execution_value - 24
-    assert machine_state.active_words == pre_machine_state.active_words + 1
+    assert machine_state.active_words == 8
     assert machine_state.stack == pre_machine_state.stack ++ [1]
   end
 
@@ -145,5 +146,38 @@ defmodule EVM.MessageCallTest do
     %{machine_state: %{active_words: active_words}} = MessageCall.call(message_call)
 
     assert active_words == 0
+  end
+
+  test "truncates message call's output if output's byte size is bigger than output_params" do
+    code = build(:machine_code, operations: [:push1, 1, :push1, 3, :add, :push1, 0x00, :mstore])
+
+    recipient = %{address: <<0x9::160>>, code: code}
+
+    account_repo =
+      build(:mock_account_repo)
+      |> MockAccountRepo.add_account(recipient.address, %{balance: 10, code: recipient.code})
+
+    pre_exec_env =
+      build(:exec_env,
+        account_repo: account_repo
+      )
+
+    pre_machine_state = build(:machine_state)
+
+    message_call =
+      build(:message_call,
+        current_exec_env: pre_exec_env,
+        current_machine_state: pre_machine_state,
+        recipient: recipient.address,
+        code_owner: recipient.address,
+        execution_value: 100,
+        output_params: {0, 2}
+      )
+
+    %{machine_state: machine_state, exec_env: _exec_env, sub_state: _sub_state} =
+      MessageCall.call(message_call)
+
+    assert machine_state.memory == <<0, 0>>
+    assert machine_state.active_words == 1
   end
 end

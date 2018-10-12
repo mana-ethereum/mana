@@ -21,14 +21,11 @@ defmodule Blockchain.StateTest do
       "stReturnDataTest/returndatacopy_following_call",
       "stReturnDataTest/returndatacopy_following_revert",
       "stReturnDataTest/returndatacopy_following_revert_in_create",
-      "stRevertTest/PythonRevertTestTue201814-1430",
       "stRevertTest/RevertInCallCode",
       "stRevertTest/RevertInCreateInInit",
       "stRevertTest/RevertInDelegateCall",
       "stRevertTest/RevertOpcodeInCreateReturns",
-      "stRevertTest/RevertOpcodeMultipleSubCalls",
-      "stSpecialTest/failed_tx_xcf416c53",
-      "stStaticCall/static_Call1024PreCalls2"
+      "stSpecialTest/failed_tx_xcf416c53"
     ],
     "Constantinople" => [
       "stCreate2/CREATE2_ContractSuicideDuringInit_ThenStoreThenReturn",
@@ -58,16 +55,12 @@ defmodule Blockchain.StateTest do
       "stCreate2/returndatacopy_0_0_following_successful_create",
       "stCreate2/returndatacopy_afterFailing_create",
       "stCreate2/returndatacopy_following_revert_in_create",
-      "stCreate2/returndatasize_following_successful_create",
-      "stRevertTest/RevertOpcodeMultipleSubCalls"
+      "stCreate2/returndatasize_following_successful_create"
     ],
     "Frontier" => [],
-    "Homestead" => ["stRevertTest/RevertOpcodeMultipleSubCalls"],
-    "SpuriousDragon" => [
-      "stRevertTest/RevertOpcodeMultipleSubCalls",
-      "stSpecialTest/failed_tx_xcf416c53"
-    ],
-    "TangerineWhistle" => ["stRevertTest/RevertOpcodeMultipleSubCalls"]
+    "Homestead" => [],
+    "SpuriousDragon" => ["stSpecialTest/failed_tx_xcf416c53"],
+    "TangerineWhistle" => []
   }
 
   @fifteen_minutes 1000 * 60 * 15
