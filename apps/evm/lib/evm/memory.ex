@@ -79,13 +79,17 @@ defmodule EVM.Memory do
 
   def write(machine_state = %MachineState{}, offset_bytes, original_data, size) do
     data =
-      if size do
-        original_data
-        |> :binary.decode_unsigned()
-        |> rem(size * EVM.word_size())
-        |> :binary.encode_unsigned()
-      else
-        original_data
+      cond do
+        is_nil(size) ->
+          original_data
+
+        size > byte_size(original_data) ->
+          original_data
+
+        true ->
+          <<data::binary-size(size), _tail::bitstring>> = original_data
+
+          data
       end
 
     memory_size = byte_size(machine_state.memory)
