@@ -24,8 +24,7 @@ defmodule Blockchain.StateTest do
       "stRevertTest/RevertInCallCode",
       "stRevertTest/RevertInCreateInInit",
       "stRevertTest/RevertInDelegateCall",
-      "stRevertTest/RevertOpcodeInCreateReturns",
-      "stSpecialTest/failed_tx_xcf416c53"
+      "stRevertTest/RevertOpcodeInCreateReturns"
     ],
     "Constantinople" => [
       "stCreate2/CREATE2_ContractSuicideDuringInit_ThenStoreThenReturn",
@@ -59,7 +58,7 @@ defmodule Blockchain.StateTest do
     ],
     "Frontier" => [],
     "Homestead" => [],
-    "SpuriousDragon" => ["stSpecialTest/failed_tx_xcf416c53"],
+    "SpuriousDragon" => [],
     "TangerineWhistle" => []
   }
 
