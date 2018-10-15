@@ -207,10 +207,14 @@ defmodule EVM.Operation.EnvironmentalInformation do
         exec_env: exec_env,
         machine_state: machine_state
       }) do
-    data = Memory.read_zeroed_memory(exec_env.machine_code, code_offset, size)
-    machine_state = Memory.write(machine_state, mem_offset, data)
+    if size == 0 || size + mem_offset > EVM.max_int() do
+      %{machine_state: machine_state}
+    else
+      data = Memory.read_zeroed_memory(exec_env.machine_code, code_offset, size)
+      machine_state = Memory.write(machine_state, mem_offset, data)
 
-    %{machine_state: machine_state}
+      %{machine_state: machine_state}
+    end
   end
 
   @doc """

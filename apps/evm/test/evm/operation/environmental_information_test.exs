@@ -17,6 +17,21 @@ defmodule EVM.Operation.EnvironmentalInformationTest do
 
       assert result == %{machine_state: machine_state}
     end
+
+    test "returns the vm_map unchanged if `size` + `memory_offset` overflows memory" do
+      code = <<54>>
+      mem_offset = EVM.max_int()
+      code_offset = 2
+      size = 1
+      exec_env = %EVM.ExecEnv{machine_code: code}
+      machine_state = %EVM.MachineState{}
+      vm_map = %{exec_env: exec_env, machine_state: machine_state}
+
+      result =
+        EVM.Operation.EnvironmentalInformation.codecopy([mem_offset, code_offset, size], vm_map)
+
+      assert result == %{machine_state: machine_state}
+    end
   end
 
   describe "returndatacopy" do
