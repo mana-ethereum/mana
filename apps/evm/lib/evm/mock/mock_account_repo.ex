@@ -43,8 +43,6 @@ defmodule EVM.Mock.MockAccountRepo do
 
     if account do
       account.balance
-    else
-      nil
     end
   end
 
