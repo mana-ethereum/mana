@@ -35,4 +35,24 @@ defmodule EVM.Operation.EnvironmentalInformationTest do
       assert result == %{machine_state: machine_state}
     end
   end
+
+  describe "extcodecopy" do
+    test "returns unmodified machine state if size is zero" do
+      address = <<1>>
+      mem_offset = code_offset = size = 0
+
+      params = [address, mem_offset, code_offset, size]
+
+      exec_env = %EVM.ExecEnv{
+        account_repo: %EVM.Mock.MockAccountRepo{account_map: %{<<1>> => %{code: <<11>>}}}
+      }
+
+      machine_state = %EVM.MachineState{}
+      vm_map = %{exec_env: exec_env, machine_state: machine_state}
+
+      result = EVM.Operation.EnvironmentalInformation.extcodecopy(params, vm_map)
+
+      assert result == %{machine_state: machine_state}
+    end
+  end
 end
