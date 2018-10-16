@@ -38,7 +38,7 @@ defmodule EVM.RefundsTest do
     expected_exec_env = Map.put(exec_env, :account_repo, expected_account_repo)
 
     assert result ==
-             {0, %EVM.SubState{logs: [], refund: 15_000, selfdestruct_list: []},
+             {0, %EVM.SubState{logs: [], refund: 15_000, selfdestruct_list: MapSet.new()},
               expected_exec_env, ""}
   end
 end

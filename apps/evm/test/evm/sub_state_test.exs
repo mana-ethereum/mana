@@ -13,7 +13,7 @@ defmodule EVM.SubStateTest do
           }
         ],
         refund: 0,
-        selfdestruct_list: []
+        selfdestruct_list: MapSet.new()
       }
 
       new_substate = EVM.SubState.add_log(sub_state, 1, [5], "zxcz")

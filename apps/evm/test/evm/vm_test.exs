@@ -30,7 +30,7 @@ defmodule EVM.VMTest do
     exec_env = %ExecEnv{machine_code: MachineCode.compile(instructions)}
     result = VM.run(24, exec_env)
 
-    expected_sub_state = %SubState{logs: [], refund: 0, selfdestruct_list: []}
+    expected_sub_state = %SubState{}
     expected = {0, expected_sub_state, exec_env, <<0x08::256>>}
 
     assert result == expected
@@ -67,7 +67,7 @@ defmodule EVM.VMTest do
 
     expected_account_repo = MockAccountRepo.new(expected_account_state)
     expected_exec_env = Map.put(exec_env, :account_repo, expected_account_repo)
-    expected_sub_state = %SubState{logs: [], refund: 0, selfdestruct_list: []}
+    expected_sub_state = %SubState{}
 
     expected = {0, expected_sub_state, expected_exec_env, ""}
     assert result == expected
