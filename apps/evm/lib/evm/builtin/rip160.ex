@@ -1,6 +1,7 @@
 defmodule EVM.Builtin.Rip160 do
   @g_rip160_base 600
   @g_rip160_byte 120
+  @contract_address <<3::160>>
 
   @doc """
   Runs RIPEMD160 hashing
@@ -24,5 +25,9 @@ defmodule EVM.Builtin.Rip160 do
     else
       {0, %EVM.SubState{}, exec_env, :failed}
     end
+  end
+
+  def contract_address do
+    @contract_address
   end
 end

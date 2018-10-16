@@ -184,7 +184,7 @@ defmodule EVM.MessageCallTest do
   describe "when recipient address is precompiled contract 3" do
     test "fails if it runs out of gas" do
       pre_machine_state = build(:machine_state)
-      precompiled_contract = <<3::160>>
+      precompiled_contract = EVM.Builtin.Rip160.contract_address()
 
       message_call =
         build(:message_call,
@@ -201,7 +201,7 @@ defmodule EVM.MessageCallTest do
 
     test "includes the address in the substate's touched accounts" do
       pre_machine_state = build(:machine_state)
-      precompiled_contract = <<3::160>>
+      precompiled_contract = EVM.Builtin.Rip160.contract_address()
 
       message_call =
         build(:message_call,

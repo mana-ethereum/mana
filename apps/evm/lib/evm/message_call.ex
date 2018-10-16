@@ -161,7 +161,7 @@ defmodule EVM.MessageCall do
        ) do
     result = failed_call(message_call)
 
-    if message_call_to_rip_md?(message_call) do
+    if message_call_to_rip_emd?(message_call) do
       sub_state =
         message_call.current_sub_state
         |> SubState.add_touched_account(message_call.recipient)
@@ -172,8 +172,8 @@ defmodule EVM.MessageCall do
     end
   end
 
-  defp message_call_to_rip_md?(message_call) do
-    message_call.recipient == <<3::160>>
+  defp message_call_to_rip_emd?(message_call) do
+    message_call.recipient == EVM.Builtin.Rip160.contract_address()
   end
 
   defp finalize_reverted_message_call(
