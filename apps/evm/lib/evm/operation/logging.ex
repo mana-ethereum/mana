@@ -243,7 +243,15 @@ defmodule EVM.Operation.Logging do
          sub_state: sub_state,
          machine_state: machine_state
        }) do
-    {data, _} = machine_state |> Memory.read(offset, size)
+    {data, _} = Memory.read(machine_state, offset, size)
+
+    data =
+      if byte_size(data) > 32 do
+        for <<chunk::size(32) <- data>>, do: <<chunk::size(32)>>
+      else
+        data
+      end
+
     address = exec_env.address
     updated_substate = sub_state |> SubState.add_log(address, topics, data)
 
