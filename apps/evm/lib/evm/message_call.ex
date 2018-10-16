@@ -2,7 +2,7 @@ defmodule EVM.MessageCall do
   alias EVM.{AccountRepo, ExecEnv, Memory, Builtin, VM, Functions, MachineState, SubState}
 
   @moduledoc """
-  Describes a message call function that used for all call operations (call, delegatecall, callcode, staticcall).
+  Describes a message call function that is used for all call operations (call, delegatecall, callcode, staticcall).
   """
   defstruct [
     :current_exec_env,
@@ -145,7 +145,7 @@ defmodule EVM.MessageCall do
       ) do
     case output do
       :failed ->
-        failed_call(message_call)
+        finalize_failed_message_call(exec_result, message_call)
 
       {:revert, _output} ->
         finalize_reverted_message_call(exec_result, message_call)
@@ -153,6 +153,27 @@ defmodule EVM.MessageCall do
       _ ->
         finalize_successful_message_call(exec_result, message_call)
     end
+  end
+
+  defp finalize_failed_message_call(
+         {_remaining_gas, _n_sub_state, _exec_env, :failed},
+         message_call
+       ) do
+    result = failed_call(message_call)
+
+    if message_call_to_rip_emd?(message_call) do
+      sub_state =
+        message_call.current_sub_state
+        |> SubState.add_touched_account(message_call.recipient)
+
+      Map.put(result, :sub_state, sub_state)
+    else
+      result
+    end
+  end
+
+  defp message_call_to_rip_emd?(message_call) do
+    message_call.recipient == EVM.Builtin.Rip160.contract_address()
   end
 
   defp finalize_reverted_message_call(

@@ -17,9 +17,7 @@ defmodule BlockchainTest do
     "Frontier" => [],
     "Homestead" => [],
     "TangerineWhistle" => [],
-    "SpuriousDragon" => [
-      "GeneralStateTests/stSpecialTest/failed_tx_xcf416c53_d0g0v0.json"
-    ],
+    "SpuriousDragon" => [],
     "Byzantium" => String.split(@failing_byzantium_tests, "\n"),
     "Constantinople" => String.split(@failing_constantinople_tests, "\n"),
     # the rest are not implemented yet
