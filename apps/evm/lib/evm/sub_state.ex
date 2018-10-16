@@ -13,12 +13,12 @@ defmodule EVM.SubState do
     Refunds
   }
 
-  defstruct selfdestruct_list: [],
-            touched_accounts: [],
+  defstruct selfdestruct_list: MapSet.new(),
+            touched_accounts: MapSet.new(),
             logs: [],
             refund: 0
 
-  @type address_list :: [EVM.address()]
+  @type address_list :: MapSet.t()
   @type logs :: [LogEntry.t()]
   @type refund :: EVM.Wei.t()
 
@@ -37,14 +37,14 @@ defmodule EVM.SubState do
   @doc """
   Checks whether the given `sub_state` is empty.
   """
-  def empty?(sub_state), do: %{sub_state | touched_accounts: []} == empty()
+  def empty?(sub_state), do: %{sub_state | touched_accounts: MapSet.new()} == empty()
 
   @doc """
   Adds log entry to substate's log entry list.
 
   ## Examples
 
-      iex> sub_state = %EVM.SubState{selfdestruct_list: [], logs: [], refund: 0}
+      iex> sub_state = %EVM.SubState{}
       iex> sub_state |> EVM.SubState.add_log(0, [1, 10, 12], "adsfa")
       %EVM.SubState{
         logs: [
@@ -57,9 +57,7 @@ defmodule EVM.SubState do
               <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 12>>
             ]
           }
-        ],
-        refund: 0,
-        selfdestruct_list: []
+        ]
       }
   """
   @spec add_log(t(), EVM.address(), Operation.stack_args(), binary()) :: t()
@@ -100,28 +98,30 @@ defmodule EVM.SubState do
 
   ## Examples
 
-      iex> substate1 = %EVM.SubState{refund: 5, logs: [1], selfdestruct_list: [5]}
-      iex> substate2 = %EVM.SubState{refund: 5, logs: [5], selfdestruct_list: [1]}
+      iex> substate1 = %EVM.SubState{refund: 5, logs: [1], selfdestruct_list: MapSet.new([5])}
+      iex> substate2 = %EVM.SubState{refund: 5, logs: [5], selfdestruct_list: MapSet.new([1])}
       iex> EVM.SubState.merge(substate1, substate2)
-      %EVM.SubState{refund: 10, logs: [1, 5], selfdestruct_list: [5, 1]}
+      %EVM.SubState{refund: 10, logs: [1, 5], selfdestruct_list: MapSet.new([5, 1])}
   """
 
   @spec merge(t(), t()) :: t()
   def merge(sub_state1, sub_state2) do
-    selfdestruct_list = sub_state1.selfdestruct_list ++ sub_state2.selfdestruct_list
-    dedup_selfdestruct_list = Enum.dedup(selfdestruct_list)
+    selfdestruct_list = MapSet.union(sub_state1.selfdestruct_list, sub_state2.selfdestruct_list)
     logs = sub_state1.logs ++ sub_state2.logs
 
-    refund =
-      sub_state1.refund + sub_state2.refund -
-        (Enum.count(selfdestruct_list) - Enum.count(dedup_selfdestruct_list)) *
-          Refunds.selfdestruct_refund()
+    common_refund =
+      sub_state1.selfdestruct_list
+      |> MapSet.intersection(sub_state2.selfdestruct_list)
+      |> Enum.count()
+      |> Kernel.*(Refunds.selfdestruct_refund())
 
-    touched_accounts = Enum.dedup(sub_state1.touched_accounts ++ sub_state2.touched_accounts)
+    refund = sub_state1.refund + sub_state2.refund - common_refund
+
+    touched_accounts = MapSet.union(sub_state1.touched_accounts, sub_state2.touched_accounts)
 
     %__MODULE__{
       refund: refund,
-      selfdestruct_list: dedup_selfdestruct_list,
+      selfdestruct_list: selfdestruct_list,
       touched_accounts: touched_accounts,
       logs: logs
     }
@@ -135,13 +135,17 @@ defmodule EVM.SubState do
       iex> sub_state = %EVM.SubState{}
       iex> address = <<0x01::160>>
       iex> EVM.SubState.mark_account_for_destruction(sub_state, address)
-      %EVM.SubState{selfdestruct_list: [<<0x01::160>>]}
+      %EVM.SubState{selfdestruct_list: MapSet.new([<<0x01::160>>])}
   """
-  def mark_account_for_destruction(sub_state, account_address) do
-    %{sub_state | selfdestruct_list: sub_state.selfdestruct_list ++ [account_address]}
+  def mark_account_for_destruction(sub_state, address) do
+    new_selfdestruct_list = MapSet.put(sub_state.selfdestruct_list, address)
+
+    %{sub_state | selfdestruct_list: new_selfdestruct_list}
   end
 
   def add_touched_account(sub_state, address) do
-    %{sub_state | touched_accounts: sub_state.touched_accounts ++ [address]}
+    new_touched_accounts = MapSet.put(sub_state.touched_accounts, address)
+
+    %{sub_state | touched_accounts: new_touched_accounts}
   end
 end
