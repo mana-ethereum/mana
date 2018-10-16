@@ -23,15 +23,16 @@ defmodule Mix.Tasks.StateTests.Run do
   ## Command line options
 
   * `--fork` - the name of the hardfork to run (optional)
-  * `--hardfork` - alias for `--fork`
+  * `-f` - alias for `--fork`
   """
 
   @preferred_cli_env :test
   @switches [test: :string, fork: :string]
-  @aliases [hardfork: :fork]
+  @aliases [f: :fork]
 
   def run(args) do
     {opts, [test_name | _]} = OptionParser.parse!(args, switches: @switches, aliases: @aliases)
+
     hardfork = Keyword.get(opts, :fork, :all)
 
     test_name
