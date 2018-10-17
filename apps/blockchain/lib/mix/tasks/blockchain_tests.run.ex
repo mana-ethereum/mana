@@ -1,4 +1,4 @@
-defmodule Mix.Tasks.CommonTests.Run do
+defmodule Mix.Tasks.BlockchainTests.Run do
   use Mix.Task
 
   require Logger
@@ -10,20 +10,17 @@ defmodule Mix.Tasks.CommonTests.Run do
   @moduledoc """
   Runs a single blockchain common test.
 
-  Note that this should be run with `MIX_ENV=test`.
-
   ## Example
 
   From the blockchain app,
 
   ```
-  MIX_ENV=test mix common_tests.run "stSpecialTest/failed_tx" --fork "EIP158"
+  mix blockchain_tests.run "stSpecialTest/failed_tx" --fork "SpuriousDragon"
   ```
 
   ## Command line options
 
-  * `--fork` - the name of the hardfork to run (optional)
-  * `--hardfork` - alias for `--fork`
+  * `--fork`, `-f` - the name of the hardfork to run (optional)
   """
 
   @preferred_cli_env :test

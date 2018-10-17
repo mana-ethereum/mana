@@ -10,20 +10,17 @@ defmodule Mix.Tasks.StateTests.Run do
   @moduledoc """
   Runs a single state common test.
 
-  Note that this should be run with `MIX_ENV=test`.
-
   ## Example
 
   From the blockchain app,
 
   ```
-  MIX_ENV=test mix state_tests.run "stRevertTest/RevertInCallCode" --fork "Byzantium"
+  mix state_tests.run "stRevertTest/RevertInCallCode" --fork "Byzantium"
   ```
 
   ## Command line options
 
-  * `--fork` - the name of the hardfork to run (optional)
-  * `-f` - alias for `--fork`
+  * `--fork`, `-f` - the name of the hardfork to run (optional)
   """
 
   @preferred_cli_env :test
