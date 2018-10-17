@@ -343,8 +343,8 @@ defmodule EVM.Operation.System do
     exec_env = %{exec_env | account_repo: updated_account_repo}
 
     sub_state =
-      n_sub_state
-      |> SubState.merge(sub_state)
+      sub_state
+      |> SubState.merge(n_sub_state)
       |> SubState.add_touched_account(new_address)
 
     %{

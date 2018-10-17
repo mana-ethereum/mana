@@ -80,9 +80,8 @@ defmodule Blockchain.Block.HolisticValidity do
       |> check_ommers_hash_validity(child_block, block)
       |> check_transactions_root_validity(child_block, block)
       |> check_gas_used(child_block, block)
-
-    # |> check_receipts_root_validity(child_block, block)
-    # |> check_logs_bloom(child_block, block)
+      |> check_receipts_root_validity(child_block, block)
+      |> check_logs_bloom(child_block, block)
 
     if errors == [], do: :valid, else: {:invalid, errors}
   end

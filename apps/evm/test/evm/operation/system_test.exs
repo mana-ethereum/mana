@@ -172,6 +172,58 @@ defmodule EVM.Operation.SystemTest do
 
       assert n_machine_state == expected_machine_state
     end
+
+    test "merges old substate to substate after contract creation so the old logs is before the new logs" do
+      new_log_entry = %EVM.LogEntry{
+        address: <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1>>,
+        data: <<2>>,
+        topics: []
+      }
+
+      new_sub_state = %EVM.SubState{
+        logs: [new_log_entry]
+      }
+
+      block_header_info = MockBlockHeaderInfo.new(%Block.Header{})
+      account_map = %{<<100::160>> => %{balance: 5_000, nonce: 5}}
+      contract_result = %{gas: 500, sub_state: new_sub_state, output: "output"}
+      account_repo = MockAccountRepo.new(account_map, contract_result)
+
+      exec_env = %ExecEnv{
+        stack_depth: 0,
+        address: <<100::160>>,
+        account_repo: account_repo,
+        block_header_info: block_header_info
+      }
+
+      machine_state = %MachineState{
+        gas: 300,
+        stack: [0xA0, 0, 1],
+        memory: "________" <> "input"
+      }
+
+      old_log_entry = %EVM.LogEntry{
+        address: <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0>>,
+        data: <<1>>,
+        topics: [
+          <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0>>
+        ]
+      }
+
+      old_sub_state = %EVM.SubState{
+        logs: [old_log_entry]
+      }
+
+      %{sub_state: sub_state} =
+        Operation.System.create([1_000, 5, 5], %{
+          exec_env: exec_env,
+          machine_state: machine_state,
+          sub_state: old_sub_state
+        })
+
+      assert sub_state.logs == [old_log_entry, new_log_entry]
+    end
   end
 
   describe "call/2" do
