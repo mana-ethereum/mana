@@ -585,7 +585,7 @@ defmodule EVM.Gas do
       call_cost_without_exec_gas = original_cost - stack_exec_gas
       remaining_gas = machine_state.gas - call_cost_without_exec_gas
 
-      if remaining_gas > 0 do
+      if remaining_gas >= 0 do
         new_call_gas = Helpers.all_but_one_64th(remaining_gas)
         new_gas_cost = new_call_gas + call_cost_without_exec_gas
 
