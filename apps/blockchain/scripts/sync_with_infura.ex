@@ -14,19 +14,20 @@ defmodule SyncWithInfura do
   def add_block_to_tree(db, chain, tree, n) do
     next_block = get_block(n)
 
-    if rem(n, @save_block_interval) == 0 do
-      Logger.info("Saved progress at block #{n}")
-      MerklePatriciaTree.DB.put!(db, "current_block_hash", Blockchain.Block.hash(next_block))
-      MerklePatriciaTree.DB.put!(db, "current_block_tree", :erlang.term_to_binary(tree))
-    end
-
     case Blockchain.Blocktree.verify_and_add_block(tree, chain, next_block, db) do
       {:ok, next_tree} ->
+        if rem(n, @save_block_interval) == 0 do
+          Logger.info("Saved progress at block #{n}")
+          MerklePatriciaTree.DB.put!(db, "current_block_tree", :erlang.term_to_binary(next_tree))
+        end
+
         add_block_to_tree(db, chain, next_tree, n + 1)
 
       {:invalid, error} ->
         Logger.info("Failed to Verify Block #{n}")
         Logger.error(inspect(error))
+        Logger.info("Saving progress at block #{tree.best_block.header.number}")
+        MerklePatriciaTree.DB.put!(db, "current_block_tree", :erlang.term_to_binary(tree))
     end
   end
 
@@ -134,16 +135,6 @@ end
 
 {db, chain} = SyncWithInfura.setup()
 
-current_block =
-  case MerklePatriciaTree.DB.get(db, "current_block_hash") do
-    {:ok, current_block_hash} ->
-      {:ok, current_block} = Blockchain.Block.get_block(current_block_hash, db)
-      current_block
-
-    _ ->
-      Blockchain.Genesis.create_block(chain, db)
-  end
-
 tree =
   case MerklePatriciaTree.DB.get(db, "current_block_tree") do
     {:ok, current_block_tree} ->
@@ -151,6 +142,16 @@ tree =
 
     _ ->
       Blockchain.Blocktree.new_tree()
+  end
+
+current_block =
+  case tree.best_block do
+    nil ->
+      Blockchain.Genesis.create_block(chain, db)
+
+    block ->
+      {:ok, current_block} = Blockchain.Block.get_block(block.block_hash, db)
+      current_block
   end
 
 SyncWithInfura.add_block_to_tree(db, chain, tree, current_block.header.number)
