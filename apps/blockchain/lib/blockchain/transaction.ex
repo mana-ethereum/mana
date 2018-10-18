@@ -355,11 +355,11 @@ defmodule Blockchain.Transaction do
     {state, gas, new_sub_state, status}
   end
 
-  defp contract_creation_response({:ok, {account_repo, remaining_gas, sub_state}}) do
+  defp contract_creation_response({:ok, {account_repo, remaining_gas, sub_state, _output}}) do
     {account_repo, remaining_gas, sub_state, @success_status}
   end
 
-  defp contract_creation_response({:error, {account_repo, remaining_gas, sub_state}}) do
+  defp contract_creation_response({:error, {account_repo, remaining_gas, sub_state, _output}}) do
     {account_repo, remaining_gas, sub_state, @failure_status}
   end
 

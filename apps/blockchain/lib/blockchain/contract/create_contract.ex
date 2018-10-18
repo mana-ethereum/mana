@@ -65,14 +65,14 @@ defmodule Blockchain.Contract.CreateContract do
       #
       case output do
         :failed -> error(original_account_repo)
-        {:revert, _} -> {:error, {original_account_repo, rem_gas, SubState.empty()}}
+        {:revert, output} -> {:error, {original_account_repo, rem_gas, SubState.empty(), output}}
         _ -> finalize(result, params, contract_address)
       end
     else
       if account_will_collide?(account) do
         error(original_account_repo)
       else
-        {:ok, {original_account_repo, 0, SubState.empty()}}
+        {:ok, {original_account_repo, 0, SubState.empty(), <<>>}}
       end
     end
   end
@@ -97,7 +97,7 @@ defmodule Blockchain.Contract.CreateContract do
 
   @spec error(Repo.t()) :: {:error, {Repo.t(), 0, SubState.t()}}
   defp error(account_repo) do
-    {:error, {account_repo, 0, SubState.empty()}}
+    {:error, {account_repo, 0, SubState.empty(), <<>>}}
   end
 
   @spec create(t(), EVM.address()) :: {EVM.state(), EVM.Gas.t(), EVM.SubState.t()}
@@ -154,13 +154,13 @@ defmodule Blockchain.Contract.CreateContract do
     cond do
       insufficient_gas &&
           EVM.Configuration.for(params.config).fail_contract_creation_lack_of_gas?(params.config) ->
-        {:error, {original_account_repo, 0, SubState.empty()}}
+        {:error, {original_account_repo, 0, SubState.empty(), <<>>}}
 
       EVM.Configuration.for(params.config).limit_contract_code_size?(
         params.config,
         byte_size(output)
       ) ->
-        {:error, {original_account_repo, 0, SubState.empty()}}
+        {:error, {original_account_repo, 0, SubState.empty(), <<>>}}
 
       true ->
         modified_account_repo = exec_env.account_repo
@@ -181,7 +181,7 @@ defmodule Blockchain.Contract.CreateContract do
 
         sub_state = SubState.add_touched_account(accrued_sub_state, address)
 
-        {:ok, {resultant_account_repo, resultant_gas, sub_state}}
+        {:ok, {resultant_account_repo, resultant_gas, sub_state, <<>>}}
     end
   end
 
