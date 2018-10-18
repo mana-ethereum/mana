@@ -10,7 +10,6 @@ defmodule Blockchain.StateTest do
   @failing_tests %{
     "Byzantium" => [
       "stReturnDataTest/call_outsize_then_create_successful_then_returndatasize",
-      "stReturnDataTest/call_then_call_value_fail_then_returndatasize",
       "stReturnDataTest/call_then_create_successful_then_returndatasize",
       "stReturnDataTest/modexp_modsize0_returndatasize",
       "stReturnDataTest/returndatacopy_afterFailing_create",

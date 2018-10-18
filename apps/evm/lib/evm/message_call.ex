@@ -338,6 +338,8 @@ defmodule EVM.MessageCall do
       |> push_failure_on_stack()
       |> MachineState.refund_gas(remaining_gas)
 
+    updated_machine_state = %{updated_machine_state | last_return_data: <<>>}
+
     %{machine_state: updated_machine_state}
   end
 
