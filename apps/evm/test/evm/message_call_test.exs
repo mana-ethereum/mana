@@ -120,6 +120,22 @@ defmodule EVM.MessageCallTest do
     assert has_failure_on_stack?(machine_state.stack)
   end
 
+  test "sets last last_return_data to empty binary on failure" do
+    pre_machine_state = build(:machine_state, last_return_data: <<1, 2, 3, 4, 5>>)
+
+    message_call =
+      build(:message_call,
+        current_machine_state: pre_machine_state,
+        value: 9000,
+        execution_value: 100
+      )
+
+    %{machine_state: machine_state} = MessageCall.call(message_call)
+
+    assert has_failure_on_stack?(machine_state.stack)
+    assert machine_state.last_return_data == <<>>
+  end
+
   test "sets machine_state.active_words" do
     pre_machine_state = build(:machine_state)
 
