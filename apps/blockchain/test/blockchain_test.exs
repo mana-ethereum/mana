@@ -18,8 +18,14 @@ defmodule BlockchainTest do
     "Homestead" => [],
     "TangerineWhistle" => [],
     "SpuriousDragon" => [],
-    "Byzantium" => String.split(@failing_byzantium_tests, "\n"),
-    "Constantinople" => String.split(@failing_constantinople_tests, "\n"),
+    "Byzantium" =>
+      @failing_byzantium_tests
+      |> String.split("\n")
+      |> Enum.reject(fn path -> path == "" || path == " " end),
+    "Constantinople" =>
+      @failing_constantinople_tests
+      |> String.split("\n")
+      |> Enum.reject(fn path -> path == "" || path == " " end),
     # the rest are not implemented yet
     "EIP158ToByzantiumAt5" => [],
     "FrontierToHomesteadAt5" => [],
