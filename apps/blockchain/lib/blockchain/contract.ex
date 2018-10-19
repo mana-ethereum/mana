@@ -14,7 +14,8 @@ defmodule Blockchain.Contract do
 
   We are also inlining Eq.(97) and Eq.(98).
   """
-  @spec create(CreateContract.t()) :: {:ok | :error, {EVM.state(), EVM.Gas.t(), EVM.SubState.t()}}
+  @spec create(CreateContract.t()) ::
+          {:ok | :error, {EVM.state(), EVM.Gas.t(), EVM.SubState.t(), binary() | <<>>}}
   def create(params), do: CreateContract.execute(params)
 
   @doc """

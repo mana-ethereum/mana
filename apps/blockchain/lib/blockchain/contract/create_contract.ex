@@ -47,7 +47,7 @@ defmodule Blockchain.Contract.CreateContract do
           config: EVM.Configuration.t()
         }
 
-  @spec execute(t()) :: {:ok | :error, {Repo.t(), EVM.Gas.t(), EVM.SubState.t()}}
+  @spec execute(t()) :: {:ok | :error, {Repo.t(), EVM.Gas.t(), EVM.SubState.t(), binary() | <<>>}}
   def execute(params) do
     original_account_repo = params.account_repo
     contract_address = new_account_address(params)
@@ -95,12 +95,13 @@ defmodule Blockchain.Contract.CreateContract do
     account.nonce > 0 || !Account.is_simple_account?(account)
   end
 
-  @spec error(Repo.t()) :: {:error, {Repo.t(), 0, SubState.t()}}
+  @spec error(Repo.t()) :: {:error, {Repo.t(), 0, SubState.t(), <<>>}}
   defp error(account_repo) do
     {:error, {account_repo, 0, SubState.empty(), <<>>}}
   end
 
-  @spec create(t(), EVM.address()) :: {EVM.state(), EVM.Gas.t(), EVM.SubState.t()}
+  @spec create(t(), EVM.address()) ::
+          {EVM.state(), EVM.Gas.t(), EVM.SubState.t(), EVM.VM.output()}
   defp create(params, address) do
     account_repo =
       params
@@ -145,7 +146,7 @@ defmodule Blockchain.Contract.CreateContract do
           {EVM.Gas.t(), EVM.SubState.t(), EVM.ExecEnv.t(), EVM.VM.output()},
           t(),
           EVM.address()
-        ) :: {:ok | :error, {Repo.t(), EVM.Gas.t(), EVM.SubState.t()}}
+        ) :: {:ok | :error, {Repo.t(), EVM.Gas.t(), EVM.SubState.t(), binary() | <<>>}}
   defp finalize({remaining_gas, accrued_sub_state, exec_env, output}, params, address) do
     original_account_repo = params.account_repo
     contract_creation_cost = creation_cost(output)
