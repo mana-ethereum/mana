@@ -21,6 +21,7 @@ defmodule EVM.Configuration.Frontier do
             has_static_call: false,
             support_variable_length_return_value: false,
             has_mod_exp_builtin: false,
+            status_in_receipt: false,
             has_ec_add_builtin: false,
             has_ec_mult_builtin: false,
             has_ec_pairing_builtin: false,
@@ -95,6 +96,9 @@ defmodule EVM.Configuration.Frontier do
 
   @impl true
   def has_mod_exp_builtin?(config), do: config.has_mod_exp_builtin
+
+  @impl true
+  def status_in_receipt?(config), do: config.status_in_receipt
 
   @impl true
   def has_ec_add_builtin?(config), do: config.has_ec_add_builtin

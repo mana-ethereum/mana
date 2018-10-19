@@ -74,6 +74,9 @@ defmodule EVM.Configuration do
   # EIP198
   @callback has_mod_exp_builtin?(t) :: boolean()
 
+  # EIP658
+  @callback status_in_receipt?(t) :: boolean()
+
   # EIP145
   @callback has_shift_operations?(t) :: boolean()
 

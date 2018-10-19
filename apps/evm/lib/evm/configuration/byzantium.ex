@@ -8,6 +8,7 @@ defmodule EVM.Configuration.Byzantium do
             has_static_call: true,
             support_variable_length_return_value: true,
             has_mod_exp_builtin: true,
+            status_in_receipt: true,
             has_ec_add_builtin: true,
             has_ec_mult_builtin: true,
             has_ec_pairing_builtin: true
@@ -95,6 +96,9 @@ defmodule EVM.Configuration.Byzantium do
 
   @impl true
   def has_mod_exp_builtin?(config), do: config.has_mod_exp_builtin
+
+  @impl true
+  def status_in_receipt?(config), do: config.status_in_receipt
 
   @impl true
   def has_ec_add_builtin?(config), do: config.has_ec_add_builtin

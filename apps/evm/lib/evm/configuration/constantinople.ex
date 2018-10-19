@@ -95,6 +95,9 @@ defmodule EVM.Configuration.Constantinople do
   def has_mod_exp_builtin?(config), do: Byzantium.has_mod_exp_builtin?(config.fallback_config)
 
   @impl true
+  def status_in_receipt?(config), do: Byzantium.status_in_receipt?(config.fallback_config)
+
+  @impl true
   def has_ec_add_builtin?(config), do: Byzantium.has_ec_add_builtin?(config.fallback_config)
 
   @impl true
