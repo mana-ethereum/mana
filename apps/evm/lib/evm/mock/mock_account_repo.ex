@@ -196,7 +196,8 @@ defmodule EVM.Mock.MockAccountRepo do
      {
        mock_account_repo,
        mock_account_repo.contract_result[:gas],
-       mock_account_repo.contract_result[:sub_state] || EVM.SubState.empty()
+       mock_account_repo.contract_result[:sub_state] || EVM.SubState.empty(),
+       mock_account_repo.contract_result[:output] || <<>>
      }}
   end
 

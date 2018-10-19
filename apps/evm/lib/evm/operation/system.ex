@@ -289,7 +289,7 @@ defmodule EVM.Operation.System do
 
     remaining_gas = machine_state.gas - available_gas
 
-    {status, {updated_account_repo, n_gas, n_sub_state}} =
+    {status, {updated_account_repo, n_gas, n_sub_state, output}} =
       if is_allowed do
         account_repo =
           AccountRepo.repo(exec_env.account_repo).increment_account_nonce(
@@ -321,7 +321,7 @@ defmodule EVM.Operation.System do
           exec_env.config
         )
       else
-        {:error, {exec_env.account_repo, available_gas, SubState.empty()}}
+        {:error, {exec_env.account_repo, available_gas, SubState.empty(), <<>>}}
       end
 
     # Note if was exception halt or other failure on stack
@@ -337,7 +337,8 @@ defmodule EVM.Operation.System do
     machine_state = %{
       machine_state
       | stack: Stack.push(machine_state.stack, new_address_for_machine_state),
-        gas: n_gas + remaining_gas
+        gas: n_gas + remaining_gas,
+        last_return_data: output
     }
 
     exec_env = %{exec_env | account_repo: updated_account_repo}

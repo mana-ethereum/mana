@@ -9,21 +9,16 @@ defmodule Blockchain.StateTest do
 
   @failing_tests %{
     "Byzantium" => [
-      "stReturnDataTest/call_outsize_then_create_successful_then_returndatasize",
-      "stReturnDataTest/call_then_create_successful_then_returndatasize",
       "stReturnDataTest/modexp_modsize0_returndatasize",
-      "stReturnDataTest/returndatacopy_afterFailing_create",
       "stReturnDataTest/returndatacopy_after_revert_in_staticcall",
       "stReturnDataTest/returndatacopy_after_successful_callcode",
       "stReturnDataTest/returndatacopy_after_successful_delegatecall",
       "stReturnDataTest/returndatacopy_after_successful_staticcall",
       "stReturnDataTest/returndatacopy_following_call",
       "stReturnDataTest/returndatacopy_following_revert",
-      "stReturnDataTest/returndatacopy_following_revert_in_create",
       "stRevertTest/RevertInCallCode",
       "stRevertTest/RevertInCreateInInit",
-      "stRevertTest/RevertInDelegateCall",
-      "stRevertTest/RevertOpcodeInCreateReturns"
+      "stRevertTest/RevertInDelegateCall"
     ],
     "Constantinople" => [
       "stCreate2/CREATE2_ContractSuicideDuringInit_ThenStoreThenReturn",

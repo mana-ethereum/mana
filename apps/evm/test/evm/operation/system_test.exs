@@ -167,7 +167,8 @@ defmodule EVM.Operation.SystemTest do
         gas: 500,
         stack: [0x601BCC2189B7096D8DFAA6F74EFEEBEF20486D0D, 1],
         active_words: 1,
-        memory: "________input"
+        memory: "________input",
+        last_return_data: "output"
       }
 
       assert n_machine_state == expected_machine_state

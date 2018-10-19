@@ -47,7 +47,9 @@ defmodule EVM.AccountRepo do
               Header.t(),
               EVM.address() | nil,
               EVM.Configuration.t()
-            ) :: {:ok | :error, {t, EVM.Gas.t(), EVM.SubState.t()}}
+            ) ::
+              {:error, {t, EVM.Gas.t(), EVM.SubState.t()}, <<>> | binary()}
+              | {:ok, {t, EVM.Gas.t(), EVM.SubState.t()}, <<>>}
 
   @doc "Sets the balance of the account at the given address to zero"
   @callback clear_balance(t, EVM.address()) :: t
