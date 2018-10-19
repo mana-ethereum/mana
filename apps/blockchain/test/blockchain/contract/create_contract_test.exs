@@ -34,7 +34,7 @@ defmodule Blockchain.Contract.CreateContractTest do
         block_header: %Block.Header{nonce: 1}
       }
 
-      {_, {account_repo, gas, sub_state}} = Contract.create(params)
+      {_, {account_repo, gas, sub_state, _output}} = Contract.create(params)
       state = Repo.commit(account_repo).state
 
       expected_root_hash =
@@ -90,7 +90,7 @@ defmodule Blockchain.Contract.CreateContractTest do
         block_header: %Block.Header{nonce: 1}
       }
 
-      {:error, {account_repo, 0, sub_state}} = Contract.create(params)
+      {:error, {account_repo, 0, sub_state, _ourput}} = Contract.create(params)
       assert state == account_repo.state
 
       assert SubState.empty?(sub_state)
@@ -120,7 +120,7 @@ defmodule Blockchain.Contract.CreateContractTest do
         block_header: %Block.Header{nonce: 1}
       }
 
-      {:error, {account_repo, 0, sub_state}} = Contract.create(params)
+      {:error, {account_repo, 0, sub_state, _output}} = Contract.create(params)
       assert state == account_repo.state
 
       assert SubState.empty?(sub_state)
@@ -150,7 +150,7 @@ defmodule Blockchain.Contract.CreateContractTest do
         block_header: %Block.Header{nonce: 1}
       }
 
-      {_, {account_repo, _gas, _sub_state}} = Contract.create(params)
+      {_, {account_repo, _gas, _sub_state, _output}} = Contract.create(params)
       state = Repo.commit(account_repo).state
 
       addresses = [<<0x10::160>>, Account.Address.new(<<0x10::160>>, 2)]

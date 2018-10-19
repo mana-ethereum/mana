@@ -467,7 +467,7 @@ defmodule Blockchain.Account.Repo do
 
   ## Examples
 
-      iex> {:ok, {account_repo, _gas, _sub_state}} = MerklePatriciaTree.Test.random_ets_db()
+      iex> {:ok, {account_repo, _gas, _sub_state, _output}} = MerklePatriciaTree.Test.random_ets_db()
       ...> |> MerklePatriciaTree.Trie.new()
       ...> |> Blockchain.Account.put_account(<<0x10::160>>, %Blockchain.Account{balance: 11, nonce: 5})
       ...> |> Blockchain.Account.Repo.new()

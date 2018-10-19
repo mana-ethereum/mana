@@ -308,7 +308,7 @@ defmodule Blockchain.Transaction do
         config: config
       }
       |> Contract.create()
-      |> contract_creation_response()
+      |> transaction_response()
     else
       %Contract.MessageCall{
         account_repo: account_repo,
@@ -326,7 +326,7 @@ defmodule Blockchain.Transaction do
         config: config
       }
       |> Contract.message_call()
-      |> message_call_response()
+      |> transaction_response()
       |> touch_beneficiary_account(block_header.beneficiary)
     end
   end
@@ -355,19 +355,11 @@ defmodule Blockchain.Transaction do
     {state, gas, new_sub_state, status}
   end
 
-  defp contract_creation_response({:ok, {account_repo, remaining_gas, sub_state, _output}}) do
+  defp transaction_response({:ok, {account_repo, remaining_gas, sub_state, _output}}) do
     {account_repo, remaining_gas, sub_state, @success_status}
   end
 
-  defp contract_creation_response({:error, {account_repo, remaining_gas, sub_state, _output}}) do
-    {account_repo, remaining_gas, sub_state, @failure_status}
-  end
-
-  defp message_call_response({:ok, {account_repo, remaining_gas, sub_state, _output}}) do
-    {account_repo, remaining_gas, sub_state, @success_status}
-  end
-
-  defp message_call_response({:error, {account_repo, remaining_gas, sub_state, _output}}) do
+  defp transaction_response({:error, {account_repo, remaining_gas, sub_state, _output}}) do
     {account_repo, remaining_gas, sub_state, @failure_status}
   end
 
