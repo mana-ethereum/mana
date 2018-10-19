@@ -221,7 +221,8 @@ defmodule Blockchain.Transaction do
             account_repo_after_execution.state.root_hash,
             expended_gas,
             sub_state.logs,
-            status
+            status,
+            evm_config
           )
 
         account_repo =
@@ -254,7 +255,8 @@ defmodule Blockchain.Transaction do
             account_repo_after_execution.state.root_hash,
             expended_gas,
             sub_state.logs,
-            status
+            status,
+            evm_config
           )
 
         {account_repo_after_execution, receipt}
@@ -508,8 +510,12 @@ defmodule Blockchain.Transaction do
     end
   end
 
-  defp create_receipt(state_root_hash, gas_used, logs, _status_code) do
-    Receipt.new(state_root_hash, gas_used, logs)
+  defp create_receipt(state_root_hash, gas_used, logs, status_code, evm_config) do
+    if Configuration.for(evm_config).status_in_receipt?(evm_config) do
+      Receipt.new(status_code, gas_used, logs)
+    else
+      Receipt.new(state_root_hash, gas_used, logs)
+    end
   end
 
   def contract_creation?(%Blockchain.Transaction{to: <<>>}), do: true
