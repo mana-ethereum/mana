@@ -8,7 +8,14 @@ defmodule GenerateBlockchainTests do
   import EthCommonTest.Helpers
 
   @base_path System.cwd() <> "/../../ethereum_common_tests/BlockchainTests/"
-  @allowed_forks ["Constantinople", "Byzantium", "Frontier", "Homestead", "TangerineWhistle", "SpuriousDragon"]
+  @allowed_forks [
+    "Constantinople",
+    "Byzantium",
+    "Frontier",
+    "Homestead",
+    "TangerineWhistle",
+    "SpuriousDragon"
+  ]
   @byzantium_failing_tests_path System.cwd() <> "/test/support/byzantium_failing_tests.txt"
   @constantinople_failing_tests_path System.cwd() <>
                                        "/test/support/constantinople_failing_tests.txt"
