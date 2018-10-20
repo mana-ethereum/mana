@@ -8,7 +8,6 @@ defmodule BlockchainTest do
 
   doctest Blockchain
 
-  @failing_byzantium_tests File.read!(System.cwd() <> "/test/support/byzantium_failing_tests.txt")
   @failing_constantinople_tests File.read!(
                                   System.cwd() <> "/test/support/constantinople_failing_tests.txt"
                                 )
@@ -18,14 +17,22 @@ defmodule BlockchainTest do
     "Homestead" => [],
     "TangerineWhistle" => [],
     "SpuriousDragon" => [],
-    "Byzantium" =>
-      @failing_byzantium_tests
-      |> String.split("\n")
-      |> Enum.reject(fn path -> path == "" || path == " " end),
-    "Constantinople" =>
-      @failing_constantinople_tests
-      |> String.split("\n")
-      |> Enum.reject(fn path -> path == "" || path == " " end),
+    "Byzantium" => [
+      "GeneralStateTests/stReturnDataTest/modexp_modsize0_returndatasize_d0g0v0.json",
+      "GeneralStateTests/stReturnDataTest/modexp_modsize0_returndatasize_d0g1v0.json",
+      "GeneralStateTests/stReturnDataTest/modexp_modsize0_returndatasize_d0g2v0.json",
+      "GeneralStateTests/stReturnDataTest/modexp_modsize0_returndatasize_d0g3v0.json",
+      "GeneralStateTests/stReturnDataTest/returndatacopy_after_revert_in_staticcall_d0g0v0.json",
+      "GeneralStateTests/stReturnDataTest/returndatacopy_after_successful_callcode_d0g0v0.json",
+      "GeneralStateTests/stReturnDataTest/returndatacopy_after_successful_delegatecall_d0g0v0.json",
+      "GeneralStateTests/stReturnDataTest/returndatacopy_after_successful_staticcall_d0g0v0.json",
+      "GeneralStateTests/stReturnDataTest/returndatacopy_following_call_d0g0v0.json",
+      "GeneralStateTests/stReturnDataTest/returndatacopy_following_revert_d0g0v0.json",
+      "GeneralStateTests/stRevertTest/RevertInCallCode_d0g0v0.json",
+      "GeneralStateTests/stRevertTest/RevertInCreateInInit_d0g0v0.json",
+      "GeneralStateTests/stRevertTest/RevertInDelegateCall_d0g0v0.json"
+    ],
+    "Constantinople" => String.split(@failing_constantinople_tests, "\n"),
     # the rest are not implemented yet
     "EIP158ToByzantiumAt5" => [],
     "FrontierToHomesteadAt5" => [],

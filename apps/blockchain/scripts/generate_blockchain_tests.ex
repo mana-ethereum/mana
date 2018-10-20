@@ -16,7 +16,6 @@ defmodule GenerateBlockchainTests do
     "TangerineWhistle",
     "SpuriousDragon"
   ]
-  @byzantium_failing_tests_path System.cwd() <> "/test/support/byzantium_failing_tests.txt"
   @constantinople_failing_tests_path System.cwd() <>
                                        "/test/support/constantinople_failing_tests.txt"
   @initial_pass_fail {[], []}
@@ -107,9 +106,6 @@ defmodule GenerateBlockchainTests do
 
   defp io_device_from_hardfork(hardfork) do
     case hardfork do
-      "Byzantium" ->
-        File.open!(@byzantium_failing_tests_path, [:write])
-
       "Constantinople" ->
         File.open!(@constantinople_failing_tests_path, [:write])
 
