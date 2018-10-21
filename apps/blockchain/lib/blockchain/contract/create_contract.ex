@@ -4,10 +4,10 @@ defmodule Blockchain.Contract.CreateContract do
   as defined in Section 7, Eq.(76) of the Yellow Paper.
   """
 
-  alias Blockchain.Account.Repo
   alias Block.Header
   alias Blockchain.{Account, BlockHeaderInfo}
-  alias EVM.{SubState, Gas}
+  alias Blockchain.Account.Repo
+  alias EVM.{Gas, SubState}
 
   defstruct account_repo: %Repo{},
             sender: <<>>,

@@ -2,9 +2,9 @@ defmodule EVM.MessageCallTest do
   use ExUnit.Case, async: true
   doctest EVM.MessageCall
 
+  alias EVM.AccountRepo
   alias EVM.MessageCall
   alias EVM.Mock.MockAccountRepo
-  alias EVM.AccountRepo
 
   import EVM.TestFactory, only: [build: 1, build: 2]
 

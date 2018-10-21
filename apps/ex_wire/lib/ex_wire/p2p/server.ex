@@ -17,7 +17,7 @@ defmodule ExWire.P2P.Server do
 
   require Logger
 
-  alias ExWire.{TCP, P2P}
+  alias ExWire.{P2P, TCP}
 
   @doc """
   Child spec definition to be used by a supervisor when wanting to supervise an

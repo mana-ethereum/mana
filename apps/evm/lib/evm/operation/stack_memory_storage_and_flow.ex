@@ -1,5 +1,5 @@
 defmodule EVM.Operation.StackMemoryStorageAndFlow do
-  alias EVM.{Helpers, Memory, Stack, ExecEnv, Operation}
+  alias EVM.{ExecEnv, Helpers, Memory, Operation, Stack}
   alias MathHelper
 
   use Bitwise

@@ -2,9 +2,9 @@ defmodule ExWire.Handshake.Struct.AuthMsgV4Test do
   use ExUnit.Case, async: true
   doctest ExWire.Handshake.Struct.AuthMsgV4
 
+  alias ExthCrypto.ECIES.ECDH
   alias ExWire.Handshake
   alias ExWire.Handshake.Struct.AuthMsgV4
-  alias ExthCrypto.ECIES.ECDH
 
   setup do
     keys = %{

@@ -3,13 +3,13 @@ defmodule Blockchain.Account.Storage do
   Represents the account storage,
   as defined in Section 4.1 of the Yellow Paper.
 
-  A mapping between addresses and account states is stored in a modified Merkle 
-  Patricia tree.  The trie requires a simple database backend 
+  A mapping between addresses and account states is stored in a modified Merkle
+  Patricia tree.  The trie requires a simple database backend
   (the state database) that maintains a mapping of bytearrays to bytearrays.
   """
 
   alias ExthCrypto.Hash.Keccak
-  alias MerklePatriciaTree.{Trie, DB}
+  alias MerklePatriciaTree.{DB, Trie}
 
   @spec put(DB.db(), EVM.trie_root(), integer(), integer()) :: Trie.t()
   def put(db, root, key, value) do

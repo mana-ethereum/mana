@@ -9,8 +9,7 @@ defmodule ExWire.Framing.Frame do
   TODO: Add tests, etc.
   """
 
-  alias ExthCrypto.MAC
-  alias ExthCrypto.AES
+  alias ExthCrypto.{AES, MAC}
   alias ExWire.Framing.Secrets
 
   @type frame :: binary()

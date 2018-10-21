@@ -1,5 +1,5 @@
 defmodule EVM.Builtin.EcMult do
-  alias EVM.{Memory, Helpers}
+  alias EVM.{Helpers, Memory}
   alias BN.{BN128Arithmetic, FQ}
 
   @g_ec_mult 40_000

@@ -3,13 +3,13 @@ defmodule ExWire.Kademlia.RoutingTable do
   Module for working with current node's buckets
   """
 
+  alias ExWire.Handler.Params
   alias ExWire.Kademlia.{Bucket, Node}
   alias ExWire.Kademlia.Config, as: KademliaConfig
-  alias ExWire.Message.{Ping, Pong, FindNeighbours, Neighbours}
+  alias ExWire.Message.{FindNeighbours, Neighbours, Ping, Pong}
   alias ExWire.{Network, Protocol}
-  alias ExWire.Util.Timestamp
-  alias ExWire.Handler.Params
   alias ExWire.Struct.Endpoint
+  alias ExWire.Util.Timestamp
 
   defstruct [
     :current_node,

@@ -4,8 +4,8 @@ defmodule Blockchain.Genesis do
   """
 
   alias Block.Header
-  alias Blockchain.{Block, Account, Chain}
-  alias MerklePatriciaTree.{Trie, DB}
+  alias Blockchain.{Account, Block, Chain}
+  alias MerklePatriciaTree.{DB, Trie}
 
   @type seal_config :: %{
           mix_hash: binary(),

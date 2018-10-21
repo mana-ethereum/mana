@@ -12,7 +12,7 @@ defmodule EVMRunner do
 
   """
   require Logger
-  alias EVM.{VM, ExecEnv}
+  alias EVM.{ExecEnv, VM}
   alias EVM.Mock.MockAccountRepo
   alias EVM.Mock.MockBlockHeaderInfo
 

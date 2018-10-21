@@ -7,8 +7,8 @@ defmodule ExWire.Handler.Neighbours do
   require Logger
 
   alias ExWire.Handler
-  alias ExWire.Message.Neighbours
   alias ExWire.Kademlia
+  alias ExWire.Message.Neighbours
 
   @doc """
   Handler for a Neighbours message.

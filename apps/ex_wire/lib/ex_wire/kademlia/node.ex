@@ -2,10 +2,10 @@ defmodule ExWire.Kademlia.Node do
   @moduledoc """
   Represents a node in Kademlia algorithm; an entity on the network.
   """
+  alias ExWire.{Crypto, Message}
+  alias ExWire.Handler.Params
   alias ExWire.Kademlia.XorDistance
   alias ExWire.Struct.Endpoint
-  alias ExWire.Handler.Params
-  alias ExWire.{Message, Crypto}
 
   defstruct [
     :public_key,

@@ -1,7 +1,6 @@
 defmodule EVM.Operation.ComparisonAndBitwiseLogic do
+  alias EVM.{Helpers, Operation}
   alias MathHelper
-  alias EVM.Helpers
-  alias EVM.Operation
   use Bitwise
 
   @doc """

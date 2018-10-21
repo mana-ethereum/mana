@@ -4,7 +4,7 @@ defmodule MerklePatriciaTree.Trie.Inspector do
   of tries.
   """
   alias MerklePatriciaTree.Trie
-  alias MerklePatriciaTree.Trie.{Node, Helper}
+  alias MerklePatriciaTree.Trie.{Helper, Node}
   require Logger
 
   @doc """

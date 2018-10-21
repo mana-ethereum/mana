@@ -1,12 +1,11 @@
 defmodule ExWire.NodeDiscoveryTest do
   use ExUnit.Case, async: true
-  alias ExWire.NodeDiscoverySupervisor
-  alias ExWire.Struct.Endpoint
   alias ExWire.Adapter.UDP
-  alias ExWire.Kademlia
+  alias ExWire.{Config, Kademlia, Network}
   alias ExWire.Kademlia.{Node, RoutingTable}
   alias ExWire.Message.FindNeighbours
-  alias ExWire.{Network, Config}
+  alias ExWire.NodeDiscoverySupervisor
+  alias ExWire.Struct.Endpoint
 
   @moduletag integration: true
   @moduletag network: true

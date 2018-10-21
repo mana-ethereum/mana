@@ -1,14 +1,14 @@
 defmodule ExWire.KademliaTest do
   use ExUnit.Case, async: true
 
-  alias ExWire.{Kademlia, TestHelper}
-  alias ExWire.Kademlia.{Server, RoutingTable, Node}
   alias ExWire.Adapter.UDP
-  alias ExWire.Network
-  alias ExWire.Message.{Pong, FindNeighbours, Neighbours}
   alias ExWire.Handler.Params
-  alias ExWire.Util.Timestamp
+  alias ExWire.{Kademlia, TestHelper}
+  alias ExWire.Kademlia.{Node, RoutingTable, Server}
+  alias ExWire.Message.{FindNeighbours, Neighbours, Pong}
+  alias ExWire.Network
   alias ExWire.Struct.Neighbour
+  alias ExWire.Util.Timestamp
 
   setup_all do
     node = TestHelper.random_node()

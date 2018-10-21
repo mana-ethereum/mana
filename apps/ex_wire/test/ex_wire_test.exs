@@ -2,12 +2,12 @@ defmodule ExWireTest do
   use ExUnit.Case
   doctest ExWire
 
-  alias ExWire.{Protocol, TestHelper, Network}
-  alias ExWire.Message.{Ping, Pong, Neighbours, FindNeighbours}
-  alias ExWire.Handler.FindNeighbours, as: FindNeighboursHandler
-  alias ExWire.Util.Timestamp
-  alias ExWire.Struct.Endpoint
   alias ExWire.Adapter.Test
+  alias ExWire.Handler.FindNeighbours, as: FindNeighboursHandler
+  alias ExWire.Message.{FindNeighbours, Neighbours, Ping, Pong}
+  alias ExWire.{Network, Protocol, TestHelper}
+  alias ExWire.Struct.Endpoint
+  alias ExWire.Util.Timestamp
 
   @them %ExWire.Struct.Endpoint{
     ip: [0, 0, 0, 1],

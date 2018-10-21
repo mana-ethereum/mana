@@ -10,7 +10,7 @@ defmodule ExWire.Kademlia.Server do
   # 10s
   @pong_cleanup_period 10 * 1000
 
-  alias ExWire.Kademlia.{RoutingTable, Node, Discovery}
+  alias ExWire.Kademlia.{Discovery, Node, RoutingTable}
 
   def start_link(params) do
     name = params[:name] || @default_process_name

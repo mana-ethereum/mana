@@ -2,7 +2,7 @@ defmodule EVM.VMTest do
   use ExUnit.Case, async: true
   doctest EVM.VM
 
-  alias EVM.{VM, ExecEnv, SubState, MachineCode}
+  alias EVM.{ExecEnv, MachineCode, SubState, VM}
   alias EVM.Mock.MockAccountRepo
 
   setup do

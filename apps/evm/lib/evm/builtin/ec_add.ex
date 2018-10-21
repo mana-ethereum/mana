@@ -1,6 +1,6 @@
 defmodule EVM.Builtin.EcAdd do
-  alias EVM.{Memory, Helpers}
-  alias BN.{FQ, BN128Arithmetic}
+  alias EVM.{Helpers, Memory}
+  alias BN.{BN128Arithmetic, FQ}
 
   @g_ec_add 500
 

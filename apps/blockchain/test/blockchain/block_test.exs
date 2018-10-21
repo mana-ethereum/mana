@@ -5,7 +5,7 @@ defmodule Blockchain.BlockTest do
   doctest Blockchain.Block
 
   alias Block.Header
-  alias Blockchain.{Chain, Account, Block, Transaction, Genesis}
+  alias Blockchain.{Account, Block, Chain, Genesis, Transaction}
   alias EVM.MachineCode
   alias MerklePatriciaTree.Trie
 

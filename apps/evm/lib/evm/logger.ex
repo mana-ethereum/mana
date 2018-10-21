@@ -1,6 +1,6 @@
 defmodule EVM.Logger do
   require Logger
-  alias EVM.{Operation, MachineState}
+  alias EVM.{MachineState, Operation}
 
   @doc """
   Helper function to log the stack given the machine state

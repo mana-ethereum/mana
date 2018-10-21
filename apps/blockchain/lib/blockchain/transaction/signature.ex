@@ -10,8 +10,8 @@ defmodule Blockchain.Transaction.Signature do
   https://github.com/ethereum/EIPs/blob/master/EIPS/eip-155.md
   """
 
-  alias ExthCrypto.Hash.Keccak
   alias Blockchain.Transaction
+  alias ExthCrypto.Hash.Keccak
 
   @type public_key :: <<_::512>>
   @type private_key :: <<_::256>>

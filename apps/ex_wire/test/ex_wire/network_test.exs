@@ -3,9 +3,9 @@ defmodule ExWire.NetworkTest do
   doctest ExWire.Network
 
   alias ExWire.{Crypto, Network}
-  alias ExWire.Struct.Endpoint
-  alias ExWire.Network.InboundMessage
   alias ExWire.Message.Pong
+  alias ExWire.Network.InboundMessage
+  alias ExWire.Struct.Endpoint
 
   describe "receive/2" do
     test "fails to receive message" do

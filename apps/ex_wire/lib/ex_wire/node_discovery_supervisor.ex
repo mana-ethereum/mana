@@ -7,9 +7,9 @@ defmodule ExWire.NodeDiscoverySupervisor do
   that sends and receives all messages that are used for node discovery (ping, pong etc)
   """
 
-  alias ExWire.Kademlia.Server, as: KademliaServer
+  alias ExWire.{Config, Network}
   alias ExWire.Kademlia.Node
-  alias ExWire.{Network, Config}
+  alias ExWire.Kademlia.Server, as: KademliaServer
   alias ExWire.Struct.Endpoint
 
   def start_link(params \\ []) do

@@ -6,14 +6,14 @@ defmodule Blockchain.Block do
   For more information, see Section 4.3 of the Yellow Paper.
   """
 
-  alias ExthCrypto.Hash.Keccak
   alias Block.Header
-  alias Blockchain.{Account, Transaction, Chain}
+  alias Blockchain.{Account, Chain, Transaction}
+  alias Blockchain.Account.Repo
   alias Blockchain.Block.HolisticValidity
   alias Blockchain.Transaction.Receipt
-  alias Blockchain.Account.Repo
   alias Blockchain.Transaction.Receipt.Bloom
-  alias MerklePatriciaTree.{Trie, DB}
+  alias ExthCrypto.Hash.Keccak
+  alias MerklePatriciaTree.{DB, Trie}
 
   # Defined in Eq.(19)
   # block_hash: Hash for this block, acts simply as a cache,

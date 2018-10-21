@@ -5,11 +5,8 @@ defmodule EVM.Debugger do
   """
   require Logger
 
-  alias EVM.Debugger.Breakpoint
-  alias EVM.Debugger.Command
-  alias EVM.SubState
-  alias EVM.ExecEnv
-  alias EVM.MachineState
+  alias EVM.Debugger.{Breakpoint, Command}
+  alias EVM.{ExecEnv, MachineState, SubState}
 
   @commands [
     %Command{

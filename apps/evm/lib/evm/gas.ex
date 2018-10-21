@@ -4,13 +4,13 @@ defmodule EVM.Gas do
   """
 
   alias EVM.{
-    MachineState,
-    MachineCode,
-    Operation,
     Address,
-    ExecEnv,
     Configuration,
-    Helpers
+    ExecEnv,
+    Helpers,
+    MachineCode,
+    MachineState,
+    Operation
   }
 
   @type t :: EVM.val()

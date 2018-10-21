@@ -2,7 +2,7 @@ defmodule EVM.BuiltinTest do
   use ExUnit.Case, async: true
   doctest EVM.Builtin
 
-  alias EVM.{ExecEnv, Builtin, Helpers}
+  alias EVM.{Builtin, ExecEnv, Helpers}
 
   describe "ec_add/2" do
     test "calculates elliptic curve addition on bn128 curve" do

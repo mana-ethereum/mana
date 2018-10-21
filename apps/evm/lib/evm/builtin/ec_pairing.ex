@@ -1,7 +1,6 @@
 defmodule EVM.Builtin.EcPairing do
+  alias BN.{BN128Arithmetic, FQ, FQ12, FQ2, FQP, Pairing}
   alias EVM.Helpers
-  alias BN.BN128Arithmetic
-  alias BN.{FQ, FQP, FQ2, FQ12, Pairing}
 
   @g_ec_pairing_point 80_000
   @g_ec_pairing 100_000

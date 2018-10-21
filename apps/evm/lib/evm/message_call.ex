@@ -1,5 +1,5 @@
 defmodule EVM.MessageCall do
-  alias EVM.{AccountRepo, ExecEnv, Memory, Builtin, VM, Functions, MachineState, SubState}
+  alias EVM.{AccountRepo, Builtin, ExecEnv, Functions, MachineState, Memory, SubState, VM}
 
   @moduledoc """
   Describes a message call function that is used for all call operations (call, delegatecall, callcode, staticcall).

@@ -1,5 +1,5 @@
 defmodule EVM.Operation.EnvironmentalInformation do
-  alias EVM.{AccountRepo, Operation, Stack, Helpers, Memory, Stack}
+  alias EVM.{AccountRepo, Helpers, Memory, Operation, Stack}
 
   @doc """
   Get address of currently executing account.

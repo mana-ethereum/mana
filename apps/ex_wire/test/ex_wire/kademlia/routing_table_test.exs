@@ -3,13 +3,13 @@ defmodule ExWire.Kademlia.RoutingTableTest do
 
   doctest ExWire.Kademlia.RoutingTable
 
-  alias ExWire.Kademlia.{RoutingTable, Bucket, Node}
+  alias ExWire.Handler.Params
+  alias ExWire.Kademlia.{Bucket, Node, RoutingTable}
   alias ExWire.Kademlia.Config, as: KademliaConfig
-  alias ExWire.Message.{Pong, FindNeighbours, Neighbours}
+  alias ExWire.Message.{FindNeighbours, Neighbours, Pong}
+  alias ExWire.Struct.Neighbour
   alias ExWire.TestHelper
   alias ExWire.Util.Timestamp
-  alias ExWire.Handler.Params
-  alias ExWire.Struct.Neighbour
 
   setup_all do
     table = TestHelper.random_empty_table()

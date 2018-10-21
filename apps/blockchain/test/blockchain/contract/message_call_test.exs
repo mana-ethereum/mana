@@ -3,9 +3,9 @@ defmodule Blockchain.Contract.MessageCallTest do
   doctest Blockchain.Contract.MessageCall
 
   alias Blockchain.{Account, Contract}
-  alias EVM.{SubState, MachineCode}
-  alias MerklePatriciaTree.{Trie, DB}
   alias Blockchain.Account.Repo
+  alias EVM.{MachineCode, SubState}
+  alias MerklePatriciaTree.{DB, Trie}
 
   setup do
     db = MerklePatriciaTree.Test.random_ets_db(:message_call_test)

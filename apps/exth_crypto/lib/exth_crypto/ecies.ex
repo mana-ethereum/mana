@@ -5,11 +5,9 @@ defmodule ExthCrypto.ECIES do
   This is derived primarily from [SEC 1: Elliptic Curve Cryptography](http://www.secg.org/sec1-v1.99.dif.pdf)
   """
 
-  alias ExthCrypto.ECIES.Parameters
   alias ExthCrypto.ECIES.ECDH
-  alias ExthCrypto.MAC
-  alias ExthCrypto.Hash
-  alias ExthCrypto.Cipher
+  alias ExthCrypto.ECIES.Parameters
+  alias ExthCrypto.{Cipher, Hash, MAC}
 
   @curve_name :secp256k1
 

@@ -6,9 +6,9 @@ defmodule ExWire.Handler do
   after it has been decoded.
   """
 
-  alias ExWire.{Message, Crypto}
+  alias ExWire.{Crypto, Message}
   alias ExWire.Struct.Endpoint
-  alias ExWire.Handler.{Ping, Pong, FindNeighbours, Neighbours}
+  alias ExWire.Handler.{FindNeighbours, Neighbours, Ping, Pong}
 
   require Logger
 

@@ -13,8 +13,8 @@ defmodule MerklePatriciaTree.Trie.Destroyer do
 
   import MerklePatriciaTree.ListHelper, only: [overlap: 2]
 
-  alias MerklePatriciaTree.Trie.Node
   alias MerklePatriciaTree.Trie
+  alias MerklePatriciaTree.Trie.Node
 
   @empty_branch <<>>
 

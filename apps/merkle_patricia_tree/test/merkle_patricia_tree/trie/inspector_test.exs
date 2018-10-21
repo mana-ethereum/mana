@@ -6,7 +6,7 @@ defmodule MerklePatriciaTree.Trie.InspectorTest do
   import Support.NodeHelpers, only: :functions
 
   alias MerklePatriciaTree.Trie
-  alias MerklePatriciaTree.Trie.{Storage, Inspector}
+  alias MerklePatriciaTree.Trie.{Inspector, Storage}
 
   setup do
     db = MerklePatriciaTree.Test.random_ets_db()

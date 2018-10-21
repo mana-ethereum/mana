@@ -2,9 +2,9 @@ defmodule ExWire.Framing.SecretsTest do
   use ExUnit.Case, async: true
   doctest ExWire.Framing.Secrets
 
+  alias ExthCrypto.ECIES.ECDH
   alias ExWire.Framing.Secrets
   alias ExWire.Handshake
-  alias ExthCrypto.ECIES.ECDH
 
   setup do
     creds = %{

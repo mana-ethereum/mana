@@ -1,10 +1,10 @@
 defmodule EthCommonTest.BlockchainTestRunner do
   import EthCommonTest.Helpers
 
-  alias Blockchain.{Blocktree, Account, Transaction, Chain}
-  alias MerklePatriciaTree.Trie
-  alias Blockchain.Account.Storage
   alias Block.Header
+  alias Blockchain.{Account, Blocktree, Chain, Transaction}
+  alias Blockchain.Account.Storage
+  alias MerklePatriciaTree.Trie
 
   def run(json_test_path, fork) do
     json_test_path

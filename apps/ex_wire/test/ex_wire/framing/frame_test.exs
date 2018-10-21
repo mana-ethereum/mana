@@ -1,7 +1,7 @@
 defmodule ExWire.Framing.FrameTest do
   use ExUnit.Case, async: true
-  alias ExWire.Framing.Frame
   alias ExthCrypto.AES
+  alias ExWire.Framing.Frame
 
   test "mac encoder" do
     mac_secret =

@@ -1,8 +1,7 @@
 defmodule Blockchain.StateTest do
-  alias MerklePatriciaTree.Trie
   alias Blockchain.Account
-  alias EthCommonTest.StateTestRunner
-  alias EthCommonTest.Helpers
+  alias MerklePatriciaTree.Trie
+  alias EthCommonTest.{Helpers, StateTestRunner}
 
   use EthCommonTest.Harness
   use ExUnit.Case, async: true

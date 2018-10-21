@@ -4,11 +4,10 @@ defmodule ExWire.Framing.Secrets do
   and outgoing peer to peer messages.
   """
 
-  alias ExWire.Handshake
-  alias ExthCrypto.AES
-  alias ExthCrypto.MAC
-  alias ExthCrypto.Hash.Keccak
+  alias ExthCrypto.{AES, MAC}
   alias ExthCrypto.ECIES.ECDH
+  alias ExthCrypto.Hash.Keccak
+  alias ExWire.Handshake
 
   @type t :: %__MODULE__{
           egress_mac: MAC.mac_inst(),
