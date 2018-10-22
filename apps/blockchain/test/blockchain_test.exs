@@ -18,10 +18,6 @@ defmodule BlockchainTest do
     "TangerineWhistle" => [],
     "SpuriousDragon" => [],
     "Byzantium" => [
-      "GeneralStateTests/stReturnDataTest/modexp_modsize0_returndatasize_d0g0v0.json",
-      "GeneralStateTests/stReturnDataTest/modexp_modsize0_returndatasize_d0g1v0.json",
-      "GeneralStateTests/stReturnDataTest/modexp_modsize0_returndatasize_d0g2v0.json",
-      "GeneralStateTests/stReturnDataTest/modexp_modsize0_returndatasize_d0g3v0.json",
       "GeneralStateTests/stRevertTest/RevertInCreateInInit_d0g0v0.json"
     ],
     "Constantinople" => String.split(@failing_constantinople_tests, "\n"),

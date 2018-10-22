@@ -61,6 +61,7 @@ defmodule EVM.Builtin.ModExp do
     if required_gas <= gas do
       result =
         cond do
+          modulus_length == 0 -> <<>>
           modulus <= 1 -> <<0>>
           exponent == 0 -> <<1>>
           base == 0 -> <<0>>
