@@ -2,7 +2,7 @@ defmodule ExWire.P2P do
   require Logger
 
   alias ExWire.Framing.Frame
-  alias ExWire.{Handshake, Packet, TCP, DEVp2p}
+  alias ExWire.{DEVp2p, Handshake, Packet, TCP}
   alias ExWire.Struct.Peer
 
   defmodule Connection do

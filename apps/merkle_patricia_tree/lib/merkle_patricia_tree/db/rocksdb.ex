@@ -4,7 +4,7 @@ defmodule MerklePatriciaTree.DB.RocksDB do
   is backed by rocksdb.
   """
 
-  alias MerklePatriciaTree.{Trie, DB}
+  alias MerklePatriciaTree.{DB, Trie}
 
   @behaviour MerklePatriciaTree.DB
 

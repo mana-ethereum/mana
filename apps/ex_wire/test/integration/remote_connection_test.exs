@@ -15,8 +15,8 @@ defmodule ExWire.RemoteConnectionTest do
 
   require Logger
 
-  alias ExWire.Packet
   alias ExWire.P2P.Server, as: P2P
+  alias ExWire.Packet
 
   @moduletag integration: true
   @moduletag network: true

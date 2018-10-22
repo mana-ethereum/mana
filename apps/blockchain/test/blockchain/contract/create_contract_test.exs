@@ -2,11 +2,11 @@ defmodule Blockchain.Contract.CreateContractTest do
   use ExUnit.Case
   doctest Blockchain.Contract.CreateContract
 
-  alias ExthCrypto.Hash.Keccak
   alias Blockchain.{Account, Contract}
-  alias EVM.{SubState, MachineCode}
-  alias MerklePatriciaTree.{Trie, DB}
   alias Blockchain.Account.Repo
+  alias ExthCrypto.Hash.Keccak
+  alias EVM.{MachineCode, SubState}
+  alias MerklePatriciaTree.{DB, Trie}
 
   setup do
     db = MerklePatriciaTree.Test.random_ets_db(:contract_test)

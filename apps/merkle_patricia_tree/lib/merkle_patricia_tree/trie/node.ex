@@ -6,7 +6,7 @@ defmodule MerklePatriciaTree.Trie.Node do
   """
 
   alias MerklePatriciaTree.Trie.Storage
-  alias MerklePatriciaTree.{Trie, HexPrefix}
+  alias MerklePatriciaTree.{HexPrefix, Trie}
 
   @type trie_node ::
           :empty

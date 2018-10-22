@@ -4,7 +4,7 @@ defmodule EVM.VM do
   opcodes of a contract during a transfer or message call.
   """
 
-  alias EVM.{SubState, MachineCode, MachineState, ExecEnv, Functions, Gas, Operation, Debugger}
+  alias EVM.{Debugger, ExecEnv, Functions, Gas, MachineCode, MachineState, Operation, SubState}
 
   @type output :: binary() | :failed | {:revert, binary()}
 

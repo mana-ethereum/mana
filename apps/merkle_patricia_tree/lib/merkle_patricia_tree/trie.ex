@@ -2,7 +2,7 @@ defmodule MerklePatriciaTree.Trie do
   @moduledoc File.read!("#{__DIR__}/../../README.md")
 
   alias ExthCrypto.Hash.Keccak
-  alias MerklePatriciaTree.Trie.{Helper, Builder, Destroyer, Node, Storage}
+  alias MerklePatriciaTree.Trie.{Builder, Destroyer, Helper, Node, Storage}
   alias MerklePatriciaTree.{DB, ListHelper}
 
   defstruct db: nil, root_hash: nil

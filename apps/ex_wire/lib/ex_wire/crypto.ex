@@ -3,8 +3,8 @@ defmodule ExWire.Crypto do
   Helper functions for cryptographic functions of RLPx.
   """
 
-  alias ExthCrypto.{Signature, Key, Math}
   alias ExthCrypto.Hash.Keccak
+  alias ExthCrypto.{Key, Math, Signature}
 
   @type hash :: binary()
   @type signature :: binary()

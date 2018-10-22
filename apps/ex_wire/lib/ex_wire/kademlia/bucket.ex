@@ -3,7 +3,7 @@ defmodule ExWire.Kademlia.Bucket do
   Represents a Kademlia k-bucket.
   """
 
-  alias ExWire.Kademlia.{Node, Config}
+  alias ExWire.Kademlia.{Config, Node}
   alias ExWire.Util.Timestamp
 
   defstruct [:id, :nodes, :updated_at]

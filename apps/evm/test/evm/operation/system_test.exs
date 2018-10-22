@@ -2,8 +2,8 @@ defmodule EVM.Operation.SystemTest do
   use ExUnit.Case, async: true
   doctest EVM.Operation.System
 
-  alias EVM.{ExecEnv, Stack, Address, Operation, MachineState, SubState, MachineCode, VM}
   alias EVM.AccountRepo
+  alias EVM.{Address, ExecEnv, MachineCode, MachineState, Operation, Stack, SubState, VM}
   alias EVM.Mock.MockAccountRepo
   alias EVM.Mock.MockBlockHeaderInfo
 

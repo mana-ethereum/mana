@@ -4,7 +4,7 @@ defmodule Blockchain.Block.HolisticValidity do
   section 4.3.2, of the Yellow Paper - Byzantium Version e94ebda.
   """
 
-  alias Blockchain.{Block, Genesis, Chain}
+  alias Blockchain.{Block, Chain, Genesis}
   alias MerklePatriciaTree.DB
 
   @doc """

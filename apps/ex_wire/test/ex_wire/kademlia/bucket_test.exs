@@ -3,7 +3,7 @@ defmodule ExWire.Kademlia.BucketTest do
 
   doctest ExWire.Kademlia.Bucket
 
-  alias ExWire.Kademlia.{Config, Bucket}
+  alias ExWire.Kademlia.{Bucket, Config}
   alias ExWire.TestHelper
 
   describe "add_node/3" do

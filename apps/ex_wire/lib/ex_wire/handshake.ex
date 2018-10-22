@@ -16,10 +16,10 @@ defmodule ExWire.Handshake do
   require Logger
 
   alias ExthCrypto.ECIES.ECDH
+  alias ExWire.Framing.Secrets
   alias ExWire.Handshake
   alias ExWire.Handshake.EIP8
-  alias ExWire.Handshake.Struct.{AuthMsgV4, AckRespV4}
-  alias ExWire.Framing.Secrets
+  alias ExWire.Handshake.Struct.{AckRespV4, AuthMsgV4}
 
   defstruct [
     :initiator,

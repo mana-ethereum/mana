@@ -1,5 +1,5 @@
 defmodule EVM.Operation.BlockInformation do
-  alias EVM.{Operation, BlockHeaderInfo}
+  alias EVM.{BlockHeaderInfo, Operation}
 
   @doc """
   Get the hash of one of the 256 most recent complete blocks.

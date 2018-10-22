@@ -4,8 +4,8 @@ defmodule Blockchain.Transaction.Validity do
   as defined in the Yellow Paper.
   """
 
-  alias Blockchain.{Account, Chain, Transaction}
   alias Block.Header
+  alias Blockchain.{Account, Chain, Transaction}
   alias MerklePatriciaTree.Trie
 
   @doc """

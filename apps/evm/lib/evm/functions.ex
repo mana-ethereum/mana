@@ -4,7 +4,7 @@ defmodule EVM.Functions do
   fit in other modules.
   """
 
-  alias EVM.{ExecEnv, MachineCode, MachineState, Operation, Stack, Gas, Configuration}
+  alias EVM.{Configuration, ExecEnv, Gas, MachineCode, MachineState, Operation, Stack}
   alias EVM.Operation.Metadata
 
   @max_stack 1024

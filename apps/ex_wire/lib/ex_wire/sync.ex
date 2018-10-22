@@ -14,10 +14,9 @@ defmodule ExWire.Sync do
   require Logger
 
   alias Block.Header
-  alias ExWire.Struct.BlockQueue
-  alias ExWire.Packet.BlockHeaders
-  alias ExWire.Packet.BlockBodies
+  alias ExWire.Packet.{BlockBodies, BlockHeaders}
   alias ExWire.PeerSupervisor
+  alias ExWire.Struct.BlockQueue
 
   @doc """
   Starts a Sync process.

@@ -3,9 +3,9 @@ defmodule Blockchain.AccountTest do
 
   doctest Blockchain.Account
 
+  alias Blockchain.Account
   alias ExthCrypto.Hash.Keccak
   alias MerklePatriciaTree.Trie
-  alias Blockchain.Account
 
   test "serialize and deserialize" do
     acct = %Account{

@@ -3,9 +3,9 @@ defmodule ExWire.TestHelper do
     Helper methods shared across test files.
   """
 
-  alias ExWire.Kademlia.{Node, RoutingTable, Bucket}
-  alias ExWire.Kademlia.Config, as: KademliaConfig
   alias ExWire.Adapter.UDP
+  alias ExWire.Kademlia.Config, as: KademliaConfig
+  alias ExWire.Kademlia.{Bucket, Node, RoutingTable}
   alias ExWire.Network
   alias ExWire.Struct.Endpoint
 

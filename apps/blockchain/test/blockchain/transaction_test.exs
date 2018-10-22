@@ -4,12 +4,12 @@ defmodule Blockchain.TransactionTest do
 
   doctest Blockchain.Transaction
 
-  alias ExthCrypto.Hash.Keccak
   alias Blockchain.{Account, Chain, Transaction}
-  alias Blockchain.Transaction.Signature
   alias Blockchain.Account.Repo
-  alias MerklePatriciaTree.Trie
+  alias Blockchain.Transaction.Signature
   alias EVM.MachineCode
+  alias ExthCrypto.Hash.Keccak
+  alias MerklePatriciaTree.Trie
 
   @forks ~w(
     Byzantium

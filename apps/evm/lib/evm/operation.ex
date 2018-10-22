@@ -5,17 +5,17 @@ defmodule EVM.Operation do
   """
 
   alias MathHelper
-  alias EVM.{Helpers, ExecEnv, MachineState, Stack, SubState}
-  alias EVM.Operation.Metadata.StopAndArithmetic, as: StopAndArithmeticMetadata
-  alias EVM.Operation.Metadata.ComparisonAndBitwiseLogic, as: ComparisonAndBitwiseLogicMetadata
-  alias EVM.Operation.Metadata.SHA3, as: SHA3Metadata
-  alias EVM.Operation.Metadata.EnvironmentalInformation, as: EnvironmentalInformationMetadata
+  alias EVM.{ExecEnv, Helpers, MachineState, Stack, SubState}
   alias EVM.Operation.Metadata.BlockInformation, as: BlockInformationMetadata
-  alias EVM.Operation.Metadata.StackMemoryStorageAndFlow, as: StackMemoryStorageAndFlowMetadata
-  alias EVM.Operation.Metadata.Push, as: PushMetadata
+  alias EVM.Operation.Metadata.ComparisonAndBitwiseLogic, as: ComparisonAndBitwiseLogicMetadata
   alias EVM.Operation.Metadata.Duplication, as: DuplicationMetadata
+  alias EVM.Operation.Metadata.EnvironmentalInformation, as: EnvironmentalInformationMetadata
   alias EVM.Operation.Metadata.Exchange, as: ExchangeMetadata
   alias EVM.Operation.Metadata.Logging, as: LoggingMetadata
+  alias EVM.Operation.Metadata.Push, as: PushMetadata
+  alias EVM.Operation.Metadata.SHA3, as: SHA3Metadata
+  alias EVM.Operation.Metadata.StackMemoryStorageAndFlow, as: StackMemoryStorageAndFlowMetadata
+  alias EVM.Operation.Metadata.StopAndArithmetic, as: StopAndArithmeticMetadata
   alias EVM.Operation.Metadata.System, as: SystemMetadata
 
   use Bitwise

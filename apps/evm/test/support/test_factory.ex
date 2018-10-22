@@ -1,5 +1,5 @@
 defmodule EVM.TestFactory do
-  alias EVM.{MessageCall, MachineState, ExecEnv, SubState}
+  alias EVM.{ExecEnv, MachineState, MessageCall, SubState}
   alias EVM.Mock.MockAccountRepo
 
   @doc """

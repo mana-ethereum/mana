@@ -5,11 +5,10 @@ defmodule EVM.SubState do
   """
 
   alias EVM.{
-    Operation,
-    LogEntry,
-    Refunds,
     ExecEnv,
+    LogEntry,
     MachineState,
+    Operation,
     Refunds
   }
 

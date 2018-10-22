@@ -6,7 +6,7 @@ defmodule ExWire.Handler.FindNeighbours do
 
   alias ExWire.{Handler, Kademlia}
   alias ExWire.Handler.Params
-  alias ExWire.Message.{Neighbours, FindNeighbours}
+  alias ExWire.Message.{FindNeighbours, Neighbours}
   alias ExWire.Struct.Neighbour
 
   @doc """

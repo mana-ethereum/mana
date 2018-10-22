@@ -4,9 +4,9 @@ defmodule ExWire.Config do
   """
 
   alias Blockchain.Chain
-  alias ExWire.Crypto
   alias ExthCrypto.ECIES.ECDH
-  alias ExthCrypto.{Signature, Key}
+  alias ExthCrypto.{Key, Signature}
+  alias ExWire.Crypto
 
   @doc """
   Returns a private key that is generated when a new session is created.

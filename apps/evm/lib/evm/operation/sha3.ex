@@ -1,7 +1,5 @@
 defmodule EVM.Operation.Sha3 do
-  alias EVM.Stack
-  alias EVM.Helpers
-  alias EVM.Operation
+  alias EVM.{Helpers, Operation, Stack}
   alias ExthCrypto.Hash.Keccak
 
   @doc """

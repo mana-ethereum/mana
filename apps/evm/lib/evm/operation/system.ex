@@ -3,17 +3,16 @@ defmodule EVM.Operation.System do
   alias EVM.BlockHeaderInfo
 
   alias EVM.{
-    MachineState,
-    ExecEnv,
     Address,
-    Stack,
-    Operation,
-    MessageCall,
-    Gas,
-    Memory,
-    SubState,
     Configuration,
-    Address
+    ExecEnv,
+    Gas,
+    MachineState,
+    Memory,
+    MessageCall,
+    Operation,
+    Stack,
+    SubState
   }
 
   @dialyzer {:no_return, callcode: 2}

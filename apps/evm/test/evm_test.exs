@@ -1,9 +1,8 @@
 defmodule EvmTest do
   import ExthCrypto.Math, only: [hex_to_bin: 1, hex_to_int: 1]
 
+  alias EVM.Mock.{MockAccountRepo, MockBlockHeaderInfo}
   alias ExthCrypto.Hash.Keccak
-  alias EVM.Mock.MockAccountRepo
-  alias EVM.Mock.MockBlockHeaderInfo
 
   use ExUnit.Case, async: true
 

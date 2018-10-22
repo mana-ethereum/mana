@@ -2,7 +2,7 @@ defmodule ExWire.Kademlia.NodeTest do
   use ExUnit.Case, async: true
   doctest ExWire.Kademlia.Node
 
-  alias ExthCrypto.{Math, Key}
+  alias ExthCrypto.{Key, Math}
   alias ExWire.Message
 
   describe "from_handler_params/1" do

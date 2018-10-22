@@ -3,8 +3,8 @@ defmodule ExWire.Message do
   Defines a behavior for messages so that they can be
   easily encoded and decoded.
   """
-  alias ExWire.Message.{Ping, Pong, FindNeighbours, Neighbours}
   alias ExWire.Crypto
+  alias ExWire.Message.{FindNeighbours, Neighbours, Ping, Pong}
   alias ExWire.Struct.Endpoint
 
   defmodule UnknownMessageError do

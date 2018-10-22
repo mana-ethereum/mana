@@ -3,9 +3,9 @@ defmodule ExWire.Kademlia do
   Handles Kademlia algorithm state.
   """
 
-  alias ExWire.Kademlia.{Server, Node, RoutingTable}
-  alias ExWire.Message.{Pong, FindNeighbours, Neighbours}
   alias ExWire.Handler.Params
+  alias ExWire.Kademlia.{Node, RoutingTable, Server}
+  alias ExWire.Message.{FindNeighbours, Neighbours, Pong}
   alias ExWire.Struct.Endpoint
 
   @doc """

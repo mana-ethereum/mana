@@ -5,11 +5,11 @@ defmodule Blockchain.Transaction do
   We are focused on implementing 𝛶, as defined in Eq.(1).
   """
 
-  alias Blockchain.{Chain, Contract, Transaction, MathHelper}
-  alias Blockchain.Transaction.{Validity, Receipt, AccountCleaner}
   alias Block.Header
-  alias EVM.{Gas, Configuration, SubState}
   alias Blockchain.Account.Repo
+  alias Blockchain.{Chain, Contract, MathHelper, Transaction}
+  alias Blockchain.Transaction.{AccountCleaner, Receipt, Validity}
+  alias EVM.{Configuration, Gas, SubState}
   alias MerklePatriciaTree.Trie
 
   # nonce: T_n

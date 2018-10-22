@@ -4,11 +4,11 @@ defmodule Blockchain.Contract.MessageCall do
   as defined in Section 8, Eq.(98) of the Yellow Paper.
   """
 
+  alias Block.Header
   alias Blockchain.Account.Repo
   alias Blockchain.BlockHeaderInfo
-  alias Block.Header
-  alias EVM.SubState
   alias EVM.MessageCall
+  alias EVM.SubState
 
   defstruct account_repo: %Repo{},
             sender: <<>>,

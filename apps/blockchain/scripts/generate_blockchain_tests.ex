@@ -1,10 +1,10 @@
 defmodule GenerateBlockchainTests do
   use EthCommonTest.Harness
 
-  alias Blockchain.{Blocktree, Account, Transaction, Chain}
-  alias MerklePatriciaTree.Trie
-  alias Blockchain.Account.Storage
   alias Block.Header
+  alias Blockchain.{Account, Blocktree, Chain, Transaction}
+  alias Blockchain.Account.Storage
+  alias MerklePatriciaTree.Trie
   import EthCommonTest.Helpers
 
   @base_path System.cwd() <> "/../../ethereum_common_tests/BlockchainTests/"

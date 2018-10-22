@@ -2,9 +2,9 @@ defmodule Blockchain.Account.Repo do
   @moduledoc """
   Module to interact with contracts and accounts.
   """
-  alias Blockchain.Account.Repo.Cache
-  alias Blockchain.Account.Address
   alias Blockchain.{Account, Contract}
+  alias Blockchain.Account.Address
+  alias Blockchain.Account.Repo.Cache
   alias ExthCrypto.Hash.Keccak
   alias MerklePatriciaTree.Trie
 

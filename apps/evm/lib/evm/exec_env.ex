@@ -1,6 +1,6 @@
 defmodule EVM.ExecEnv do
   alias EVM.AccountRepo
-  alias EVM.{Configuration, BlockHeaderInfo}
+  alias EVM.{BlockHeaderInfo, Configuration}
 
   @moduledoc """
   Stores information about the execution environment which led

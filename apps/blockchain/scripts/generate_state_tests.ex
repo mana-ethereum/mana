@@ -1,10 +1,9 @@
 defmodule GenerateStateTests do
-  alias MerklePatriciaTree.Trie
   alias Blockchain.Account
-  alias Blockchain.Account.Repo
-  alias Blockchain.Account.Storage
-  alias EthCommonTest.StateTestRunner
+  alias Blockchain.Account.{Repo, Storage}
   alias EthCommonTest.Helpers
+  alias EthCommonTest.StateTestRunner
+  alias MerklePatriciaTree.Trie
 
   use EthCommonTest.Harness
 

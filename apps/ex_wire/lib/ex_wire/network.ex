@@ -7,7 +7,7 @@ defmodule ExWire.Network do
 
   require Logger
 
-  alias ExWire.{Crypto, Handler, Protocol, Config, Message}
+  alias ExWire.{Config, Crypto, Handler, Message, Protocol}
   alias ExWire.Struct.Endpoint
 
   defmodule InboundMessage do
