@@ -31,7 +31,10 @@ defmodule Blockchain.Chain do
           eip649_reward: integer(),
           eip100b_transition: integer(),
           eip649_transition: integer(),
-          difficulty_bomb_delays: [{integer(), integer()}]
+          difficulty_bomb_delays: [{integer(), integer()}],
+          dao_hardfork_transition: integer() | nil,
+          dao_hardfork_accounts: [binary()] | nil,
+          dao_hardfork_beneficiary: binary() | nil
         }
 
   @type params :: %{
@@ -91,6 +94,8 @@ defmodule Blockchain.Chain do
           accounts: %{EVM.address() => account() | builtin_account()},
           evm_config: EVM.Configuration.t()
         }
+
+  @dao_extra_range 9
 
   @doc """
   Loads a given blockchain, such as Homestead or Ropsten.
@@ -159,6 +164,9 @@ defmodule Blockchain.Chain do
 
       "Constantinople" ->
         load_chain(:constantinople_test, config)
+
+      "HomesteadToDaoAt5" ->
+        load_chain(:dao_hardfork_test, config)
 
       _ ->
         nil
@@ -242,6 +250,19 @@ defmodule Blockchain.Chain do
     reward
   end
 
+  def support_dao_fork?(chain) do
+    !is_nil(chain.engine["Ethash"][:dao_hardfork_transition])
+  end
+
+  def dao_fork?(chain, block_number) do
+    chain.engine["Ethash"][:dao_hardfork_transition] == block_number
+  end
+
+  def within_dao_fork_extra_range?(chain, block_number) do
+    dao_hardfork = chain.engine["Ethash"][:dao_hardfork_transition]
+    block_number >= dao_hardfork && block_number <= dao_hardfork + @dao_extra_range
+  end
+
   @doc """
   Helper function to determine if block number is after the homestead transition
   based on the chain configuration.
@@ -275,10 +296,19 @@ defmodule Blockchain.Chain do
       eip649_reward: params["eip649Reward"] |> load_hex(),
       eip100b_transition: params["eip100bTransition"] |> load_hex(),
       eip649_transition: params["eip649Transition"] |> load_hex(),
-      difficulty_bomb_delays: params["difficultyBombDelays"] |> parse_bomb_delays()
+      difficulty_bomb_delays: params["difficultyBombDelays"] |> parse_bomb_delays(),
+      dao_hardfork_transition: params["daoHardforkTransition"] |> load_hex(),
+      dao_hardfork_accounts: params["daoHardforkAccounts"] |> parse_dao_accounts(),
+      dao_hardfork_beneficiary: params["daoHardforkBeneficiary"] |> load_raw_hex()
     }
 
     {engine, config}
+  end
+
+  defp parse_dao_accounts(nil), do: []
+
+  defp parse_dao_accounts(accounts) do
+    Enum.map(accounts, &load_raw_hex/1)
   end
 
   defp parse_reward(block_reward) when is_binary(block_reward) do

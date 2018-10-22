@@ -668,18 +668,27 @@ defmodule Blockchain.Block do
   @spec validate(t, Chain.t(), t, DB.db()) :: :valid | {:invalid, [atom()]}
   def validate(block, chain, parent_block, db) do
     with :valid <- validate_parent_block(block, parent_block),
-         expected_difficulty <- get_difficulty(block, parent_block, chain),
-         :valid <-
-           Header.validate(
-             block.header,
-             if(parent_block, do: parent_block.header, else: nil),
-             expected_difficulty,
-             chain.params[:gas_limit_bound_divisor],
-             chain.params[:min_gas_limit]
-           ) do
-      # Pass to holistic validity check
+         :valid <- validate_header(block, parent_block, chain) do
       HolisticValidity.validate(block, chain, parent_block, db)
     end
+  end
+
+  defp validate_header(block, parent_block, chain) do
+    expected_difficulty = get_difficulty(block, parent_block, chain)
+    parent_block_header = if parent_block, do: parent_block.header, else: nil
+
+    validate_dao_extra_data =
+      Chain.support_dao_fork?(chain) &&
+        Chain.within_dao_fork_extra_range?(chain, block.header.number)
+
+    Header.validate(
+      block.header,
+      parent_block_header,
+      expected_difficulty,
+      chain.params[:gas_limit_bound_divisor],
+      chain.params[:min_gas_limit],
+      validate_dao_extra_data
+    )
   end
 
   defp validate_parent_block(block, parent_block) do
@@ -699,18 +708,27 @@ defmodule Blockchain.Block do
 
   The trie db refers to where we expect our trie to exist, e.g.
   in `:ets` or `:rocksdb`. See `MerklePatriciaTree.DB`.
-
-  # TODO: Add a rich set of test cases in `block_test.exs`
-
-  ## Examples
-
-      # Create a contract
   """
   @spec add_transactions(t, [Transaction.t()], DB.db(), Chain.t()) :: t
   def add_transactions(block, transactions, db, chain) do
     block
+    |> process_hardfork_specifics(chain, db)
     |> do_add_transactions(transactions, db, chain)
     |> calculate_logs_bloom()
+  end
+
+  defp process_hardfork_specifics(block, chain, db) do
+    if Chain.support_dao_fork?(chain) && Chain.dao_fork?(chain, block.header.number) do
+      repo =
+        db
+        |> Trie.new(block.header.state_root)
+        |> Account.Repo.new()
+        |> Blockchain.Hardfork.Dao.execute(chain)
+
+      put_state(block, repo.state)
+    else
+      block
+    end
   end
 
   @spec do_add_transactions(t, [Transaction.t()], DB.db(), Chain.t(), integer()) :: t

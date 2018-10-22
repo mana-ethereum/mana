@@ -69,10 +69,6 @@ defmodule Block.Header do
   # https://github.com/ethereum/EIPs/blob/master/EIPS/eip-606.md
   @homestead_block 1_150_000
 
-  # The start of the Byzantium block, as defined in EIP-609:
-  # https://github.com/ethereum/EIPs/blob/master/EIPS/eip-609.md
-  @byzantium_block 4_370_000
-
   # D_0 is the difficulty of the genesis block.
   # As defined in Eq.(42)
   @initial_difficulty 131_072
@@ -91,6 +87,8 @@ defmodule Block.Header do
 
   # Eq.(47)
   @min_gas_limit 125_000
+
+  @dao_extra_data "dao-hard-fork"
 
   @doc """
   Returns the block that defines the start of Homestead.
@@ -257,7 +255,8 @@ defmodule Block.Header do
         parent_header,
         expected_difficulty,
         gas_limit_bound_divisor \\ @gas_limit_bound_divisor,
-        min_gas_limit \\ @min_gas_limit
+        min_gas_limit \\ @min_gas_limit,
+        validate_dao_extra_data \\ false
       ) do
     parent_gas_limit = if parent_header, do: parent_header.gas_limit, else: nil
 
@@ -274,6 +273,7 @@ defmodule Block.Header do
       )
       |> check_gas_limit(header)
       |> check_difficulty_validity(header, expected_difficulty)
+      |> check_extra_data_validity(header, validate_dao_extra_data)
 
     if errors == [], do: :valid, else: {:invalid, errors}
   end
@@ -472,6 +472,16 @@ defmodule Block.Header do
       errors
     else
       [:invalid_difficulty | errors]
+    end
+  end
+
+  def check_extra_data_validity(errors, _header, false), do: errors
+
+  def check_extra_data_validity(errors, header, true) do
+    if header.extra_data == @dao_extra_data do
+      errors
+    else
+      [:invalid_extra_data | errors]
     end
   end
 

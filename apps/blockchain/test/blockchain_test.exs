@@ -15,6 +15,7 @@ defmodule BlockchainTest do
   @failing_tests %{
     "Frontier" => [],
     "Homestead" => [],
+    "HomesteadToDaoAt5" => [],
     "TangerineWhistle" => [],
     "SpuriousDragon" => [],
     "Byzantium" => [
@@ -24,7 +25,6 @@ defmodule BlockchainTest do
     # the rest are not implemented yet
     "EIP158ToByzantiumAt5" => [],
     "FrontierToHomesteadAt5" => [],
-    "HomesteadToDaoAt5" => [],
     "HomesteadToEIP150At5" => []
   }
 

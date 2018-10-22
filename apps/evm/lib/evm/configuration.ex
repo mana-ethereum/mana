@@ -103,6 +103,9 @@ defmodule EVM.Configuration do
       "Homestead" ->
         EVM.Configuration.Homestead.new()
 
+      "HomesteadToDaoAt5" ->
+        EVM.Configuration.Homestead.new()
+
       "TangerineWhistle" ->
         EVM.Configuration.TangerineWhistle.new()
 

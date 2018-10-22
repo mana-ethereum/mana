@@ -43,6 +43,59 @@ defmodule Blockchain.ChainTest do
     end
   end
 
+  describe "support_dao_fork?/1" do
+    test "returns false if chain does not have dao fork information" do
+      chain = Chain.test_config("Frontier")
+
+      refute Chain.support_dao_fork?(chain)
+    end
+
+    test "returns true if chain has dao fork information" do
+      chain = Chain.load_chain(:foundation)
+
+      assert Chain.support_dao_fork?(chain)
+    end
+  end
+
+  describe "dao_fork?/2" do
+    test "returns true if block number is the dao fork's block number" do
+      block_number = 1_920_000
+      chain = Chain.load_chain(:foundation)
+
+      assert Chain.dao_fork?(chain, block_number)
+    end
+
+    test "returns false if the block number is not the dao fork's number" do
+      block_number = 1_919_999
+      chain = Chain.load_chain(:foundation)
+
+      refute Chain.dao_fork?(chain, block_number)
+    end
+  end
+
+  describe "within_dao_fork_extra_range/2" do
+    test "returns true if block is the dao fork" do
+      block_number = 1_920_000
+      chain = Chain.load_chain(:foundation)
+
+      assert Chain.within_dao_fork_extra_range?(chain, block_number)
+    end
+
+    test "returns true if block number is within 9 blocks of dao fork" do
+      block_number = 1_920_008
+      chain = Chain.load_chain(:foundation)
+
+      assert Chain.within_dao_fork_extra_range?(chain, block_number)
+    end
+
+    test "returns false if block number is farther than 10 block from dao fork" do
+      block_number = 1_920_010
+      chain = Chain.load_chain(:foundation)
+
+      refute Chain.within_dao_fork_extra_range?(chain, block_number)
+    end
+  end
+
   describe "after_homestead?/2" do
     test "checks whether or not a block number is after the homestead transition" do
       homestead_transition = 1_150_000
