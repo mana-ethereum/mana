@@ -7,10 +7,7 @@ defmodule Blockchain.StateTest do
   use ExUnit.Case, async: true
 
   @failing_tests %{
-    "Byzantium" => [
-      "stReturnDataTest/modexp_modsize0_returndatasize",
-      "stRevertTest/RevertInCreateInInit"
-    ],
+    "Byzantium" => ["stRevertTest/RevertInCreateInInit"],
     "Constantinople" => [
       "stCreate2/CREATE2_ContractSuicideDuringInit_ThenStoreThenReturn",
       "stCreate2/CREATE2_Suicide",
