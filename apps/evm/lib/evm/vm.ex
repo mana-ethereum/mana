@@ -49,13 +49,13 @@ defmodule EVM.VM do
   ## Examples
 
       iex> EVM.VM.exec(%EVM.MachineState{program_counter: 0, gas: 5, stack: [1, 2]}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:add])})
-      {%EVM.MachineState{program_counter: 2, gas: 2, stack: [3]}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:add])}, ""}
+      {%EVM.MachineState{program_counter: 2, gas: 2, stack: [3], step: 2}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:add])}, ""}
 
       iex> EVM.VM.exec(%EVM.MachineState{program_counter: 0, gas: 9, stack: []}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:push1, 3, :push1, 5, :add])})
-      {%EVM.MachineState{program_counter: 6, gas: 0, stack: [8]}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:push1, 3, :push1, 5, :add])}, ""}
+      {%EVM.MachineState{program_counter: 6, gas: 0, stack: [8], step: 4}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:push1, 3, :push1, 5, :add])}, ""}
 
       iex> EVM.VM.exec(%EVM.MachineState{program_counter: 0, gas: 24, stack: []}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:push1, 3, :push1, 5, :add, :push1, 0x00, :mstore, :push1, 32, :push1, 0, :return])})
-      {%EVM.MachineState{active_words: 1, memory: <<0x08::256>>, gas: 0, program_counter: 13, stack: []}, %EVM.SubState{logs: [], refund: 0}, %EVM.ExecEnv{machine_code: <<96, 3, 96, 5, 1, 96, 0, 82, 96, 32, 96, 0, 243>>}, <<8::256>>}
+      {%EVM.MachineState{active_words: 1, memory: <<0x08::256>>, gas: 0, program_counter: 13, stack: [], step: 8}, %EVM.SubState{logs: [], refund: 0}, %EVM.ExecEnv{machine_code: <<96, 3, 96, 5, 1, 96, 0, 82, 96, 32, 96, 0, 243>>}, <<8::256>>}
   """
   @spec exec(MachineState.t(), SubState.t(), ExecEnv.t()) ::
           {MachineState.t(), SubState.t(), ExecEnv.t(), output}
@@ -126,7 +126,7 @@ defmodule EVM.VM do
   ## Examples
 
       iex> EVM.VM.cycle(%EVM.MachineState{program_counter: 0, gas: 5, stack: [1, 2]}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:add])})
-      {%EVM.MachineState{program_counter: 1, gas: 2, stack: [3]}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:add])}}
+      {%EVM.MachineState{program_counter: 1, gas: 2, stack: [3], step: 1}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:add])}}
   """
   @spec cycle(MachineState.t(), SubState.t(), ExecEnv.t()) ::
           {MachineState.t(), SubState.t(), ExecEnv.t()}
@@ -140,7 +140,10 @@ defmodule EVM.VM do
     {n_machine_state, n_sub_state, n_exec_env} =
       Operation.run(operation, machine_state, sub_state, exec_env)
 
-    final_machine_state = MachineState.move_program_counter(n_machine_state, operation, inputs)
+    final_machine_state =
+      n_machine_state
+      |> MachineState.move_program_counter(operation, inputs)
+      |> MachineState.increment_step()
 
     {final_machine_state, n_sub_state, n_exec_env}
   end

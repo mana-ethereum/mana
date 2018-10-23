@@ -7,7 +7,11 @@ defmodule EVM.Logger do
   """
   @spec log_stack(MachineState.t()) :: MachineState.t()
   def log_stack(machine_state) do
-    Logger.debug(fn -> "Stack: #{inspect(machine_state.stack)}" end)
+    stack =
+      machine_state.stack
+      |> Enum.map(&stack_value_string/1)
+
+    Logger.debug(fn -> "Stack: #{inspect(stack)}" end)
     machine_state
   end
 
@@ -25,9 +29,9 @@ defmodule EVM.Logger do
 
   defp log_opcode_and_gas_left(operation, machine_state) do
     Logger.debug(fn ->
-      "[0x#{program_counter_string(machine_state)}][#{operation_string(operation)}(0x#{
-        opcode_string(operation)
-      }) Gas Left: #{machine_state.gas})"
+      "[#{current_step(machine_state)}] pc(#{machine_state.program_counter}) [#{
+        operation_string(operation)
+      }(0x#{opcode_string(operation)}) Gas Left: #{machine_state.gas})"
     end)
   end
 
@@ -39,18 +43,28 @@ defmodule EVM.Logger do
       |> Enum.reverse()
       |> Stream.with_index()
       |> Enum.each(fn {value, i} ->
-        value_string =
-          if value == 0,
-            do: "0",
-            else:
-              value
-              |> :binary.encode_unsigned()
-              |> Base.encode16(case: :lower)
-              |> String.trim_leading("0")
-
-        Logger.debug(fn -> "       | #{i}: 0x#{value_string}" end)
+        value_string = stack_value_string(value)
+        Logger.debug(fn -> "       | #{i}: #{value_string}" end)
       end)
     end
+  end
+
+  defp current_step(machine_state) do
+    machine_state.step + 1
+  end
+
+  defp stack_value_string(value) do
+    string_value =
+      if value == 0 do
+        "0"
+      else
+        value
+        |> :binary.encode_unsigned()
+        |> Base.encode16(case: :lower)
+        |> String.trim_leading("0")
+      end
+
+    "0x" <> string_value
   end
 
   defp operation_string(operation) do
@@ -60,21 +74,11 @@ defmodule EVM.Logger do
     |> String.pad_leading(8)
   end
 
-  defp opcode_string(operation),
-    do:
-      operation.id
-      |> :binary.encode_unsigned()
-      |> Base.encode16(case: :lower)
-      |> String.trim_leading("0")
-      |> String.pad_trailing(2)
-
-  defp program_counter_string(machine_state) do
-    program_counter = machine_state.program_counter + 1
-
-    program_counter
+  defp opcode_string(operation) do
+    operation.id
     |> :binary.encode_unsigned()
     |> Base.encode16(case: :lower)
     |> String.trim_leading("0")
-    |> String.pad_trailing(3)
+    |> String.pad_trailing(2)
   end
 end
