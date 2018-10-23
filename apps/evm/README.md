@@ -45,11 +45,11 @@ The following example is from [Ethereum Virtual Machine in Elixir](https://www.b
       operation = MachineCode.current_operation(machine_state, exec_env)
       inputs = Operation.inputs(operation, machine_state)
 
-      # more code
-
-      final_machine_state
+      machine_state
       |> EVM.Logger.log_stack()
       |> EVM.Logger.log_state(operation)
+
+      # more code
 
       {final_machine_state, n_sub_state, n_exec_env}
       ```

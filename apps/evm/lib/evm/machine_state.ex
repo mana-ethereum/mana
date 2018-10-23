@@ -15,7 +15,8 @@ defmodule EVM.MachineState do
             active_words: 0,
             previously_active_words: 0,
             stack: [],
-            last_return_data: <<>>
+            last_return_data: <<>>,
+            step: 0
 
   @type program_counter :: integer()
   @type memory :: binary()
@@ -27,6 +28,10 @@ defmodule EVM.MachineState do
   - m: memory
   - i: active_words
   - s: stack
+
+  Other terms:
+
+  - step: the number of vm cycles the machine state gas gone through
   """
   @type t :: %__MODULE__{
           gas: Gas.t(),
@@ -35,7 +40,8 @@ defmodule EVM.MachineState do
           active_words: integer(),
           previously_active_words: integer(),
           stack: Stack.t(),
-          last_return_data: binary()
+          last_return_data: binary(),
+          step: integer()
         }
 
   @doc """
@@ -138,5 +144,18 @@ defmodule EVM.MachineState do
     next_postion = ProgramCounter.next(machine_state.program_counter, operation_metadata, inputs)
 
     %{machine_state | program_counter: next_postion}
+  end
+
+  @doc """
+  Increments the step (representing another vm cycle)
+
+  ## Examples
+
+      iex> EVM.MachineState.increment_step(%EVM.MachineState{step: 9})
+      %EVM.MachineState{step: 10}
+  """
+  @spec increment_step(MachineState.t()) :: MachineState.t()
+  def increment_step(machine_state) do
+    %{machine_state | step: machine_state.step + 1}
   end
 end
