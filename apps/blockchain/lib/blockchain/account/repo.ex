@@ -62,6 +62,16 @@ defmodule Blockchain.Account.Repo do
     new(account_repo.state)
   end
 
+  @spec set_empty_storage_root(t(), Address.t()) :: t()
+  def set_empty_storage_root(account_repo, address) do
+    {account, code} = account_with_code(account_repo, address)
+
+    updated_account = %{account | storage_root: MerklePatriciaTree.Trie.empty_trie_root_hash()}
+    updated_cache = Cache.update_account(account_repo.cache, address, {updated_account, code})
+
+    %{account_repo | cache: updated_cache}
+  end
+
   @impl true
   def increment_account_nonce(account_repo, evm_address) do
     address = Account.Address.from(evm_address)
@@ -329,7 +339,8 @@ defmodule Blockchain.Account.Repo do
 
     case cached_value do
       nil ->
-        stored_value = Account.get_storage(account_repo.state, address, key)
+        account = account(account_repo, address)
+        stored_value = Account.get_storage(account_repo.state, account, key)
 
         case stored_value do
           :account_not_found ->
