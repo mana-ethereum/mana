@@ -578,7 +578,7 @@ defmodule Blockchain.Account do
       iex> Blockchain.Account.get_storage(updated_state, <<01::160>>, 55)
       :key_not_found
   """
-  @spec get_storage(EVM.state(), Address.t() | t() | nil, integer()) ::
+  @spec get_storage(MerklePatriciaTree.Trie.t(), Address.t() | t() | nil, integer()) ::
           {:ok, integer()} | :account_not_found | :key_not_found
   def get_storage(state, address, key) when is_binary(address) do
     account = get_account(state, address)
