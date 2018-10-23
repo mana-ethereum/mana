@@ -138,9 +138,10 @@ defmodule Blockchain.Contract.CreateContract do
       else
         params.account_repo
       end
-      |> Repo.set_empty_storage_root(address)
 
-    Repo.transfer_wei!(account_repo, params.sender, address, params.endowment)
+    account_repo
+    |> Repo.set_empty_storage_root(address)
+    |> Repo.transfer_wei!(params.sender, address, params.endowment)
   end
 
   @spec finalize(
