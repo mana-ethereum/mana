@@ -29,9 +29,9 @@ defmodule Blockchain.Account do
         }
 
   @doc """
-  Checks whether or not an account is a non-contract account. 
-  If the codeHash field is the Keccak-256 hash of the empty string, then the 
-  node represents a simple account, sometimes referred to as a “non-contract” 
+  Checks whether or not an account is a non-contract account.
+  If the codeHash field is the Keccak-256 hash of the empty string, then the
+  node represents a simple account, sometimes referred to as a “non-contract”
   account. This is defined in the latter part of Section 4.1 of the Yellow Paper.
 
   ## Examples
@@ -107,7 +107,7 @@ defmodule Blockchain.Account do
   end
 
   @doc """
-  Loads an account from an address, as defined in Eq.(9), Eq.(10), and Eq.(12) 
+  Loads an account from an address, as defined in Eq.(9), Eq.(10), and Eq.(12)
   of the Yellow Paper.
 
   ## Examples
@@ -383,7 +383,7 @@ defmodule Blockchain.Account do
   is nil or has an insufficient balance, but we add a few extra checks just in
   case.
 
-  **Note**: transferring value to an empty account still adds value to said 
+  **Note**: transferring value to an empty account still adds value to said
   account, even though it's effectively a zombie.
 
   ## Examples
@@ -458,7 +458,7 @@ defmodule Blockchain.Account do
   Puts code into a given account.
 
   **Note**: we need to store the `code_hash` outside of the contract itself and
-  only store the KEC of the code_hash. See Section 4.1 under `codeHash` in the 
+  only store the KEC of the code_hash. See Section 4.1 under `codeHash` in the
   Yellow Paper.
 
   All such code fragments are contained in the
@@ -578,10 +578,16 @@ defmodule Blockchain.Account do
       iex> Blockchain.Account.get_storage(updated_state, <<01::160>>, 55)
       :key_not_found
   """
-  @spec get_storage(EVM.state(), Address.t(), integer()) ::
+  @spec get_storage(EVM.state(), Address.t() | t() | nil, integer()) ::
           {:ok, integer()} | :account_not_found | :key_not_found
-  def get_storage(state, address, key) do
-    case get_account(state, address) do
+  def get_storage(state, address, key) when is_binary(address) do
+    account = get_account(state, address)
+
+    get_storage(state, account, key)
+  end
+
+  def get_storage(state, account, key) do
+    case account do
       nil ->
         :account_not_found
 
