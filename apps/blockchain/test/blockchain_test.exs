@@ -18,9 +18,7 @@ defmodule BlockchainTest do
     "HomesteadToDaoAt5" => [],
     "TangerineWhistle" => [],
     "SpuriousDragon" => [],
-    "Byzantium" => [
-      "GeneralStateTests/stRevertTest/RevertInCreateInInit_d0g0v0.json"
-    ],
+    "Byzantium" => [],
     "Constantinople" => String.split(@failing_constantinople_tests, "\n"),
     # the rest are not implemented yet
     "EIP158ToByzantiumAt5" => [],
