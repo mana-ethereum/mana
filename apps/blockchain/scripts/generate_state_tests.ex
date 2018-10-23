@@ -13,6 +13,7 @@ defmodule GenerateStateTests do
     "Homestead",
     "Frontier",
     "Byzantium",
+    "HomesteadToDaoAt5",
     "Constantinople"
   ]
 
@@ -24,7 +25,8 @@ defmodule GenerateStateTests do
       "TangerineWhistle" => [],
       "SpuriousDragon" => [],
       "Byzantium" => [],
-      "Constantinople" => []
+      "Constantinople" => [],
+      "HomesteadToDaoAt5" => []
     },
     failing: %{
       "Homestead" => [],
@@ -32,7 +34,8 @@ defmodule GenerateStateTests do
       "TangerineWhistle" => [],
       "SpuriousDragon" => [],
       "Byzantium" => [],
-      "Constantinople" => []
+      "Constantinople" => [],
+      "HomesteadToDaoAt5" => []
     }
   }
 

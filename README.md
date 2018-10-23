@@ -123,23 +123,22 @@ cd apps/blockchain && mix test test/blockchain/transaction_test.exs
 
 Ethereum common tests are created for all clients to test against. We plan to progress through supported hard fork test protocols, and are currently working on the Homestead tests. See the [common test documentation](http://ethereum-tests.readthedocs.io/en/latest/index.html) for more information.
 
-- [VMTests](https://github.com/ethereum/tests/tree/develop/VMTests/vmTests) = 100% passing
-- [x] Frontier
-  - [BlockchainTests](https://github.com/ethereum/tests/tree/develop/BlockchainTests) (Includes GeneralStateTests) 1325/1325 = 100% passing
-  - [GeneralStateTests](https://github.com/ethereum/tests/tree/develop/GeneralStateTests) 1026/1026 = 100% passing
-- [x] Homestead
-  - [BlockchainTests](https://github.com/ethereum/tests/tree/develop/BlockchainTests) (Includes GeneralStateTests) 2231/2231 = 100% passing
-  - [GeneralStateTests](https://github.com/ethereum/tests/tree/develop/GeneralStateTests) 2061/2061 = 100.0% passing
-- [x] EIP150
-  - [BlockchainTests](https://github.com/ethereum/tests/tree/develop/BlockchainTests) (Includes GeneralStateTests) 1275/1275 = 100% passing
-  - [GeneralStateTests](https://github.com/ethereum/tests/tree/develop/GeneralStateTests) 1113/1113 = 100.0% passing
-- [x] EIP158
-  - [BlockchainTests](https://github.com/ethereum/tests/tree/develop/BlockchainTests) (Includes GeneralStateTests) 1233/1233 = 100% passing
-  - [GeneralStateTests](https://github.com/ethereum/tests/tree/develop/GeneralStateTests) 1181/1181 = 100% passing
-- [x] Byzantium
-  - [BlockchainTests](https://github.com/ethereum/tests/tree/develop/BlockchainTests) (Includes GeneralStateTests) 4992/4992 = 100% passing
-  - [GeneralStateTests](https://github.com/ethereum/tests/tree/develop/GeneralStateTests) 4784/4784 = 100% passing
-- [ ] Constantinople: View the community [Constantinople Project Tracker](https://github.com/ethereum/pm/issues/53).
+[VMTests](https://github.com/ethereum/tests/tree/develop/VMTests/vmTests) = 100% passing
+
+| Hardfork          | [BlockchainTests] passing | [GeneralStateTests] passing | Complete? |
+| ----------------- | ------------------------- | --------------------------- | --------- |
+| Frontier          | 100% (1320/1320)          | 100% (1033/1033)            | ✓         |
+| Homestead         | 100% (2203/2203)          | 100% (2061/2061)            | ✓         |
+| HomesteadToDaoAt5 | 100% (4/4)                | N/A                         | ✓         |
+| TangerineWhistle  | 100% (1262/1262)          | 100% (1112/1112)            | ✓         |
+| SpuriousDragon    | 100% (1193/1193)          | 100% (1172/1172)            | ✓         |
+| Byzantium         | 100% (4945/4945)          | 100% (4790/4790)            | ✓         |
+| Constantinople    | 99.9% (5347/5349)         | 99.9% (5309/5311)           |           |
+
+View the community [Constantinople Project Tracker](https://github.com/ethereum/pm/issues/53).
+
+[blockchaintests]: https://github.com/ethereum/tests/tree/develop/BlockchainTests
+[generalstatetests]: https://github.com/ethereum/tests/tree/develop/GeneralStateTests
 
 ## Updating the Common test
 
@@ -174,8 +173,8 @@ To view module and reference documentation:
 
 Licensed under either of:
 
-* Apache License, Version 2.0, ([LICENSE_APACHE](LICENSE_APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
-* MIT license ([LICENSE_MIT](LICENSE_MIT) or http://opensource.org/licenses/MIT)
+- Apache License, Version 2.0, ([LICENSE_APACHE](LICENSE_APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
+- MIT license ([LICENSE_MIT](LICENSE_MIT) or http://opensource.org/licenses/MIT)
 
 at your option.
 

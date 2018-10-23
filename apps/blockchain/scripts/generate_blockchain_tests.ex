@@ -13,6 +13,7 @@ defmodule GenerateBlockchainTests do
     "Byzantium",
     "Frontier",
     "Homestead",
+    "HomesteadToDaoAt5",
     "TangerineWhistle",
     "SpuriousDragon"
   ]
@@ -155,30 +156,7 @@ defmodule GenerateBlockchainTests do
   end
 
   defp load_chain(hardfork) do
-    config = EVM.Configuration.hardfork_config(hardfork)
-
-    case hardfork do
-      "Frontier" ->
-        Chain.load_chain(:frontier_test, config)
-
-      "Homestead" ->
-        Chain.load_chain(:homestead_test, config)
-
-      "TangerineWhistle" ->
-        Chain.load_chain(:eip150_test, config)
-
-      "SpuriousDragon" ->
-        Chain.load_chain(:eip150_test, config)
-
-      "Byzantium" ->
-        Chain.load_chain(:byzantium_test, config)
-
-      "Constantinople" ->
-        Chain.load_chain(:constantinople_test, config)
-
-      _ ->
-        nil
-    end
+    Chain.test_config(hardfork)
   end
 
   defp add_genesis_block(blocktree, json_test, state, chain) do
