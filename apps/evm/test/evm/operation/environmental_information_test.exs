@@ -52,6 +52,27 @@ defmodule EVM.Operation.EnvironmentalInformationTest do
   end
 
   describe "extcodecopy" do
+    test "writes empty code to memory if size is positive" do
+      address = <<1::160>>
+      mem_offset = code_offset = 0
+      size = 120
+      bit_size = size * 8
+      code = <<>>
+
+      params = [address, mem_offset, code_offset, size]
+
+      exec_env = %EVM.ExecEnv{
+        account_repo: %EVM.Mock.MockAccountRepo{account_map: %{address => %{code: code}}}
+      }
+
+      vm_map = %{exec_env: exec_env, machine_state: %EVM.MachineState{}}
+
+      result = EVM.Operation.EnvironmentalInformation.extcodecopy(params, vm_map)
+
+      assert %{machine_state: machine_state} = result
+      assert machine_state.memory == <<0::size(bit_size)>>
+    end
+
     test "returns unmodified machine state if size is zero" do
       address = <<1>>
       mem_offset = code_offset = size = 0

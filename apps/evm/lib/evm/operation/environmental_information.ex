@@ -301,14 +301,10 @@ defmodule EVM.Operation.EnvironmentalInformation do
         wrapped_address
       )
 
-    if size == 0 || size + mem_offset > EVM.max_int() || (code_offset == 0 && account_code == "") do
-      %{machine_state: machine_state}
-    else
-      data = Memory.read_zeroed_memory(account_code, code_offset, size)
-      machine_state = Memory.write(machine_state, mem_offset, data)
+    data = Memory.read_zeroed_memory(account_code, code_offset, size)
+    machine_state = Memory.write(machine_state, mem_offset, data)
 
-      %{machine_state: machine_state}
-    end
+    %{machine_state: machine_state}
   end
 
   @spec extcodehash(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
