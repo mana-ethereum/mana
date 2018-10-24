@@ -1,5 +1,5 @@
 defmodule EVM.Operation.EnvironmentalInformation do
-  alias EVM.{AccountRepo, Helpers, Memory, Operation, Stack}
+  alias EVM.{AccountRepo, Address, Helpers, Memory, Operation, Stack}
 
   @doc """
   Get address of currently executing account.
@@ -313,7 +313,7 @@ defmodule EVM.Operation.EnvironmentalInformation do
 
   @spec extcodehash(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def extcodehash([address], %{exec_env: exec_env}) do
-    wrapped_address = Helpers.wrap_address(address)
+    wrapped_address = Address.new(address)
 
     hash =
       AccountRepo.repo(exec_env.account_repo).get_account_code_hash(

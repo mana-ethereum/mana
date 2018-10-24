@@ -71,7 +71,7 @@ defmodule EVM.Memory do
           MachineState.t()
   def write(machine_state, offset_bytes, original_data, size \\ nil)
 
-  def write(machine_state, offset_bytes, data, size) when size == 0,
+  def write(machine_state, _offset_bytes, _data, size) when size == 0,
     do: machine_state
 
   def write(machine_state, offset_bytes, data, size) when is_integer(data),
