@@ -83,7 +83,7 @@ defmodule Blockchain.Contract.CreateContract do
           EVM.address()
         ) :: Repo.t()
   defp increment_nonce_of_touched_account(account_repo, config, address) do
-    if EVM.Configuration.for(config).increment_nonce_on_create?(config) do
+    if config.increment_nonce_on_create do
       Repo.increment_account_nonce(account_repo, address)
     else
       account_repo
@@ -155,8 +155,7 @@ defmodule Blockchain.Contract.CreateContract do
     insufficient_gas = remaining_gas < contract_creation_cost
 
     cond do
-      insufficient_gas &&
-          EVM.Configuration.for(params.config).fail_contract_creation_lack_of_gas?(params.config) ->
+      insufficient_gas && params.config.should_fail_contract_creation_lack_of_gas ->
         {:error, {original_account_repo, 0, SubState.empty(), <<>>}}
 
       EVM.Configuration.for(params.config).limit_contract_code_size?(

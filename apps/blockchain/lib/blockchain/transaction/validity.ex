@@ -43,7 +43,7 @@ defmodule Blockchain.Transaction.Validity do
   end
 
   defp validate_signature(trx, chain, evm_config) do
-    max_s_value = EVM.Configuration.for(evm_config).max_signature_s(evm_config)
+    max_s_value = evm_config.max_signature_s
 
     if Transaction.Signature.is_signature_valid?(trx.r, trx.s, trx.v, chain.params.network_id,
          max_s: max_s_value

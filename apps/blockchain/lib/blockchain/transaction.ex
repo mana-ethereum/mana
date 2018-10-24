@@ -212,8 +212,7 @@ defmodule Blockchain.Transaction do
     {expended_gas, refund} = calculate_gas_usage(tx, remaining_gas, sub_state)
 
     {account_repo_after_receipt, receipt} =
-      if empty_contract_creation?(tx) &&
-           Configuration.for(evm_config).clean_touched_accounts?(evm_config) do
+      if empty_contract_creation?(tx) && evm_config.clean_touched_accounts do
         account_repo_after_execution = Repo.commit(updated_account_repo)
 
         receipt =
@@ -496,14 +495,14 @@ defmodule Blockchain.Transaction do
 
   defp transaction_cost(tx, config) do
     if contract_creation?(tx) do
-      Configuration.for(config).contract_creation_cost(config)
+      config.contract_creation_cost
     else
       Gas.g_transaction()
     end
   end
 
   defp create_receipt(state_root_hash, gas_used, logs, status_code, evm_config) do
-    if Configuration.for(evm_config).status_in_receipt?(evm_config) do
+    if evm_config.status_in_receipt do
       Receipt.new(status_code, gas_used, logs)
     else
       Receipt.new(state_root_hash, gas_used, logs)

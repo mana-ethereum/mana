@@ -3,91 +3,62 @@ defmodule EVM.Configuration do
   Behaviour for hardfork configurations.
   """
 
-  @type t :: struct()
+  defmacro __using__(opts) do
+    fallback_config = Keyword.fetch!(opts, :fallback_config)
+    overrides = Keyword.fetch!(opts, :overrides)
 
-  # EIP2
-  @callback contract_creation_cost(t) :: integer()
+    quote do
+      @behaviour EVM.Configuration
 
-  # EIP2
-  @callback fail_contract_creation_lack_of_gas?(t) :: boolean()
+      defstruct unquote(fallback_config).new()
+                |> Map.from_struct()
+                |> Map.merge(unquote(overrides))
+                |> Enum.into([])
 
-  # EIP2
-  @callback max_signature_s(t) :: atom()
+      @impl true
+      def new, do: %__MODULE__{}
+    end
+  end
 
-  # EIP7
-  @callback has_delegate_call?(t) :: boolean()
+  @type t :: %{
+          :contract_creation_cost => non_neg_integer(),
+          :has_delegate_call => boolean(),
+          :should_fail_contract_creation_lack_of_gas => boolean(),
+          :max_signature_s => :secp256k1n | :secp256k1n_2,
+          :extcodesize_cost => non_neg_integer(),
+          :extcodecopy_cost => non_neg_integer(),
+          :balance_cost => non_neg_integer(),
+          :sload_cost => non_neg_integer(),
+          :call_cost => non_neg_integer(),
+          :selfdestruct_cost => non_neg_integer(),
+          :should_fail_nested_operation_lack_of_gas => boolean(),
+          :exp_byte_cost => non_neg_integer(),
+          :limit_contract_code_size => boolean(),
+          :increment_nonce_on_create => boolean(),
+          :empty_account_value_transfer => boolean(),
+          :clean_touched_accounts => boolean(),
+          :has_revert => boolean(),
+          :has_static_call => boolean(),
+          :support_variable_length_return_value => boolean(),
+          :has_mod_exp_builtin => boolean(),
+          :status_in_receipt => boolean(),
+          :has_ec_add_builtin => boolean(),
+          :has_ec_mult_builtin => boolean(),
+          :has_ec_pairing_builtin => boolean(),
+          :has_shift_operations => boolean(),
+          :has_extcodehash => boolean(),
+          :has_create2 => boolean(),
+          :eip1283_sstore_gas_cost_changed => boolean(),
+          optional(atom) => any()
+        }
 
-  # EIP150
-  @callback extcodesize_cost(t) :: integer()
-
-  # EIP150
-  @callback extcodecopy_cost(t) :: integer()
-
-  # EIP150
-  @callback balance_cost(t) :: integer()
-
-  # EIP150
-  @callback sload_cost(t) :: integer()
-
-  # EIP150
-  @callback call_cost(t) :: integer()
+  @callback new() :: t()
 
   # EIP150
   @callback selfdestruct_cost(t, keyword()) :: integer()
 
-  # EIP150
-  @callback fail_nested_operation_lack_of_gas?(t) :: boolean()
-
-  # EIP160
-  @callback exp_byte_cost(t) :: integer()
-
-  # EIP161-a
-  @callback increment_nonce_on_create?(t) :: boolean()
-
-  # EIP161-b
-  @callback empty_account_value_transfer?(t) :: boolean()
-
-  # EIP161-cd
-  @callback clean_touched_accounts?(t) :: boolean()
-
   # EIP170
   @callback limit_contract_code_size?(t, integer) :: boolean()
-
-  # EIP140
-  @callback has_revert?(t) :: boolean()
-
-  # EIP211
-  @callback support_variable_length_return_value?(t) :: boolean()
-
-  # EIP214
-  @callback has_static_call?(t) :: boolean()
-
-  # EIP196
-  @callback has_ec_add_builtin?(t) :: boolean()
-
-  # EIP196
-  @callback has_ec_mult_builtin?(t) :: boolean()
-
-  # EIP197
-  @callback has_ec_pairing_builtin?(t) :: boolean()
-
-  # EIP198
-  @callback has_mod_exp_builtin?(t) :: boolean()
-
-  # EIP658
-  @callback status_in_receipt?(t) :: boolean()
-
-  # EIP145
-  @callback has_shift_operations?(t) :: boolean()
-
-  # EIP1052
-  @callback has_extcodehash?(t) :: boolean()
-
-  # EIP1014
-  @callback has_create2?(t) :: boolean()
-
-  # EIP1283
-  @callback eip1283_sstore_gas_cost_changed?(t) :: boolean()
 
   @spec for(t) :: module()
   def for(config) do
