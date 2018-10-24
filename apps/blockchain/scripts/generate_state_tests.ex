@@ -68,7 +68,7 @@ defmodule GenerateStateTests do
       percentage =
         if total_tests == 0, do: 0, else: round(passing_tests / total_tests * 1000) / 10
 
-      IO.puts("Passing #{hardfork} tests #{passing_tests}/#{total_tests}= #{percentage}%")
+      IO.puts("Passing #{hardfork} tests #{passing_tests}/#{total_tests} = #{percentage}%")
     end
   end
 
