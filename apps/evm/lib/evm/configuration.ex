@@ -115,8 +115,8 @@ defmodule EVM.Configuration do
       "Byzantium" ->
         EVM.Configuration.Byzantium.new()
 
-      "Constantinople" ->
-        EVM.Configuration.Constantinople.new()
+      # "Constantinople" ->
+      #   EVM.Configuration.Constantinople.new()
 
       _ ->
         nil
