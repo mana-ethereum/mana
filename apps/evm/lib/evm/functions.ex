@@ -4,7 +4,7 @@ defmodule EVM.Functions do
   fit in other modules.
   """
 
-  alias EVM.{Configuration, ExecEnv, Gas, MachineCode, MachineState, Operation, Stack}
+  alias EVM.{ExecEnv, Gas, MachineCode, MachineState, Operation, Stack}
   alias EVM.Operation.Metadata
 
   @max_stack 1024
@@ -149,36 +149,36 @@ defmodule EVM.Functions do
 
       case operation_metadata.sym do
         :delegatecall ->
-          if Configuration.for(config).has_delegate_call?(config), do: operation_metadata
+          if config.has_delegate_call, do: operation_metadata
 
         :revert ->
-          if Configuration.for(config).has_revert?(config), do: operation_metadata
+          if config.has_revert, do: operation_metadata
 
         :staticcall ->
-          if Configuration.for(config).has_static_call?(config), do: operation_metadata
+          if config.has_static_call, do: operation_metadata
 
         :returndatasize ->
-          if Configuration.for(config).support_variable_length_return_value?(config),
+          if config.support_variable_length_return_value,
             do: operation_metadata
 
         :returndatacopy ->
-          if Configuration.for(config).support_variable_length_return_value?(config),
+          if config.support_variable_length_return_value,
             do: operation_metadata
 
         :shl ->
-          if Configuration.for(config).has_shift_operations?(config), do: operation_metadata
+          if config.has_shift_operations, do: operation_metadata
 
         :shr ->
-          if Configuration.for(config).has_shift_operations?(config), do: operation_metadata
+          if config.has_shift_operations, do: operation_metadata
 
         :sar ->
-          if Configuration.for(config).has_shift_operations?(config), do: operation_metadata
+          if config.has_shift_operations, do: operation_metadata
 
         :extcodehash ->
-          if Configuration.for(config).has_extcodehash?(config), do: operation_metadata
+          if config.has_extcodehash, do: operation_metadata
 
         :create2 ->
-          if Configuration.for(config).has_create2?(config), do: operation_metadata
+          if config.has_create2, do: operation_metadata
 
         _ ->
           operation_metadata

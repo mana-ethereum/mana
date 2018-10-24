@@ -4,7 +4,6 @@ defmodule EVM.Operation.System do
 
   alias EVM.{
     Address,
-    Configuration,
     ExecEnv,
     Gas,
     MachineState,
@@ -280,7 +279,7 @@ defmodule EVM.Operation.System do
       value <= account_balance and exec_env.stack_depth < EVM.Functions.max_stack_depth()
 
     available_gas =
-      if Configuration.for(exec_env.config).fail_nested_operation_lack_of_gas?(exec_env.config) do
+      if exec_env.config.should_fail_nested_operation_lack_of_gas do
         machine_state.gas
       else
         EVM.Helpers.all_but_one_64th(machine_state.gas)

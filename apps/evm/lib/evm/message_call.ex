@@ -315,16 +315,16 @@ defmodule EVM.MessageCall do
       address == 4 ->
         &Builtin.run_id/2
 
-      address == 5 && EVM.Configuration.for(config).has_mod_exp_builtin?(config) ->
+      address == 5 && config.has_mod_exp_builtin ->
         &Builtin.mod_exp/2
 
-      address == 6 && EVM.Configuration.for(config).has_ec_add_builtin?(config) ->
+      address == 6 && config.has_ec_add_builtin ->
         &Builtin.ec_add/2
 
-      address == 7 && EVM.Configuration.for(config).has_ec_mult_builtin?(config) ->
+      address == 7 && config.has_ec_mult_builtin ->
         &Builtin.ec_mult/2
 
-      address == 8 && EVM.Configuration.for(config).has_ec_pairing_builtin?(config) ->
+      address == 8 && config.has_ec_pairing_builtin ->
         &Builtin.ec_pairing/2
 
       true ->
