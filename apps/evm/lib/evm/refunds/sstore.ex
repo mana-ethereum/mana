@@ -1,5 +1,5 @@
 defmodule EVM.Refunds.Sstore do
-  alias EVM.{Configuration, ExecEnv, Gas}
+  alias EVM.{ExecEnv, Gas}
 
   # Refund given (added into refund counter) when the storage value is set to zero from non-zero.
   @storage_refund 15_000
