@@ -8,7 +8,6 @@ defmodule Mana.MixProject do
       apps: [
         :blockchain,
         :evm,
-        :ex_rlp,
         :ex_wire,
         :exth_crypto,
         :merkle_patricia_tree
@@ -36,10 +35,11 @@ defmodule Mana.MixProject do
   # Run "mix help deps" for examples and options.
   defp deps do
     [
+      {:ex_rlp, "~> 0.3.1"},
       {:poison, "~> 4.0.1", runtime: false},
       {:ex_doc, "~> 0.19", only: :dev, runtime: false},
       {:dialyxir, "~> 1.0.0-rc.3", only: [:dev, :test], runtime: false},
-      {:ethereumex, "~> 0.4.0"},
+      {:ethereumex, "~> 0.5.0"},
       {:credo, "~> 0.10.0", only: [:dev, :test], runtime: false}
     ]
   end
