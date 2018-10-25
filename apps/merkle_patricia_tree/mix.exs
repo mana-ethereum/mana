@@ -47,7 +47,7 @@ defmodule MerklePatriciaTree.Mixfile do
   #
   defp deps do
     [
-      {:ex_rlp, "~> 0.3.0"},
+      {:ex_rlp, "~> 0.3.1"},
       {:exth_crypto, in_umbrella: true},
       {:rox, [github: "poanetwork/rox", branch: "update-erlang_nif-sys"]}
     ]

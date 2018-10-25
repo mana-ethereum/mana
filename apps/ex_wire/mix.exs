@@ -32,7 +32,7 @@ defmodule ExWire.Mixfile do
   defp deps do
     [
       {:ex_doc, "~> 0.16", only: :dev, runtime: false},
-      {:ex_rlp, "~> 0.3.0"},
+      {:ex_rlp, "~> 0.3.1"},
       {:blockchain, in_umbrella: true},
       {:exth_crypto, in_umbrella: true},
       {:evm, in_umbrella: true}
