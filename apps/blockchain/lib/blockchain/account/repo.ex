@@ -461,7 +461,7 @@ defmodule Blockchain.Account.Repo do
 
       iex> MerklePatriciaTree.Test.random_ets_db()
       ...> |> MerklePatriciaTree.Trie.new()
-      ...> |> MerklePatriciaTree.Trie.update(<<5>>, <<6>>)
+      ...> |> MerklePatriciaTree.Trie.update_key(<<5>>, <<6>>)
       ...> |> Blockchain.Account.Repo.new()
       ...> |> Blockchain.Account.Repo.dump_storage()
       %{<<5>> => <<6>>}

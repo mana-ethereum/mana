@@ -20,18 +20,18 @@ create an update a trie.
     iex> trie =
     ...>    MerklePatriciaTree.Test.random_ets_db()
     ...>    |> MerklePatriciaTree.Trie.new()
-    ...>    |> MerklePatriciaTree.Trie.update(<<0x01::4, 0x02::4>>, "wee")
-    ...>    |> MerklePatriciaTree.Trie.update(<<0x01::4, 0x02::4, 0x03::4>>, "cool")
-    iex> trie_2 = MerklePatriciaTree.Trie.update(trie, <<0x01::4, 0x02::4, 0x03::4>>, "cooler")
-    iex> MerklePatriciaTree.Trie.get(trie_2, <<0x01::4, 0x02::4, 0x03::4>>)
+    ...>    |> MerklePatriciaTree.Trie.update_key(<<0x01::4, 0x02::4>>, "wee")
+    ...>    |> MerklePatriciaTree.Trie.update_key(<<0x01::4, 0x02::4, 0x03::4>>, "cool")
+    iex> trie_2 = MerklePatriciaTree.Trie.update_key(trie, <<0x01::4, 0x02::4, 0x03::4>>, "cooler")
+    iex> MerklePatriciaTree.Trie.get_key(trie_2, <<0x01::4, 0x02::4, 0x03::4>>)
     "cooler"
-    iex> MerklePatriciaTree.Trie.get(trie_2, <<0x01::4>>)
+    iex> MerklePatriciaTree.Trie.get_key(trie_2, <<0x01::4>>)
     nil
-    iex> MerklePatriciaTree.Trie.get(trie_2, <<0x01::4, 0x02::4>>)
+    iex> MerklePatriciaTree.Trie.get_key(trie_2, <<0x01::4, 0x02::4>>)
     "wee"
-    iex> MerklePatriciaTree.Trie.get(trie_2, <<0x01::4, 0x02::4, 0x03::4>>)
+    iex> MerklePatriciaTree.Trie.get_key(trie_2, <<0x01::4, 0x02::4, 0x03::4>>)
     "cooler"
-    iex> MerklePatriciaTree.Trie.get(trie_2, <<0x01::4, 0x02::4, 0x03::4, 0x04::4>>)
+    iex> MerklePatriciaTree.Trie.get_key(trie_2, <<0x01::4, 0x02::4, 0x03::4, 0x04::4>>)
     nil
 ```
 

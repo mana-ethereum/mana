@@ -293,7 +293,7 @@ defmodule Blockchain.Block do
     serialized_receipt =
       db
       |> Trie.new(block.header.receipts_root)
-      |> Trie.get(i |> ExRLP.encode())
+      |> Trie.get_key(i |> ExRLP.encode())
 
     case serialized_receipt do
       nil ->
@@ -337,7 +337,7 @@ defmodule Blockchain.Block do
     serialized_transaction =
       db
       |> Trie.new(block.header.transactions_root)
-      |> Trie.get(i |> ExRLP.encode())
+      |> Trie.get_key(i |> ExRLP.encode())
 
     case serialized_transaction do
       nil -> nil
@@ -803,7 +803,7 @@ defmodule Blockchain.Block do
     updated_receipts_root =
       db
       |> Trie.new(block.header.receipts_root)
-      |> Trie.update(ExRLP.encode(i), encoded_receipt)
+      |> Trie.update_key(ExRLP.encode(i), encoded_receipt)
 
     updated_header = %{block.header | receipts_root: updated_receipts_root.root_hash}
     updated_receipts = block.receipts ++ [receipt]
@@ -834,7 +834,7 @@ defmodule Blockchain.Block do
     updated_transactions_root =
       db
       |> Trie.new(block.header.transactions_root)
-      |> Trie.update(ExRLP.encode(i), encoded_transaction)
+      |> Trie.update_key(ExRLP.encode(i), encoded_transaction)
 
     %{
       block

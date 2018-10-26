@@ -417,7 +417,7 @@ defmodule ExWire.Struct.BlockQueue do
 
     trie =
       Enum.reduce(transactions_list |> Enum.with_index(), Trie.new(db), fn {trx, i}, trie ->
-        Trie.update(trie, ExRLP.encode(i), ExRLP.encode(trx))
+        Trie.update_key(trie, ExRLP.encode(i), ExRLP.encode(trx))
       end)
 
     trie.root_hash
