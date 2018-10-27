@@ -1,8 +1,6 @@
 version: 2
 jobs:
   build:
-    parallelism: 3
-    resource_class: large
     docker:
       - image: circleci/elixir:1.7.2
         environment:
@@ -78,11 +76,8 @@ jobs:
           paths: "_build"
 
       - run:
-          name: Run Tests
-          command: |
-            echo "Running in node $CIRCLE_NODE_INDEX"
-            bin/test_command_for_node $CIRCLE_NODE_INDEX
-          no_output_timeout: "20m"
+          name: Compile
+          command: mix compile
 
       - persist_to_workspace:
           root: .
@@ -102,6 +97,34 @@ jobs:
             - mix.exs
             - mix.lock
             - chains
+
+  test:
+    docker:
+      - image: circleci/elixir:1.7.2
+        environment:
+          MIX_ENV: test
+
+    working_directory: ~/app
+
+    steps:
+      - attach_workspace:
+           at: .
+
+      - run: mix test --exclude pending
+
+  test_frontier:
+    docker:
+      - image: circleci/elixir:1.7.2
+        environment:
+          MIX_ENV: test
+
+    working_directory: ~/app
+
+    steps:
+      - attach_workspace:
+           at: .
+
+      - run: mix cmd --app blockchain mix test --exclude test --include Frontier
 
   dialyzer:
     docker:
@@ -222,5 +245,11 @@ workflows:
           requires:
             - build
       - dialyzer:
+          requires:
+            - build
+      - test:
+          requires:
+            - build
+      - test_frontier:
           requires:
             - build

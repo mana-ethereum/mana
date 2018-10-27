@@ -27,12 +27,51 @@ defmodule BlockchainTest do
   }
 
   @ten_minutes 1000 * 60 * 10
-  @num_test_groups 10
+
+  # Run each fork as its own test
+  @tag :ethereum_common_tests
+  @tag :Frontier
+  test "runs Frontier blockchain tests", do: run_fork_tests("Frontier")
 
   @tag :ethereum_common_tests
-  @tag :blockchain_common_tests
-  test "runs blockchain tests" do
-    grouped_test_per_fork()
+  @tag :Homestead
+  test "runs Homestead blockchain tests", do: run_fork_tests("Homestead")
+
+  @tag :ethereum_common_tests
+  @tag :HomesteadToDaoAt5
+  test "runs HomesteadToDaoAt5 blockchain tests", do: run_fork_tests("HomesteadToDaoAt5")
+
+  @tag :ethereum_common_tests
+  @tag :TangerineWhistle
+  test "runs TangerineWhistle blockchain tests", do: run_fork_tests("TangerineWhistle")
+
+  @tag :ethereum_common_tests
+  @tag :SpuriousDragon
+  test "runs SpuriousDragon blockchain tests", do: run_fork_tests("SpuriousDragon")
+
+  @tag :ethereum_common_tests
+  @tag :Byzantium
+  test "runs Byzantium blockchain tests", do: run_fork_tests("Byzantium")
+
+  @tag :ethereum_common_tests
+  @tag :Constantinople
+  test "runs Constantinople blockchain tests", do: run_fork_tests("Constantinople")
+
+  @tag :ethereum_common_tests
+  @tag :EIP158ToByzantiumAt5
+  test "runs EIP158ToByzantiumAt5 blockchain tests", do: run_fork_tests("EIP158ToByzantiumAt5")
+
+  @tag :ethereum_common_tests
+  @tag :FrontierToHomesteadAt5
+  test "runs FrontierToHomesteadAt5 blockchain tests",
+    do: run_fork_tests("FrontierToHomesteadAt5")
+
+  @tag :ethereum_common_tests
+  @tag :HomesteadToEIP150At5
+  test "runs HomesteadToEIP150At5 blockchain tests", do: run_fork_tests("HomesteadToEIP150At5")
+
+  defp run_fork_tests(fork) do
+    [{fork, all_tests()}]
     |> Task.async_stream(&run_tests(&1), timeout: @ten_minutes)
     |> Enum.flat_map(fn {:ok, results} -> results end)
     |> Enum.filter(&failing_test?/1)
@@ -41,20 +80,6 @@ defmodule BlockchainTest do
 
   defp failing_test?({:fail, _}), do: true
   defp failing_test?(_), do: false
-
-  defp grouped_test_per_fork do
-    for fork <- forks_with_existing_implementation(),
-        test_group <- split_tests_into_groups(@num_test_groups),
-        do: {fork, test_group}
-  end
-
-  defp split_tests_into_groups(num_groups_desired) do
-    all_tests = tests()
-    test_count = Enum.count(all_tests)
-    tests_per_group = div(test_count, num_groups_desired)
-
-    Enum.chunk_every(all_tests, tests_per_group)
-  end
 
   defp run_tests({fork, tests}) do
     tests
@@ -107,7 +132,7 @@ defmodule BlockchainTest do
     "[#{fork}] #{test_name}: expected #{inspect(expected)}, but received #{inspect(actual)}"
   end
 
-  defp tests do
+  defp all_tests() do
     ethereum_common_tests_path()
     |> Path.join("/BlockchainTests/**/*.json")
     |> Path.wildcard()

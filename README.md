@@ -18,7 +18,7 @@ Mana-Ethereum is currently in development. See the [Project Status](#project-sta
 - Clone repo with submodules (to access the Ethereum common tests)
 
 ```
-git clone --recurse-submodules https://github.com/poanetwork/mana.git
+git clone --recurse-submodules https://github.com/mana-ethereum/mana.git
 ```
 
 - Go to the mana subdirectory `cd mana`
