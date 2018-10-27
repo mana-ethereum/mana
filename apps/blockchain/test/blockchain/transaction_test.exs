@@ -6,7 +6,6 @@ defmodule Blockchain.TransactionTest do
 
   alias Blockchain.{Account, Chain, Transaction}
   alias Blockchain.Account.Repo
-  alias Blockchain.Transaction.Signature
   alias EVM.MachineCode
   alias ExthCrypto.Hash.Keccak
   alias MerklePatriciaTree.Trie

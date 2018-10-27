@@ -157,7 +157,7 @@ defmodule ExWire.P2P do
     send_packet(conn, return_packet)
   end
 
-  defp do_handle_packet(packet = %Packet.Disconnect{}, conn) do
+  defp do_handle_packet(_packet = %Packet.Disconnect{}, conn) do
     TCP.shutdown(conn.socket)
   end
 

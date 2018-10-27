@@ -478,6 +478,23 @@ jobs:
 
       - run: mix credo --only readability,consistency,warning,refactor
 
+  release:
+    docker:
+      # Ensure .tool-versions matches
+      - image: circleci/elixir:1.7.2
+        environment:
+          MIX_ENV: dev
+
+    working_directory: ~/app
+
+    steps:
+      - attach_workspace:
+          at: .
+
+      - run: mix release
+
+      - run: mix credo --only readability,consistency,warning,refactor
+
 workflows:
   version: 2
   primary:

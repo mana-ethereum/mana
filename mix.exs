@@ -13,6 +13,7 @@ defmodule Mana.MixProject do
         :exth_crypto,
         :merkle_patricia_tree
       ],
+      elixirc_options: [warnings_as_errors: true],
       elixir: "~> 1.7.2",
       start_permanent: Mix.env() == :prod,
       dialyzer: [
@@ -41,7 +42,8 @@ defmodule Mana.MixProject do
       {:ex_doc, "~> 0.19", only: :dev, runtime: false},
       {:dialyxir, "~> 1.0.0-rc.3", only: [:dev, :test], runtime: false},
       {:ethereumex, "~> 0.5.0"},
-      {:credo, "~> 0.10.0", only: [:dev, :test], runtime: false}
+      {:credo, "~> 0.10.0", only: [:dev, :test], runtime: false},
+      {:distillery, "~> 2.0"}
     ]
   end
 end

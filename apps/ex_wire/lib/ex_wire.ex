@@ -9,6 +9,11 @@ defmodule ExWire do
   use Application
 
   alias ExWire.Config
+  alias ExWire.TCPListeningSupervisor
+  alias ExWire.NodeDiscoverySupervisor
+  alias MerklePatriciaTree.DB.RocksDB
+  alias ExWire.PeerSupervisor
+  alias ExWire.Sync
 
   def start(_type, args) do
     import Supervisor.Spec
@@ -17,11 +22,11 @@ defmodule ExWire do
 
     sync_children =
       if Config.sync() do
-        db = MerklePatriciaTree.DB.RocksDB.init(db_name())
+        db = RocksDB.init(db_name())
 
         [
-          supervisor(ExWire.PeerSupervisor, [:ok]),
-          worker(ExWire.Sync, [db])
+          supervisor(PeerSupervisor, [:ok]),
+          worker(Sync, [db])
         ]
       else
         []
@@ -29,12 +34,12 @@ defmodule ExWire do
 
     node_discovery =
       if Config.discovery() do
-        [worker(ExWire.NodeDiscoverySupervisor, [])]
+        [worker(NodeDiscoverySupervisor, [])]
       else
         []
       end
 
-    tcp_listening = [ExWire.TCPListeningSupervisor]
+    tcp_listening = [TCPListeningSupervisor]
 
     children = sync_children ++ node_discovery ++ tcp_listening
 
@@ -43,7 +48,8 @@ defmodule ExWire do
   end
 
   defp db_name() do
-    env = Mix.env() |> to_string()
+    environment = Config.get_environment()
+    env = environment |> to_string()
     "db/mana-" <> env
   end
 end
