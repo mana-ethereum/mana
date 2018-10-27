@@ -109,6 +109,8 @@ jobs:
     steps:
       - attach_workspace:
            at: .
+      - run: git submodule sync --recursive
+      - run: git submodule update --recursive --init
 
       - run: mix local.hex --force
       - run: mix local.rebar --force
@@ -143,6 +145,8 @@ jobs:
     steps:
       - attach_workspace:
            at: .
+      - run: git submodule sync --recursive
+      - run: git submodule update --recursive --init
 
       - run: mix local.hex --force
       - run: mix local.rebar --force
