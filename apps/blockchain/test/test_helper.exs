@@ -1,2 +1,2 @@
 ExUnit.configure(timeout: :infinity)
-ExUnit.start()
+ExUnit.start(exclude: :slow)

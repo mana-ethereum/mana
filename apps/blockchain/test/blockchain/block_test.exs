@@ -1,6 +1,6 @@
 defmodule Blockchain.BlockTest do
   use ExUnit.Case, async: true
-  use EthCommonTest.Harness
+  import EthCommonTest.Helpers
 
   doctest Blockchain.Block
 
@@ -9,40 +9,46 @@ defmodule Blockchain.BlockTest do
   alias EVM.MachineCode
   alias MerklePatriciaTree.Trie
 
-  define_common_tests("GenesisTests", [], fn _test_name, test_data ->
-    for {internal_test_name, test} <- test_data do
-      if Enum.member?(["test2", "test3"], internal_test_name) do
-        db = MerklePatriciaTree.Test.random_ets_db()
+  test "eth common tests" do
+    common_tests = EthCommonTest.Helpers.test_files("GenesisTests")
 
-        chain = %Chain{
-          genesis: %{
-            timestamp: test["timestamp"] |> maybe_hex,
-            parent_hash: test["parentHash"] |> maybe_hex,
-            extra_data: test["extraData"] |> maybe_hex,
-            gas_limit: test["gasLimit"] |> maybe_hex,
-            difficulty: test["difficulty"] |> maybe_hex,
-            author: test["coinbase"] |> maybe_hex,
-            seal: %{
-              mix_hash: test["mixHash"] |> maybe_hex,
-              nonce: test["nonce"] |> maybe_hex
-            }
-          },
-          accounts: get_test_accounts(test["alloc"])
-        }
+    for test_path <- common_tests do
+      test_data = EthCommonTest.Helpers.read_test_file(test_path)
 
-        block = Genesis.create_block(chain, db)
+      for {internal_test_name, test} <- test_data do
+        if Enum.member?(["test2", "test3"], internal_test_name) do
+          db = MerklePatriciaTree.Test.random_ets_db()
 
-        # Check that our block matches the serialization from common tests
-        assert Block.serialize(block) == test["result"] |> maybe_hex |> ExRLP.decode()
+          chain = %Chain{
+            genesis: %{
+              timestamp: maybe_hex(test["timestamp"]),
+              parent_hash: maybe_hex(test["parentHash"]),
+              extra_data: maybe_hex(test["extraData"]),
+              gas_limit: maybe_hex(test["gasLimit"]),
+              difficulty: maybe_hex(test["difficulty"]),
+              author: maybe_hex(test["coinbase"]),
+              seal: %{
+                mix_hash: maybe_hex(test["mixHash"]),
+                nonce: maybe_hex(test["nonce"])
+              }
+            },
+            accounts: get_test_accounts(test["alloc"])
+          }
+
+          block = Genesis.create_block(chain, db)
+
+          # Check that our block matches the serialization from common tests
+          assert Block.serialize(block) == test["result"] |> maybe_hex() |> ExRLP.decode()
+        end
       end
     end
-  end)
+  end
 
   defp get_test_accounts(alloc) do
     for {k, v} <- alloc do
       {k |> load_raw_hex,
        %{
-         balance: (v["balance"] || v["wei"] || "0") |> load_decimal,
+         balance: (v["balance"] || v["wei"] || "0") |> load_decimal(),
          storage: get_storage(v["storage"])
        }}
     end
