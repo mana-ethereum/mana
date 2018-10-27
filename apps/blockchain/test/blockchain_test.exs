@@ -1,5 +1,6 @@
 defmodule BlockchainTest do
   use ExUnit.Case
+  require Logger
 
   import EthCommonTest.Helpers
 
@@ -31,30 +32,37 @@ defmodule BlockchainTest do
   # Run each fork as its own test
   @tag :ethereum_common_tests
   @tag :Frontier
+  @tag :slow
   test "runs Frontier blockchain tests", do: run_fork_tests("Frontier")
 
   @tag :ethereum_common_tests
   @tag :Homestead
+  @tag :slow
   test "runs Homestead blockchain tests", do: run_fork_tests("Homestead")
 
   @tag :ethereum_common_tests
   @tag :HomesteadToDaoAt5
+  @tag :slow
   test "runs HomesteadToDaoAt5 blockchain tests", do: run_fork_tests("HomesteadToDaoAt5")
 
   @tag :ethereum_common_tests
   @tag :TangerineWhistle
+  @tag :slow
   test "runs TangerineWhistle blockchain tests", do: run_fork_tests("TangerineWhistle")
 
   @tag :ethereum_common_tests
   @tag :SpuriousDragon
+  @tag :slow
   test "runs SpuriousDragon blockchain tests", do: run_fork_tests("SpuriousDragon")
 
   @tag :ethereum_common_tests
   @tag :Byzantium
+  @tag :slow
   test "runs Byzantium blockchain tests", do: run_fork_tests("Byzantium")
 
   @tag :ethereum_common_tests
   @tag :Constantinople
+  @tag :slow
   test "runs Constantinople blockchain tests", do: run_fork_tests("Constantinople")
 
   @tag :ethereum_common_tests
@@ -71,11 +79,15 @@ defmodule BlockchainTest do
   test "runs HomesteadToEIP150At5 blockchain tests", do: run_fork_tests("HomesteadToEIP150At5")
 
   defp run_fork_tests(fork) do
-    [{fork, all_tests()}]
-    |> Task.async_stream(&run_tests(&1), timeout: @ten_minutes)
-    |> Enum.flat_map(fn {:ok, results} -> results end)
-    |> Enum.filter(&failing_test?/1)
-    |> make_assertions()
+    if is_nil(Chain.test_config(fork)) do
+      Logger.warn("Skipping tests for fork #{fork}")
+    else
+      [{fork, all_tests()}]
+      |> Task.async_stream(&run_tests(&1), timeout: @ten_minutes)
+      |> Enum.flat_map(fn {:ok, results} -> results end)
+      |> Enum.filter(&failing_test?/1)
+      |> make_assertions()
+    end
   end
 
   defp failing_test?({:fail, _}), do: true
@@ -95,18 +107,6 @@ defmodule BlockchainTest do
     Enum.any?(hardfork_failing_tests, fn failing_test ->
       String.contains?(json_test_path, failing_test)
     end)
-  end
-
-  defp forks_with_existing_implementation do
-    @failing_tests
-    |> Map.keys()
-    |> Enum.reject(&fork_without_implementation?/1)
-  end
-
-  defp fork_without_implementation?(fork) do
-    fork
-    |> Chain.test_config()
-    |> is_nil()
   end
 
   defp make_assertions([]), do: assert(true)

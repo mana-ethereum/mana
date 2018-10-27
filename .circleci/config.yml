@@ -133,7 +133,7 @@ jobs:
 
       - run: mix test --exclude pending
 
-  test_Frontier:
+  Frontier:
     docker:
       - image: circleci/elixir:1.7.2
         environment:
@@ -167,7 +167,7 @@ jobs:
 
       - run: mix cmd --app blockchain mix test --exclude test --include Frontier
 
-  test_Homestead:
+  Homestead:
     docker:
       - image: circleci/elixir:1.7.2
         environment:
@@ -201,7 +201,7 @@ jobs:
 
       - run: mix cmd --app blockchain mix test --exclude test --include Homestead
 
-  test_HomesteadToDaoAt5:
+  HomesteadToDaoAt5:
     docker:
       - image: circleci/elixir:1.7.2
         environment:
@@ -235,7 +235,7 @@ jobs:
 
       - run: mix cmd --app blockchain mix test --exclude test --include HomesteadToDaoAt5
 
-  test_TangerineWhistle:
+  TangerineWhistle:
     docker:
       - image: circleci/elixir:1.7.2
         environment:
@@ -269,7 +269,7 @@ jobs:
 
       - run: mix cmd --app blockchain mix test --exclude test --include TangerineWhistle
 
-  test_SpuriousDragon:
+  SpuriousDragon:
     docker:
       - image: circleci/elixir:1.7.2
         environment:
@@ -303,7 +303,7 @@ jobs:
 
       - run: mix cmd --app blockchain mix test --exclude test --include SpuriousDragon
 
-  test_Byzantium:
+  Byzantium:
     docker:
       - image: circleci/elixir:1.7.2
         environment:
@@ -337,7 +337,7 @@ jobs:
 
       - run: mix cmd --app blockchain mix test --exclude test --include Byzantium
 
-  test_Constantinople:
+  Constantinople:
     docker:
       - image: circleci/elixir:1.7.2
         environment:
@@ -370,108 +370,6 @@ jobs:
             - v4-env-cache
 
       - run: mix cmd --app blockchain mix test --exclude test --include Constantinople
-
-  test_EIP158ToByzantiumAt5:
-    docker:
-      - image: circleci/elixir:1.7.2
-        environment:
-          MIX_ENV: test
-
-    working_directory: ~/app
-
-    steps:
-      - attach_workspace:
-           at: .
-
-      - run: mix local.hex --force
-      - run: mix local.rebar --force
-
-      - restore_cache:
-          keys:
-            - v4-build-cache-{{ .Branch }}
-            - v4-build-cache
-
-      - restore_cache:
-          keys:
-            - v4-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
-            - v4-mix-cache-{{ .Branch }}
-            - v4-mix-cache
-
-      - restore_cache:
-          keys:
-            - v4-env-cache-{{ arch }}-{{ .Branch }}
-            - v4-env-cache-{{ .Branch }}
-            - v4-env-cache
-
-      - run: mix cmd --app blockchain mix test --exclude test --include EIP158ToByzantiumAt5
-
-  test_FrontierToHomesteadAt5:
-    docker:
-      - image: circleci/elixir:1.7.2
-        environment:
-          MIX_ENV: test
-
-    working_directory: ~/app
-
-    steps:
-      - attach_workspace:
-           at: .
-
-      - run: mix local.hex --force
-      - run: mix local.rebar --force
-
-      - restore_cache:
-          keys:
-            - v4-build-cache-{{ .Branch }}
-            - v4-build-cache
-
-      - restore_cache:
-          keys:
-            - v4-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
-            - v4-mix-cache-{{ .Branch }}
-            - v4-mix-cache
-
-      - restore_cache:
-          keys:
-            - v4-env-cache-{{ arch }}-{{ .Branch }}
-            - v4-env-cache-{{ .Branch }}
-            - v4-env-cache
-
-      - run: mix cmd --app blockchain mix test --exclude test --include FrontierToHomesteadAt5
-
-  test_HomesteadToEIP150At5:
-    docker:
-      - image: circleci/elixir:1.7.2
-        environment:
-          MIX_ENV: test
-
-    working_directory: ~/app
-
-    steps:
-      - attach_workspace:
-           at: .
-
-      - run: mix local.hex --force
-      - run: mix local.rebar --force
-
-      - restore_cache:
-          keys:
-            - v4-build-cache-{{ .Branch }}
-            - v4-build-cache
-
-      - restore_cache:
-          keys:
-            - v4-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
-            - v4-mix-cache-{{ .Branch }}
-            - v4-mix-cache
-
-      - restore_cache:
-          keys:
-            - v4-env-cache-{{ arch }}-{{ .Branch }}
-            - v4-env-cache-{{ .Branch }}
-            - v4-env-cache
-
-      - run: mix cmd --app blockchain mix test --exclude test --include HomesteadToEIP150At5
 
   dialyzer:
     docker:
@@ -593,23 +491,17 @@ workflows:
           requires: [build]
       - test:
           requires: [build]
-      - test_Frontier:
+      - Frontier:
           requires: [build]
-      - test_Homestead:
+      - Homestead:
           requires: [build]
-      - test_HomesteadToDaoAt5:
+      - HomesteadToDaoAt5:
           requires: [build]
-      - test_TangerineWhistle:
+      - TangerineWhistle:
           requires: [build]
-      - test_SpuriousDragon:
+      - SpuriousDragon:
           requires: [build]
-      - test_Byzantium:
+      - Byzantium:
           requires: [build]
-      - test_Constantinople:
-          requires: [build]
-      - test_EIP158ToByzantiumAt5:
-          requires: [build]
-      - test_FrontierToHomesteadAt5:
-          requires: [build]
-      - test_HomesteadToEIP150At5:
+      - Constantinople:
           requires: [build]
