@@ -26,22 +26,11 @@ defmodule Blockchain.TransactionTest do
     EIP158
   )
 
-  @ignore_tests [
-    "ttWrongRLP/",
-    "ttSignature/TransactionWithTooFewRLPElements.json",
-    "ttSignature/TransactionWithTooManyRLPElements.json"
-  ]
-
   @mainnet_chain_id 1
 
   test "eth common tests" do
-    common_tests = EthCommonTest.Helpers.test_files("TransactionTests", ignore: @ignore_tests)
-
-    for test_path <- common_tests do
-      test_data = EthCommonTest.Helpers.read_test_file(test_path)
-      test_name = Path.basename(test_path, ".json")
-
-      parsed_test = parse_test(test_data, test_name)
+    EthCommonTest.Helpers.run_common_tests("TransactionTests", fn test_name, test_case ->
+      parsed_test = parse_test(test_name, test_case)
 
       for {fork, test} <- parsed_test.tests_by_fork do
         chain_id = chain_id_for_fork(fork)
@@ -56,7 +45,7 @@ defmodule Blockchain.TransactionTest do
           end
         end
       end
-    end
+    end)
   end
 
   defp chain_id_for_fork(fork) do
@@ -67,8 +56,8 @@ defmodule Blockchain.TransactionTest do
     end
   end
 
-  defp parse_test(test, test_name) do
-    rlp = test[test_name]["rlp"] |> maybe_hex()
+  defp parse_test(test_name, test_case) do
+    rlp = maybe_hex(test_case["rlp"])
 
     transaction =
       rlp
@@ -76,7 +65,7 @@ defmodule Blockchain.TransactionTest do
       |> Transaction.deserialize()
 
     %{
-      tests_by_fork: organize_tests_by_fork(test[test_name]),
+      tests_by_fork: organize_tests_by_fork(test_case),
       rlp: rlp,
       transaction: transaction
     }

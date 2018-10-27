@@ -1,0 +1,4 @@
+GenesisTests/basic_genesis_tests.json/test1
+TransactionTests/ttWrongRLP/.*
+TransactionTests/ttSignature/TransactionWithTooFewRLPElements.json/.*
+TransactionTests/ttSignature/TransactionWithTooManyRLPElements.json/.*
