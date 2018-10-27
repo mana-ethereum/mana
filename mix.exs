@@ -43,7 +43,7 @@ defmodule Mana.MixProject do
       {:dialyxir, "~> 1.0.0-rc.3", only: [:dev, :test], runtime: false},
       {:ethereumex, "~> 0.5.0"},
       {:credo, "~> 0.10.0", only: [:dev, :test], runtime: false},
-      {:distillery, "~> 2.0"}
+      {:distillery, "~> 2.0", runtime: false}
     ]
   end
 end

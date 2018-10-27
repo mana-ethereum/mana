@@ -493,7 +493,6 @@ jobs:
 
       - run: mix release
 
-      - run: mix credo --only readability,consistency,warning,refactor
 
 workflows:
   version: 2

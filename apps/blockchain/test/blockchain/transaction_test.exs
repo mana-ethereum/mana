@@ -3,8 +3,11 @@ defmodule Blockchain.TransactionTest do
   import EthCommonTest.Helpers
 
   doctest Blockchain.Transaction
+  alias Blockchain.Account
+  alias Blockchain.Transaction.Signature
 
-  alias Blockchain.{Account, Chain, Transaction}
+  alias Blockchain.Chain
+  alias Blockchain.Transaction
   alias Blockchain.Account.Repo
   alias EVM.MachineCode
   alias ExthCrypto.Hash.Keccak

@@ -9,11 +9,11 @@ defmodule ExWire do
   use Application
 
   alias ExWire.Config
-  alias ExWire.TCPListeningSupervisor
   alias ExWire.NodeDiscoverySupervisor
-  alias MerklePatriciaTree.DB.RocksDB
   alias ExWire.PeerSupervisor
   alias ExWire.Sync
+  alias ExWire.TCPListeningSupervisor
+  alias MerklePatriciaTree.DB.RocksDB
 
   def start(_type, args) do
     import Supervisor.Spec
