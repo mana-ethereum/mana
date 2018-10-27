@@ -16,7 +16,6 @@ defmodule Blockchain.BlockTest do
       test_data = EthCommonTest.Helpers.read_test_file(test_path)
 
       for {internal_test_name, test} <- test_data do
-        # TODO: Enum.member? why?
         if Enum.member?(["test2", "test3"], internal_test_name) do
           db = MerklePatriciaTree.Test.random_ets_db()
 
