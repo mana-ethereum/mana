@@ -1,6 +1,6 @@
 # Mana-Ethereum
 
-[![CircleCI](https://circleci.com/gh/poanetwork/mana/tree/master.svg?style=svg)](https://circleci.com/gh/poanetwork/mana/tree/master) [![Waffle.io - Columns and their card count](https://badge.waffle.io/poanetwork/mana.svg?columns=all)](https://waffle.io/poanetwork/mana)[![Gitter chat](https://badges.gitter.im/poanetwork/mana.png)](https://gitter.im/poanetwork/mana)
+[![CircleCI](https://circleci.com/gh/mana-ethereum/mana.svg?style=svg)](https://circleci.com/gh/mana-ethereum/mana) [![Waffle.io - Columns and their card count](https://badge.waffle.io/mana-ethereum/mana.svg?columns=all)](https://waffle.io/mana-ethereum/mana)[![Gitter chat](https://badges.gitter.im/mana-ethereum/mana.png)](https://gitter.im/mana-ethereum/mana)
 
 Mana-Ethereum is an open-source Ethereum blockchain client built using [Elixir](https://elixir-lang.org/). Elixir runs on the Erlang Virtual Machine, which is used for distributed systems and offers massive scalability and high visibility. These properties make Elixir a perfect candidate for blockchain network development.
 
@@ -29,7 +29,7 @@ git clone --recurse-submodules https://github.com/mana-ethereum/mana.git
 
 Currently, peer-to-peer communication is incomplete, but if you would like
 to partially sync blocks, you can use an experimental script to [sync with
-Infura](https://github.com/poanetwork/mana/blob/master/apps/blockchain/scripts/sync_with_infura.ex). This script downloads blocks from Infura, runs the transactions inside them then verifies the block.
+Infura](https://github.com/mana-ethereum/mana/blob/master/apps/blockchain/scripts/sync_with_infura.ex). This script downloads blocks from Infura, runs the transactions inside them then verifies the block.
 
 ## Running the sync_with_infura script
 
