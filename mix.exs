@@ -14,6 +14,7 @@ defmodule Mana.MixProject do
       ],
       elixir: "~> 1.7.2",
       start_permanent: Mix.env() == :prod,
+      elixirc_options: [warnings_as_errors: true],
       dialyzer: [
         ignore_warnings: ".dialyzer.ignore-warnings",
         plt_add_apps: [:mix],
@@ -40,7 +41,8 @@ defmodule Mana.MixProject do
       {:ex_doc, "~> 0.19", only: :dev, runtime: false},
       {:dialyxir, "~> 1.0.0-rc.3", only: [:dev, :test], runtime: false},
       {:ethereumex, "~> 0.5.0"},
-      {:credo, "~> 0.10.0", only: [:dev, :test], runtime: false}
+      {:credo, "~> 0.10.0", only: [:dev, :test], runtime: false},
+      {:distillery, "~> 2.0", runtime: false}
     ]
   end
 end

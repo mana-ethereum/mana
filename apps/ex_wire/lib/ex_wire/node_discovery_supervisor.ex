@@ -61,7 +61,7 @@ defmodule ExWire.NodeDiscoverySupervisor do
   end
 
   defp nodes do
-    if Mix.env() == :test do
+    if Config.get_environment() == :test do
       []
     else
       Config.bootnodes()

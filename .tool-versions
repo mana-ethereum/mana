@@ -1,3 +1,2 @@
-rust 1.26.0
-elixir 1.7.2
-erlang 20.0
+erlang 21.1
+elixir 1.7-otp-21

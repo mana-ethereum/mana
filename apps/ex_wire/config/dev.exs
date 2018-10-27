@@ -13,3 +13,5 @@ config :ex_wire,
     supervisor_name: ExWire.NodeDiscoverySupervisor,
     port: 30_304
   ]
+
+config :ex_wire, :environment, :dev

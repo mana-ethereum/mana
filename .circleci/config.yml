@@ -133,6 +133,40 @@ jobs:
 
       - run: mix test --exclude pending
 
+  release:
+    docker:
+      - image: circleci/elixir:1.7.2
+        environment:
+          MIX_ENV: test
+
+    working_directory: ~/app
+
+    steps:
+      - attach_workspace:
+           at: .
+
+      - run: mix local.hex --force
+      - run: mix local.rebar --force
+
+      - restore_cache:
+          keys:
+            - v4-build-cache-{{ .Branch }}
+            - v4-build-cache
+
+      - restore_cache:
+          keys:
+            - v4-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
+            - v4-mix-cache-{{ .Branch }}
+            - v4-mix-cache
+
+      - restore_cache:
+          keys:
+            - v4-env-cache-{{ arch }}-{{ .Branch }}
+            - v4-env-cache-{{ .Branch }}
+            - v4-env-cache
+
+      - run: mix release
+
   Frontier:
     docker:
       - image: circleci/elixir:1.7.2
@@ -490,6 +524,8 @@ workflows:
       - dialyzer:
           requires: [build]
       - test:
+          requires: [build]
+      - release:
           requires: [build]
       - Frontier:
           requires: [build]

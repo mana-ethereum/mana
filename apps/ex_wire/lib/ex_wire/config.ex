@@ -115,6 +115,11 @@ defmodule ExWire.Config do
     get_env!(:node_discovery)
   end
 
+  @spec get_environment() :: atom() | ArgumentError
+  def get_environment() do
+    get_env!(:environment)
+  end
+
   @spec get_env!(atom()) :: any()
   defp get_env!(key) do
     get_env(key) ||
