@@ -1,6 +1,6 @@
 defmodule Blockchain.TransactionTest do
   use ExUnit.Case, async: true
-  use EthCommonTest.Harness
+  import EthCommonTest.Helpers
 
   doctest Blockchain.Transaction
 
@@ -26,18 +26,21 @@ defmodule Blockchain.TransactionTest do
     EIP158
   )
 
+  @ignore_tests [
+    "ttWrongRLP/",
+    "ttSignature/TransactionWithTooFewRLPElements.json",
+    "ttSignature/TransactionWithTooManyRLPElements.json"
+  ]
+
   @mainnet_chain_id 1
 
-  define_common_tests(
-    "TransactionTests",
-    [
-      ignore: [
-        "ttWrongRLP/",
-        "ttSignature/TransactionWithTooFewRLPElements.json",
-        "ttSignature/TransactionWithTooManyRLPElements.json"
-      ]
-    ],
-    fn test_name, test_data ->
+  test "eth common tests" do
+    common_tests = EthCommonTest.Helpers.test_files("TransactionTests", ignore: @ignore_tests)
+
+    for test_path <- common_tests do
+      test_data = EthCommonTest.Helpers.read_test_file(test_path)
+      test_name = Path.basename(test_path, ".json")
+
       parsed_test = parse_test(test_data, test_name)
 
       for {fork, test} <- parsed_test.tests_by_fork do
@@ -54,7 +57,7 @@ defmodule Blockchain.TransactionTest do
         end
       end
     end
-  )
+  end
 
   defp chain_id_for_fork(fork) do
     if Enum.member?(@forks_that_require_chain_id, fork) do

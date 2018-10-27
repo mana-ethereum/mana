@@ -3,7 +3,6 @@ defmodule Blockchain.StateTest do
   alias MerklePatriciaTree.Trie
   alias EthCommonTest.{Helpers, StateTestRunner}
 
-  use EthCommonTest.Harness
   use ExUnit.Case, async: true
 
   @failing_tests %{
@@ -179,7 +178,7 @@ defmodule Blockchain.StateTest do
   end
 
   defp tests do
-    ethereum_common_tests_path()
+    EthCommonTest.Helpers.ethereum_common_tests_path()
     |> Path.join("/GeneralStateTests/**/*.json")
     |> Path.wildcard()
     |> Enum.sort()
