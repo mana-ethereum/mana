@@ -64,11 +64,11 @@ defmodule CLI.Sync.RPC do
         add_block_to_tree(client, db, chain, next_tree, block_number + 1)
 
       {:invalid, error} ->
-        Logger.debug("Failed block: #{inspect(next_block)}")
-        Logger.error("Failed to verify block #{block_number}: #{inspect(error)}")
+        Logger.debug(fn -> "Failed block: #{inspect(next_block)}" end)
+        Logger.error(fn -> "Failed to verify block #{block_number}: #{inspect(error)}" end)
 
         if tree.best_block do
-          Logger.info("Saving progress at block #{tree.best_block.header.number}")
+          Logger.info(fn -> "Saving progress at block #{tree.best_block.header.number}" end)
 
           MerklePatriciaTree.DB.put!(db, "current_block_tree", :erlang.term_to_binary(tree))
         end
