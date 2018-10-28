@@ -22,4 +22,5 @@ config :ex_wire,
     port: 30_304
   ]
 
+config :ex_wire, :environment, Mix.env()
 import_config "#{Mix.env()}.exs"

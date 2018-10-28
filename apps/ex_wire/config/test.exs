@@ -11,5 +11,3 @@ config :ex_wire,
     port: 30_304
   ],
   discovery: true
-
-config :ex_wire, :environment, :test
