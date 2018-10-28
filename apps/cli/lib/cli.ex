@@ -17,7 +17,7 @@ defmodule CLI do
   """
   alias Blockchain.{Block, Blocktree, Chain, Genesis}
   alias MerklePatriciaTree.DB
-  alias MerklePatriciaTree.DB.RockDB
+  alias MerklePatriciaTree.DB.RocksDB
 
   @doc """
   Initiates a sync with a given provider (e.g. a JSON-RPC client, such

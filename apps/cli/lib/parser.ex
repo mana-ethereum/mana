@@ -2,6 +2,7 @@ defmodule CLI.Parser do
   @moduledoc """
   Parser for command line arguments from Mix.
   """
+  alias CLI.Sync
 
   @type sync_arg_keywords :: [provider: String.t(), provider_url: String.t()]
 
@@ -45,7 +46,7 @@ defmodule CLI.Parser do
 
     case given_provider do
       "rpc" ->
-        {CLI.Sync.RPC, [provider_url], "RPC"}
+        {RPC, [provider_url], "RPC"}
 
       els ->
         throw("Invalid provider: #{els}")
