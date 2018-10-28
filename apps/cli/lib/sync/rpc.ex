@@ -9,13 +9,13 @@ defmodule CLI.Sync.RPC do
   alias Ethereumex.{HttpClient, IpcClient}
   alias MerklePatriciaTree.DB
 
-  @save_block_interval 1000
+  @save_block_interval 100
   @max_retries 5
 
   @type ethereumex_client :: module()
   @type state :: ethereumex_client()
 
-  @provider_url "http://mainnet.infura.io"
+  @provider_url "https://mainnet.infura.io"
 
   @doc """
   Sets up database and loads chain information
@@ -66,8 +66,10 @@ defmodule CLI.Sync.RPC do
 
       case Blocktree.verify_and_add_block(tree, chain, next_block, db) do
         {:ok, next_tree} ->
+          Logger.debug(fn -> "Successfully loaded block #{block_number}..." end)
+
           if rem(block_number, @save_block_interval) == 0 do
-            Logger.info("Saved progress at block #{block_number}")
+            Logger.info(fn -> "Saved progress at block #{block_number}" end)
 
             DB.put!(
               db,
@@ -147,7 +149,7 @@ defmodule CLI.Sync.RPC do
         for {_ommer_hash, index} <- ommers_stream do
           {:ok, ommer_data} =
             client.eth_get_uncle_by_block_hash_and_index(
-              get(block_data, "hash"),
+              get(block_data, "hash", :raw),
               to_hex(index)
             )
 
