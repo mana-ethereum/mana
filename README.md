@@ -37,13 +37,19 @@ To sync a chain from an RPC Client (e.g. Infura) or a local client,
 run the following command:
 
 ```bash
-mix sync --provider-url https://ropsten.infura.io/v3/<api_key>
+mix sync --chain ropsten
 ```
 
-You can sign up for an [Infura API key here](https://infura.io/register). Alternatively, you can sync via IPC to a local node (like Parity or Geth running locally):
+You can sign up for an [Infura API key here](https://infura.io/register). This will ensure your requests are not throttled.
 
 ```bash
-mix sync --provider rpc --provider-url ipc://...
+mix sync --chain ropsten --provider-url https://ropsten.infura.io/v3/<api_key>
+```
+
+Alternatively, you can sync via IPC to a local node (like Parity or Geth running locally):
+
+```bash
+mix sync --chain ropsten --provider-url ipc:///path/to/ipc
 ```
 
 You can begin syncing, you will see a timestamp and a running list of verified blocks.
