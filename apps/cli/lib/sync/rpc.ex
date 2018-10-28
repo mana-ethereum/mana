@@ -41,11 +41,13 @@ defmodule CLI.Sync.RPC do
   end
 
   @doc """
-  Adds a new block to the blocktree. 
+  Recursively adds blocks to a tree. This function will
+  run forever unless `max_new_blocks` is set, in which
+  case it will add that many blocks and then return.
   """
   @spec add_block_to_tree(
-          state,
-          MerklePatriciaTree.DB.t(),
+          state(),
+          MerklePatriciaTree.DB.db(),
           Blockchain.Chain.t(),
           Blockchain.Blocktree.t(),
           integer(),
@@ -69,7 +71,9 @@ defmodule CLI.Sync.RPC do
             )
           end
 
-          add_block_to_tree(client, db, chain, next_tree, block_number + 1, max_new_blocks - 1)
+          next_max_new_blocks = if is_nil(max_new_blocks), do: nil, else: max_new_blocks - 1
+
+          add_block_to_tree(client, db, chain, next_tree, block_number + 1, next_max_new_blocks)
 
         {:invalid, error} ->
           Logger.debug(fn -> "Failed block: #{inspect(next_block)}" end)
