@@ -23,9 +23,9 @@ defmodule CLI do
   Initiates a sync with a given provider (e.g. a JSON-RPC client, such
   as Infura). This is the basis of our "sync the blockchain" code.
   """
-  def sync(sync_provider, provider_args \\ []) do
+  def sync(chain_id, sync_provider, provider_args \\ []) do
     db = RocksDB.init(db_name())
-    chain = Chain.load_chain(:foundation)
+    chain = Chain.load_chain(chain_id)
 
     {:ok, provider_state} = apply(sync_provider, :setup, provider_args)
 

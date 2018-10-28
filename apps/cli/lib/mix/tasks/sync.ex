@@ -12,9 +12,11 @@ defmodule Mix.Tasks.Sync do
 
   Command Line Options:
 
-      `--provider` (default: rpc) - Source to pull blocks from, must be RPC.
+      `--chain` - Chain to load data from (default: ropsten)
+      `--provider` - Source to pull blocks from, must be RPC. (default: rpc)
       `--provider-url` - URL to pull RPC data from. Should either be an HTTP(s) URL
                          or an IPC url. E.g. `https://...` or `ipc:///path/to/file`.
+                         Default: `https://${chain}.infura.io`
 
   Examples:
 
@@ -26,11 +28,16 @@ defmodule Mix.Tasks.Sync do
 
   @shortdoc "Starts sync with a provider (e.g. Infura)"
   def run(args) do
-    {provider, provider_args, provider_name} = CLI.Parser.sync_args(args)
+    %{
+      chain_id: chain_id,
+      provider: provider,
+      provider_args: provider_args,
+      provider_info: provider_info
+    } = CLI.Parser.sync_args(args)
 
-    IO.puts("Starting sync with #{provider_name}...")
+    IO.puts("Starting sync with #{Atom.to_string(chain_id)} via #{provider_info}...")
 
     # Kick off a sync
-    CLI.sync(provider, provider_args)
+    CLI.sync(chain_id, provider, provider_args)
   end
 end

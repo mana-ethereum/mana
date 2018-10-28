@@ -454,6 +454,32 @@ defmodule Blockchain.Chain do
     Path.expand("../../../../chains/#{Atom.to_string(chain)}.json", __DIR__)
   end
 
+  @doc """
+  Given a string (e.g. user input), returns either a valid atom
+  referencing a chain or `:not_found`.
+
+  ## Examples
+
+    iex> Blockchain.Chain.id_from_string("ropsten")
+    {:ok, :ropsten}
+
+    iex> Blockchain.Chain.id_from_string("jungle")
+    :not_found
+  """
+  @spec id_from_string(String.t()) :: {:ok, atom()} | :not_found
+  def id_from_string(chain_name) do
+    case chain_name do
+      "ropsten" ->
+        {:ok, :ropsten}
+
+      "foundation" ->
+        {:ok, :foundation}
+
+      _ ->
+        :not_found
+    end
+  end
+
   @spec load_raw_hex(String.t() | nil) :: binary()
   defp load_raw_hex(nil), do: nil
   defp load_raw_hex("0x" <> hex_data), do: load_raw_hex(hex_data)
