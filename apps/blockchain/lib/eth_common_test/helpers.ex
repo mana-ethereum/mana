@@ -130,7 +130,7 @@ defmodule EthCommonTest.Helpers do
     {:ok, task_sup} = Task.Supervisor.start_link()
 
     # Start a task for each test.
-    {successes, failures} =
+    tasks =
       Task.Supervisor.async_stream_nolink(
         task_sup,
         test_cases,
@@ -141,7 +141,8 @@ defmodule EthCommonTest.Helpers do
         end,
         timeout: @ten_minutes
       )
-      |> group_tasks()
+
+    {successes, failures} = group_tasks(tasks)
 
     success_count = Enum.count(successes)
     failure_count = Enum.count(failures)
