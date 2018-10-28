@@ -24,48 +24,13 @@ defmodule Mix.Tasks.Sync do
   """
   use Mix.Task
 
-  @default_provider "rpc"
-
   @shortdoc "Starts sync with a provider (e.g. Infura)"
   def run(args) do
-    {kw_args, _extra} =
-      OptionParser.parse!(args, switches: [provider: :string, provider_url: :string])
-
-    provider_url = get_provider_url(kw_args)
-
-    {provider, provider_args, provider_name} = get_provider(kw_args, provider_url)
+    {provider, provider_args, provider_name} = CLI.Parser.sync_args(args)
 
     IO.puts("Starting sync with #{provider_name}...")
 
     # Kick off a sync
     CLI.sync(provider, provider_args)
-  end
-
-  @spec get_provider([provider: String.t()], String.t() | nil) ::
-          {module(), any(), String.t()} | no_return()
-  def get_provider(kw_args, provider_url) do
-    given_provider =
-      kw_args
-      |> Keyword.get(:provider, @default_provider)
-      |> String.trim()
-
-    case given_provider do
-      "rpc" ->
-        {CLI.Sync.RPC, [provider_url], "RPC"}
-
-      els ->
-        throw("Invalid provider: #{els}")
-    end
-  end
-
-  @spec get_provider_url(provider_url: String.t()) :: String.t() | no_return()
-  def get_provider_url(kw_args) do
-    case Keyword.get(kw_args, :provider_url) do
-      nil ->
-        nil
-
-      provider_url ->
-        String.trim(provider_url)
-    end
   end
 end
