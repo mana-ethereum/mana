@@ -25,19 +25,27 @@ defmodule Mix.Tasks.Sync do
       mix sync --provider rpc --provider-url ipc:///path/to/file
   """
   use Mix.Task
+  require Logger
 
   @shortdoc "Starts sync with a provider (e.g. Infura)"
   def run(args) do
-    %{
-      chain_id: chain_id,
-      provider: provider,
-      provider_args: provider_args,
-      provider_info: provider_info
-    } = CLI.Parser.sync_args(args)
+    case CLI.Parser.sync_args(args) do
+      {:ok,
+       %{
+         chain_id: chain_id,
+         provider: provider,
+         provider_args: provider_args,
+         provider_info: provider_info
+       }} ->
+        Logger.warn("Starting sync with #{Atom.to_string(chain_id)} via #{provider_info}...")
 
-    IO.puts("Starting sync with #{Atom.to_string(chain_id)} via #{provider_info}...")
+        # Kick off a sync
+        CLI.sync(chain_id, provider, provider_args)
 
-    # Kick off a sync
-    CLI.sync(chain_id, provider, provider_args)
+      {:error, error} ->
+        Logger.error("Error: #{error}")
+        Logger.flush()
+        System.halt(1)
+    end
   end
 end

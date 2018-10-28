@@ -16,6 +16,7 @@ defmodule CLI do
   ```
   """
   alias Blockchain.{Block, Blocktree, Chain, Genesis}
+  alias CLI.Config
   alias MerklePatriciaTree.DB
   alias MerklePatriciaTree.DB.RocksDB
 
@@ -24,7 +25,7 @@ defmodule CLI do
   as Infura). This is the basis of our "sync the blockchain" code.
   """
   def sync(chain_id, sync_provider, provider_args \\ []) do
-    db = RocksDB.init(db_name())
+    db = RocksDB.init(Config.db_name(chain_id))
     chain = Chain.load_chain(chain_id)
 
     {:ok, provider_state} = apply(sync_provider, :setup, provider_args)
@@ -51,12 +52,5 @@ defmodule CLI do
       end
 
     sync_provider.add_block_to_tree(provider_state, db, chain, tree, current_block.header.number)
-  end
-
-  # The name of the database (e.g. for RocksDB) to store loaded blocks in.
-  @spec db_name() :: String.t()
-  defp db_name() do
-    env = Mix.env() |> to_string()
-    "db/mana-" <> env
   end
 end
