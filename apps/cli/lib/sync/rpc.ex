@@ -4,6 +4,11 @@ defmodule CLI.Sync.RPC do
   """
   require Logger
 
+  alias Block.Header
+  alias Blockchain.{Block, Blocktree, Chain, Transaction}
+  alias Ethereumex.{HttpClient, IpcClient}
+  alias MerklePatriciaTree.DB
+
   @save_block_interval 1000
   @max_retries 5
 
@@ -26,12 +31,12 @@ defmodule CLI.Sync.RPC do
         %URI{scheme: scheme} when scheme == "http" or scheme == "https" ->
           Application.put_env(:ethereumex, :url, provider_url)
 
-          {:ok, Ethereumex.HttpClient}
+          {:ok, HttpClient}
 
         %URI{scheme: "ipc", path: ipc_path} ->
           Application.put_env(:ethereumex, :ipc_path, ipc_path)
 
-          {:ok, Ethereumex.IpcClient}
+          {:ok, IpcClient}
 
         els ->
           {:error, "Unknown scheme for #{inspect(els)}"}
@@ -47,24 +52,24 @@ defmodule CLI.Sync.RPC do
   """
   @spec add_block_to_tree(
           state(),
-          MerklePatriciaTree.DB.db(),
-          Blockchain.Chain.t(),
-          Blockchain.Blocktree.t(),
+          DB.db(),
+          Chain.t(),
+          Blocktree.t(),
           integer(),
           integer() | nil
-        ) :: {:ok, Blockchain.Blocktree.t()} | {:error, any()}
+        ) :: {:ok, Blocktree.t()} | {:error, any()}
   def add_block_to_tree(client, db, chain, tree, block_number, max_new_blocks \\ nil) do
     if !is_nil(max_new_blocks) && max_new_blocks > 0 do
       {:ok, tree}
     else
       {:ok, next_block} = get_block(block_number, client)
 
-      case Blockchain.Blocktree.verify_and_add_block(tree, chain, next_block, db) do
+      case Blocktree.verify_and_add_block(tree, chain, next_block, db) do
         {:ok, next_tree} ->
           if rem(block_number, @save_block_interval) == 0 do
             Logger.info("Saved progress at block #{block_number}")
 
-            MerklePatriciaTree.DB.put!(
+            DB.put!(
               db,
               "current_block_tree",
               :erlang.term_to_binary(next_tree)
@@ -82,7 +87,7 @@ defmodule CLI.Sync.RPC do
           if tree.best_block do
             Logger.info(fn -> "Saving progress at block #{tree.best_block.header.number}" end)
 
-            MerklePatriciaTree.DB.put!(db, "current_block_tree", :erlang.term_to_binary(tree))
+            DB.put!(db, "current_block_tree", :erlang.term_to_binary(tree))
           end
 
           {:error, error}
@@ -90,12 +95,12 @@ defmodule CLI.Sync.RPC do
     end
   end
 
-  @spec get_block(integer(), ethereumex_client()) :: {:ok, Blockchain.Block.t()} | {:error, any()}
+  @spec get_block(integer(), ethereumex_client()) :: {:ok, Block.t()} | {:error, any()}
   def get_block(number, client) do
     with {:ok, block_data} <- load_new_block(number, client) do
-      block = %Blockchain.Block{
+      block = %Block{
         block_hash: get(block_data, "hash"),
-        header: %Block.Header{
+        header: %Header{
           parent_hash: get(block_data, "parentHash"),
           ommers_hash: get(block_data, "sha3Uncles"),
           beneficiary: get(block_data, "miner"),
@@ -117,7 +122,7 @@ defmodule CLI.Sync.RPC do
             to = get(trx_data, "to", :binary, <<>>)
             input = get(trx_data, "input")
 
-            %Blockchain.Transaction{
+            %Transaction{
               nonce: get(trx_data, "nonce", :integer),
               gas_price: get(trx_data, "gasPrice", :integer),
               gas_limit: get(trx_data, "gas", :integer),
@@ -146,7 +151,7 @@ defmodule CLI.Sync.RPC do
               to_hex(index)
             )
 
-          %Block.Header{
+          %Header{
             parent_hash: get(ommer_data, "parentHash"),
             ommers_hash: get(ommer_data, "sha3Uncles"),
             beneficiary: get(ommer_data, "miner"),
@@ -165,7 +170,7 @@ defmodule CLI.Sync.RPC do
           }
         end
 
-      block_with_ommers = Blockchain.Block.add_ommers(block, ommers)
+      block_with_ommers = Block.add_ommers(block, ommers)
 
       {:ok, block_with_ommers}
     end
