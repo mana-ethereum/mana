@@ -6,6 +6,8 @@ defmodule EthCommonTest.Helpers do
   require Integer
   require Logger
 
+  @type test_case :: %{}
+
   @ten_minutes 1000 * 60 * 10
 
   @spec load_integer(String.t()) :: integer() | nil
@@ -117,30 +119,70 @@ defmodule EthCommonTest.Helpers do
     Path.join(System.cwd(), "/test/support/known_failures.txt")
   end
 
-  @spec run_common_tests(String.t(), (String.t(), %{} -> no_return())) :: no_return()
+  @spec run_common_tests(String.t(), (String.t(), test_case() -> no_return())) :: no_return()
   def run_common_tests(test_set_name, runner) do
-    # `common_tests` are simply a list of paths to tests for test_set_name
+    # `common_test_files` are simply a list of paths to tests for test_set_name
     # these are top-level folder names in `ethereum_common_tests`
-    common_tests = EthCommonTest.Helpers.test_files(test_set_name)
-
-    known_failures =
-      case File.read(known_failures_path()) do
-        {:ok, data} ->
-          data
-          |> String.split("\n")
-          |> Enum.filter(fn l -> !Regex.match?(~r/^\s*$/, l) end)
-          |> Enum.map(&Regex.compile!/1)
-
-        _ ->
-          []
-      end
+    common_test_files = test_files(test_set_name)
+    known_failures = load_known_failures_or_blank()
+    {test_cases, skips} = read_test_cases(test_set_name, common_test_files, known_failures)
 
     {:ok, task_sup} = Task.Supervisor.start_link()
 
+    # Start a task for each test.
+    {successes, failures} =
+      Task.Supervisor.async_stream_nolink(
+        task_sup,
+        test_cases,
+        fn {test_name, test_case} ->
+          runner.(test_name, test_case)
+
+          test_name
+        end,
+        timeout: @ten_minutes
+      )
+      |> group_tasks()
+
+    success_count = Enum.count(successes)
+    failure_count = Enum.count(failures)
+    skip_count = Enum.count(skips)
+
+    result_message =
+      "#{test_set_name}: #{success_count} success(es), #{skip_count} skip(s), #{failure_count} failure(s)"
+
+    if failure_count > 0 do
+      # If we have any failures, fail
+      ExUnit.Assertions.flunk(result_message)
+    else
+      Logger.warn(result_message)
+    end
+  end
+
+  # Returns a list of known failures (as regexs) or an empty list if
+  # known_failures.txt does not exist for this app
+  @spec load_known_failures_or_blank() :: [Regex.t()]
+  defp load_known_failures_or_blank() do
+    case File.read(known_failures_path()) do
+      {:ok, data} ->
+        data
+        |> String.split("\n")
+        |> Enum.filter(fn l -> !Regex.match?(~r/^\s*$/, l) end)
+        |> Enum.map(&Regex.compile!/1)
+
+      _ ->
+        []
+    end
+  end
+
+  # Reads test cases from `ethereum_common_tests` based on the file paths
+  # given. Compares each test against `known_failures` and returns skipped
+  # tests as a separate list.
+  @spec read_test_cases(String.t(), [String.t()], [Regex.t()]) :: {[test_case()], [test_case()]}
+  defp read_test_cases(test_set_name, common_test_files, known_failures) do
     # `all_test_cases` is the set of test cases, including the ones we plan to
     # skip since they are known failures
     all_test_cases =
-      for test_path <- common_tests do
+      for test_path <- common_test_files do
         # `test_data` is a map of test-name to test-cases that comes from json file
         # `#{ethereum_common_tests}/#{test_name}/#{test_path}`.
 
@@ -167,20 +209,11 @@ defmodule EthCommonTest.Helpers do
         {t, true}, {tests, skips} ->
           {tests, [t | skips]}
       end)
+  end
 
-    # Start a task for each test.
-    tasks =
-      Task.Supervisor.async_stream_nolink(
-        task_sup,
-        test_cases,
-        fn {test_name, test_case} ->
-          runner.(test_name, test_case)
-
-          test_name
-        end,
-        timeout: @ten_minutes
-      )
-
+  # Groups the results of tasks together into successes or failures
+  @spec group_tasks(Enumerable.t()) :: {[String.t()], [any()]}
+  defp group_tasks(tasks) do
     # Then gather up the successes and failures
     # Note: we currently have the exits for the failure
     #       but the exit doesn't include the test name
@@ -192,19 +225,5 @@ defmodule EthCommonTest.Helpers do
         {:exit, error}, {succ, fail} ->
           {succ, [error | fail]}
       end)
-
-    success_count = Enum.count(successes)
-    failure_count = Enum.count(failures)
-    skip_count = Enum.count(skips)
-
-    result_message =
-      "#{test_set_name}: #{success_count} success(es), #{skip_count} skip(s), #{failure_count} failure(s)"
-
-    if failure_count > 0 do
-      # If we have any failures, fail
-      ExUnit.Assertions.flunk(result_message)
-    else
-      Logger.warn(result_message)
-    end
   end
 end
