@@ -29,23 +29,27 @@ defmodule Blockchain.TransactionTest do
   @mainnet_chain_id 1
 
   test "eth common tests" do
-    EthCommonTest.Helpers.run_common_tests("TransactionTests", fn test_name, test_case ->
-      parsed_test = parse_test(test_name, test_case)
+    EthCommonTest.Helpers.run_common_tests(
+      "TransactionTests",
+      &ExUnit.Assertions.flunk/1,
+      fn test_name, test_case ->
+        parsed_test = parse_test(test_name, test_case)
 
-      for {fork, test} <- parsed_test.tests_by_fork do
-        chain_id = chain_id_for_fork(fork)
+        for {fork, test} <- parsed_test.tests_by_fork do
+          chain_id = chain_id_for_fork(fork)
 
-        for {method, value} <- test do
-          case method do
-            :hash ->
-              assert Keccak.kec(parsed_test.rlp) == value
+          for {method, value} <- test do
+            case method do
+              :hash ->
+                assert Keccak.kec(parsed_test.rlp) == value
 
-            :sender ->
-              assert Signature.sender(parsed_test.transaction, chain_id) == {:ok, value}
+              :sender ->
+                assert Signature.sender(parsed_test.transaction, chain_id) == {:ok, value}
+            end
           end
         end
       end
-    end)
+    )
   end
 
   defp chain_id_for_fork(fork) do

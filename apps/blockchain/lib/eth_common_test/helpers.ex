@@ -119,8 +119,12 @@ defmodule EthCommonTest.Helpers do
     Path.join(System.cwd(), "/test/support/known_failures.txt")
   end
 
-  @spec run_common_tests(String.t(), (String.t(), test_case() -> no_return())) :: no_return()
-  def run_common_tests(test_set_name, runner) do
+  @spec run_common_tests(
+          String.t(),
+          (String.t() -> no_return()),
+          (String.t(), test_case() -> no_return())
+        ) :: no_return()
+  def run_common_tests(test_set_name, runner, fail_fun) do
     # `common_test_files` are simply a list of paths to tests for test_set_name
     # these are top-level folder names in `ethereum_common_tests`
     common_test_files = test_files(test_set_name)
@@ -153,7 +157,7 @@ defmodule EthCommonTest.Helpers do
 
     if failure_count > 0 do
       # If we have any failures, fail
-      ExUnit.Assertions.flunk(result_message)
+      fail_fun.(result_message)
     else
       Logger.warn(result_message)
     end
