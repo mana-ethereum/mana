@@ -29,12 +29,12 @@ defmodule CLI.Sync.RPC do
     state =
       case URI.parse(provider_url) do
         %URI{scheme: scheme} when scheme == "http" or scheme == "https" ->
-          Application.put_env(:ethereumex, :url, provider_url)
+          :ok = Application.put_env(:ethereumex, :url, provider_url)
 
           {:ok, HttpClient}
 
         %URI{scheme: "ipc", path: ipc_path} ->
-          Application.put_env(:ethereumex, :ipc_path, ipc_path)
+          :ok = Application.put_env(:ethereumex, :ipc_path, ipc_path)
 
           {:ok, IpcClient}
 
