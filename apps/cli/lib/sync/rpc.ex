@@ -41,37 +41,48 @@ defmodule CLI.Sync.RPC do
   end
 
   @doc """
-  Adds a new block to the blocktree
+  Adds a new block to the blocktree. 
   """
   @spec add_block_to_tree(
           state,
           MerklePatriciaTree.DB.t(),
           Blockchain.Chain.t(),
           Blockchain.Blocktree.t(),
-          integer()
-        ) :: Blockchain.Blocktree.t() | no_return()
-  def add_block_to_tree(client, db, chain, tree, block_number) do
-    {:ok, next_block} = get_block(block_number, client)
+          integer(),
+          integer() | nil
+        ) :: {:ok, Blockchain.Blocktree.t()} | {:error, any()}
+  def add_block_to_tree(client, db, chain, tree, block_number, max_new_blocks \\ nil) do
+    if !is_nil(max_new_blocks) && max_new_blocks > 0 do
+      {:ok, tree}
+    else
+      {:ok, next_block} = get_block(block_number, client)
 
-    case Blockchain.Blocktree.verify_and_add_block(tree, chain, next_block, db) do
-      {:ok, next_tree} ->
-        if rem(block_number, @save_block_interval) == 0 do
-          Logger.info("Saved progress at block #{block_number}")
+      case Blockchain.Blocktree.verify_and_add_block(tree, chain, next_block, db) do
+        {:ok, next_tree} ->
+          if rem(block_number, @save_block_interval) == 0 do
+            Logger.info("Saved progress at block #{block_number}")
 
-          MerklePatriciaTree.DB.put!(db, "current_block_tree", :erlang.term_to_binary(next_tree))
-        end
+            MerklePatriciaTree.DB.put!(
+              db,
+              "current_block_tree",
+              :erlang.term_to_binary(next_tree)
+            )
+          end
 
-        add_block_to_tree(client, db, chain, next_tree, block_number + 1)
+          add_block_to_tree(client, db, chain, next_tree, block_number + 1, max_new_blocks - 1)
 
-      {:invalid, error} ->
-        Logger.debug(fn -> "Failed block: #{inspect(next_block)}" end)
-        Logger.error(fn -> "Failed to verify block #{block_number}: #{inspect(error)}" end)
+        {:invalid, error} ->
+          Logger.debug(fn -> "Failed block: #{inspect(next_block)}" end)
+          Logger.error(fn -> "Failed to verify block #{block_number}: #{inspect(error)}" end)
 
-        if tree.best_block do
-          Logger.info(fn -> "Saving progress at block #{tree.best_block.header.number}" end)
+          if tree.best_block do
+            Logger.info(fn -> "Saving progress at block #{tree.best_block.header.number}" end)
 
-          MerklePatriciaTree.DB.put!(db, "current_block_tree", :erlang.term_to_binary(tree))
-        end
+            MerklePatriciaTree.DB.put!(db, "current_block_tree", :erlang.term_to_binary(tree))
+          end
+
+          {:error, error}
+      end
     end
   end
 
