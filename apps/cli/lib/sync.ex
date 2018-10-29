@@ -85,7 +85,7 @@ defmodule CLI.Sync do
   end
 
   defp track_progress(block_number, max_block_number) do
-    ProgressBar.render(block_number + 1, max_block_number, progress_bar_format())
+    ProgressBar.render(block_number + 1, max_block_number, progress_bar_format(suffix: :count))
   end
 
   @spec progress_bar_format([]) :: []

@@ -32,7 +32,7 @@ defmodule Cli.MixProject do
       {:ethereumex, "~> 0.5.0"},
       {:blockchain, in_umbrella: true},
       {:merkle_patricia_tree, in_umbrella: true},
-      {:progress_bar, "~> 1.6.1"}
+      {:progress_bar, git: "https://github.com/kelvinst/progress_bar.git", branch: "count-suffix"}
     ]
   end
 end
