@@ -494,7 +494,7 @@ jobs:
       - run: echo 'export PATH=~/.cargo/bin:$PATH' >> $BASH_ENV
       - run: mix local.hex --force
       - run: mix local.rebar --force
-      - run: mix release --verbose
+      - run: MIX_ENV=dev mix release --verbose
       - store_artifacts:
           path: _build/dev/rel/mana/
           destination: _build/dev/rel/mana/
