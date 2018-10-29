@@ -49,7 +49,7 @@ mix sync --chain ropsten --provider-url https://ropsten.infura.io/v3/<api_key>
 Alternatively, you can sync via IPC to a local node (like Parity or Geth running locally):
 
 ```bash
-mix sync --chain ropsten --provider-url ipc:///path/to/ipc
+mix sync --chain ropsten --provider-url ipc://~/Library/Application\ Support/io.parity.ethereum/jsonrpc.ipc
 ```
 
 You can begin syncing, you will see a timestamp and a running list of verified blocks.

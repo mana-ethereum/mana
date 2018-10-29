@@ -20,23 +20,25 @@ defmodule CLI.BlockProvider.RPC do
   """
   @spec setup(String.t() | nil) :: {:ok, state()} | {:error, any()}
   def setup(provider_url) do
-    {:ok, _started} = Application.ensure_all_started(:ethereumex)
-
     state =
       case URI.parse(provider_url) do
         %URI{scheme: scheme} when scheme == "http" or scheme == "https" ->
           :ok = Application.put_env(:ethereumex, :url, provider_url)
+          :ok = Application.put_env(:ethereumex, :client_type, :http)
 
           {:ok, HttpClient}
 
         %URI{scheme: "ipc", path: ipc_path} ->
           :ok = Application.put_env(:ethereumex, :ipc_path, ipc_path)
+          :ok = Application.put_env(:ethereumex, :client_type, :ipc)
 
           {:ok, IpcClient}
 
         els ->
           {:error, "Unknown scheme for #{inspect(els)}"}
       end
+
+    {:ok, _started} = Application.ensure_all_started(:ethereumex)
 
     state
   end
