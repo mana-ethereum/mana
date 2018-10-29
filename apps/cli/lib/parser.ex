@@ -1,8 +1,8 @@
 defmodule CLI.Parser do
   @moduledoc """
-  Parser for command line arguments from Mix.
+  Parses for command line arguments for the CLI.
   """
-  alias CLI.Sync.RPC
+  alias CLI.BlockProvider.RPC
 
   @type sync_arg_keywords :: [provider: String.t(), provider_url: String.t()]
 
@@ -22,7 +22,7 @@ defmodule CLI.Parser do
       iex> CLI.Parser.sync_args(["--provider", "rpc", "--provider-url", "https://mainnet.infura.io"])
       {:ok, %{
         chain_id: :ropsten,
-        provider: CLI.Sync.RPC,
+        provider: CLI.BlockProvider.RPC,
         provider_args: ["https://mainnet.infura.io"],
         provider_info: "RPC"
       }}
@@ -30,7 +30,7 @@ defmodule CLI.Parser do
       iex> CLI.Parser.sync_args(["--provider-url", "ipc:///path/to/file"])
       {:ok, %{
         chain_id: :ropsten,
-        provider: CLI.Sync.RPC,
+        provider: CLI.BlockProvider.RPC,
         provider_args: ["ipc:///path/to/file"],
         provider_info: "RPC"
       }}
@@ -38,7 +38,7 @@ defmodule CLI.Parser do
       iex> CLI.Parser.sync_args([])
       {:ok, %{
         chain_id: :ropsten,
-        provider: CLI.Sync.RPC,
+        provider: CLI.BlockProvider.RPC,
         provider_args: ["https://ropsten.infura.io"],
         provider_info: "RPC"
       }}
@@ -46,7 +46,7 @@ defmodule CLI.Parser do
       iex> CLI.Parser.sync_args(["--chain", "foundation"])
       {:ok, %{
         chain_id: :foundation,
-        provider: CLI.Sync.RPC,
+        provider: CLI.BlockProvider.RPC,
         provider_args: ["https://foundation.infura.io"],
         provider_info: "RPC"
       }}

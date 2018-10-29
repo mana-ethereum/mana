@@ -15,42 +15,42 @@ defmodule CLI do
   ./mana --sync --rpc --submit-transaction "{...}"
   ```
   """
-  alias Blockchain.{Block, Blocktree, Chain, Genesis}
-  alias CLI.Config
-  alias MerklePatriciaTree.DB
+  alias Blockchain.{Blocktree, Chain}
+  alias CLI.{Config, State, Sync}
   alias MerklePatriciaTree.DB.RocksDB
 
   @doc """
   Initiates a sync with a given provider (e.g. a JSON-RPC client, such
   as Infura). This is the basis of our "sync the blockchain" code.
   """
-  def sync(chain_id, sync_provider, provider_args \\ []) do
+  @spec sync(atom(), module(), [any()]) :: {:ok, Blocktree.t()} | {:error, any()}
+  def sync(chain_id, block_provider, block_provider_args \\ []) do
     db = RocksDB.init(Config.db_name(chain_id))
     chain = Chain.load_chain(chain_id)
 
-    {:ok, provider_state} = apply(sync_provider, :setup, provider_args)
+    {:ok, block_provider_state} = apply(block_provider, :setup, block_provider_args)
 
-    # First, try to load tree from local database
-    tree =
-      case DB.get(db, "current_block_tree") do
-        {:ok, current_block_tree} ->
-          :erlang.binary_to_term(current_block_tree)
+    tree = State.load_tree(db)
 
-        _ ->
-          Blocktree.new_tree()
+    with {:ok, current_block} <- Blocktree.get_best_block(tree, chain, db) do
+      with {:ok, highest_known_block_number} <-
+             block_provider.get_block_number(block_provider_state) do
+        # Note: we load the highest block number right now just
+        # to track our progress.
+
+        # TODO: Use highest known block as limit?
+
+        Sync.sync_new_blocks(
+          block_provider,
+          block_provider_state,
+          db,
+          chain,
+          tree,
+          current_block.header.number + 1,
+          :infinite,
+          highest_known_block_number
+        )
       end
-
-    current_block =
-      case tree.best_block do
-        nil ->
-          Genesis.create_block(chain, db)
-
-        block ->
-          {:ok, current_block} = Block.get_block(block.block_hash, db)
-
-          current_block
-      end
-
-    sync_provider.add_block_to_tree(provider_state, db, chain, tree, current_block.header.number)
+    end
   end
 end

@@ -1,7 +1,8 @@
 defmodule CLI.Config do
   @moduledoc """
-  CLI.Config determines configuration in how to run Mana
-  from the CLI. For instance, which database to use.
+  CLI.Config determines the configuration for a running
+  Mana instance. For example, which database to use to store
+  the block tree.
   """
 
   @doc """

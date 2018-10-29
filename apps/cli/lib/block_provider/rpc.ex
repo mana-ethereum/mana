@@ -1,6 +1,7 @@
-defmodule CLI.Sync.RPC do
+defmodule CLI.BlockProvider.RPC do
   @moduledoc """
-  Script to set-up a sync with Infura.
+  Provider which can pulls from another full node via RPC.
+  This can be via HTTP(s) or IPC.
   """
   require Logger
 
@@ -9,21 +10,16 @@ defmodule CLI.Sync.RPC do
   alias Ethereumex.{HttpClient, IpcClient}
   alias MerklePatriciaTree.DB
 
-  @save_block_interval 100
   @max_retries 5
 
   @type ethereumex_client :: module()
   @type state :: ethereumex_client()
 
-  @provider_url "https://mainnet.infura.io"
-
   @doc """
-  Sets up database and loads chain information
+  Sets up database and loads chain information.
   """
-  @spec setup(String.t() | nil) :: {:ok, state} | {:error, any()}
+  @spec setup(String.t() | nil) :: {:ok, state()} | {:error, any()}
   def setup(provider_url) do
-    provider_url = if provider_url, do: provider_url, else: @provider_url
-
     {:ok, _started} = Application.ensure_all_started(:ethereumex)
 
     state =
@@ -46,58 +42,28 @@ defmodule CLI.Sync.RPC do
   end
 
   @doc """
-  Recursively adds blocks to a tree. This function will
-  run forever unless `max_new_blocks` is set, in which
-  case it will add that many blocks and then return.
+  Returns the highest known block number. This is used for progress tracking.
   """
-  @spec add_block_to_tree(
-          state(),
-          DB.db(),
-          Chain.t(),
-          Blocktree.t(),
-          integer(),
-          integer() | nil
-        ) :: {:ok, Blocktree.t()} | {:error, any()}
-  def add_block_to_tree(client, db, chain, tree, block_number, max_new_blocks \\ nil) do
-    if !is_nil(max_new_blocks) && max_new_blocks > 0 do
-      {:ok, tree}
-    else
-      {:ok, next_block} = get_block(block_number, client)
+  @spec get_block_number(ethereumex_client(), integer()) :: {:ok, integer()} | {:error, any()}
+  def get_block_number(client, retries \\ @max_retries) do
+    case client.eth_block_number() do
+      {:ok, block_number} ->
+        {:ok, decode_integer(block_number)}
 
-      case Blocktree.verify_and_add_block(tree, chain, next_block, db) do
-        {:ok, next_tree} ->
-          Logger.debug(fn -> "Successfully loaded block #{block_number}..." end)
-
-          if rem(block_number, @save_block_interval) == 0 do
-            Logger.info(fn -> "Saved progress at block #{block_number}" end)
-
-            DB.put!(
-              db,
-              "current_block_tree",
-              :erlang.term_to_binary(next_tree)
-            )
-          end
-
-          next_max_new_blocks = if is_nil(max_new_blocks), do: nil, else: max_new_blocks - 1
-
-          add_block_to_tree(client, db, chain, next_tree, block_number + 1, next_max_new_blocks)
-
-        {:invalid, error} ->
-          Logger.debug(fn -> "Failed block: #{inspect(next_block)}" end)
-          Logger.error(fn -> "Failed to verify block #{block_number}: #{inspect(error)}" end)
-
-          if tree.best_block do
-            Logger.info(fn -> "Saving progress at block #{tree.best_block.header.number}" end)
-
-            DB.put!(db, "current_block_tree", :erlang.term_to_binary(tree))
-          end
-
+      {:error, error} ->
+        if retries > 0 do
+          Logger.info("Error loading block number, retrying: #{inspect(error)}")
+          get_block_number(client, retries - 1)
+        else
           {:error, error}
-      end
+        end
     end
   end
 
-  @spec get_block(integer(), ethereumex_client()) :: {:ok, Block.t()} | {:error, any()}
+  @doc """
+  Retrieves a block from the full node via an RPC call.
+  """
+  @spec get_block(integer(), state()) :: {:ok, Block.t(), state()} | {:error, any()}
   def get_block(number, client) do
     with {:ok, block_data} <- load_new_block(number, client) do
       block = %Block{
@@ -174,7 +140,7 @@ defmodule CLI.Sync.RPC do
 
       block_with_ommers = Block.add_ommers(block, ommers)
 
-      {:ok, block_with_ommers}
+      {:ok, block_with_ommers, client}
     end
   end
 
@@ -225,13 +191,18 @@ defmodule CLI.Sync.RPC do
             load_hex(value)
 
           :integer when is_binary(value) ->
-            value
-            |> load_hex()
-            |> :binary.decode_unsigned()
+            decode_integer(value)
 
           :raw ->
             value
         end
     end
+  end
+
+  @spec decode_integer(String.t()) :: integer()
+  defp decode_integer(value) do
+    value
+    |> load_hex()
+    |> :binary.decode_unsigned()
   end
 end
