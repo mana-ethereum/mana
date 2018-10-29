@@ -12,11 +12,11 @@ defmodule MerklePatriciaTree.StorageBehaviour do
 
   @callback put_node(node, t) :: nil | binary()
 
-  @callback remove_key(t, Trie.key()) :: t
+  @callback remove_key(t, Trie.key()) :: Node.trie_node()
 
   @callback update_key(t(), Trie.key(), ExRLP.t() | nil) :: t
 
-  @callback get_key(t(), Trie.key()) :: t()
+  @callback get_key(t(), Trie.key()) :: nil | binary()
 
   @callback into(binary(), t) :: t
 
