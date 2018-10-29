@@ -8,7 +8,7 @@ defmodule MerklePatriciaTree.CachingTrie do
   alias MerklePatriciaTree.Trie.Node
   alias MerklePatriciaTree.Trie.Storage
 
-  @behaviour MerklePatriciaTree.StorageBehaviour
+  @behaviour MerklePatriciaTree.Storage
 
   defstruct [
     :in_memory_trie,
@@ -91,8 +91,7 @@ defmodule MerklePatriciaTree.CachingTrie do
     rlp = Helper.rlp_encode(in_memory_trie.root_hash)
 
     # Let's check if it is RLP or Keccak-256 hash.
-    # Keccak-256 is always 32-bytes.
-    if byte_size(rlp) < Storage.max_rlp_len() do
+    if Storage.keccak_hash?(rlp) do
       # It is RLP, so we need to calc KEC-256 and
       # store it in the database.
       kec = Storage.store(rlp, in_memory_trie.db)

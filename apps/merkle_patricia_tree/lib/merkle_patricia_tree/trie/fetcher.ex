@@ -1,19 +1,19 @@
 defmodule MerklePatriciaTree.Trie.Fetcher do
   alias MerklePatriciaTree.ListHelper
-  alias MerklePatriciaTree.StorageBehaviour
+  alias MerklePatriciaTree.Storage
   alias MerklePatriciaTree.Trie.Helper
 
   def get(trie, key) do
     do_get(trie, Helper.get_nibbles(key))
   end
 
-  @spec do_get(StorageBehaviour.t() | nil, [integer()]) :: binary() | nil
+  @spec do_get(Storage.t() | nil, [integer()]) :: binary() | nil
   defp do_get(nil, _), do: nil
 
   defp do_get(trie, nibbles = [nibble | rest]) do
     # Let's decode `c(I, i)`
 
-    case StorageBehaviour.storage(trie).fetch_node(trie) do
+    case Storage.storage(trie).fetch_node(trie) do
       # No node, bail
       :empty ->
         nil
@@ -32,21 +32,21 @@ defmodule MerklePatriciaTree.Trie.Fetcher do
             nil
 
           rest ->
-            next_node |> StorageBehaviour.storage(trie).into(trie) |> do_get(rest)
+            next_node |> Storage.storage(trie).into(trie) |> do_get(rest)
         end
 
       # Branch node
       {:branch, branches} ->
         case Enum.at(branches, nibble) do
           [] -> nil
-          node_hash -> node_hash |> StorageBehaviour.storage(trie).into(trie) |> do_get(rest)
+          node_hash -> node_hash |> Storage.storage(trie).into(trie) |> do_get(rest)
         end
     end
   end
 
   defp do_get(trie, []) do
     # No prefix left, its either branch or leaf node
-    case StorageBehaviour.storage(trie).fetch_node(trie) do
+    case Storage.storage(trie).fetch_node(trie) do
       # In branch node value is always the last element
       {:branch, branches} ->
         value = List.last(branches)

@@ -1,4 +1,4 @@
-defmodule MerklePatriciaTree.StorageBehaviour do
+defmodule MerklePatriciaTree.Storage do
   @moduledoc """
   Defines functions for fetching and updating nodes.
   """
