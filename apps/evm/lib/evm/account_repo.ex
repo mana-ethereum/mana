@@ -2,7 +2,7 @@ defmodule EVM.AccountRepo do
   alias Block.Header
 
   @moduledoc """
-  Module the defines a set of functions to interact with accounts.
+  Module that defines a set of functions to interact with accounts.
   """
 
   @type t :: struct()

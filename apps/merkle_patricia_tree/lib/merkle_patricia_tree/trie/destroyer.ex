@@ -13,6 +13,7 @@ defmodule MerklePatriciaTree.Trie.Destroyer do
 
   import MerklePatriciaTree.ListHelper, only: [overlap: 2]
 
+  alias MerklePatriciaTree.Storage
   alias MerklePatriciaTree.Trie
   alias MerklePatriciaTree.Trie.Node
 
@@ -23,7 +24,7 @@ defmodule MerklePatriciaTree.Trie.Destroyer do
 
   This may radically change the structure of the trie.
   """
-  @spec remove_key(Node.trie_node(), Trie.key(), Trie.t()) :: Node.trie_node()
+  @spec remove_key(Node.trie_node(), Trie.key(), Storage.t()) :: Node.trie_node()
   def remove_key(trie_node, key, trie) do
     trie_remove_key(trie_node, key, trie)
   end
@@ -46,8 +47,8 @@ defmodule MerklePatriciaTree.Trie.Destroyer do
     if Enum.empty?(ext_tl) do
       existing_node =
         node_hash
-        |> Trie.into(trie)
-        |> Node.decode_trie()
+        |> Storage.storage(trie).into(trie)
+        |> Storage.storage(trie).fetch_node()
 
       updated_node = trie_remove_key(existing_node, remaining_tl, trie)
 
@@ -65,7 +66,7 @@ defmodule MerklePatriciaTree.Trie.Destroyer do
           {:ext, ext_prefix ++ new_ext_prefix, new_ext_node_hash}
 
         elements ->
-          encoded = Node.encode_node(elements, trie)
+          encoded = Storage.storage(trie).put_node(elements, trie)
           {:ext, ext_prefix, encoded}
       end
     else
@@ -88,12 +89,12 @@ defmodule MerklePatriciaTree.Trie.Destroyer do
       List.update_at(branches, prefix_hd, fn branch ->
         branch_node =
           branch
-          |> Trie.into(trie)
-          |> Node.decode_trie()
+          |> Storage.storage(trie).into(trie)
+          |> Storage.storage(trie).fetch_node()
 
         branch_node
         |> trie_remove_key(prefix_tl, trie)
-        |> Node.encode_node(trie)
+        |> Storage.storage(trie).put_node(trie)
       end)
 
     non_blank_branches =
@@ -113,7 +114,10 @@ defmodule MerklePatriciaTree.Trie.Destroyer do
         # We just have a node we need to percolate up.
         {branch_node, i} = List.first(non_blank_branches)
 
-        decoded_branch_node = Node.decode_trie(branch_node |> Trie.into(trie))
+        decoded_branch_node =
+          branch_node
+          |> Storage.storage(trie).into(trie)
+          |> Storage.storage(trie).fetch_node()
 
         case decoded_branch_node do
           {:leaf, leaf_prefix, leaf_value} ->

@@ -13,11 +13,11 @@ defmodule MerklePatriciaTree.Trie.Inspector do
   ## Examples
 
       iex> MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
-      ...>   |> MerklePatriciaTree.Trie.update("type", "fighter")
-      ...>   |> MerklePatriciaTree.Trie.update("name", "bob")
-      ...>   |> MerklePatriciaTree.Trie.update("nationality", "usa")
-      ...>   |> MerklePatriciaTree.Trie.update("nato", "strong")
-      ...>   |> MerklePatriciaTree.Trie.update((for x <- 1..100, into: <<>>, do: <<x::8>>), (for x <- 1..100, into: <<>>, do: <<x*2::8>>))
+      ...>   |> MerklePatriciaTree.Trie.update_key("type", "fighter")
+      ...>   |> MerklePatriciaTree.Trie.update_key("name", "bob")
+      ...>   |> MerklePatriciaTree.Trie.update_key("nationality", "usa")
+      ...>   |> MerklePatriciaTree.Trie.update_key("nato", "strong")
+      ...>   |> MerklePatriciaTree.Trie.update_key((for x <- 1..100, into: <<>>, do: <<x::8>>), (for x <- 1..100, into: <<>>, do: <<x*2::8>>))
       ...>   |> MerklePatriciaTree.Trie.Inspector.all_values()
       [
         {(for x <- 1..100, into: <<>>, do: <<x::8>>), (for x <- 1..100, into: <<>>, do: <<x*2::8>>)},
@@ -72,11 +72,11 @@ defmodule MerklePatriciaTree.Trie.Inspector do
   ## Examples
 
       iex> MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
-      ...>   |> MerklePatriciaTree.Trie.update("type", "fighter")
-      ...>   |> MerklePatriciaTree.Trie.update("name", "bob")
-      ...>   |> MerklePatriciaTree.Trie.update("nationality", "usa")
-      ...>   |> MerklePatriciaTree.Trie.update("nato", "strong")
-      ...>   |> MerklePatriciaTree.Trie.update((for x <- 1..100, into: <<>>, do: <<x::8>>), (for x <- 1..100, into: <<>>, do: <<x*2::8>>))
+      ...>   |> MerklePatriciaTree.Trie.update_key("type", "fighter")
+      ...>   |> MerklePatriciaTree.Trie.update_key("name", "bob")
+      ...>   |> MerklePatriciaTree.Trie.update_key("nationality", "usa")
+      ...>   |> MerklePatriciaTree.Trie.update_key("nato", "strong")
+      ...>   |> MerklePatriciaTree.Trie.update_key((for x <- 1..100, into: <<>>, do: <<x::8>>), (for x <- 1..100, into: <<>>, do: <<x*2::8>>))
       ...>   |> MerklePatriciaTree.Trie.Inspector.all_keys()
       [
         (for x <- 1..100, into: <<>>, do: <<x::8>>),

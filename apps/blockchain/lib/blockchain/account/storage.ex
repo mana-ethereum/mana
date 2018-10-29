@@ -18,7 +18,7 @@ defmodule Blockchain.Account.Storage do
 
     db
     |> Trie.new(root)
-    |> Trie.update(k, v)
+    |> Trie.update_key(k, v)
   end
 
   @spec remove(DB.db(), EVM.trie_root(), integer()) :: Trie.t()
@@ -27,7 +27,7 @@ defmodule Blockchain.Account.Storage do
 
     db
     |> Trie.new(root)
-    |> Trie.remove(k)
+    |> Trie.remove_key(k)
   end
 
   @spec fetch(DB.db(), EVM.trie_root(), integer()) :: integer() | nil
@@ -37,7 +37,7 @@ defmodule Blockchain.Account.Storage do
     result =
       db
       |> Trie.new(root)
-      |> Trie.get(k)
+      |> Trie.get_key(k)
 
     if is_nil(result), do: nil, else: ExRLP.decode(result)
   end

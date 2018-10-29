@@ -17,7 +17,7 @@ defmodule MerklePatriciaTree.TrieTest do
     trie = Trie.new(MerklePatriciaTree.Test.random_ets_db())
 
     assert trie.root_hash == Trie.empty_trie_root_hash()
-    assert Trie.get(trie, <<0x01, 0x02, 0x03>>) == nil
+    assert Trie.get_key(trie, <<0x01, 0x02, 0x03>>) == nil
   end
 
   describe "get" do
@@ -25,10 +25,10 @@ defmodule MerklePatriciaTree.TrieTest do
       root_hash = leaf_node([0x01, 0x02, 0x03], "cool")
       trie = Trie.new(db, root_hash)
 
-      assert Trie.get(trie, <<0x01::4>>) == nil
-      assert Trie.get(trie, <<0x01::4, 0x02::4>>) == nil
-      assert Trie.get(trie, <<0x01::4, 0x02::4, 0x03::4>>) == "cool"
-      assert Trie.get(trie, <<0x01::4, 0x02::4, 0x03::4, 0x04::4>>) == nil
+      assert Trie.get_key(trie, <<0x01::4>>) == nil
+      assert Trie.get_key(trie, <<0x01::4, 0x02::4>>) == nil
+      assert Trie.get_key(trie, <<0x01::4, 0x02::4, 0x03::4>>) == "cool"
+      assert Trie.get_key(trie, <<0x01::4, 0x02::4, 0x03::4, 0x04::4>>) == nil
     end
 
     test "with an extension node followed by a leaf", %{db: db} do
@@ -40,10 +40,10 @@ defmodule MerklePatriciaTree.TrieTest do
 
       trie = Trie.new(db, root_hash)
 
-      assert Trie.get(trie, <<0x01::4>>) == nil
-      assert Trie.get(trie, <<0x01::4, 0x02::4>>) == nil
-      assert Trie.get(trie, <<0x01::4, 0x02::4, 0x03::4>>) == "cool"
-      assert Trie.get(trie, <<0x01::4, 0x02::4, 0x03::4, 0x04::4>>) == nil
+      assert Trie.get_key(trie, <<0x01::4>>) == nil
+      assert Trie.get_key(trie, <<0x01::4, 0x02::4>>) == nil
+      assert Trie.get_key(trie, <<0x01::4, 0x02::4, 0x03::4>>) == "cool"
+      assert Trie.get_key(trie, <<0x01::4, 0x02::4, 0x03::4, 0x04::4>>) == nil
     end
 
     test "with an extension node followed by an extension node and then leaf", %{db: db} do
@@ -63,11 +63,11 @@ defmodule MerklePatriciaTree.TrieTest do
 
       trie = Trie.new(db, root_hash)
 
-      assert Trie.get(trie, <<0x01::4>>) == nil
-      assert Trie.get(trie, <<0x01::4, 0x02::4>>) == nil
-      assert Trie.get(trie, <<0x01::4, 0x02::4, 0x03::4>>) == nil
-      assert Trie.get(trie, <<0x01::4, 0x02::4, 0x03::4, 0x04::4>>) == "cool"
-      assert Trie.get(trie, <<0x01::4, 0x02::4, 0x03::4, 0x04::4, 0x05::4>>) == nil
+      assert Trie.get_key(trie, <<0x01::4>>) == nil
+      assert Trie.get_key(trie, <<0x01::4, 0x02::4>>) == nil
+      assert Trie.get_key(trie, <<0x01::4, 0x02::4, 0x03::4>>) == nil
+      assert Trie.get_key(trie, <<0x01::4, 0x02::4, 0x03::4, 0x04::4>>) == "cool"
+      assert Trie.get_key(trie, <<0x01::4, 0x02::4, 0x03::4, 0x04::4, 0x05::4>>) == nil
     end
 
     test "with a branch node", %{db: db} do
@@ -87,11 +87,11 @@ defmodule MerklePatriciaTree.TrieTest do
 
       trie = Trie.new(db, root_hash)
 
-      assert Trie.get(trie, <<0x01::4>>) == "cool"
-      assert Trie.get(trie, <<0x01::4, 0x00::4>>) == nil
-      assert Trie.get(trie, <<0x01::4, 0x00::4, 0x02::4>>) == "hi"
-      assert Trie.get(trie, <<0x01::4, 0x00::4, 0x0::43>>) == nil
-      assert Trie.get(trie, <<0x01::4, 0x01::4>>) == nil
+      assert Trie.get_key(trie, <<0x01::4>>) == "cool"
+      assert Trie.get_key(trie, <<0x01::4, 0x00::4>>) == nil
+      assert Trie.get_key(trie, <<0x01::4, 0x00::4, 0x02::4>>) == "hi"
+      assert Trie.get_key(trie, <<0x01::4, 0x00::4, 0x0::43>>) == nil
+      assert Trie.get_key(trie, <<0x01::4, 0x01::4>>) == nil
     end
 
     test "with encoded nodes", %{db: db} do
@@ -110,27 +110,27 @@ defmodule MerklePatriciaTree.TrieTest do
 
       trie = Trie.new(db, root_hash)
 
-      assert Trie.get(trie, <<0x01::4>>) == nil
-      assert Trie.get(trie, <<0x01::4, 0x02::4>>) == nil
-      assert Trie.get(trie, <<0x01::4, 0x02::4, 0x03::4>>) == long_string
-      assert Trie.get(trie, <<0x01::4, 0x02::4, 0x03::4, 0x04::4>>) == nil
+      assert Trie.get_key(trie, <<0x01::4>>) == nil
+      assert Trie.get_key(trie, <<0x01::4, 0x02::4>>) == nil
+      assert Trie.get_key(trie, <<0x01::4, 0x02::4, 0x03::4>>) == long_string
+      assert Trie.get_key(trie, <<0x01::4, 0x02::4, 0x03::4, 0x04::4>>) == nil
     end
   end
 
   describe "update trie" do
     test "add a leaf to an empty tree", %{db: db} do
       trie_1 = Trie.new(db)
-      trie_2 = Trie.update(trie_1, <<0x01::4, 0x02::4, 0x03::4>>, "cool")
+      trie_2 = Trie.update_key(trie_1, <<0x01::4, 0x02::4, 0x03::4>>, "cool")
 
-      assert Trie.get(trie_2, <<0x01::4>>) == nil
-      assert Trie.get(trie_2, <<0x01::4, 0x02::4>>) == nil
-      assert Trie.get(trie_2, <<0x01::4, 0x02::4, 0x03::4>>) == "cool"
-      assert Trie.get(trie_2, <<0x01::4, 0x02::4, 0x03::4, 0x04::4>>) == nil
+      assert Trie.get_key(trie_2, <<0x01::4>>) == nil
+      assert Trie.get_key(trie_2, <<0x01::4, 0x02::4>>) == nil
+      assert Trie.get_key(trie_2, <<0x01::4, 0x02::4, 0x03::4>>) == "cool"
+      assert Trie.get_key(trie_2, <<0x01::4, 0x02::4, 0x03::4, 0x04::4>>) == nil
     end
 
     test "from blog post", %{db: db} do
       trie_1 = Trie.new(db)
-      trie_2 = Trie.update(trie_1, <<0x01::4, 0x01::4, 0x02::4>>, "hello")
+      trie_2 = Trie.update_key(trie_1, <<0x01::4, 0x01::4, 0x02::4>>, "hello")
 
       assert trie_2.root_hash ==
                <<73, 98, 206, 73, 94, 192, 23, 36, 174, 248, 169, 73, 103, 133, 200, 167, 68, 83,
@@ -139,9 +139,9 @@ defmodule MerklePatriciaTree.TrieTest do
 
     test "update a leaf value (when stored directly)", %{db: db} do
       trie_1 = Trie.new(db, leaf_node([0x01, 0x02], "first"))
-      trie_2 = Trie.update(trie_1, <<0x01::4, 0x02::4>>, "second")
+      trie_2 = Trie.update_key(trie_1, <<0x01::4, 0x02::4>>, "second")
 
-      assert Trie.get(trie_2, <<0x01::4, 0x02::4>>) == "second"
+      assert Trie.get_key(trie_2, <<0x01::4, 0x02::4>>) == "second"
     end
 
     test "update a leaf value (when stored in ets)", %{db: db} do
@@ -155,39 +155,39 @@ defmodule MerklePatriciaTree.TrieTest do
         |> Storage.store(db)
 
       trie_1 = Trie.new(db, root_hash)
-      trie_2 = Trie.update(trie_1, <<0x01::4, 0x02::4>>, long_string_2)
+      trie_2 = Trie.update_key(trie_1, <<0x01::4, 0x02::4>>, long_string_2)
 
-      assert Trie.get(trie_2, <<0x01::4, 0x02::4>>) == long_string_2
+      assert Trie.get_key(trie_2, <<0x01::4, 0x02::4>>) == long_string_2
     end
 
     test "update branch under ext node", %{db: db} do
       trie_1 =
         db
         |> Trie.new()
-        |> Trie.update(<<0x01::4, 0x02::4>>, "wee")
-        |> Trie.update(<<0x01::4, 0x02::4, 0x03::4>>, "cool")
+        |> Trie.update_key(<<0x01::4, 0x02::4>>, "wee")
+        |> Trie.update_key(<<0x01::4, 0x02::4, 0x03::4>>, "cool")
 
-      trie_2 = Trie.update(trie_1, <<0x01::4, 0x02::4, 0x03::4>>, "cooler")
+      trie_2 = Trie.update_key(trie_1, <<0x01::4, 0x02::4, 0x03::4>>, "cooler")
 
-      assert Trie.get(trie_2, <<0x01::4>>) == nil
-      assert Trie.get(trie_2, <<0x01::4, 0x02::4>>) == "wee"
-      assert Trie.get(trie_2, <<0x01::4, 0x02::4, 0x03::4>>) == "cooler"
-      assert Trie.get(trie_2, <<0x01::4, 0x02::4, 0x03::4, 0x04::4>>) == nil
+      assert Trie.get_key(trie_2, <<0x01::4>>) == nil
+      assert Trie.get_key(trie_2, <<0x01::4, 0x02::4>>) == "wee"
+      assert Trie.get_key(trie_2, <<0x01::4, 0x02::4, 0x03::4>>) == "cooler"
+      assert Trie.get_key(trie_2, <<0x01::4, 0x02::4, 0x03::4, 0x04::4>>) == nil
     end
 
     test "update multiple keys", %{db: db} do
       trie =
         db
         |> Trie.new()
-        |> Trie.update(<<0x01::4, 0x02::4, 0x03::4>>, "a")
-        |> Trie.update(<<0x01::4, 0x02::4, 0x03::4, 0x04::4>>, "b")
-        |> Trie.update(<<0x01::4, 0x02::4, 0x04::4>>, "c")
-        |> Trie.update(<<0x01::size(256)>>, "d")
+        |> Trie.update_key(<<0x01::4, 0x02::4, 0x03::4>>, "a")
+        |> Trie.update_key(<<0x01::4, 0x02::4, 0x03::4, 0x04::4>>, "b")
+        |> Trie.update_key(<<0x01::4, 0x02::4, 0x04::4>>, "c")
+        |> Trie.update_key(<<0x01::size(256)>>, "d")
 
-      assert Trie.get(trie, <<0x01::4, 0x02::4, 0x03::4>>) == "a"
-      assert Trie.get(trie, <<0x01::4, 0x02::4, 0x03::4, 0x04::4>>) == "b"
-      assert Trie.get(trie, <<0x01::4, 0x02::4, 0x04::4>>) == "c"
-      assert Trie.get(trie, <<0x01::size(256)>>) == "d"
+      assert Trie.get_key(trie, <<0x01::4, 0x02::4, 0x03::4>>) == "a"
+      assert Trie.get_key(trie, <<0x01::4, 0x02::4, 0x03::4, 0x04::4>>) == "b"
+      assert Trie.get_key(trie, <<0x01::4, 0x02::4, 0x04::4>>) == "c"
+      assert Trie.get_key(trie, <<0x01::size(256)>>) == "d"
     end
 
     test "update a leaf deep in ext nodes", %{db: db} do
@@ -196,30 +196,30 @@ defmodule MerklePatriciaTree.TrieTest do
       trie_1 =
         db
         |> Trie.new()
-        |> Trie.update(<<0x01::4>>, "foo")
-        |> Trie.update(<<0x01::4, 0x01::4>>, "bar")
-        |> Trie.update(<<0x01::4, 0x01::4, 0x01::4, 0x02::4, 0x01::4, 0x03::4>>, "qux")
-        |> Trie.update(key, "corge")
+        |> Trie.update_key(<<0x01::4>>, "foo")
+        |> Trie.update_key(<<0x01::4, 0x01::4>>, "bar")
+        |> Trie.update_key(<<0x01::4, 0x01::4, 0x01::4, 0x02::4, 0x01::4, 0x03::4>>, "qux")
+        |> Trie.update_key(key, "corge")
 
-      trie_2 = Trie.update(trie_1, key, "grault")
+      trie_2 = Trie.update_key(trie_1, key, "grault")
 
-      assert Trie.get(trie_2, key) == "grault"
+      assert Trie.get_key(trie_2, key) == "grault"
     end
 
     test "a root of the trie depends only on the data", %{db: db} do
       trie1 =
         db
         |> Trie.new()
-        |> Trie.update(<<4::4, 2::4, 3::4>>, 1)
-        |> Trie.update(<<4::4, 2::4>>, 2)
-        |> Trie.update(<<4::4, 2::4, 3::4, 8::4>>, 3)
+        |> Trie.update_key(<<4::4, 2::4, 3::4>>, 1)
+        |> Trie.update_key(<<4::4, 2::4>>, 2)
+        |> Trie.update_key(<<4::4, 2::4, 3::4, 8::4>>, 3)
 
       trie2 =
         db
         |> Trie.new()
-        |> Trie.update(<<4::4, 2::4>>, 2)
-        |> Trie.update(<<4::4, 2::4, 3::4, 8::4>>, 3)
-        |> Trie.update(<<4::4, 2::4, 3::4>>, 1)
+        |> Trie.update_key(<<4::4, 2::4>>, 2)
+        |> Trie.update_key(<<4::4, 2::4, 3::4, 8::4>>, 3)
+        |> Trie.update_key(<<4::4, 2::4, 3::4>>, 1)
 
       assert trie2.root_hash == trie1.root_hash
     end
@@ -228,52 +228,52 @@ defmodule MerklePatriciaTree.TrieTest do
       trie =
         db
         |> Trie.new()
-        |> Trie.update(<<5::4, 7::4, 10::4, 15::4, 15::4>>, "a")
-        |> Trie.update(<<5::4, 11::4, 0::4, 0::4, 14::4>>, "b")
-        |> Trie.update(<<5::4, 10::4, 0::4, 0::4, 14::4>>, "c")
-        |> Trie.update(<<4::4, 10::4, 0::4, 0::4, 14::4>>, "d")
-        |> Trie.update(<<5::4, 10::4, 1::4, 0::4, 14::4>>, "e")
+        |> Trie.update_key(<<5::4, 7::4, 10::4, 15::4, 15::4>>, "a")
+        |> Trie.update_key(<<5::4, 11::4, 0::4, 0::4, 14::4>>, "b")
+        |> Trie.update_key(<<5::4, 10::4, 0::4, 0::4, 14::4>>, "c")
+        |> Trie.update_key(<<4::4, 10::4, 0::4, 0::4, 14::4>>, "d")
+        |> Trie.update_key(<<5::4, 10::4, 1::4, 0::4, 14::4>>, "e")
 
-      assert Trie.get(trie, <<5::4, 7::4, 10::4, 15::4, 15::4>>) == "a"
-      assert Trie.get(trie, <<5::4, 11::4, 0::4, 0::4, 14::4>>) == "b"
-      assert Trie.get(trie, <<5::4, 10::4, 0::4, 0::4, 14::4>>) == "c"
-      assert Trie.get(trie, <<4::4, 10::4, 0::4, 0::4, 14::4>>) == "d"
-      assert Trie.get(trie, <<5::4, 10::4, 1::4, 0::4, 14::4>>) == "e"
+      assert Trie.get_key(trie, <<5::4, 7::4, 10::4, 15::4, 15::4>>) == "a"
+      assert Trie.get_key(trie, <<5::4, 11::4, 0::4, 0::4, 14::4>>) == "b"
+      assert Trie.get_key(trie, <<5::4, 10::4, 0::4, 0::4, 14::4>>) == "c"
+      assert Trie.get_key(trie, <<4::4, 10::4, 0::4, 0::4, 14::4>>) == "d"
+      assert Trie.get_key(trie, <<5::4, 10::4, 1::4, 0::4, 14::4>>) == "e"
     end
 
     test "yet another set of updates", %{db: db} do
       trie =
         db
         |> Trie.new()
-        |> Trie.update(
+        |> Trie.update_key(
           <<15::4, 10::4, 5::4, 11::4, 5::4, 2::4, 10::4, 9::4, 6::4, 13::4, 10::4, 3::4, 10::4,
             6::4, 7::4, 1::4>>,
           "a"
         )
-        |> Trie.update(
+        |> Trie.update_key(
           <<15::4, 11::4, 1::4, 14::4, 9::4, 7::4, 9::4, 5::4, 6::4, 15::4, 6::4, 11::4, 8::4,
             5::4, 2::4, 12::4>>,
           "b"
         )
-        |> Trie.update(
+        |> Trie.update_key(
           <<6::4, 1::4, 10::4, 10::4, 5::4, 7::4, 14::4, 3::4, 10::4, 0::4, 15::4, 3::4, 6::4,
             4::4, 5::4, 0::4>>,
           "c"
         )
 
-      assert Trie.get(
+      assert Trie.get_key(
                trie,
                <<15::4, 10::4, 5::4, 11::4, 5::4, 2::4, 10::4, 9::4, 6::4, 13::4, 10::4, 3::4,
                  10::4, 6::4, 7::4, 1::4>>
              ) == "a"
 
-      assert Trie.get(
+      assert Trie.get_key(
                trie,
                <<15::4, 11::4, 1::4, 14::4, 9::4, 7::4, 9::4, 5::4, 6::4, 15::4, 6::4, 11::4,
                  8::4, 5::4, 2::4, 12::4>>
              ) == "b"
 
-      assert Trie.get(
+      assert Trie.get_key(
                trie,
                <<6::4, 1::4, 10::4, 10::4, 5::4, 7::4, 14::4, 3::4, 10::4, 0::4, 15::4, 3::4,
                  6::4, 4::4, 5::4, 0::4>>
@@ -284,35 +284,35 @@ defmodule MerklePatriciaTree.TrieTest do
       trie =
         db
         |> Trie.new()
-        |> Trie.update(
+        |> Trie.update_key(
           <<15::4, 10::4, 5::4, 11::4, 5::4, 2::4, 10::4, 9::4, 6::4, 13::4, 10::4, 3::4, 10::4,
             6::4, 7::4, 1::4>>,
           "a"
         )
-        |> Trie.update(
+        |> Trie.update_key(
           <<15::4, 11::4, 1::4, 14::4, 9::4, 7::4, 9::4, 5::4, 6::4, 15::4, 6::4, 11::4, 8::4,
             5::4, 2::4, 12::4>>,
           "b"
         )
-        |> Trie.update(
+        |> Trie.update_key(
           <<6::4, 1::4, 10::4, 10::4, 5::4, 7::4, 14::4, 3::4, 10::4, 0::4, 15::4, 3::4, 6::4,
             4::4, 5::4, 0::4>>,
           "c"
         )
 
-      assert Trie.get(
+      assert Trie.get_key(
                trie,
                <<15::4, 10::4, 5::4, 11::4, 5::4, 2::4, 10::4, 9::4, 6::4, 13::4, 10::4, 3::4,
                  10::4, 6::4, 7::4, 1::4>>
              ) == "a"
 
-      assert Trie.get(
+      assert Trie.get_key(
                trie,
                <<15::4, 11::4, 1::4, 14::4, 9::4, 7::4, 9::4, 5::4, 6::4, 15::4, 6::4, 11::4,
                  8::4, 5::4, 2::4, 12::4>>
              ) == "b"
 
-      assert Trie.get(
+      assert Trie.get_key(
                trie,
                <<6::4, 1::4, 10::4, 10::4, 5::4, 7::4, 14::4, 3::4, 10::4, 0::4, 15::4, 3::4,
                  6::4, 4::4, 5::4, 0::4>>
@@ -321,12 +321,12 @@ defmodule MerklePatriciaTree.TrieTest do
 
     test "remove branch value", %{db: db} do
       empty_trie = Trie.new(db)
-      trie_1 = Trie.update(empty_trie, <<0x01::4, 0x02::4>>, "foo")
-      trie_2 = Trie.update(trie_1, <<0x01::4, 0x02::4, 0x03::4>>, "bar")
-      trie_3 = Trie.remove(trie_2, <<0x01::4, 0x02::4>>)
+      trie_1 = Trie.update_key(empty_trie, <<0x01::4, 0x02::4>>, "foo")
+      trie_2 = Trie.update_key(trie_1, <<0x01::4, 0x02::4, 0x03::4>>, "bar")
+      trie_3 = Trie.remove_key(trie_2, <<0x01::4, 0x02::4>>)
 
-      assert Trie.get(trie_3, <<0x01::4, 0x02::4>>) == nil
-      assert Trie.get(trie_3, <<0x01::4, 0x02::4, 0x03::4>>) == "bar"
+      assert Trie.get_key(trie_3, <<0x01::4, 0x02::4>>) == nil
+      assert Trie.get_key(trie_3, <<0x01::4, 0x02::4, 0x03::4>>) == "bar"
     end
 
     test "acceptence testing", %{db: db} do
@@ -335,11 +335,11 @@ defmodule MerklePatriciaTree.TrieTest do
           key = random_key()
           value = random_value()
 
-          updated_trie = Trie.update(trie, key, value)
+          updated_trie = Trie.update_key(trie, key, value)
 
           # Verify each key exists in our trie
           for {k, v} <- dict do
-            assert Trie.get(updated_trie, k) == v
+            assert Trie.get_key(updated_trie, k) == v
           end
 
           {updated_trie, [{key, value} | dict]}
@@ -347,6 +347,38 @@ defmodule MerklePatriciaTree.TrieTest do
 
       # next, assert tree is well formed
       assert Verifier.verify_trie(trie, values) == :ok
+    end
+
+    test "creates 2 tries with the same key-value pairs but different insertion order", %{db: db} do
+      key_value_pairs = [
+        {"elixir", "erlang"},
+        {"kotlin", "java"},
+        {"purescript", "javascript"},
+        {"rust", "c++"},
+        {"ruby", "crystal"}
+      ]
+
+      trie1 =
+        Enum.reduce(key_value_pairs, Trie.new(db), fn {lang1, lang2}, trie_acc ->
+          Trie.update_key(trie_acc, lang1, lang2)
+        end)
+
+      trie2 =
+        key_value_pairs
+        |> Enum.reverse()
+        |> Enum.reduce(Trie.new(db), fn {lang1, lang2}, trie_acc ->
+          Trie.update_key(trie_acc, lang1, lang2)
+        end)
+
+      trie3 =
+        key_value_pairs
+        |> Enum.shuffle()
+        |> Enum.reduce(Trie.new(db), fn {lang1, lang2}, trie_acc ->
+          Trie.update_key(trie_acc, lang1, lang2)
+        end)
+
+      assert trie1.root_hash == trie2.root_hash
+      assert trie1.root_hash == trie3.root_hash
     end
   end
 end

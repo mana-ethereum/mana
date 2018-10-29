@@ -2,10 +2,12 @@ defmodule MerklePatriciaTree.Trie do
   @moduledoc File.read!("#{__DIR__}/../../README.md")
 
   alias ExthCrypto.Hash.Keccak
-  alias MerklePatriciaTree.Trie.{Builder, Destroyer, Helper, Node, Storage}
-  alias MerklePatriciaTree.{DB, ListHelper}
+  alias MerklePatriciaTree.DB
+  alias MerklePatriciaTree.Trie.{Builder, Destroyer, Fetcher, Helper, Node, Storage}
 
   defstruct db: nil, root_hash: nil
+
+  @behaviour MerklePatriciaTree.Storage
 
   @type root_hash :: binary()
 
@@ -62,6 +64,16 @@ defmodule MerklePatriciaTree.Trie do
     %__MODULE__{db: db, root_hash: root_hash} |> store()
   end
 
+  @impl true
+  def fetch_node(trie) do
+    Node.decode_trie(trie)
+  end
+
+  @impl true
+  def put_node(node, trie) do
+    Node.encode_node(node, trie)
+  end
+
   @doc """
   Moves trie down to be rooted at `next_node`,
   this is effectively (and literally) just changing
@@ -69,6 +81,7 @@ defmodule MerklePatriciaTree.Trie do
   Used for trie traversal (ext and branch nodes) and
   for creating new tries with the same underlying db.
   """
+  @impl true
   def into(next_node, trie) do
     %{trie | root_hash: next_node}
   end
@@ -76,114 +89,57 @@ defmodule MerklePatriciaTree.Trie do
   @doc """
   Given a trie, returns the value associated with key.
   """
-  @spec get(t(), key()) :: binary() | nil
-  def get(trie, key) do
-    do_get(trie, Helper.get_nibbles(key))
-  end
-
-  @spec do_get(t() | nil, [integer()]) :: binary() | nil
-  defp do_get(nil, _), do: nil
-
-  defp do_get(trie, nibbles = [nibble | rest]) do
-    # Let's decode `c(I, i)`
-
-    case Node.decode_trie(trie) do
-      # No node, bail
-      :empty ->
-        nil
-
-      # Leaf node
-      {:leaf, prefix, value} ->
-        if prefix == nibbles,
-          do: value,
-          else: nil
-
-      # Extension, continue walking trie if we match
-      {:ext, shared_prefix, next_node} ->
-        case ListHelper.get_postfix(nibbles, shared_prefix) do
-          # Did not match extension node
-          nil ->
-            nil
-
-          rest ->
-            next_node |> into(trie) |> do_get(rest)
-        end
-
-      # Branch node
-      {:branch, branches} ->
-        case Enum.at(branches, nibble) do
-          [] -> nil
-          node_hash -> node_hash |> into(trie) |> do_get(rest)
-        end
-    end
-  end
-
-  defp do_get(trie, []) do
-    # No prefix left, its either branch or leaf node
-    case Node.decode_trie(trie) do
-      # In branch node value is always the last element
-      {:branch, branches} ->
-        value = List.last(branches)
-        # Decode empty value as nil, see Eq.(194)
-        if value == <<>>, do: nil, else: value
-
-      {:leaf, [], v} ->
-        v
-
-      _ ->
-        nil
-    end
+  @impl true
+  def get_key(trie, key) do
+    Fetcher.get(trie, key)
   end
 
   @doc """
   Updates a trie by setting key equal to value.
   If value is nil, we will instead remove `key` from the trie.
   """
-  @spec update(t(), key(), ExRLP.t() | nil) :: t()
-  def update(trie, key, nil), do: remove(trie, key)
 
-  def update(trie, key, value) do
-    key_nibbles = Helper.get_nibbles(key)
-    # We're going to recursively walk toward our key,
-    # then we'll add our value (either a new leaf or the value
-    # on a branch node), then we'll walk back up the tree and
-    # update all previous nodes.
-    # This may require changing the type of the node.
-    trie
-    |> Node.decode_trie()
-    |> Builder.put_key(key_nibbles, value, trie)
-    |> Node.encode_node(trie)
-    |> into(trie)
-    |> store()
+  @impl true
+  def update_key(trie, key, value) do
+    if is_nil(value) do
+      remove_key(trie, key)
+    else
+      key_nibbles = Helper.get_nibbles(key)
+      # We're going to recursively walk toward our key,
+      # then we'll add our value (either a new leaf or the value
+      # on a branch node), then we'll walk back up the tree and
+      # update all previous nodes.
+      # This may require changing the type of the node.
+      trie
+      |> fetch_node()
+      |> Builder.put_key(key_nibbles, value, trie)
+      |> put_node(trie)
+      |> into(trie)
+      |> store()
+    end
   end
 
   @doc """
   Removes `key` from the `trie`.
   """
-  @spec remove(t(), key()) :: t()
-  def remove(trie, key) do
+  @impl true
+  def remove_key(trie, key) do
     key_nibbles = Helper.get_nibbles(key)
 
-    new_trie =
-      trie
-      |> Node.decode_trie()
-      |> Destroyer.remove_key(key_nibbles, trie)
-      |> Node.encode_node(trie)
-      |> into(trie)
-      |> store()
-
-    # TODO: https://github.com/poanetwork/mana/issues/229
-    # Storage.delete(trie)
-
-    new_trie
+    trie
+    |> fetch_node()
+    |> Destroyer.remove_key(key_nibbles, trie)
+    |> put_node(trie)
+    |> into(trie)
+    |> store()
   end
 
+  @impl true
   def store(trie) do
-    rlp = rlp_encode(trie.root_hash)
+    rlp = Helper.rlp_encode(trie.root_hash)
 
     # Let's check if it is RLP or Keccak-256 hash.
-    # Keccak-256 is always 32-bytes.
-    if byte_size(rlp) < Storage.max_rlp_len() do
+    if Storage.keccak_hash?(rlp) do
       # It is RLP, so we need to calc KEC-256 and
       # store it in the database.
       kec = Storage.store(rlp, trie.db)
@@ -194,9 +150,4 @@ defmodule MerklePatriciaTree.Trie do
       trie
     end
   end
-
-  # Encodes `x` in RLP if it isn't already encoded.
-  # And it is definitely not encoded if it is `<<>>` or not a binary (e.g. array).
-  defp rlp_encode(x) when not is_binary(x) or x == <<>>, do: ExRLP.encode(x)
-  defp rlp_encode(x), do: x
 end

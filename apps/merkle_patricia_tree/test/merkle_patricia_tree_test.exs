@@ -29,7 +29,7 @@ defmodule MerklePatriciaTreeTest do
 
         trie =
           Enum.reduce(input, Trie.new(db), fn [k, v], trie ->
-            Trie.update(trie, hex_to_bin(k), hex_to_bin(v))
+            Trie.update_key(trie, hex_to_bin(k), hex_to_bin(v))
           end)
 
         assert trie.root_hash == hex_to_bin(test["root"])

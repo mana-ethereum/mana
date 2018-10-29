@@ -14,6 +14,9 @@ defmodule MerklePatriciaTree.Trie.Storage do
   @spec max_rlp_len() :: integer()
   def max_rlp_len(), do: @max_rlp_len
 
+  # Keccak-256 is always 32-bytes.
+  def keccak_hash?(bytes), do: byte_size(bytes) < max_rlp_len()
+
   @doc """
   Takes an RLP-encoded node and pushes it to storage,
   as defined by `n(I, i)` Eq.(178) of the Yellow Paper.
