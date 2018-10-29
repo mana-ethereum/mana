@@ -5,8 +5,8 @@ defmodule CLI.State do
   """
   require Logger
 
-  alias MerklePatriciaTree.DB
   alias Blockchain.Blocktree
+  alias MerklePatriciaTree.DB
 
   @doc """
   Loads the current block tree from the database.
