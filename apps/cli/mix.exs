@@ -11,6 +11,7 @@ defmodule Cli.MixProject do
       lockfile: "../../mix.lock",
       elixir: "~> 1.7",
       start_permanent: Mix.env() == :prod,
+      elixirc_paths: elixirc_paths(Mix.env()),
       deps: deps()
     ]
   end
@@ -22,12 +23,16 @@ defmodule Cli.MixProject do
     ]
   end
 
+  defp elixirc_paths(:test), do: ["lib", "test/support"]
+  defp elixirc_paths(_), do: ["lib"]
+
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
       {:ethereumex, "~> 0.5.0"},
       {:blockchain, in_umbrella: true},
-      {:merkle_patricia_tree, in_umbrella: true}
+      {:merkle_patricia_tree, in_umbrella: true},
+      {:progress_bar, "~> 1.6.1"}
     ]
   end
 end

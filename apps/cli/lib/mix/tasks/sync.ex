@@ -20,9 +20,9 @@ defmodule Mix.Tasks.Sync do
 
   Examples:
 
-      mix sync --provider-url https://ropsten.infura.io
+      mix sync --chain ropsten --provider-url https://ropsten.infura.io
 
-      mix sync --provider rpc --provider-url ipc:///path/to/file
+      mix sync --chain ropsten --provider-url ipc:///path/to/file
   """
   use Mix.Task
   require Logger
