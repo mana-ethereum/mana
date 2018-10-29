@@ -80,12 +80,14 @@ defmodule CLI.Sync do
   defp should_continue?(n), do: {:continue, n - 1}
 
   @spec track_progress(integer(), integer() | nil) :: no_return()
-  defp track_progress(block_number, nil) do
-    ProgressBar.render_indeterminate(block_number + 1)
-  end
-
-  defp track_progress(block_number, max_block_number) do
-    ProgressBar.render(block_number + 1, max_block_number, progress_bar_format())
+  defp track_progress(block_number, _max_block_number) do
+    # Let's currently just show till next sync block until we
+    # can use `suffix: :count`
+    ProgressBar.render(
+      rem(block_number, @save_block_interval),
+      100,
+      progress_bar_format()
+    )
   end
 
   @spec progress_bar_format([]) :: []
