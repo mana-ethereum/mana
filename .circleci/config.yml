@@ -490,7 +490,7 @@ jobs:
     steps:
       - attach_workspace:
            at: .
-      - run: curl https://sh.rustup.rs -sSf | sh -s -- -y
+      - run: curl -s https://static.rust-lang.org/rustup.sh | sh -s -- --channel=nightly
       - run: echo 'export PATH=~/.cargo/bin:$PATH' >> $BASH_ENV
       - run: mix local.hex --force
       - run: mix local.rebar --force
