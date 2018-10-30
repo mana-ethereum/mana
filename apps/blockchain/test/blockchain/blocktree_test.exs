@@ -153,11 +153,9 @@ defmodule Blockchain.BlocktreeTest do
         }
       }
 
-      {:ok, hash} = Blockchain.Block.put_block(block, db)
-      tree = %Blocktree{best_block: %Blockchain.Block{block_hash: hash}}
+      tree = %Blocktree{best_block: block}
 
-      assert {:ok, loaded_block} = Blockchain.Blocktree.get_best_block(tree, chain, db)
-      assert loaded_block.header.number == 5
+      assert {:ok, block} == Blockchain.Blocktree.get_best_block(tree, chain, db)
     end
   end
 end

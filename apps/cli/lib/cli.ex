@@ -15,6 +15,8 @@ defmodule CLI do
   ./mana --sync --rpc --submit-transaction "{...}"
   ```
   """
+  require Logger
+
   alias Blockchain.{Blocktree, Chain}
   alias CLI.{Config, State, Sync}
   alias MerklePatriciaTree.DB.RocksDB
@@ -37,6 +39,10 @@ defmodule CLI do
              block_provider.get_block_number(block_provider_state) do
         # Note: we load the highest block number right now just
         # to track our progress.
+
+        Logger.info(fn ->
+          "Starting sync at block ##{current_block.header.number} of #{highest_known_block_number} total blocks"
+        end)
 
         # TODO: Use highest known block as limit?
 
