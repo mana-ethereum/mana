@@ -124,7 +124,7 @@ defmodule EthCommonTest.Helpers do
           (String.t() -> no_return()),
           (String.t(), test_case() -> no_return())
         ) :: no_return()
-  def run_common_tests(test_set_name, runner, fail_fun) do
+  def run_common_tests(test_set_name, fail_fun, runner) do
     # `common_test_files` are simply a list of paths to tests for test_set_name
     # these are top-level folder names in `ethereum_common_tests`
     common_test_files = test_files(test_set_name)
