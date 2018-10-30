@@ -480,10 +480,10 @@ defmodule Blockchain.Account do
   def put_code(state, contract_address, machine_code) do
     kec = Keccak.kec(machine_code)
 
-    MerklePatriciaTree.DB.put!(state.db, kec, machine_code)
+    new_state = TrieStorage.storage(state).put_raw_key!(state, kec, machine_code)
 
     update_account(state, contract_address, fn acct ->
-      {%{acct | code_hash: kec}, state}
+      {%{acct | code_hash: kec}, new_state}
     end)
   end
 
@@ -522,7 +522,7 @@ defmodule Blockchain.Account do
         {:ok, <<>>}
 
       code_hash ->
-        case MerklePatriciaTree.DB.get(state.db, code_hash) do
+        case TrieStorage.storage(state).get_raw_key(state, code_hash) do
           {:ok, machine_code} when is_binary(machine_code) -> {:ok, machine_code}
           _ -> :not_found
         end

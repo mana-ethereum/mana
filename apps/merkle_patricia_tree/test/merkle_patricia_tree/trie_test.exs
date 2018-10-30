@@ -410,4 +410,15 @@ defmodule MerklePatriciaTree.TrieTest do
       assert Trie.get_subtrie_key(updated_trie, updated_subtrie.root_hash, "elixir") == "erlang"
     end
   end
+
+  describe "put_raw_key!/3" do
+    test "saves raw data", %{db: db} do
+      trie = Trie.new(db)
+
+      updated_trie = Trie.put_raw_key!(trie, "1", "555")
+
+      assert Trie.get_raw_key(updated_trie, "1") == {:ok, "555"}
+      assert Trie.get_raw_key(updated_trie, "5") == :not_found
+    end
+  end
 end

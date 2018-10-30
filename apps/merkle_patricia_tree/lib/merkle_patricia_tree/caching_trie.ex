@@ -36,7 +36,8 @@ defmodule MerklePatriciaTree.CachingTrie do
     %__MODULE__{
       in_memory_trie: in_memory_trie,
       trie: trie,
-      trie_changes: []
+      trie_changes: [],
+      db_changes: %{}
     }
   end
 
@@ -134,6 +135,24 @@ defmodule MerklePatriciaTree.CachingTrie do
     }
 
     {updated_caching_subtrie, updated_caching_trie}
+  end
+
+  @impl true
+  def put_raw_key!(caching_trie, key, value) do
+    updated_db_changes = Map.put(caching_trie.db_changes, key, value)
+
+    %{caching_trie | db_changes: updated_db_changes}
+  end
+
+  @impl true
+  def get_raw_key(caching_trie, key) do
+    cached_value = Map.get(caching_trie.db_changes, key)
+
+    if is_nil(cached_value) do
+      MerklePatriciaTree.DB.get(caching_trie.trie.db, key)
+    else
+      {:ok, cached_value}
+    end
   end
 
   @impl true

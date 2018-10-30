@@ -187,4 +187,22 @@ defmodule MerklePatriciaTree.CachingTrieTest do
              ) == nil
     end
   end
+
+  describe "put_raw_key!/3" do
+    test "saves raw data to cache", %{disk_trie: disk_trie} do
+      disk_trie = Trie.put_raw_key!(disk_trie, "1", "555")
+      caching_trie = CachingTrie.new(disk_trie)
+
+      updated_caching_trie =
+        caching_trie
+        |> CachingTrie.put_raw_key!("key1", "value1")
+        |> CachingTrie.put_raw_key!("key2", "value2")
+
+      assert updated_caching_trie.db_changes == %{"key1" => "value1", "key2" => "value2"}
+      assert CachingTrie.get_raw_key(updated_caching_trie, "key1") == {:ok, "value1"}
+      assert CachingTrie.get_raw_key(updated_caching_trie, "key2") == {:ok, "value2"}
+      assert CachingTrie.get_raw_key(updated_caching_trie, "1") == {:ok, "555"}
+      assert CachingTrie.get_raw_key(updated_caching_trie, "key3") == :not_found
+    end
+  end
 end

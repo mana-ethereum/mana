@@ -20,6 +20,10 @@ defmodule MerklePatriciaTree.Storage do
 
   @callback update_subtrie_key(t(), Trie.root_hash(), Trie.key(), ExRLP.t() | nil) :: {t, t}
 
+  @callback put_raw_key!(t(), binary(), binary()) :: t()
+
+  @callback get_raw_key(t(), binary()) :: {:ok, binary()} | :not_found
+
   @callback get_key(t(), Trie.key()) :: nil | binary()
 
   @callback get_subtrie_key(t(), Trie.root_hash(), Trie.key()) :: nil | binary()
