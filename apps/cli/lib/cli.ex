@@ -1,19 +1,7 @@
 defmodule CLI do
   @moduledoc """
-  Command-line tooling for Mana.
-
-  We currently support syncing via the CLI, run as:
-
-  ```bash
-  mana> mix sync --provider-url https://mainnet.infura.io/...
-  ```
-
-  Over time, with releases, we plan to evolve the CLI to function
-  similar to Parity, so you may see:
-
-  ```bash
-  ./mana --sync --rpc --submit-transaction "{...}"
-  ```
+  Command-line tooling for Mana. We currently expose a function
+  to kick off syncing with a remote RPC client.
   """
   require Logger
 
