@@ -9,35 +9,30 @@ defmodule Blockchain.Account.Storage do
   """
 
   alias ExthCrypto.Hash.Keccak
-  alias MerklePatriciaTree.{DB, Trie}
+  alias MerklePatriciaTree.Storage, as: TrieStorage
+  alias MerklePatriciaTree.Trie
 
-  @spec put(DB.db(), EVM.trie_root(), integer(), integer()) :: Trie.t()
-  def put(db, root, key, value) do
+  @spec put(TrieStorage.t(), EVM.trie_root(), integer(), integer()) ::
+          {TrieStorage.t(), TrieStorage.t()}
+  def put(trie_storage, root, key, value) do
     k = encode_key(key)
     v = encode_value(value)
 
-    db
-    |> Trie.new(root)
-    |> Trie.update_key(k, v)
+    TrieStorage.storage(trie_storage).update_subtrie_key(trie_storage, root, k, v)
   end
 
-  @spec remove(DB.db(), EVM.trie_root(), integer()) :: Trie.t()
-  def remove(db, root, key) do
+  @spec remove(TrieStorage.t(), EVM.trie_root(), integer()) :: {TrieStorage.t(), TrieStorage.t()}
+  def remove(trie_storage, root, key) do
     k = encode_key(key)
 
-    db
-    |> Trie.new(root)
-    |> Trie.remove_key(k)
+    TrieStorage.storage(trie_storage).remove_subtrie_key(trie_storage, root, k)
   end
 
-  @spec fetch(DB.db(), EVM.trie_root(), integer()) :: integer() | nil
-  def fetch(db, root, key) do
+  @spec fetch(TrieStorage.t(), EVM.trie_root(), integer()) :: integer() | nil
+  def fetch(trie_storage, root, key) do
     k = encode_key(key)
 
-    result =
-      db
-      |> Trie.new(root)
-      |> Trie.get_key(k)
+    result = TrieStorage.storage(trie_storage).get_subtrie_key(trie_storage, root, k)
 
     if is_nil(result), do: nil, else: ExRLP.decode(result)
   end
