@@ -7,6 +7,7 @@ defmodule Mana.MixProject do
       apps_path: "apps",
       apps: [
         :blockchain,
+        :cli,
         :evm,
         :ex_wire,
         :exth_crypto,

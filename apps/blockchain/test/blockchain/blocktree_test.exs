@@ -113,4 +113,49 @@ defmodule Blockchain.BlocktreeTest do
                {:invalid, [:invalid_difficulty, :invalid_gas_limit, :child_timestamp_invalid]}
     end
   end
+
+  describe "get_best_block/3" do
+    test "when there's no best block" do
+      db = MerklePatriciaTree.Test.random_ets_db()
+      chain = Blockchain.Chain.load_chain(:ropsten)
+      tree = Blocktree.new_tree()
+
+      assert {:ok, block} = Blockchain.Blocktree.get_best_block(tree, chain, db)
+      assert block.header.number == 0
+    end
+
+    test "when there is a best block" do
+      db = MerklePatriciaTree.Test.random_ets_db()
+      chain = Blockchain.Chain.load_chain(:ropsten)
+
+      block = %Blockchain.Block{
+        transactions: [
+          %Blockchain.Transaction{
+            nonce: 5,
+            gas_price: 6,
+            gas_limit: 7,
+            to: <<1::160>>,
+            value: 8,
+            v: 27,
+            r: 9,
+            s: 10,
+            data: "hi"
+          }
+        ],
+        header: %Block.Header{
+          number: 5,
+          parent_hash: <<1, 2, 3>>,
+          beneficiary: <<2, 3, 4>>,
+          difficulty: 100,
+          timestamp: 11,
+          mix_hash: <<1>>,
+          nonce: <<2>>
+        }
+      }
+
+      tree = %Blocktree{best_block: block}
+
+      assert {:ok, block} == Blockchain.Blocktree.get_best_block(tree, chain, db)
+    end
+  end
 end

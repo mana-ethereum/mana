@@ -7,7 +7,8 @@ defmodule Blockchain.Blocktree do
     defexception [:message]
   end
 
-  alias Blockchain.{Block, Chain}
+  alias Blockchain.{Block, Chain, Genesis}
+  alias MerklePatriciaTree.DB
 
   defstruct best_block: nil
 
@@ -29,7 +30,7 @@ defmodule Blockchain.Blocktree do
   2. Verfiy the block against its parent block
   3. If valid, put the block into our DB
   """
-  @spec verify_and_add_block(t, Chain.t(), Block.t(), MerklePatriciaTree.DB.db(), boolean()) ::
+  @spec verify_and_add_block(t, Chain.t(), Block.t(), DB.db(), boolean()) ::
           {:ok, t} | :parent_not_found | {:invalid, [atom()]}
   def verify_and_add_block(
         blocktree,
@@ -75,5 +76,21 @@ defmodule Blockchain.Blocktree do
          else: best_block
 
     %{blocktree | best_block: new_best_block}
+  end
+
+  @doc """
+  Returns the best block in a tree, which is either the listed best block,
+  or it's the genesis block, which we create.
+
+  Note: we load the block by the block_hash, instead of taking it
+        directly from the tree.
+  """
+  @spec get_best_block(t(), Chain.t(), DB.db()) :: {:ok, Block.t()} | {:error, any()}
+  def get_best_block(blocktree, chain, db) do
+    if block = blocktree.best_block do
+      {:ok, block}
+    else
+      {:ok, Genesis.create_block(chain, db)}
+    end
   end
 end
