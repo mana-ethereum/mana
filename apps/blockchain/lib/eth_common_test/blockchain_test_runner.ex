@@ -194,7 +194,7 @@ defmodule EthCommonTest.BlockchainTestRunner do
       storage =
         Enum.reduce(account["storage"], storage, fn {key, value}, trie ->
           {subtrie, _trie} =
-            Storage.put(trie.db, trie.root_hash, load_integer(key), load_integer(value))
+            Storage.put(trie, trie.root_hash, load_integer(key), load_integer(value))
 
           subtrie
         end)
