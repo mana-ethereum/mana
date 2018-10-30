@@ -30,6 +30,10 @@ defmodule MerklePatriciaTree.Storage do
 
   @callback into(binary(), t) :: t
 
+  @callback root_hash(t()) :: Trie.root_hash()
+
+  @callback set_root_hash(t(), Trie.root_hash()) :: t()
+
   @callback store(t) :: t
 
   def storage(implementation) do

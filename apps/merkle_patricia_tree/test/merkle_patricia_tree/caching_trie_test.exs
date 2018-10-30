@@ -205,4 +205,32 @@ defmodule MerklePatriciaTree.CachingTrieTest do
       assert CachingTrie.get_raw_key(updated_caching_trie, "key3") == :not_found
     end
   end
+
+  describe "root_hash/1" do
+    test "returns root_hash from in-memory trie", %{disk_trie: disk_trie} do
+      disk_trie = Trie.update_key(disk_trie, "elixir", "ruby")
+
+      caching_trie =
+        disk_trie
+        |> CachingTrie.new()
+        |> CachingTrie.update_key("elixir", "erlang")
+
+      assert Trie.get_key(caching_trie.trie, "elixir") == "ruby"
+      assert Trie.get_key(caching_trie.in_memory_trie, "elixir") == "erlang"
+      assert CachingTrie.root_hash(caching_trie) == caching_trie.in_memory_trie.root_hash
+    end
+  end
+
+  describe "set_root_hash/2" do
+    test "sets root_hash to in-memory trie", %{disk_trie: disk_trie} do
+      caching_trie =
+        disk_trie
+        |> Trie.update_key("elixir", "ruby")
+        |> CachingTrie.new()
+
+      updated_caching_trie = CachingTrie.set_root_hash(caching_trie, Trie.empty_trie_root_hash())
+
+      assert CachingTrie.root_hash(updated_caching_trie) == Trie.empty_trie_root_hash()
+    end
+  end
 end

@@ -42,6 +42,16 @@ defmodule MerklePatriciaTree.CachingTrie do
   end
 
   @impl true
+  def root_hash(caching_trie) do
+    caching_trie.in_memory_trie.root_hash
+  end
+
+  @impl true
+  def set_root_hash(caching_trie, root_hash) do
+    %{caching_trie | in_memory_trie: %{caching_trie.in_memory_trie | root_hash: root_hash}}
+  end
+
+  @impl true
   def fetch_node(caching_trie) do
     in_memory_node = Node.decode_trie(caching_trie.in_memory_trie)
 

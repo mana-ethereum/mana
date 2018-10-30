@@ -185,4 +185,14 @@ defmodule MerklePatriciaTree.Trie do
       trie
     end
   end
+
+  @impl true
+  def root_hash(trie) do
+    trie.root_hash
+  end
+
+  @impl true
+  def set_root_hash(trie, root_hash) do
+    %{trie | root_hash: root_hash}
+  end
 end
