@@ -15,6 +15,7 @@ defmodule Blockchain.BlockTest do
       &ExUnit.Assertions.flunk/1,
       fn test_name, test_case ->
         db = MerklePatriciaTree.Test.random_ets_db()
+        trie = MerklePatriciaTree.Trie.new(db)
 
         chain = %Chain{
           genesis: %{
@@ -32,7 +33,7 @@ defmodule Blockchain.BlockTest do
           accounts: get_test_accounts(test_case["alloc"])
         }
 
-        block = Genesis.create_block(chain, db)
+        {block, _} = Genesis.create_block(chain, trie)
 
         # Check that our block matches the serialization from common tests
         assert Block.serialize(block) ==
@@ -65,6 +66,7 @@ defmodule Blockchain.BlockTest do
   describe "add_rewards/3" do
     test "rewards the miner and ommers" do
       db = MerklePatriciaTree.Test.random_ets_db()
+      trie = MerklePatriciaTree.Trie.new(db)
       miner = <<0x05::160>>
       ommer = <<0x06::160>>
       state = MerklePatriciaTree.Trie.new(db)
@@ -84,17 +86,17 @@ defmodule Blockchain.BlockTest do
         ]
       }
 
-      block = Blockchain.Block.add_rewards(block, db, chain)
+      {block, _trie} = Blockchain.Block.add_rewards(block, trie, chain)
 
       miner_balance =
         block
-        |> Blockchain.Block.get_state(db)
+        |> Blockchain.Block.get_state(trie)
         |> Blockchain.Account.get_account(miner)
         |> Map.get(:balance)
 
       ommer_balance =
         block
-        |> Blockchain.Block.get_state(db)
+        |> Blockchain.Block.get_state(trie)
         |> Blockchain.Account.get_account(ommer)
         |> Map.get(:balance)
 
@@ -104,6 +106,7 @@ defmodule Blockchain.BlockTest do
 
     test "rewards the miner and ommers with Byzantium rewards" do
       db = MerklePatriciaTree.Test.random_ets_db()
+      trie = MerklePatriciaTree.Trie.new(db)
       miner = <<0x05::160>>
       ommer = <<0x06::160>>
       state = MerklePatriciaTree.Trie.new(db)
@@ -127,17 +130,17 @@ defmodule Blockchain.BlockTest do
         ]
       }
 
-      block = Blockchain.Block.add_rewards(block, db, chain)
+      {block, trie} = Blockchain.Block.add_rewards(block, trie, chain)
 
       miner_balance =
         block
-        |> Blockchain.Block.get_state(db)
+        |> Blockchain.Block.get_state(trie)
         |> Blockchain.Account.get_account(miner)
         |> Map.get(:balance)
 
       ommer_balance =
         block
-        |> Blockchain.Block.get_state(db)
+        |> Blockchain.Block.get_state(trie)
         |> Blockchain.Account.get_account(ommer)
         |> Map.get(:balance)
 
@@ -205,14 +208,16 @@ defmodule Blockchain.BlockTest do
 
   test "validate" do
     db = MerklePatriciaTree.Test.random_ets_db()
+    trie = MerklePatriciaTree.Trie.new(db)
     chain = Blockchain.Test.ropsten_chain()
-    parent = Blockchain.Genesis.create_block(chain, db)
+    {parent, new_trie} = Blockchain.Genesis.create_block(chain, trie)
     beneficiary = <<0x05::160>>
 
     child =
       parent
       |> Blockchain.Block.gen_child_block(chain, beneficiary: beneficiary)
-      |> Blockchain.Block.add_rewards(db, chain)
+
+    {child, _new_trie} = Blockchain.Block.add_rewards(child, new_trie, chain)
 
     result = Blockchain.Block.validate(child, chain, parent, db)
 
@@ -221,12 +226,15 @@ defmodule Blockchain.BlockTest do
 
   test "match genesis block on ropsten" do
     db = MerklePatriciaTree.Test.random_ets_db()
+    trie = MerklePatriciaTree.Trie.new(db)
     chain = Blockchain.Test.ropsten_chain()
 
+    {block, updated_trie} = Genesis.create_block(chain, trie)
+
+    {block, updated_trie} = Block.add_rewards(block, updated_trie, chain)
+
     block =
-      chain
-      |> Genesis.create_block(db)
-      |> Block.add_rewards(db, chain)
+      block
       |> Block.put_header(:mix_hash, <<0::256>>)
       |> Block.put_header(:nonce, <<0x42::64>>)
 
@@ -273,13 +281,12 @@ defmodule Blockchain.BlockTest do
 
   test "assert fully valid genesis block on ropsten" do
     db = MerklePatriciaTree.Test.random_ets_db()
+    trie = MerklePatriciaTree.Trie.new(db)
     chain = Blockchain.Test.ropsten_chain()
 
-    result =
-      chain
-      |> Genesis.create_block(db)
-      |> Block.add_rewards(db, chain)
-      |> Block.validate(chain, nil, db)
+    {block, _} = Genesis.create_block(chain, trie)
+    {block, _} = Block.add_rewards(block, trie, chain)
+    result = Block.validate(block, chain, nil, db)
 
     assert result == :valid
   end
@@ -338,7 +345,7 @@ defmodule Blockchain.BlockTest do
       }
 
       block = %Block{header: block_header, transactions: []}
-      block = Block.add_transactions(block, [trx], db, chain)
+      {block, _} = Block.add_transactions(block, [trx], state, chain)
 
       assert Enum.count(block.transactions) == 1
 
@@ -372,7 +379,7 @@ defmodule Blockchain.BlockTest do
 
       actual_accounts =
         block
-        |> Block.get_state(db)
+        |> Block.get_state(MerklePatriciaTree.Trie.new(db))
         |> Account.get_accounts(addresses)
 
       expected_accounts = [

@@ -17,13 +17,13 @@ defmodule Blockchain.BlockHeaderInfo do
 
   ## Examples
 
-      # iex> block_header = %Block.Header{}
-      # iex> db = MerklePatriciaTree.Test.random_ets_db(:new_block_header_info)
-      # iex> Blockchain.BlockHeaderInfo.new(block_header, db)
-      # %Blockchain.BlockHeaderInfo{
-      #   block_header: %Block.Header{},
-      #   db: {MerklePatriciaTree.DB.ETS, :new_block_header_info}
-      # }
+      iex> block_header = %Block.Header{}
+      iex> trie = MerklePatriciaTree.Test.random_ets_db(:new_block_header_info) |> MerklePatriciaTree.Trie.new()
+      iex> Blockchain.BlockHeaderInfo.new(block_header, trie)
+      %Blockchain.BlockHeaderInfo{
+        block_header: %Block.Header{},
+        trie: %MerklePatriciaTree.Trie{db: {MerklePatriciaTree.DB.ETS, :new_block_header_info}, root_hash: <<86, 232, 31, 23, 27, 204, 85, 166, 255, 131, 69, 230, 146, 192, 248, 110, 91, 72, 224, 27, 153, 108, 173, 192, 1, 98, 47, 181, 227, 99, 180, 33>>}
+      }
   """
   def new(block_header, trie) do
     %__MODULE__{

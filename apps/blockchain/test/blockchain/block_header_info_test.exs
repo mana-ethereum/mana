@@ -39,7 +39,7 @@ defmodule Blockchain.BlockHeaderInfoTest do
 
       ancestor_header =
         block.header
-        |> Blockchain.BlockHeaderInfo.new(db)
+        |> Blockchain.BlockHeaderInfo.new(MerklePatriciaTree.Trie.new(db))
         |> Blockchain.BlockHeaderInfo.get_ancestor_header(1)
 
       assert parent_header == ancestor_header
@@ -96,7 +96,7 @@ defmodule Blockchain.BlockHeaderInfoTest do
 
       ancestor_header =
         block.header
-        |> Blockchain.BlockHeaderInfo.new(db)
+        |> Blockchain.BlockHeaderInfo.new(MerklePatriciaTree.Trie.new(db))
         |> Blockchain.BlockHeaderInfo.get_ancestor_header(2)
 
       assert grand_parent_header == ancestor_header
@@ -108,7 +108,7 @@ defmodule Blockchain.BlockHeaderInfoTest do
 
       ancestor_header =
         header
-        |> Blockchain.BlockHeaderInfo.new(db)
+        |> Blockchain.BlockHeaderInfo.new(MerklePatriciaTree.Trie.new(db))
         |> Blockchain.BlockHeaderInfo.get_ancestor_header(257)
 
       assert is_nil(ancestor_header)
@@ -120,7 +120,7 @@ defmodule Blockchain.BlockHeaderInfoTest do
 
       ancestor_header =
         header
-        |> Blockchain.BlockHeaderInfo.new(db)
+        |> Blockchain.BlockHeaderInfo.new(MerklePatriciaTree.Trie.new(db))
         |> Blockchain.BlockHeaderInfo.get_ancestor_header(-1)
 
       assert is_nil(ancestor_header)
@@ -133,7 +133,7 @@ defmodule Blockchain.BlockHeaderInfoTest do
 
       ancestor_header =
         header
-        |> Blockchain.BlockHeaderInfo.new(db)
+        |> Blockchain.BlockHeaderInfo.new(MerklePatriciaTree.Trie.new(db))
         |> Blockchain.BlockHeaderInfo.get_ancestor_header(0)
 
       assert is_nil(ancestor_header)

@@ -7,7 +7,7 @@ defmodule Blockchain.BlocktreeTest do
     test "adds valid blocks" do
       trie = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
       chain = Blockchain.Chain.load_chain(:ropsten)
-      parent = Blockchain.Genesis.create_block(chain, trie.db)
+      {parent, _trie} = Blockchain.Genesis.create_block(chain, trie)
       child = Blockchain.Block.gen_child_block(parent, chain)
 
       block_1 = %Blockchain.Block{
@@ -24,7 +24,7 @@ defmodule Blockchain.BlocktreeTest do
         }
       }
 
-      block_2 =
+      {block_2, _new_trie} =
         %Blockchain.Block{
           header: %Block.Header{
             number: 1,
@@ -38,7 +38,7 @@ defmodule Blockchain.BlocktreeTest do
             state_root: child.header.state_root
           }
         }
-        |> Blockchain.Block.add_rewards(trie.db, chain)
+        |> Blockchain.Block.add_rewards(trie, chain)
 
       tree = Blocktree.new_tree()
       {:ok, tree_1} = Blocktree.verify_and_add_block(tree, chain, block_1, trie.db)
@@ -68,7 +68,9 @@ defmodule Blockchain.BlocktreeTest do
       }
 
       tree = Blockchain.Blocktree.new_tree()
-      {:ok, tree_1} = Blockchain.Blocktree.verify_and_add_block(tree, chain, gen_block, trie.db)
+
+      {:ok, tree_1} =
+        Blockchain.Blocktree.verify_and_add_block(tree, chain, gen_block, trie.db, false)
 
       assert tree_1.best_block.header.number == 0
     end
@@ -76,7 +78,7 @@ defmodule Blockchain.BlocktreeTest do
     test "adds invalid block" do
       trie = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
       chain = Blockchain.Chain.load_chain(:ropsten)
-      parent = Blockchain.Genesis.create_block(chain, trie.db)
+      {parent, _new_trie} = Blockchain.Genesis.create_block(chain, trie)
 
       block_1 = %Blockchain.Block{
         header: %Block.Header{
@@ -116,11 +118,12 @@ defmodule Blockchain.BlocktreeTest do
 
   describe "get_best_block/3" do
     test "when there's no best block" do
-      db = MerklePatriciaTree.Test.random_ets_db()
+      trie = MerklePatriciaTree.Test.random_ets_db() |> MerklePatriciaTree.Trie.new()
       chain = Blockchain.Chain.load_chain(:ropsten)
       tree = Blocktree.new_tree()
 
-      assert {:ok, block} = Blockchain.Blocktree.get_best_block(tree, chain, db)
+      assert {:ok, {block, new_trie}} = Blockchain.Blocktree.get_best_block(tree, chain, trie)
+
       assert block.header.number == 0
     end
 

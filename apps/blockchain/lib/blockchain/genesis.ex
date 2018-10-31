@@ -5,7 +5,6 @@ defmodule Blockchain.Genesis do
 
   alias Block.Header
   alias Blockchain.{Account, Block, Chain}
-  alias MerklePatriciaTree.{DB, Trie}
   alias MerklePatriciaTree.TrieStorage
 
   @type seal_config :: %{
@@ -34,9 +33,10 @@ defmodule Blockchain.Genesis do
 
   ## Examples
 
-      iex> db = MerklePatriciaTree.Test.random_ets_db()
+      iex> trie = MerklePatriciaTree.Test.random_ets_db() |> MerklePatriciaTree.Trie.new()
       iex> chain = Blockchain.Chain.load_chain(:ropsten)
-      iex> Blockchain.Genesis.create_block(chain, db)
+      iex> {block, _state} = Blockchain.Genesis.create_block(chain, trie)
+      iex> block
       %Blockchain.Block{
         header: %Block.Header{
           number: 0,
@@ -46,7 +46,7 @@ defmodule Blockchain.Genesis do
           extra_data: "55555555555555555555555555555555",
           gas_limit: 16777216,
           parent_hash: <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0>>,
-          state_root: <<33, 123, 11, 188, 251, 114, 226, 213, 126, 40, 243, 60, 179, 97, 185, 152, 53, 19, 23, 119, 85, 220, 63, 51, 206, 62, 112, 34, 237, 98, 183, 123>>,
+          state_root: <<232, 107, 69, 139, 178, 253, 233, 218, 130, 174, 216, 128, 173, 120, 27, 24, 193, 116, 237, 198, 52, 187, 160, 193, 55, 110, 174, 93, 47, 62, 189, 214>>,
           transactions_root: <<86, 232, 31, 23, 27, 204, 85, 166, 255, 131, 69, 230, 146, 192, 248, 110, 91, 72, 224, 27, 153, 108, 173, 192, 1, 98, 47, 181, 227, 99, 180, 33>>,
           receipts_root: <<86, 232, 31, 23, 27, 204, 85, 166, 255, 131, 69, 230, 146, 192, 248, 110, 91, 72, 224, 27, 153, 108, 173, 192, 1, 98, 47, 181, 227, 99, 180, 33>>,
           ommers_hash: <<29, 204, 77, 232, 222, 199, 93, 122, 171, 133, 181, 103, 182, 204, 212, 26, 211, 18, 69, 27, 148, 138, 116, 19, 240, 161, 66, 253, 64, 212, 147, 71>>,
@@ -66,16 +66,17 @@ defmodule Blockchain.Genesis do
     accounts = Enum.into(chain.accounts, [])
 
     state =
-      Enum.reduce(accounts, trie, fn {address, account_map}, trie ->
+      Enum.reduce(accounts, trie, fn {address, account_map}, trie_acc ->
         if is_nil(account_map[:balance]) do
-          trie
+          trie_acc
         else
-          {account, trie} = create_account(trie, address, account_map)
-          Account.put_account(trie, address, account)
+          {account, trie_acc} = create_account(trie_acc, address, account_map)
+          Account.put_account(trie_acc, address, account)
         end
       end)
 
-    header = %{header | state_root: state.root_hash}
+    root_hash = TrieStorage.root_hash(state)
+    header = %{header | state_root: root_hash}
 
     {%{block | header: header}, state}
   end

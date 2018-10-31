@@ -22,7 +22,7 @@ defmodule CLI do
 
     tree = State.load_tree(db)
 
-    with {:ok, current_block} <- Blocktree.get_best_block(tree, chain, db) do
+    with {:ok, current_block} <- Blocktree.get_best_block(tree, chain, tree) do
       with {:ok, highest_known_block_number} <-
              block_provider.get_block_number(block_provider_state) do
         # Note: we load the highest block number right now just

@@ -88,11 +88,11 @@ defmodule Blockchain.Blocktree do
         directly from the tree.
   """
   @spec get_best_block(t(), Chain.t(), DB.db()) :: {:ok, Block.t()} | {:error, any()}
-  def get_best_block(blocktree, chain, db) do
+  def get_best_block(blocktree, chain, trie) do
     if block = blocktree.best_block do
       {:ok, block}
     else
-      {:ok, Genesis.create_block(chain, db)}
+      {:ok, Genesis.create_block(chain, trie)}
     end
   end
 end
