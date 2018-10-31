@@ -31,6 +31,22 @@ defmodule ExthCrypto.Hash.Keccak do
   end
 
   @doc """
+  Returns the keccak sha512 of a given input.
+
+  ## Examples
+
+      iex> ExthCrypto.Hash.Keccak.kec512("hello world")
+      <<62, 226, 180, 0, 71, 184, 6, 15, 104, 198, 114, 66, 23, 86, 96, 244, 23, 77,
+        10, 245, 192, 29, 71, 22, 142, 194, 14, 214, 25, 176, 183, 196, 33, 129, 244,
+        10, 161, 4, 111, 57, 226, 239, 158, 252, 105, 16, 120, 42, 153, 142, 0, 19,
+        209, 114, 69, 137, 87, 149, 127, 172, 148, 5, 182, 125>>
+  """
+  @spec kec(binary()) :: keccak_hash
+  def kec512(data) do
+    :keccakf1600.sha3_512(data)
+  end
+
+  @doc """
   Initializes a new Keccak mac stream.
 
   ## Examples

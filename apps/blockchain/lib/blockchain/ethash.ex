@@ -79,4 +79,22 @@ defmodule Blockchain.Ethash do
     |> Enum.find(fn a -> rem(num, a) == 0 end)
     |> is_nil
   end
+
+  @doc """
+  This is the initial cache, c', defined in the Dataset Generation section of
+  Appendix J of the Yellow Paper.
+  """
+  def initial_cache(seed, cache_size) do
+    adjusted_cache_size = div(cache_size, @j_hashbytes)
+
+    for i <- 0..(adjusted_cache_size - 1) do
+      cache_element(i, seed)
+    end
+  end
+
+  def cache_element(0, seed), do: Keccak.kec512(seed)
+
+  def cache_element(element, seed) do
+    Keccak.kec512(cache_element(element - 1, seed))
+  end
 end

@@ -67,4 +67,39 @@ defmodule Blockchain.EthashTest do
       assert result == Keccak.kec(previous_seed_hash)
     end
   end
+
+  describe "initial_cache/3" do
+    test "returns the initial cache for a given cache size" do
+      seed = <<0::256>>
+      # j_hashbytes = 64
+      cache_size = 2 * 64
+      element0 = Keccak.kec512(seed)
+      element1 = Keccak.kec512(element0)
+
+      cache = Ethash.initial_cache(seed, cache_size)
+
+      assert cache == [element0, element1]
+    end
+  end
+
+  describe "cache_element/1" do
+    test "returns the kec 512 of the seed for element 0" do
+      element = 0
+      seed = <<0::256>>
+
+      result = Ethash.cache_element(element, seed)
+
+      assert result == Keccak.kec512(seed)
+    end
+
+    test "returns the kec 512 of the previous element of the cache" do
+      element = 1
+      seed = <<0::256>>
+      previous_element_cache = Keccak.kec512(seed)
+
+      result = Ethash.cache_element(element, seed)
+
+      assert result == Keccak.kec512(previous_element_cache)
+    end
+  end
 end
