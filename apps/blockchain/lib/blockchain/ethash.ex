@@ -4,6 +4,8 @@ defmodule Blockchain.Ethash do
   yellow paper concerning the Ethash implementation for POW.
   """
 
+  alias ExthCrypto.Hash.Keccak
+
   @j_epoch 30_000
   @j_datasetinit round(:math.pow(2, 30))
   @j_datasetgrowth round(:math.pow(2, 23))
@@ -23,6 +25,8 @@ defmodule Blockchain.Ethash do
                            |> File.read!()
                            |> String.split()
                            |> Enum.map(&String.to_integer/1)
+
+  @first_epoch_seed_hash <<0::256>>
 
   def epoch(block_number) do
     div(block_number, @j_epoch)
@@ -48,6 +52,14 @@ defmodule Blockchain.Ethash do
       @j_cacheinit + @j_cachegrowth * epoch - @j_hashbytes,
       unit_size: @j_hashbytes
     )
+  end
+
+  def seed_hash(block_number) do
+    if epoch(block_number) == 0 do
+      @first_epoch_seed_hash
+    else
+      Keccak.kec(seed_hash(block_number - @j_epoch))
+    end
   end
 
   defp highest_prime_below_threshold(upper_bound, unit_size: unit_size) do
