@@ -11,10 +11,10 @@ defmodule CLI.Config do
   ## Examples
 
       iex> CLI.Config.db_name(:ropsten)
-      "db/mana-ropsten"
+      'db/mana-ropsten'
   """
-  @spec db_name(atom()) :: String.t()
+  @spec db_name(atom()) :: nonempty_charlist()
   def db_name(chain_id) do
-    "db/mana-" <> Atom.to_string(chain_id)
+    'db/mana-' ++ Atom.to_charlist(chain_id)
   end
 end

@@ -13,7 +13,6 @@ defmodule MerklePatriciaTree.DB.RocksDB do
   """
   @spec init(DB.db_name()) :: DB.db()
   def init(db_name) do
-    db_name = String.to_charlist(db_name)
     {:ok, db_ref} = :rocksdb.open(db_name, create_if_missing: true)
 
     {__MODULE__, db_ref}

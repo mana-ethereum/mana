@@ -21,7 +21,7 @@ defmodule MerklePatriciaTree.Test do
       :test1
   """
   def random_ets_db(name \\ nil) do
-    MerklePatriciaTree.DB.ETS.init(name || MerklePatriciaTree.Test.random_atom(20))
+    MerklePatriciaTree.DB.ETS.init(name || random_atom(20))
   end
 
   @doc """

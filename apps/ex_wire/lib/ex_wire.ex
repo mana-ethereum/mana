@@ -49,7 +49,7 @@ defmodule ExWire do
 
   defp db_name() do
     environment = Config.get_environment()
-    env = environment |> to_string()
-    "db/mana-" <> env
+    env = environment |> to_charlist()
+    'db/mana-' ++ env
   end
 end

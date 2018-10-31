@@ -6,7 +6,7 @@ defmodule MerklePatriciaTree.CachingTrieTest do
 
   setup do
     disk_trie =
-      "/tmp/#{MerklePatriciaTree.Test.random_string(20)}"
+      ('/tmp/' ++ to_charlist(MerklePatriciaTree.Test.random_string(20)))
       |> MerklePatriciaTree.DB.RocksDB.init()
       |> MerklePatriciaTree.Trie.new()
 

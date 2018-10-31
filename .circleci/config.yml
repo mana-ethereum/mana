@@ -494,12 +494,6 @@ jobs:
       - run: mix local.hex --force
       - run: mix local.rebar --force
       - run: mix compile
-      - run:
-          name: Collecting artifacts
-          command: |
-            ls
-            ls rel/
-          when: always
       - run: mix release --verbose --env prod
       - run:
           name: Collecting artifacts
