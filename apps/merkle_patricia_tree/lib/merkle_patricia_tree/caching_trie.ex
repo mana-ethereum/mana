@@ -199,8 +199,8 @@ defmodule MerklePatriciaTree.CachingTrie do
 
     caching_trie.db_changes
     |> Map.to_list()
-    |> Enum.reduce(updated_trie, fn {key, value}, trie_acc ->
-      Trie.put_raw_key!(trie_acc, key, value)
+    |> Enum.each(fn {key, value} ->
+      Trie.put_raw_key!(updated_trie, key, value)
     end)
 
     :ok

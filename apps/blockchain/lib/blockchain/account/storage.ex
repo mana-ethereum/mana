@@ -9,8 +9,8 @@ defmodule Blockchain.Account.Storage do
   """
 
   alias ExthCrypto.Hash.Keccak
-  alias MerklePatriciaTree.TrieStorage
   alias MerklePatriciaTree.Trie
+  alias MerklePatriciaTree.TrieStorage
 
   @spec put(TrieStorage.t(), EVM.trie_root(), integer(), integer()) ::
           {TrieStorage.t(), TrieStorage.t()}

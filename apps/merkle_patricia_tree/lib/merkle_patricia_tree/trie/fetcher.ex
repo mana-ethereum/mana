@@ -1,7 +1,7 @@
 defmodule MerklePatriciaTree.Trie.Fetcher do
   alias MerklePatriciaTree.ListHelper
-  alias MerklePatriciaTree.TrieStorage
   alias MerklePatriciaTree.Trie.Helper
+  alias MerklePatriciaTree.TrieStorage
 
   def get(trie, key) do
     do_get(trie, Helper.get_nibbles(key))

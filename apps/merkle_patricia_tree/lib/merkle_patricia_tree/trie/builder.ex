@@ -13,9 +13,9 @@ defmodule MerklePatriciaTree.Trie.Builder do
 
   import MerklePatriciaTree.ListHelper, only: [overlap: 2]
 
-  alias MerklePatriciaTree.TrieStorage
   alias MerklePatriciaTree.Trie
   alias MerklePatriciaTree.Trie.Node
+  alias MerklePatriciaTree.TrieStorage
 
   @empty_branch <<>>
 
