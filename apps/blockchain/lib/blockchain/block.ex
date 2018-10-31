@@ -219,7 +219,7 @@ defmodule Blockchain.Block do
         header: %Block.Header{number: 5, parent_hash: <<1, 2, 3>>, beneficiary: <<2, 3, 4>>, difficulty: 100, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>}
       }}
   """
-  @spec get_block(EVM.hash(), DB.db()) :: {:ok, t} | :not_found
+  @spec get_block(EVM.hash(), TrieStorage.t()) :: {:ok, t} | :not_found
   def get_block(block_hash, trie) do
     with {:ok, rlp} <- TrieStorage.get_raw_key(trie, block_hash) do
       block = rlp |> ExRLP.decode() |> deserialize()
@@ -249,11 +249,11 @@ defmodule Blockchain.Block do
       iex> Blockchain.Block.get_parent_block(%Blockchain.Block{header: %Block.Header{parent_hash: block |> Blockchain.Block.hash}}, MerklePatriciaTree.Trie.new(db))
       :not_found
   """
-  @spec get_parent_block(t, DB.db()) :: {:ok, t} | :genesis | :not_found
-  def get_parent_block(block, db) do
+  @spec get_parent_block(t, TrieStorage.t()) :: {:ok, t} | :genesis | :not_found
+  def get_parent_block(block, trie) do
     case block.header.number do
       0 -> :genesis
-      _ -> get_block(block.header.parent_hash, db)
+      _ -> get_block(block.header.parent_hash, trie)
     end
   end
 
@@ -737,7 +737,8 @@ defmodule Blockchain.Block do
     end
   end
 
-  @spec do_add_transactions(t, [Transaction.t()], DB.db(), Chain.t(), integer()) :: t
+  @spec do_add_transactions(t, [Transaction.t()], DB.db(), Chain.t(), integer()) ::
+          {t, TrieStorage.t()}
   defp do_add_transactions(block, transactions, state, chain, trx_count \\ 0)
 
   defp do_add_transactions(block, [], trie, _, _), do: {block, trie}
@@ -805,7 +806,7 @@ defmodule Blockchain.Block do
       ...> |> MerklePatriciaTree.Trie.Inspector.all_values()
       [{<<5>>, <<208, 131, 1, 2, 3, 10, 131, 2, 3, 4, 134, 104, 105, 32, 109, 111, 109>>}]
   """
-  @spec put_receipt(t, integer(), Receipt.t(), TrieStorage.t()) :: t
+  @spec put_receipt(t, integer(), Receipt.t(), TrieStorage.t()) :: {t, TrieStorage.t()}
   def put_receipt(block, i, receipt, trie) do
     encoded_receipt = receipt |> Receipt.serialize() |> ExRLP.encode()
 
@@ -840,7 +841,7 @@ defmodule Blockchain.Block do
       ...> |> MerklePatriciaTree.Trie.Inspector.all_values()
       [{<<0x80>>, <<201, 1, 128, 128, 128, 128, 128, 2, 3, 4>>}]
   """
-  @spec put_transaction(t, integer(), Transaction.t(), TrieStorage.t()) :: t
+  @spec put_transaction(t, integer(), Transaction.t(), TrieStorage.t()) :: {t, TrieStorage.t()}
   def put_transaction(block, i, trx, trie) do
     total_transactions = block.transactions ++ [trx]
     encoded_transaction = trx |> Transaction.serialize() |> ExRLP.encode()
@@ -894,7 +895,7 @@ defmodule Blockchain.Block do
       ...> |> Blockchain.Account.get_accounts([miner])
       [%Blockchain.Account{balance: 3000000000000400000}]
   """
-  @spec add_rewards(t, DB.db(), Chain.t()) :: t
+  @spec add_rewards(t, TrieStorage.t(), Chain.t()) :: {t, TrieStorage.t()}
   def add_rewards(block, trie, chain)
 
   def add_rewards(%{header: %{beneficiary: beneficiary}}, _trie, _chain)

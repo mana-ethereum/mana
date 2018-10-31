@@ -8,6 +8,7 @@ defmodule Blockchain.Blocktree do
   end
 
   alias Blockchain.{Block, Chain, Genesis}
+  alias MerklePatriciaTree.TrieStorage
   alias MerklePatriciaTree.DB
 
   defstruct best_block: nil
@@ -87,7 +88,7 @@ defmodule Blockchain.Blocktree do
   Note: we load the block by the block_hash, instead of taking it
         directly from the tree.
   """
-  @spec get_best_block(t(), Chain.t(), DB.db()) :: {:ok, Block.t()} | {:error, any()}
+  @spec get_best_block(t(), Chain.t(), TrieStorage.t()) :: {:ok, Block.t()} | {:error, any()}
   def get_best_block(blocktree, chain, trie) do
     if block = blocktree.best_block do
       {:ok, block}

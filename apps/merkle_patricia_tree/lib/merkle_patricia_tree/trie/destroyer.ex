@@ -24,7 +24,7 @@ defmodule MerklePatriciaTree.Trie.Destroyer do
 
   This may radically change the structure of the trie.
   """
-  @spec remove_key(Node.trie_node(), Trie.key(), Storage.t()) :: Node.trie_node()
+  @spec remove_key(Node.trie_node(), Trie.key(), TrieStorage.t()) :: Node.trie_node()
   def remove_key(trie_node, key, trie) do
     trie_remove_key(trie_node, key, trie)
   end
