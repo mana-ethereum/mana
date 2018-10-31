@@ -107,4 +107,187 @@ defmodule MerklePatriciaTree.CachingTrieTest do
       assert caching_trie.trie.root_hash == disk_trie.root_hash
     end
   end
+
+  describe "update_subtrie_key/4" do
+    test "update in-memory subtrie", %{disk_trie: disk_trie} do
+      disk_trie = Trie.update_key(disk_trie, "java", "kotlin")
+
+      caching_trie =
+        disk_trie
+        |> CachingTrie.new()
+        |> CachingTrie.update_key("elixir", "erlang")
+
+      {subtrie, updated_caching_trie} =
+        CachingTrie.update_subtrie_key(caching_trie, Trie.empty_trie_root_hash(), "rust", "c++")
+
+      assert CachingTrie.get_key(subtrie, "rust") == "c++"
+
+      trie_changes = [
+        {:update, disk_trie.root_hash, "elixir", "erlang"},
+        {:update, Trie.empty_trie_root_hash(), "rust", "c++"}
+      ]
+
+      assert subtrie.trie_changes == trie_changes
+      assert updated_caching_trie.trie_changes == trie_changes
+
+      assert updated_caching_trie.in_memory_trie.root_hash ==
+               caching_trie.in_memory_trie.root_hash
+    end
+  end
+
+  describe "remove_subtrie_key/4" do
+    test "removes key from in-memory subtrie", %{disk_trie: disk_trie} do
+      caching_trie = CachingTrie.new(disk_trie)
+
+      {subtrie, updated_caching_trie} =
+        CachingTrie.update_subtrie_key(
+          caching_trie,
+          Trie.empty_trie_root_hash(),
+          "elixir",
+          "erlang"
+        )
+
+      {subtrie, updated_caching_trie} =
+        CachingTrie.update_subtrie_key(
+          updated_caching_trie,
+          subtrie.in_memory_trie.root_hash,
+          "rust",
+          "c++"
+        )
+
+      assert CachingTrie.get_subtrie_key(
+               updated_caching_trie,
+               subtrie.in_memory_trie.root_hash,
+               "elixir"
+             ) == "erlang"
+
+      assert CachingTrie.get_subtrie_key(
+               updated_caching_trie,
+               subtrie.in_memory_trie.root_hash,
+               "rust"
+             ) == "c++"
+
+      {updated_subtrie, updated_caching_trie} =
+        CachingTrie.remove_subtrie_key(
+          updated_caching_trie,
+          subtrie.in_memory_trie.root_hash,
+          "rust"
+        )
+
+      assert CachingTrie.get_subtrie_key(
+               updated_caching_trie,
+               updated_subtrie.in_memory_trie.root_hash,
+               "elixir"
+             ) == "erlang"
+
+      assert CachingTrie.get_subtrie_key(
+               updated_caching_trie,
+               updated_subtrie.in_memory_trie.root_hash,
+               "rust"
+             ) == nil
+    end
+  end
+
+  describe "put_raw_key!/3" do
+    test "saves raw data to cache", %{disk_trie: disk_trie} do
+      disk_trie = Trie.put_raw_key!(disk_trie, "1", "555")
+      caching_trie = CachingTrie.new(disk_trie)
+
+      updated_caching_trie =
+        caching_trie
+        |> CachingTrie.put_raw_key!("key1", "value1")
+        |> CachingTrie.put_raw_key!("key2", "value2")
+
+      assert updated_caching_trie.db_changes == %{"key1" => "value1", "key2" => "value2"}
+      assert CachingTrie.get_raw_key(updated_caching_trie, "key1") == {:ok, "value1"}
+      assert CachingTrie.get_raw_key(updated_caching_trie, "key2") == {:ok, "value2"}
+      assert CachingTrie.get_raw_key(updated_caching_trie, "1") == {:ok, "555"}
+      assert CachingTrie.get_raw_key(updated_caching_trie, "key3") == :not_found
+    end
+  end
+
+  describe "root_hash/1" do
+    test "returns root_hash from in-memory trie", %{disk_trie: disk_trie} do
+      disk_trie = Trie.update_key(disk_trie, "elixir", "ruby")
+
+      caching_trie =
+        disk_trie
+        |> CachingTrie.new()
+        |> CachingTrie.update_key("elixir", "erlang")
+
+      assert Trie.get_key(caching_trie.trie, "elixir") == "ruby"
+      assert Trie.get_key(caching_trie.in_memory_trie, "elixir") == "erlang"
+      assert CachingTrie.root_hash(caching_trie) == caching_trie.in_memory_trie.root_hash
+    end
+  end
+
+  describe "set_root_hash/2" do
+    test "sets root_hash to in-memory trie", %{disk_trie: disk_trie} do
+      caching_trie =
+        disk_trie
+        |> Trie.update_key("elixir", "ruby")
+        |> CachingTrie.new()
+
+      updated_caching_trie = CachingTrie.set_root_hash(caching_trie, Trie.empty_trie_root_hash())
+
+      assert CachingTrie.root_hash(updated_caching_trie) == Trie.empty_trie_root_hash()
+    end
+  end
+
+  describe "commit/1" do
+    test "commits trie cache" do
+      disk_trie =
+        "/tmp/#{MerklePatriciaTree.Test.random_string(20)}"
+        |> MerklePatriciaTree.DB.RocksDB.init()
+        |> MerklePatriciaTree.Trie.new()
+
+      caching_trie =
+        disk_trie
+        |> CachingTrie.new()
+        |> CachingTrie.update_key("key1", "value1")
+        |> CachingTrie.update_key("key2", "value2")
+        |> CachingTrie.update_key("elixir", "erlang")
+
+      assert Trie.get_subtrie_key(disk_trie, caching_trie.in_memory_trie.root_hash, "key1") == nil
+      assert Trie.get_subtrie_key(disk_trie, caching_trie.in_memory_trie.root_hash, "key2") == nil
+
+      assert Trie.get_subtrie_key(disk_trie, caching_trie.in_memory_trie.root_hash, "elixir") ==
+               nil
+
+      CachingTrie.commit!(caching_trie)
+
+      assert Trie.get_subtrie_key(disk_trie, caching_trie.in_memory_trie.root_hash, "key1") ==
+               "value1"
+
+      assert Trie.get_subtrie_key(disk_trie, caching_trie.in_memory_trie.root_hash, "key2") ==
+               "value2"
+
+      assert Trie.get_subtrie_key(disk_trie, caching_trie.in_memory_trie.root_hash, "elixir") ==
+               "erlang"
+    end
+
+    test "commits raw cache" do
+      disk_trie =
+        "/tmp/#{MerklePatriciaTree.Test.random_string(20)}"
+        |> MerklePatriciaTree.DB.RocksDB.init()
+        |> MerklePatriciaTree.Trie.new()
+
+      caching_trie =
+        disk_trie
+        |> CachingTrie.new()
+        |> CachingTrie.put_raw_key!("key1", "value1")
+        |> CachingTrie.put_raw_key!("key2", "value2")
+        |> CachingTrie.put_raw_key!("elixir", "erlang")
+
+      assert Trie.get_raw_key(disk_trie, "key1") == :not_found
+      assert Trie.get_raw_key(disk_trie, "key2") == :not_found
+      assert Trie.get_raw_key(disk_trie, "elixir") == :not_found
+
+      CachingTrie.commit!(caching_trie)
+
+      assert Trie.get_raw_key(disk_trie, "key1") == {:ok, "value1"}
+      assert Trie.get_raw_key(disk_trie, "key2") == {:ok, "value2"}
+      assert Trie.get_raw_key(disk_trie, "elixir") == {:ok, "erlang"}
+    end
+  end
 end

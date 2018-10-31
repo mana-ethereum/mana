@@ -381,4 +381,44 @@ defmodule MerklePatriciaTree.TrieTest do
       assert trie1.root_hash == trie3.root_hash
     end
   end
+
+  describe "update_subtrie_key/2" do
+    test "updates subtrie", %{db: db} do
+      trie = Trie.new(db)
+
+      {subtrie, updated_trie} =
+        Trie.update_subtrie_key(trie, Trie.empty_trie_root_hash(), "elixir", "erlang")
+
+      assert Trie.get_subtrie_key(updated_trie, subtrie.root_hash, "elixir") == "erlang"
+    end
+  end
+
+  describe "remove_subtrie_key/2" do
+    test "removes subtrie key", %{db: db} do
+      trie = Trie.new(db)
+
+      {subtrie, updated_trie} =
+        Trie.update_subtrie_key(trie, Trie.empty_trie_root_hash(), "elixir", "erlang")
+
+      {subtrie, updated_trie} =
+        Trie.update_subtrie_key(updated_trie, subtrie.root_hash, "rust", "c++")
+
+      {updated_subtrie, updated_trie} =
+        Trie.remove_subtrie_key(updated_trie, subtrie.root_hash, "rust")
+
+      assert Trie.get_subtrie_key(updated_trie, updated_subtrie.root_hash, "rust") == nil
+      assert Trie.get_subtrie_key(updated_trie, updated_subtrie.root_hash, "elixir") == "erlang"
+    end
+  end
+
+  describe "put_raw_key!/3" do
+    test "saves raw data", %{db: db} do
+      trie = Trie.new(db)
+
+      updated_trie = Trie.put_raw_key!(trie, "1", "555")
+
+      assert Trie.get_raw_key(updated_trie, "1") == {:ok, "555"}
+      assert Trie.get_raw_key(updated_trie, "5") == :not_found
+    end
+  end
 end

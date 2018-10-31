@@ -6,6 +6,7 @@ defmodule Blockchain.Account do
 
   alias ExthCrypto.Hash.Keccak
   alias MerklePatriciaTree.Trie
+  alias MerklePatriciaTree.TrieStorage
   alias Blockchain.Account.{Address, Storage}
 
   @empty_keccak Keccak.kec(<<>>)
@@ -126,11 +127,11 @@ defmodule Blockchain.Account do
       ...> |> Blockchain.Account.get_account(<<0x01::160>>)
       nil
   """
-  @spec get_account(Trie.t(), Address.t()) :: t | nil
+  @spec get_account(TrieStorage.t(), Address.t()) :: t | nil
   def get_account(state, address) do
-    trie = Trie.get_key(state, Keccak.kec(address))
+    account = TrieStorage.get_key(state, Keccak.kec(address))
 
-    case trie do
+    case account do
       nil ->
         nil
 
@@ -197,7 +198,7 @@ defmodule Blockchain.Account do
       |> serialize()
       |> ExRLP.encode()
 
-    Trie.update_key(state, Keccak.kec(address), encoded_account)
+    TrieStorage.update_key(state, Keccak.kec(address), encoded_account)
   end
 
   @doc """
@@ -227,7 +228,7 @@ defmodule Blockchain.Account do
         state
 
       _acc ->
-        Trie.remove_key(state, Keccak.kec(address))
+        TrieStorage.remove_key(state, Keccak.kec(address))
     end
   end
 
@@ -238,22 +239,22 @@ defmodule Blockchain.Account do
 
   ## Examples
 
-      iex> MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
+      iex> state = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
       ...>   |> Blockchain.Account.put_account(<<0x01::160>>, %Blockchain.Account{balance: 10})
-      ...>   |> Blockchain.Account.update_account(<<0x01::160>>, fn (acc) -> %{acc | balance: acc.balance + 5} end)
+      iex> Blockchain.Account.update_account(state, <<0x01::160>>, fn (acc) -> {%{acc | balance: acc.balance + 5}, state} end)
       ...>   |> Blockchain.Account.get_account(<<0x01::160>>)
       %Blockchain.Account{balance: 15}
 
-      iex> {_state, before_acct, after_acct} = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
+      iex> state = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
       ...>   |> Blockchain.Account.put_account(<<0x01::160>>, %Blockchain.Account{balance: 10})
-      ...>   |> Blockchain.Account.update_account(<<0x01::160>>, fn (acc) -> %{acc | balance: acc.balance + 5} end, true)
+      iex> {_state, before_acct, after_acct} = Blockchain.Account.update_account(state, <<0x01::160>>, fn (acc) -> {%{acc | balance: acc.balance + 5}, state} end, true)
       iex> before_acct.balance
       10
       iex> after_acct.balance
       15
 
-      iex> MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
-      ...>   |> Blockchain.Account.update_account(<<0x01::160>>, fn (acc) -> %{acc | nonce: acc.nonce + 1} end)
+      iex> state = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
+      iex> Blockchain.Account.update_account(state, <<0x01::160>>, fn (acc) -> {%{acc | nonce: acc.nonce + 1}, state} end)
       ...>   |> Blockchain.Account.get_account(<<0x01::160>>)
       %Blockchain.Account{nonce: 1}
   """
@@ -261,9 +262,9 @@ defmodule Blockchain.Account do
           EVM.state() | {EVM.state(), t, t}
   def update_account(state, address, fun, return_accounts \\ false) do
     account = get_account(state, address) || %__MODULE__{}
-    updated_account = fun.(account)
+    {updated_account, updated_state} = fun.(account)
 
-    updated_state = put_account(state, address, updated_account)
+    updated_state = put_account(updated_state, address, updated_account)
 
     if return_accounts do
       {updated_state, account, updated_account}
@@ -296,7 +297,7 @@ defmodule Blockchain.Account do
       state,
       address,
       fn acct ->
-        %{acct | nonce: acct.nonce + 1}
+        {%{acct | nonce: acct.nonce + 1}, state}
       end,
       return_accounts
     )
@@ -337,7 +338,7 @@ defmodule Blockchain.Account do
 
       if updated_balance < 0, do: raise("wei reduced to less than zero")
 
-      %{acct | balance: updated_balance}
+      {%{acct | balance: updated_balance}, state}
     end)
   end
 
@@ -479,10 +480,10 @@ defmodule Blockchain.Account do
   def put_code(state, contract_address, machine_code) do
     kec = Keccak.kec(machine_code)
 
-    MerklePatriciaTree.DB.put!(state.db, kec, machine_code)
+    new_state = TrieStorage.put_raw_key!(state, kec, machine_code)
 
     update_account(state, contract_address, fn acct ->
-      %{acct | code_hash: kec}
+      {%{acct | code_hash: kec}, new_state}
     end)
   end
 
@@ -521,7 +522,7 @@ defmodule Blockchain.Account do
         {:ok, <<>>}
 
       code_hash ->
-        case MerklePatriciaTree.DB.get(state.db, code_hash) do
+        case TrieStorage.get_raw_key(state, code_hash) do
           {:ok, machine_code} when is_binary(machine_code) -> {:ok, machine_code}
           _ -> :not_found
         end
@@ -543,18 +544,20 @@ defmodule Blockchain.Account do
   @spec put_storage(EVM.state(), Address.t(), integer(), integer()) :: EVM.state()
   def put_storage(state, address, key, value) do
     update_account(state, address, fn acct ->
-      updated_storage_trie = Storage.put(state.db, acct.storage_root, key, value)
+      {updated_storage_trie, updated_trie} = Storage.put(state, acct.storage_root, key, value)
+      root_hash = TrieStorage.root_hash(updated_storage_trie)
 
-      %{acct | storage_root: updated_storage_trie.root_hash}
+      {%{acct | storage_root: root_hash}, updated_trie}
     end)
   end
 
   @spec remove_storage(EVM.state(), Address.t(), integer()) :: EVM.state()
   def remove_storage(state, address, key) do
     update_account(state, address, fn acct ->
-      updated_storage_trie = Storage.remove(state.db, acct.storage_root, key)
+      {updated_storage_trie, updated_trie} = Storage.remove(state, acct.storage_root, key)
+      root_hash = TrieStorage.root_hash(updated_storage_trie)
 
-      %{acct | storage_root: updated_storage_trie.root_hash}
+      {%{acct | storage_root: root_hash}, updated_trie}
     end)
   end
 
@@ -592,7 +595,7 @@ defmodule Blockchain.Account do
         :account_not_found
 
       account ->
-        case Storage.fetch(state.db, account.storage_root, key) do
+        case Storage.fetch(state, account.storage_root, key) do
           nil -> :key_not_found
           value -> {:ok, value |> :binary.decode_unsigned()}
         end
@@ -614,7 +617,7 @@ defmodule Blockchain.Account do
   @spec clear_balance(EVM.state(), Address.t()) :: EVM.state()
   def clear_balance(state, address) do
     update_account(state, address, fn acct ->
-      %{acct | balance: 0}
+      {%{acct | balance: 0}, state}
     end)
   end
 

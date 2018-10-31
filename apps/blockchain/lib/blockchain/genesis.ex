@@ -5,7 +5,7 @@ defmodule Blockchain.Genesis do
 
   alias Block.Header
   alias Blockchain.{Account, Block, Chain}
-  alias MerklePatriciaTree.{DB, Trie}
+  alias MerklePatriciaTree.TrieStorage
 
   @type seal_config :: %{
           mix_hash: binary(),
@@ -33,50 +33,78 @@ defmodule Blockchain.Genesis do
 
   ## Examples
 
-      iex> db = MerklePatriciaTree.Test.random_ets_db()
+      iex> trie = MerklePatriciaTree.Test.random_ets_db() |> MerklePatriciaTree.Trie.new()
       iex> chain = Blockchain.Chain.load_chain(:ropsten)
-      iex> Blockchain.Genesis.create_block(chain, db)
+      iex> {block, _state} = Blockchain.Genesis.create_block(chain, trie)
+      iex> block
       %Blockchain.Block{
+        block_hash: nil,
         header: %Block.Header{
-          number: 0,
-          timestamp: 0,
           beneficiary: <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0>>,
           difficulty: 1048576,
           extra_data: "55555555555555555555555555555555",
           gas_limit: 16777216,
-          parent_hash: <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0>>,
-          state_root: <<33, 123, 11, 188, 251, 114, 226, 213, 126, 40, 243, 60, 179, 97, 185, 152, 53, 19, 23, 119, 85, 220, 63, 51, 206, 62, 112, 34, 237, 98, 183, 123>>,
-          transactions_root: <<86, 232, 31, 23, 27, 204, 85, 166, 255, 131, 69, 230, 146, 192, 248, 110, 91, 72, 224, 27, 153, 108, 173, 192, 1, 98, 47, 181, 227, 99, 180, 33>>,
-          receipts_root: <<86, 232, 31, 23, 27, 204, 85, 166, 255, 131, 69, 230, 146, 192, 248, 110, 91, 72, 224, 27, 153, 108, 173, 192, 1, 98, 47, 181, 227, 99, 180, 33>>,
-          ommers_hash: <<29, 204, 77, 232, 222, 199, 93, 122, 171, 133, 181, 103, 182, 204, 212, 26, 211, 18, 69, 27, 148, 138, 116, 19, 240, 161, 66, 253, 64, 212, 147, 71>>,
-          mix_hash: <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0>>,
-          nonce: <<0, 0, 0, 0, 0, 0, 0, 66>>
+          gas_used: 0,
+          logs_bloom: <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0>>,
+          mix_hash: <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0>>,
+          nonce: <<0, 0, 0, 0, 0, 0, 0, 66>>,
+          number: 0,
+          ommers_hash: <<29, 204, 77, 232, 222, 199, 93, 122, 171, 133, 181, 103, 182,
+            204, 212, 26, 211, 18, 69, 27, 148, 138, 116, 19, 240, 161, 66, 253, 64,
+            212, 147, 71>>,
+          parent_hash: <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0>>,
+          receipts_root: <<86, 232, 31, 23, 27, 204, 85, 166, 255, 131, 69, 230, 146,
+            192, 248, 110, 91, 72, 224, 27, 153, 108, 173, 192, 1, 98, 47, 181, 227,
+            99, 180, 33>>,
+          state_root: <<33, 123, 11, 188, 251, 114, 226, 213, 126, 40, 243, 60, 179,
+            97, 185, 152, 53, 19, 23, 119, 85, 220, 63, 51, 206, 62, 112, 34, 237, 98,
+            183, 123>>,
+          timestamp: 0,
+          transactions_root: <<86, 232, 31, 23, 27, 204, 85, 166, 255, 131, 69, 230,
+            146, 192, 248, 110, 91, 72, 224, 27, 153, 108, 173, 192, 1, 98, 47, 181,
+            227, 99, 180, 33>>
         },
         ommers: [],
+        receipts: [],
         transactions: []
       }
 
       # TODO: Add test case with initial storage
   """
-  @spec create_block(Chain.t(), DB.db()) :: Block.t()
-  def create_block(chain, db) do
+  @spec create_block(Chain.t(), TrieStorage.t()) :: Block.t()
+  def create_block(chain, trie) do
     header = create_header(chain.genesis)
     block = %Block{header: header}
     accounts = Enum.into(chain.accounts, [])
 
     state =
-      Enum.reduce(accounts, Trie.new(db), fn {address, account_map}, trie ->
+      Enum.reduce(accounts, trie, fn {address, account_map}, trie_acc ->
         if is_nil(account_map[:balance]) do
-          trie
+          trie_acc
         else
-          account = create_account(db, address, account_map)
-          Account.put_account(trie, address, account)
+          {account, account_trie} = create_account(trie_acc, address, account_map)
+          trie_acc = TrieStorage.set_root_hash(account_trie, TrieStorage.root_hash(trie_acc))
+
+          Account.put_account(trie_acc, address, account)
         end
       end)
 
-    header = %{header | state_root: state.root_hash}
+    root_hash = TrieStorage.root_hash(state)
+    header = %{header | state_root: root_hash}
 
-    %{block | header: header}
+    {%{block | header: header}, state}
   end
 
   @doc """
@@ -97,27 +125,27 @@ defmodule Blockchain.Genesis do
     }
   end
 
-  @spec create_account(DB.db(), EVM.address(), map()) :: Account.t()
-  def create_account(db, address, account_map) do
+  @spec create_account(TrieStorage.t(), EVM.address(), map()) :: Account.t()
+  def create_account(trie, address, account_map) do
     storage =
       if account_map[:storage_root],
-        do: Trie.new(db, account_map[:storage_root]),
-        else: Trie.new(db)
+        do: TrieStorage.set_root_hash(trie, account_map[:storage_root]),
+        else: TrieStorage.set_root_hash(trie, MerklePatriciaTree.Trie.empty_trie_root_hash())
 
     storage =
       if account_map[:storage] do
-        Enum.reduce(account_map[:storage], storage, fn {key, value}, trie ->
-          Account.put_storage(trie, address, key, value)
+        Enum.reduce(account_map[:storage], storage, fn {key, value}, trie_acc ->
+          Account.put_storage(trie_acc, address, key, value)
         end)
       else
         storage
       end
 
-    %Account{
-      nonce: account_map[:nonce] || 0,
-      balance: account_map[:balance],
-      storage_root: storage.root_hash
-    }
+    {%Account{
+       nonce: account_map[:nonce] || 0,
+       balance: account_map[:balance],
+       storage_root: TrieStorage.root_hash(storage)
+     }, storage}
   end
 
   @doc """

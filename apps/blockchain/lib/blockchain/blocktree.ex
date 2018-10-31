@@ -9,6 +9,7 @@ defmodule Blockchain.Blocktree do
 
   alias Blockchain.{Block, Chain, Genesis}
   alias MerklePatriciaTree.DB
+  alias MerklePatriciaTree.TrieStorage
 
   defstruct best_block: nil
 
@@ -40,8 +41,10 @@ defmodule Blockchain.Blocktree do
         do_validate \\ true,
         specified_block_hash \\ nil
       ) do
+    trie = MerklePatriciaTree.Trie.new(db)
+
     parent =
-      case Block.get_parent_block(block, db) do
+      case Block.get_parent_block(block, trie) do
         :genesis -> nil
         {:ok, parent} -> parent
         :not_found -> :parent_not_found
@@ -85,12 +88,12 @@ defmodule Blockchain.Blocktree do
   Note: we load the block by the block_hash, instead of taking it
         directly from the tree.
   """
-  @spec get_best_block(t(), Chain.t(), DB.db()) :: {:ok, Block.t()} | {:error, any()}
-  def get_best_block(blocktree, chain, db) do
+  @spec get_best_block(t(), Chain.t(), TrieStorage.t()) :: {:ok, Block.t()} | {:error, any()}
+  def get_best_block(blocktree, chain, trie) do
     if block = blocktree.best_block do
       {:ok, block}
     else
-      {:ok, Genesis.create_block(chain, db)}
+      {:ok, Genesis.create_block(chain, trie)}
     end
   end
 end

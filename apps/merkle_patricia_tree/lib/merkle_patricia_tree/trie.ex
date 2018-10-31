@@ -7,7 +7,7 @@ defmodule MerklePatriciaTree.Trie do
 
   defstruct db: nil, root_hash: nil
 
-  @behaviour MerklePatriciaTree.Storage
+  @behaviour MerklePatriciaTree.TrieStorage
 
   @type root_hash :: binary()
 
@@ -94,6 +94,13 @@ defmodule MerklePatriciaTree.Trie do
     Fetcher.get(trie, key)
   end
 
+  @impl true
+  def get_subtrie_key(trie, root_hash, key) do
+    subtrie = %{trie | root_hash: root_hash}
+
+    Fetcher.get(subtrie, key)
+  end
+
   @doc """
   Updates a trie by setting key equal to value.
   If value is nil, we will instead remove `key` from the trie.
@@ -119,6 +126,14 @@ defmodule MerklePatriciaTree.Trie do
     end
   end
 
+  @impl true
+  def update_subtrie_key(trie, root_hash, key, value) do
+    subtrie = %{trie | root_hash: root_hash}
+    updated_subtrie = update_key(subtrie, key, value)
+
+    {updated_subtrie, trie}
+  end
+
   @doc """
   Removes `key` from the `trie`.
   """
@@ -132,6 +147,26 @@ defmodule MerklePatriciaTree.Trie do
     |> put_node(trie)
     |> into(trie)
     |> store()
+  end
+
+  @impl true
+  def remove_subtrie_key(trie, root_hash, key) do
+    subtrie = %{trie | root_hash: root_hash}
+    updated_subtrie = remove_key(subtrie, key)
+
+    {updated_subtrie, trie}
+  end
+
+  @impl true
+  def put_raw_key!(trie, key, value) do
+    MerklePatriciaTree.DB.put!(trie.db, key, value)
+
+    trie
+  end
+
+  @impl true
+  def get_raw_key(trie, key) do
+    MerklePatriciaTree.DB.get(trie.db, key)
   end
 
   @impl true
@@ -150,4 +185,17 @@ defmodule MerklePatriciaTree.Trie do
       trie
     end
   end
+
+  @impl true
+  def root_hash(trie) do
+    trie.root_hash
+  end
+
+  @impl true
+  def set_root_hash(trie, root_hash) do
+    %{trie | root_hash: root_hash}
+  end
+
+  @impl true
+  def commit!(_trie), do: :ok
 end

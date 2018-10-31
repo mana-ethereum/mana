@@ -92,7 +92,7 @@ defmodule Blockchain.Contract.MessageCall do
       value_in_wei: params.apparent_value,
       machine_code: machine_code,
       stack_depth: params.stack_depth,
-      block_header_info: BlockHeaderInfo.new(params.block_header, account_repo.state.db),
+      block_header_info: BlockHeaderInfo.new(params.block_header, account_repo.state),
       account_repo: account_repo,
       config: params.config
     }

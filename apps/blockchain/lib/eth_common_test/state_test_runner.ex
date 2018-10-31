@@ -135,7 +135,9 @@ defmodule EthCommonTest.StateTestRunner do
           if value == 0 do
             trie
           else
-            Storage.put(trie.db, trie.root_hash, load_integer(key), value)
+            {subtrie, _trie} = Storage.put(trie, trie.root_hash, load_integer(key), value)
+
+            subtrie
           end
         end)
 

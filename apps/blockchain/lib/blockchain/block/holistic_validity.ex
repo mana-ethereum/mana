@@ -52,25 +52,32 @@ defmodule Blockchain.Block.HolisticValidity do
   """
   @spec validate(Block.t(), Chain.t(), Block.t() | nil, DB.db()) :: :valid | {:invalid, [atom()]}
   def validate(block, chain, parent_block, db) do
-    base_block =
+    caching_trie =
+      db
+      |> MerklePatriciaTree.Trie.new()
+      |> MerklePatriciaTree.CachingTrie.new()
+
+    {base_block, state} =
       if is_nil(parent_block) do
-        Genesis.create_block(chain, db)
+        Genesis.create_block(chain, caching_trie)
       else
-        Block.gen_child_block(
-          parent_block,
-          chain,
-          beneficiary: block.header.beneficiary,
-          timestamp: block.header.timestamp,
-          gas_limit: block.header.gas_limit,
-          extra_data: block.header.extra_data
-        )
+        {Block.gen_child_block(
+           parent_block,
+           chain,
+           beneficiary: block.header.beneficiary,
+           timestamp: block.header.timestamp,
+           gas_limit: block.header.gas_limit,
+           extra_data: block.header.extra_data
+         ), caching_trie}
       end
 
-    child_block =
-      base_block
-      |> Block.add_ommers(block.ommers)
-      |> Block.add_transactions(block.transactions, db, chain)
-      |> Block.add_rewards(db, chain)
+    child_block_with_ommers = Block.add_ommers(base_block, block.ommers)
+
+    {child_block_with_transactions, updated_trie} =
+      Block.add_transactions(child_block_with_ommers, block.transactions, state, chain)
+
+    {child_block, updated_trie} =
+      Block.add_rewards(child_block_with_transactions, updated_trie, chain)
 
     # The following checks Holistic Validity,
     # as defined in Eq.(31), section 4.3.2 of Yellow Paper
@@ -83,7 +90,12 @@ defmodule Blockchain.Block.HolisticValidity do
       |> check_receipts_root_validity(child_block, block)
       |> check_logs_bloom(child_block, block)
 
-    if errors == [], do: :valid, else: {:invalid, errors}
+    if errors == [] do
+      MerklePatriciaTree.CachingTrie.commit!(updated_trie)
+      :valid
+    else
+      {:invalid, errors}
+    end
   end
 
   @spec check_state_root_validity([atom()], Block.t(), Block.t()) :: [atom()]
