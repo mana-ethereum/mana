@@ -13,7 +13,7 @@ defmodule Blockchain.BlockTest do
     EthCommonTest.Helpers.run_common_tests(
       "GenesisTests",
       &ExUnit.Assertions.flunk/1,
-      fn test_name, test_case ->
+      fn _test_name, test_case ->
         db = MerklePatriciaTree.Test.random_ets_db()
         trie = MerklePatriciaTree.Trie.new(db)
 
@@ -231,7 +231,7 @@ defmodule Blockchain.BlockTest do
 
     {block, updated_trie} = Genesis.create_block(chain, trie)
 
-    {block, updated_trie} = Block.add_rewards(block, updated_trie, chain)
+    {block, _updated_trie} = Block.add_rewards(block, updated_trie, chain)
 
     block =
       block

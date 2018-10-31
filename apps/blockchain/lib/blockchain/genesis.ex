@@ -47,7 +47,7 @@ defmodule Blockchain.Genesis do
           gas_limit: 16777216,
           parent_hash: <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0>>,
           state_root: <<232, 107, 69, 139, 178, 253, 233, 218, 130, 174, 216, 128, 173, 120, 27, 24, 193, 116, 237, 198, 52, 187, 160, 193, 55, 110, 174, 93, 47, 62, 189, 214>>,
-          transactions_root: <<86, 232, 31, 23, 27, 204, 85, 166, 255, 131, 69, 230, 146, 192, 248, 110, 91, 72, 224, 27, 153, 108, 173, 192, 1, 98, 47, 181, 227, 99, 180, 33>>,
+          transactions_root: <<33, 123, 11, 188, 251, 114, 226, 213, 126, 40, 243, 60, 179, 97, 185, 152, 53, 19, 23, 119, 85, 220, 63, 51, 206, 62, 112, 34, 237, 98, 183, 123>>,
           receipts_root: <<86, 232, 31, 23, 27, 204, 85, 166, 255, 131, 69, 230, 146, 192, 248, 110, 91, 72, 224, 27, 153, 108, 173, 192, 1, 98, 47, 181, 227, 99, 180, 33>>,
           ommers_hash: <<29, 204, 77, 232, 222, 199, 93, 122, 171, 133, 181, 103, 182, 204, 212, 26, 211, 18, 69, 27, 148, 138, 116, 19, 240, 161, 66, 253, 64, 212, 147, 71>>,
           mix_hash: <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0>>,
@@ -70,7 +70,9 @@ defmodule Blockchain.Genesis do
         if is_nil(account_map[:balance]) do
           trie_acc
         else
-          {account, trie_acc} = create_account(trie_acc, address, account_map)
+          {account, account_trie} = create_account(trie_acc, address, account_map)
+          trie_acc = TrieStorage.set_root_hash(account_trie, TrieStorage.root_hash(trie_acc))
+
           Account.put_account(trie_acc, address, account)
         end
       end)
@@ -104,12 +106,12 @@ defmodule Blockchain.Genesis do
     storage =
       if account_map[:storage_root],
         do: TrieStorage.set_root_hash(trie, account_map[:storage_root]),
-        else: trie
+        else: TrieStorage.set_root_hash(trie, MerklePatriciaTree.Trie.empty_trie_root_hash())
 
     storage =
       if account_map[:storage] do
-        Enum.reduce(account_map[:storage], storage, fn {key, value}, trie ->
-          Account.put_storage(trie, address, key, value)
+        Enum.reduce(account_map[:storage], storage, fn {key, value}, trie_acc ->
+          Account.put_storage(trie_acc, address, key, value)
         end)
       else
         storage
