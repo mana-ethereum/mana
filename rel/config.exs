@@ -30,14 +30,14 @@ environment :dev do
   # the --env flag to Distillery explicitly if you want to use
   # dev mode.
   set dev_mode: true
-  set include_erts: true
-  set cookie: :"zGokf%I2ZvCe6)?qkO}rlf)[*&<GefmD}w*$5Gv/6VNO6`x&?Y!t^i>M[/zJ.q9j"
+  set include_erts: false
+  set cookie: :"bAFS)[qmAg0XFS5`7Ncbz,$J:K3Tv)t@{OIPWJb`;N!k%z^H,^(L}:qI_$Tp8>EX"
 end
 
 environment :prod do
   set include_erts: true
   set include_src: false
-  set cookie: :"%POy.W>cr1@.Qe217jz;d.m0Uhx]$h8Ae$3.i*,U;jH@]U^T}&sLkg12;,5dc)P5"
+  set cookie: :"Wxv5K^qhnRXWBRLt0R/V_$u3!(Hz~Um%U5MrXVJzpvb,{43bHM8G*0:RokSbah]%"
 end
 
 # You may define one or more releases in this file.
@@ -50,6 +50,7 @@ release :mana do
   set applications: [
     :runtime_tools,
     blockchain: :permanent,
+    cli: :permanent,
     evm: :permanent,
     ex_wire: :permanent,
     exth_crypto: :permanent,
