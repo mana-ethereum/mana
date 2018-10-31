@@ -9,7 +9,7 @@ defmodule Blockchain.Account.Storage do
   """
 
   alias ExthCrypto.Hash.Keccak
-  alias MerklePatriciaTree.Storage, as: TrieStorage
+  alias MerklePatriciaTree.TrieStorage
   alias MerklePatriciaTree.Trie
 
   @spec put(TrieStorage.t(), EVM.trie_root(), integer(), integer()) ::
@@ -18,21 +18,21 @@ defmodule Blockchain.Account.Storage do
     k = encode_key(key)
     v = encode_value(value)
 
-    TrieStorage.storage(trie_storage).update_subtrie_key(trie_storage, root, k, v)
+    TrieStorage.update_subtrie_key(trie_storage, root, k, v)
   end
 
   @spec remove(TrieStorage.t(), EVM.trie_root(), integer()) :: {TrieStorage.t(), TrieStorage.t()}
   def remove(trie_storage, root, key) do
     k = encode_key(key)
 
-    TrieStorage.storage(trie_storage).remove_subtrie_key(trie_storage, root, k)
+    TrieStorage.remove_subtrie_key(trie_storage, root, k)
   end
 
   @spec fetch(TrieStorage.t(), EVM.trie_root(), integer()) :: integer() | nil
   def fetch(trie_storage, root, key) do
     k = encode_key(key)
 
-    result = TrieStorage.storage(trie_storage).get_subtrie_key(trie_storage, root, k)
+    result = TrieStorage.get_subtrie_key(trie_storage, root, k)
 
     if is_nil(result), do: nil, else: ExRLP.decode(result)
   end

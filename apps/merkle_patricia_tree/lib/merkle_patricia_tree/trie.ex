@@ -7,7 +7,7 @@ defmodule MerklePatriciaTree.Trie do
 
   defstruct db: nil, root_hash: nil
 
-  @behaviour MerklePatriciaTree.Storage
+  @behaviour MerklePatriciaTree.TrieStorage
 
   @type root_hash :: binary()
 
@@ -195,4 +195,7 @@ defmodule MerklePatriciaTree.Trie do
   def set_root_hash(trie, root_hash) do
     %{trie | root_hash: root_hash}
   end
+
+  @impl true
+  def commit!(_trie), do: :ok
 end

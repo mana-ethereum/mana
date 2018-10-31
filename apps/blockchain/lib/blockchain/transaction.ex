@@ -11,6 +11,7 @@ defmodule Blockchain.Transaction do
   alias Blockchain.Transaction.{AccountCleaner, Receipt, Validity}
   alias EVM.{Configuration, Gas, SubState}
   alias MerklePatriciaTree.Trie
+  alias MerklePatriciaTree.TrieStorage
 
   # nonce: T_n
   # gas_price: T_p
@@ -215,9 +216,11 @@ defmodule Blockchain.Transaction do
       if empty_contract_creation?(tx) && evm_config.clean_touched_accounts do
         account_repo_after_execution = Repo.commit(updated_account_repo)
 
+        root_hash = TrieStorage.root_hash(account_repo_after_execution.state)
+
         receipt =
           create_receipt(
-            account_repo_after_execution.state.root_hash,
+            root_hash,
             expended_gas,
             sub_state.logs,
             status,
@@ -249,9 +252,11 @@ defmodule Blockchain.Transaction do
           )
           |> Repo.commit()
 
+        root_hash = TrieStorage.root_hash(account_repo_after_execution.state)
+
         receipt =
           create_receipt(
-            account_repo_after_execution.state.root_hash,
+            root_hash,
             expended_gas,
             sub_state.logs,
             status,

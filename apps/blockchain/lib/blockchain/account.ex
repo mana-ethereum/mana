@@ -6,7 +6,7 @@ defmodule Blockchain.Account do
 
   alias ExthCrypto.Hash.Keccak
   alias MerklePatriciaTree.Trie
-  alias MerklePatriciaTree.Storage, as: TrieStorage
+  alias MerklePatriciaTree.TrieStorage
   alias Blockchain.Account.{Address, Storage}
 
   @empty_keccak Keccak.kec(<<>>)
@@ -129,7 +129,7 @@ defmodule Blockchain.Account do
   """
   @spec get_account(TrieStorage.t(), Address.t()) :: t | nil
   def get_account(state, address) do
-    account = TrieStorage.storage(state).get_key(state, Keccak.kec(address))
+    account = TrieStorage.get_key(state, Keccak.kec(address))
 
     case account do
       nil ->
@@ -198,7 +198,7 @@ defmodule Blockchain.Account do
       |> serialize()
       |> ExRLP.encode()
 
-    TrieStorage.storage(state).update_key(state, Keccak.kec(address), encoded_account)
+    TrieStorage.update_key(state, Keccak.kec(address), encoded_account)
   end
 
   @doc """
@@ -228,7 +228,7 @@ defmodule Blockchain.Account do
         state
 
       _acc ->
-        TrieStorage.storage(state).remove_key(state, Keccak.kec(address))
+        TrieStorage.remove_key(state, Keccak.kec(address))
     end
   end
 
@@ -480,7 +480,7 @@ defmodule Blockchain.Account do
   def put_code(state, contract_address, machine_code) do
     kec = Keccak.kec(machine_code)
 
-    new_state = TrieStorage.storage(state).put_raw_key!(state, kec, machine_code)
+    new_state = TrieStorage.put_raw_key!(state, kec, machine_code)
 
     update_account(state, contract_address, fn acct ->
       {%{acct | code_hash: kec}, new_state}
@@ -522,7 +522,7 @@ defmodule Blockchain.Account do
         {:ok, <<>>}
 
       code_hash ->
-        case TrieStorage.storage(state).get_raw_key(state, code_hash) do
+        case TrieStorage.get_raw_key(state, code_hash) do
           {:ok, machine_code} when is_binary(machine_code) -> {:ok, machine_code}
           _ -> :not_found
         end
@@ -545,8 +545,9 @@ defmodule Blockchain.Account do
   def put_storage(state, address, key, value) do
     update_account(state, address, fn acct ->
       {updated_storage_trie, updated_trie} = Storage.put(state, acct.storage_root, key, value)
+      root_hash = TrieStorage.root_hash(updated_storage_trie)
 
-      {%{acct | storage_root: updated_storage_trie.root_hash}, updated_trie}
+      {%{acct | storage_root: root_hash}, updated_trie}
     end)
   end
 
@@ -554,8 +555,9 @@ defmodule Blockchain.Account do
   def remove_storage(state, address, key) do
     update_account(state, address, fn acct ->
       {updated_storage_trie, updated_trie} = Storage.remove(state, acct.storage_root, key)
+      root_hash = TrieStorage.root_hash(updated_storage_trie)
 
-      {%{acct | storage_root: updated_storage_trie.root_hash}, updated_trie}
+      {%{acct | storage_root: root_hash}, updated_trie}
     end)
   end
 

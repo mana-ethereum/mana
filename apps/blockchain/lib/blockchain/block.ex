@@ -14,6 +14,7 @@ defmodule Blockchain.Block do
   alias Blockchain.Transaction.Receipt.Bloom
   alias ExthCrypto.Hash.Keccak
   alias MerklePatriciaTree.{DB, Trie}
+  alias MerklePatriciaTree.TrieStorage
 
   # Defined in Eq.(19)
   # block_hash: Hash for this block, acts simply as a cache,
@@ -218,8 +219,8 @@ defmodule Blockchain.Block do
       }}
   """
   @spec get_block(EVM.hash(), DB.db()) :: {:ok, t} | :not_found
-  def get_block(block_hash, db) do
-    with {:ok, rlp} <- MerklePatriciaTree.DB.get(db, block_hash) do
+  def get_block(block_hash, trie) do
+    with {:ok, rlp} <- TrieStorage.get_raw_key(trie, block_hash) do
       block = rlp |> ExRLP.decode() |> deserialize()
       {:ok, block}
     end
@@ -710,40 +711,45 @@ defmodule Blockchain.Block do
   in `:ets` or `:rocksdb`. See `MerklePatriciaTree.DB`.
   """
   @spec add_transactions(t, [Transaction.t()], DB.db(), Chain.t()) :: t
-  def add_transactions(block, transactions, db, chain) do
-    block
-    |> process_hardfork_specifics(chain, db)
-    |> do_add_transactions(transactions, db, chain)
-    |> calculate_logs_bloom()
+  def add_transactions(block, transactions, trie, chain) do
+    {updated_block, updated_trie} = process_hardfork_specifics(block, chain, trie)
+
+    {updated_block, updated_trie} =
+      do_add_transactions(updated_block, transactions, updated_trie, chain)
+
+    updated_block = calculate_logs_bloom(updated_block)
+
+    {updated_block, updated_trie}
   end
 
-  defp process_hardfork_specifics(block, chain, db) do
+  defp process_hardfork_specifics(block, chain, trie) do
     if Chain.support_dao_fork?(chain) && Chain.dao_fork?(chain, block.header.number) do
       repo =
-        db
-        |> Trie.new(block.header.state_root)
+        trie
+        |> TrieStorage.set_root_hash(block.header.state_root)
         |> Account.Repo.new()
         |> Blockchain.Hardfork.Dao.execute(chain)
 
-      put_state(block, repo.state)
+      updated_block = put_state(block, repo.state)
+      {updated_block, repo.state}
     else
-      block
+      {block, trie}
     end
   end
 
   @spec do_add_transactions(t, [Transaction.t()], DB.db(), Chain.t(), integer()) :: t
-  defp do_add_transactions(block, transactions, db, chain, trx_count \\ 0)
+  defp do_add_transactions(block, transactions, state, chain, trx_count \\ 0)
 
-  defp do_add_transactions(block, [], _, _, _), do: block
+  defp do_add_transactions(block, [], trie, _, _), do: {block, trie}
 
   defp do_add_transactions(
          block = %__MODULE__{header: header},
          [trx | transactions],
-         db,
+         trie,
          chain,
          trx_count
        ) do
-    state = Trie.new(db, header.state_root)
+    state = TrieStorage.set_root_hash(trie, header.state_root)
 
     {new_account_repo, gas_used, receipt} =
       Transaction.execute_with_validation(state, trx, header, chain)
@@ -757,10 +763,11 @@ defmodule Blockchain.Block do
       block
       |> put_state(new_state)
       |> put_gas_used(total_gas_used)
-      |> put_receipt(trx_count, receipt, db)
-      |> put_transaction(trx_count, trx, db)
 
-    do_add_transactions(updated_block, transactions, db, chain, trx_count + 1)
+    {updated_block, updated_state} = put_receipt(updated_block, trx_count, receipt, new_state)
+    {updated_block, updated_state} = put_transaction(updated_block, trx_count, trx, updated_state)
+
+    do_add_transactions(updated_block, transactions, updated_state, chain, trx_count + 1)
   end
 
   @spec calculate_logs_bloom(t()) :: t()
@@ -775,7 +782,9 @@ defmodule Blockchain.Block do
   # Updates a block to have a new state root given a state object
   @spec put_state(t, Trie.t()) :: t
   def put_state(block = %__MODULE__{header: header = %Header{}}, new_state) do
-    %{block | header: %{header | state_root: new_state.root_hash}}
+    root_hash = TrieStorage.root_hash(new_state)
+
+    %{block | header: %{header | state_root: root_hash}}
   end
 
   # Updates a block to have total gas used set in the header
@@ -796,19 +805,24 @@ defmodule Blockchain.Block do
       ...> |> MerklePatriciaTree.Trie.Inspector.all_values()
       [{<<5>>, <<208, 131, 1, 2, 3, 10, 131, 2, 3, 4, 134, 104, 105, 32, 109, 111, 109>>}]
   """
-  @spec put_receipt(t, integer(), Receipt.t(), DB.db()) :: t
-  def put_receipt(block, i, receipt, db) do
+  @spec put_receipt(t, integer(), Receipt.t(), TrieStorage.t()) :: t
+  def put_receipt(block, i, receipt, trie) do
     encoded_receipt = receipt |> Receipt.serialize() |> ExRLP.encode()
 
-    updated_receipts_root =
-      db
-      |> Trie.new(block.header.receipts_root)
-      |> Trie.update_key(ExRLP.encode(i), encoded_receipt)
+    {subtrie, updated_trie} =
+      TrieStorage.update_subtrie_key(
+        trie,
+        block.header.receipts_root,
+        ExRLP.encode(i),
+        encoded_receipt
+      )
 
-    updated_header = %{block.header | receipts_root: updated_receipts_root.root_hash}
+    updated_receipts_root = TrieStorage.root_hash(subtrie)
+
+    updated_header = %{block.header | receipts_root: updated_receipts_root}
     updated_receipts = block.receipts ++ [receipt]
 
-    %{block | header: updated_header, receipts: updated_receipts}
+    {%{block | header: updated_header, receipts: updated_receipts}, updated_trie}
   end
 
   @doc """
@@ -826,21 +840,26 @@ defmodule Blockchain.Block do
       ...> |> MerklePatriciaTree.Trie.Inspector.all_values()
       [{<<0x80>>, <<201, 1, 128, 128, 128, 128, 128, 2, 3, 4>>}]
   """
-  @spec put_transaction(t, integer(), Transaction.t(), DB.db()) :: t
-  def put_transaction(block, i, trx, db) do
+  @spec put_transaction(t, integer(), Transaction.t(), TrieStorage.t()) :: t
+  def put_transaction(block, i, trx, trie) do
     total_transactions = block.transactions ++ [trx]
     encoded_transaction = trx |> Transaction.serialize() |> ExRLP.encode()
 
-    updated_transactions_root =
-      db
-      |> Trie.new(block.header.transactions_root)
-      |> Trie.update_key(ExRLP.encode(i), encoded_transaction)
+    {subtrie, updated_trie} =
+      TrieStorage.update_subtrie_key(
+        trie,
+        block.header.transactions_root,
+        ExRLP.encode(i),
+        encoded_transaction
+      )
 
-    %{
-      block
-      | transactions: total_transactions,
-        header: %{block.header | transactions_root: updated_transactions_root.root_hash}
-    }
+    updated_transactions_root = TrieStorage.root_hash(subtrie)
+
+    {%{
+       block
+       | transactions: total_transactions,
+         header: %{block.header | transactions_root: updated_transactions_root}
+     }, updated_trie}
   end
 
   @doc """
@@ -874,34 +893,35 @@ defmodule Blockchain.Block do
       [%Blockchain.Account{balance: 3000000000000400000}]
   """
   @spec add_rewards(t, DB.db(), Chain.t()) :: t
-  def add_rewards(block, db, chain)
+  def add_rewards(block, trie, chain)
 
-  def add_rewards(%{header: %{beneficiary: beneficiary}}, _db, _chain)
+  def add_rewards(%{header: %{beneficiary: beneficiary}}, _trie, _chain)
       when is_nil(beneficiary),
       do: raise("Unable to add block rewards, beneficiary is nil")
 
-  def add_rewards(block = %{header: %{number: number}}, _db, _chain)
+  def add_rewards(block = %{header: %{number: number}}, _trie, _chain)
       when number == 0,
       do: block
 
-  def add_rewards(block, db, chain) do
+  def add_rewards(block, trie, chain) do
     base_reward = Chain.block_reward_for_block(chain, block.header.number)
 
     state =
       block
-      |> get_state(db)
+      |> get_state(trie)
       |> add_miner_reward(block, base_reward)
       |> add_ommer_rewards(block, base_reward)
 
-    set_state(block, state)
+    updated_block = set_state(block, state)
+
+    {updated_block, state}
   end
 
   defp add_miner_reward(state, block, base_reward) do
     ommer_reward = round(base_reward * length(block.ommers) / @block_reward_ommer_divisor)
     reward = ommer_reward + base_reward
 
-    state
-    |> Account.add_wei(block.header.beneficiary, reward)
+    Account.add_wei(state, block.header.beneficiary, reward)
   end
 
   defp add_ommer_rewards(state, block, base_reward) do
@@ -914,8 +934,7 @@ defmodule Blockchain.Block do
             (base_reward / @block_reward_ommer_offset)
         )
 
-      state
-      |> Account.add_wei(ommer.beneficiary, reward)
+      Account.add_wei(state, ommer.beneficiary, reward)
     end)
   end
 
@@ -949,8 +968,8 @@ defmodule Blockchain.Block do
       %MerklePatriciaTree.Trie{root_hash: <<5::256>>, db: {MerklePatriciaTree.DB.ETS, :get_state}}
   """
   @spec get_state(t, DB.db()) :: Trie.t()
-  def get_state(block, db) do
-    Trie.new(db, block.header.state_root)
+  def get_state(block, trie) do
+    TrieStorage.set_root_hash(trie, block.header.state_root)
   end
 
   @doc """
@@ -963,6 +982,8 @@ defmodule Blockchain.Block do
   """
   @spec set_state(t, Trie.t()) :: t
   def set_state(block, trie) do
-    put_header(block, :state_root, trie.root_hash)
+    root_hash = TrieStorage.root_hash(trie)
+
+    put_header(block, :state_root, root_hash)
   end
 end

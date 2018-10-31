@@ -13,7 +13,7 @@ defmodule MerklePatriciaTree.Trie.Destroyer do
 
   import MerklePatriciaTree.ListHelper, only: [overlap: 2]
 
-  alias MerklePatriciaTree.Storage
+  alias MerklePatriciaTree.TrieStorage
   alias MerklePatriciaTree.Trie
   alias MerklePatriciaTree.Trie.Node
 
@@ -47,8 +47,8 @@ defmodule MerklePatriciaTree.Trie.Destroyer do
     if Enum.empty?(ext_tl) do
       existing_node =
         node_hash
-        |> Storage.storage(trie).into(trie)
-        |> Storage.storage(trie).fetch_node()
+        |> TrieStorage.into(trie)
+        |> TrieStorage.fetch_node()
 
       updated_node = trie_remove_key(existing_node, remaining_tl, trie)
 
@@ -66,7 +66,7 @@ defmodule MerklePatriciaTree.Trie.Destroyer do
           {:ext, ext_prefix ++ new_ext_prefix, new_ext_node_hash}
 
         elements ->
-          encoded = Storage.storage(trie).put_node(elements, trie)
+          encoded = TrieStorage.put_node(elements, trie)
           {:ext, ext_prefix, encoded}
       end
     else
@@ -89,12 +89,12 @@ defmodule MerklePatriciaTree.Trie.Destroyer do
       List.update_at(branches, prefix_hd, fn branch ->
         branch_node =
           branch
-          |> Storage.storage(trie).into(trie)
-          |> Storage.storage(trie).fetch_node()
+          |> TrieStorage.into(trie)
+          |> TrieStorage.fetch_node()
 
         branch_node
         |> trie_remove_key(prefix_tl, trie)
-        |> Storage.storage(trie).put_node(trie)
+        |> TrieStorage.put_node(trie)
       end)
 
     non_blank_branches =
@@ -116,8 +116,8 @@ defmodule MerklePatriciaTree.Trie.Destroyer do
 
         decoded_branch_node =
           branch_node
-          |> Storage.storage(trie).into(trie)
-          |> Storage.storage(trie).fetch_node()
+          |> TrieStorage.into(trie)
+          |> TrieStorage.fetch_node()
 
         case decoded_branch_node do
           {:leaf, leaf_prefix, leaf_value} ->

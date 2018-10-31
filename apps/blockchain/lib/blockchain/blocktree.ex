@@ -40,8 +40,10 @@ defmodule Blockchain.Blocktree do
         do_validate \\ true,
         specified_block_hash \\ nil
       ) do
+    trie = MerklePatriciaTree.Trie.new(db)
+
     parent =
-      case Block.get_parent_block(block, db) do
+      case Block.get_parent_block(block, trie) do
         :genesis -> nil
         {:ok, parent} -> parent
         :not_found -> :parent_not_found

@@ -6,6 +6,7 @@ defmodule Blockchain.Genesis do
   alias Block.Header
   alias Blockchain.{Account, Block, Chain}
   alias MerklePatriciaTree.{DB, Trie}
+  alias MerklePatriciaTree.TrieStorage
 
   @type seal_config :: %{
           mix_hash: binary(),
@@ -58,25 +59,25 @@ defmodule Blockchain.Genesis do
 
       # TODO: Add test case with initial storage
   """
-  @spec create_block(Chain.t(), DB.db()) :: Block.t()
-  def create_block(chain, db) do
+  @spec create_block(Chain.t(), TrieStorage.t()) :: Block.t()
+  def create_block(chain, trie) do
     header = create_header(chain.genesis)
     block = %Block{header: header}
     accounts = Enum.into(chain.accounts, [])
 
     state =
-      Enum.reduce(accounts, Trie.new(db), fn {address, account_map}, trie ->
+      Enum.reduce(accounts, trie, fn {address, account_map}, trie ->
         if is_nil(account_map[:balance]) do
           trie
         else
-          account = create_account(db, address, account_map)
+          {account, trie} = create_account(trie, address, account_map)
           Account.put_account(trie, address, account)
         end
       end)
 
     header = %{header | state_root: state.root_hash}
 
-    %{block | header: header}
+    {%{block | header: header}, state}
   end
 
   @doc """
@@ -97,12 +98,12 @@ defmodule Blockchain.Genesis do
     }
   end
 
-  @spec create_account(DB.db(), EVM.address(), map()) :: Account.t()
-  def create_account(db, address, account_map) do
+  @spec create_account(TrieStorage.t(), EVM.address(), map()) :: Account.t()
+  def create_account(trie, address, account_map) do
     storage =
       if account_map[:storage_root],
-        do: Trie.new(db, account_map[:storage_root]),
-        else: Trie.new(db)
+        do: TrieStorage.set_root_hash(trie, account_map[:storage_root]),
+        else: trie
 
     storage =
       if account_map[:storage] do
@@ -113,11 +114,11 @@ defmodule Blockchain.Genesis do
         storage
       end
 
-    %Account{
-      nonce: account_map[:nonce] || 0,
-      balance: account_map[:balance],
-      storage_root: storage.root_hash
-    }
+    {%Account{
+       nonce: account_map[:nonce] || 0,
+       balance: account_map[:balance],
+       storage_root: TrieStorage.root_hash(storage)
+     }, storage}
   end
 
   @doc """

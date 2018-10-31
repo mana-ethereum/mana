@@ -13,7 +13,7 @@ defmodule MerklePatriciaTree.Trie.Builder do
 
   import MerklePatriciaTree.ListHelper, only: [overlap: 2]
 
-  alias MerklePatriciaTree.Storage
+  alias MerklePatriciaTree.TrieStorage
   alias MerklePatriciaTree.Trie
   alias MerklePatriciaTree.Trie.Node
 
@@ -49,7 +49,7 @@ defmodule MerklePatriciaTree.Trie.Builder do
     branch =
       [{old_tl, old_value}, {new_tl, new_value}]
       |> build_branch(trie)
-      |> Storage.storage(trie).put_node(trie)
+      |> TrieStorage.put_node(trie)
 
     {:ext, matching_prefix, branch}
   end
@@ -70,13 +70,13 @@ defmodule MerklePatriciaTree.Trie.Builder do
      List.update_at(nodes, prefix_hd, fn branch ->
        node =
          branch
-         |> Storage.storage(trie).into(trie)
-         |> Storage.storage(trie).fetch_node()
+         |> TrieStorage.into(trie)
+         |> TrieStorage.fetch_node()
 
        # Insert the rest
        node
        |> put_key(prefix_tl, value, trie)
-       |> Storage.storage(trie).put_node(trie)
+       |> TrieStorage.put_node(trie)
      end)}
   end
 
@@ -112,15 +112,15 @@ defmodule MerklePatriciaTree.Trie.Builder do
       # This is our decoded old branch trie.
       old_trie =
         old_value
-        |> Storage.storage(trie).into(trie)
-        |> Storage.storage(trie).fetch_node()
+        |> TrieStorage.into(trie)
+        |> TrieStorage.fetch_node()
 
       # Recursively merge the new value into
       # the old branch trie.
       new_encoded_trie =
         old_trie
         |> put_key(new_tl, new_value, trie)
-        |> Storage.storage(trie).put_node(trie)
+        |> TrieStorage.put_node(trie)
 
       {:ext, matching_prefix, new_encoded_trie}
     else
@@ -151,14 +151,14 @@ defmodule MerklePatriciaTree.Trie.Builder do
           # They have some common/shared prefix nibbles.
           # So we need to "insert" an extension node.
           [h | t] ->
-            ext_encoded = Storage.storage(trie).put_node({:ext, t, old_value}, trie)
+            ext_encoded = TrieStorage.put_node({:ext, t, old_value}, trie)
             {h, {:encoded, ext_encoded}}
         end
 
       branch =
         [first, {new_tl, new_value}]
         |> build_branch(trie)
-        |> Storage.storage(trie).put_node(trie)
+        |> TrieStorage.put_node(trie)
 
       {:ext, matching_prefix, branch}
     end
@@ -172,7 +172,7 @@ defmodule MerklePatriciaTree.Trie.Builder do
           {h, {:encoded, old_value}}
 
         [h | t] ->
-          ext_encoded = Storage.storage(trie).put_node({:ext, t, old_value}, trie)
+          ext_encoded = TrieStorage.put_node({:ext, t, old_value}, trie)
           {h, {:encoded, ext_encoded}}
       end
 

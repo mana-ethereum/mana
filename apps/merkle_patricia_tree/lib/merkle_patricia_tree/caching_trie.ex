@@ -8,7 +8,7 @@ defmodule MerklePatriciaTree.CachingTrie do
   alias MerklePatriciaTree.Trie.Node
   alias MerklePatriciaTree.Trie.Storage
 
-  @behaviour MerklePatriciaTree.Storage
+  @behaviour MerklePatriciaTree.TrieStorage
 
   defstruct [
     :in_memory_trie,
@@ -178,6 +178,32 @@ defmodule MerklePatriciaTree.CachingTrie do
     }
 
     Fetcher.get(caching_subtrie, key)
+  end
+
+  @impl true
+  def commit!(caching_trie) do
+    trie = caching_trie.trie
+
+    updated_trie =
+      Enum.reduce(caching_trie.trie_changes, trie, fn trie_change, trie_acc ->
+        case trie_change do
+          {:update, root_hash, key, value} ->
+            {_subtrie, trie} = Trie.update_subtrie_key(trie_acc, root_hash, key, value)
+            trie
+
+          {:remove, root_hash, key} ->
+            {_subtrie, trie} = Trie.remove_subtrie_key(trie_acc, root_hash, key)
+            trie
+        end
+      end)
+
+    caching_trie.db_changes
+    |> Map.to_list()
+    |> Enum.reduce(updated_trie, fn {key, value}, trie_acc ->
+      Trie.put_raw_key!(trie_acc, key, value)
+    end)
+
+    :ok
   end
 
   @impl true

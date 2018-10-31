@@ -7,28 +7,28 @@ defmodule Blockchain.BlockHeaderInfo do
 
   @type t :: %__MODULE__{
           block_header: Block.Header.t(),
-          db: MerklePatriciaTree.DB.db()
+          trie: MerklePatriciaTree.DB.db()
         }
 
-  defstruct [:block_header, :db]
+  defstruct [:block_header, :trie]
 
   @doc """
   Returns a new block interface.
 
   ## Examples
 
-      iex> block_header = %Block.Header{}
-      iex> db = MerklePatriciaTree.Test.random_ets_db(:new_block_header_info)
-      iex> Blockchain.BlockHeaderInfo.new(block_header, db)
-      %Blockchain.BlockHeaderInfo{
-        block_header: %Block.Header{},
-        db: {MerklePatriciaTree.DB.ETS, :new_block_header_info}
-      }
+      # iex> block_header = %Block.Header{}
+      # iex> db = MerklePatriciaTree.Test.random_ets_db(:new_block_header_info)
+      # iex> Blockchain.BlockHeaderInfo.new(block_header, db)
+      # %Blockchain.BlockHeaderInfo{
+      #   block_header: %Block.Header{},
+      #   db: {MerklePatriciaTree.DB.ETS, :new_block_header_info}
+      # }
   """
-  def new(block_header, db) do
+  def new(block_header, trie) do
     %__MODULE__{
       block_header: block_header,
-      db: db
+      trie: trie
     }
   end
 
@@ -67,7 +67,7 @@ defmodule Blockchain.BlockHeaderInfo do
   end
 
   defp get_block_by_hash(block_header_info, block_hash) do
-    case Blockchain.Block.get_block(block_hash, block_header_info.db) do
+    case Blockchain.Block.get_block(block_hash, block_header_info.trie) do
       {:ok, block} -> block.header
       :not_found -> nil
     end

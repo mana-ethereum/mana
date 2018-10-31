@@ -233,4 +233,61 @@ defmodule MerklePatriciaTree.CachingTrieTest do
       assert CachingTrie.root_hash(updated_caching_trie) == Trie.empty_trie_root_hash()
     end
   end
+
+  describe "commit/1" do
+    test "commits trie cache" do
+      disk_trie =
+        "/tmp/#{MerklePatriciaTree.Test.random_string(20)}"
+        |> MerklePatriciaTree.DB.RocksDB.init()
+        |> MerklePatriciaTree.Trie.new()
+
+      caching_trie =
+        disk_trie
+        |> CachingTrie.new()
+        |> CachingTrie.update_key("key1", "value1")
+        |> CachingTrie.update_key("key2", "value2")
+        |> CachingTrie.update_key("elixir", "erlang")
+
+      assert Trie.get_subtrie_key(disk_trie, caching_trie.in_memory_trie.root_hash, "key1") == nil
+      assert Trie.get_subtrie_key(disk_trie, caching_trie.in_memory_trie.root_hash, "key2") == nil
+
+      assert Trie.get_subtrie_key(disk_trie, caching_trie.in_memory_trie.root_hash, "elixir") ==
+               nil
+
+      CachingTrie.commit!(caching_trie)
+
+      assert Trie.get_subtrie_key(disk_trie, caching_trie.in_memory_trie.root_hash, "key1") ==
+               "value1"
+
+      assert Trie.get_subtrie_key(disk_trie, caching_trie.in_memory_trie.root_hash, "key2") ==
+               "value2"
+
+      assert Trie.get_subtrie_key(disk_trie, caching_trie.in_memory_trie.root_hash, "elixir") ==
+               "erlang"
+    end
+
+    test "commits raw cache" do
+      disk_trie =
+        "/tmp/#{MerklePatriciaTree.Test.random_string(20)}"
+        |> MerklePatriciaTree.DB.RocksDB.init()
+        |> MerklePatriciaTree.Trie.new()
+
+      caching_trie =
+        disk_trie
+        |> CachingTrie.new()
+        |> CachingTrie.put_raw_key!("key1", "value1")
+        |> CachingTrie.put_raw_key!("key2", "value2")
+        |> CachingTrie.put_raw_key!("elixir", "erlang")
+
+      assert Trie.get_raw_key(disk_trie, "key1") == :not_found
+      assert Trie.get_raw_key(disk_trie, "key2") == :not_found
+      assert Trie.get_raw_key(disk_trie, "elixir") == :not_found
+
+      CachingTrie.commit!(caching_trie)
+
+      assert Trie.get_raw_key(disk_trie, "key1") == {:ok, "value1"}
+      assert Trie.get_raw_key(disk_trie, "key2") == {:ok, "value2"}
+      assert Trie.get_raw_key(disk_trie, "elixir") == {:ok, "erlang"}
+    end
+  end
 end
