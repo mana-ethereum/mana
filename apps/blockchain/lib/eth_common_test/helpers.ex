@@ -206,14 +206,13 @@ defmodule EthCommonTest.Helpers do
         end
       end
 
-    {test_cases, skips} =
-      Enum.reduce(List.flatten(all_test_cases), {[], []}, fn
-        {t, false}, {tests, skips} ->
-          {[t | tests], skips}
+    Enum.reduce(List.flatten(all_test_cases), {[], []}, fn
+      {t, false}, {tests, skips} ->
+        {[t | tests], skips}
 
-        {t, true}, {tests, skips} ->
-          {tests, [t | skips]}
-      end)
+      {t, true}, {tests, skips} ->
+        {tests, [t | skips]}
+    end)
   end
 
   # Groups the results of tasks together into successes or failures
@@ -222,13 +221,12 @@ defmodule EthCommonTest.Helpers do
     # Then gather up the successes and failures
     # Note: we currently have the exits for the failure
     #       but the exit doesn't include the test name
-    {successes, failures} =
-      Enum.reduce(tasks, {[], []}, fn
-        {:ok, test_name}, {succ, fail} ->
-          {[test_name | succ], fail}
+    Enum.reduce(tasks, {[], []}, fn
+      {:ok, test_name}, {succ, fail} ->
+        {[test_name | succ], fail}
 
-        {:exit, error}, {succ, fail} ->
-          {succ, [error | fail]}
-      end)
+      {:exit, error}, {succ, fail} ->
+        {succ, [error | fail]}
+    end)
   end
 end
