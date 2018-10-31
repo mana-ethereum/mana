@@ -8,15 +8,15 @@ fancy_echo() {
 }
 
 install_linux_deps() {
-  local LINUX_DEPS="automake autoconf autogen libtool gcc curl"
+  local LINUX_DEPS="automake autoconf autogen libtool curl"
   local flavor=`grep "^ID=" /etc/os-release | cut -d"=" -f 2`
   echo $flavor
   case $flavor in
     debian|ubuntu)
-      sudo apt-get install -y $LINUX_DEPS libgmp-dev erlang-dev
+      sudo apt-get install -y $LINUX_DEPS build-essential libgmp-dev erlang-dev
       ;;
     fedora|centos)
-      sudo yum install $LINUX_DEPS gmp-devel
+      sudo yum install $LINUX_DEPS gcc gmp-devel
       ;;
     *)
       fancy_echo "Unrecognized distribution $flavor"
