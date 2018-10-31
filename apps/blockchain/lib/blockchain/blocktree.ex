@@ -8,8 +8,8 @@ defmodule Blockchain.Blocktree do
   end
 
   alias Blockchain.{Block, Chain, Genesis}
-  alias MerklePatriciaTree.TrieStorage
   alias MerklePatriciaTree.DB
+  alias MerklePatriciaTree.TrieStorage
 
   defstruct best_block: nil
 
