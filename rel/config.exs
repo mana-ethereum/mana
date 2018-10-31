@@ -31,7 +31,6 @@ environment :dev do
   # dev mode.
   set dev_mode: true
   set include_erts: true
-  set include_src: false
   set cookie: :"zGokf%I2ZvCe6)?qkO}rlf)[*&<GefmD}w*$5Gv/6VNO6`x&?Y!t^i>M[/zJ.q9j"
 end
 

@@ -490,11 +490,12 @@ jobs:
     steps:
       - attach_workspace:
            at: .
-      - run: curl -s https://static.rust-lang.org/rustup.sh | sh -s -- --channel=nightly
+      - run: curl https://sh.rustup.rs -sSf | sh -s -- -y
       - run: echo 'export PATH=~/.cargo/bin:$PATH' >> $BASH_ENV
       - run: mix local.hex --force
       - run: mix local.rebar --force
-      - run: MIX_ENV=dev mix release --verbose
+      - run: mix release.init
+      - run: mix release --verbose
       - store_artifacts:
           path: _build/dev/rel/mana/
           destination: _build/dev/rel/mana/

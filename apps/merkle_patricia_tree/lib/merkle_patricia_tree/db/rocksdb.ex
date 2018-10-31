@@ -13,7 +13,8 @@ defmodule MerklePatriciaTree.DB.RocksDB do
   """
   @spec init(DB.db_name()) :: DB.db()
   def init(db_name) do
-    {:ok, db_ref} = Rox.open(db_name, create_if_missing: true)
+    db_name = String.to_charlist(db_name)
+    {:ok, db_ref} = :rocksdb.open(db_name, create_if_missing: true)
 
     {__MODULE__, db_ref}
   end
@@ -22,20 +23,20 @@ defmodule MerklePatriciaTree.DB.RocksDB do
   Retrieves a key from the database.
   """
   @spec get(DB.db_ref(), Trie.key()) :: {:ok, DB.value()} | :not_found
-  def get(db_ref, key), do: Rox.get(db_ref, key)
+  def get(db_ref, key), do: :rocksdb.get(db_ref, key, [])
 
   @doc """
   Stores a key in the database.
   """
   @spec put!(DB.db_ref(), Trie.key(), DB.value()) :: :ok
-  def put!(db_ref, key, value), do: Rox.put(db_ref, key, value)
+  def put!(db_ref, key, value), do: :rocksdb.put(db_ref, key, value, [])
 
   @doc """
   Removes all objects with key from the database.
   """
   @spec delete!(DB.db_ref(), Trie.key()) :: :ok
   def delete!(db_ref, key) do
-    case Rox.delete(db_ref, key) do
+    case :rocksdb.delete(db_ref, key, []) do
       :ok -> :ok
     end
   end
