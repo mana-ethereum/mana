@@ -21,7 +21,7 @@ defmodule CLI.Sync do
   @spec sync_new_blocks(
           module(),
           any(),
-          DB.db(),
+          TrieStorage.t(),
           Chain.t(),
           Blocktree.t(),
           block_limit()

@@ -186,7 +186,7 @@ defmodule Blockchain.Block do
       iex> serialized_block |> ExRLP.decode |> Blockchain.Block.deserialize()
       %Blockchain.Block{header: %Block.Header{number: 5, parent_hash: <<1, 2, 3>>, beneficiary: <<2, 3, 4>>, difficulty: 100, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>}}
   """
-  @spec put_block(t, TrieStorage.t(), binary() | nil) :: {:ok, EVM.hash()}
+  @spec put_block(t, TrieStorage.t(), binary() | nil) :: {:ok, {EVM.hash(), TrieStorage.t()}}
   def put_block(block, trie, predefined_key \\ nil) do
     hash = if predefined_key, do: predefined_key, else: hash(block)
     block_rlp = block |> serialize |> ExRLP.encode()
