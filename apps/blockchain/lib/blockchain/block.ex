@@ -669,7 +669,8 @@ defmodule Blockchain.Block do
       iex> status
       :valid
   """
-  @spec validate(t, Chain.t(), t, DB.db()) :: {:valid, TrieStorage.t()} | {:invalid, [atom()]}
+  @spec validate(t, Chain.t(), t, TrieStorage.t()) ::
+          {:valid, TrieStorage.t()} | {:invalid, [atom()]}
   def validate(block, chain, parent_block, db) do
     with :valid <- validate_parent_block(block, parent_block),
          :valid <- validate_header(block, parent_block, chain) do

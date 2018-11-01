@@ -7,7 +7,7 @@ defmodule Blockchain.BlockHeaderInfo do
 
   @type t :: %__MODULE__{
           block_header: Block.Header.t(),
-          trie: MerklePatriciaTree.DB.db()
+          trie: MerklePatriciaTree.TrieStorage.t()
         }
 
   defstruct [:block_header, :trie]

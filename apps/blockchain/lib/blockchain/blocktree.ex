@@ -31,7 +31,7 @@ defmodule Blockchain.Blocktree do
   2. Verfiy the block against its parent block
   3. If valid, put the block into our DB
   """
-  @spec verify_and_add_block(t, Chain.t(), Block.t(), TrieStorage.t(), boolean()) ::
+  @spec verify_and_add_block(t, Chain.t(), Block.t(), TrieStorage.t(), boolean(), binary() | nil) ::
           {:ok, {t, TrieStorage.t()}} | :parent_not_found | {:invalid, [atom()]}
   def verify_and_add_block(
         blocktree,

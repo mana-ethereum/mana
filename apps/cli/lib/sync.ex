@@ -24,7 +24,8 @@ defmodule CLI.Sync do
           TrieStorage.t(),
           Chain.t(),
           Blocktree.t(),
-          block_limit()
+          block_limit(),
+          integer() | nil
         ) :: {:ok, Blocktree.t()} | {:error, any()}
   def sync_new_blocks(
         block_provider,
@@ -100,7 +101,7 @@ defmodule CLI.Sync do
     # can use `suffix: :count`
     ProgressBar.render(
       rem(block_number, @save_block_interval),
-      100,
+      @save_block_interval,
       progress_bar_format()
     )
   end
