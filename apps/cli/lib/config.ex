@@ -15,6 +15,16 @@ defmodule CLI.Config do
   """
   @spec db_name(atom()) :: nonempty_charlist()
   def db_name(chain_id) do
-    'db/mana-' ++ Atom.to_charlist(chain_id)
+    "db/mana-#{Atom.to_string(chain_id)}"
+    |> relative_to_pwd()
+    |> String.to_charlist()
+  end
+
+  @spec relative_to_pwd(String.t()) :: String.t()
+  defp relative_to_pwd(rel) do
+    Path.join(
+      System.cwd!(),
+      "/../../../../#{rel}"
+    )
   end
 end
