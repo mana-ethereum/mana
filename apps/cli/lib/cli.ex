@@ -8,6 +8,7 @@ defmodule CLI do
   alias Blockchain.{Blocktree, Chain}
   alias CLI.{Config, State, Sync}
   alias MerklePatriciaTree.DB.RocksDB
+  alias MerklePatriciaTree.Trie
 
   @doc """
   Initiates a sync with a given provider (e.g. a JSON-RPC client, such
@@ -16,13 +17,14 @@ defmodule CLI do
   @spec sync(atom(), module(), [any()]) :: {:ok, Blocktree.t()} | {:error, any()}
   def sync(chain_id, block_provider, block_provider_args \\ []) do
     db = RocksDB.init(Config.db_name(chain_id))
+    trie = Trie.new(db)
     chain = Chain.load_chain(chain_id)
 
     {:ok, block_provider_state} = apply(block_provider, :setup, block_provider_args)
 
-    tree = State.load_tree(db)
+    blocktree = State.load_tree(db)
 
-    with {:ok, current_block} <- Blocktree.get_best_block(tree, chain, tree) do
+    with {:ok, {current_block, _updated_trie}} <- Blocktree.get_best_block(blocktree, chain, trie) do
       with {:ok, highest_known_block_number} <-
              block_provider.get_block_number(block_provider_state) do
         # Note: we load the highest block number right now just
@@ -39,7 +41,7 @@ defmodule CLI do
           block_provider_state,
           db,
           chain,
-          tree,
+          blocktree,
           current_block.header.number + 1,
           :infinite,
           highest_known_block_number

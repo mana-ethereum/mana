@@ -243,6 +243,7 @@ defmodule ExWire.Struct.BlockQueue do
     # We can only process the next canonical block
 
     {remaining_block_queue, blocks} = get_complete_blocks(block_queue)
+    trie = MerklePatriciaTree.Trie.new(db)
 
     block_tree =
       Enum.reduce(blocks, block_tree, fn block, block_tree ->
@@ -250,7 +251,7 @@ defmodule ExWire.Struct.BlockQueue do
                block_tree,
                chain,
                block,
-               db,
+               trie,
                do_validation
              ) do
           :parent_not_found ->
@@ -265,7 +266,7 @@ defmodule ExWire.Struct.BlockQueue do
 
             block_tree
 
-          {:ok, new_block_tree} ->
+          {:ok, {new_block_tree, _new_trie}} ->
             Logger.debug("[Block Queue] Verified block and added to new block tree")
 
             new_block_tree
