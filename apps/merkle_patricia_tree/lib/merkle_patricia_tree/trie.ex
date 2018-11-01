@@ -198,4 +198,7 @@ defmodule MerklePatriciaTree.Trie do
 
   @impl true
   def commit!(_trie), do: :ok
+
+  @impl true
+  def permanent_db(trie), do: trie.db
 end

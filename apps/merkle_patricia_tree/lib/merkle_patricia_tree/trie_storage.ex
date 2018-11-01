@@ -36,6 +36,8 @@ defmodule MerklePatriciaTree.TrieStorage do
 
   @callback store(t) :: t
 
+  @callback permanent_db(t) :: DB.db()
+
   @callback commit!(t) :: :ok
 
   def fetch_node(implementation) do
@@ -96,6 +98,10 @@ defmodule MerklePatriciaTree.TrieStorage do
 
   def commit!(implementation) do
     storage(implementation).commit!(implementation)
+  end
+
+  def permanent_db(implementation) do
+    storage(implementation).permanent_db(implementation)
   end
 
   defp storage(implementation) do
