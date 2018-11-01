@@ -5,7 +5,7 @@ defmodule Blockchain.Block.HolisticValidity do
   """
 
   alias Blockchain.{Block, Chain, Genesis}
-  alias MerklePatriciaTree.DB
+  alias MerklePatriciaTree.TrieStorage
 
   @doc """
   Determines whether or not a block is valid. This is
@@ -50,16 +50,12 @@ defmodule Blockchain.Block.HolisticValidity do
       ...> |> Blockchain.Block.validate(chain, parent_block, db)
       {:invalid, [:receipts_root_mismatch, :transactions_root_mismatch, :ommers_hash_mismatch, :state_root_mismatch]}
   """
-  @spec validate(Block.t(), Chain.t(), Block.t() | nil, DB.db()) :: :valid | {:invalid, [atom()]}
-  def validate(block, chain, parent_block, db) do
-    caching_trie =
-      db
-      |> MerklePatriciaTree.Trie.new()
-      |> MerklePatriciaTree.CachingTrie.new()
-
+  @spec validate(Block.t(), Chain.t(), Block.t() | nil, TrieStorage.t()) ::
+          {:valid, TrieStorage.t()} | {:invalid, [atom()]}
+  def validate(block, chain, parent_block, trie) do
     {base_block, state} =
       if is_nil(parent_block) do
-        Genesis.create_block(chain, caching_trie)
+        Genesis.create_block(chain, trie)
       else
         {Block.gen_child_block(
            parent_block,
@@ -68,7 +64,7 @@ defmodule Blockchain.Block.HolisticValidity do
            timestamp: block.header.timestamp,
            gas_limit: block.header.gas_limit,
            extra_data: block.header.extra_data
-         ), caching_trie}
+         ), trie}
       end
 
     child_block_with_ommers = Block.add_ommers(base_block, block.ommers)
@@ -91,8 +87,7 @@ defmodule Blockchain.Block.HolisticValidity do
       |> check_logs_bloom(child_block, block)
 
     if errors == [] do
-      MerklePatriciaTree.CachingTrie.commit!(updated_trie)
-      :valid
+      {:valid, updated_trie}
     else
       {:invalid, errors}
     end

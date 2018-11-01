@@ -31,10 +31,10 @@ defmodule EthCommonTest.BlockchainTestRunner do
 
     state = populate_prestate(json_test)
 
-    blocktree =
+    {blocktree, _} =
       create_blocktree()
       |> add_genesis_block(json_test, state, chain)
-      |> add_blocks(json_test, state, chain)
+      |> add_blocks(json_test, chain)
 
     expected_block_hash = maybe_hex(json_test["lastblockhash"])
 
@@ -64,21 +64,21 @@ defmodule EthCommonTest.BlockchainTestRunner do
 
     genesis_block = block_from_json(block, json_test["genesisBlockHeader"])
 
-    {:ok, blocktree} =
+    {:ok, {blocktree, new_state}} =
       Blocktree.verify_and_add_block(
         blocktree,
         chain,
         genesis_block,
-        state.db,
+        state,
         false,
         maybe_hex(json_test["genesisBlockHeader"]["hash"])
       )
 
-    blocktree
+    {blocktree, new_state}
   end
 
-  defp add_blocks(blocktree, json_test, state, chain) do
-    Enum.reduce(json_test["blocks"], blocktree, fn json_block, acc ->
+  defp add_blocks({blocktree, state}, json_test, chain) do
+    Enum.reduce(json_test["blocks"], {blocktree, state}, fn json_block, {acc, state_acc} ->
       block = json_block["rlp"] |> Blockchain.Block.decode_rlp()
 
       case block do
@@ -91,13 +91,13 @@ defmodule EthCommonTest.BlockchainTestRunner do
               json_block["uncleHeaders"]
             )
 
-          case Blocktree.verify_and_add_block(acc, chain, block, state.db) do
-            {:ok, blocktree} -> blocktree
-            _ -> acc
+          case Blocktree.verify_and_add_block(acc, chain, block, state_acc) do
+            {:ok, {blocktree, new_state}} -> {blocktree, new_state}
+            _ -> {acc, state_acc}
           end
 
         _ ->
-          acc
+          {acc, state_acc}
       end
     end)
   end

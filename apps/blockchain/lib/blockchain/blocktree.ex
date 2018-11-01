@@ -31,18 +31,16 @@ defmodule Blockchain.Blocktree do
   2. Verfiy the block against its parent block
   3. If valid, put the block into our DB
   """
-  @spec verify_and_add_block(t, Chain.t(), Block.t(), DB.db(), boolean()) ::
-          {:ok, t} | :parent_not_found | {:invalid, [atom()]}
+  @spec verify_and_add_block(t, Chain.t(), Block.t(), TrieStorage.t(), boolean()) ::
+          {:ok, {t, TrieStorage.t()}} | :parent_not_found | {:invalid, [atom()]}
   def verify_and_add_block(
         blocktree,
         chain,
         block,
-        db,
+        trie,
         do_validate \\ true,
         specified_block_hash \\ nil
       ) do
-    trie = MerklePatriciaTree.Trie.new(db)
-
     parent =
       case Block.get_parent_block(block, trie) do
         :genesis -> nil
@@ -52,18 +50,18 @@ defmodule Blockchain.Blocktree do
 
     validation =
       if do_validate,
-        do: Block.validate(block, chain, parent, db),
-        else: :valid
+        do: Block.validate(block, chain, parent, trie),
+        else: {:valid, trie}
 
-    with :valid <- validation do
-      {:ok, block_hash} = Block.put_block(block, db, specified_block_hash)
+    with {:valid, trie} <- validation do
+      {:ok, {block_hash, updated_trie}} = Block.put_block(block, trie, specified_block_hash)
 
       # Cache computed block hash
       block = %{block | block_hash: block_hash}
 
       updated_blocktree = update_best_block(blocktree, block)
 
-      {:ok, updated_blocktree}
+      {:ok, {updated_blocktree, updated_trie}}
     end
   end
 
@@ -91,7 +89,7 @@ defmodule Blockchain.Blocktree do
   @spec get_best_block(t(), Chain.t(), TrieStorage.t()) :: {:ok, Block.t()} | {:error, any()}
   def get_best_block(blocktree, chain, trie) do
     if block = blocktree.best_block do
-      {:ok, block}
+      {:ok, {block, trie}}
     else
       {:ok, Genesis.create_block(chain, trie)}
     end
