@@ -7,8 +7,8 @@ defmodule CLI do
 
   alias Blockchain.{Blocktree, Chain}
   alias CLI.{Config, State, Sync}
-  alias MerklePatriciaTree.DB.RocksDB
   alias MerklePatriciaTree.CachingTrie
+  alias MerklePatriciaTree.DB.RocksDB
   alias MerklePatriciaTree.Trie
 
   @doc """

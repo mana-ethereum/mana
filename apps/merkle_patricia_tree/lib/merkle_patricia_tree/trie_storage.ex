@@ -3,8 +3,8 @@ defmodule MerklePatriciaTree.TrieStorage do
   Defines functions for fetching and updating nodes.
   """
 
-  alias MerklePatriciaTree.Trie
   alias MerklePatriciaTree.DB
+  alias MerklePatriciaTree.Trie
   alias MerklePatriciaTree.Trie.Node
 
   @type t :: struct()
