@@ -91,7 +91,11 @@ defmodule Blockchain.Blocktree do
     if block = blocktree.best_block do
       {:ok, {block, trie}}
     else
-      {:ok, Genesis.create_block(chain, trie)}
+      {block, new_trie} = Genesis.create_block(chain, trie)
+
+      {:ok, {_hash, trie_with_block}} = Block.put_block(block, new_trie)
+
+      {:ok, {block, trie_with_block}}
     end
   end
 end

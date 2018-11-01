@@ -8,6 +8,7 @@ defmodule CLI do
   alias Blockchain.{Blocktree, Chain}
   alias CLI.{Config, State, Sync}
   alias MerklePatriciaTree.DB.RocksDB
+  alias MerklePatriciaTree.CachingTrie
   alias MerklePatriciaTree.Trie
 
   @doc """
@@ -17,14 +18,15 @@ defmodule CLI do
   @spec sync(atom(), module(), [any()]) :: {:ok, Blocktree.t()} | {:error, any()}
   def sync(chain_id, block_provider, block_provider_args \\ []) do
     db = RocksDB.init(Config.db_name(chain_id))
-    trie = Trie.new(db)
+
+    trie = db |> Trie.new() |> CachingTrie.new()
     chain = Chain.load_chain(chain_id)
 
     {:ok, block_provider_state} = apply(block_provider, :setup, block_provider_args)
 
     blocktree = State.load_tree(db)
 
-    with {:ok, {current_block, _updated_trie}} <- Blocktree.get_best_block(blocktree, chain, trie) do
+    with {:ok, {current_block, updated_trie}} <- Blocktree.get_best_block(blocktree, chain, trie) do
       with {:ok, highest_known_block_number} <-
              block_provider.get_block_number(block_provider_state) do
         # Note: we load the highest block number right now just
@@ -39,7 +41,7 @@ defmodule CLI do
         Sync.sync_new_blocks(
           block_provider,
           block_provider_state,
-          db,
+          updated_trie,
           chain,
           blocktree,
           current_block.header.number + 1,

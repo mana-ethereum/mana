@@ -205,7 +205,7 @@ defmodule MerklePatriciaTree.CachingTrie do
       TrieStorage.put_raw_key!(updated_trie, key, value)
     end)
 
-    :ok
+    new(updated_trie)
   end
 
   @impl true

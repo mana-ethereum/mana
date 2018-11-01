@@ -47,12 +47,20 @@ defmodule CLI.Sync do
             {:ok, {next_tree, updated_trie}} ->
               track_progress(block_number, highest_known_block_number)
 
-              if rem(block_number, @save_block_interval) == 0 do
-                # TODO: Does this log mess up our progress tracker?
-                updated_trie
-                |> TrieStorage.permanent_db()
-                |> State.save_tree(next_tree)
-              end
+              updated_trie =
+                if rem(block_number, @save_block_interval) == 0 do
+                  # TODO: Does this log mess up our progress tracker?
+
+                  committed_trie = TrieStorage.commit!(updated_trie)
+
+                  committed_trie
+                  |> TrieStorage.permanent_db()
+                  |> State.save_tree(next_tree)
+
+                  committed_trie
+                else
+                  updated_trie
+                end
 
               sync_new_blocks(
                 block_provider,
@@ -69,7 +77,9 @@ defmodule CLI.Sync do
               Logger.debug(fn -> "Failed block: #{inspect(next_block)}" end)
               Logger.error(fn -> "Failed to verify block #{block_number}: #{inspect(error)}" end)
 
-              trie
+              committed_trie = TrieStorage.commit!(tree)
+
+              committed_trie
               |> TrieStorage.permanent_db()
               |> State.save_tree(tree)
 
