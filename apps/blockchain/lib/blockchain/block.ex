@@ -177,11 +177,12 @@ defmodule Blockchain.Block do
 
   ## Examples
 
-      iex> db = MerklePatriciaTree.Test.random_ets_db()
+      iex> trie = MerklePatriciaTree.Test.random_ets_db() |> MerklePatriciaTree.Trie.new()
       iex> block = %Blockchain.Block{header: %Block.Header{number: 5, parent_hash: <<1, 2, 3>>, beneficiary: <<2, 3, 4>>, difficulty: 100, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>}}
-      iex> Blockchain.Block.put_block(block, db)
-      {:ok, <<78, 28, 127, 10, 192, 253, 127, 239, 254, 179, 39, 34, 245, 44, 152, 98, 128, 71, 238, 155, 100, 161, 199, 71, 243, 223, 172, 191, 74, 99, 128, 63>>}
-      iex> {:ok, serialized_block} = MerklePatriciaTree.DB.get(db, block |> Blockchain.Block.hash)
+      iex> {:ok, {hash, _}} = Blockchain.Block.put_block(block, trie)
+      iex> hash
+      <<78, 28, 127, 10, 192, 253, 127, 239, 254, 179, 39, 34, 245, 44, 152, 98, 128, 71, 238, 155, 100, 161, 199, 71, 243, 223, 172, 191, 74, 99, 128, 63>>
+      iex> {:ok, serialized_block} = MerklePatriciaTree.DB.get(trie.db, block |> Blockchain.Block.hash)
       iex> serialized_block |> ExRLP.decode |> Blockchain.Block.deserialize()
       %Blockchain.Block{header: %Block.Header{number: 5, parent_hash: <<1, 2, 3>>, beneficiary: <<2, 3, 4>>, difficulty: 100, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>}}
   """
@@ -212,7 +213,7 @@ defmodule Blockchain.Block do
       ...>   transactions: [%Blockchain.Transaction{nonce: 5, gas_price: 6, gas_limit: 7, to: <<1::160>>, value: 8, v: 27, r: 9, s: 10, data: "hi"}],
       ...>   header: %Block.Header{number: 5, parent_hash: <<1, 2, 3>>, beneficiary: <<2, 3, 4>>, difficulty: 100, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>}
       ...> }
-      iex> Blockchain.Block.put_block(block, db)
+      iex> Blockchain.Block.put_block(block, trie)
       iex> Blockchain.Block.get_block(block |> Blockchain.Block.hash, trie)
       {:ok, %Blockchain.Block{
         transactions: [%Blockchain.Transaction{nonce: 5, gas_price: 6, gas_limit: 7, to: <<1::160>>, value: 8, v: 27, r: 9, s: 10, data: "hi"}],
@@ -238,10 +239,10 @@ defmodule Blockchain.Block do
       iex> Blockchain.Block.get_parent_block(%Blockchain.Block{header: %Block.Header{number: 0}}, nil)
       :genesis
 
-      iex> db = MerklePatriciaTree.Test.random_ets_db()
+      iex> trie = MerklePatriciaTree.Test.random_ets_db() |> MerklePatriciaTree.Trie.new()
       iex> block = %Blockchain.Block{header: %Block.Header{number: 5, parent_hash: <<1, 2, 3>>, beneficiary: <<2, 3, 4>>, difficulty: 100, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>}}
-      iex> Blockchain.Block.put_block(block, db)
-      iex> Blockchain.Block.get_parent_block(%Blockchain.Block{header: %Block.Header{parent_hash: block |> Blockchain.Block.hash}}, MerklePatriciaTree.Trie.new(db))
+      iex> Blockchain.Block.put_block(block, trie)
+      iex> Blockchain.Block.get_parent_block(%Blockchain.Block{header: %Block.Header{parent_hash: block |> Blockchain.Block.hash}}, trie)
       {:ok, %Blockchain.Block{header: %Block.Header{number: 5, parent_hash: <<1, 2, 3>>, beneficiary: <<2, 3, 4>>, difficulty: 100, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>}}}
 
       iex> db = MerklePatriciaTree.Test.random_ets_db()
@@ -643,27 +644,29 @@ defmodule Blockchain.Block do
 
   ## Examples
 
-      iex> db = MerklePatriciaTree.Test.random_ets_db()
+      iex> trie = MerklePatriciaTree.Test.random_ets_db() |> MerklePatriciaTree.Trie.new()
       iex> chain = Blockchain.Test.ropsten_chain()
-      iex> {updated_block, _new_trie} = Blockchain.Genesis.create_block(chain, MerklePatriciaTree.Trie.new(db))
-      iex> {updated_block, _new_trie} =  Blockchain.Block.add_rewards(updated_block, MerklePatriciaTree.Trie.new(db), chain)
-      iex> Blockchain.Block.validate(updated_block, chain, nil, db)
+      iex> {updated_block, _new_trie} = Blockchain.Genesis.create_block(chain, trie)
+      iex> {updated_block, _new_trie} =  Blockchain.Block.add_rewards(updated_block, trie, chain)
+      iex> {status, _} = Blockchain.Block.validate(updated_block, chain, nil, trie)
+      iex> status
       :valid
 
-      iex> db = MerklePatriciaTree.Test.random_ets_db()
+      iex> trie = MerklePatriciaTree.Test.random_ets_db() |> MerklePatriciaTree.Trie.new()
       iex> chain = Blockchain.Test.ropsten_chain()
-      iex> {parent, _} = Blockchain.Genesis.create_block(chain, MerklePatriciaTree.Trie.new(db))
+      iex> {parent, _} = Blockchain.Genesis.create_block(chain, trie)
       iex> child = Blockchain.Block.gen_child_block(parent, chain)
-      iex> Blockchain.Block.validate(child, chain, :parent_not_found, db)
+      iex> Blockchain.Block.validate(child, chain, :parent_not_found, trie)
       {:errors, [:non_genesis_block_requires_parent]}
 
-      iex> db = MerklePatriciaTree.Test.random_ets_db()
+      iex> trie = MerklePatriciaTree.Test.random_ets_db() |> MerklePatriciaTree.Trie.new()
       iex> chain = Blockchain.Test.ropsten_chain()
-      iex> {parent, _} = Blockchain.Genesis.create_block(chain, MerklePatriciaTree.Trie.new(db))
+      iex> {parent, _} = Blockchain.Genesis.create_block(chain, trie)
       iex> beneficiary = <<0x05::160>>
       iex> {child, _} = Blockchain.Block.gen_child_block(parent, chain, beneficiary: beneficiary)
-      ...> |> Blockchain.Block.add_rewards(MerklePatriciaTree.Trie.new(db), chain)
-      iex> Blockchain.Block.validate(child, chain, parent, db)
+      ...> |> Blockchain.Block.add_rewards(trie, chain)
+      iex> {status, _} = Blockchain.Block.validate(child, chain, parent, trie)
+      iex> status
       :valid
   """
   @spec validate(t, Chain.t(), t, DB.db()) :: {:valid, TrieStorage.t()} | {:invalid, [atom()]}
