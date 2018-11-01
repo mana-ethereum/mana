@@ -41,8 +41,8 @@ defmodule Blockchain.BlocktreeTest do
         |> Blockchain.Block.add_rewards(trie, chain)
 
       tree = Blocktree.new_tree()
-      {:ok, tree_1} = Blocktree.verify_and_add_block(tree, chain, block_1, trie.db)
-      {:ok, tree_2} = Blocktree.verify_and_add_block(tree_1, chain, block_2, trie.db)
+      {:ok, {tree_1, _trie}} = Blocktree.verify_and_add_block(tree, chain, block_1, trie)
+      {:ok, {tree_2, _trie}} = Blocktree.verify_and_add_block(tree_1, chain, block_2, trie)
 
       assert tree_2.best_block.header.number == block_2.header.number
     end
@@ -69,8 +69,8 @@ defmodule Blockchain.BlocktreeTest do
 
       tree = Blockchain.Blocktree.new_tree()
 
-      {:ok, tree_1} =
-        Blockchain.Blocktree.verify_and_add_block(tree, chain, gen_block, trie.db, false)
+      {:ok, {tree_1, _new_trie}} =
+        Blockchain.Blocktree.verify_and_add_block(tree, chain, gen_block, trie, false)
 
       assert tree_1.best_block.header.number == 0
     end
@@ -107,9 +107,11 @@ defmodule Blockchain.BlocktreeTest do
       }
 
       tree = Blockchain.Blocktree.new_tree()
-      {:ok, tree_1} = Blockchain.Blocktree.verify_and_add_block(tree, chain, block_1, trie.db)
 
-      result = Blockchain.Blocktree.verify_and_add_block(tree_1, chain, block_2, trie.db)
+      {:ok, {tree_1, _trie}} =
+        Blockchain.Blocktree.verify_and_add_block(tree, chain, block_1, trie)
+
+      result = Blockchain.Blocktree.verify_and_add_block(tree_1, chain, block_2, trie)
 
       assert result ==
                {:invalid, [:invalid_difficulty, :invalid_gas_limit, :child_timestamp_invalid]}
@@ -128,7 +130,7 @@ defmodule Blockchain.BlocktreeTest do
     end
 
     test "when there is a best block" do
-      db = MerklePatriciaTree.Test.random_ets_db()
+      trie = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
       chain = Blockchain.Chain.load_chain(:ropsten)
 
       block = %Blockchain.Block{
@@ -158,7 +160,9 @@ defmodule Blockchain.BlocktreeTest do
 
       tree = %Blocktree{best_block: block}
 
-      assert {:ok, block} == Blockchain.Blocktree.get_best_block(tree, chain, db)
+      {:ok, {found_block, _trie}} = Blockchain.Blocktree.get_best_block(tree, chain, trie)
+
+      assert found_block == block
     end
   end
 end

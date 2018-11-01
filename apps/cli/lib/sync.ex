@@ -7,6 +7,7 @@ defmodule CLI.Sync do
   alias Blockchain.{Blocktree, Chain}
   alias CLI.State
   alias MerklePatriciaTree.DB
+  alias MerklePatriciaTree.TrieStorage
 
   @type block_limit :: integer() | :infinite
 
@@ -20,15 +21,16 @@ defmodule CLI.Sync do
   @spec sync_new_blocks(
           module(),
           any(),
-          DB.db(),
+          TrieStorage.t(),
           Chain.t(),
           Blocktree.t(),
-          block_limit()
+          block_limit(),
+          integer() | nil
         ) :: {:ok, Blocktree.t()} | {:error, any()}
   def sync_new_blocks(
         block_provider,
         block_provider_state,
-        db,
+        trie,
         chain,
         tree,
         block_number,
@@ -42,19 +44,29 @@ defmodule CLI.Sync do
       {:continue, next_block_limit} ->
         with {:ok, next_block, next_block_provider_state} <-
                block_provider.get_block(block_number, block_provider_state) do
-          case Blocktree.verify_and_add_block(tree, chain, next_block, db) do
-            {:ok, next_tree} ->
+          case Blocktree.verify_and_add_block(tree, chain, next_block, trie) do
+            {:ok, {next_tree, updated_trie}} ->
               track_progress(block_number, highest_known_block_number)
 
-              if rem(block_number, @save_block_interval) == 0 do
-                # TODO: Does this log mess up our progress tracker?
-                State.save_tree(db, next_tree)
-              end
+              updated_trie =
+                if rem(block_number, @save_block_interval) == 0 do
+                  # TODO: Does this log mess up our progress tracker?
+
+                  committed_trie = TrieStorage.commit!(updated_trie)
+
+                  committed_trie
+                  |> TrieStorage.permanent_db()
+                  |> State.save_tree(next_tree)
+
+                  committed_trie
+                else
+                  updated_trie
+                end
 
               sync_new_blocks(
                 block_provider,
                 next_block_provider_state,
-                db,
+                updated_trie,
                 chain,
                 next_tree,
                 block_number + 1,
@@ -66,7 +78,11 @@ defmodule CLI.Sync do
               Logger.debug(fn -> "Failed block: #{inspect(next_block)}" end)
               Logger.error(fn -> "Failed to verify block #{block_number}: #{inspect(error)}" end)
 
-              State.save_tree(db, tree)
+              committed_trie = TrieStorage.commit!(tree)
+
+              committed_trie
+              |> TrieStorage.permanent_db()
+              |> State.save_tree(tree)
 
               {:error, error}
           end
@@ -85,7 +101,7 @@ defmodule CLI.Sync do
     # can use `suffix: :count`
     ProgressBar.render(
       rem(block_number, @save_block_interval),
-      100,
+      @save_block_interval,
       progress_bar_format()
     )
   end

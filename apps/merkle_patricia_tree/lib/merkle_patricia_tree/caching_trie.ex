@@ -5,8 +5,7 @@ defmodule MerklePatriciaTree.CachingTrie do
   alias MerklePatriciaTree.Trie.Destroyer
   alias MerklePatriciaTree.Trie.Fetcher
   alias MerklePatriciaTree.Trie.Helper
-  alias MerklePatriciaTree.Trie.Node
-  alias MerklePatriciaTree.Trie.Storage
+  alias MerklePatriciaTree.TrieStorage
 
   @behaviour MerklePatriciaTree.TrieStorage
 
@@ -23,15 +22,16 @@ defmodule MerklePatriciaTree.CachingTrie do
   @type db_changes :: %{binary() => binary()}
 
   @type t :: %__MODULE__{
-          in_memory_trie: Trie.t(),
-          trie: Trie.t(),
+          in_memory_trie: TrieStorage.t(),
+          trie: TrieStorage.t(),
           trie_changes: [trie_change()],
           db_changes: db_changes
         }
 
   def new(trie) do
     ets_db = MerklePatriciaTree.Test.random_ets_db()
-    in_memory_trie = Trie.new(ets_db, trie.root_hash)
+    root_hash = TrieStorage.root_hash(trie)
+    in_memory_trie = Trie.new(ets_db, root_hash)
 
     %__MODULE__{
       in_memory_trie: in_memory_trie,
@@ -43,7 +43,7 @@ defmodule MerklePatriciaTree.CachingTrie do
 
   @impl true
   def root_hash(caching_trie) do
-    caching_trie.in_memory_trie.root_hash
+    TrieStorage.root_hash(caching_trie.in_memory_trie)
   end
 
   @impl true
@@ -53,12 +53,14 @@ defmodule MerklePatriciaTree.CachingTrie do
 
   @impl true
   def fetch_node(caching_trie) do
-    in_memory_node = Node.decode_trie(caching_trie.in_memory_trie)
+    in_memory_node = TrieStorage.fetch_node(caching_trie.in_memory_trie)
 
     if in_memory_node == :empty do
-      trie = %{caching_trie.trie | root_hash: caching_trie.in_memory_trie.root_hash}
+      in_memory_root_hash = TrieStorage.root_hash(caching_trie.in_memory_trie)
 
-      Node.decode_trie(trie)
+      caching_trie.trie
+      |> TrieStorage.set_root_hash(in_memory_root_hash)
+      |> TrieStorage.fetch_node()
     else
       in_memory_node
     end
@@ -66,7 +68,7 @@ defmodule MerklePatriciaTree.CachingTrie do
 
   @impl true
   def put_node(node, caching_trie) do
-    Node.encode_node(node, caching_trie.in_memory_trie)
+    TrieStorage.put_node(node, caching_trie.in_memory_trie)
   end
 
   @impl true
@@ -159,7 +161,7 @@ defmodule MerklePatriciaTree.CachingTrie do
     cached_value = Map.get(caching_trie.db_changes, key)
 
     if is_nil(cached_value) do
-      MerklePatriciaTree.DB.get(caching_trie.trie.db, key)
+      TrieStorage.get_raw_key(caching_trie.trie, key)
     else
       {:ok, cached_value}
     end
@@ -188,11 +190,11 @@ defmodule MerklePatriciaTree.CachingTrie do
       Enum.reduce(caching_trie.trie_changes, trie, fn trie_change, trie_acc ->
         case trie_change do
           {:update, root_hash, key, value} ->
-            {_subtrie, trie} = Trie.update_subtrie_key(trie_acc, root_hash, key, value)
+            {_subtrie, trie} = TrieStorage.update_subtrie_key(trie_acc, root_hash, key, value)
             trie
 
           {:remove, root_hash, key} ->
-            {_subtrie, trie} = Trie.remove_subtrie_key(trie_acc, root_hash, key)
+            {_subtrie, trie} = TrieStorage.remove_subtrie_key(trie_acc, root_hash, key)
             trie
         end
       end)
@@ -200,29 +202,19 @@ defmodule MerklePatriciaTree.CachingTrie do
     caching_trie.db_changes
     |> Map.to_list()
     |> Enum.each(fn {key, value} ->
-      Trie.put_raw_key!(updated_trie, key, value)
+      TrieStorage.put_raw_key!(updated_trie, key, value)
     end)
 
-    :ok
+    new(updated_trie)
   end
 
   @impl true
   def store(caching_trie) do
     in_memory_trie = caching_trie.in_memory_trie
-    rlp = Helper.rlp_encode(in_memory_trie.root_hash)
 
-    # Let's check if it is RLP or Keccak-256 hash.
-    if Storage.keccak_hash?(rlp) do
-      # It is RLP, so we need to calc KEC-256 and
-      # store it in the database.
-      kec = Storage.store(rlp, in_memory_trie.db)
-      updated_in_memory_trie = %{in_memory_trie | root_hash: kec}
-      %{caching_trie | in_memory_trie: updated_in_memory_trie}
-    else
-      # It is SHA3/Keccak-256,
-      # so we know it is already stored in the DB.
-      caching_trie
-    end
+    stored_in_memory_trie = TrieStorage.store(in_memory_trie)
+
+    %{caching_trie | in_memory_trie: stored_in_memory_trie}
   end
 
   @impl true
@@ -230,5 +222,10 @@ defmodule MerklePatriciaTree.CachingTrie do
     updated_in_memory_trie = %{caching_trie.in_memory_trie | root_hash: next_node}
 
     %{caching_trie | in_memory_trie: updated_in_memory_trie}
+  end
+
+  @impl true
+  def permanent_db(caching_trie) do
+    TrieStorage.permanent_db(caching_trie.trie)
   end
 end

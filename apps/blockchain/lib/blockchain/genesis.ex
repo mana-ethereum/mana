@@ -83,7 +83,7 @@ defmodule Blockchain.Genesis do
 
       # TODO: Add test case with initial storage
   """
-  @spec create_block(Chain.t(), TrieStorage.t()) :: Block.t()
+  @spec create_block(Chain.t(), TrieStorage.t()) :: {Block.t(), TrieStorage.t()}
   def create_block(chain, trie) do
     header = create_header(chain.genesis)
     block = %Block{header: header}
@@ -125,7 +125,7 @@ defmodule Blockchain.Genesis do
     }
   end
 
-  @spec create_account(TrieStorage.t(), EVM.address(), map()) :: Account.t()
+  @spec create_account(TrieStorage.t(), EVM.address(), map()) :: {Account.t(), TrieStorage.t()}
   def create_account(trie, address, account_map) do
     storage =
       if account_map[:storage_root],

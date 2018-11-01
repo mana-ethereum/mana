@@ -10,16 +10,20 @@ defmodule CLI.SyncTest do
 
   describe "sync_new_blocks/6" do
     test "it pulls a new block and adds it to chain" do
-      db = ETS.init(:sync_new_blocks_test_0)
+      trie =
+        :sync_new_blocks_test_0
+        |> ETS.init()
+        |> MerklePatriciaTree.Trie.new()
+
       chain = Chain.load_chain(:ropsten)
-      tree = Blocktree.new_tree()
+      blocktree = Blocktree.new_tree()
 
       assert Sync.sync_new_blocks(
                RPC,
                MockHttpClient,
-               db,
+               trie,
                chain,
-               tree,
+               blocktree,
                0,
                2,
                2
@@ -77,16 +81,20 @@ defmodule CLI.SyncTest do
     end
 
     test "fails when it cannot pull a block" do
-      db = ETS.init(:sync_new_blocks_test_1)
+      trie =
+        :sync_new_blocks_test_1
+        |> ETS.init()
+        |> MerklePatriciaTree.Trie.new()
+
       chain = Chain.load_chain(:ropsten)
-      tree = Blocktree.new_tree()
+      blocktree = Blocktree.new_tree()
 
       assert Sync.sync_new_blocks(
                RPC,
                MockHttpClient,
-               db,
+               trie,
                chain,
-               tree,
+               blocktree,
                0,
                3,
                2

@@ -219,7 +219,7 @@ defmodule Blockchain.BlockTest do
 
     {child, _new_trie} = Blockchain.Block.add_rewards(child, new_trie, chain)
 
-    result = Blockchain.Block.validate(child, chain, parent, db)
+    {result, _} = Blockchain.Block.validate(child, chain, parent, trie)
 
     assert result == :valid
   end
@@ -286,7 +286,7 @@ defmodule Blockchain.BlockTest do
 
     {block, _} = Genesis.create_block(chain, trie)
     {block, _} = Block.add_rewards(block, trie, chain)
-    result = Block.validate(block, chain, nil, db)
+    {result, _} = Block.validate(block, chain, nil, trie)
 
     assert result == :valid
   end

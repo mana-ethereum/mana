@@ -4,7 +4,7 @@ defmodule Blockchain.BlockHeaderInfoTest do
 
   describe ".get_ancestor_header/2" do
     test "returns the parent header if passed 1" do
-      db = MerklePatriciaTree.Test.random_ets_db()
+      trie = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
 
       parent_header = %Block.Header{
         number: 3,
@@ -34,19 +34,19 @@ defmodule Blockchain.BlockHeaderInfoTest do
         header: header
       }
 
-      Blockchain.Block.put_block(parent_block, db)
-      Blockchain.Block.put_block(block, db)
+      Blockchain.Block.put_block(parent_block, trie)
+      Blockchain.Block.put_block(block, trie)
 
       ancestor_header =
         block.header
-        |> Blockchain.BlockHeaderInfo.new(MerklePatriciaTree.Trie.new(db))
+        |> Blockchain.BlockHeaderInfo.new(trie)
         |> Blockchain.BlockHeaderInfo.get_ancestor_header(1)
 
       assert parent_header == ancestor_header
     end
 
     test "gets the header of the nth ancestor" do
-      db = MerklePatriciaTree.Test.random_ets_db()
+      trie = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
 
       grand_parent_header = %Block.Header{
         number: 3,
@@ -90,13 +90,13 @@ defmodule Blockchain.BlockHeaderInfoTest do
         header: header
       }
 
-      Blockchain.Block.put_block(grand_parent_block, db)
-      Blockchain.Block.put_block(parent_block, db)
-      Blockchain.Block.put_block(block, db)
+      Blockchain.Block.put_block(grand_parent_block, trie)
+      Blockchain.Block.put_block(parent_block, trie)
+      Blockchain.Block.put_block(block, trie)
 
       ancestor_header =
         block.header
-        |> Blockchain.BlockHeaderInfo.new(MerklePatriciaTree.Trie.new(db))
+        |> Blockchain.BlockHeaderInfo.new(trie)
         |> Blockchain.BlockHeaderInfo.get_ancestor_header(2)
 
       assert grand_parent_header == ancestor_header

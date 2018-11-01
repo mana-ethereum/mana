@@ -3,6 +3,7 @@ defmodule MerklePatriciaTree.TrieStorage do
   Defines functions for fetching and updating nodes.
   """
 
+  alias MerklePatriciaTree.DB
   alias MerklePatriciaTree.Trie
   alias MerklePatriciaTree.Trie.Node
 
@@ -36,7 +37,9 @@ defmodule MerklePatriciaTree.TrieStorage do
 
   @callback store(t) :: t
 
-  @callback commit!(t) :: :ok
+  @callback permanent_db(t) :: DB.db()
+
+  @callback commit!(t) :: t
 
   def fetch_node(implementation) do
     storage(implementation).fetch_node(implementation)
@@ -96,6 +99,10 @@ defmodule MerklePatriciaTree.TrieStorage do
 
   def commit!(implementation) do
     storage(implementation).commit!(implementation)
+  end
+
+  def permanent_db(implementation) do
+    storage(implementation).permanent_db(implementation)
   end
 
   defp storage(implementation) do
