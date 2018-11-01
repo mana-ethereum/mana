@@ -5,7 +5,6 @@ jobs:
       - image: circleci/elixir:1.7.2
         environment:
           MIX_ENV: test
-
     working_directory: ~/app
 
     steps:
@@ -98,6 +97,7 @@ jobs:
             - mix.lock
             - chains
             - ethereum_common_tests
+            - rel
 
   test:
     docker:
@@ -478,6 +478,34 @@ jobs:
 
       - run: mix credo --only readability,consistency,warning,refactor
 
+  release:
+    docker:
+      # Ensure .tool-versions matches
+      - image: circleci/elixir:1.7.2
+        environment:
+          MIX_ENV: dev
+    working_directory: ~/app
+
+    steps:
+      - attach_workspace:
+           at: .
+      - run: curl https://sh.rustup.rs -sSf | sh -s -- -y
+      - run: echo 'export PATH=~/.cargo/bin:$PATH' >> $BASH_ENV
+      - run: mix local.hex --force
+      - run: mix local.rebar --force
+      - run: mix compile
+      - run: mix release --verbose --env prod
+      - run:
+          name: Collecting artifacts
+          command: |
+            find -name 'mana.tar.gz' -exec sh -c 'mkdir -p ci_artifact && cp "$@" ci_artifact' _ {} +
+          when: always
+
+      - store_artifacts:
+          name: Uploading CI artifacts
+          path: ci_artifact/mana.tar.gz
+          destination: ci_artifact
+
 workflows:
   version: 2
   primary:
@@ -490,6 +518,8 @@ workflows:
       - dialyzer:
           requires: [build]
       - test:
+          requires: [build]
+      - release:
           requires: [build]
       - Frontier:
           requires: [build]

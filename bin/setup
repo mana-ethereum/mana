@@ -36,7 +36,7 @@ EOF
 }
 
 install_rust() {
-  curl https://sh.rustup.rs -sSf | sh -s -- -y
+  curl -s https://static.rust-lang.org/rustup.sh | sh -s -- --channel=nightly
   if [ $? -ne 0 ]; then
     fancy_echo "Rust installation failed"
     exit 1

@@ -81,6 +81,6 @@ defmodule Mix.Tasks.Sync.FromFile do
 
   defp db_name() do
     env = Mix.env() |> to_string()
-    "db/mana-" <> env
+    'db/mana-' ++ env
   end
 end

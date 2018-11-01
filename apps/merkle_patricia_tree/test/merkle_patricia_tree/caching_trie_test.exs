@@ -6,7 +6,7 @@ defmodule MerklePatriciaTree.CachingTrieTest do
 
   setup do
     disk_trie =
-      "/tmp/#{MerklePatriciaTree.Test.random_string(20)}"
+      ('/tmp/' ++ to_charlist(MerklePatriciaTree.Test.random_string(20)))
       |> MerklePatriciaTree.DB.RocksDB.init()
       |> MerklePatriciaTree.Trie.new()
 
@@ -237,7 +237,7 @@ defmodule MerklePatriciaTree.CachingTrieTest do
   describe "commit/1" do
     test "commits trie cache" do
       disk_trie =
-        "/tmp/#{MerklePatriciaTree.Test.random_string(20)}"
+        ('/tmp/' ++ to_charlist(MerklePatriciaTree.Test.random_string(20)))
         |> MerklePatriciaTree.DB.RocksDB.init()
         |> MerklePatriciaTree.Trie.new()
 
@@ -268,7 +268,7 @@ defmodule MerklePatriciaTree.CachingTrieTest do
 
     test "commits raw cache" do
       disk_trie =
-        "/tmp/#{MerklePatriciaTree.Test.random_string(20)}"
+        ('/tmp/' ++ to_charlist(MerklePatriciaTree.Test.random_string(20)))
         |> MerklePatriciaTree.DB.RocksDB.init()
         |> MerklePatriciaTree.Trie.new()
 

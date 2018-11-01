@@ -49,7 +49,7 @@ defmodule MerklePatriciaTree.Mixfile do
     [
       {:ex_rlp, "~> 0.3.1"},
       {:exth_crypto, in_umbrella: true},
-      {:rox, [github: "poanetwork/rox", branch: "update-erlang_nif-sys"]}
+      {:rocksdb, "~> 0.23.2"}
     ]
   end
 end

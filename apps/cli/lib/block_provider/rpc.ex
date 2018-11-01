@@ -6,9 +6,8 @@ defmodule CLI.BlockProvider.RPC do
   require Logger
 
   alias Block.Header
-  alias Blockchain.{Block, Blocktree, Chain, Transaction}
+  alias Blockchain.{Block, Transaction}
   alias Ethereumex.{HttpClient, IpcClient}
-  alias MerklePatriciaTree.DB
 
   @max_retries 5
 
