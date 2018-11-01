@@ -4,6 +4,7 @@ defmodule MerklePatriciaTree.TrieStorage do
   """
 
   alias MerklePatriciaTree.Trie
+  alias MerklePatriciaTree.DB
   alias MerklePatriciaTree.Trie.Node
 
   @type t :: struct()
