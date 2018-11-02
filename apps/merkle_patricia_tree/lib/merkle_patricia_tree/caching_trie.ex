@@ -199,11 +199,9 @@ defmodule MerklePatriciaTree.CachingTrie do
         end
       end)
 
-    caching_trie.db_changes
-    |> Map.to_list()
-    |> Enum.each(fn {key, value} ->
-      TrieStorage.put_raw_key!(updated_trie, key, value)
-    end)
+    db_updates = Map.to_list(caching_trie.db_changes)
+
+    TrieStorage.put_batch_raw_keys!(updated_trie, db_updates)
 
     new(updated_trie)
   end
