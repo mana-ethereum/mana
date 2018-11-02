@@ -209,6 +209,15 @@ defmodule MerklePatriciaTree.CachingTrie do
   end
 
   @impl true
+  def put_batch_raw_keys!(caching_trie, key_value_pairs) do
+    updates = Map.new(key_value_pairs)
+
+    updated_db_changes = Map.merge(caching_trie.db_changes, updates)
+
+    %{caching_trie | db_changes: updated_db_changes}
+  end
+
+  @impl true
   def store(caching_trie) do
     in_memory_trie = caching_trie.in_memory_trie
 

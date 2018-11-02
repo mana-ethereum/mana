@@ -157,14 +157,19 @@ defmodule MerklePatriciaTree.Trie do
 
   @impl true
   def put_raw_key!(trie, key, value) do
-    MerklePatriciaTree.DB.put!(trie.db, key, value)
+    DB.put!(trie.db, key, value)
 
     trie
   end
 
   @impl true
+  def put_batch_raw_keys!(trie, key_value_pairs) do
+    DB.batch_put!(trie.db, key_value_pairs)
+  end
+
+  @impl true
   def get_raw_key(trie, key) do
-    MerklePatriciaTree.DB.get(trie.db, key)
+    DB.get(trie.db, key)
   end
 
   @impl true

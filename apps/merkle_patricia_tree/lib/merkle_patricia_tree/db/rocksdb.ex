@@ -49,6 +49,8 @@ defmodule MerklePatriciaTree.DB.RocksDB do
       :ok = :rocksdb.batch_put(batch, key, value)
     end)
 
-    :rocksdb.write_batch(db_ref, batch, [])
+    :ok = :rocksdb.write_batch(db_ref, batch, [])
+
+    :ok
   end
 end
