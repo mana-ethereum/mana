@@ -12,19 +12,14 @@ defmodule MerklePatriciaTree.CachingTrie do
   defstruct [
     :in_memory_trie,
     :trie,
-    :trie_changes,
     :db_changes
   ]
 
-  @type trie_change ::
-          {:update, Trie.root_hash(), Trie.key(), ExRLP.t()}
-          | {:remove, Trie.root_hash(), Trie.key()}
   @type db_changes :: %{binary() => binary()}
 
   @type t :: %__MODULE__{
           in_memory_trie: TrieStorage.t(),
           trie: TrieStorage.t(),
-          trie_changes: [trie_change()],
           db_changes: db_changes
         }
 
@@ -36,7 +31,6 @@ defmodule MerklePatriciaTree.CachingTrie do
     %__MODULE__{
       in_memory_trie: in_memory_trie,
       trie: trie,
-      trie_changes: [],
       db_changes: %{}
     }
   end
@@ -74,23 +68,17 @@ defmodule MerklePatriciaTree.CachingTrie do
   @impl true
   def remove_key(caching_trie, key) do
     key_nibbles = Helper.get_nibbles(key)
-    trie_change = {:remove, caching_trie.in_memory_trie.root_hash, key}
 
-    updated_caching_trie =
-      caching_trie
-      |> fetch_node()
-      |> Destroyer.remove_key(key_nibbles, caching_trie)
-      |> put_node(caching_trie)
-      |> into(caching_trie)
-      |> store()
-
-    %{updated_caching_trie | trie_changes: updated_caching_trie.trie_changes ++ [trie_change]}
+    caching_trie
+    |> fetch_node()
+    |> Destroyer.remove_key(key_nibbles, caching_trie)
+    |> put_node(caching_trie)
+    |> into(caching_trie)
+    |> store()
   end
 
   @impl true
   def remove_subtrie_key(caching_trie, root_hash, key) do
-    trie_change = {:remove, root_hash, key}
-
     caching_subtrie = %{
       caching_trie
       | in_memory_trie: %{caching_trie.in_memory_trie | root_hash: root_hash}
@@ -98,12 +86,7 @@ defmodule MerklePatriciaTree.CachingTrie do
 
     updated_caching_subtrie = remove_key(caching_subtrie, key)
 
-    updated_caching_trie = %{
-      caching_trie
-      | trie_changes: caching_trie.trie_changes ++ [trie_change]
-    }
-
-    {updated_caching_subtrie, updated_caching_trie}
+    {updated_caching_subtrie, caching_trie}
   end
 
   @impl true
@@ -112,28 +95,22 @@ defmodule MerklePatriciaTree.CachingTrie do
       remove_key(caching_trie, key)
     else
       key_nibbles = Helper.get_nibbles(key)
-      trie_change = {:update, caching_trie.in_memory_trie.root_hash, key, value}
       # We're going to recursively walk toward our key,
       # then we'll add our value (either a new leaf or the value
       # on a branch node), then we'll walk back up the tree and
       # update all previous nodes.
       # This may require changing the type of the node.
-      updated_caching_trie =
-        caching_trie
-        |> fetch_node()
-        |> Builder.put_key(key_nibbles, value, caching_trie)
-        |> put_node(caching_trie)
-        |> into(caching_trie)
-        |> store()
-
-      %{updated_caching_trie | trie_changes: updated_caching_trie.trie_changes ++ [trie_change]}
+      caching_trie
+      |> fetch_node()
+      |> Builder.put_key(key_nibbles, value, caching_trie)
+      |> put_node(caching_trie)
+      |> into(caching_trie)
+      |> store()
     end
   end
 
   @impl true
   def update_subtrie_key(caching_trie, root_hash, key, value) do
-    trie_change = {:update, root_hash, key, value}
-
     caching_subtrie = %{
       caching_trie
       | in_memory_trie: %{caching_trie.in_memory_trie | root_hash: root_hash}
@@ -141,12 +118,7 @@ defmodule MerklePatriciaTree.CachingTrie do
 
     updated_caching_subtrie = update_key(caching_subtrie, key, value)
 
-    updated_caching_trie = %{
-      caching_trie
-      | trie_changes: caching_trie.trie_changes ++ [trie_change]
-    }
-
-    {updated_caching_subtrie, updated_caching_trie}
+    {updated_caching_subtrie, caching_trie}
   end
 
   @impl true
@@ -186,24 +158,13 @@ defmodule MerklePatriciaTree.CachingTrie do
   def commit!(caching_trie) do
     trie = caching_trie.trie
 
-    updated_trie =
-      Enum.reduce(caching_trie.trie_changes, trie, fn trie_change, trie_acc ->
-        case trie_change do
-          {:update, root_hash, key, value} ->
-            {_subtrie, trie} = TrieStorage.update_subtrie_key(trie_acc, root_hash, key, value)
-            trie
-
-          {:remove, root_hash, key} ->
-            {_subtrie, trie} = TrieStorage.remove_subtrie_key(trie_acc, root_hash, key)
-            trie
-        end
-      end)
-
+    trie_updates = get_all_key_value_pairs(caching_trie.in_memory_trie)
     db_updates = Map.to_list(caching_trie.db_changes)
+    all_updates = trie_updates ++ db_updates
 
-    TrieStorage.put_batch_raw_keys!(updated_trie, db_updates)
+    TrieStorage.put_batch_raw_keys!(trie, all_updates)
 
-    new(updated_trie)
+    new(trie)
   end
 
   @impl true
@@ -234,5 +195,13 @@ defmodule MerklePatriciaTree.CachingTrie do
   @impl true
   def permanent_db(caching_trie) do
     TrieStorage.permanent_db(caching_trie.trie)
+  end
+
+  defp get_all_key_value_pairs(in_memory_trie) do
+    {_db_module, db_ref} = in_memory_trie.db
+
+    db_ref
+    |> :ets.match({:"$1", :"$2"})
+    |> Enum.map(fn [key, value] -> {key, value} end)
   end
 end
