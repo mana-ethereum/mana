@@ -11,7 +11,7 @@ defmodule CLI.Sync do
 
   @type block_limit :: integer() | :infinite
 
-  @save_block_interval 100
+  @save_block_interval 1000
 
   @doc """
   Recursively adds blocks to a tree. This function will
