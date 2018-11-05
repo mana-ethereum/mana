@@ -20,7 +20,7 @@ defmodule EthCommonTest.BlockchainTestRunner do
   defp read_test(path) do
     path
     |> File.read!()
-    |> Poison.decode!()
+    |> Jason.decode!()
   end
 
   defp fork_test?(_, :all), do: true

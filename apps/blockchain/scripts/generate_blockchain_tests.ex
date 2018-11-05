@@ -127,7 +127,7 @@ defmodule GenerateBlockchainTests do
   defp read_test(path) do
     path
     |> File.read!()
-    |> Poison.decode!()
+    |> Jason.decode!()
   end
 
   defp run_test(json_test) do

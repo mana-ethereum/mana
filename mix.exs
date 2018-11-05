@@ -22,8 +22,6 @@ defmodule Mana.MixProject do
         plt_add_apps: [:mix, :iex],
         plt_add_deps: :transitive,
         excluded_paths: [
-          Path.join(@root_path, "_build/test/lib/abi/ebin"),
-          Path.join(@root_path, "_build/test/lib/exth_crypto/ebin"),
           Path.join(@root_path, "_build/test/lib/ex_wire/ebin")
         ]
       ],
@@ -39,10 +37,9 @@ defmodule Mana.MixProject do
   defp deps do
     [
       {:ex_rlp, "~> 0.3.1"},
-      {:poison, "~> 4.0.1", runtime: false},
       {:ex_doc, "~> 0.19", only: :dev, runtime: false},
       {:dialyxir, "~> 1.0.0-rc.4", only: [:dev, :test], runtime: false},
-      {:ethereumex, "~> 0.5.0"},
+      {:ethereumex, "~> 0.5.1"},
       {:credo, "~> 0.10.0", only: [:dev, :test], runtime: false},
       {:distillery, "~> 2.0", runtime: false}
     ]

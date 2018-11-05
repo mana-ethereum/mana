@@ -162,7 +162,7 @@ defmodule EthCommonTest.StateTestRunner do
   def read_state_test_file(test_path) do
     test_path
     |> File.read!()
-    |> Poison.decode!()
+    |> Jason.decode!()
   end
 
   defp simulate_miner_reward(account_repo, test) do

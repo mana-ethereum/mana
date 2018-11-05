@@ -195,7 +195,7 @@ defmodule EvmTest do
 
   def read_test_file(group, name) do
     {:ok, body} = File.read(test_file_name(group, name))
-    Poison.decode!(body)[name |> Atom.to_string()]
+    Jason.decode!(body)[name |> Atom.to_string()]
   end
 
   def all_tests_of_type(type) do
