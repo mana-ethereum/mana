@@ -9,10 +9,6 @@ defmodule BlockchainTest do
 
   doctest Blockchain
 
-  @failing_constantinople_tests File.read!(
-                                  System.cwd() <> "/test/support/constantinople_failing_tests.txt"
-                                )
-
   @failing_tests %{
     "Frontier" => [],
     "Homestead" => [],
@@ -20,7 +16,11 @@ defmodule BlockchainTest do
     "TangerineWhistle" => [],
     "SpuriousDragon" => [],
     "Byzantium" => [],
-    "Constantinople" => String.split(@failing_constantinople_tests, "\n"),
+    "Constantinople" => [
+      "stCreate2/RevertInCreateInInitCreate2",
+      "stRevertTest/RevertInCreateInInit",
+      "stSStoreTest/InitCollision"
+    ],
     # the rest are not implemented yet
     "EIP158ToByzantiumAt5" => [],
     "FrontierToHomesteadAt5" => [],

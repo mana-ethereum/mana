@@ -1,6 +1,4 @@
 defmodule GenerateBlockchainTests do
-  use EthCommonTest.Harness
-
   alias Block.Header
   alias Blockchain.{Account, Blocktree, Chain, Transaction}
   alias Blockchain.Account.Storage
@@ -17,8 +15,6 @@ defmodule GenerateBlockchainTests do
     "TangerineWhistle",
     "SpuriousDragon"
   ]
-  @constantinople_failing_tests_path System.cwd() <>
-                                       "/test/support/constantinople_failing_tests.txt"
   @initial_pass_fail {[], []}
   @number_of_test_groups 20
   @ten_minutes 1000 * 60 * 10
@@ -105,14 +101,8 @@ defmodule GenerateBlockchainTests do
   defp close_io_device(:stdio), do: :ok
   defp close_io_device(file_pid), do: File.close(file_pid)
 
-  defp io_device_from_hardfork(hardfork) do
-    case hardfork do
-      "Constantinople" ->
-        File.open!(@constantinople_failing_tests_path, [:write])
-
-      _ ->
-        :stdio
-    end
+  defp io_device_from_hardfork(_hardfork) do
+    :stdio
   end
 
   defp ensure_hardfork(args) do
@@ -145,10 +135,10 @@ defmodule GenerateBlockchainTests do
 
     chain = load_chain(human_readable_fork_name(json_test["network"]))
 
-    blocktree =
+    {blocktree, _} =
       create_blocktree()
       |> add_genesis_block(json_test, state, chain)
-      |> add_blocks(json_test, state, chain)
+      |> add_blocks(json_test, chain)
 
     best_block_hash = maybe_hex(json_test["lastblockhash"])
 
@@ -162,32 +152,33 @@ defmodule GenerateBlockchainTests do
   defp add_genesis_block(blocktree, json_test, state, chain) do
     block =
       if json_test["genesisRLP"] do
-        {:ok, block} = Blockchain.Block.decode_rlp(json_test["genesisRLP"])
-
-        block
+        case Blockchain.Block.decode_rlp(json_test["genesisRLP"]) do
+          {:ok, block} -> block
+          {:error, error} -> raise error
+        end
       end
 
     genesis_block = block_from_json(block, json_test["genesisBlockHeader"])
 
-    {:ok, blocktree} =
+    {:ok, {blocktree, new_state}} =
       Blocktree.verify_and_add_block(
         blocktree,
         chain,
         genesis_block,
-        state.db,
+        state,
         false,
         maybe_hex(json_test["genesisBlockHeader"]["hash"])
       )
 
-    blocktree
+    {blocktree, new_state}
   end
 
   defp create_blocktree do
     Blocktree.new_tree()
   end
 
-  defp add_blocks(blocktree, json_test, state, chain) do
-    Enum.reduce(json_test["blocks"], blocktree, fn json_block, acc ->
+  defp add_blocks({blocktree, state}, json_test, chain) do
+    Enum.reduce(json_test["blocks"], {blocktree, state}, fn json_block, {acc, state_acc} ->
       block = json_block["rlp"] |> Blockchain.Block.decode_rlp()
 
       case block do
@@ -200,13 +191,13 @@ defmodule GenerateBlockchainTests do
               json_block["uncleHeaders"]
             )
 
-          case Blocktree.verify_and_add_block(acc, chain, block, state.db) do
-            {:ok, blocktree} -> blocktree
-            _ -> acc
+          case Blocktree.verify_and_add_block(acc, chain, block, state_acc) do
+            {:ok, {blocktree, new_state}} -> {blocktree, new_state}
+            _ -> {acc, state_acc}
           end
 
         _ ->
-          acc
+          {acc, state_acc}
       end
     end)
   end
@@ -302,7 +293,10 @@ defmodule GenerateBlockchainTests do
 
       storage =
         Enum.reduce(account["storage"], storage, fn {key, value}, trie ->
-          Storage.put(trie.db, trie.root_hash, load_integer(key), load_integer(value))
+          {subtrie, _trie} =
+            Storage.put(trie, trie.root_hash, load_integer(key), load_integer(value))
+
+          subtrie
         end)
 
       new_account = %Account{

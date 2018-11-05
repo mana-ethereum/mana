@@ -5,7 +5,7 @@ defmodule GenerateStateTests do
   alias EthCommonTest.StateTestRunner
   alias MerklePatriciaTree.Trie
 
-  use EthCommonTest.Harness
+  import EthCommonTest.Helpers
 
   @hardforks [
     "TangerineWhistle",
