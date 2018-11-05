@@ -2,7 +2,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: circleci/elixir:latest
+      - image: circleci/elixir:1.7.3
         environment:
           MIX_ENV: test
     working_directory: ~/app
