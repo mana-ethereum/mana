@@ -2,7 +2,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: circleci/elixir:1.7.2
+      - image: circleci/elixir:1.7.3
         environment:
           MIX_ENV: test
     working_directory: ~/app
@@ -101,7 +101,7 @@ jobs:
 
   test:
     docker:
-      - image: circleci/elixir:1.7.2
+      - image: circleci/elixir:1.7.3
         environment:
           MIX_ENV: test
 
@@ -135,7 +135,7 @@ jobs:
 
   Frontier:
     docker:
-      - image: circleci/elixir:1.7.2
+      - image: circleci/elixir:1.7.3
         environment:
           MIX_ENV: test
 
@@ -169,7 +169,7 @@ jobs:
 
   Homestead:
     docker:
-      - image: circleci/elixir:1.7.2
+      - image: circleci/elixir:1.7.3
         environment:
           MIX_ENV: test
 
@@ -203,7 +203,7 @@ jobs:
 
   HomesteadToDaoAt5:
     docker:
-      - image: circleci/elixir:1.7.2
+      - image: circleci/elixir:1.7.3
         environment:
           MIX_ENV: test
 
@@ -237,7 +237,7 @@ jobs:
 
   TangerineWhistle:
     docker:
-      - image: circleci/elixir:1.7.2
+      - image: circleci/elixir:1.7.3
         environment:
           MIX_ENV: test
 
@@ -271,7 +271,7 @@ jobs:
 
   SpuriousDragon:
     docker:
-      - image: circleci/elixir:1.7.2
+      - image: circleci/elixir:1.7.3
         environment:
           MIX_ENV: test
 
@@ -305,7 +305,7 @@ jobs:
 
   Byzantium:
     docker:
-      - image: circleci/elixir:1.7.2
+      - image: circleci/elixir:1.7.3
         environment:
           MIX_ENV: test
 
@@ -339,7 +339,7 @@ jobs:
 
   Constantinople:
     docker:
-      - image: circleci/elixir:1.7.2
+      - image: circleci/elixir:1.7.3
         environment:
           MIX_ENV: test
 
@@ -374,7 +374,7 @@ jobs:
   dialyzer:
     docker:
       # Ensure .tool-versions matches
-      - image: circleci/elixir:1.7.2
+      - image: circleci/elixir:1.7.3
         environment:
           MIX_ENV: test
 
@@ -449,7 +449,7 @@ jobs:
 
   check_formatted:
     docker:
-      - image: circleci/elixir:1.7.2
+      - image: circleci/elixir:1.7.3
         environment:
           MIX_ENV: test
 
@@ -464,7 +464,7 @@ jobs:
   credo:
     docker:
       # Ensure .tool-versions matches
-      - image: circleci/elixir:1.7.2
+      - image: circleci/elixir:1.7.3
         environment:
           MIX_ENV: test
 
@@ -481,7 +481,7 @@ jobs:
   release:
     docker:
       # Ensure .tool-versions matches
-      - image: circleci/elixir:1.7.2
+      - image: circleci/elixir:1.7.3
         environment:
           MIX_ENV: dev
     working_directory: ~/app
