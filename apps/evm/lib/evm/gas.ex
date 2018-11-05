@@ -15,8 +15,11 @@ defmodule EVM.Gas do
 
   @type t :: EVM.val()
   @type gas_price :: EVM.Wei.t()
+<<<<<<< HEAD
   @type cost_with_status :: {:original, t} | {:changed, t, t}
 
+=======
+>>>>>>> strict dialyzer, dialyxir upgrade and fixes
   # Nothing paid for operations of the set W_zero.
   @g_zero 0
   # Amount of gas to pay for operations of the set W_base.
