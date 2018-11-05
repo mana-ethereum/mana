@@ -16,11 +16,7 @@ defmodule BlockchainTest do
     "TangerineWhistle" => [],
     "SpuriousDragon" => [],
     "Byzantium" => [],
-    "Constantinople" => [
-      "stCreate2/RevertInCreateInInitCreate2",
-      "stRevertTest/RevertInCreateInInit",
-      "stSStoreTest/InitCollision"
-    ],
+    "Constantinople" => [],
     # the rest are not implemented yet
     "EIP158ToByzantiumAt5" => [],
     "FrontierToHomesteadAt5" => [],
