@@ -23,6 +23,8 @@ defmodule MerklePatriciaTree.TrieStorage do
 
   @callback put_raw_key!(t(), binary(), binary()) :: t()
 
+  @callback put_batch_raw_keys!(t(), [{binary(), binary()}]) :: t()
+
   @callback get_raw_key(t(), binary()) :: {:ok, binary()} | :not_found
 
   @callback get_key(t(), Trie.key()) :: nil | binary()
@@ -67,6 +69,10 @@ defmodule MerklePatriciaTree.TrieStorage do
 
   def put_raw_key!(implementation, key, value) do
     storage(implementation).put_raw_key!(implementation, key, value)
+  end
+
+  def put_batch_raw_keys!(implementation, pairs) do
+    storage(implementation).put_batch_raw_keys!(implementation, pairs)
   end
 
   def get_raw_key(implementation, key) do

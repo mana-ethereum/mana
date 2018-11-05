@@ -122,14 +122,6 @@ defmodule MerklePatriciaTree.CachingTrieTest do
 
       assert CachingTrie.get_key(subtrie, "rust") == "c++"
 
-      trie_changes = [
-        {:update, disk_trie.root_hash, "elixir", "erlang"},
-        {:update, Trie.empty_trie_root_hash(), "rust", "c++"}
-      ]
-
-      assert subtrie.trie_changes == trie_changes
-      assert updated_caching_trie.trie_changes == trie_changes
-
       assert updated_caching_trie.in_memory_trie.root_hash ==
                caching_trie.in_memory_trie.root_hash
     end
@@ -288,6 +280,26 @@ defmodule MerklePatriciaTree.CachingTrieTest do
       assert Trie.get_raw_key(disk_trie, "key1") == {:ok, "value1"}
       assert Trie.get_raw_key(disk_trie, "key2") == {:ok, "value2"}
       assert Trie.get_raw_key(disk_trie, "elixir") == {:ok, "erlang"}
+    end
+  end
+
+  describe "put_batch_raw_keys!/2" do
+    test "puts a batch of keys to db_changes", %{disk_trie: disk_trie} do
+      caching_trie = CachingTrie.new(disk_trie)
+
+      pairs = [
+        {"elixir", "erlang"},
+        {"rust", "c++"},
+        {"ruby", "crystal"}
+      ]
+
+      updated_caching_trie = CachingTrie.put_batch_raw_keys!(caching_trie, pairs)
+
+      assert updated_caching_trie.db_changes == %{
+               "elixir" => "erlang",
+               "ruby" => "crystal",
+               "rust" => "c++"
+             }
     end
   end
 end
