@@ -10,7 +10,7 @@ Mana-Ethereum is currently in development. See the [Project Status](#project-sta
 
 # Dependencies
 
-- Elixir ~> 1.7.2
+- Elixir ~> 1.7.3
 - Rust ~> 1.26.0 (as a dependency of [Rox](https://github.com/urbint/rox))
 
 # Installation

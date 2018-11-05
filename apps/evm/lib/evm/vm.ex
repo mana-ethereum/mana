@@ -95,8 +95,9 @@ defmodule EVM.VM do
         # Question: should we return the original sub-state?
         {original_machine_state, original_sub_state, original_exec_env, :failed}
 
-      :continue ->
-        {n_machine_state, n_sub_state, n_exec_env} = cycle(machine_state, sub_state, exec_env)
+      {:continue, cost_with_status} ->
+        {n_machine_state, n_sub_state, n_exec_env} =
+          cycle(machine_state, sub_state, exec_env, cost_with_status)
 
         case Functions.is_normal_halting?(machine_state, exec_env) do
           # continue execution
@@ -125,16 +126,16 @@ defmodule EVM.VM do
 
   ## Examples
 
-      iex> EVM.VM.cycle(%EVM.MachineState{program_counter: 0, gas: 5, stack: [1, 2]}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:add])})
+      iex> EVM.VM.cycle(%EVM.MachineState{program_counter: 0, gas: 5, stack: [1, 2]}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:add])}, {:original, 3})
       {%EVM.MachineState{program_counter: 1, gas: 2, stack: [3], step: 1}, %EVM.SubState{}, %EVM.ExecEnv{machine_code: EVM.MachineCode.compile([:add])}}
   """
-  @spec cycle(MachineState.t(), SubState.t(), ExecEnv.t()) ::
+  @spec cycle(MachineState.t(), SubState.t(), ExecEnv.t(), Gas.cost_with_status()) ::
           {MachineState.t(), SubState.t(), ExecEnv.t()}
-  def cycle(machine_state, sub_state, exec_env) do
+  def cycle(machine_state, sub_state, exec_env, cost_with_status) do
     operation = MachineCode.current_operation(machine_state, exec_env)
     inputs = Operation.inputs(operation, machine_state)
 
-    machine_state = MachineState.subtract_gas(machine_state, exec_env)
+    machine_state = MachineState.subtract_gas(machine_state, cost_with_status)
     sub_state = SubState.add_refund(machine_state, sub_state, exec_env)
 
     {n_machine_state, n_sub_state, n_exec_env} =
