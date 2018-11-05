@@ -95,7 +95,8 @@ defmodule EVM.Functions do
       iex> EVM.Functions.is_exception_halt?(%EVM.MachineState{program_counter: 0, gas: 0xffff, stack: []}, %EVM.ExecEnv{machine_code: <<EVM.Operation.encode(:invalid)>>})
       {:halt, :invalid_instruction}
   """
-  @spec is_exception_halt?(MachineState.t(), ExecEnv.t()) :: :continue | {:halt, atom()}
+  @spec is_exception_halt?(MachineState.t(), ExecEnv.t()) ::
+          {:continue, Gas.cost_with_status()} | {:halt, atom()}
   # credo:disable-for-next-line
   def is_exception_halt?(machine_state, exec_env) do
     operation = Operation.get_operation_at(exec_env.machine_code, machine_state.program_counter)
