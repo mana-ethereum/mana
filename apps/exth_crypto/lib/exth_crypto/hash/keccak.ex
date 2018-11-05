@@ -41,7 +41,7 @@ defmodule ExthCrypto.Hash.Keccak do
         10, 161, 4, 111, 57, 226, 239, 158, 252, 105, 16, 120, 42, 153, 142, 0, 19,
         209, 114, 69, 137, 87, 149, 127, 172, 148, 5, 182, 125>>
   """
-  @spec kec(binary()) :: keccak_hash
+  @spec kec512(binary()) :: keccak_hash
   def kec512(data) do
     :keccakf1600.sha3_512(data)
   end

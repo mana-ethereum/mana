@@ -6,7 +6,6 @@ defmodule CLI.Sync do
 
   alias Blockchain.{Blocktree, Chain}
   alias CLI.State
-  alias MerklePatriciaTree.DB
   alias MerklePatriciaTree.TrieStorage
 
   @type block_limit :: integer() | :infinite
@@ -75,8 +74,10 @@ defmodule CLI.Sync do
               )
 
             {:invalid, error} ->
-              Logger.debug(fn -> "Failed block: #{inspect(next_block)}" end)
-              Logger.error(fn -> "Failed to verify block #{block_number}: #{inspect(error)}" end)
+              _ = Logger.debug(fn -> "Failed block: #{inspect(next_block)}" end)
+
+              _ =
+                Logger.error(fn -> "Failed to verify block #{block_number}: #{inspect(error)}" end)
 
               committed_trie = TrieStorage.commit!(tree)
 

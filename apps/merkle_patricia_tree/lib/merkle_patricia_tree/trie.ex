@@ -9,7 +9,7 @@ defmodule MerklePatriciaTree.Trie do
 
   @behaviour MerklePatriciaTree.TrieStorage
 
-  @type root_hash :: binary()
+  @type root_hash :: <<_::256>>
 
   @type t :: %__MODULE__{
           db: DB.db(),
@@ -19,6 +19,7 @@ defmodule MerklePatriciaTree.Trie do
   @type key :: binary() | [integer()]
 
   @empty_trie <<>>
+  @type empty_trie :: <<>>
   @empty_trie_root_hash @empty_trie |> ExRLP.encode() |> Keccak.kec()
 
   @doc """
@@ -57,7 +58,7 @@ defmodule MerklePatriciaTree.Trie do
       iex> db
       MerklePatriciaTree.DB.RocksDB
   """
-  @spec new(DB.db(), root_hash) :: t()
+  @spec new(DB.db(), root_hash | empty_trie) :: t()
   def new(db = {_, _}, root_hash \\ @empty_trie) do
     %__MODULE__{db: db, root_hash: root_hash} |> store()
   end

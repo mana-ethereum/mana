@@ -1,9 +1,10 @@
 defmodule EVM.Debugger.BreakpointTest do
   use ExUnit.Case, async: true
   doctest EVM.Debugger.Breakpoint
+  alias EVM.Debugger.Breakpoint
 
   setup_all do
-    EVM.Debugger.Breakpoint.init()
+    Breakpoint.init()
 
     :ok
   end

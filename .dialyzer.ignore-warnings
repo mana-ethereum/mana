@@ -1,55 +1,18 @@
-:0: Unknown function 'Elixir.Poison':'decode!'/1
-:0: Unknown function 'Elixir.Poison':'encode!'/1
-
-# evm warnings
-
-apps/evm/lib/evm/functions.ex:190: Function 'not_enough_gas?'/2 has no local return
-apps/evm/lib/evm/functions.ex:197: Function 'out_of_memory_bounds?'/3 will never be called
-apps/evm/lib/evm/functions.ex:213: Function 'is_invalid_jump_destination?'/3 will never be called
-apps/evm/lib/evm/functions.ex:223: Function 'static_state_modification?'/2 will never be called
-apps/evm/lib/evm/operation/environmental_information.ex:116: Function calldataload/2 has no local return
-apps/evm/lib/evm/operation/environmental_information.ex:119: The call 'Elixir.EVM.Helpers':decode_signed(binary()) breaks the contract (integer() | 'nil') -> 'Elixir.EVM':val() | 'nil'
-apps/evm/lib/evm/vm.ex:98: The pattern 'continue' can never match the type {'halt','invalid_instruction' | 'stack_underflow' | 'undefined_instruction'}
-apps/evm/lib/evm/vm.ex:133: Function cycle/3 has no local return
-apps/evm/lib/evm/builtin.ex:235: Guard test __@1::'true' =:= 'false' can never succeed
-apps/evm/lib/evm/builtin.ex:255: Guard test __@3::'true' =:= 'false' can never succeed
-apps/evm/lib/evm/builtin.ex:255: Guard test __@1::'true' =:= 'false' can never succeed
-
 -------------------------------
-# Machine code
--------------------------------
-lib/evm/machine_code
-
--------------------------------
-# AccountRepo
--------------------------------
-pps/blockchain/lib/blockchain/account/repo.ex:492: The inferred return type of create_contract/11 ({'error',{#{'__struct__':='Elixir.Blockchain.Account.Repo', 'cache':=map(), 'state':=map()},integer(),#{'__struct__':='Elixir.EVM.SubState', 'logs':=[], 'refund':=0, 'selfdestruct_list':='Elixir.MapSet':t(_), 'touched_accounts':='Elixir.MapSet':t(_)},binary()}} | {'ok',{#{'__struct__':='Elixir.Blockchain.Account.Repo', 'cache':=map(), 'state':=map()},integer(),#{'__struct__':='Elixir.EVM.SubState', 'logs':=[any()], 'refund':=integer(), 'selfdestruct_list':='Elixir.MapSet':t(_), 'touched_accounts':='Elixir.MapSet':t(_)},<<>>}}) has nothing in common with {'error',{#{'__struct__':=atom(), atom()=>_},integer(),#{'__struct__':='Elixir.EVM.SubState', 'logs':=[#{'__struct__':='Elixir.EVM.LogEntry', 'address':=<<_:160>>, 'data':=binary(), 'topics':=[binary()]}], 'refund':=integer(), 'selfdestruct_list':='Elixir.MapSet':t(_), 'touched_accounts':='Elixir.MapSet':t(_)}},binary()} | {'ok',{#{'__struct__':=atom(), atom()=>_},integer(),#{'__struct__':='Elixir.EVM.SubState', 'logs':=[#{'__struct__':='Elixir.EVM.LogEntry', 'address':=<<_:160>>, 'data':=binary(), 'topics':=[binary()]}], 'refund':=integer(), 'selfdestruct_list':='Elixir.MapSet':t(_), 'touched_accounts':='Elixir.MapSet':t(_)}},<<>>}, which is the expected return type for the callback of the 'Elixir.EVM.AccountRepo' behaviour
+ # blockchain/block.ex warnings
+ -------------------------------
+apps/blockchain/lib/blockchain/block.ex:449: Function gen_child_block/2 has no local return
+apps/blockchain/lib/blockchain/block.ex:449: Function gen_child_block/3 has no local return
+--------------------------------
+-# AccountRepo
+--------------------------------
+apps/blockchain/lib/blockchain/account/repo.ex:492: The inferred return type of create_contract/11 ({'error',{#{'__struct__':='Elixir.Blockchain.Account.Repo', 'cache':=map(), 'state':=map()},integer(),#{'__struct__':='Elixir.EVM.SubState', 'logs':=[], 'refund':=0, 'selfdestruct_list':='Elixir.MapSet':t(_), 'touched_accounts':='Elixir.MapSet':t(_)},binary()}} | {'ok',{#{'__struct__':='Elixir.Blockchain.Account.Repo', 'cache':=map(), 'state':=map()},integer(),#{'__struct__':='Elixir.EVM.SubState', 'logs':=[any()], 'refund':=integer(), 'selfdestruct_list':='Elixir.MapSet':t(_), 'touched_accounts':='Elixir.MapSet':t(_)},<<>>}}) has nothing in common with {'error',{#{'__struct__':=atom(), atom()=>_},integer(),#{'__struct__':='Elixir.EVM.SubState', 'logs':=[#{'__struct__':='Elixir.EVM.LogEntry', 'address':=<<_:160>>, 'data':=binary(), 'topics':=[binary()]}], 'refund':=integer(), 'selfdestruct_list':='Elixir.MapSet':t(_), 'touched_accounts':='Elixir.MapSet':t(_)}},binary()} | {'ok',{#{'__struct__':=atom(), atom()=>_},integer(),#{'__struct__':='Elixir.EVM.SubState', 'logs':=[#{'__struct__':='Elixir.EVM.LogEntry', 'address':=<<_:160>>, 'data':=binary(), 'topics':=[binary()]}], 'refund':=integer(), 'selfdestruct_list':='Elixir.MapSet':t(_), 'touched_accounts':='Elixir.MapSet':t(_)}},<<>>}, which is the expected return type for the callback of the 'Elixir.EVM.AccountRepo' behaviour
 apps/evm/lib/evm/mock/mock_account_repo.ex:182: The inferred return type of create_contract/11 ({'ok',{atom() | #{'contract_result':='nil' | [any()] | map(), _=>_},_,_,_}}) has nothing in common with {'error',{#{'__struct__':=atom(), atom()=>_},integer(),#{'__struct__':='Elixir.EVM.SubState', 'logs':=[#{'__struct__':='Elixir.EVM.LogEntry', 'address':=<<_:160>>, 'data':=binary(), 'topics':=[binary()]}], 'refund':=integer(), 'selfdestruct_list':='Elixir.MapSet':t(_), 'touched_accounts':='Elixir.MapSet':t(_)}},binary()} | {'ok',{#{'__struct__':=atom(), atom()=>_},integer(),#{'__struct__':='Elixir.EVM.SubState', 'logs':=[#{'__struct__':='Elixir.EVM.LogEntry', 'address':=<<_:160>>, 'data':=binary(), 'topics':=[binary()]}], 'refund':=integer(), 'selfdestruct_list':='Elixir.MapSet':t(_), 'touched_accounts':='Elixir.MapSet':t(_)}},<<>>}, which is the expected return type for the callback of the 'Elixir.EVM.AccountRepo' behaviour
-
--------------------------------
-# apps/evm/lib/evm/builtin.ex warnings
--------------------------------
-apps/evm/lib/evm/builtin.ex:60: Call to missing or unexported function 'Elixir.ExthCrypto.Signature':version/0
-
--------------------------------
-# Introduced by Elixir 1.6.4 https://github.com/elixir-lang/elixir/issues/7508
--------------------------------
-lib/trie/helper.ex:41: Guard test is_binary(_@1::<<_:4>>) can never succeed
-lib/trie/helper.ex:41: The variable _@1 can never match since previous clauses completely covered the type <<_:4>>
 
 -------------------------------
 # blockchain/block.ex warnings
 -------------------------------
-apps/blockchain/lib/blockchain/block.ex:447: Function gen_child_block/2 has no local return
-apps/blockchain/lib/blockchain/block.ex:447: Function gen_child_block/3 has no local return
-apps/blockchain/lib/blockchain/block.ex:443: The call 'Elixir.Blockchain.Block':set_block_number(#{'__s
-truct__':='Elixir.Blockchain.Block', 'block_hash':='nil', 'header':=#{'__struct__':='Elixir.Block.Heade
-r', 'beneficiary':=_, 'difficulty':='nil', 'extra_data':=_, 'gas_limit':=0, 'gas_used':=0, 'logs_bloom'
-:=<<_:2048>>, 'mix_hash':=_, 'nonce':=<<_:64>>, 'number':='nil', 'ommers_hash':=<<_:256>>, 'parent_hash
-':='nil', 'receipts_root':=<<_:256>>, 'state_root':=_, 'timestamp':=_, 'transactions_root':=<<_:256>>},
- 'ommers':=[], 'transactions':=[]},_parent_block@1::any()) breaks the contract (t(),t()) -> t()
-apps/merkle_patricia_tree/lib/merkle_patricia_tree/trie/helper.ex:41: Guard test is_binary(__@1::<<_:4>
->) can never succeed
+
 
 apps/blockchain/lib/blockchain/block.ex:724: Function add_transactions/3 has no local return
 apps/blockchain/lib/blockchain/block.ex:724: The call 'Elixir.Blockchain.Block':add_transactions(_@1
@@ -112,11 +75,6 @@ apps/blockchain/lib/blockchain/transaction.ex
 # blockchain/transaction/account_cleaner.ex
 -------------------------------
 apps/blockchain/lib/blockchain/transaction/account_cleaner.ex:11: Guard test __@2::#{'__struct__':='Elixir.Blockchain.Account', 'balance':=integer(), 'code_hash':=binary() | [integer()], 'nonce':=integer(), 'storage_root':=binary()} =:= 'false' can never succeed
-
--------------------------------
-# blockchain/application.ex
--------------------------------
-apps/blockchain/lib/blockchain/application.ex:14: The call 'Elixir.EVM.Debugger':break_on([{'address',binary()},...]) will never return since the success typing is (['address']) -> integer() and the contract is (elixir:keyword('Elixir.EVM.Debugger.Breakpoint':conditions())) -> 'Elixir.EVM.Debugger.Breakpoint':id()
 
 -------------------------------
 # apps/blockchain/lib/mix/tasks/sync/from_file.ex

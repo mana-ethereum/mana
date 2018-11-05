@@ -2,8 +2,12 @@ defmodule EthCommonTest.BlockchainTestRunner do
   import EthCommonTest.Helpers
 
   alias Block.Header
-  alias Blockchain.{Account, Blocktree, Chain, Transaction}
+  alias Blockchain.Account
   alias Blockchain.Account.Storage
+  alias Blockchain.Block
+  alias Blockchain.Blocktree
+  alias Blockchain.Chain
+  alias Blockchain.Transaction
   alias MerklePatriciaTree.Trie
 
   def run(json_test_path, fork) do
@@ -56,7 +60,7 @@ defmodule EthCommonTest.BlockchainTestRunner do
   defp add_genesis_block(blocktree, json_test, state, chain) do
     block =
       if json_test["genesisRLP"] do
-        case Blockchain.Block.decode_rlp(json_test["genesisRLP"]) do
+        case Block.decode_rlp(json_test["genesisRLP"]) do
           {:ok, block} -> block
           {:error, error} -> raise error
         end
@@ -79,7 +83,7 @@ defmodule EthCommonTest.BlockchainTestRunner do
 
   defp add_blocks({blocktree, state}, json_test, chain) do
     Enum.reduce(json_test["blocks"], {blocktree, state}, fn json_block, {acc, state_acc} ->
-      block = json_block["rlp"] |> Blockchain.Block.decode_rlp()
+      block = json_block["rlp"] |> Block.decode_rlp()
 
       case block do
         {:ok, block} ->
@@ -131,8 +135,10 @@ defmodule EthCommonTest.BlockchainTestRunner do
     }
   end
 
+  defp ommers_from_json(nil), do: :ok
+
   defp ommers_from_json(json_ommers) do
-    Enum.map(json_ommers || [], fn json_ommer ->
+    Enum.map(json_ommers, fn json_ommer ->
       %Header{
         parent_hash: maybe_hex(json_ommer["parentHash"]),
         ommers_hash: maybe_hex(json_ommer["uncleHash"]),
@@ -153,8 +159,10 @@ defmodule EthCommonTest.BlockchainTestRunner do
     end)
   end
 
+  defp transactions_from_json(nil), do: :ok
+
   defp transactions_from_json(json_transactions) do
-    Enum.map(json_transactions || [], fn json_transaction ->
+    Enum.map(json_transactions, fn json_transaction ->
       init =
         if maybe_hex(json_transaction["to"]) == <<>> do
           maybe_hex(json_transaction["data"])

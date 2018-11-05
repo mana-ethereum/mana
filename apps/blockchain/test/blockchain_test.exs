@@ -76,7 +76,7 @@ defmodule BlockchainTest do
 
   defp run_fork_tests(fork) do
     if is_nil(Chain.test_config(fork)) do
-      Logger.warn("Skipping tests for fork #{fork}")
+      :ok = Logger.warn("Skipping tests for fork #{fork}")
     else
       [{fork, all_tests()}]
       |> Task.async_stream(&run_tests(&1), timeout: @twenty_minutes)

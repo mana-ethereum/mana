@@ -62,18 +62,18 @@ defmodule Mix.Tasks.Sync.FromFile do
     next_block = Enum.at(blocks, n)
 
     if is_nil(next_block) do
-      Logger.info("Validation complete")
+      :ok = Logger.info("Validation complete")
       MerklePatriciaTree.DB.put!(db, "current_block_number", 0)
     else
       case Blockchain.Blocktree.verify_and_add_block(tree, chain, next_block, db) do
         {:ok, next_tree} ->
-          Logger.info("Verified Block #{n}")
+          :ok = Logger.info("Verified Block #{n}")
           MerklePatriciaTree.DB.put!(db, "current_block_number", next_block.header.number)
           add_block_to_tree(db, chain, next_tree, blocks, n + 1)
 
         {:invalid, error} ->
-          Logger.info("Failed to Verify Block #{n}")
-          Logger.error(inspect(error))
+          :ok = Logger.info("Failed to Verify Block #{n}")
+          _ = Logger.error(inspect(error))
           MerklePatriciaTree.DB.put!(db, "current_block_tree", :erlang.term_to_binary(tree))
       end
     end

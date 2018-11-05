@@ -93,20 +93,15 @@ defmodule EVM.Helpers do
   def encode_signed(n) when n < 0, do: EVM.max_int() - abs(n)
   def encode_signed(n), do: n
 
-  @spec decode_signed(integer() | nil) :: EVM.val() | nil
-  def decode_signed(n) when is_nil(n), do: 0
-
-  def decode_signed(n) when is_integer(n) do
-    if n <= @max_uint_255 do
-      n
-    else
-      n - @max_256_ceiling
-    end
-  end
+  @spec decode_signed(integer() | binary() | nil) :: EVM.val()
+  def decode_signed(nil), do: 0
 
   def decode_signed(n) when is_binary(n) do
     n |> :binary.decode_unsigned() |> decode_signed()
   end
+
+  def decode_signed(n) when n <= @max_uint_255, do: n
+  def decode_signed(n), do: n - @max_256_ceiling
 
   @spec encode_val(integer() | binary() | list(integer())) :: list(EVM.val()) | EVM.val()
   def encode_val(n) when is_binary(n), do: :binary.decode_unsigned(n)
@@ -122,7 +117,7 @@ defmodule EVM.Helpers do
   Helper function to print an instruction message.
   """
   def inspect(msg, prefix) do
-    Logger.debug(inspect([prefix, ":", msg]))
+    _ = Logger.debug(inspect([prefix, ":", msg]))
 
     msg
   end

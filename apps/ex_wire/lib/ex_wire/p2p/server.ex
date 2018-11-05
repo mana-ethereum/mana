@@ -18,6 +18,8 @@ defmodule ExWire.P2P.Server do
   require Logger
 
   alias ExWire.{P2P, TCP}
+  alias ExWire.P2P.Inbound
+  alias ExWire.P2P.Outbound
 
   @doc """
   Child spec definition to be used by a supervisor when wanting to supervise an
@@ -27,7 +29,7 @@ defmodule ExWire.P2P.Server do
   """
   def child_spec([:inbound, socket]) do
     %{
-      id: ExWire.P2P.Inbound,
+      id: Inbound,
       start: {__MODULE__, :start_link, [{:inbound, socket}]},
       restart: :temporary
     }
@@ -41,7 +43,7 @@ defmodule ExWire.P2P.Server do
   """
   def child_spec([:outbound, peer, subscribers]) do
     %{
-      id: ExWire.P2P.Outbound,
+      id: Outbound,
       start: {__MODULE__, :start_link, [:outbound, peer, subscribers]},
       restart: :temporary
     }
@@ -101,9 +103,10 @@ defmodule ExWire.P2P.Server do
   def init(%{is_outbound: true, peer: peer}) do
     {:ok, socket} = TCP.connect(peer.host, peer.port)
 
-    Logger.debug(fn ->
-      "[Network] [#{peer}] Established outbound connection with #{peer.host}."
-    end)
+    _ =
+      Logger.debug(fn ->
+        "[Network] [#{peer}] Established outbound connection with #{peer.host}."
+      end)
 
     state = P2P.new_outbound_connection(socket, peer)
 
@@ -151,7 +154,7 @@ defmodule ExWire.P2P.Server do
   def handle_info({:tcp_closed, _socket}, state) do
     peer = Map.get(state, :peer, :unknown)
 
-    Logger.warn("[Network] [#{peer}] Peer closed connection")
+    :ok = Logger.warn("[Network] [#{peer}] Peer closed connection")
 
     Process.exit(self(), :normal)
 

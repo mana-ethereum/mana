@@ -38,7 +38,7 @@ defmodule MerklePatriciaTree.Trie.Helper do
   """
   @spec get_binary([integer()]) :: binary()
   def get_binary(l) do
-    for x <- l, into: <<>>, do: <<x::4>>
+    for x <- l, into: <<0::size(0)>>, do: <<x::4>>
   end
 
   # Encodes `x` in RLP if it isn't already encoded.

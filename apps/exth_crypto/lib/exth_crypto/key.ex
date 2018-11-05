@@ -5,7 +5,7 @@ defmodule ExthCrypto.Key do
 
   @type symmetric_key :: binary()
   @type public_key_der :: binary()
-  @type public_key :: binary()
+  @type public_key :: <<_::8, _::_*8>>
   @type private_key_der :: binary()
   @type private_key :: binary()
   @type key_pair :: {public_key, private_key}

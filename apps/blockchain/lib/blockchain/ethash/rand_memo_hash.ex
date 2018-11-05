@@ -37,7 +37,7 @@ defmodule Blockchain.Ethash.RandMemoHash do
     List.replace_at(cache, i, updated_element)
   end
 
-  @spec first_index(integer(), integer()) :: integer()
+  @spec first_index(integer(), non_neg_integer()) :: integer()
   defp first_index(i, n) do
     Integer.mod(i - 1 + n, n)
   end

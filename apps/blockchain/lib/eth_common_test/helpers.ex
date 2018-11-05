@@ -46,7 +46,7 @@ defmodule EthCommonTest.Helpers do
     Base.decode16!(hex_data, case: :mixed)
   end
 
-  @spec load_hex(String.t()) :: integer()
+  @spec load_hex(String.t()) :: non_neg_integer()
   def load_hex(hex_data), do: hex_data |> load_raw_hex |> :binary.decode_unsigned()
 
   @spec read_test_file(String.t()) :: any()
@@ -159,7 +159,7 @@ defmodule EthCommonTest.Helpers do
       # If we have any failures, fail
       fail_fun.(result_message)
     else
-      Logger.warn(result_message)
+      :ok = Logger.warn(result_message)
     end
   end
 

@@ -27,48 +27,44 @@ defmodule EVM.Refunds.Sstore do
     end
   end
 
-  # credo:disable-for-next-line
   defp eip1283_sstore_refund({key, new_value}, exec_env) do
     initial_value = get_initial_value(exec_env, key)
     current_value = get_current_value(exec_env, key)
+    get_refund(initial_value, current_value, new_value)
+  end
 
-    cond do
-      current_value == new_value ->
-        0
+  defp get_refund(_, _current_value = value, _new_value = value), do: 0
+  defp get_refund(0, 0, _new_value), do: 0
 
-      initial_value == current_value && initial_value == 0 ->
-        0
+  defp get_refund(_initial_value = value, _current_value = value, _new_value = 0),
+    do: @storage_refund
 
-      initial_value == current_value && new_value == 0 ->
-        @storage_refund
+  defp get_refund(initial_value, current_value, new_value) do
+    first_refund =
+      cond do
+        initial_value != 0 && current_value == 0 ->
+          -@storage_refund
 
-      true ->
-        first_refund =
-          cond do
-            initial_value != 0 && current_value == 0 ->
-              -@storage_refund
+        initial_value != 0 && new_value == 0 ->
+          @storage_refund
 
-            initial_value != 0 && new_value == 0 ->
-              @storage_refund
+        true ->
+          0
+      end
 
-            true ->
-              0
-          end
+    second_refund =
+      cond do
+        initial_value == new_value && initial_value == 0 ->
+          Gas.g_sset() - Gas.g_sload()
 
-        second_refund =
-          cond do
-            initial_value == new_value && initial_value == 0 ->
-              Gas.g_sset() - Gas.g_sload()
+        initial_value == new_value ->
+          Gas.g_sreset() - Gas.g_sload()
 
-            initial_value == new_value ->
-              Gas.g_sreset() - Gas.g_sload()
+        true ->
+          0
+      end
 
-            true ->
-              0
-          end
-
-        first_refund + second_refund
-    end
+    first_refund + second_refund
   end
 
   defp get_initial_value(exec_env, key) do

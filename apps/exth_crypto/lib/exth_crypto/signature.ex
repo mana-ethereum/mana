@@ -18,14 +18,14 @@ defmodule ExthCrypto.Signature do
 
   @signature_length 64
   @version 27
-
+  @type version :: unquote(@version)
   @doc """
   Returns the signture version.
 
   The best explanation I can find for this number is here:
   https://github.com/ethereum/eips/issues/155#issuecomment-253952071
   """
-  @spec version() :: integer()
+  @spec version() :: version()
   def version(), do: @version
 
   @doc """

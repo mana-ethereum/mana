@@ -6,20 +6,20 @@ defmodule EVM.Address do
   alias ExthCrypto.Hash.Keccak
 
   @type t :: binary() | non_neg_integer()
-
   @size 20
+  @type address_size :: unquote(@size)
   @max round(:math.pow(2, @size * EVM.byte_size()))
-
+  @type max :: unquote(@max)
   @doc """
   Returns the maximum allowed address size.
   """
-  @spec size() :: integer()
+  @spec size() :: address_size()
   def size(), do: @size
 
   @doc """
   Returns the maximum allowed address value.
   """
-  @spec max() :: integer()
+  @spec max() :: max()
   def max(), do: @max
 
   @doc """
@@ -49,7 +49,7 @@ defmodule EVM.Address do
   @doc """
   Returns an address for create2 opcode.
   """
-  @spec new(integer() | binary(), integer() | binary(), binary() | integer()) :: binary()
+  @spec new(integer(), non_neg_integer() | binary(), binary() | non_neg_integer()) :: binary()
   def new(address, salt, init_code) do
     binary_address = new(address)
 

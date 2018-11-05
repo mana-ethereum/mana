@@ -53,7 +53,7 @@ defmodule CLI.BlockProvider.RPC do
 
       {:error, error} ->
         if retries > 0 do
-          Logger.info("Error loading block number, retrying: #{inspect(error)}")
+          :ok = Logger.info("Error loading block number, retrying: #{inspect(error)}")
           get_block_number(client, retries - 1)
         else
           {:error, error}
@@ -153,7 +153,7 @@ defmodule CLI.BlockProvider.RPC do
 
       {:error, error} ->
         if retries > 0 do
-          Logger.info("Error loading block, retrying: #{inspect(error)}")
+          :ok = Logger.info("Error loading block, retrying: #{inspect(error)}")
           load_new_block(number, client, retries - 1)
         else
           {:error, error}
@@ -200,7 +200,7 @@ defmodule CLI.BlockProvider.RPC do
     end
   end
 
-  @spec decode_integer(String.t()) :: integer()
+  @spec decode_integer(String.t()) :: non_neg_integer()
   defp decode_integer(value) do
     value
     |> load_hex()

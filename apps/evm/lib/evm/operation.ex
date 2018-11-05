@@ -240,7 +240,7 @@ defmodule EVM.Operation do
     apply(group_to_module(group), method, args)
   end
 
-  @spec group_to_module(atom()) :: op_result()
+  @spec group_to_module(atom()) :: atom()
   defp group_to_module(group),
     do:
       ("Elixir.EVM.Operation." <> Macro.camelize(Atom.to_string(group)))
