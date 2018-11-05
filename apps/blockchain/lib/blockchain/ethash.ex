@@ -4,6 +4,7 @@ defmodule Blockchain.Ethash do
   yellow paper concerning the Ethash implementation for POW.
   """
 
+  alias Blockchain.Ethash.RandMemoHash
   alias ExthCrypto.Hash.Keccak
 
   @j_epoch 30_000
@@ -13,6 +14,7 @@ defmodule Blockchain.Ethash do
   @j_cacheinit round(:math.pow(2, 24))
   @j_cachegrowth round(:math.pow(2, 17))
   @j_hashbytes 64
+  @j_cacherounds 3
 
   @precomputed_data_sizes [__DIR__, "ethash", "data_sizes.txt"]
                           |> Path.join()
@@ -27,6 +29,9 @@ defmodule Blockchain.Ethash do
                            |> Enum.map(&String.to_integer/1)
 
   @first_epoch_seed_hash <<0::256>>
+
+  @type cache :: list(binary())
+  @type seed :: <<_::256>>
 
   def epoch(block_number) do
     div(block_number, @j_epoch)
@@ -81,9 +86,24 @@ defmodule Blockchain.Ethash do
   end
 
   @doc """
+  Calculates the cache, c, outlined in Appendix J section J.3.2 of the Yellow
+  Paper, by performing the RandMemoHash algorithm n times (where n is 3 if it is
+  j_cacherounds)
+  """
+  @spec calculate_cache(cache(), integer()) :: cache()
+  def calculate_cache(initial_cache, number_of_rounds \\ @j_cacherounds)
+  def calculate_cache(initial_cache, 0), do: initial_cache
+  def calculate_cache(initial_cache, 1), do: RandMemoHash.hash(initial_cache)
+
+  def calculate_cache(cache, number_of_rounds) do
+    calculate_cache(RandMemoHash.hash(cache), number_of_rounds - 1)
+  end
+
+  @doc """
   This is the initial cache, c', defined in the Dataset Generation section of
   Appendix J of the Yellow Paper.
   """
+  @spec initial_cache(seed(), integer()) :: cache()
   def initial_cache(seed, cache_size) do
     adjusted_cache_size = div(cache_size, @j_hashbytes)
 

@@ -2,6 +2,7 @@ defmodule Blockchain.EthashTest do
   use ExUnit.Case, async: true
 
   alias Blockchain.Ethash
+  alias Blockchain.Ethash.RandMemoHash
   alias ExthCrypto.Hash.Keccak
 
   test "it can calculate the epoch from block number" do
@@ -65,6 +66,38 @@ defmodule Blockchain.EthashTest do
       result = Ethash.seed_hash(70_000)
 
       assert result == Keccak.kec(previous_seed_hash)
+    end
+  end
+
+  describe "calculate_cache/2" do
+    test "returns initial cache if number of rounds is 0" do
+      seed = <<0::256>>
+      cache_size = 64
+      initial_cache = Ethash.initial_cache(seed, cache_size)
+
+      cache = Ethash.calculate_cache(initial_cache, 0)
+
+      assert cache == initial_cache
+    end
+
+    test "returns the RandMemoHash of the initial cache for round 1" do
+      seed = <<0::256>>
+      cache_size = 64
+      initial_cache = Ethash.initial_cache(seed, cache_size)
+
+      cache = Ethash.calculate_cache(initial_cache, 1)
+
+      assert cache == RandMemoHash.hash(initial_cache)
+    end
+
+    test "returns n rounds of rand memo hash on the initial cache" do
+      seed = <<0::256>>
+      cache_size = 64
+      initial_cache = Ethash.initial_cache(seed, cache_size)
+
+      cache = Ethash.calculate_cache(initial_cache, 2)
+
+      assert cache == RandMemoHash.hash(RandMemoHash.hash(initial_cache))
     end
   end
 
