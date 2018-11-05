@@ -4,14 +4,12 @@ defmodule MerklePatriciaTree.DB.ETS do
   is backed by :ets.
   """
 
-  alias MerklePatriciaTree.{DB, Trie}
-
   @behaviour MerklePatriciaTree.DB
 
   @doc """
   Performs initialization for this db.
   """
-  @spec init(DB.db_name()) :: DB.db()
+  @impl true
   def init(db_name) do
     :ets.new(db_name, [:set, :public, :named_table])
 
@@ -21,7 +19,7 @@ defmodule MerklePatriciaTree.DB.ETS do
   @doc """
   Retrieves a key from the database.
   """
-  @spec get(DB.db_ref(), Trie.key()) :: {:ok, DB.value()} | :not_found
+  @impl true
   def get(db_ref, key) do
     case :ets.lookup(db_ref, key) do
       [{^key, v} | _rest] -> {:ok, v}
@@ -32,7 +30,7 @@ defmodule MerklePatriciaTree.DB.ETS do
   @doc """
   Stores a key in the database.
   """
-  @spec put!(DB.db_ref(), Trie.key(), DB.value()) :: :ok
+  @impl true
   def put!(db_ref, key, value) do
     case :ets.insert(db_ref, {key, value}) do
       true -> :ok
@@ -42,9 +40,19 @@ defmodule MerklePatriciaTree.DB.ETS do
   @doc """
   Removes all objects with key from the database.
   """
-  @spec delete!(DB.db_ref(), Trie.key()) :: :ok
+  @impl true
   def delete!(db_ref, key) do
     case :ets.delete(db_ref, key) do
+      true -> :ok
+    end
+  end
+
+  @doc """
+  Stores key-value pairs in the database.
+  """
+  @impl true
+  def batch_put!(db_ref, key_value_pairs) do
+    case :ets.insert(db_ref, key_value_pairs) do
       true -> :ok
     end
   end
