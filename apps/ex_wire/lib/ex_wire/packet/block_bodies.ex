@@ -89,7 +89,7 @@ defmodule ExWire.Packet.BlockBodies do
   """
   @spec handle(ExWire.Packet.packet()) :: ExWire.Packet.handle_response()
   def handle(packet = %__MODULE__{}) do
-    Logger.info("[Packet] Peer sent #{Enum.count(packet.blocks)} block(s).")
+    :ok = Logger.info("[Packet] Peer sent #{Enum.count(packet.blocks)} block(s).")
 
     :ok
   end

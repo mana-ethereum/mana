@@ -19,7 +19,7 @@ defmodule EVM.Operation.System do
   @doc """
   Create a new account with associated code.
   """
-  @spec create(Operation.stack_args(), map()) :: Operation.op_result()
+  @spec create(Operation.stack_args(), Operation.op_result()) :: Operation.op_result()
   def create([value, input_offset, input_size], vm_map = %{exec_env: exec_env}) do
     nonce =
       AccountRepo.repo(exec_env.account_repo).get_account_nonce(

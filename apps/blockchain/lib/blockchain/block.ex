@@ -7,6 +7,8 @@ defmodule Blockchain.Block do
   """
 
   alias Block.Header
+  alias Blockchain.BlockGetter
+  alias Blockchain.BlockSetter
   alias Blockchain.{Account, Chain, Transaction}
   alias Blockchain.Account.Repo
   alias Blockchain.Block.HolisticValidity
@@ -30,9 +32,9 @@ defmodule Blockchain.Block do
   @type t :: %__MODULE__{
           block_hash: EVM.hash() | nil,
           header: Header.t(),
-          transactions: [Transaction.t()],
-          receipts: [Receipt.t()],
-          ommers: [Header.t()]
+          transactions: [Transaction.t()] | [],
+          receipts: [Receipt.t()] | [],
+          ommers: [Header.t()] | []
         }
 
   @block_reward_ommer_divisor 32
@@ -445,23 +447,24 @@ defmodule Blockchain.Block do
   """
   @spec gen_child_block(t, Chain.t(), keyword()) :: t
   def gen_child_block(parent_block, chain, opts \\ []) do
-    gas_limit = opts[:gas_limit] || parent_block.header.gas_limit
+    gas_limit = get_opts_property(opts, :gas_limit, parent_block.header.gas_limit)
+
     header = gen_child_header(parent_block, opts)
 
     %__MODULE__{header: header}
-    |> set_block_number(parent_block)
-    |> set_block_difficulty(chain, parent_block)
-    |> set_block_gas_limit(chain, parent_block, gas_limit)
-    |> set_block_parent_hash(parent_block)
+    |> BlockSetter.set_block_number(parent_block)
+    |> BlockSetter.set_block_difficulty(chain, parent_block)
+    |> BlockSetter.set_block_gas_limit(chain, parent_block, gas_limit)
+    |> BlockSetter.set_block_parent_hash(parent_block)
   end
 
   @spec gen_child_header(t, keyword()) :: Header.t()
   defp gen_child_header(parent_block, opts) do
-    timestamp = opts[:timestamp] || System.system_time(:second)
-    beneficiary = opts[:beneficiary] || nil
-    extra_data = opts[:extra_data] || <<>>
-    state_root = opts[:state_root] || parent_block.header.state_root
-    mix_hash = opts[:mix_hash] || parent_block.header.mix_hash
+    timestamp = get_opts_property(opts, :timestamp, System.system_time(:second))
+    beneficiary = get_opts_property(opts, :beneficiary, nil)
+    extra_data = get_opts_property(opts, :extra_data, <<>>)
+    state_root = get_opts_property(opts, :state_root, parent_block.header.state_root)
+    mix_hash = get_opts_property(opts, :mix_hash, parent_block.header.mix_hash)
 
     %Header{
       state_root: state_root,
@@ -470,132 +473,6 @@ defmodule Blockchain.Block do
       beneficiary: beneficiary,
       mix_hash: mix_hash
     }
-  end
-
-  @doc """
-  Sets block's parent's hash
-  """
-  @spec set_block_parent_hash(t, t) :: t
-  def set_block_parent_hash(block, parent_block) do
-    parent_hash = parent_block.block_hash || hash(parent_block)
-    header = %{block.header | parent_hash: parent_hash}
-    %{block | header: header}
-  end
-
-  @doc """
-  Calculates the `number` for a new block. This implements Eq.(38) from
-  the Yellow Paper.
-
-  ## Examples
-
-      iex> Blockchain.Block.set_block_number(%Blockchain.Block{header: %Block.Header{extra_data: "hello"}}, %Blockchain.Block{header: %Block.Header{number: 32}})
-      %Blockchain.Block{header: %Block.Header{number: 33, extra_data: "hello"}}
-  """
-  @spec set_block_number(t, t) :: t
-  def set_block_number(block, parent_block) do
-    number = parent_block.header.number + 1
-    header = %{block.header | number: number}
-    %{block | header: header}
-  end
-
-  @doc """
-  Set the difficulty of a new block based on Eq.(39), better defined
-  in `Block.Header`.
-
-  # TODO: Validate these results
-
-  ## Examples
-
-      iex> Blockchain.Block.set_block_difficulty(
-      ...>   %Blockchain.Block{header: %Block.Header{number: 0, timestamp: 0}},
-      ...>   Blockchain.Test.ropsten_chain(),
-      ...>   nil
-      ...> )
-      %Blockchain.Block{header: %Block.Header{number: 0, timestamp: 0, difficulty: 1_048_576}}
-
-      iex> Blockchain.Block.set_block_difficulty(
-      ...>   %Blockchain.Block{header: %Block.Header{number: 1, timestamp: 1_479_642_530}},
-      ...>   Blockchain.Test.ropsten_chain(),
-      ...>   %Blockchain.Block{header: %Block.Header{number: 0, timestamp: 0, difficulty: 1_048_576}}
-      ...> )
-      %Blockchain.Block{header: %Block.Header{number: 1, timestamp: 1_479_642_530, difficulty: 997_888}}
-  """
-  @spec set_block_difficulty(t, Chain.t(), t) :: t
-  def set_block_difficulty(block, chain, parent_block) do
-    difficulty = get_difficulty(block, parent_block, chain)
-
-    %{block | header: %{block.header | difficulty: difficulty}}
-  end
-
-  defp get_difficulty(block, parent_block, chain) do
-    cond do
-      Chain.after_bomb_delays?(chain, block.header.number) ->
-        delay_factor = Chain.bomb_delay_factor_for_block(chain, block.header.number)
-
-        Header.get_byzantium_difficulty(
-          block.header,
-          if(parent_block, do: parent_block.header, else: nil),
-          delay_factor,
-          chain.genesis[:difficulty],
-          chain.engine["Ethash"][:minimum_difficulty],
-          chain.engine["Ethash"][:difficulty_bound_divisor]
-        )
-
-      Chain.after_homestead?(chain, block.header.number) ->
-        Header.get_homestead_difficulty(
-          block.header,
-          if(parent_block, do: parent_block.header, else: nil),
-          chain.genesis[:difficulty],
-          chain.engine["Ethash"][:minimum_difficulty],
-          chain.engine["Ethash"][:difficulty_bound_divisor]
-        )
-
-      true ->
-        Header.get_frontier_difficulty(
-          block.header,
-          if(parent_block, do: parent_block.header, else: nil),
-          chain.genesis[:difficulty],
-          chain.engine["Ethash"][:minimum_difficulty],
-          chain.engine["Ethash"][:difficulty_bound_divisor]
-        )
-    end
-  end
-
-  @doc """
-  Sets the gas limit of a given block, or raises
-  if the block limit is not acceptable. The validity
-  check is defined in Eq.(45), Eq.(46) and Eq.(47) of
-  the Yellow Paper.
-
-  ## Examples
-
-      iex> Blockchain.Block.set_block_gas_limit(
-      ...>   %Blockchain.Block{header: %Block.Header{}},
-      ...>   Blockchain.Test.ropsten_chain(),
-      ...>   %Blockchain.Block{header: %Block.Header{gas_limit: 1_000_000}},
-      ...>   1_000_500
-      ...> )
-      %Blockchain.Block{header: %Block.Header{gas_limit: 1_000_500}}
-
-      iex> Blockchain.Block.set_block_gas_limit(
-      ...>   %Blockchain.Block{header: %Block.Header{}},
-      ...>   Blockchain.Test.ropsten_chain(),
-      ...>   %Blockchain.Block{header: %Block.Header{gas_limit: 1_000_000}},
-      ...>   2_000_000
-      ...> )
-      ** (RuntimeError) Block gas limit not valid
-  """
-  @spec set_block_gas_limit(t, Chain.t(), t, EVM.Gas.t()) :: t
-  def set_block_gas_limit(block, chain, parent_block, gas_limit) do
-    if not Header.is_gas_limit_valid?(
-         gas_limit,
-         parent_block.header.gas_limit,
-         chain.params[:gas_limit_bound_divisor],
-         chain.params[:min_gas_limit]
-       ),
-       do: raise("Block gas limit not valid")
-
-    %{block | header: %{block.header | gas_limit: gas_limit}}
   end
 
   @doc """
@@ -679,7 +556,7 @@ defmodule Blockchain.Block do
   end
 
   defp validate_header(block, parent_block, chain) do
-    expected_difficulty = get_difficulty(block, parent_block, chain)
+    expected_difficulty = BlockGetter.get_difficulty(block, parent_block, chain)
     parent_block_header = if parent_block, do: parent_block.header, else: nil
 
     validate_dao_extra_data =
@@ -883,7 +760,7 @@ defmodule Blockchain.Block do
       ...> block
       ...> |> Blockchain.Block.add_rewards(MerklePatriciaTree.Trie.new(db), chain)
       iex> updated_block
-      ...> |> Blockchain.Block.get_state(MerklePatriciaTree.Trie.new(db))
+      ...> |> Blockchain.BlockGetter.get_state(MerklePatriciaTree.Trie.new(db))
       ...> |> Blockchain.Account.get_accounts([miner])
       [%Blockchain.Account{balance: 400_000}]
 
@@ -895,7 +772,7 @@ defmodule Blockchain.Block do
       iex> block = %Blockchain.Block{header: %Block.Header{state_root: state.root_hash, beneficiary: miner}}
       iex> {updated_block, updated_trie} = Blockchain.Block.add_rewards(block, state, chain)
       iex> updated_block
-      ...> |> Blockchain.Block.get_state(updated_trie)
+      ...> |> Blockchain.BlockGetter.get_state(updated_trie)
       ...> |> Blockchain.Account.get_accounts([miner])
       [%Blockchain.Account{balance: 3000000000000400000}]
   """
@@ -915,11 +792,11 @@ defmodule Blockchain.Block do
 
     state =
       block
-      |> get_state(trie)
+      |> BlockGetter.get_state(trie)
       |> add_miner_reward(block, base_reward)
       |> add_ommer_rewards(block, base_reward)
 
-    updated_block = set_state(block, state)
+    updated_block = BlockSetter.set_state(block, state)
 
     {updated_block, state}
   end
@@ -945,52 +822,10 @@ defmodule Blockchain.Block do
     end)
   end
 
-  @doc """
-  Sets a given block header field as a shortcut when
-  we want to change a single field.
-
-  ## Examples
-
-      iex> %Blockchain.Block{}
-      ...> |> Blockchain.Block.put_header(:number, 5)
-      %Blockchain.Block{
-        header: %Block.Header{
-          number: 5
-        }
-      }
-  """
-  @spec put_header(t, any(), any()) :: t
-  def put_header(block, key, value) do
-    new_header = Map.put(block.header, key, value)
-    %{block | header: new_header}
-  end
-
-  @doc """
-  Returns a trie rooted at the state_root of a given block.
-
-  ## Examples
-
-      iex> db = MerklePatriciaTree.Test.random_ets_db(:get_state)
-      iex> Blockchain.Block.get_state(%Blockchain.Block{header: %Block.Header{state_root: <<5::256>>}}, MerklePatriciaTree.Trie.new(db))
-      %MerklePatriciaTree.Trie{root_hash: <<5::256>>, db: {MerklePatriciaTree.DB.ETS, :get_state}}
-  """
-  @spec get_state(t, DB.db()) :: Trie.t()
-  def get_state(block, trie) do
-    TrieStorage.set_root_hash(trie, block.header.state_root)
-  end
-
-  @doc """
-  Sets the state_root of a given block from a trie.
-
-  ## Examples
-      iex> trie = %MerklePatriciaTree.Trie{root_hash: <<5::256>>, db: {MerklePatriciaTree.DB.ETS, :get_state}}
-      iex> Blockchain.Block.set_state(%Blockchain.Block{}, trie)
-      %Blockchain.Block{header: %Block.Header{state_root: <<5::256>>}}
-  """
-  @spec set_state(t, Trie.t()) :: t
-  def set_state(block, trie) do
-    root_hash = TrieStorage.root_hash(trie)
-
-    put_header(block, :state_root, root_hash)
+  defp get_opts_property(opts, property, default) do
+    case Keyword.get(opts, property, nil) do
+      nil -> default
+      property_value -> property_value
+    end
   end
 end

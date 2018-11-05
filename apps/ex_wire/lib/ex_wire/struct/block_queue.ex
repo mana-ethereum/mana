@@ -255,19 +255,20 @@ defmodule ExWire.Struct.BlockQueue do
                do_validation
              ) do
           :parent_not_found ->
-            Logger.debug("[Block Queue] Failed to verify block due to missing parent")
+            _ = Logger.debug("[Block Queue] Failed to verify block due to missing parent")
 
             block_tree
 
           {:invalid, reasons} ->
-            Logger.debug(fn ->
-              "[Block Queue] Failed to verify block due to #{inspect(reasons)}"
-            end)
+            _ =
+              Logger.debug(fn ->
+                "[Block Queue] Failed to verify block due to #{inspect(reasons)}"
+              end)
 
             block_tree
 
           {:ok, {new_block_tree, _new_trie}} ->
-            Logger.debug("[Block Queue] Verified block and added to new block tree")
+            _ = Logger.debug("[Block Queue] Verified block and added to new block tree")
 
             new_block_tree
         end

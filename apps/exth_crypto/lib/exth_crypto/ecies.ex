@@ -8,7 +8,7 @@ defmodule ExthCrypto.ECIES do
   alias ExthCrypto.ECIES.ECDH
   alias ExthCrypto.ECIES.Parameters
   alias ExthCrypto.{Cipher, Hash, MAC}
-
+  alias ExthCrypto.KDF.NistSp80056
   @curve_name :secp256k1
 
   @doc """
@@ -79,7 +79,7 @@ defmodule ExthCrypto.ECIES do
     # Next, derive a KDF twice the length as needed, with shared_info_1 as the extra_data
     # SEC1 - §5.1.3 - Step 5
     kdf =
-      ExthCrypto.KDF.NistSp80056.single_step_kdf(
+      NistSp80056.single_step_kdf(
         shared_secret,
         2 * params.key_len,
         params.hasher,
@@ -131,7 +131,9 @@ defmodule ExthCrypto.ECIES do
       {:ok, "hello"}
   """
   @spec decrypt(ExthCrypto.Key.private_key(), binary(), binary(), binary()) ::
-          {:ok, Cipher.plaintext()} | {:error, String.t()}
+          {:ok, Cipher.plaintext()}
+          | {:error, :invalid_message_tag}
+          | {:error, :invalid_ECIES_encoded_message}
   def decrypt(
         my_static_private_key,
         ecies_encoded_msg,
@@ -184,7 +186,7 @@ defmodule ExthCrypto.ECIES do
         # SEC1 - §5.1.4 - Step 6
         # Geneate our KDF as before
         kdf =
-          ExthCrypto.KDF.NistSp80056.single_step_kdf(
+          NistSp80056.single_step_kdf(
             shared_secret,
             2 * params.key_len,
             params.hasher,
@@ -211,12 +213,12 @@ defmodule ExthCrypto.ECIES do
             # SEC1 - §5.1.4 - Step 10
             {:ok, message}
           else
-            {:error, "Invalid message tag"}
+            {:error, :invalid_message_tag}
           end
         end
 
       _els ->
-        {:error, "Invalid ECIES encoded message"}
+        {:error, :invalid_ECIES_encoded_message}
     end
   end
 end

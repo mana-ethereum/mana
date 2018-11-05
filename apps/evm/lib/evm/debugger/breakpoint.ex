@@ -3,14 +3,14 @@ defmodule EVM.Debugger.Breakpoint do
   Breakpoints allow us to break execution of a given
   contract based on a set of conditions.
   """
-
+  alias EVM.MachineState
   @table __MODULE__
 
   @type id :: integer()
 
   @type conditions :: [
           # only triggers when contract executes at given address
-          :address
+          address: binary()
         ]
 
   @type t :: %__MODULE__{
@@ -31,10 +31,11 @@ defmodule EVM.Debugger.Breakpoint do
   """
   @spec init() :: :ok
   def init() do
-    case :ets.info(@table) do
-      :undefined -> :ets.new(@table, [:ordered_set, :public, :named_table])
-      _info -> :table_exists
-    end
+    _ =
+      case :ets.info(@table) do
+        :undefined -> :ets.new(@table, [:ordered_set, :public, :named_table])
+        _info -> :table_exists
+      end
 
     :ok
   end
@@ -127,7 +128,7 @@ defmodule EVM.Debugger.Breakpoint do
       iex> EVM.Debugger.Breakpoint.matches?(breakpoint, machine_state, sub_state, exec_env)
       false
   """
-  @spec matches?(t, EVM.MachineState.t(), EVM.SubState.t(), EVM.ExecEnv.t()) :: boolean()
+  @spec matches?(t, MachineState.t(), EVM.SubState.t(), EVM.ExecEnv.t()) :: boolean()
   def matches?(breakpoint, machine_state, _sub_state, exec_env) do
     should_break = break_on_next_pc?(breakpoint, machine_state.program_counter)
 
@@ -303,14 +304,10 @@ defmodule EVM.Debugger.Breakpoint do
 
   # This is will be true if we're instructed to break on :next or :start, or
   # when the machine's breakpoint's pc matches the machine's pc.
-  @spec break_on_next_pc?(t, EVM.MachineState.program_counter()) :: boolean()
-  def break_on_next_pc?(breakpoint, pc) do
-    case breakpoint.pc do
-      nil -> false
-      :next -> true
-      :start -> true
-      ^pc -> true
-      _ -> false
-    end
-  end
+  @spec break_on_next_pc?(t, MachineState.program_counter()) :: boolean()
+  defp break_on_next_pc?(%{pc: nil}, _pc), do: false
+  defp break_on_next_pc?(%{pc: :next}, _pc), do: true
+  defp break_on_next_pc?(%{pc: :start}, _pc), do: true
+  defp break_on_next_pc?(%{pc: pc}, pc), do: true
+  defp break_on_next_pc?(_, _), do: false
 end

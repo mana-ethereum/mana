@@ -10,8 +10,9 @@ defmodule MerklePatriciaTree.Trie.Storage do
 
   # Maximum RLP length in bytes that is stored as is
   @max_rlp_len 32
+  @type max_rlp_len :: unquote(@max_rlp_len)
 
-  @spec max_rlp_len() :: integer()
+  @spec max_rlp_len() :: max_rlp_len()
   def max_rlp_len(), do: @max_rlp_len
 
   # Keccak-256 is always 32-bytes.

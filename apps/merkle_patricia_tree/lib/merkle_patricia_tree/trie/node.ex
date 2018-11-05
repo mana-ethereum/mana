@@ -40,7 +40,7 @@ defmodule MerklePatriciaTree.Trie.Node do
       iex> MerklePatriciaTree.Trie.Node.encode_node({:ext, [1, 2, 3], <<>>}, trie)
       [<<17, 35>>, ""]
   """
-  @spec encode_node(trie_node, Trie.t()) :: nil | binary()
+  @spec encode_node(trie_node, Trie.t()) :: binary()
   def encode_node(trie_node, trie) do
     trie_node
     |> encode_node_type()

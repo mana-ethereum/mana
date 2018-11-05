@@ -11,7 +11,7 @@ defmodule EVM.Logger do
       machine_state.stack
       |> Enum.map(&stack_value_string/1)
 
-    Logger.debug(fn -> "Stack: #{inspect(stack)}" end)
+    _ = Logger.debug(fn -> "Stack: #{inspect(stack)}" end)
     machine_state
   end
 
@@ -22,8 +22,8 @@ defmodule EVM.Logger do
   """
   @spec log_state(MachineState.t(), EVM.Operation.Metadata.t()) :: MachineState.t()
   def log_state(machine_state, operation) do
-    log_opcode_and_gas_left(operation, machine_state)
-    log_inputs(operation, machine_state)
+    _ = log_opcode_and_gas_left(operation, machine_state)
+    _ = log_inputs(operation, machine_state)
     machine_state
   end
 
@@ -53,16 +53,14 @@ defmodule EVM.Logger do
     machine_state.step + 1
   end
 
+  defp stack_value_string(0), do: "0x0"
+
   defp stack_value_string(value) do
     string_value =
-      if value == 0 do
-        "0"
-      else
-        value
-        |> :binary.encode_unsigned()
-        |> Base.encode16(case: :lower)
-        |> String.trim_leading("0")
-      end
+      value
+      |> :binary.encode_unsigned()
+      |> Base.encode16(case: :lower)
+      |> String.trim_leading("0")
 
     "0x" <> string_value
   end
