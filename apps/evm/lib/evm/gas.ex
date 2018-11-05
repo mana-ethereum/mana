@@ -15,6 +15,7 @@ defmodule EVM.Gas do
 
   @type t :: EVM.val()
   @type gas_price :: EVM.Wei.t()
+  @type cost_with_status :: {:original, t} | {:changed, t, t}
 
   # Nothing paid for operations of the set W_zero.
   @g_zero 0
@@ -143,7 +144,7 @@ defmodule EVM.Gas do
     end
   end
 
-  @spec cost_with_status(MachineState.t(), ExecEnv.t()) :: {:original, t} | {:changed, t, t}
+  @spec cost_with_status(MachineState.t(), ExecEnv.t()) :: cost_with_status()
   def cost_with_status(machine_state, exec_env) do
     operation = MachineCode.current_operation(machine_state, exec_env)
     inputs = Operation.inputs(operation, machine_state)

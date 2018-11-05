@@ -62,7 +62,7 @@ defmodule Blockchain.TransactionTest do
     end
   end
 
-  defp parse_test(test_name, test_case) do
+  defp parse_test(_test_name, test_case) do
     rlp = maybe_hex(test_case["rlp"])
 
     transaction =
