@@ -369,7 +369,9 @@ jobs:
             - v4-env-cache-{{ .Branch }}
             - v4-env-cache
 
-      - run: mix cmd --app blockchain mix test --exclude test --include Constantinople
+      - run:
+          command: mix cmd --app blockchain mix test --exclude test --include Constantinople
+          no_output_timeout: 2400
 
   dialyzer:
     docker:
