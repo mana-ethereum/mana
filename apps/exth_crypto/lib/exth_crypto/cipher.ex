@@ -8,7 +8,7 @@ defmodule ExthCrypto.Cipher do
   @type plaintext :: iodata()
   @type ciphertext :: binary()
   @type init_vector :: binary()
-  @opaque stream :: :crypto.ctr_state()
+  @type stream :: :crypto.stream_state()
 
   @doc """
   Encrypts the given plaintext for the given block cipher.
@@ -75,7 +75,7 @@ defmodule ExthCrypto.Cipher do
       iex> ExthCrypto.Cipher.generate_init_vector(32) == ExthCrypto.Cipher.generate_init_vector(32)
       false
   """
-  @spec generate_init_vector(integer()) :: init_vector
+  @spec generate_init_vector(non_neg_integer()) :: init_vector
   def generate_init_vector(block_size) do
     :crypto.strong_rand_bytes(block_size)
   end

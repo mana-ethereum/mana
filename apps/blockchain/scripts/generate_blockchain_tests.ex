@@ -240,8 +240,9 @@ defmodule GenerateBlockchainTests do
     }
   end
 
+  defp ommers_from_json(nil), do: :ok
   defp ommers_from_json(json_ommers) do
-    Enum.map(json_ommers || [], fn json_ommer ->
+    Enum.map(json_ommers, fn json_ommer ->
       %Header{
         parent_hash: maybe_hex(json_ommer["parentHash"]),
         ommers_hash: maybe_hex(json_ommer["uncleHash"]),
@@ -262,6 +263,7 @@ defmodule GenerateBlockchainTests do
     end)
   end
 
+  defp transactions_from_json(nil), do: :ok
   defp transactions_from_json(json_transactions) do
     Enum.map(json_transactions || [], fn json_transaction ->
       init =

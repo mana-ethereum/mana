@@ -14,15 +14,22 @@ defmodule ExWire.Sync do
   require Logger
 
   alias Block.Header
-  alias ExWire.Packet.{BlockBodies, BlockHeaders}
+  alias Blockchain.Block
+  alias Blockchain.Blocktree
+  alias ExWire.Config
+  alias ExWire.Packet.BlockBodies
+  alias ExWire.Packet.BlockHeaders
+  alias ExWire.Packet.GetBlockBodies
+  alias ExWire.Packet.GetBlockHeaders
   alias ExWire.PeerSupervisor
   alias ExWire.Struct.BlockQueue
+  alias ExWire.Sync
 
   @doc """
   Starts a Sync process.
   """
   def start_link(db) do
-    GenServer.start_link(__MODULE__, db, name: ExWire.Sync)
+    GenServer.start_link(__MODULE__, db, name: Sync)
   end
 
   @doc """
@@ -32,13 +39,13 @@ defmodule ExWire.Sync do
         We will need to add some "restore state" logic.
   """
   def init(db) do
-    block_tree = Blockchain.Blocktree.new_tree()
+    block_tree = Blocktree.new_tree()
 
     {:ok,
      %{
        block_queue: %BlockQueue{},
        block_tree: block_tree,
-       chain: ExWire.Config.chain(),
+       chain: Config.chain(),
        db: db,
        last_requested_block: request_next_block(block_tree)
      }}
@@ -75,10 +82,10 @@ defmodule ExWire.Sync do
           )
 
         if should_request_block do
-          Logger.debug(fn -> "[Sync] Requesting block body #{header.number}" end)
+          _ = Logger.debug(fn -> "[Sync] Requesting block body #{header.number}" end)
 
           # TODO: Bulk up these requests?
-          PeerSupervisor.send_packet(%ExWire.Packet.GetBlockBodies{
+          PeerSupervisor.send_packet(%GetBlockBodies{
             hashes: [header_hash]
           })
         end
@@ -133,7 +140,7 @@ defmodule ExWire.Sync do
   end
 
   def handle_info({:packet, packet, peer}, state) do
-    Logger.debug(fn -> "[Sync] Ignoring packet #{packet.__struct__} from #{peer}" end)
+    _ = Logger.debug(fn -> "[Sync] Ignoring packet #{packet.__struct__} from #{peer}" end)
 
     {:noreply, state}
   end
@@ -142,12 +149,12 @@ defmodule ExWire.Sync do
     next_number =
       case block_tree.best_block do
         nil -> 0
-        %Blockchain.Block{header: %Block.Header{number: number}} -> number + 1
+        %Block{header: %Header{number: number}} -> number + 1
       end
 
-    Logger.debug(fn -> "[Sync] Requesting block #{next_number}" end)
+    _ = Logger.debug(fn -> "[Sync] Requesting block #{next_number}" end)
 
-    ExWire.PeerSupervisor.send_packet(%ExWire.Packet.GetBlockHeaders{
+    PeerSupervisor.send_packet(%GetBlockHeaders{
       block_identifier: next_number,
       max_headers: 1,
       skip: 0,

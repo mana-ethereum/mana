@@ -27,7 +27,7 @@ defmodule CLI.State do
   """
   @spec save_tree(DB.db(), Blocktree.t()) :: :ok
   def save_tree(db, tree) do
-    Logger.info(fn -> "Saving progress at block #{tree.best_block.header.number}" end)
+    :ok = Logger.info(fn -> "Saving progress at block #{tree.best_block.header.number}" end)
 
     DB.put!(
       db,

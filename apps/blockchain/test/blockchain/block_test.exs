@@ -5,6 +5,7 @@ defmodule Blockchain.BlockTest do
   doctest Blockchain.Block
 
   alias Block.Header
+  alias Blockchain.BlockGetter
   alias Blockchain.{Account, Block, Chain, Genesis, Transaction}
   alias EVM.MachineCode
   alias MerklePatriciaTree.Trie
@@ -90,14 +91,14 @@ defmodule Blockchain.BlockTest do
 
       miner_balance =
         block
-        |> Blockchain.Block.get_state(trie)
-        |> Blockchain.Account.get_account(miner)
+        |> BlockGetter.get_state(trie)
+        |> Account.get_account(miner)
         |> Map.get(:balance)
 
       ommer_balance =
         block
-        |> Blockchain.Block.get_state(trie)
-        |> Blockchain.Account.get_account(ommer)
+        |> BlockGetter.get_state(trie)
+        |> Account.get_account(ommer)
         |> Map.get(:balance)
 
       assert miner_balance == round(515_625.0e13)
@@ -134,13 +135,13 @@ defmodule Blockchain.BlockTest do
 
       miner_balance =
         block
-        |> Blockchain.Block.get_state(trie)
+        |> BlockGetter.get_state(trie)
         |> Blockchain.Account.get_account(miner)
         |> Map.get(:balance)
 
       ommer_balance =
         block
-        |> Blockchain.Block.get_state(trie)
+        |> BlockGetter.get_state(trie)
         |> Blockchain.Account.get_account(ommer)
         |> Map.get(:balance)
 
@@ -235,8 +236,8 @@ defmodule Blockchain.BlockTest do
 
     block =
       block
-      |> Block.put_header(:mix_hash, <<0::256>>)
-      |> Block.put_header(:nonce, <<0x42::64>>)
+      |> put_header(:mix_hash, <<0::256>>)
+      |> put_header(:nonce, <<0x42::64>>)
 
     block = %{block | block_hash: Block.hash(block)}
 
@@ -379,7 +380,7 @@ defmodule Blockchain.BlockTest do
 
       actual_accounts =
         block
-        |> Block.get_state(MerklePatriciaTree.Trie.new(db))
+        |> BlockGetter.get_state(MerklePatriciaTree.Trie.new(db))
         |> Account.get_accounts(addresses)
 
       expected_accounts = [
@@ -396,5 +397,10 @@ defmodule Blockchain.BlockTest do
 
       assert actual_accounts == expected_accounts
     end
+  end
+
+  defp put_header(block, key, value) do
+    new_header = Map.put(block.header, key, value)
+    %{block | header: new_header}
   end
 end

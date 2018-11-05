@@ -8,7 +8,6 @@ defmodule Blockchain.Blocktree do
   end
 
   alias Blockchain.{Block, Chain, Genesis}
-  alias MerklePatriciaTree.DB
   alias MerklePatriciaTree.TrieStorage
 
   defstruct best_block: nil
@@ -32,7 +31,7 @@ defmodule Blockchain.Blocktree do
   3. If valid, put the block into our DB
   """
   @spec verify_and_add_block(t, Chain.t(), Block.t(), TrieStorage.t(), boolean(), binary() | nil) ::
-          {:ok, {t, TrieStorage.t()}} | :parent_not_found | {:invalid, [atom()]}
+          {:ok, {t, TrieStorage.t()}} | {:invalid, [atom()]}
   def verify_and_add_block(
         blocktree,
         chain,
@@ -86,8 +85,7 @@ defmodule Blockchain.Blocktree do
   Note: we load the block by the block_hash, instead of taking it
         directly from the tree.
   """
-  @spec get_best_block(t(), Chain.t(), TrieStorage.t()) ::
-          {:ok, {Block.t(), TrieStorage.t()}} | {:error, any()}
+  @spec get_best_block(t(), Chain.t(), TrieStorage.t()) :: {:ok, {Block.t(), TrieStorage.t()}}
   def get_best_block(blocktree, chain, trie) do
     if block = blocktree.best_block do
       {:ok, {block, trie}}

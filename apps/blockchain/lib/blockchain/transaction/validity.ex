@@ -6,6 +6,7 @@ defmodule Blockchain.Transaction.Validity do
 
   alias Block.Header
   alias Blockchain.{Account, Chain, Transaction}
+  alias EVM.Configuration
   alias MerklePatriciaTree.Trie
 
   @doc """
@@ -63,7 +64,8 @@ defmodule Blockchain.Transaction.Validity do
     end
   end
 
-  @spec check_intristic_gas([atom()], Transaction.t(), EVM.Configuration.t()) :: [atom()]
+  @spec check_intristic_gas([], Transaction.t(), Configuration.t()) ::
+          [] | [:insufficient_intrinsic_gas]
   defp check_intristic_gas(errors, transaction, config) do
     intrinsic_gas_cost = Transaction.intrinsic_gas_cost(transaction, config)
 
@@ -74,7 +76,11 @@ defmodule Blockchain.Transaction.Validity do
     end
   end
 
-  @spec check_balance([atom()], Transaction.t(), Account.t()) :: [atom()]
+  @spec check_balance(
+          [:insufficient_intrinsic_gas | :nonce_mismatch],
+          Transaction.t(),
+          Account.t()
+        ) :: [:insufficient_balance | :insufficient_intrinsic_gas | :nonce_mismatch]
   defp check_balance(errors, transaction, account) do
     value = transaction.gas_limit * transaction.gas_price + transaction.value
 

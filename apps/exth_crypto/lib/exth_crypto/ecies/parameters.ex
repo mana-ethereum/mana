@@ -7,6 +7,10 @@ defmodule ExthCrypto.ECIES.Parameters do
   * ECIES using AES256 and HMAC-SHA-384-48
   * ECIES using AES256 and HMAC-SHA-512-64
   """
+  alias ExthCrypto.AES
+  alias ExthCrypto.Cipher
+  alias ExthCrypto.Hash
+  alias ExthCrypto.Hash.SHA
 
   defstruct mac: nil,
             hasher: nil,
@@ -14,9 +18,9 @@ defmodule ExthCrypto.ECIES.Parameters do
             key_len: nil
 
   @type t :: %__MODULE__{
-          mac: :crypto.hash_algorithms(),
-          hasher: ExthCrypto.Hash.hash_type(),
-          cipher: ExthCrypto.Cipher.cipher(),
+          mac: Hash.hash_algorithm(),
+          hasher: Hash.hash_type(),
+          cipher: Cipher.cipher(),
           key_len: integer()
         }
 
@@ -28,8 +32,8 @@ defmodule ExthCrypto.ECIES.Parameters do
   def ecies_aes128_sha256 do
     %__MODULE__{
       mac: :sha256,
-      hasher: {&ExthCrypto.Hash.SHA.sha256/1, nil, 32},
-      cipher: {ExthCrypto.AES, ExthCrypto.AES.block_size(), :ctr},
+      hasher: {&SHA.sha256/1, nil, 32},
+      cipher: {AES, AES.block_size(), :ctr},
       key_len: 16
     }
   end
@@ -42,8 +46,8 @@ defmodule ExthCrypto.ECIES.Parameters do
   def ecies_aes256_sha256 do
     %__MODULE__{
       mac: :sha256,
-      hasher: {&ExthCrypto.Hash.SHA.sha256/1, nil, 32},
-      cipher: {ExthCrypto.AES, ExthCrypto.AES.block_size(), :ctr},
+      hasher: {&SHA.sha256/1, nil, 32},
+      cipher: {AES, AES.block_size(), :ctr},
       key_len: 32
     }
   end
@@ -56,8 +60,8 @@ defmodule ExthCrypto.ECIES.Parameters do
   def ecies_aes256_sha384 do
     %__MODULE__{
       mac: :sha256,
-      hasher: {&ExthCrypto.Hash.SHA.sha384/1, nil, 48},
-      cipher: {ExthCrypto.AES, ExthCrypto.AES.block_size(), :ctr},
+      hasher: {&SHA.sha384/1, nil, 48},
+      cipher: {AES, AES.block_size(), :ctr},
       key_len: 32
     }
   end
@@ -70,8 +74,8 @@ defmodule ExthCrypto.ECIES.Parameters do
   def ecies_aes256_sha512 do
     %__MODULE__{
       mac: :sha256,
-      hasher: {&ExthCrypto.Hash.SHA.sha512/1, nil, 64},
-      cipher: {ExthCrypto.AES, ExthCrypto.AES.block_size(), :ctr},
+      hasher: {&SHA.sha512/1, nil, 64},
+      cipher: {AES, AES.block_size(), :ctr},
       key_len: 32
     }
   end

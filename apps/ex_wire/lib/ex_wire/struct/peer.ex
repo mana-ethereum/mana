@@ -13,8 +13,8 @@ defmodule ExWire.Struct.Peer do
   alias ExWire.Crypto
 
   @type t :: %__MODULE__{
-          host: String.t(),
-          port: integer(),
+          host: :inet.socket_address() | :inet.hostname(),
+          port: :inet.port_number(),
           remote_id: String.t(),
           ident: String.t()
         }

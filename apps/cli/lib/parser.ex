@@ -129,7 +129,7 @@ defmodule CLI.Parser do
     end
   end
 
-  @spec get_infura_url(atom()) :: String.t()
+  @spec get_infura_url(:foundation | :ropsten) :: String.t()
   defp get_infura_url(chain_id) do
     "https://#{Atom.to_string(chain_id)}.infura.io"
   end

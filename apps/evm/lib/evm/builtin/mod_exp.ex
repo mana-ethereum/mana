@@ -88,7 +88,8 @@ defmodule EVM.Builtin.ModExp do
     MathHelper.floor(x * x / 16) + 480 * x - 199_680
   end
 
-  @spec e_length_prime(integer(), integer(), {integer(), binary()}) :: integer()
+  @spec e_length_prime(non_neg_integer(), non_neg_integer(), {non_neg_integer(), binary()}) ::
+          integer()
   defp e_length_prime(e_length, e, _) when e == 0 and e_length <= 32, do: 0
 
   defp e_length_prime(e_length, e, _) when e != 0 and e_length <= 32, do: highest_bit(e)
@@ -105,7 +106,7 @@ defmodule EVM.Builtin.ModExp do
     end
   end
 
-  @spec highest_bit(integer()) :: integer()
+  @spec highest_bit(non_neg_integer()) :: integer()
   defp highest_bit(number) do
     res =
       number

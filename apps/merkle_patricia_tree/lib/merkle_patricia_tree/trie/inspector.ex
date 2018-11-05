@@ -138,7 +138,7 @@ defmodule MerklePatriciaTree.Trie.Inspector do
   Helper function to print an instruction message.
   """
   def inspect(msg, prefix) do
-    Logger.debug(inspect([prefix, ":", msg]))
+    _ = Logger.debug(inspect([prefix, ":", msg]))
 
     msg
   end

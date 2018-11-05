@@ -126,6 +126,8 @@ defmodule EVM.Gas do
   @w_high_instr [:jumpi]
   @call_operations [:call, :callcode, :delegatecall, :staticcall]
 
+  @type g_codedeposit :: unquote(@g_codedeposit)
+  @type g_callstipend :: unquote(@g_callstipend)
   @doc """
   Returns the cost to execute the given a cycle of the VM. This is defined
   in Appenix H of the Yellow Paper, Eq.(294) and is denoted `C`.
@@ -499,12 +501,12 @@ defmodule EVM.Gas do
     end
   end
 
-  @spec callstipend() :: integer()
+  @spec callstipend() :: g_callstipend()
   def callstipend do
     @g_callstipend
   end
 
-  @spec codedeposit_cost() :: integer()
+  @spec codedeposit_cost() :: g_codedeposit()
   def codedeposit_cost do
     @g_codedeposit
   end

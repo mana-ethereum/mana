@@ -62,7 +62,7 @@ defmodule ExthCrypto.Math do
       iex> ExthCrypto.Math.hex_to_int("0x01020A0d")
       16910861
   """
-  @spec hex_to_int(String.t()) :: integer()
+  @spec hex_to_int(String.t()) :: non_neg_integer()
   def hex_to_int(s) do
     s
     |> hex_to_bin()
@@ -91,7 +91,7 @@ defmodule ExthCrypto.Math do
       iex> ExthCrypto.Math.pad(<<>>, 0)
       <<>>
   """
-  @spec pad(binary(), integer()) :: binary()
+  @spec pad(binary(), non_neg_integer()) :: binary()
   def pad(bin, length) do
     padding_bits = (length - byte_size(bin)) * 8
 
@@ -120,7 +120,7 @@ defmodule ExthCrypto.Math do
       iex> ExthCrypto.Math.nonce(32) == ExthCrypto.Math.nonce(32)
       false
   """
-  @spec nonce(integer()) :: binary()
+  @spec nonce(non_neg_integer()) :: binary()
   def nonce(nonce_size) do
     :crypto.strong_rand_bytes(nonce_size)
   end

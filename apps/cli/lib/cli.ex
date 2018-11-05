@@ -26,29 +26,30 @@ defmodule CLI do
 
     blocktree = State.load_tree(db)
 
-    with {:ok, {current_block, updated_trie}} <- Blocktree.get_best_block(blocktree, chain, trie) do
-      with {:ok, highest_known_block_number} <-
-             block_provider.get_block_number(block_provider_state) do
-        # Note: we load the highest block number right now just
-        # to track our progress.
+    {:ok, {current_block, updated_trie}} = Blocktree.get_best_block(blocktree, chain, trie)
 
+    with {:ok, highest_known_block_number} <-
+           block_provider.get_block_number(block_provider_state) do
+      # Note: we load the highest block number right now just
+      # to track our progress.
+
+      :ok =
         Logger.info(fn ->
           "Starting sync at block ##{current_block.header.number} of #{highest_known_block_number} total blocks"
         end)
 
-        # TODO: Use highest known block as limit?
+      # TODO: Use highest known block as limit?
 
-        Sync.sync_new_blocks(
-          block_provider,
-          block_provider_state,
-          updated_trie,
-          chain,
-          blocktree,
-          current_block.header.number + 1,
-          :infinite,
-          highest_known_block_number
-        )
-      end
+      Sync.sync_new_blocks(
+        block_provider,
+        block_provider_state,
+        updated_trie,
+        chain,
+        blocktree,
+        current_block.header.number + 1,
+        :infinite,
+        highest_known_block_number
+      )
     end
   end
 end
