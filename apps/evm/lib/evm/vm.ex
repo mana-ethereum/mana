@@ -36,6 +36,7 @@ defmodule EVM.VM do
   def run(gas, exec_env) do
     machine_state = %MachineState{gas: gas}
     sub_state = %SubState{}
+    exec_env = ExecEnv.set_valid_jump_destinations(exec_env)
 
     {n_machine_state, n_sub_state, n_exec_env, output} = exec(machine_state, sub_state, exec_env)
 

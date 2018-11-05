@@ -6,11 +6,12 @@ defmodule EVM.MachineState do
   This is most often seen as µ in the Yellow Paper.
   """
 
-  alias EVM.{Gas, MachineState, ProgramCounter, Stack}
   alias EVM.Operation.Metadata
+  alias EVM.{Gas, MachineState, ProgramCounter, Stack}
 
   defstruct gas: nil,
             program_counter: 0,
+            valid_jump_destinations: [],
             memory: <<>>,
             active_words: 0,
             previously_active_words: 0,
