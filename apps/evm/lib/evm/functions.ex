@@ -78,16 +78,16 @@ defmodule EVM.Functions do
       {:halt, :invalid_jump_destination}
 
       iex> EVM.Functions.is_exception_halt?(%EVM.MachineState{program_counter: 0, gas: 0xffff, stack: [1]}, %EVM.ExecEnv{machine_code: <<EVM.Operation.encode(:jump), EVM.Operation.encode(:jumpdest)>>})
-      :continue
+      {:continue, {:original, 8}}
 
       iex> EVM.Functions.is_exception_halt?(%EVM.MachineState{program_counter: 0, gas: 0xffff, stack: [1, 5]}, %EVM.ExecEnv{machine_code: <<EVM.Operation.encode(:jumpi)>>})
       {:halt, :invalid_jump_destination}
 
       iex> EVM.Functions.is_exception_halt?(%EVM.MachineState{program_counter: 0, gas: 0xffff, stack: [1, 5]}, %EVM.ExecEnv{machine_code: <<EVM.Operation.encode(:jumpi), EVM.Operation.encode(:jumpdest)>>})
-      :continue
+      {:continue, {:original, 10}}
 
       iex> EVM.Functions.is_exception_halt?(%EVM.MachineState{program_counter: 0, gas: 0xffff, stack: (for _ <- 1..1024, do: 0x0)}, %EVM.ExecEnv{machine_code: <<EVM.Operation.encode(:stop)>>})
-      :continue
+      {:continue, {:original, 0}}
 
       iex> EVM.Functions.is_exception_halt?(%EVM.MachineState{program_counter: 0, gas: 0xffff, stack: (for _ <- 1..1024, do: 0x0)}, %EVM.ExecEnv{machine_code: <<EVM.Operation.encode(:push1)>>})
       {:halt, :stack_overflow}
@@ -110,33 +110,39 @@ defmodule EVM.Functions do
         Operation.inputs(operation_metadata, machine_state)
       end
 
-    cond do
-      is_invalid_instruction?(operation_metadata) ->
-        {:halt, :invalid_instruction}
+    halt_status =
+      cond do
+        is_invalid_instruction?(operation_metadata) ->
+          {:halt, :invalid_instruction}
 
-      is_nil(input_count) ->
-        {:halt, :undefined_instruction}
+        is_nil(input_count) ->
+          {:halt, :undefined_instruction}
 
-      length(machine_state.stack) < input_count ->
-        {:halt, :stack_underflow}
+        length(machine_state.stack) < input_count ->
+          {:halt, :stack_underflow}
 
-      not_enough_gas?(machine_state, exec_env) ->
-        {:halt, :out_of_gas}
+        Stack.length(machine_state.stack) - input_count + output_count > @max_stack ->
+          {:halt, :stack_overflow}
 
-      Stack.length(machine_state.stack) - input_count + output_count > @max_stack ->
-        {:halt, :stack_overflow}
+        is_invalid_jump_destination?(operation_metadata, inputs, exec_env.machine_code) ->
+          {:halt, :invalid_jump_destination}
 
-      is_invalid_jump_destination?(operation_metadata, inputs, exec_env.machine_code) ->
-        {:halt, :invalid_jump_destination}
+        exec_env.static && static_state_modification?(operation_metadata.sym, inputs) ->
+          {:halt, :static_state_modification}
 
-      exec_env.static && static_state_modification?(operation_metadata.sym, inputs) ->
-        {:halt, :static_state_modification}
+        out_of_memory_bounds?(operation_metadata.sym, machine_state, inputs) ->
+          {:halt, :out_of_memory_bounds}
 
-      out_of_memory_bounds?(operation_metadata.sym, machine_state, inputs) ->
-        {:halt, :out_of_memory_bounds}
+        true ->
+          :continue
+      end
 
-      true ->
-        :continue
+    case halt_status do
+      :continue ->
+        not_enough_gas?(machine_state, exec_env)
+
+      other ->
+        other
     end
   end
 
@@ -186,11 +192,22 @@ defmodule EVM.Functions do
     end
   end
 
-  @spec not_enough_gas?(MachineState.t(), ExecEnv.t()) :: boolean()
+  @spec not_enough_gas?(MachineState.t(), ExecEnv.t()) ::
+          {:halt, :out_of_gas} | {:continue, Gas.cost_with_status()}
   defp not_enough_gas?(machine_state, exec_env) do
-    cost = Gas.cost(machine_state, exec_env)
+    cost_with_status = Gas.cost_with_status(machine_state, exec_env)
 
-    cost > machine_state.gas
+    cost =
+      case cost_with_status do
+        {:original, cost} -> cost
+        {:changed, value, _} -> value
+      end
+
+    if cost > machine_state.gas do
+      {:halt, :out_of_gas}
+    else
+      {:continue, cost_with_status}
+    end
   end
 
   @spec out_of_memory_bounds?(atom(), MachineState.t(), [EVM.val()]) :: boolean()
