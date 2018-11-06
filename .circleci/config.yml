@@ -446,7 +446,7 @@ jobs:
           paths:
             - plts
 
-      - run: mix dialyzer --halt-exit-status
+      - run: mix dialyzer --format short --halt-exit-status
 
 
   check_formatted:

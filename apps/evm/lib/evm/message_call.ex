@@ -22,6 +22,9 @@ defmodule EVM.MessageCall do
     :type
   ]
 
+  alias EVM.Configuration
+  alias EVM.ExecEnv
+
   @type out_size :: integer()
   @type out_offset :: integer()
   @type output_params :: {out_offset(), out_size()}
@@ -295,42 +298,22 @@ defmodule EVM.MessageCall do
       iex> EVM.MessageCall.get_run_function(<<6::160>>, EVM.Configuration.Frontier.new())
       &EVM.VM.run/2
   """
-  @spec get_run_function(EVM.address(), EVM.Configuration.t()) ::
-          (EVM.Gas.t(), EVM.ExecEnv.t() ->
-             {EVM.state(), EVM.Gas.t(), EVM.SubState.t(), EVM.VM.output()})
-  # credo:disable-for-next-line
+  @spec get_run_function(binary(), Configuration.t()) :: (any(), any() -> any())
   def get_run_function(code_owner, config) do
     address = :binary.decode_unsigned(code_owner)
-
-    cond do
-      address == 1 ->
-        &Builtin.run_ecrec/2
-
-      address == 2 ->
-        &Builtin.run_sha256/2
-
-      address == 3 ->
-        &Builtin.run_rip160/2
-
-      address == 4 ->
-        &Builtin.run_id/2
-
-      address == 5 && config.has_mod_exp_builtin ->
-        &Builtin.mod_exp/2
-
-      address == 6 && config.has_ec_add_builtin ->
-        &Builtin.ec_add/2
-
-      address == 7 && config.has_ec_mult_builtin ->
-        &Builtin.ec_mult/2
-
-      address == 8 && config.has_ec_pairing_builtin ->
-        &Builtin.ec_pairing/2
-
-      true ->
-        &VM.run/2
-    end
+    do_get_run_function(address, config)
   end
+
+  @spec do_get_run_function(non_neg_integer(), Configuration.t()) :: (any(), any() -> any())
+  defp do_get_run_function(1, _), do: &Builtin.run_ecrec/2
+  defp do_get_run_function(2, _), do: &Builtin.run_sha256/2
+  defp do_get_run_function(3, _), do: &Builtin.run_rip160/2
+  defp do_get_run_function(4, _), do: &Builtin.run_id/2
+  defp do_get_run_function(5, %{has_mod_exp_builtin: true}), do: &Builtin.mod_exp/2
+  defp do_get_run_function(6, %{has_ec_add_builtin: true}), do: &Builtin.ec_add/2
+  defp do_get_run_function(7, %{has_ec_mult_builtin: true}), do: &Builtin.ec_mult/2
+  defp do_get_run_function(8, %{has_ec_pairing_builtin: true}), do: &Builtin.ec_pairing/2
+  defp do_get_run_function(_, _), do: &VM.run/2
 
   defp failed_call(message_call, remaining_gas \\ 0) do
     updated_machine_state =

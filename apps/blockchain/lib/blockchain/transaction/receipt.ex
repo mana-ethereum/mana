@@ -22,6 +22,9 @@ defmodule Blockchain.Transaction.Receipt do
    - _Rb_: the *bloom filter* composed from information in those logs
 
    - _Rz_: the status code of the transaction.
+
+   Update:
+   Receipts contain root hash before Byzantium and 0 (or 1) after as per https://github.com/ethereum/EIPs/blob/master/EIPS/eip-658.md
   """
 
   # Defined in Eq.(20)
@@ -32,15 +35,15 @@ defmodule Blockchain.Transaction.Receipt do
 
   # Types defined in Eq.(22) and Eq.(23)
   @type t :: %__MODULE__{
-          state: EVM.trie_root(),
+          state: state,
           # Defined in Eq.(21)
           cumulative_gas: EVM.Gas.t(),
           # Defined in Eq.(26)
           bloom_filter: binary(),
           logs: EVM.SubState.logs()
         }
-
-  @spec new(EVM.trie_root(), EVM.Gas.t(), EVM.SubState.logs()) :: t()
+  @type state :: EVM.trie_root() | 0 | 1
+  @spec new(state, EVM.Gas.t(), EVM.SubState.logs()) :: t()
   def new(state_root, gas_used, logs) do
     bloom_filter = Bloom.from_logs(logs)
 

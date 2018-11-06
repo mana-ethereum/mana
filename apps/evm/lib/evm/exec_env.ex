@@ -41,17 +41,17 @@ defmodule EVM.ExecEnv do
   - I_H (via a behaviour): block_header info
   """
   @type t :: %__MODULE__{
-          address: EVM.address(),
-          originator: EVM.address(),
-          gas_price: EVM.Gas.gas_price(),
-          data: binary(),
-          sender: EVM.address(),
-          value_in_wei: EVM.Wei.t(),
-          machine_code: EVM.MachineCode.t(),
-          valid_jump_destinations: list(non_neg_integer()),
+          address: EVM.address() | nil,
+          originator: EVM.address() | nil,
+          gas_price: EVM.Gas.gas_price() | nil,
+          data: binary() | nil,
+          sender: EVM.address() | nil,
+          value_in_wei: EVM.Wei.t() | nil,
+          machine_code: EVM.MachineCode.t() | nil,
+          valid_jump_destinations: list(non_neg_integer()) | [],
           stack_depth: integer(),
           block_header_info: BlockHeaderInfo.t(),
-          account_repo: AccountRepo.t(),
+          account_repo: AccountRepo.t() | nil,
           config: Configuration.t(),
           static: boolean()
         }
