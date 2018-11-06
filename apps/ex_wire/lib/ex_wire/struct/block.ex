@@ -3,15 +3,21 @@ defmodule ExWire.Struct.Block do
   A struct for storing blocks as they are transported over the Eth Wire Protocol.
   """
 
+  alias Block.Header
+  alias Blockchain.Transaction
+
   defstruct [
-    :transactions_list,
+    :transactions_rlp,
     :transactions,
+    :ommers_rlp,
     :ommers
   ]
 
   @type t :: %__MODULE__{
-          transactions: [Blockchain.Transaction.t()],
-          ommers: [binary()]
+          transactions_rlp: list(binary()),
+          transactions: list(Transaction.t()),
+          ommers_rlp: list(binary()),
+          ommers: list(Header.t())
         }
 
   @doc """
@@ -26,8 +32,8 @@ defmodule ExWire.Struct.Block do
   @spec serialize(t) :: ExRLP.t()
   def serialize(struct) do
     [
-      struct.transactions_list,
-      struct.ommers
+      struct.transactions_rlp,
+      struct.ommers_rlp
     ]
   end
 
@@ -46,18 +52,15 @@ defmodule ExWire.Struct.Block do
   @spec deserialize(ExRLP.t()) :: t
   def deserialize(rlp) do
     [
-      transactions_list,
-      ommers
+      transactions_rlp,
+      ommers_rlp
     ] = rlp
 
     %__MODULE__{
-      transactions_list: transactions_list,
-      transactions:
-        for(
-          transaction_rlp <- transactions_list,
-          do: Blockchain.Transaction.deserialize(transaction_rlp)
-        ),
-      ommers: ommers
+      transactions_rlp: transactions_rlp,
+      transactions: Enum.map(transactions_rlp, &Transaction.deserialize/1),
+      ommers_rlp: ommers_rlp,
+      ommers: Enum.map(ommers_rlp, &Header.deserialize/1)
     }
   end
 end

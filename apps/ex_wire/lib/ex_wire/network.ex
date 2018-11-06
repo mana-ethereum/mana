@@ -1,8 +1,8 @@
 defmodule ExWire.Network do
   @moduledoc """
-  This module will handle the business logic for processing
-  incoming messages from the network. We will, for instance,
-  decide to respond pong to any incoming ping.
+  This module will handle the business logic for processing incoming messages
+  from the network. We will, for instance, decide to respond pong to any
+  incoming ping.
   """
 
   require Logger

@@ -1,6 +1,6 @@
-defmodule CLI.StateTest do
+defmodule Blockchain.StateTest do
   use ExUnit.Case, async: true
-  alias CLI.State
+  alias Blockchain.State
   doctest State
 
   alias Block.Header

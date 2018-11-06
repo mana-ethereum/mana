@@ -25,10 +25,12 @@ defmodule ExWire.Struct.BlockQueue do
   @empty_hash [] |> ExRLP.encode() |> ExthCrypto.Hash.Keccak.kec()
 
   defstruct queue: %{},
-            do_validation: true
+            backlog: %{},
+            do_validation: true,
+            block_numbers: MapSet.new()
 
   @type block_item :: %{
-          commitments: [binary()],
+          commitments: list(binary()),
           block: Block.t(),
           ready: boolean()
         }
@@ -39,7 +41,9 @@ defmodule ExWire.Struct.BlockQueue do
 
   @type t :: %__MODULE__{
           queue: %{integer() => block_map},
-          do_validation: boolean()
+          backlog: %{EVM.hash() => list(Block.t())},
+          do_validation: boolean(),
+          block_numbers: MapSet.t()
         }
 
   @doc """
@@ -69,8 +73,8 @@ defmodule ExWire.Struct.BlockQueue do
           EVM.hash(),
           binary(),
           Chain.t(),
-          MerklePatriciaTree.DB.db()
-        ) :: {t, Blocktree.t(), boolean()}
+          Trie.t()
+        ) :: {t, Blocktree.t(), Trie.t(), boolean()}
   def add_header(
         block_queue = %__MODULE__{queue: queue},
         block_tree,
@@ -78,7 +82,7 @@ defmodule ExWire.Struct.BlockQueue do
         header_hash,
         remote_id,
         chain,
-        db
+        trie
       ) do
     block_map = Map.get(queue, header.number, %{})
 
@@ -104,11 +108,16 @@ defmodule ExWire.Struct.BlockQueue do
            }), false}
       end
 
-    updated_block_queue = %{block_queue | queue: Map.put(queue, header.number, block_map)}
+    updated_block_queue = %{
+      block_queue
+      | queue: Map.put(queue, header.number, block_map),
+        block_numbers: MapSet.put(block_queue.block_numbers, header.number)
+    }
 
-    {block_queue, block_tree} = process_block_queue(updated_block_queue, block_tree, chain, db)
+    {new_block_queue, new_block_tree, new_trie} =
+      process_block_queue(updated_block_queue, block_tree, chain, trie)
 
-    {block_queue, block_tree, should_request_body}
+    {new_block_queue, new_block_tree, new_trie, should_request_body}
   end
 
   @doc """
@@ -131,7 +140,7 @@ defmodule ExWire.Struct.BlockQueue do
       ...>   ommers_hash: <<232, 5, 101, 202, 108, 35, 61, 149, 228, 58, 111, 18, 19, 234, 191, 129, 189, 107, 167, 195, 222, 123, 50, 51, 176, 222, 225, 181, 72, 231, 198, 53>>
       ...> }
       iex> block_struct = %ExWire.Struct.Block{
-      ...>   transactions_list: [[1], [2], [3]],
+      ...>   transactions_rlp: [[1], [2], [3]],
       ...>   transactions: ["trx"],
       ...>   ommers: ["ommers"]
       ...> }
@@ -165,17 +174,17 @@ defmodule ExWire.Struct.BlockQueue do
           BlockStruct.t(),
           Blocktree.t(),
           Chain.t(),
-          MerklePatriciaTree.DB.db()
-        ) :: t
+          Trie.t()
+        ) :: {t, Blocktree.t(), Trie.t()}
   def add_block_struct(
         block_queue = %__MODULE__{queue: queue},
         block_tree,
         block_struct,
         chain,
-        db
+        trie
       ) do
-    transactions_root = get_transactions_root(block_struct.transactions_list)
-    ommers_hash = get_ommers_hash(block_struct.ommers)
+    transactions_root = get_transactions_root(block_struct.transactions_rlp)
+    ommers_hash = get_ommers_hash(block_struct.ommers_rlp)
 
     updated_queue =
       Enum.reduce(queue, queue, fn {number, block_map}, queue ->
@@ -201,7 +210,7 @@ defmodule ExWire.Struct.BlockQueue do
 
     updated_block_queue = %{block_queue | queue: updated_queue}
 
-    process_block_queue(updated_block_queue, block_tree, chain, db)
+    process_block_queue(updated_block_queue, block_tree, chain, trie)
   end
 
   @doc """
@@ -232,49 +241,72 @@ defmodule ExWire.Struct.BlockQueue do
       iex> block_queue.queue
       %{}
   """
-  @spec process_block_queue(t, Blocktree.t(), Chain.t(), MerklePatriciaTree.DB.db()) ::
-          {t, Blocktree.t()}
+  @spec process_block_queue(t, Blocktree.t(), Chain.t(), Trie.t()) :: {t, Blocktree.t(), Trie.t()}
   def process_block_queue(
-        block_queue = %__MODULE__{do_validation: do_validation},
+        block_queue = %__MODULE__{},
         block_tree,
         chain,
-        db
+        trie
       ) do
-    # We can only process the next canonical block
-
+    # First get ready to process blocks
     {remaining_block_queue, blocks} = get_complete_blocks(block_queue)
-    trie = MerklePatriciaTree.Trie.new(db)
 
-    block_tree =
-      Enum.reduce(blocks, block_tree, fn block, block_tree ->
-        case Blocktree.verify_and_add_block(
-               block_tree,
-               chain,
-               block,
-               trie,
-               do_validation
-             ) do
-          :parent_not_found ->
-            _ = Logger.debug("[Block Queue] Failed to verify block due to missing parent")
+    # Then recursively process them
+    do_process_blocks(blocks, remaining_block_queue, block_tree, chain, trie)
+  end
 
-            block_tree
+  @spec do_process_blocks(list(Block.t()), t(), BlockTree.t(), Chain.t(), Trie.t()) ::
+          {t(), BlockTree.t(), Trie.t()}
 
-          {:invalid, reasons} ->
-            _ =
-              Logger.debug(fn ->
-                "[Block Queue] Failed to verify block due to #{inspect(reasons)}"
-              end)
+  defp do_process_blocks([], block_queue, block_tree, _chain, trie),
+    do: {block_queue, block_tree, trie}
 
-            block_tree
+  defp do_process_blocks([block | rest], block_queue, block_tree, chain, trie) do
+    {new_block_tree, new_trie, new_backlog, extra_blocks} =
+      case Blocktree.verify_and_add_block(
+             block_tree,
+             chain,
+             block,
+             trie,
+             block_queue.do_validation
+           ) do
+        {:errors, [:non_genesis_block_requires_parent]} ->
+          # :ok = Logger.debug("[Block Queue] Failed to verify block due to missing parent")
 
-          {:ok, {new_block_tree, _new_trie}} ->
-            _ = Logger.debug("[Block Queue] Verified block and added to new block tree")
+          updated_backlog =
+            Map.update(
+              block_queue.backlog,
+              block.header.parent_hash,
+              [block],
+              fn blocks -> [block | blocks] end
+            )
 
-            new_block_tree
-        end
-      end)
+          {block_tree, trie, updated_backlog, []}
 
-    {remaining_block_queue, block_tree}
+        {:invalid, reasons} ->
+          :ok =
+            Logger.debug(fn ->
+              "[Block Queue] Failed to verify block due to #{inspect(reasons)}"
+            end)
+
+          {block_tree, trie, block_queue.backlog, []}
+
+        {:ok, {new_block_tree, new_trie, block_hash}} ->
+          :ok =
+            Logger.debug(
+              "[Block Queue] Verified block #{block.header.number} (0x#{
+                Base.encode16(block_hash, case: :lower)
+              }) and added to new block tree"
+            )
+
+          {backlogged_blocks, new_backlog} = Map.pop(block_queue.backlog, block_hash, [])
+
+          {new_block_tree, new_trie, new_backlog, backlogged_blocks}
+      end
+
+    new_block_queue = %{block_queue | backlog: new_backlog}
+
+    do_process_blocks(extra_blocks ++ rest, new_block_queue, new_block_tree, chain, new_trie)
   end
 
   @doc """
@@ -413,20 +445,20 @@ defmodule ExWire.Struct.BlockQueue do
   end
 
   @spec get_transactions_root([ExRLP.t()]) :: MerklePatriciaTree.Trie.root_hash()
-  defp get_transactions_root(transactions_list) do
+  defp get_transactions_root(transactions_rlp) do
     # this is a throw-away
     db = MerklePatriciaTree.Test.random_ets_db()
 
     trie =
-      Enum.reduce(transactions_list |> Enum.with_index(), Trie.new(db), fn {trx, i}, trie ->
+      Enum.reduce(transactions_rlp |> Enum.with_index(), Trie.new(db), fn {trx, i}, trie ->
         Trie.update_key(trie, ExRLP.encode(i), ExRLP.encode(trx))
       end)
 
     trie.root_hash
   end
 
-  @spec get_ommers_hash([EVM.hash()]) :: ExthCrypto.Hash.hash()
-  defp get_ommers_hash(ommers) do
-    ommers |> ExRLP.encode() |> ExthCrypto.Hash.Keccak.kec()
+  @spec get_ommers_hash(list(binary())) :: ExthCrypto.Hash.hash()
+  defp get_ommers_hash(ommers_rlp) do
+    ommers_rlp |> ExRLP.encode() |> ExthCrypto.Hash.Keccak.kec()
   end
 end

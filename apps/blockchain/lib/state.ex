@@ -1,6 +1,6 @@
-defmodule CLI.State do
+defmodule Blockchain.State do
   @moduledoc """
-  CLI.State keeps track of local state, e.g. the blockchain
+  Blockchain.State keeps track of local state, e.g. the blockchain
   which we have synced so far.
   """
   require Logger

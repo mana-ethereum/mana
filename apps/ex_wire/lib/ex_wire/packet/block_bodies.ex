@@ -77,6 +77,10 @@ defmodule ExWire.Packet.BlockBodies do
     }
   end
 
+  # @impl true
+  # def describe(%__MODULE__{blocks: blocks}) do
+  # end
+
   @doc """
   Handles a BlockBodies message. This is when we have received
   a given set of blocks back from a peer.

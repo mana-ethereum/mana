@@ -1,7 +1,8 @@
 defmodule ExWire.PeerSupervisor do
   @moduledoc """
   The Peer Supervisor is responsible for maintaining a set of peer TCP
-  connections.
+  connections. Currently this only manages outbound connections, and
+  `TCP.InboundConnectionsSupervisor` manages inbound connections.
   """
   use DynamicSupervisor
 
@@ -20,7 +21,7 @@ defmodule ExWire.PeerSupervisor do
   def start_child(peer_enode_url) do
     {:ok, peer} = ExWire.Struct.Peer.from_uri(peer_enode_url)
 
-    spec = {ExWire.P2P.Server, [:outbound, peer, [{:server, ExWire.Sync}]]}
+    spec = {ExWire.P2P.Server, {:outbound, peer, [{:server, ExWire.Sync}]}}
 
     DynamicSupervisor.start_child(@name, spec)
   end
@@ -35,12 +36,16 @@ defmodule ExWire.PeerSupervisor do
 
     for {_id, child, _type, _modules} <- DynamicSupervisor.which_children(@name) do
       # Children which are being restarted by not have a child_pid at this time.
-      if is_pid(child), do: ExWire.P2P.Server.send_packet(child, packet)
+      if is_pid(child), do: ExWire.P2P.Server.send_packet(child, packet) |> IO.inspect()
     end
   end
 
   @impl true
-  def init(_) do
+  def init(nodes) do
+    Task.start_link(fn ->
+      for node <- nodes, do: start_child(node)
+    end)
+
     DynamicSupervisor.init(strategy: :one_for_one)
   end
 end

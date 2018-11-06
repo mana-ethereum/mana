@@ -196,7 +196,7 @@ defmodule ExWire.Framing.Frame do
 
   @spec padding_size(integer(), integer()) :: integer()
   defp padding_size(given_size, to_size) do
-    to_size - rem(given_size, to_size)
+    rem(to_size - rem(given_size, to_size), to_size)
   end
 
   @spec padding_for(integer(), integer()) :: binary()

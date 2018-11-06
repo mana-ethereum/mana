@@ -12,6 +12,7 @@ defmodule ExWire.Packet.GetBlockHeaders do
   """
 
   alias ExWire.Packet
+  alias ExWire.Packet.BlockHeaders
 
   @behaviour ExWire.Packet
 
@@ -74,10 +75,10 @@ defmodule ExWire.Packet.GetBlockHeaders do
     ] = rlp
 
     %__MODULE__{
-      block_identifier: block_identifier,
-      max_headers: max_headers,
-      skip: skip,
-      reverse: reverse == 1
+      block_identifier: :binary.decode_unsigned(block_identifier),
+      max_headers: :binary.decode_unsigned(max_headers),
+      skip: :binary.decode_unsigned(skip),
+      reverse: :binary.decode_unsigned(reverse) == 1
     }
   end
 
@@ -93,6 +94,9 @@ defmodule ExWire.Packet.GetBlockHeaders do
   """
   @spec handle(ExWire.Packet.packet()) :: ExWire.Packet.handle_response()
   def handle(_packet = %__MODULE__{}) do
-    :ok
+    {:send,
+     %BlockHeaders{
+       headers: []
+     }}
   end
 end

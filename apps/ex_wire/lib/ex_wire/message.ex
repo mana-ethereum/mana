@@ -1,8 +1,9 @@
 defmodule ExWire.Message do
   @moduledoc """
-  Defines a behavior for messages so that they can be
-  easily encoded and decoded.
+  Defines a behavior for messages so that they can be easily encoded and
+  decoded for transfer from and to the wire.
   """
+
   alias ExWire.Crypto
   alias ExWire.Message.{FindNeighbours, Neighbours, Ping, Pong}
   alias ExWire.Struct.Endpoint

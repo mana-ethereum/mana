@@ -30,9 +30,13 @@ defmodule Cli.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:ethereumex, "~> 0.5.0"},
+      # Umbrella deps
       {:blockchain, in_umbrella: true},
+      {:ex_wire, in_umbrella: true, runtime: false},
       {:merkle_patricia_tree, in_umbrella: true},
+
+      # External deps
+      {:ethereumex, "~> 0.5.0"},
       {:progress_bar, "~> 1.6.1"}
     ]
   end

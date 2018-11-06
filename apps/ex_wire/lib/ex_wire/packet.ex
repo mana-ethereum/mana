@@ -13,6 +13,7 @@ defmodule ExWire.Packet do
 
   @callback serialize(packet) :: ExRLP.t()
   @callback deserialize(ExRLP.t()) :: packet
+  # @callback summary(packet) :: String.t()
 
   @type handle_response ::
           :ok | :activate | :peer_disconnect | {:disconnect, atom()} | {:send, struct()}

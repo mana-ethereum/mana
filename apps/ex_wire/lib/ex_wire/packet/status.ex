@@ -153,7 +153,7 @@ defmodule ExWire.Packet.Status do
         do: _ = Logger.debug(fn -> "[Packet] Got Status: #{inspect(packet)}" end)
 
     if packet.protocol_version == ExWire.Config.protocol_version() do
-      :ok
+      {:send, new(packet)}
     else
       # TODO: We need to follow up on disconnection packets with disconnection ourselves
       _ =

@@ -79,7 +79,7 @@ defmodule ExWire.Handler do
 
       # TODO: Add a `no_response` test case
   """
-  @spec dispatch(Params.t(), Keyword.t()) :: handler_response
+  @spec dispatch(Params.t(), Keyword.t()) :: handler_response()
   def dispatch(params, options \\ []) do
     case @handlers[params.type] do
       nil ->

@@ -17,9 +17,12 @@ defmodule ExWire.P2P.Server do
 
   require Logger
 
-  alias ExWire.{P2P, TCP}
+  alias ExWire.{P2P, TCP, Packet}
   alias ExWire.P2P.Inbound
   alias ExWire.P2P.Outbound
+  alias ExWire.Struct.Peer
+
+  @type subscription() :: {module(), atom(), list()} | {:server, pid()}
 
   @doc """
   Child spec definition to be used by a supervisor when wanting to supervise an
@@ -27,10 +30,12 @@ defmodule ExWire.P2P.Server do
 
   We spawn a temporary child process for each inbound connection.
   """
-  def child_spec([:inbound, socket]) do
+  @spec child_spec({:inbound, TCP.socket()} | {:outbound, Peer.t(), list(subscription())}) ::
+          Supervisor.child_spec()
+  def child_spec({:inbound, socket}) do
     %{
       id: Inbound,
-      start: {__MODULE__, :start_link, [{:inbound, socket}]},
+      start: {__MODULE__, :start_link, [:inbound, socket]},
       restart: :temporary
     }
   end
@@ -41,7 +46,7 @@ defmodule ExWire.P2P.Server do
 
   We spawn a temporary child process for each outbound connection.
   """
-  def child_spec([:outbound, peer, subscribers]) do
+  def child_spec({:outbound, peer, subscribers}) do
     %{
       id: Outbound,
       start: {__MODULE__, :start_link, [:outbound, peer, subscribers]},
@@ -52,7 +57,8 @@ defmodule ExWire.P2P.Server do
   @doc """
   Starts an outbound or inbound peer to peer connection.
   """
-  def start_link(:outbound, peer, subscribers \\ []) do
+  @spec start_link(:outbound, Peer.t(), list(subscription())) :: GenServer.on_start()
+  def start_link(:outbound, peer, subscribers) do
     GenServer.start_link(__MODULE__, %{
       is_outbound: true,
       peer: peer,
@@ -60,7 +66,8 @@ defmodule ExWire.P2P.Server do
     })
   end
 
-  def start_link({:inbound, socket}) do
+  @spec start_link(:inbound, TCP.socket()) :: GenServer.on_start()
+  def start_link(:inbound, socket) do
     GenServer.start_link(__MODULE__, %{
       is_outbound: false,
       socket: socket
@@ -70,7 +77,7 @@ defmodule ExWire.P2P.Server do
   @doc """
   Client function for sending a packet over to a peer.
   """
-  @spec send_packet(pid(), struct()) :: :ok
+  @spec send_packet(pid(), Packet.packet()) :: :ok
   def send_packet(pid, packet) do
     GenServer.cast(pid, {:send, %{packet: packet}})
   end
@@ -82,10 +89,10 @@ defmodule ExWire.P2P.Server do
 
   1. Provide a `{:server, server_pid}`, and we will send a packet to that
   process with the contents `{:packet, packet, peer}` for each received packet.
-  2. Provde a `{module, function, arguments}`, and we will apply that function
+  2. Provide a `{module, function, arguments}`, and we will apply that function
   with the provided arguments along with the packet.
   """
-  @spec subscribe(pid(), {module(), atom(), list()} | {:server, pid()}) :: :ok
+  @spec subscribe(pid(), subscription()) :: :ok
   def subscribe(pid, subscription) do
     GenServer.call(pid, {:subscribe, subscription})
   end
@@ -93,6 +100,7 @@ defmodule ExWire.P2P.Server do
   @doc """
   Client function to disconnect from tcp connection
   """
+  @spec disconnect(pid()) :: :ok
   def disconnect(pid) do
     GenServer.cast(pid, :disconnect)
   end
@@ -100,7 +108,8 @@ defmodule ExWire.P2P.Server do
   @doc """
   Initialize by opening up a `gen_tcp` connection to given host and port.
   """
-  def init(%{is_outbound: true, peer: peer}) do
+  @spec init(map()) :: {:ok, Connection.t()}
+  def init(opts = %{is_outbound: true, peer: peer}) do
     {:ok, socket} = TCP.connect(peer.host, peer.port)
 
     _ =
@@ -108,13 +117,19 @@ defmodule ExWire.P2P.Server do
         "[Network] [#{peer}] Established outbound connection with #{peer.host}."
       end)
 
-    state = P2P.new_outbound_connection(socket, peer)
+    state =
+      socket
+      |> P2P.new_outbound_connection(peer)
+      |> Map.put(:subscribers, Map.get(opts, :subscribers, []))
 
     {:ok, state}
   end
 
-  def init(%{is_outbound: false, socket: socket}) do
-    state = P2P.new_inbound_connection(socket)
+  def init(opts = %{is_outbound: false, socket: socket}) do
+    state =
+      socket
+      |> P2P.new_inbound_connection()
+      |> Map.put(:subscribers, Map.get(opts, :subscribers, []))
 
     {:ok, state}
   end
@@ -125,25 +140,17 @@ defmodule ExWire.P2P.Server do
   or `{:server, server_pid}` for a GenServer, in which case we'll send a message
   `{:packet, packet, peer}`.
   """
-  def handle_call({:subscribe, {_module, _function, _args} = mfa}, _from, state) do
-    updated_state =
-      Map.update(state, :subscribers, [mfa], fn subscribers -> [mfa | subscribers] end)
+  def handle_call({:subscribe, subscription}, _from, state) do
+    {:ok, new_state} = handle_subscribe(subscription, state)
 
-    {:reply, :ok, updated_state}
-  end
-
-  def handle_call({:subscribe, {:server, _server_pid} = server}, _from, state) do
-    updated_state =
-      Map.update(state, :subscribers, [server], fn subscribers -> [server | subscribers] end)
-
-    {:reply, :ok, updated_state}
+    {:reply, :ok, new_state}
   end
 
   @doc """
   Handle inbound communication from a peer node via tcp.
   """
   def handle_info({:tcp, _socket, data}, state) do
-    new_state = P2P.handle_message(state, data)
+    {:ok, new_state} = handle_socket_message(data, state)
 
     {:noreply, new_state}
   end
@@ -152,30 +159,73 @@ defmodule ExWire.P2P.Server do
   Function triggered when tcp closes the connection
   """
   def handle_info({:tcp_closed, _socket}, state) do
-    peer = Map.get(state, :peer, :unknown)
+    {:ok, new_state} = handle_socket_close(state)
 
-    :ok = Logger.warn("[Network] [#{peer}] Peer closed connection")
-
-    Process.exit(self(), :normal)
-
-    {:noreply, state}
+    {:noreply, new_state}
   end
 
   @doc """
   Server function for sending packets to a peer.
   """
   def handle_cast({:send, %{packet: packet}}, state) do
-    updated_state = P2P.send_packet(state, packet)
+    {:ok, new_state} = handle_send(packet, state)
 
-    {:noreply, updated_state}
+    {:noreply, new_state}
   end
 
   @doc """
   Server function handling disconnecting from tcp connection.
   """
   def handle_cast(:disconnect, state = %{socket: socket}) do
-    TCP.shutdown(socket)
+    {:ok, new_state} = handle_disconnection(socket, state)
 
-    {:noreply, Map.delete(state, :socket)}
+    {:noreply, new_state}
+  end
+
+  @spec handle_subscribe(subscription(), Connection.t()) :: {:ok, Connection.t()}
+  defp handle_subscribe({_module, _function, _args} = mfa, state) do
+    new_state = Map.update(state, :subscribers, [mfa], fn subscribers -> [mfa | subscribers] end)
+
+    {:ok, new_state}
+  end
+
+  defp handle_subscribe({:server, _server_pid} = server, state) do
+    new_state =
+      Map.update(state, :subscribers, [server], fn subscribers -> [server | subscribers] end)
+
+    {:ok, new_state}
+  end
+
+  @spec handle_socket_message(binary(), Connection.t()) :: {:ok, Connection.t()}
+  defp handle_socket_message(data, state) do
+    new_state = P2P.handle_message(state, data)
+
+    {:ok, new_state}
+  end
+
+  @spec handle_socket_close(Connection.t()) :: {:ok, Connection.t()}
+  defp handle_socket_close(state) do
+    peer = Map.get(state, :peer, :unknown)
+
+    Logger.warn("[Network] [#{peer}] Peer closed connection")
+
+    Process.exit(self(), :normal)
+
+    {:ok, state}
+  end
+
+  @spec handle_send(Packet.packet(), Connection.t()) :: {:ok, Connection.t()}
+  defp handle_send(packet, state) do
+    new_state = P2P.send_packet(state, packet)
+
+    {:ok, new_state}
+  end
+
+  @spec handle_disconnection(TCP.socket(), Connection.t()) :: {:ok, Connection.t()}
+  defp handle_disconnection(socket, state) do
+    :ok = TCP.shutdown(socket)
+    new_state = Map.delete(state, :socket)
+
+    {:ok, new_state}
   end
 end

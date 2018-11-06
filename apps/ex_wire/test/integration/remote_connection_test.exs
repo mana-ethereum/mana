@@ -5,8 +5,7 @@ defmodule ExWire.RemoteConnectionTest do
 
   Before starting, you may want to run a Parity or Geth node.
 
-  E.g. `cargo run -- --chain=ropsten --bootnodes=`
-  E.g. `cargo run -- --chain=ropsten --bootnodes= --logging network,discovery=trace`
+  E.g. `cargo run -- --chain=ropsten --bootnodes= --no-discovery --reserved-peers=/dev/null --logging network,discovery=trace `
   E.g. `build/bin/geth --testnet --bootnodes= --port 31313 --verbosity 6`
 
   If you do set, set the `REMOTE_TEST_PEER` environment variable to the full `enode://...` address.
@@ -149,15 +148,7 @@ defmodule ExWire.RemoteConnectionTest do
          total_difficulty: total_difficulty,
          genesis_hash: genesis_hash
        }} ->
-        # Send a simple status message
-        P2P.send_packet(client_pid, %Packet.Status{
-          protocol_version: ExWire.Config.protocol_version(),
-          network_id: ExWire.Config.network_id(),
-          total_difficulty: total_difficulty,
-          best_hash: genesis_hash,
-          genesis_hash: genesis_hash
-        })
-
+        # Request block headers
         P2P.send_packet(client_pid, %ExWire.Packet.GetBlockHeaders{
           block_identifier: genesis_hash,
           max_headers: 1,
@@ -173,7 +164,7 @@ defmodule ExWire.RemoteConnectionTest do
 
         receive_status(client_pid)
     after
-      3_000 ->
+      10_000 ->
         raise "Expected status, but did not receive before timeout."
     end
   end
