@@ -77,13 +77,17 @@ defmodule EVM.Functions do
       iex> EVM.Functions.is_exception_halt?(%EVM.MachineState{program_counter: 0, gas: 0xffff, stack: [5]}, %EVM.ExecEnv{machine_code: <<EVM.Operation.encode(:jump)>>})
       {:halt, :invalid_jump_destination}
 
-      iex> EVM.Functions.is_exception_halt?(%EVM.MachineState{program_counter: 0, gas: 0xffff, stack: [1]}, %EVM.ExecEnv{machine_code: <<EVM.Operation.encode(:jump), EVM.Operation.encode(:jumpdest)>>})
+      iex> machine_code = <<EVM.Operation.encode(:jump), EVM.Operation.encode(:jumpdest)>>
+      iex> exec_env = EVM.ExecEnv.set_valid_jump_destinations(%EVM.ExecEnv{machine_code: machine_code})
+      iex> EVM.Functions.is_exception_halt?(%EVM.MachineState{program_counter: 0, gas: 0xffff, stack: [1]}, exec_env)
       {:continue, {:original, 8}}
 
       iex> EVM.Functions.is_exception_halt?(%EVM.MachineState{program_counter: 0, gas: 0xffff, stack: [1, 5]}, %EVM.ExecEnv{machine_code: <<EVM.Operation.encode(:jumpi)>>})
       {:halt, :invalid_jump_destination}
 
-      iex> EVM.Functions.is_exception_halt?(%EVM.MachineState{program_counter: 0, gas: 0xffff, stack: [1, 5]}, %EVM.ExecEnv{machine_code: <<EVM.Operation.encode(:jumpi), EVM.Operation.encode(:jumpdest)>>})
+      iex> machine_code = <<EVM.Operation.encode(:jumpi), EVM.Operation.encode(:jumpdest)>>
+      iex> exec_env = EVM.ExecEnv.set_valid_jump_destinations(%EVM.ExecEnv{machine_code: machine_code})
+      iex> EVM.Functions.is_exception_halt?(%EVM.MachineState{program_counter: 0, gas: 0xffff, stack: [1, 5]}, exec_env)
       {:continue, {:original, 10}}
 
       iex> EVM.Functions.is_exception_halt?(%EVM.MachineState{program_counter: 0, gas: 0xffff, stack: (for _ <- 1..1024, do: 0x0)}, %EVM.ExecEnv{machine_code: <<EVM.Operation.encode(:stop)>>})
@@ -125,7 +129,7 @@ defmodule EVM.Functions do
         Stack.length(machine_state.stack) - input_count + output_count > @max_stack ->
           {:halt, :stack_overflow}
 
-        is_invalid_jump_destination?(operation_metadata, inputs, exec_env.machine_code) ->
+        is_invalid_jump_destination?(operation_metadata, inputs, exec_env) ->
           {:halt, :invalid_jump_destination}
 
         exec_env.static && static_state_modification?(operation_metadata.sym, inputs) ->
@@ -227,13 +231,13 @@ defmodule EVM.Functions do
 
   defp is_invalid_instruction?(_), do: false
 
-  @spec is_invalid_jump_destination?(Metadata.t(), [EVM.val()], MachineCode.t()) :: boolean()
-  defp is_invalid_jump_destination?(%Metadata{sym: :jump}, [position], machine_code) do
-    not MachineCode.valid_jump_dest?(position, machine_code)
+  @spec is_invalid_jump_destination?(Metadata.t(), [EVM.val()], ExecEnv.t()) :: boolean()
+  defp is_invalid_jump_destination?(%Metadata{sym: :jump}, [position], exec_env) do
+    not Enum.member?(exec_env.valid_jump_destinations, position)
   end
 
-  defp is_invalid_jump_destination?(%Metadata{sym: :jumpi}, [position, condition], machine_code) do
-    condition != 0 && not MachineCode.valid_jump_dest?(position, machine_code)
+  defp is_invalid_jump_destination?(%Metadata{sym: :jumpi}, [position, condition], exec_env) do
+    condition != 0 && not Enum.member?(exec_env.valid_jump_destinations, position)
   end
 
   defp is_invalid_jump_destination?(_operation, _inputs, _machine_code), do: false

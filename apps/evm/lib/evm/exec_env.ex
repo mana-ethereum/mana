@@ -1,6 +1,6 @@
 defmodule EVM.ExecEnv do
   alias EVM.AccountRepo
-  alias EVM.{BlockHeaderInfo, Configuration}
+  alias EVM.{BlockHeaderInfo, Configuration, MachineCode}
 
   @moduledoc """
   Stores information about the execution environment which led
@@ -20,6 +20,7 @@ defmodule EVM.ExecEnv do
             sender: nil,
             value_in_wei: nil,
             machine_code: <<>>,
+            valid_jump_destinations: [],
             stack_depth: 0,
             account_repo: nil,
             block_header_info: nil,
@@ -47,12 +48,36 @@ defmodule EVM.ExecEnv do
           sender: EVM.address(),
           value_in_wei: EVM.Wei.t(),
           machine_code: EVM.MachineCode.t(),
+          valid_jump_destinations: list(non_neg_integer()),
           stack_depth: integer(),
           block_header_info: BlockHeaderInfo.t(),
           account_repo: AccountRepo.t(),
           config: Configuration.t(),
           static: boolean()
         }
+
+  @doc """
+  Sets valid_jump_destinations
+
+  #
+  ## Examples
+
+      iex> EVM.ExecEnv.set_valid_jump_destinations(%EVM.ExecEnv{})
+      %EVM.ExecEnv{valid_jump_destinations: []}
+
+      iex> machine_code = EVM.MachineCode.compile([:push1, 3, :push1, 5, :jumpdest, :add, :return, :jumpdest, :stop])
+      iex> EVM.ExecEnv.set_valid_jump_destinations(%EVM.ExecEnv{machine_code: machine_code})
+      ...> |> Map.get(:valid_jump_destinations)
+      [4, 7]
+
+  """
+  def set_valid_jump_destinations(exec_env) do
+    valid_jump_destinations =
+      MachineCode.valid_jump_destinations(Map.get(exec_env, :machine_code))
+
+    exec_env
+    |> Map.put(:valid_jump_destinations, valid_jump_destinations)
+  end
 
   @spec put_storage(t(), integer(), integer()) :: t()
   def put_storage(
