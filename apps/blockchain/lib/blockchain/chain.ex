@@ -446,7 +446,7 @@ defmodule Blockchain.Chain do
   defp read_chain!(chain) do
     filename = chain_filename(chain)
     {:ok, body} = File.read(filename)
-    Poison.decode!(body)
+    Jason.decode!(body)
   end
 
   @spec chain_filename(atom()) :: String.t()

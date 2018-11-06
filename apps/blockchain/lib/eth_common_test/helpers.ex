@@ -60,7 +60,7 @@ defmodule EthCommonTest.Helpers do
       |> Enum.filter(fn x -> not (x |> String.contains?("secretkey ")) end)
       |> Enum.join("\n")
 
-    Poison.decode!(body)
+    Jason.decode!(body)
   end
 
   @spec test_file_name(String.t(), String.t()) :: String.t()
