@@ -507,13 +507,17 @@ defmodule Blockchain.Transaction do
     end
   end
 
-  defp create_receipt(state_root_hash, gas_used, logs, status_code, evm_config) do
-    if evm_config.status_in_receipt do
-      Receipt.new(status_code, gas_used, logs)
-    else
-      Receipt.new(state_root_hash, gas_used, logs)
-    end
-  end
+  defp create_receipt(
+         _state_root_hash,
+         gas_used,
+         logs,
+         status_code,
+         _evm_config = %{status_in_receipt: true}
+       ),
+       do: Receipt.new(status_code, gas_used, logs)
+
+  defp create_receipt(state_root_hash, gas_used, logs, _status_code, _evm_config),
+    do: Receipt.new(state_root_hash, gas_used, logs)
 
   def contract_creation?(%Blockchain.Transaction{to: <<>>}), do: true
   def contract_creation?(%Blockchain.Transaction{to: _recipient}), do: false
