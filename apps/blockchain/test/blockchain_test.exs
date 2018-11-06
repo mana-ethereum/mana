@@ -16,14 +16,7 @@ defmodule BlockchainTest do
     "TangerineWhistle" => [],
     "SpuriousDragon" => [],
     "Byzantium" => [],
-    "Constantinople" => [
-      "GeneralStateTests/stCreate2/RevertInCreateInInitCreate2_d0g0v0.json",
-      "GeneralStateTests/stRevertTest/RevertInCreateInInit_d0g0v0.json",
-      "GeneralStateTests/stSStoreTest/InitCollision_d0g0v0.json",
-      "GeneralStateTests/stSStoreTest/InitCollision_d1g0v0.json",
-      "GeneralStateTests/stSStoreTest/InitCollision_d2g0v0.json",
-      "GeneralStateTests/stSStoreTest/InitCollision_d3g0v0.json"
-    ],
+    "Constantinople" => [],
     # the rest are not implemented yet
     "EIP158ToByzantiumAt5" => [],
     "FrontierToHomesteadAt5" => [],
