@@ -9,7 +9,8 @@ defmodule Blockchain.StateTest do
     "Byzantium" => [],
     "Constantinople" => [
       "stCreate2/RevertInCreateInInitCreate2",
-      "stRevertTest/RevertInCreateInInit"
+      "stRevertTest/RevertInCreateInInit",
+      "stSStoreTest/InitCollision"
     ],
     "Frontier" => [],
     "Homestead" => [],
