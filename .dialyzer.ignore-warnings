@@ -1,4 +1,75 @@
 -------------------------------
+ # TODO:: EX WIRE IS GOING THROUGH LARGE REFACTOR
+ -------------------------------
+apps/ex_wire/lib/ex_wire/adapter/udp.ex:71:unmatched_return Expression produces multiple types but none are matched.
+apps/ex_wire/lib/ex_wire/config.ex:123:contract_supertype Type specification is a supertype of the success typing.
+apps/ex_wire/lib/ex_wire/crypto.ex:129:invalid_contract Invalid type specification for function ExWire.Crypto.recover_public_key/3.
+apps/ex_wire/lib/ex_wire/crypto.ex:136:contract_supertype Type specification is a supertype of the success typing.
+apps/ex_wire/lib/ex_wire/framing/frame.ex:197:contract_supertype Type specification is a supertype of the success typing.
+apps/ex_wire/lib/ex_wire/handshake.ex:60:invalid_contract Invalid type specification for function ExWire.Handshake.new/1.
+apps/ex_wire/lib/ex_wire/handshake.ex:77:invalid_contract Invalid type specification for function ExWire.Handshake.new_response/0.
+apps/ex_wire/lib/ex_wire/handshake.ex:93:no_return Function generate_auth/1 has no local return.
+apps/ex_wire/lib/ex_wire/handshake.ex:95:call The function call will fail.
+apps/ex_wire/lib/ex_wire/handshake.ex:107:invalid_contract Invalid type specification for function ExWire.Handshake.build_auth_msg/3.
+apps/ex_wire/lib/ex_wire/handshake.ex:165:pattern_match The pattern can never match the type.
+apps/ex_wire/lib/ex_wire/handshake.ex:187:invalid_contract Invalid type specification for function ExWire.Handshake.handle_auth/2.
+apps/ex_wire/lib/ex_wire/handshake.ex:193:call The function call will fail.
+apps/ex_wire/lib/ex_wire/handshake.ex:205:invalid_contract Invalid type specification for function ExWire.Handshake.add_auth_data/3.
+apps/ex_wire/lib/ex_wire/handshake.ex:224:unused_fun Function generate_ack_resp/1 will never be called.
+apps/ex_wire/lib/ex_wire/handshake.ex:231:no_return Function encode/3 has no local return.
+apps/ex_wire/lib/ex_wire/handshake.ex:234:call The function call will fail.
+apps/ex_wire/lib/ex_wire/handshake.ex:240:pattern_match The pattern can never match the type.
+apps/ex_wire/lib/ex_wire/handshake.ex:256:invalid_contract Invalid type specification for function ExWire.Handshake.read_auth_msg/2.
+apps/ex_wire/lib/ex_wire/handshake/struct/auth_msg_v4.ex:36:invalid_contract Invalid type specification for function ExWire.Handshake.Struct.AuthMsgV4.deserialize/1.
+apps/ex_wire/lib/ex_wire/handshake/struct/auth_msg_v4.ex:60:invalid_contract Invalid type specification for function ExWire.Handshake.Struct.AuthMsgV4.set_initiator_ephemeral_public_key/2.
+apps/ex_wire/lib/ex_wire/kademlia/bucket.ex:92:invalid_contract Invalid type specification for function ExWire.Kademlia.Bucket.refresh_node/3.
+apps/ex_wire/lib/ex_wire/kademlia/bucket.ex:95:call The function call will fail.
+apps/ex_wire/lib/ex_wire/kademlia/bucket.ex:97:call The function call will fail.
+apps/ex_wire/lib/ex_wire/kademlia/config.ex:28:contract_supertype Type specification is a supertype of the success typing.
+apps/ex_wire/lib/ex_wire/kademlia/config.ex:33:contract_supertype Type specification is a supertype of the success typing.
+apps/ex_wire/lib/ex_wire/kademlia/config.ex:38:contract_supertype Type specification is a supertype of the success typing.
+apps/ex_wire/lib/ex_wire/kademlia/config.ex:43:contract_supertype Type specification is a supertype of the success typing.
+apps/ex_wire/lib/ex_wire/kademlia/config.ex:48:contract_supertype Type specification is a supertype of the success typing.
+apps/ex_wire/lib/ex_wire/kademlia/config.ex:53:contract_supertype Type specification is a supertype of the success typing.
+apps/ex_wire/lib/ex_wire/kademlia/config.ex:58:contract_supertype Type specification is a supertype of the success typing.
+apps/ex_wire/lib/ex_wire/kademlia/discovery.ex:37:invalid_contract Invalid type specification for function ExWire.Kademlia.Discovery.find_neighbours/2.
+apps/ex_wire/lib/ex_wire/kademlia/node.ex:67:invalid_contract Invalid type specification for function ExWire.Kademlia.Node.new/2.
+apps/ex_wire/lib/ex_wire/kademlia/routing_table.ex:89:call The function call will fail.
+apps/ex_wire/lib/ex_wire/kademlia/routing_table.ex:95:pattern_match_cov The pattern can never match the type since it covered by previous clauses.
+apps/ex_wire/lib/ex_wire/kademlia/routing_table.ex:167:no_return The created fun has no local return.
+apps/ex_wire/lib/ex_wire/kademlia/routing_table.ex:167:call The function call will fail.
+apps/ex_wire/lib/ex_wire/kademlia/routing_table.ex:181:invalid_contract Invalid type specification for function ExWire.Kademlia.RoutingTable.ping/2.
+apps/ex_wire/lib/ex_wire/kademlia/routing_table.ex:332:invalid_contract Invalid type specification for function ExWire.Kademlia.RoutingTable.nodes_at/2.
+apps/ex_wire/lib/ex_wire/kademlia/routing_table.ex:339:contract_supertype Type specification is a supertype of the success typing.
+apps/ex_wire/lib/ex_wire/kademlia/routing_table.ex:344:contract_supertype Type specification is a supertype of the success typing.
+apps/ex_wire/lib/ex_wire/kademlia/server.ex:27:unmatched_return Expression produces multiple types but none are matched.
+apps/ex_wire/lib/ex_wire/kademlia/server.ex:80:unmatched_return Expression produces multiple types but none are matched.
+apps/ex_wire/lib/ex_wire/kademlia/xor_distance.ex:45:contract_supertype Type specification is a supertype of the success typing.
+apps/ex_wire/lib/ex_wire/kademlia/xor_distance.ex:50:contract_supertype Type specification is a supertype of the success typing.
+apps/ex_wire/lib/ex_wire/network.ex:38:contract_supertype Type specification is a supertype of the success typing.
+apps/ex_wire/lib/ex_wire/network.ex:101:pattern_match The pattern can never match the type.
+apps/ex_wire/lib/ex_wire/network.ex:152:extra_range @spec for ExWire.Network.send/3 has more types than returned by function.
+apps/ex_wire/lib/ex_wire/p2p.ex:34:no_return Function new_outbound_connection/2 has no local return.
+apps/ex_wire/lib/ex_wire/p2p.ex:50:invalid_contract Invalid type specification for function ExWire.P2P.new_inbound_connection/1.
+apps/ex_wire/lib/ex_wire/p2p.ex:84:unmatched_return Expression produces multiple types but none are matched.
+apps/ex_wire/lib/ex_wire/p2p.ex:142:unmatched_return Expression produces multiple types but none are matched.
+apps/ex_wire/lib/ex_wire/p2p.ex:211:pattern_match The pattern can never match the type.
+apps/ex_wire/lib/ex_wire/p2p.ex:223:pattern_match The pattern can never match the type.
+apps/ex_wire/lib/ex_wire/p2p.ex:256:unmatched_return Expression produces multiple types but none are matched.
+apps/ex_wire/lib/ex_wire/p2p.ex:261:unused_fun Function send_unframed_data/3 will never be called.
+apps/ex_wire/lib/ex_wire/p2p.ex:279:unused_fun Function get_peer_info/2 will never be called.
+apps/ex_wire/lib/ex_wire/p2p/server.ex:177:unmatched_return Expression produces multiple types but none are matched.
+apps/ex_wire/lib/ex_wire/packet/disconnect.ex:159:guard_fail Guard test can never succeed.
+apps/ex_wire/lib/ex_wire/packet/hello.ex:109:unmatched_return Expression produces multiple types but none are matched.
+apps/ex_wire/lib/ex_wire/packet/status.ex:60:invalid_contract Invalid type specification for function ExWire.Packet.Status.new/1.
+apps/ex_wire/lib/ex_wire/protocol.ex:72:contract_supertype Type specification is a supertype of the success typing.
+apps/ex_wire/lib/ex_wire/protocol.ex:98:contract_supertype Type specification is a supertype of the success typing.
+apps/ex_wire/lib/ex_wire/struct/block_queue.ex:163:invalid_contract Invalid type specification for function ExWire.Struct.BlockQueue.add_block_struct/5.
+apps/ex_wire/lib/ex_wire/struct/block_queue.ex:257:pattern_match The pattern can never match the type.
+apps/ex_wire/lib/ex_wire/struct/endpoint.ex:32:contract_supertype Type specification is a supertype of the success typing.
+apps/ex_wire/lib/ex_wire/sync.ex:84:unmatched_return Expression produces multiple types but none are matched.
+apps/ex_wire/lib/ex_wire/sync.ex:157:unmatched_return Expression produces multiple types but none are matched.
+-------------------------------
  # blockchain/block.ex warnings
  -------------------------------
 apps/blockchain/lib/blockchain/block.ex:449: Function gen_child_block/2 has no local return
