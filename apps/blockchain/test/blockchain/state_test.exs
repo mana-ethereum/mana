@@ -7,7 +7,11 @@ defmodule Blockchain.StateTest do
 
   @failing_tests %{
     "Byzantium" => [],
-    "Constantinople" => [],
+    "Constantinople" => [
+      "stCreate2/RevertInCreateInInitCreate2",
+      "stRevertTest/RevertInCreateInInit",
+      "stSStoreTest/InitCollision"
+    ],
     "Frontier" => [],
     "Homestead" => [],
     "SpuriousDragon" => [],

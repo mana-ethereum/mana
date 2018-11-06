@@ -17,9 +17,12 @@ defmodule BlockchainTest do
     "SpuriousDragon" => [],
     "Byzantium" => [],
     "Constantinople" => [
-      "stCreate2/RevertInCreateInInitCreate2",
-      "stRevertTest/RevertInCreateInInit",
-      "stSStoreTest/InitCollision"
+      "GeneralStateTests/stCreate2/RevertInCreateInInitCreate2_d0g0v0.json",
+      "GeneralStateTests/stRevertTest/RevertInCreateInInit_d0g0v0.json",
+      "GeneralStateTests/stSStoreTest/InitCollision_d0g0v0.json",
+      "GeneralStateTests/stSStoreTest/InitCollision_d1g0v0.json",
+      "GeneralStateTests/stSStoreTest/InitCollision_d2g0v0.json",
+      "GeneralStateTests/stSStoreTest/InitCollision_d3g0v0.json"
     ],
     # the rest are not implemented yet
     "EIP158ToByzantiumAt5" => [],
