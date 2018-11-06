@@ -1,6 +1,5 @@
 defmodule Mana.MixProject do
   use Mix.Project
-  @root_path File.cwd!()
 
   def project do
     [
@@ -19,11 +18,7 @@ defmodule Mana.MixProject do
       dialyzer: [
         flags: [:underspecs, :unknown, :unmatched_returns],
         ignore_warnings: ".dialyzer.ignore-warnings",
-        plt_add_apps: [:mix, :iex],
-        plt_add_deps: :transitive,
-        excluded_paths: [
-          Path.join(@root_path, "_build/test/lib/ex_wire/ebin")
-        ]
+        plt_add_apps: [:mix, :iex, :ex_unit]
       ],
       deps: deps()
     ]
