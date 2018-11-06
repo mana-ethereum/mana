@@ -9,6 +9,7 @@ defmodule Blockchain.Transaction do
   alias Blockchain.Account.Repo
   alias Blockchain.{Chain, Contract, MathHelper, Transaction}
   alias Blockchain.Transaction.{AccountCleaner, Receipt, Validity}
+  alias Contract.MessageCall
   alias EVM.{Configuration, Gas, SubState}
   alias MerklePatriciaTree.Trie
   alias MerklePatriciaTree.TrieStorage
@@ -316,7 +317,7 @@ defmodule Blockchain.Transaction do
       |> Contract.create()
       |> transaction_response()
     else
-      %Contract.MessageCall{
+      %MessageCall{
         account_repo: account_repo,
         sender: sender,
         originator: originator,

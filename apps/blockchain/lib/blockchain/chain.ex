@@ -13,6 +13,7 @@ defmodule Blockchain.Chain do
   require Integer
 
   alias Blockchain.Genesis
+  alias EVM.Configuration
 
   defstruct name: nil,
             engine: %{},
@@ -92,7 +93,7 @@ defmodule Blockchain.Chain do
           genesis: Genesis.t(),
           nodes: [String.t()],
           accounts: %{EVM.address() => account() | builtin_account()},
-          evm_config: EVM.Configuration.t()
+          evm_config: Configuration.t()
         }
 
   @dao_extra_range 9

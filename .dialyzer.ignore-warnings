@@ -131,7 +131,7 @@ apps/blockchain/lib/blockchain/account.ex
 -------------------------------
 # blockchain/transaction.ex
 -------------------------------
-apps/blockchain/lib/blockchain/transaction.ex
+#apps/blockchain/lib/blockchain/transaction.ex
 
 
 -------------------------------
@@ -139,9 +139,11 @@ apps/blockchain/lib/mix/tasks/sync/from_file.ex
 -------------------------------
 # Ignores the whole contract
 -------------------------------
+
 apps/blockchain/lib/blockchain/contract.ex
 apps/blockchain/lib/blockchain/contract/message_call.ex
 
 -------------------------------
 apps/blockchain/lib/eth_common_test/blockchain_test_runner.ex
 apps/blockchain/lib/eth_common_test/state_test_runner.ex
+
