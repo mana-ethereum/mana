@@ -262,7 +262,7 @@ defmodule ExWire.P2P do
     {:ok, packet_mod} = Packet.get_packet_mod(packet_type)
 
     :ok =
-      Logger.info(
+      Logger.debug(
         "[Network] [#{peer}] Sending packet #{inspect(packet_mod)} to #{peer.host} (##{
           conn.sent_message_count + 1
         })"

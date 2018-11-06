@@ -116,7 +116,6 @@ defmodule ExWire.Config do
       :from_chain ->
         chain().nodes
     end
-    |> IO.inspect()
   end
 
   @spec chain(Keyword.t()) :: Chain.t()

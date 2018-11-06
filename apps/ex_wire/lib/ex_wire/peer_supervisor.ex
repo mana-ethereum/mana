@@ -36,7 +36,7 @@ defmodule ExWire.PeerSupervisor do
 
     for {_id, child, _type, _modules} <- DynamicSupervisor.which_children(@name) do
       # Children which are being restarted by not have a child_pid at this time.
-      if is_pid(child), do: ExWire.P2P.Server.send_packet(child, packet) |> IO.inspect()
+      if is_pid(child), do: ExWire.P2P.Server.send_packet(child, packet)
     end
   end
 

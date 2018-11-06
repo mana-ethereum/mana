@@ -16,3 +16,5 @@ config :ex_wire,
     supervisor_name: ExWire.NodeDiscoverySupervisor,
     port: 30_366
   ]
+
+config :logger, level: :info
