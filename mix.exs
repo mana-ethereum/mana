@@ -1,6 +1,5 @@
 defmodule Mana.MixProject do
   use Mix.Project
-  @root_path File.cwd!()
 
   def project do
     [
@@ -14,17 +13,12 @@ defmodule Mana.MixProject do
         :merkle_patricia_tree
       ],
       elixirc_options: [warnings_as_errors: true],
-      elixir: "~> 1.7.2",
+      elixir: "~> 1.7.3",
       start_permanent: Mix.env() == :prod,
       dialyzer: [
+        flags: [:underspecs, :unknown, :unmatched_returns],
         ignore_warnings: ".dialyzer.ignore-warnings",
-        plt_add_apps: [:mix],
-        plt_add_deps: :transitive,
-        excluded_paths: [
-          Path.join(@root_path, "_build/test/lib/abi/ebin"),
-          Path.join(@root_path, "_build/test/lib/exth_crypto/ebin"),
-          Path.join(@root_path, "_build/test/lib/ex_wire/ebin")
-        ]
+        plt_add_apps: [:mix, :iex, :ex_unit]
       ],
       deps: deps()
     ]
@@ -38,10 +32,10 @@ defmodule Mana.MixProject do
   defp deps do
     [
       {:ex_rlp, "~> 0.3.1"},
-      {:poison, "~> 4.0.1", runtime: false},
       {:ex_doc, "~> 0.19", only: :dev, runtime: false},
-      {:dialyxir, "~> 1.0.0-rc.3", only: [:dev, :test], runtime: false},
-      {:ethereumex, "~> 0.5.0"},
+      {:dialyxir, "~> 1.0.0-rc.4", only: [:dev, :test], runtime: false},
+      {:ethereumex, "~> 0.5.1"},
+      {:jason, "~> 1.1"},
       {:credo, "~> 0.10.0", only: [:dev, :test], runtime: false},
       {:distillery, "~> 2.0", runtime: false}
     ]

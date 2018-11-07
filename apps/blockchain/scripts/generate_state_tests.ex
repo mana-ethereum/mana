@@ -5,7 +5,7 @@ defmodule GenerateStateTests do
   alias EthCommonTest.StateTestRunner
   alias MerklePatriciaTree.Trie
 
-  use EthCommonTest.Harness
+  import EthCommonTest.Helpers
 
   @hardforks [
     "TangerineWhistle",
@@ -179,7 +179,7 @@ defmodule GenerateStateTests do
   def read_state_test_file(test_path) do
     test_path
     |> File.read!()
-    |> Poison.decode!()
+    |> Jason.decode!()
   end
 
   def state_test_file_name(group, test) do

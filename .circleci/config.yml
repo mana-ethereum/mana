@@ -2,7 +2,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: circleci/elixir:1.7.2
+      - image: circleci/elixir:1.7.3
         environment:
           MIX_ENV: test
     working_directory: ~/app
@@ -14,21 +14,21 @@ jobs:
 
       - restore_cache:
           keys:
-            - v4-env-cache-{{ arch }}-{{ .Branch }}
-            - v4-env-cache-{{ .Branch }}
-            - v4-env-cache
+            - v6-env-cache-{{ arch }}-{{ .Branch }}
+            - v6-env-cache-{{ .Branch }}
+            - v6-env-cache
 
       - restore_cache:
           keys:
-            - v4-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
-            - v4-mix-cache-{{ .Branch }}
-            - v4-mix-cache
+            - v6-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
+            - v6-mix-cache-{{ .Branch }}
+            - v6-mix-cache
 
       - restore_cache:
           keys:
-            - v4-build-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
-            - v4-build-cache-{{ .Branch }}
-            - v4-build-cache
+            - v6-build-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
+            - v6-build-cache-{{ .Branch }}
+            - v6-build-cache
 
       - run: echo 'export PATH=~/.cargo/bin:$PATH' >> $BASH_ENV
 
@@ -37,41 +37,41 @@ jobs:
           no_output_timeout: 2400
 
       - save_cache:
-          key: v4-env-cache-{{ arch }}-{{ .Branch }}
+          key: v6-env-cache-{{ arch }}-{{ .Branch }}
           paths:
             - $HOME/.cargo
             - $HOME/.rustup
 
       - save_cache:
-          key: v4-env-cache-{{ .Branch }}
+          key: v6-env-cache-{{ .Branch }}
           paths:
             - $HOME/.cargo
             - $HOME/.rustup
 
       - save_cache:
-          key: v4-env-cache
+          key: v6-env-cache
           paths:
             - $HOME/.cargo
             - $HOME/.rustup
 
       - save_cache:
-          key: v4-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
+          key: v6-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
           paths: "deps"
       - save_cache:
-          key: v4-mix-cache-{{ .Branch }}
+          key: v6-mix-cache-{{ .Branch }}
           paths: "deps"
       - save_cache:
-          key: v4-mix-cache
+          key: v6-mix-cache
           paths: "deps"
 
       - save_cache:
-          key: v4-build-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
+          key: v6-build-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
           paths: "_build"
       - save_cache:
-          key: v4-build-cache-{{ .Branch }}
+          key: v6-build-cache-{{ .Branch }}
           paths: "_build"
       - save_cache:
-          key: v4-build-cache
+          key: v6-build-cache
           paths: "_build"
 
       - run:
@@ -101,7 +101,7 @@ jobs:
 
   test:
     docker:
-      - image: circleci/elixir:1.7.2
+      - image: circleci/elixir:1.7.3
         environment:
           MIX_ENV: test
 
@@ -116,26 +116,26 @@ jobs:
 
       - restore_cache:
           keys:
-            - v4-build-cache-{{ .Branch }}
-            - v4-build-cache
+            - v6-build-cache-{{ .Branch }}
+            - v6-build-cache
 
       - restore_cache:
           keys:
-            - v4-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
-            - v4-mix-cache-{{ .Branch }}
-            - v4-mix-cache
+            - v6-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
+            - v6-mix-cache-{{ .Branch }}
+            - v6-mix-cache
 
       - restore_cache:
           keys:
-            - v4-env-cache-{{ arch }}-{{ .Branch }}
-            - v4-env-cache-{{ .Branch }}
-            - v4-env-cache
+            - v6-env-cache-{{ arch }}-{{ .Branch }}
+            - v6-env-cache-{{ .Branch }}
+            - v6-env-cache
 
       - run: mix test --exclude pending
 
   Frontier:
     docker:
-      - image: circleci/elixir:1.7.2
+      - image: circleci/elixir:1.7.3
         environment:
           MIX_ENV: test
 
@@ -150,26 +150,26 @@ jobs:
 
       - restore_cache:
           keys:
-            - v4-build-cache-{{ .Branch }}
-            - v4-build-cache
+            - v6-build-cache-{{ .Branch }}
+            - v6-build-cache
 
       - restore_cache:
           keys:
-            - v4-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
-            - v4-mix-cache-{{ .Branch }}
-            - v4-mix-cache
+            - v6-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
+            - v6-mix-cache-{{ .Branch }}
+            - v6-mix-cache
 
       - restore_cache:
           keys:
-            - v4-env-cache-{{ arch }}-{{ .Branch }}
-            - v4-env-cache-{{ .Branch }}
-            - v4-env-cache
+            - v6-env-cache-{{ arch }}-{{ .Branch }}
+            - v6-env-cache-{{ .Branch }}
+            - v6-env-cache
 
       - run: mix cmd --app blockchain mix test --exclude test --include Frontier
 
   Homestead:
     docker:
-      - image: circleci/elixir:1.7.2
+      - image: circleci/elixir:1.7.3
         environment:
           MIX_ENV: test
 
@@ -184,26 +184,26 @@ jobs:
 
       - restore_cache:
           keys:
-            - v4-build-cache-{{ .Branch }}
-            - v4-build-cache
+            - v6-build-cache-{{ .Branch }}
+            - v6-build-cache
 
       - restore_cache:
           keys:
-            - v4-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
-            - v4-mix-cache-{{ .Branch }}
-            - v4-mix-cache
+            - v6-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
+            - v6-mix-cache-{{ .Branch }}
+            - v6-mix-cache
 
       - restore_cache:
           keys:
-            - v4-env-cache-{{ arch }}-{{ .Branch }}
-            - v4-env-cache-{{ .Branch }}
-            - v4-env-cache
+            - v6-env-cache-{{ arch }}-{{ .Branch }}
+            - v6-env-cache-{{ .Branch }}
+            - v6-env-cache
 
       - run: mix cmd --app blockchain mix test --exclude test --include Homestead
 
   HomesteadToDaoAt5:
     docker:
-      - image: circleci/elixir:1.7.2
+      - image: circleci/elixir:1.7.3
         environment:
           MIX_ENV: test
 
@@ -218,26 +218,26 @@ jobs:
 
       - restore_cache:
           keys:
-            - v4-build-cache-{{ .Branch }}
-            - v4-build-cache
+            - v6-build-cache-{{ .Branch }}
+            - v6-build-cache
 
       - restore_cache:
           keys:
-            - v4-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
-            - v4-mix-cache-{{ .Branch }}
-            - v4-mix-cache
+            - v6-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
+            - v6-mix-cache-{{ .Branch }}
+            - v6-mix-cache
 
       - restore_cache:
           keys:
-            - v4-env-cache-{{ arch }}-{{ .Branch }}
-            - v4-env-cache-{{ .Branch }}
-            - v4-env-cache
+            - v6-env-cache-{{ arch }}-{{ .Branch }}
+            - v6-env-cache-{{ .Branch }}
+            - v6-env-cache
 
       - run: mix cmd --app blockchain mix test --exclude test --include HomesteadToDaoAt5
 
   TangerineWhistle:
     docker:
-      - image: circleci/elixir:1.7.2
+      - image: circleci/elixir:1.7.3
         environment:
           MIX_ENV: test
 
@@ -252,26 +252,26 @@ jobs:
 
       - restore_cache:
           keys:
-            - v4-build-cache-{{ .Branch }}
-            - v4-build-cache
+            - v6-build-cache-{{ .Branch }}
+            - v6-build-cache
 
       - restore_cache:
           keys:
-            - v4-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
-            - v4-mix-cache-{{ .Branch }}
-            - v4-mix-cache
+            - v6-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
+            - v6-mix-cache-{{ .Branch }}
+            - v6-mix-cache
 
       - restore_cache:
           keys:
-            - v4-env-cache-{{ arch }}-{{ .Branch }}
-            - v4-env-cache-{{ .Branch }}
-            - v4-env-cache
+            - v6-env-cache-{{ arch }}-{{ .Branch }}
+            - v6-env-cache-{{ .Branch }}
+            - v6-env-cache
 
       - run: mix cmd --app blockchain mix test --exclude test --include TangerineWhistle
 
   SpuriousDragon:
     docker:
-      - image: circleci/elixir:1.7.2
+      - image: circleci/elixir:1.7.3
         environment:
           MIX_ENV: test
 
@@ -286,26 +286,26 @@ jobs:
 
       - restore_cache:
           keys:
-            - v4-build-cache-{{ .Branch }}
-            - v4-build-cache
+            - v6-build-cache-{{ .Branch }}
+            - v6-build-cache
 
       - restore_cache:
           keys:
-            - v4-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
-            - v4-mix-cache-{{ .Branch }}
-            - v4-mix-cache
+            - v6-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
+            - v6-mix-cache-{{ .Branch }}
+            - v6-mix-cache
 
       - restore_cache:
           keys:
-            - v4-env-cache-{{ arch }}-{{ .Branch }}
-            - v4-env-cache-{{ .Branch }}
-            - v4-env-cache
+            - v6-env-cache-{{ arch }}-{{ .Branch }}
+            - v6-env-cache-{{ .Branch }}
+            - v6-env-cache
 
       - run: mix cmd --app blockchain mix test --exclude test --include SpuriousDragon
 
   Byzantium:
     docker:
-      - image: circleci/elixir:1.7.2
+      - image: circleci/elixir:1.7.3
         environment:
           MIX_ENV: test
 
@@ -320,26 +320,26 @@ jobs:
 
       - restore_cache:
           keys:
-            - v4-build-cache-{{ .Branch }}
-            - v4-build-cache
+            - v6-build-cache-{{ .Branch }}
+            - v6-build-cache
 
       - restore_cache:
           keys:
-            - v4-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
-            - v4-mix-cache-{{ .Branch }}
-            - v4-mix-cache
+            - v6-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
+            - v6-mix-cache-{{ .Branch }}
+            - v6-mix-cache
 
       - restore_cache:
           keys:
-            - v4-env-cache-{{ arch }}-{{ .Branch }}
-            - v4-env-cache-{{ .Branch }}
-            - v4-env-cache
+            - v6-env-cache-{{ arch }}-{{ .Branch }}
+            - v6-env-cache-{{ .Branch }}
+            - v6-env-cache
 
       - run: mix cmd --app blockchain mix test --exclude test --include Byzantium
 
   Constantinople:
     docker:
-      - image: circleci/elixir:1.7.2
+      - image: circleci/elixir:1.7.3
         environment:
           MIX_ENV: test
 
@@ -354,27 +354,29 @@ jobs:
 
       - restore_cache:
           keys:
-            - v4-build-cache-{{ .Branch }}
-            - v4-build-cache
+            - v6-build-cache-{{ .Branch }}
+            - v6-build-cache
 
       - restore_cache:
           keys:
-            - v4-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
-            - v4-mix-cache-{{ .Branch }}
-            - v4-mix-cache
+            - v6-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
+            - v6-mix-cache-{{ .Branch }}
+            - v6-mix-cache
 
       - restore_cache:
           keys:
-            - v4-env-cache-{{ arch }}-{{ .Branch }}
-            - v4-env-cache-{{ .Branch }}
-            - v4-env-cache
+            - v6-env-cache-{{ arch }}-{{ .Branch }}
+            - v6-env-cache-{{ .Branch }}
+            - v6-env-cache
 
-      - run: mix cmd --app blockchain mix test --exclude test --include Constantinople
+      - run:
+          command: mix cmd --app blockchain mix test --exclude test --include Constantinople
+          no_output_timeout: 2400
 
   dialyzer:
     docker:
       # Ensure .tool-versions matches
-      - image: circleci/elixir:1.7.2
+      - image: circleci/elixir:1.7.3
         environment:
           MIX_ENV: test
 
@@ -391,26 +393,26 @@ jobs:
 
       - restore_cache:
           keys:
-            - v4-build-cache-{{ .Branch }}
-            - v4-build-cache
+            - v6-build-cache-{{ .Branch }}
+            - v6-build-cache
 
       - restore_cache:
           keys:
-            - v4-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
-            - v4-mix-cache-{{ .Branch }}
-            - v4-mix-cache
+            - v6-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
+            - v6-mix-cache-{{ .Branch }}
+            - v6-mix-cache
 
       - restore_cache:
           keys:
-            - v4-env-cache-{{ arch }}-{{ .Branch }}
-            - v4-env-cache-{{ .Branch }}
-            - v4-env-cache
+            - v6-env-cache-{{ arch }}-{{ .Branch }}
+            - v6-env-cache-{{ .Branch }}
+            - v6-env-cache
 
       - restore_cache:
           keys:
-            - v4-plt-cache-{{ ".tool-versions" }}-{{ checksum "mix.lock" }}
-            - v4-plt-cache-{{ ".tool-versions" }}-{{ checksum "mix.exs" }}
-            - v4-plt-cache-{{ ".tool-versions" }}
+            - v6-plt-cache-{{ ".tool-versions" }}-{{ checksum "mix.lock" }}
+            - v6-plt-cache-{{ ".tool-versions" }}-{{ checksum "mix.exs" }}
+            - v6-plt-cache-{{ ".tool-versions" }}
 
       - run:
           name: Unpack PLT cache
@@ -430,26 +432,26 @@ jobs:
             cp ~/.mix/dialyxir*.plt plts/
 
       - save_cache:
-          key: v4-plt-cache-{{ ".tool-versions" }}-{{ checksum "mix.lock" }}
+          key: v6-plt-cache-{{ ".tool-versions" }}-{{ checksum "mix.lock" }}
           paths:
             - plts
 
       - save_cache:
-          key: v4-plt-cache-{{ ".tool-versions" }}-{{ checksum "mix.exs" }}
+          key: v6-plt-cache-{{ ".tool-versions" }}-{{ checksum "mix.exs" }}
           paths:
             - plts
 
       - save_cache:
-          key: v4-plt-cache-{{ ".tool-versions" }}
+          key: v6-plt-cache-{{ ".tool-versions" }}
           paths:
             - plts
 
-      - run: mix dialyzer --halt-exit-status
+      - run: mix dialyzer --format short --halt-exit-status
 
 
   check_formatted:
     docker:
-      - image: circleci/elixir:1.7.2
+      - image: circleci/elixir:1.7.3
         environment:
           MIX_ENV: test
 
@@ -464,7 +466,7 @@ jobs:
   credo:
     docker:
       # Ensure .tool-versions matches
-      - image: circleci/elixir:1.7.2
+      - image: circleci/elixir:1.7.3
         environment:
           MIX_ENV: test
 
@@ -481,7 +483,7 @@ jobs:
   release:
     docker:
       # Ensure .tool-versions matches
-      - image: circleci/elixir:1.7.2
+      - image: circleci/elixir:1.7.3
         environment:
           MIX_ENV: dev
     working_directory: ~/app

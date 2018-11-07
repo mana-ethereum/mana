@@ -15,8 +15,8 @@ defmodule EVM.Refunds do
 
   # Refund given (added into refund counter) for destroying an account.
   @selfdestruct_refund 24_000
-
-  @spec selfdestruct_refund() :: integer()
+  @type selfdestruct_refund :: unquote(@selfdestruct_refund)
+  @spec selfdestruct_refund() :: selfdestruct_refund()
   def selfdestruct_refund do
     @selfdestruct_refund
   end
@@ -37,7 +37,8 @@ defmodule EVM.Refunds do
       iex> EVM.Refunds.refund(machine_state, sub_state, exec_env)
       15000
   """
-  @spec refund(MachineState.t(), SubState.t(), ExecEnv.t()) :: t | nil
+  @spec refund(MachineState.t(), SubState.t(), ExecEnv.t()) ::
+          -15_000 | -10_200 | 0 | 4800 | 15_000 | 19_800 | 24_000 | 34_800
   def refund(machine_state, sub_state, exec_env) do
     operation = MachineCode.current_operation(machine_state, exec_env)
     inputs = Operation.inputs(operation, machine_state)

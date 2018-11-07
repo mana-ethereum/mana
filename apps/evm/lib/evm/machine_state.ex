@@ -6,11 +6,12 @@ defmodule EVM.MachineState do
   This is most often seen as µ in the Yellow Paper.
   """
 
-  alias EVM.{ExecEnv, Gas, MachineState, ProgramCounter, Stack}
   alias EVM.Operation.Metadata
+  alias EVM.{Gas, MachineState, ProgramCounter, Stack}
 
   defstruct gas: nil,
             program_counter: 0,
+            valid_jump_destinations: [],
             memory: <<>>,
             active_words: 0,
             previously_active_words: 0,
@@ -51,13 +52,13 @@ defmodule EVM.MachineState do
   ## Examples
 
       iex> machine_state = %EVM.MachineState{gas: 10, stack: [1, 1], program_counter: 0}
-      iex> exec_env = %EVM.ExecEnv{machine_code: <<EVM.Operation.metadata(:add).id>>}
-      iex> EVM.MachineState.subtract_gas(machine_state, exec_env)
-      %EVM.MachineState{gas: 7, stack: [1, 1]}
+      iex> gas_cost = {:original, 10}
+      iex> EVM.MachineState.subtract_gas(machine_state, gas_cost)
+      %EVM.MachineState{gas: 0, stack: [1, 1]}
   """
-  @spec subtract_gas(MachineState.t(), ExecEnv.t()) :: MachineState.t()
-  def subtract_gas(machine_state, exec_env) do
-    case Gas.cost_with_status(machine_state, exec_env) do
+  @spec subtract_gas(MachineState.t(), Gas.cost_with_status()) :: MachineState.t()
+  def subtract_gas(machine_state, cost_with_status) do
+    case cost_with_status do
       {:changed, cost, new_call_gas} ->
         new_stack = Stack.replace(machine_state.stack, 0, new_call_gas)
 

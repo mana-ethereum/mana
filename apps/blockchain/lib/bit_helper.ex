@@ -108,7 +108,7 @@ defmodule BitHelper do
 
   @doc """
   Similar to `:binary.encode_unsigned/1`, except we encode `0` as
-  `<<>>`, the empty string. The specification does not allow leading zeros; 
+  `<<>>`, the empty string. The specification does not allow leading zeros;
   <<0>> by itself is leading with a zero and prohibited.
 
   ## Examples
@@ -122,7 +122,7 @@ defmodule BitHelper do
       iex> BitHelper.encode_unsigned(5_000_000)
       <<76, 75, 64>>
   """
-  @spec encode_unsigned(number()) :: binary()
+  @spec encode_unsigned(non_neg_integer()) :: binary()
   def encode_unsigned(0), do: <<>>
   def encode_unsigned(n), do: :binary.encode_unsigned(n)
 
@@ -142,7 +142,7 @@ defmodule BitHelper do
       iex> BitHelper.decode_unsigned(<<76, 75, 64>>)
       5_000_000
   """
-  @spec decode_unsigned(binary()) :: number()
+  @spec decode_unsigned(binary()) :: non_neg_integer()
   def decode_unsigned(<<>>), do: 0
   def decode_unsigned(bin), do: :binary.decode_unsigned(bin)
 

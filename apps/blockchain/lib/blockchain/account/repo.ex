@@ -366,8 +366,13 @@ defmodule Blockchain.Account.Repo do
     cached_value = Cache.initial_value(account_repo.cache, address, key)
 
     case cached_value do
-      nil -> Account.get_storage(account_repo.state, address, key)
-      _ -> {:ok, cached_value}
+      nil ->
+        account = account(account_repo, address)
+
+        Account.get_storage(account_repo.state, account, key)
+
+      _ ->
+        {:ok, cached_value}
     end
   end
 

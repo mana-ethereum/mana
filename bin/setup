@@ -35,14 +35,6 @@ brew "libtool"
 EOF
 }
 
-install_rust() {
-  curl -s https://static.rust-lang.org/rustup.sh | sh -s -- --channel=nightly
-  if [ $? -ne 0 ]; then
-    fancy_echo "Rust installation failed"
-    exit 1
-  fi
-}
-
 install_deps() {
   local sys=`uname -s`
   echo $sys
@@ -79,8 +71,8 @@ if ! command -v mix > /dev/null; then
 fi
 
 ELIXIR_PATCH_VERSION=`elixir -v |grep Elixir | sed -n 's/.*1\.7\.\([0-9]\).*$/\1/p'`
-if [ $ELIXIR_PATCH_VERSION -lt 2 ]; then
-  fancy_echo "Your elixir version must be ~> 1.7.2"
+if [ $ELIXIR_PATCH_VERSION -lt 3 ]; then
+  fancy_echo "Your elixir version must be ~> 1.7.3"
   fancy_echo "Your current version:"
   elixir -v
   exit 1
@@ -94,24 +86,11 @@ if ! command -v mix > /dev/null; then
   exit 1
 fi
 
-if ! command -v rustc > /dev/null; then
-  fancy_echo "It looks like you don't have Rust installed. We'll install that for you."
-  install_rust
-fi
-
 fancy_echo "Installing elixir dependencies and compiling."
 mix local.hex --force
 mix local.rebar --force
 
-if ! command -v rebar > /dev/null; then
-  fancy_echo "\`rebar\`: Command not found"
-  fancy_echo "Please either add ~/.mix to your \$PATH environemnt varible or install it with brew: \`brew install rebar\`"
-  exit 1
-fi
-
 mix deps.get
-
-cd deps/libsecp256k1 && rebar compile && cd ../..
 
 mix compile
 

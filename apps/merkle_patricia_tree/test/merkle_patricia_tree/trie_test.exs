@@ -421,4 +421,26 @@ defmodule MerklePatriciaTree.TrieTest do
       assert Trie.get_raw_key(updated_trie, "5") == :not_found
     end
   end
+
+  describe "put_batch_raw_keys!/2" do
+    test "saves key-value pairs to db" do
+      trie = MerklePatriciaTree.Test.random_ets_db() |> Trie.new()
+
+      pairs = [
+        {"elixir", "erlang"},
+        {"rust", "c++"},
+        {"ruby", "crystal"}
+      ]
+
+      Enum.each(pairs, fn {key, _value} ->
+        assert Trie.get_raw_key(trie, key) == :not_found
+      end)
+
+      Trie.put_batch_raw_keys!(trie, pairs)
+
+      Enum.each(pairs, fn {key, value} ->
+        assert Trie.get_raw_key(trie, key) == {:ok, value}
+      end)
+    end
+  end
 end

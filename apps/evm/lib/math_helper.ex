@@ -96,7 +96,7 @@ defmodule MathHelper do
       iex> MathHelper.log(999999, 9999)
       1.500016178459417
   """
-  @spec log(number(), number()) :: number()
+  @spec log(number(), number()) :: float()
   def log(x, b), do: :math.log(x) / :math.log(b)
 
   @doc """
@@ -114,7 +114,7 @@ defmodule MathHelper do
       5
 
   """
-  @spec integer_byte_size(number()) :: number()
+  @spec integer_byte_size(number()) :: non_neg_integer()
   def integer_byte_size(n) when n == 0, do: 0
   def integer_byte_size(n), do: byte_size(:binary.encode_unsigned(n))
 
@@ -133,6 +133,6 @@ defmodule MathHelper do
       8
 
   """
-  @spec bits_to_words(number()) :: number()
+  @spec bits_to_words(number()) :: integer()
   def bits_to_words(n), do: round(:math.ceil(n / EVM.word_size()))
 end

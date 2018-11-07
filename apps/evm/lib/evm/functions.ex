@@ -37,7 +37,7 @@ defmodule EVM.Functions do
       iex> EVM.Functions.is_normal_halting?(%EVM.MachineState{stack: [1, 1], memory: <<0xabcd::16>>}, %EVM.ExecEnv{machine_code: <<EVM.Operation.encode(:return)>>})
       <<0xcd>>
   """
-  @spec is_normal_halting?(MachineState.t(), ExecEnv.t()) :: nil | binary() | {atom(), binary()}
+  @spec is_normal_halting?(MachineState.t(), ExecEnv.t()) :: nil | binary() | {:revert, binary()}
   def is_normal_halting?(machine_state, exec_env) do
     case MachineCode.current_operation(machine_state, exec_env).sym do
       :return -> h_return(machine_state)
@@ -77,17 +77,21 @@ defmodule EVM.Functions do
       iex> EVM.Functions.is_exception_halt?(%EVM.MachineState{program_counter: 0, gas: 0xffff, stack: [5]}, %EVM.ExecEnv{machine_code: <<EVM.Operation.encode(:jump)>>})
       {:halt, :invalid_jump_destination}
 
-      iex> EVM.Functions.is_exception_halt?(%EVM.MachineState{program_counter: 0, gas: 0xffff, stack: [1]}, %EVM.ExecEnv{machine_code: <<EVM.Operation.encode(:jump), EVM.Operation.encode(:jumpdest)>>})
-      :continue
+      iex> machine_code = <<EVM.Operation.encode(:jump), EVM.Operation.encode(:jumpdest)>>
+      iex> exec_env = EVM.ExecEnv.set_valid_jump_destinations(%EVM.ExecEnv{machine_code: machine_code})
+      iex> EVM.Functions.is_exception_halt?(%EVM.MachineState{program_counter: 0, gas: 0xffff, stack: [1]}, exec_env)
+      {:continue, {:original, 8}}
 
       iex> EVM.Functions.is_exception_halt?(%EVM.MachineState{program_counter: 0, gas: 0xffff, stack: [1, 5]}, %EVM.ExecEnv{machine_code: <<EVM.Operation.encode(:jumpi)>>})
       {:halt, :invalid_jump_destination}
 
-      iex> EVM.Functions.is_exception_halt?(%EVM.MachineState{program_counter: 0, gas: 0xffff, stack: [1, 5]}, %EVM.ExecEnv{machine_code: <<EVM.Operation.encode(:jumpi), EVM.Operation.encode(:jumpdest)>>})
-      :continue
+      iex> machine_code = <<EVM.Operation.encode(:jumpi), EVM.Operation.encode(:jumpdest)>>
+      iex> exec_env = EVM.ExecEnv.set_valid_jump_destinations(%EVM.ExecEnv{machine_code: machine_code})
+      iex> EVM.Functions.is_exception_halt?(%EVM.MachineState{program_counter: 0, gas: 0xffff, stack: [1, 5]}, exec_env)
+      {:continue, {:original, 10}}
 
       iex> EVM.Functions.is_exception_halt?(%EVM.MachineState{program_counter: 0, gas: 0xffff, stack: (for _ <- 1..1024, do: 0x0)}, %EVM.ExecEnv{machine_code: <<EVM.Operation.encode(:stop)>>})
-      :continue
+      {:continue, {:original, 0}}
 
       iex> EVM.Functions.is_exception_halt?(%EVM.MachineState{program_counter: 0, gas: 0xffff, stack: (for _ <- 1..1024, do: 0x0)}, %EVM.ExecEnv{machine_code: <<EVM.Operation.encode(:push1)>>})
       {:halt, :stack_overflow}
@@ -95,7 +99,8 @@ defmodule EVM.Functions do
       iex> EVM.Functions.is_exception_halt?(%EVM.MachineState{program_counter: 0, gas: 0xffff, stack: []}, %EVM.ExecEnv{machine_code: <<EVM.Operation.encode(:invalid)>>})
       {:halt, :invalid_instruction}
   """
-  @spec is_exception_halt?(MachineState.t(), ExecEnv.t()) :: :continue | {:halt, atom()}
+  @spec is_exception_halt?(MachineState.t(), ExecEnv.t()) ::
+          {:continue, Gas.cost_with_status()} | {:halt, atom()}
   # credo:disable-for-next-line
   def is_exception_halt?(machine_state, exec_env) do
     operation = Operation.get_operation_at(exec_env.machine_code, machine_state.program_counter)
@@ -110,33 +115,39 @@ defmodule EVM.Functions do
         Operation.inputs(operation_metadata, machine_state)
       end
 
-    cond do
-      is_invalid_instruction?(operation_metadata) ->
-        {:halt, :invalid_instruction}
+    halt_status =
+      cond do
+        is_invalid_instruction?(operation_metadata) ->
+          {:halt, :invalid_instruction}
 
-      is_nil(input_count) ->
-        {:halt, :undefined_instruction}
+        is_nil(input_count) ->
+          {:halt, :undefined_instruction}
 
-      length(machine_state.stack) < input_count ->
-        {:halt, :stack_underflow}
+        length(machine_state.stack) < input_count ->
+          {:halt, :stack_underflow}
 
-      not_enough_gas?(machine_state, exec_env) ->
-        {:halt, :out_of_gas}
+        Stack.length(machine_state.stack) - input_count + output_count > @max_stack ->
+          {:halt, :stack_overflow}
 
-      Stack.length(machine_state.stack) - input_count + output_count > @max_stack ->
-        {:halt, :stack_overflow}
+        is_invalid_jump_destination?(operation_metadata, inputs, exec_env) ->
+          {:halt, :invalid_jump_destination}
 
-      is_invalid_jump_destination?(operation_metadata, inputs, exec_env.machine_code) ->
-        {:halt, :invalid_jump_destination}
+        exec_env.static && static_state_modification?(operation_metadata.sym, inputs) ->
+          {:halt, :static_state_modification}
 
-      exec_env.static && static_state_modification?(operation_metadata.sym, inputs) ->
-        {:halt, :static_state_modification}
+        out_of_memory_bounds?(operation_metadata.sym, machine_state, inputs) ->
+          {:halt, :out_of_memory_bounds}
 
-      out_of_memory_bounds?(operation_metadata.sym, machine_state, inputs) ->
-        {:halt, :out_of_memory_bounds}
+        true ->
+          :continue
+      end
 
-      true ->
-        :continue
+    case halt_status do
+      :continue ->
+        not_enough_gas?(machine_state, exec_env)
+
+      other ->
+        other
     end
   end
 
@@ -186,11 +197,22 @@ defmodule EVM.Functions do
     end
   end
 
-  @spec not_enough_gas?(MachineState.t(), ExecEnv.t()) :: boolean()
+  @spec not_enough_gas?(MachineState.t(), ExecEnv.t()) ::
+          {:halt, :out_of_gas} | {:continue, Gas.cost_with_status()}
   defp not_enough_gas?(machine_state, exec_env) do
-    cost = Gas.cost(machine_state, exec_env)
+    cost_with_status = Gas.cost_with_status(machine_state, exec_env)
 
-    cost > machine_state.gas
+    cost =
+      case cost_with_status do
+        {:original, cost} -> cost
+        {:changed, value, _} -> value
+      end
+
+    if cost > machine_state.gas do
+      {:halt, :out_of_gas}
+    else
+      {:continue, cost_with_status}
+    end
   end
 
   @spec out_of_memory_bounds?(atom(), MachineState.t(), [EVM.val()]) :: boolean()
@@ -209,13 +231,13 @@ defmodule EVM.Functions do
 
   defp is_invalid_instruction?(_), do: false
 
-  @spec is_invalid_jump_destination?(Metadata.t(), [EVM.val()], MachineCode.t()) :: boolean()
-  defp is_invalid_jump_destination?(%Metadata{sym: :jump}, [position], machine_code) do
-    not MachineCode.valid_jump_dest?(position, machine_code)
+  @spec is_invalid_jump_destination?(Metadata.t(), [EVM.val()], ExecEnv.t()) :: boolean()
+  defp is_invalid_jump_destination?(%Metadata{sym: :jump}, [position], exec_env) do
+    not Enum.member?(exec_env.valid_jump_destinations, position)
   end
 
-  defp is_invalid_jump_destination?(%Metadata{sym: :jumpi}, [position, condition], machine_code) do
-    condition != 0 && not MachineCode.valid_jump_dest?(position, machine_code)
+  defp is_invalid_jump_destination?(%Metadata{sym: :jumpi}, [position, condition], exec_env) do
+    condition != 0 && not Enum.member?(exec_env.valid_jump_destinations, position)
   end
 
   defp is_invalid_jump_destination?(_operation, _inputs, _machine_code), do: false

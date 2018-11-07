@@ -4,7 +4,7 @@ defmodule ExthCrypto.AES do
   """
 
   @block_size 32
-
+  @type block_size :: unquote(@block_size)
   @doc """
   Returns the blocksize for AES encryption when used as block mode encryption.
 
@@ -13,7 +13,7 @@ defmodule ExthCrypto.AES do
       iex> ExthCrypto.AES.block_size
       32
   """
-  @spec block_size :: integer()
+  @spec block_size :: block_size()
   def block_size, do: @block_size
 
   @doc """

@@ -10,7 +10,7 @@ Mana-Ethereum is currently in development. See the [Project Status](#project-sta
 
 # Dependencies
 
-- Elixir ~> 1.7.2
+- Elixir ~> 1.7.3
 - Rust ~> 1.26.0 (as a dependency of [Rox](https://github.com/urbint/rox))
 
 # Installation
@@ -136,7 +136,7 @@ Ethereum common tests are created for all clients to test against. We plan to pr
 | TangerineWhistle  | 100% (1262/1262)          | 100% (1112/1112)            | ✓         |
 | SpuriousDragon    | 100% (1193/1193)          | 100% (1172/1172)            | ✓         |
 | Byzantium         | 100% (4945/4945)          | 100% (4790/4790)            | ✓         |
-| Constantinople    | 99.9% (5347/5349)         | 99.9% (5309/5311)           |           |
+| Constantinople    | 100% (5369/5369)          | 100% (5331/5331)            | ✓         |
 
 View the community [Constantinople Project Tracker](https://github.com/ethereum/pm/issues/53).
 

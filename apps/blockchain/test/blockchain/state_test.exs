@@ -1,16 +1,13 @@
 defmodule Blockchain.StateTest do
   alias Blockchain.Account
+  alias EthCommonTest.StateTestRunner
   alias MerklePatriciaTree.Trie
-  alias EthCommonTest.{Helpers, StateTestRunner}
 
   use ExUnit.Case, async: true
 
   @failing_tests %{
     "Byzantium" => [],
-    "Constantinople" => [
-      "stCreate2/RevertInCreateInInitCreate2",
-      "stRevertTest/RevertInCreateInInit"
-    ],
+    "Constantinople" => [],
     "Frontier" => [],
     "Homestead" => [],
     "SpuriousDragon" => [],
@@ -21,17 +18,45 @@ defmodule Blockchain.StateTest do
   @num_test_groups 10
 
   @tag :ethereum_common_tests
-  @tag :state_common_tests
-  test "Blockchain state tests" do
-    grouped_test_per_fork()
+  @tag :Frontier
+  @tag :slow
+  test "runs Frontier state tests", do: run_fork_tests("Frontier")
+
+  @tag :ethereum_common_tests
+  @tag :Homestead
+  @tag :slow
+  test "runs Homestead state tests", do: run_fork_tests("Homestead")
+
+  @tag :ethereum_common_tests
+  @tag :TangerineWhistle
+  @tag :slow
+  test "runs TangerineWhistle state tests", do: run_fork_tests("TangerineWhistle")
+
+  @tag :ethereum_common_tests
+  @tag :SpuriousDragon
+  @tag :slow
+  test "runs SpuriousDragon state tests", do: run_fork_tests("SpuriousDragon")
+
+  @tag :ethereum_common_tests
+  @tag :Byzantium
+  @tag :slow
+  test "runs Byzantium state tests", do: run_fork_tests("Byzantium")
+
+  @tag :ethereum_common_tests
+  @tag :Constantinople
+  @tag :slow
+  test "runs Constantinople state tests", do: run_fork_tests("Constantinople")
+
+  defp run_fork_tests(fork) do
+    fork
+    |> grouped_test_per_fork()
     |> Task.async_stream(&run_tests(&1), timeout: @fifteen_minutes)
     |> Enum.flat_map(fn {:ok, results} -> results end)
     |> make_assertions()
   end
 
-  defp grouped_test_per_fork do
-    for fork <- forks_with_existing_implementation(),
-        test_group <- split_tests_into_groups(@num_test_groups),
+  defp grouped_test_per_fork(fork) do
+    for test_group <- split_tests_into_groups(@num_test_groups),
         do: {fork, test_group}
   end
 
@@ -48,19 +73,6 @@ defmodule Blockchain.StateTest do
     |> Stream.reject(&known_fork_failure?(&1, fork))
     |> Enum.flat_map(&StateTestRunner.run(&1, fork))
     |> Enum.filter(&failed_test?/1)
-  end
-
-  defp forks_with_existing_implementation do
-    @failing_tests
-    |> Map.keys()
-    |> Enum.reject(&fork_without_implementation?/1)
-  end
-
-  defp fork_without_implementation?(fork) do
-    fork
-    |> Helpers.human_readable_fork_name()
-    |> EVM.Configuration.hardfork_config()
-    |> is_nil()
   end
 
   defp known_fork_failure?(json_test_path, hardfork) do

@@ -20,7 +20,7 @@ defmodule MerklePatriciaTree.Mixfile do
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
       deps: deps(),
-      dialyzer: [ignore_warnings: ".dialyzer.ignore-warnings"]
+      elixirc_options: [warnings_as_errors: true]
     ]
   end
 

@@ -31,38 +31,7 @@ defmodule EVM.MachineCode do
   end
 
   @doc """
-  Returns true if the given new program_counter is a valid jump
-  destination for the machine code, false otherwise.
-
-  TODO: Memoize
-
-  ## Examples
-
-      iex> EVM.MachineCode.valid_jump_dest?(0, EVM.MachineCode.compile([:push1, 3, :push1, 5, :jumpdest, :add, :return, :jumpdest, :stop]))
-      false
-
-      iex> EVM.MachineCode.valid_jump_dest?(4, EVM.MachineCode.compile([:push1, 3, :push1, 5, :jumpdest, :add, :return, :jumpdest, :stop]))
-      true
-
-      iex> EVM.MachineCode.valid_jump_dest?(6, EVM.MachineCode.compile([:push1, 3, :push1, 5, :jumpdest, :add, :return, :jumpdest, :stop]))
-      false
-
-      iex> EVM.MachineCode.valid_jump_dest?(7, EVM.MachineCode.compile([:push1, 3, :push1, 5, :jumpdest, :add, :return, :jumpdest, :stop]))
-      true
-
-      iex> EVM.MachineCode.valid_jump_dest?(100, EVM.MachineCode.compile([:push1, 3, :push1, 5, :jumpdest, :add, :return, :jumpdest, :stop]))
-      false
-  """
-  @spec valid_jump_dest?(MachineState.program_counter(), t) :: boolean()
-  def valid_jump_dest?(program_counter, machine_code) do
-    # TODO: This should be sorted for quick lookup
-    Enum.member?(machine_code |> valid_jump_destinations, program_counter)
-  end
-
-  @doc """
   Returns the legal jump locations in the given machine code.
-
-  TODO: Memoize
 
   ## Example
 

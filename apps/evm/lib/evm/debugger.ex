@@ -137,7 +137,7 @@ defmodule EVM.Debugger do
       iex> EVM.Debugger.Breakpoint.get_breakpoint(id) |> Map.put(:id, nil)
       %EVM.Debugger.Breakpoint{conditions: [address: <<188, 31, 252, 22, 32, 218, 20, 104, 98, 74, 89, 108, 184, 65, 211, 94, 107, 47, 31, 182>>], pc: :start}
   """
-  @spec break_on(keyword(Breakpoint.conditions())) :: Breakpoint.id()
+  @spec break_on(Breakpoint.conditions()) :: Breakpoint.id()
   def break_on(conditions) do
     Breakpoint.set_breakpoint(%Breakpoint{conditions: conditions, pc: :start})
   end
@@ -194,7 +194,7 @@ defmodule EVM.Debugger do
   @spec break(Breakpoint.t(), MachineState.t(), SubState.t(), ExecEnv.t(), [String.t()]) ::
           {MachineState.t(), SubState.t(), ExecEnv.t()}
   def break(breakpoint, machine_state, sub_state, exec_env, input_sequence \\ []) do
-    Breakpoint.clear_pc_if_one_time_break(breakpoint.id)
+    %Breakpoint{} = Breakpoint.clear_pc_if_one_time_break(breakpoint.id)
 
     if breakpoint.pc == :start do
       # If we're not next, we're likely a freshly hit breakpoint and should display a helpful prompt
@@ -360,11 +360,12 @@ defmodule EVM.Debugger do
          exec_env,
          input_sequence
        ) do
-    Logger.info(
-      "machine_state:  #{inspect(machine_state)}, sub_state: #{inspect(sub_state)}, exec_env: #{
-        inspect(exec_env)
-      }"
-    )
+    :ok =
+      Logger.info(
+        "machine_state:  #{inspect(machine_state)}, sub_state: #{inspect(sub_state)}, exec_env: #{
+          inspect(exec_env)
+        }"
+      )
 
     prompt(breakpoint, machine_state, sub_state, exec_env, input_sequence)
   end
@@ -384,28 +385,7 @@ defmodule EVM.Debugger do
     stack_length = machine_state.stack |> Enum.count()
     tail = stack_length - 1
 
-    case machine_state.stack do
-      [] ->
-        IO.puts("<empty>")
-
-      stack ->
-        width =
-          machine_state.stack
-          |> Enum.map(fn v -> v |> to_string |> String.length() end)
-          |> Enum.max()
-
-        for {v, i} <- stack |> Enum.with_index() do
-          heading =
-            case i do
-              0 -> "HEAD ->"
-              ^tail -> "TAIL ->"
-              _ -> "       "
-            end
-
-          IO.puts("#{heading} #{String.pad_leading(to_string(v), width)}")
-        end
-    end
-
+    _ = handle_stack(machine_state, tail)
     IO.puts("")
 
     prompt(breakpoint, machine_state, sub_state, exec_env, input_sequence)
@@ -511,7 +491,7 @@ defmodule EVM.Debugger do
          exec_env,
          _input_sequence
        ) do
-    Breakpoint.set_next(breakpoint.id)
+    %Breakpoint{} = Breakpoint.set_next(breakpoint.id)
 
     {machine_state, sub_state, exec_env}
   end
@@ -544,4 +524,24 @@ defmodule EVM.Debugger do
     do: true
 
   defp printable(_), do: false
+
+  defp handle_stack(%{stack: []}, _tail), do: IO.puts("<empty>")
+
+  defp handle_stack(%{stack: stack}, tail) do
+    width =
+      stack
+      |> Enum.map(fn v -> v |> to_string |> String.length() end)
+      |> Enum.max()
+
+    for {v, i} <- Enum.with_index(stack) do
+      heading =
+        case i do
+          0 -> "HEAD ->"
+          ^tail -> "TAIL ->"
+          _ -> "       "
+        end
+
+      IO.puts("#{heading} #{String.pad_leading(to_string(v), width)}")
+    end
+  end
 end

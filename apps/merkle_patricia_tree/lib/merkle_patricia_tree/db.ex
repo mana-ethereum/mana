@@ -20,6 +20,8 @@ defmodule MerklePatriciaTree.DB do
   @callback init(db_name) :: db
   @callback get(db_ref, MerklePatriciaTree.Trie.key()) :: {:ok, value} | :not_found
   @callback put!(db_ref, MerklePatriciaTree.Trie.key(), value) :: :ok
+  @callback delete!(db_ref(), MerklePatriciaTree.Trie.key()) :: :ok
+  @callback batch_put!(db_ref, [{MerklePatriciaTree.Trie.key(), value}]) :: :ok
 
   @doc """
   Retrieves a key from the database.
@@ -95,5 +97,13 @@ defmodule MerklePatriciaTree.DB do
   @spec delete!(db_ref(), MerklePatriciaTree.Trie.key()) :: :ok
   def delete!(_db = {db_mod, db_ref}, key) do
     db_mod.delete!(db_ref, key)
+  end
+
+  @doc """
+  Stores key-value pairs in the database.
+  """
+  @spec batch_put!(db_ref, [{MerklePatriciaTree.Trie.key(), value}]) :: :ok
+  def batch_put!(_db = {db_mod, db_ref}, key_value_pairs) do
+    db_mod.batch_put!(db_ref, key_value_pairs)
   end
 end

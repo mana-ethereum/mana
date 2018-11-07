@@ -9,10 +9,6 @@ defmodule BlockchainTest do
 
   doctest Blockchain
 
-  @failing_constantinople_tests File.read!(
-                                  System.cwd() <> "/test/support/constantinople_failing_tests.txt"
-                                )
-
   @failing_tests %{
     "Frontier" => [],
     "Homestead" => [],
@@ -20,14 +16,14 @@ defmodule BlockchainTest do
     "TangerineWhistle" => [],
     "SpuriousDragon" => [],
     "Byzantium" => [],
-    "Constantinople" => String.split(@failing_constantinople_tests, "\n"),
+    "Constantinople" => [],
     # the rest are not implemented yet
     "EIP158ToByzantiumAt5" => [],
     "FrontierToHomesteadAt5" => [],
     "HomesteadToEIP150At5" => []
   }
 
-  @ten_minutes 1000 * 60 * 10
+  @twenty_minutes 1000 * 60 * 20
 
   # Run each fork as its own test
   @tag :ethereum_common_tests
@@ -80,10 +76,10 @@ defmodule BlockchainTest do
 
   defp run_fork_tests(fork) do
     if is_nil(Chain.test_config(fork)) do
-      Logger.warn("Skipping tests for fork #{fork}")
+      :ok = Logger.warn("Skipping tests for fork #{fork}")
     else
       [{fork, all_tests()}]
-      |> Task.async_stream(&run_tests(&1), timeout: @ten_minutes)
+      |> Task.async_stream(&run_tests(&1), timeout: @twenty_minutes)
       |> Enum.flat_map(fn {:ok, results} -> results end)
       |> Enum.filter(&failing_test?/1)
       |> make_assertions()

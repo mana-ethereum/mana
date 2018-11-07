@@ -7,8 +7,14 @@ defmodule Blockchain.Contract.MessageCall do
   alias Block.Header
   alias Blockchain.Account.Repo
   alias Blockchain.BlockHeaderInfo
+  alias EVM.Configuration
+  alias EVM.Configuration.Frontier
+  alias EVM.ExecEnv
+  alias EVM.Gas
   alias EVM.MessageCall
   alias EVM.SubState
+
+  alias EVM.Wei
 
   defstruct account_repo: %Repo{},
             sender: <<>>,
@@ -22,7 +28,7 @@ defmodule Blockchain.Contract.MessageCall do
             data: <<>>,
             stack_depth: 0,
             block_header: nil,
-            config: EVM.Configuration.Frontier.new()
+            config: Frontier.new()
 
   @typedoc """
   Terms from the Yellow Paper:
@@ -44,14 +50,14 @@ defmodule Blockchain.Contract.MessageCall do
           originator: EVM.address(),
           recipient: EVM.address(),
           contract: EVM.address(),
-          available_gas: EVM.Gas.t(),
-          gas_price: EVM.Gas.gas_price(),
-          value: EVM.Wei.t(),
-          apparent_value: EVM.Wei.t(),
+          available_gas: Gas.t(),
+          gas_price: Gas.gas_price(),
+          value: Wei.t(),
+          apparent_value: Wei.t(),
           data: binary(),
           stack_depth: integer(),
           block_header: Header.t(),
-          config: EVM.Configuration.t()
+          config: Configuration.t()
         }
 
   @doc """
@@ -63,8 +69,12 @@ defmodule Blockchain.Contract.MessageCall do
   TODO: Determine whether or not we should be passing in the block header directly.
   TODO: Add serious (less trivial) test cases in `contract_test.exs`
   """
-  @spec execute(t()) :: {:ok | :error, {Repo.t(), EVM.Gas.t(), EVM.SubState.t(), EVM.VM.output()}}
-  def execute(params) do
+  @spec execute(t() | MessageCall.t()) ::
+          {:ok | :error, {Repo.t(), EVM.Gas.t(), EVM.SubState.t(), EVM.VM.output()}}
+  def execute(params = %MessageCall{}), do: do_execute(params)
+  def execute(params = %__MODULE__{}), do: do_execute(params)
+
+  defp do_execute(params) do
     run = MessageCall.get_run_function(params.recipient, params.config)
 
     # Note, this could fail if machine code is not in state
@@ -83,7 +93,7 @@ defmodule Blockchain.Contract.MessageCall do
     # Create an execution environment for a message call.
     # This is defined in Eq.(107), Eq.(108), Eq.(109), Eq.(110),
     # Eq.(111), Eq.(112), Eq.(113) and Eq.(114) of the Yellow Paper.
-    exec_env = %EVM.ExecEnv{
+    exec_env = %ExecEnv{
       address: params.recipient,
       originator: params.originator,
       gas_price: params.gas_price,

@@ -15,6 +15,7 @@ defmodule EVM.Gas do
 
   @type t :: EVM.val()
   @type gas_price :: EVM.Wei.t()
+  @type cost_with_status :: {:original, t} | {:changed, t, t}
 
   # Nothing paid for operations of the set W_zero.
   @g_zero 0
@@ -125,6 +126,8 @@ defmodule EVM.Gas do
   @w_high_instr [:jumpi]
   @call_operations [:call, :callcode, :delegatecall, :staticcall]
 
+  @type g_codedeposit :: unquote(@g_codedeposit)
+  @type g_callstipend :: unquote(@g_callstipend)
   @doc """
   Returns the cost to execute the given a cycle of the VM. This is defined
   in Appenix H of the Yellow Paper, Eq.(294) and is denoted `C`.
@@ -143,7 +146,7 @@ defmodule EVM.Gas do
     end
   end
 
-  @spec cost_with_status(MachineState.t(), ExecEnv.t()) :: {:original, t} | {:changed, t, t}
+  @spec cost_with_status(MachineState.t(), ExecEnv.t()) :: cost_with_status()
   def cost_with_status(machine_state, exec_env) do
     operation = MachineCode.current_operation(machine_state, exec_env)
     inputs = Operation.inputs(operation, machine_state)
@@ -498,12 +501,12 @@ defmodule EVM.Gas do
     end
   end
 
-  @spec callstipend() :: integer()
+  @spec callstipend() :: g_callstipend()
   def callstipend do
     @g_callstipend
   end
 
-  @spec codedeposit_cost() :: integer()
+  @spec codedeposit_cost() :: g_codedeposit()
   def codedeposit_cost do
     @g_codedeposit
   end
