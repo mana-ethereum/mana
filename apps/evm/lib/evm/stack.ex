@@ -101,12 +101,12 @@ defmodule EVM.Stack do
   @spec pop_n(t, integer(), [integer()]) :: {[EVM.val()], t}
   def pop_n(stack, n, acc \\ [])
 
-  def pop_n(stack, 0, acc), do: {acc, stack}
+  def pop_n(stack, 0, acc), do: {Enum.reverse(acc), stack}
 
   def pop_n([], _, acc), do: {acc, []}
 
   def pop_n([head | tail], n, acc) do
-    new_acc = acc ++ [head]
+    new_acc = [head | acc]
 
     pop_n(tail, n - 1, new_acc)
   end
