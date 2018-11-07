@@ -15,7 +15,6 @@ Mana-Ethereum is currently in development. See the [Project Status] for more inf
 # Dependencies
 
 - Elixir ~> 1.7.3
-- Rust ~> 1.26.0 (as a dependency of [Rox])
 
 # Installation
 
@@ -28,8 +27,6 @@ git clone --recurse-submodules https://github.com/mana-ethereum/mana.git
 - Go to the mana subdirectory `cd mana`
 
 - Run `bin/setup`
-
-[Rox]: https://github.com/urbint/rox
 
 # Running a node
 
@@ -153,7 +150,7 @@ View the community [Constantinople Project Tracker](https://github.com/ethereum/
 
 ## Updating Common Tests
 
-The Ethereum common tests are in a submodule. To update you'll want to:
+The Ethereum common tests are in a submodule. To update:
 
 ```bash
 % cd ethereum_common_tests
@@ -166,7 +163,7 @@ The Ethereum common tests are in a submodule. To update you'll want to:
 | Functionality                                                                       | Status                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | ----------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Encoding and Hashing                                                                | The [RLP] encoding protocol and the [Merkle Patricia Tree] data structure are fully implemented.                                                                                                                                                                                                                                                                                                                                                                                                       |
-| [Ethereum Virtual Machine] | Our EVM currently passes 100% of the common [VM tests]. We are still discovering subtle differences in our implementation such as the [“vanishing Ether” issue]. This component is for the most part complete.                                                                                                                                                                                                                                                       |
+| [Ethereum Virtual Machine] | Our EVM currently passes 100% of the common [VM tests]. We are refining our implementation to address subtle differences between our EVM and other implementations.                                                                                                                                                                                                                                                       |
 | Peer to Peer Networking                                                             | Currently we can connect to one of the Ethereum bootnodes, get a list of peers, and add them to a list of known peers. We have fully implemented the modified [kademlia DHT]. <br /><br />We can also successfully perform the encrypted handshake with peer nodes and derive secrets to frame the rest of the messages. We are currently configuring ExWire to work against a local Geth/Parity node. |
 | DEVp2p Protocol and Ethereum Wire Protocol                                          | We are in the process of addressing networking layer issues. Progress is being tracked in Issue [#407].                                                                                                                                                                                                                                                                                                                                                                                                                       |
 
@@ -174,7 +171,6 @@ The Ethereum common tests are in a submodule. To update you'll want to:
 [Merkle Patricia Tree]: https://github.com/mana-ethereum/mana/tree/master/apps/merkle_patricia_tree
 [Ethereum Virtual Machine]: https://github.com/mana-ethereum/mana/tree/master/apps/evm
 [VM tests]: https://github.com/ethereum/tests/tree/develop/VMTests
-[“vanishing Ether” issue]: https://github.com/mana-ethereum/mana/commit/aa3056efe341dd548a750c6f5b4c8962ccef2518
 [kademlia DHT]: https://github.com/mana-ethereum/mana/tree/master/apps/ex_wire/lib/ex_wire/kademlia
 [multi-frame packets]: https://github.com/ethereum/devp2p/blob/master/rlpx.md#framing
 [#407]: https://github.com/mana-ethereum/mana/issues/407
@@ -206,14 +202,9 @@ Unless you explicitly state otherwise, any contribution intentionally submitted 
 
 # References
 
-- [Ethereum yellow paper](https://ethereum.github.io/yellowpaper/paper.pdf)(Ethereum: A Secure Decentralised Generalised Transaction Ledger Byzantium Version)
+- [Ethereum yellow paper]: Ethereum: A Secure Decentralised Generalised Transaction Ledger Byzantium Version
 
-- [Message Calls in Ethereum](http://www.badykov.com/ethereum/2018/06/17/message-calls-in-ethereum/)
+- [Message Calls in Ethereum]
 
-Additional Ethereum Implementations
 
-- [Parity-Ethereum](https://github.com/paritytech/parity-ethereum)
-- [Go-Ethereum (Geth)](https://github.com/ethereum/go-ethereum/)
-- [EthereumJS](https://github.com/ethereumjs/ethereumjs-vm)
-- [Py-EVM](https://github.com/ethereum/py-evm)
-- [Pantheon](https://github.com/PegaSysEng/pantheon)
+[Message Calls in Ethereum]: http://www.badykov.com/ethereum/2018/06/17/message-calls-in-ethereum/
