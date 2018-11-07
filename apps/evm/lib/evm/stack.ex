@@ -98,16 +98,18 @@ defmodule EVM.Stack do
         iex> EVM.Stack.pop_n([1, 2, 3], 4)
         {[1, 2, 3], []}
   """
-  @spec pop_n(t, integer()) :: {[EVM.val()], t}
-  def pop_n(stack, 0), do: {[], stack}
+  @spec pop_n(t, integer(), [integer()]) :: {[EVM.val()], t}
+  def pop_n(stack, n, acc \\ [])
 
-  def pop_n([h | t], n) do
-    {a, b} = pop_n(t, n - 1)
+  def pop_n(stack, 0, acc), do: {acc, stack}
 
-    {[h | a], b}
+  def pop_n([], _, acc), do: {acc, []}
+
+  def pop_n([head | tail], n, acc) do
+    new_acc = acc ++ [head]
+
+    pop_n(tail, n - 1, new_acc)
   end
-
-  def pop_n([], _stack), do: {[], []}
 
   @doc """
   Returns the length of the stack.
