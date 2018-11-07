@@ -103,7 +103,7 @@ defmodule EVM.Stack do
 
   def pop_n(stack, 0, acc), do: {Enum.reverse(acc), stack}
 
-  def pop_n([], _, acc), do: {acc, []}
+  def pop_n([], _, acc), do: {Enum.reverse(acc), []}
 
   def pop_n([head | tail], n, acc) do
     new_acc = [head | acc]
