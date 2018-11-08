@@ -1,4 +1,5 @@
 defmodule EVM.Builtin.ModExp do
+  use Bitwise
   alias EVM.Memory
 
   @data_size_limit 24_577
@@ -106,13 +107,17 @@ defmodule EVM.Builtin.ModExp do
     end
   end
 
-  @spec highest_bit(non_neg_integer()) :: integer()
-  defp highest_bit(number) do
-    res =
-      number
-      |> :math.log2()
-      |> MathHelper.floor()
+  @spec highest_bit(non_neg_integer(), non_neg_integer(), boolean()) :: integer()
+  def highest_bit(number, res \\ 0, first_iter \\ true)
 
-    if res == 256, do: 255, else: res
+  def highest_bit(0, _, _), do: 0
+
+  def highest_bit(number, res, false) when number != 0, do: 254 - res
+
+  def highest_bit(number, res, _) do
+    res = res + 1
+    number = number >>> 1
+
+    highest_bit(number, res, false)
   end
 end
