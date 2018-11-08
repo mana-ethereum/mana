@@ -50,6 +50,7 @@ defmodule Blockchain.Mixfile do
   # Type "mix help deps" for more examples and options
   defp deps do
     [
+      {:ethereumex, "~> 0.5.0"},
       {:evm, in_umbrella: true},
       {:ex_rlp, "~> 0.3.1"},
       {:exth_crypto, in_umbrella: true},
