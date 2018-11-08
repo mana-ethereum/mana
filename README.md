@@ -14,7 +14,7 @@ Mana-Ethereum is currently in development. See the [Project Status] for more inf
 
 # Dependencies
 
-- Elixir ~> 1.7.3
+- Elixir ~> 1.7.4
 
 # Installation
 
@@ -61,7 +61,7 @@ Once syncing begins you will see a timestamp and a running list of verified bloc
 ### Known Sync Issues
 _Updated 11/6/2018_
 
-- Mainnet syncing slows considerably due to the [transaction spam attack] 
+- Mainnet syncing slows considerably due to the [transaction spam attack]
 that impacted Ethereum in late 2016. We are currently synced to ~ block [2469000] and counting.
 - Ropsten fails on block [2444903] with `receipts_root_mismatch`,
   `gas_used_mismatch` and `state_root_mismatch` errors - see [#580].
