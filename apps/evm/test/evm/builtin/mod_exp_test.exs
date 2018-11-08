@@ -11,7 +11,7 @@ defmodule EVM.Builtin.ModExpTest do
     available_gas = 1_000_000
 
     exec_env = %EVM.ExecEnv{data: data, config: EVM.Configuration.Byzantium.new()}
-    {result_gas, _, _, output} = ModExp.exec(available_gas, exec_env) |> IO.inspect()
+    {result_gas, _, _, output} = ModExp.exec(available_gas, exec_env)
 
     cost = available_gas - result_gas
 
