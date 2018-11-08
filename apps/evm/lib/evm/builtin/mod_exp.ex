@@ -93,7 +93,9 @@ defmodule EVM.Builtin.ModExp do
           integer()
   defp e_length_prime(e_length, e, _) when e == 0 and e_length <= 32, do: 0
 
-  defp e_length_prime(e_length, e, _) when e != 0 and e_length <= 32, do: highest_bit(e)
+  defp e_length_prime(e_length, e, _) when e_length <= 32 do
+    8 * (e_length - 32) + highest_bit(e)
+  end
 
   defp e_length_prime(e_length, _e, {b_length, data}) do
     <<_::binary-size(b_length), e_first_32_bytes_bin::binary-size(32), _::binary>> = data
@@ -108,11 +110,11 @@ defmodule EVM.Builtin.ModExp do
   end
 
   @spec highest_bit(non_neg_integer(), non_neg_integer(), boolean()) :: integer()
-  def highest_bit(number, res \\ 0, first_iter \\ true)
+  def highest_bit(number, res \\ 1, first_iter \\ true)
 
   def highest_bit(0, _, _), do: 0
 
-  def highest_bit(number, res, false) when number != 0, do: 254 - res
+  def highest_bit(number, res, false) when number != 0, do: 255 - res
 
   def highest_bit(number, res, _) do
     res = res + 1
