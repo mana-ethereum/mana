@@ -5,7 +5,7 @@ defmodule EVM.Operation do
   """
 
   alias MathHelper
-  alias EVM.{ExecEnv, Helpers, MachineState, Stack, SubState}
+  alias EVM.{ExecEnv, Helpers, MachineState, Operation, Stack, SubState}
   alias EVM.Operation.Metadata.BlockInformation, as: BlockInformationMetadata
   alias EVM.Operation.Metadata.ComparisonAndBitwiseLogic, as: ComparisonAndBitwiseLogicMetadata
   alias EVM.Operation.Metadata.Duplication, as: DuplicationMetadata
@@ -240,11 +240,17 @@ defmodule EVM.Operation do
     apply(group_to_module(group), method, args)
   end
 
-  @spec group_to_module(atom()) :: atom()
-  defp group_to_module(group),
-    do:
-      ("Elixir.EVM.Operation." <> Macro.camelize(Atom.to_string(group)))
-      |> String.to_atom()
+  defp group_to_module(:block_information), do: Operation.BlockInformation
+  defp group_to_module(:comparison_and_bitwise_logic), do: Operation.ComparisonAndBitwiseLogic
+  defp group_to_module(:duplication), do: Operation.Duplication
+  defp group_to_module(:environmental_information), do: Operation.EnvironmentalInformation
+  defp group_to_module(:exchange), do: Operation.Exchange
+  defp group_to_module(:logging), do: Operation.Logging
+  defp group_to_module(:push), do: Operation.Push
+  defp group_to_module(:sha3), do: Operation.Sha3
+  defp group_to_module(:stack_memory_storage_and_flow), do: Operation.StackMemoryStorageAndFlow
+  defp group_to_module(:stop_and_arithmetic), do: Operation.StopAndArithmetic
+  defp group_to_module(:system), do: Operation.System
 
   @doc """
   Normalizes op_results. If the result is an integer it encodes it
