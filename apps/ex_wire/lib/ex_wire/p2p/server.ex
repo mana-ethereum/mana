@@ -148,23 +148,7 @@ defmodule ExWire.P2P.Server do
   Handle inbound communication from a peer node via tcp.
   """
   def handle_info({:tcp, socket, data}, conn) do
-    IO.inspect(["Got message from socket", socket, data, conn])
-
     {:ok, new_conn} = handle_socket_message(data, conn)
-
-    new_conn =
-      if new_conn.last_error != nil do
-        Map.update(new_conn, :datas, [data], fn datas -> [data | datas] end)
-      else
-        new_conn
-      end
-
-    Enum.reduce(new_conn.datas |> Enum.reverse(), conn, fn d, c ->
-      IO.inspect(["Retrying", d, c])
-      {:ok, c} = handle_socket_message(d, c)
-
-      c
-    end)
 
     {:noreply, new_conn}
   end

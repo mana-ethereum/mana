@@ -59,7 +59,7 @@ defmodule ExWire.P2P.Manager do
         case without error.
   """
   def handle_message(conn = %{secrets: %ExWire.Framing.Secrets{}}, data) do
-    handle_packet_data(data, conn)
+    handle_packet_data(data, %{conn | last_error: nil})
   end
 
   def handle_message(conn = %{handshake: %Handshake{}}, data) do
@@ -94,7 +94,6 @@ defmodule ExWire.P2P.Manager do
   defp handle_packet_data(data, conn) when byte_size(data) == 0, do: conn
 
   defp handle_packet_data(data, conn) do
-    conn = %{conn | last_error: nil}
     %Connection{peer: peer, secrets: secrets} = conn
 
     total_data = conn.queued_data <> data
