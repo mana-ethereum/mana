@@ -1,5 +1,4 @@
 defmodule EVM.Builtin.ModExp do
-  use Bitwise
   alias EVM.Memory
 
   @data_size_limit 24_577

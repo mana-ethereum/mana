@@ -3,6 +3,7 @@ defmodule EVM.Builtin.ModExpTest do
 
   alias EVM.Builtin.ModExp
 
+  # https://github.com/mana-ethereum/mana/issues/580
   test "calculates mod_exp (block #2_444_903, transaction #4 on ropsten)" do
     data =
       "0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000203790e561ff7d7641aacb12e01f997c551b256e2da3072a0348643316b63886933fffffffffffffffffffffffffffffffffffffffffffffffffffffffbfffff0cfffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f"
