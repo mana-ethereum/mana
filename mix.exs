@@ -13,7 +13,7 @@ defmodule Mana.MixProject do
         :merkle_patricia_tree
       ],
       elixirc_options: [warnings_as_errors: true],
-      elixir: "~> 1.7.3",
+      elixir: "~> 1.7.4",
       start_permanent: Mix.env() == :prod,
       dialyzer: [
         flags: [:underspecs, :unknown, :unmatched_returns],
