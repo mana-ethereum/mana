@@ -97,7 +97,7 @@ defmodule EthCommonTest.BlockchainTestRunner do
 
           case Blocktree.verify_and_add_block(acc, chain, block, state_acc) do
             {:ok, {blocktree, new_state, _block_hash}} -> {blocktree, new_state}
-            {:invalid, [reasons_]} -> {acc, state_acc}
+            {:invalid, [_reasons]} -> {acc, state_acc}
           end
 
         _ ->
