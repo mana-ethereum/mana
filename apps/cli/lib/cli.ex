@@ -5,8 +5,8 @@ defmodule CLI do
   """
   require Logger
 
-  alias Blockchain.{Blocktree, Chain}
-  alias CLI.{Config, State, Sync}
+  alias Blockchain.{Blocktree, Chain, State}
+  alias CLI.{Config, Sync}
   alias MerklePatriciaTree.CachingTrie
   alias MerklePatriciaTree.DB.RocksDB
   alias MerklePatriciaTree.Trie
