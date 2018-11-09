@@ -92,27 +92,33 @@ defmodule EVM.Builtin.ModExp do
           integer()
   defp e_length_prime(e_length, e, _) when e == 0 and e_length <= 32, do: 0
 
-  defp e_length_prime(e_length, e, _) when e != 0 and e_length <= 32, do: highest_bit(e)
+  defp e_length_prime(e_length, e, _) when e_length <= 32 do
+    bin_e = :binary.encode_unsigned(e)
+
+    8 * (e_length - 32) + highest_bit(bin_e, e_length)
+  end
 
   defp e_length_prime(e_length, _e, {b_length, data}) do
     <<_::binary-size(b_length), e_first_32_bytes_bin::binary-size(32), _::binary>> = data
 
     e_first_32_bytes = :binary.decode_unsigned(e_first_32_bytes_bin)
 
-    if e_first_32_bytes != 0 do
-      8 * (e_length - 32) + highest_bit(e_first_32_bytes)
-    else
+    if e_first_32_bytes == 0 do
       8 * (e_length - 32)
+    else
+      8 * (e_length - 32) + highest_bit(e_first_32_bytes_bin, e_length)
     end
   end
 
-  @spec highest_bit(non_neg_integer()) :: integer()
-  defp highest_bit(number) do
-    res =
-      number
-      |> :math.log2()
-      |> MathHelper.floor()
+  @spec highest_bit(binary(), non_neg_integer()) :: non_neg_integer()
+  defp highest_bit(_, 0), do: 0
 
-    if res == 256, do: 255, else: res
+  defp highest_bit(binary_number, _) do
+    bit_list = for <<b::1 <- binary_number>>, do: b
+    index = Enum.find_index(bit_list, fn x -> x != 0 end)
+
+    index = index || 0
+
+    255 - index
   end
 end
