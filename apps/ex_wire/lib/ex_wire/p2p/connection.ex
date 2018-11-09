@@ -1,4 +1,10 @@
 defmodule ExWire.P2P.Connection do
+  @moduledoc """
+  The P2P.Connection keeps track of the current state of a P2P connection
+  between two Ethereum nodes. We track, for instance, whether we've
+  successfully completed auth, and if so, the current message authentication
+  codes, etc.
+  """
   alias ExWire.DEVp2p.Session
   alias ExWire.Framing.Secrets
   alias ExWire.Handshake
@@ -13,7 +19,9 @@ defmodule ExWire.P2P.Connection do
           queued_data: binary(),
           session: Session.t(),
           subscribers: [any()],
-          sent_message_count: integer()
+          sent_message_count: integer(),
+          datas: [binary()],
+          last_error: any()
         }
 
   defstruct peer: nil,
@@ -23,5 +31,7 @@ defmodule ExWire.P2P.Connection do
             queued_data: <<>>,
             session: nil,
             subscribers: [],
-            sent_message_count: 0
+            sent_message_count: 0,
+            datas: [],
+            last_error: nil
 end

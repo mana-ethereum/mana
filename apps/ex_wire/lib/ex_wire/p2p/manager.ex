@@ -1,4 +1,10 @@
-defmodule ExWire.P2P do
+defmodule ExWire.P2P.Manager do
+  @moduledoc """
+  P2P.Manager handles the logic of the TCP protocol in the P2P network.
+  We track state with a `Connection` struct, deriving secrets during an
+  auth phase and then handling incoming packets and deciding how to
+  respond.
+  """
   require Logger
 
   alias ExWire.Framing.Frame
@@ -88,6 +94,7 @@ defmodule ExWire.P2P do
   defp handle_packet_data(data, conn) when byte_size(data) == 0, do: conn
 
   defp handle_packet_data(data, conn) do
+    conn = %{conn | last_error: nil}
     %Connection{peer: peer, secrets: secrets} = conn
 
     total_data = conn.queued_data <> data
@@ -134,7 +141,7 @@ defmodule ExWire.P2P do
             "[Network] [#{peer}] Failed to read incoming packet from #{peer.host} `#{reason}`)"
           )
 
-        conn
+        %{conn | last_error: reason}
     end
   end
 
@@ -188,7 +195,7 @@ defmodule ExWire.P2P do
         updated_session
 
       {:error, :handshake_incomplete} ->
-        Logger.warn(fn -> "Ignoring message #{inspect(packet)} due to handshake incomplete." end)
+        Logger.error(fn -> "Ignoring message #{inspect(packet)} due to handshake incomplete." end)
 
         session
     end

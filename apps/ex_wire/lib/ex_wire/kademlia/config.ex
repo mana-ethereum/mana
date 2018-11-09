@@ -4,6 +4,7 @@ defmodule ExWire.Kademlia.Config do
 
   https://pdos.csail.mit.edu/~petar/papers/maymounkov-kademlia-lncs.pdf
   """
+
   # k
   @bucket_size 16
 

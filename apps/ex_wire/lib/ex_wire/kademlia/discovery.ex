@@ -2,7 +2,6 @@ defmodule ExWire.Kademlia.Discovery do
   @moduledoc """
   Module that handles node discovery logic.
   """
-
   alias ExWire.Kademlia.{Node, RoutingTable}
   alias ExWire.Message.FindNeighbours
   alias ExWire.Network

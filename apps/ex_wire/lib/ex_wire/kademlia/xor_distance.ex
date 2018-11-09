@@ -2,7 +2,6 @@ defmodule ExWire.Kademlia.XorDistance do
   @moduledoc """
   XOR metric used in Kademlia.
   """
-
   use Bitwise
 
   @doc """
@@ -31,7 +30,7 @@ defmodule ExWire.Kademlia.XorDistance do
   end
 
   @doc """
-    Calculates common bit prefix between two binaries.
+  Calculates common bit prefix between two binaries.
 
     ## Examples
 

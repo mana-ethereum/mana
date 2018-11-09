@@ -2,7 +2,6 @@ defmodule ExWire.Kademlia.Bucket do
   @moduledoc """
   Represents a Kademlia k-bucket.
   """
-
   alias ExWire.Kademlia.{Config, Node}
   alias ExWire.Util.Timestamp
 
@@ -18,13 +17,13 @@ defmodule ExWire.Kademlia.Bucket do
   Creates new bucket.
 
   ## Examples
+
       iex> ExWire.Kademlia.Bucket.new(1, time: :test)
       %ExWire.Kademlia.Bucket{
         id: 1,
         nodes: [],
         updated_at: 1525704921
       }
-
   """
   @spec new(integer()) :: t()
   def new(id, options \\ [time: :actual]) do
@@ -318,7 +317,6 @@ defmodule ExWire.Kademlia.Bucket do
       iex> bucket |> ExWire.Kademlia.Bucket.full?()
       false
   """
-
   @spec full?(t()) :: boolean()
   def full?(%__MODULE__{nodes: nodes}) do
     Enum.count(nodes) >= Config.bucket_size()

@@ -1,7 +1,7 @@
 defmodule ExWire.Handler.FindNeighbours do
   @moduledoc """
-  Module that handles a response to a FindNeighbours message, which generates a Neighbours response
-  with the closest nodes to provided node id.
+  Module that handles a response to a FindNeighbours message, which generates a
+  Neighbours response with the closest nodes to provided node id.
   """
 
   alias ExWire.{Handler, Kademlia}
@@ -10,7 +10,7 @@ defmodule ExWire.Handler.FindNeighbours do
   alias ExWire.Struct.Neighbour
 
   @doc """
-  Handler for a FindNeighbors message.
+  Handler for a `FindNeighbors` message.
 
   ## Examples
 
@@ -37,6 +37,9 @@ defmodule ExWire.Handler.FindNeighbours do
     }
   end
 
+  @doc """
+  Gets the list of neighbors from the Kademlina running gen server.
+  """
   @spec fetch_neighbours(Params.t(), Keyword.t()) :: [Neighbour.t()]
   def fetch_neighbours(params, options) do
     params.data

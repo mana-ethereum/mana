@@ -1,26 +1,35 @@
 defmodule ExWire.Kademlia.Server do
+  @moduledoc """
+  GenServer that manages Kademlia state
+  """
   use GenServer
-
-  @moduledoc false
-
-  @default_process_name KademliaState
-  @max_discovery_rounds 7
-  # 5s
-  @discovery_round_period 5 * 1000
-  # 10s
-  @pong_cleanup_period 10 * 1000
 
   alias ExWire.Kademlia.{Discovery, Node, RoutingTable}
 
+  @default_process_name KademliaState
+
+  @max_discovery_rounds 7
+
+  # 5s
+  @discovery_round_period 5_000
+
+  # 10s
+  @pong_cleanup_period 10_000
+
+  @spec default_process_name() :: atom()
+  def default_process_name, do: @default_process_name
+
+  @spec start_link(Keyword.t()) :: GenServer.on_start()
   def start_link(params) do
-    name = params[:name] || @default_process_name
+    name = Keyword.get(params, :name, @default_process_name)
     network_client_name = Keyword.fetch!(params, :network_client_name)
     current_node = Keyword.fetch!(params, :current_node)
-    nodes = params[:nodes] || []
+    nodes = Keyword.get(params, :nodes, [])
 
     GenServer.start_link(__MODULE__, {current_node, network_client_name, nodes}, name: name)
   end
 
+  @impl true
   def init({current_node = %Node{}, network_client_name, nodes}) do
     routing_table = RoutingTable.new(current_node, network_client_name)
 
@@ -30,6 +39,7 @@ defmodule ExWire.Kademlia.Server do
     {:ok, %{routing_table: routing_table}}
   end
 
+  @impl true
   def handle_cast({:refresh_node, node}, %{routing_table: table}) do
     updated_table = RoutingTable.refresh_node(table, node)
 
@@ -60,6 +70,7 @@ defmodule ExWire.Kademlia.Server do
     {:noreply, %{routing_table: updated_table}}
   end
 
+  @impl true
   def handle_call(:routing_table, _from, state = %{routing_table: routing_table}) do
     {:reply, routing_table, state}
   end
@@ -74,6 +85,7 @@ defmodule ExWire.Kademlia.Server do
     {:reply, neighbours, state}
   end
 
+  @impl true
   def handle_info({:discovery_round, nodes}, %{routing_table: routing_table}) do
     updated_table = Discovery.start(routing_table, nodes)
 
@@ -90,6 +102,7 @@ defmodule ExWire.Kademlia.Server do
     {:noreply, %{routing_table: updated_table}}
   end
 
+  @spec schedule_discovery_round(integer(), list(Node.t())) :: reference() | :ok
   defp schedule_discovery_round(round, nodes \\ []) do
     if round <= @max_discovery_rounds do
       Process.send_after(self(), {:discovery_round, nodes}, @discovery_round_period)
@@ -98,11 +111,8 @@ defmodule ExWire.Kademlia.Server do
     end
   end
 
+  @spec schedule_pongs_cleanup() :: reference()
   defp schedule_pongs_cleanup() do
     Process.send_after(self(), :remove_expired_nodes, @pong_cleanup_period)
-  end
-
-  def default_process_name do
-    @default_process_name
   end
 end

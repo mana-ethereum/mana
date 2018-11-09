@@ -1,8 +1,9 @@
 defmodule ExWire.NodeDiscoverySupervisor do
   @moduledoc """
-  The Node Discovery Supervisor manages two processes. The first process is kademlia
-  algorithm's routing table state - ExWire.Kademlia.Server,  the second one is process
-  that sends and receives all messages that are used for node discovery (ping, pong etc).
+  The Node Discovery Supervisor manages two processes. The first process is
+  Kademlia algorithm's routing table state: `ExWire.Kademlia.Server`, the
+  second one is process that sends and receives all messages that are used
+  for node discovery (ping, pong, ...).
   """
   use Supervisor
 

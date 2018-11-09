@@ -14,10 +14,17 @@ defmodule ExWire do
   alias ExWire.Sync
   alias ExWire.TCPListeningSupervisor
 
-  def start(_type, args) do
+  def start(_type, _args) do
+    Supervisor.start_link(
+      get_children([]),
+      strategy: :one_for_one
+    )
+  end
+
+  @spec get_children(Keyword.t()) :: list(Supervisor.child_spec())
+  defp get_children(_params) do
     import Supervisor.Spec
 
-    name = Keyword.get(args, :name, ExWire)
     chain = ExWire.Config.chain()
 
     sync_children =
@@ -44,9 +51,6 @@ defmodule ExWire do
     # Listener accepts and hands off new inbound TCP connections
     tcp_listening = [TCPListeningSupervisor]
 
-    children = sync_children ++ node_discovery ++ tcp_listening
-
-    opts = [strategy: :one_for_one, name: name]
-    Supervisor.start_link(children, opts)
+    sync_children ++ node_discovery ++ tcp_listening
   end
 end

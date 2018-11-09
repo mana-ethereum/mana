@@ -139,7 +139,16 @@ defmodule ExWire.Packet.Status do
 
       iex> %ExWire.Packet.Status{protocol_version: 63, network_id: 3, total_difficulty: 10, best_hash: <<5>>, genesis_hash: <<4>>}
       ...> |> ExWire.Packet.Status.handle()
-      :ok
+      {:send,
+             %ExWire.Packet.Status{
+               best_hash: <<4>>,
+               block_number: nil,
+               genesis_hash: <<4>>,
+               manifest_hash: nil,
+               network_id: 3,
+               protocol_version: 63,
+               total_difficulty: 10
+             }}
 
       # Test a peer with an incompatible version
       iex> %ExWire.Packet.Status{protocol_version: 555, network_id: 3, total_difficulty: 10, best_hash: <<5>>, genesis_hash: <<4>>}
@@ -148,9 +157,7 @@ defmodule ExWire.Packet.Status do
   """
   @spec handle(ExWire.Packet.packet()) :: ExWire.Packet.handle_response()
   def handle(packet = %__MODULE__{}) do
-    _ =
-      if System.get_env("TRACE"),
-        do: _ = Logger.debug(fn -> "[Packet] Got Status: #{inspect(packet)}" end)
+    Exth.trace(fn -> "[Packet] Got Status: #{inspect(packet)}" end)
 
     if packet.protocol_version == ExWire.Config.protocol_version() do
       {:send, new(packet)}

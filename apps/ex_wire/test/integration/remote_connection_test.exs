@@ -145,7 +145,7 @@ defmodule ExWire.RemoteConnectionTest do
       {:incoming_packet,
        _packet = %Packet.Status{
          best_hash: _best_hash,
-         total_difficulty: total_difficulty,
+         total_difficulty: _total_difficulty,
          genesis_hash: genesis_hash
        }} ->
         # Request block headers

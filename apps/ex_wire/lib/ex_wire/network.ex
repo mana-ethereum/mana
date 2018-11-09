@@ -3,8 +3,9 @@ defmodule ExWire.Network do
   This module will handle the business logic for processing incoming messages
   from the network. We will, for instance, decide to respond pong to any
   incoming ping.
-  """
 
+  This is used by the discovery v4 protocol.
+  """
   require Logger
 
   alias ExWire.{Config, Crypto, Handler, Message, Protocol}
@@ -109,7 +110,7 @@ defmodule ExWire.Network do
         #       but we may want to revise.
         to = response_message.__struct__.to(response_message) || remote_host
 
-        send(response_message, server_pid, to)
+        send(response_message, server_pid, to, Keyword.get(options, :private_key, nil))
     end
   end
 
@@ -124,7 +125,8 @@ defmodule ExWire.Network do
       ...>   hash: <<2>>,
       ...>   timestamp: 3,
       ...> }
-      iex> ExWire.Network.send(message, self(), %ExWire.Struct.Endpoint{ip: <<1, 2, 3, 4>>, udp_port: 5})
+      iex> private_key = <<10, 122, 189, 137, 166, 190, 127, 238, 229, 16, 211, 182, 104, 78, 138, 37, 146, 116, 90, 68, 76, 86, 168, 24, 200, 155, 0, 99, 58, 226, 211, 30>>
+      iex> ExWire.Network.send(message, self(), %ExWire.Struct.Endpoint{ip: <<1, 2, 3, 4>>, udp_port: 5}, private_key)
       {
         :sent_message,
         ExWire.Message.Pong,
@@ -140,7 +142,7 @@ defmodule ExWire.Network do
       {:"$gen_cast",
         {:send,
           %{
-            data: ExWire.Protocol.encode(message, ExWire.Config.private_key()),
+            data: ExWire.Protocol.encode(message, <<10, 122, 189, 137, 166, 190, 127, 238, 229, 16, 211, 182, 104, 78, 138, 37, 146, 116, 90, 68, 76, 86, 168, 24, 200, 155, 0, 99, 58, 226, 211, 30>>),
             to: %ExWire.Struct.Endpoint{
               ip: <<1, 2, 3, 4>>,
               tcp_port: nil,
@@ -149,9 +151,9 @@ defmodule ExWire.Network do
         }
       }
   """
-  @spec send(Message.t(), pid(), Endpoint.t()) :: handler_action
-  def send(message, server_pid, to) do
-    encoded_message = Protocol.encode(message, Config.private_key())
+  @spec send(Message.t(), pid(), Endpoint.t(), Key.private_key() | nil) :: handler_action
+  def send(message, server_pid, to, private_key \\ nil) do
+    encoded_message = Protocol.encode(message, private_key || Config.private_key())
 
     GenServer.cast(server_pid, {
       :send,

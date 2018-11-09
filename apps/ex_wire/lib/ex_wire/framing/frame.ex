@@ -11,6 +11,7 @@ defmodule ExWire.Framing.Frame do
 
   alias ExthCrypto.{AES, MAC}
   alias ExWire.Framing.Secrets
+  require Logger
 
   @type frame :: binary()
 
@@ -116,6 +117,12 @@ defmodule ExWire.Framing.Frame do
     expected_header_mac = ingress_mac |> MAC.final() |> Binary.take(16)
 
     if expected_header_mac != header_mac do
+      Logger.error(
+        "Failed to match ingress header mac, expected: #{inspect(expected_header_mac)}, got #{
+          inspect(header_mac)
+        }"
+      )
+
       {:error, "Failed to match header ingress mac"}
     else
       {decoder_stream, header} = AES.stream_decrypt(header_enc, decoder_stream)

@@ -27,8 +27,8 @@ defmodule ExWire.Message do
   }
 
   @doc """
-  Decodes a message of given `type` based on the encoded
-  data. Effectively reverses the `decode/1` function.
+  Decodes a message of given `type` based on the encoded data. Effectively
+  reverses the `decode/1` function.
 
   ## Examples
 
@@ -57,8 +57,8 @@ defmodule ExWire.Message do
   end
 
   @doc """
-  Encoded a message by concatting its `message_id` to
-  the encoded data of the message itself.
+  Encoded a message by concating its `message_id` to the encoded data of the
+  message itself.
 
   ## Examples
 
@@ -81,7 +81,8 @@ defmodule ExWire.Message do
   end
 
   @doc """
-  Recovers public key from message.
+  Recovers the public key of a signer, given a message and its
+  signature.
 
   ## Examples
 

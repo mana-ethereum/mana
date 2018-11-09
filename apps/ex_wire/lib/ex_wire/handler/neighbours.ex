@@ -1,7 +1,7 @@
 defmodule ExWire.Handler.Neighbours do
   @moduledoc """
-  Module to handle a response to a Neighbours message, which
-  should be to add the neighbors to the correct K-Buckets.
+  Module to handle a response to a Neighbours message, which should be to add
+  the neighbors to the correct K-Buckets.
   """
 
   require Logger
@@ -11,7 +11,8 @@ defmodule ExWire.Handler.Neighbours do
   alias ExWire.Message.Neighbours
 
   @doc """
-  Handler for a Neighbours message.
+  Handler for a `Neighbours` message, which directs a request to the running
+  Kademlia gen server process.
 
   ## Examples
 

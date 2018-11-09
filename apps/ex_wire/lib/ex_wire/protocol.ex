@@ -1,9 +1,8 @@
 defmodule ExWire.Protocol do
   @moduledoc """
-  Functions to handle encoding and decoding messages for
-  over the wire transfer.
+  Functions to handle encoding and decoding messages for over the wire
+  transfer.
   """
-
   alias ExWire.Crypto
   alias ExWire.Message
 

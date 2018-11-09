@@ -12,14 +12,12 @@ defmodule ExWire.P2P.Server do
   Note: incoming connections are not fully tested at this moment.
   Note: we do not currently store token to restart connections (this upsets some peers)
   """
-
   use GenServer
 
   require Logger
 
-  alias ExWire.{P2P, TCP, Packet}
-  alias ExWire.P2P.Inbound
-  alias ExWire.P2P.Outbound
+  alias ExWire.{TCP, Packet}
+  alias ExWire.P2P.Manager
   alias ExWire.Struct.Peer
 
   @type subscription() :: {module(), atom(), list()} | {:server, pid()}
@@ -34,7 +32,7 @@ defmodule ExWire.P2P.Server do
           Supervisor.child_spec()
   def child_spec({:inbound, socket}) do
     %{
-      id: Inbound,
+      id: ExWire.P2P.Inbound,
       start: {__MODULE__, :start_link, [:inbound, socket]},
       restart: :temporary
     }
@@ -48,7 +46,7 @@ defmodule ExWire.P2P.Server do
   """
   def child_spec({:outbound, peer, subscribers}) do
     %{
-      id: Outbound,
+      id: ExWire.P2P.Outbound,
       start: {__MODULE__, :start_link, [:outbound, peer, subscribers]},
       restart: :temporary
     }
@@ -119,7 +117,7 @@ defmodule ExWire.P2P.Server do
 
     state =
       socket
-      |> P2P.new_outbound_connection(peer)
+      |> Manager.new_outbound_connection(peer)
       |> Map.put(:subscribers, Map.get(opts, :subscribers, []))
 
     {:ok, state}
@@ -128,7 +126,7 @@ defmodule ExWire.P2P.Server do
   def init(opts = %{is_outbound: false, socket: socket}) do
     state =
       socket
-      |> P2P.new_inbound_connection()
+      |> Manager.new_inbound_connection()
       |> Map.put(:subscribers, Map.get(opts, :subscribers, []))
 
     {:ok, state}
@@ -149,10 +147,26 @@ defmodule ExWire.P2P.Server do
   @doc """
   Handle inbound communication from a peer node via tcp.
   """
-  def handle_info({:tcp, _socket, data}, state) do
-    {:ok, new_state} = handle_socket_message(data, state)
+  def handle_info({:tcp, socket, data}, conn) do
+    IO.inspect(["Got message from socket", socket, data, conn])
 
-    {:noreply, new_state}
+    {:ok, new_conn} = handle_socket_message(data, conn)
+
+    new_conn =
+      if new_conn.last_error != nil do
+        Map.update(new_conn, :datas, [data], fn datas -> [data | datas] end)
+      else
+        new_conn
+      end
+
+    Enum.reduce(new_conn.datas |> Enum.reverse(), conn, fn d, c ->
+      IO.inspect(["Retrying", d, c])
+      {:ok, c} = handle_socket_message(d, c)
+
+      c
+    end)
+
+    {:noreply, new_conn}
   end
 
   @doc """
@@ -198,7 +212,7 @@ defmodule ExWire.P2P.Server do
 
   @spec handle_socket_message(binary(), Connection.t()) :: {:ok, Connection.t()}
   defp handle_socket_message(data, state) do
-    new_state = P2P.handle_message(state, data)
+    new_state = Manager.handle_message(state, data)
 
     {:ok, new_state}
   end
@@ -216,7 +230,7 @@ defmodule ExWire.P2P.Server do
 
   @spec handle_send(Packet.packet(), Connection.t()) :: {:ok, Connection.t()}
   defp handle_send(packet, state) do
-    new_state = P2P.send_packet(state, packet)
+    new_state = Manager.send_packet(state, packet)
 
     {:ok, new_state}
   end

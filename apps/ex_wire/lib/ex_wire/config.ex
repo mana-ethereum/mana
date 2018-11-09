@@ -1,18 +1,25 @@
 defmodule ExWire.Config do
   @moduledoc """
   General configuration information for ExWire.
-  """
 
+  All configuration that comes from `config/*.exs`,
+  or possibly the command-line or environment should
+  come from this module.
+  """
   alias Blockchain.Chain
   alias ExthCrypto.ECIES.ECDH
   alias ExthCrypto.{Key, Signature}
   alias ExWire.Crypto
 
-  @default_port 30_304
+  @default_port 30303
   @default_public_ip [127, 0, 0, 1]
 
   @doc """
   Returns a private key that is generated when a new session is created.
+
+  Note: if the key is set to random, this will persist the key so it is
+        identical for later calls.
+
   It is intended that this key is semi-persisted.
   """
   @spec private_key() :: Key.private_key()
@@ -25,6 +32,7 @@ defmodule ExWire.Config do
         ECDH.new_ecdh_keypair()
         |> Tuple.to_list()
         |> List.last()
+        |> set_env!(:private_key)
     end
   end
 
@@ -126,6 +134,11 @@ defmodule ExWire.Config do
     end
   end
 
+  @spec db_name(Chain.t()) :: nonempty_charlist()
+  def db_name(chain) do
+    'db/mana-' ++ String.to_charlist(chain.name)
+  end
+
   @spec commitment_count(Keyword.t()) :: integer()
   def commitment_count(given_params \\ []), do: get_env!(given_params, :commitment_count)
 
@@ -162,5 +175,12 @@ defmodule ExWire.Config do
     else
       Application.get_env(:ex_wire, key, default)
     end
+  end
+
+  @spec set_env!(any(), atom()) :: any()
+  defp set_env!(value, key) do
+    Application.put_env(:ex_wire, key, value)
+
+    value
   end
 end

@@ -20,6 +20,11 @@ defmodule ExWire.DEVp2p do
   @doc """
   Function to create a DEVp2p struct needed for a protocol handshake. This
   should be an `ExWire.Packet.Hello` struct with the appropriate values filled in.
+
+  ## Examples
+
+  iex> ExWire.DEVp2p.build_hello().client_id
+  "mana/0.1.1"
   """
   @spec build_hello() :: Packet.Hello.t()
   def build_hello() do
@@ -57,6 +62,10 @@ defmodule ExWire.DEVp2p do
   @spec session_active?(Session.t()) :: boolean()
   def session_active?(session), do: Session.active?(session)
 
+  @doc """
+  Function to check whether or not a `ExWire.DEVp2p.Session` is compatible.
+  See `ExWire.DEVp2p.Session.compatible_capabilities?/1` for more information.
+  """
   @spec session_compatible?(Session.t()) :: boolean()
   def session_compatible?(session), do: Session.compatible_capabilities?(session)
 
