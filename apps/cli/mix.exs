@@ -36,7 +36,7 @@ defmodule Cli.MixProject do
       {:merkle_patricia_tree, in_umbrella: true},
 
       # External deps
-      {:ethereumex, "~> 0.5.0"},
+      {:ethereumex, "~> 0.5.1"},
       {:progress_bar, "~> 1.6.1"}
     ]
   end
