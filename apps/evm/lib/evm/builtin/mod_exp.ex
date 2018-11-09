@@ -110,9 +110,10 @@ defmodule EVM.Builtin.ModExp do
     end
   end
 
-  def highest_bit(_, 0), do: 0
+  @spec highest_bit(binary(), non_neg_interger()) :: non_neg_integer()
+  defp highest_bit(_, 0), do: 0
 
-  def highest_bit(binary_number, _) do
+  defp highest_bit(binary_number, _) do
     bit_list = for <<b::1 <- binary_number>>, do: b
     index = Enum.find_index(bit_list, fn x -> x != 0 end)
 
