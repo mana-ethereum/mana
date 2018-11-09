@@ -110,7 +110,7 @@ defmodule EVM.Builtin.ModExp do
     end
   end
 
-  @spec highest_bit(binary(), non_neg_interger()) :: non_neg_integer()
+  @spec highest_bit(binary(), non_neg_integer()) :: non_neg_integer()
   defp highest_bit(_, 0), do: 0
 
   defp highest_bit(binary_number, _) do
