@@ -20,7 +20,8 @@ defmodule ExWire.Crypto do
   defdelegate bin_to_hex(bin), to: Math
 
   @doc """
-  Returns a node_id based on a given private key.
+  Returns a node_id based on a given private key. This is the raw encoding
+  of the associated public key.
 
   ## Examples
 
@@ -37,14 +38,17 @@ defmodule ExWire.Crypto do
   @spec node_id(Key.private_key()) :: {:ok, ExWire.node_id()} | {:error, String.t()}
   def node_id(private_key) do
     case Signature.get_public_key(private_key) do
-      {:ok, <<public_key::binary()>>} -> {:ok, public_key |> Key.der_to_raw()}
-      {:error, reason} -> {:error, to_string(reason)}
+      {:ok, <<public_key::binary()>>} ->
+        {:ok, node_id_from_public_key(public_key)}
+
+      {:error, reason} ->
+        {:error, to_string(reason)}
     end
   end
 
   @doc """
-  Validates whether a hash matches a given set of data
-  via a SHA3 function, or returns `:invalid`.
+  Validates whether a hash matches a given set of data via a SHA3 function,
+  or returns `:invalid`.
 
   ## Examples
 
@@ -64,8 +68,8 @@ defmodule ExWire.Crypto do
   end
 
   @doc """
-  Similar to `hash_matches/2`, except raises an error if there
-  is an invalid hash.
+  Similar to `hash_matches/2`, except raises an error if there is an invalid
+  hash.
 
   ## Examples
 
@@ -84,7 +88,8 @@ defmodule ExWire.Crypto do
   end
 
   @doc """
-  Returns the SHA3 hash of a given set of data.
+  Returns the SHA3 hash of a given set of data. This is a simple convenience
+  function wrapping our Keccak libary.
 
   ## Examples
 
@@ -111,6 +116,8 @@ defmodule ExWire.Crypto do
   @doc """
   Recovers a public key from a given signature for a given digest.
 
+  This function will fail if recovery of the public key fails.
+
   ## Examples
       iex> message = <<240, 201, 132, 52, 176, 100, 77, 130, 118, 95, 128, 160, 58, 157, 88,
       ...>  6, 70, 100, 4, 170, 21, 252, 246, 14, 229, 171, 61, 176, 239, 240, 118, 204,
@@ -126,14 +133,24 @@ defmodule ExWire.Crypto do
         185, 91, 252, 107, 196, 30, 137, 64, 224, 60, 229, 20, 168, 35, 251, 75, 143,
         85, 130, 147, 90, 33, 104, 100, 96, 18, 220, 253, 58, 85, 207>>
   """
-  @spec recover_public_key(binary(), binary(), integer()) :: integer()
+  @spec recover_public_key(binary(), Signature.signature(), Signature.recovery_id()) ::
+          Key.public_key() | no_return()
   def recover_public_key(message, signature, recovery_id) do
     {:ok, public_key} = Signature.recover(message, signature, recovery_id)
 
     public_key
   end
 
-  @spec node_id_from_public_key(binary()) :: binary()
+  @doc """
+  Returns a node_id based on a given public key. This is simply
+  the public key in raw encoding.
+
+  ## Examples
+
+      iex> ExWire.Crypto.node_id_from_public_key(<<0x04, 1::256>>)
+      <<1::256>>
+  """
+  @spec node_id_from_public_key(Key.public_key_der()) :: Key.public_key()
   def node_id_from_public_key(public_key) do
     Key.der_to_raw(public_key)
   end

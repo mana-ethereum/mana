@@ -106,8 +106,7 @@ defmodule ExWire.Packet.Hello do
   """
   @spec handle(ExWire.Packet.packet()) :: ExWire.Packet.handle_response()
   def handle(packet = %__MODULE__{}) do
-    if System.get_env("TRACE"),
-      do: _ = Logger.debug(fn -> "[Packet] Got Hello: #{inspect(packet)}" end)
+    Exth.trace(fn -> "[Packet] Got Hello: #{inspect(packet)}" end)
 
     if packet.caps == [] do
       _ =

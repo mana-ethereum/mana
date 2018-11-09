@@ -7,65 +7,7 @@ defmodule ExWire.DEVp2p do
   """
 
   alias ExWire.{Config, Packet}
-
-  defmodule Session do
-    @moduledoc """
-      Module to hold struct for a DEVp2p Wire Protocol session.
-      The session should be active when `Hello` messages have been exchanged.
-
-      See https://github.com/ethereum/wiki/wiki/%C3%90%CE%9EVp2p-Wire-Protocol#session-management
-    """
-
-    alias ExWire.Packet.Hello
-
-    @type handshake_status :: boolean | ExWire.Packet.Hello.t()
-    @type t :: %Session{hello_sent: handshake_status, hello_received: handshake_status}
-
-    defstruct hello_sent: false, hello_received: false
-
-    @doc """
-    Checks whether or not the session is active.
-
-    A session is only active if the handshake is complete and if there are overlapping capabilities, meaning
-    that some of the sub-protocols are the same (e.g. eth 62)
-
-    ## Examples
-
-        iex> hello_received = %ExWire.Packet.Hello{caps: [{"eth", 62}]}
-        iex> hello_sent = %ExWire.Packet.Hello{caps: [{"eth", 62}]}
-        iex> ExWire.DEVp2p.Session.active?(%ExWire.DEVp2p.Session{hello_received: hello_received, hello_sent: hello_sent})
-        true
-    """
-    @spec active?(t) :: boolean()
-    def active?(%Session{hello_received: false}), do: false
-    def active?(%Session{hello_sent: false}), do: false
-
-    def active?(session = %Session{hello_sent: %Hello{}, hello_received: %Hello{}}) do
-      compatible_capabilities?(session)
-    end
-
-    @spec disconnect(t) :: Session.t()
-    def disconnect(session = %Session{}) do
-      %{session | hello_sent: false, hello_received: false}
-    end
-
-    @spec compatible_capabilities?(t) :: boolean()
-    def compatible_capabilities?(session = %Session{}) do
-      %Session{hello_received: hello_received, hello_sent: hello_sent} = session
-
-      intersection =
-        MapSet.intersection(
-          to_mapset(hello_received.caps),
-          to_mapset(hello_sent.caps)
-        )
-
-      !Enum.empty?(intersection)
-    end
-
-    defp to_mapset(list) do
-      Enum.into(list, MapSet.new())
-    end
-  end
+  alias ExWire.DEVp2p.Session
 
   @doc """
   Convenience function to create an `ExWire.DEVp2p.Session` struct
@@ -78,9 +20,14 @@ defmodule ExWire.DEVp2p do
   @doc """
   Function to create a DEVp2p struct needed for a protocol handshake. This
   should be an `ExWire.Packet.Hello` struct with the appropriate values filled in.
+
+  ## Examples
+
+  iex> ExWire.DEVp2p.build_hello().client_id
+  "mana/0.1.1"
   """
-  @spec build_hello :: Packet.Hello.t()
-  def build_hello do
+  @spec build_hello() :: Packet.Hello.t()
+  def build_hello() do
     %Packet.Hello{
       p2p_version: Config.p2p_version(),
       client_id: Config.client_id(),
@@ -115,6 +62,10 @@ defmodule ExWire.DEVp2p do
   @spec session_active?(Session.t()) :: boolean()
   def session_active?(session), do: Session.active?(session)
 
+  @doc """
+  Function to check whether or not a `ExWire.DEVp2p.Session` is compatible.
+  See `ExWire.DEVp2p.Session.compatible_capabilities?/1` for more information.
+  """
   @spec session_compatible?(Session.t()) :: boolean()
   def session_compatible?(session), do: Session.compatible_capabilities?(session)
 

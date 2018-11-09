@@ -178,7 +178,7 @@ defmodule ExWire.Kademlia.RoutingTable do
   @doc """
   Pings a node saving it to expected pongs.
   """
-  @spec ping(t(), Node.t()) :: Network.handler_action()
+  @spec ping(t(), Node.t()) :: t()
   def ping(
         table = %__MODULE__{
           current_node: %Node{endpoint: current_endpoint},
@@ -188,10 +188,17 @@ defmodule ExWire.Kademlia.RoutingTable do
         replace_candidate \\ nil
       ) do
     ping = Ping.new(current_endpoint, remote_endpoint)
+
     {:sent_message, _, encoded_message} = Network.send(ping, network_client_name, remote_endpoint)
 
     mdc = Protocol.message_mdc(encoded_message)
-    updated_pongs = Map.put(table.expected_pongs, mdc, {node, replace_candidate, ping.timestamp})
+
+    updated_pongs =
+      Map.put(
+        table.expected_pongs,
+        mdc,
+        {node, replace_candidate, ping.timestamp}
+      )
 
     %{table | expected_pongs: updated_pongs}
   end
@@ -329,19 +336,19 @@ defmodule ExWire.Kademlia.RoutingTable do
     end)
   end
 
-  @spec nodes_at(t(), integer()) :: Node.t()
+  @spec nodes_at(t(), integer()) :: list(Node.t())
   def nodes_at(table = %__MODULE__{}, bucket_id) do
     table
     |> bucket_at(bucket_id)
     |> Bucket.nodes()
   end
 
-  @spec buckets_count() :: integer()
+  @spec buckets_count() :: unquote(KademliaConfig.id_size())
   defp buckets_count do
     KademliaConfig.id_size()
   end
 
-  @spec bucket_capacity() :: integer()
+  @spec bucket_capacity() :: unquote(KademliaConfig.bucket_size())
   defp bucket_capacity do
     KademliaConfig.bucket_size()
   end

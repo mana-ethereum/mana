@@ -68,7 +68,7 @@ defmodule ExWire.Adapter.UDP do
       )
       when not is_nil(udp_port) do
     tuple_ip = List.to_tuple(ip)
-    :gen_udp.send(socket, tuple_ip, udp_port, data)
+    :ok = :gen_udp.send(socket, tuple_ip, udp_port, data)
 
     {:noreply, state}
   end

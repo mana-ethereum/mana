@@ -12,6 +12,7 @@ defmodule ExWire.Packet.GetBlockHeaders do
   """
 
   alias ExWire.Packet
+  alias ExWire.Packet.BlockHeaders
 
   @behaviour ExWire.Packet
 
@@ -58,10 +59,10 @@ defmodule ExWire.Packet.GetBlockHeaders do
 
   ## Examples
 
-      iex> ExWire.Packet.GetBlockHeaders.deserialize([5, 10, 2, 1])
+      iex> ExWire.Packet.GetBlockHeaders.deserialize([5, <<10>>, <<2>>, <<1>>])
       %ExWire.Packet.GetBlockHeaders{block_identifier: 5, max_headers: 10, skip: 2, reverse: true}
 
-      iex> ExWire.Packet.GetBlockHeaders.deserialize([<<5>>, 10, 2, 0])
+      iex> ExWire.Packet.GetBlockHeaders.deserialize([<<5>>, <<10>>, <<2>>, <<0>>])
       %ExWire.Packet.GetBlockHeaders{block_identifier: <<5>>, max_headers: 10, skip: 2, reverse: false}
   """
   @spec deserialize(ExRLP.t()) :: t
@@ -75,24 +76,33 @@ defmodule ExWire.Packet.GetBlockHeaders do
 
     %__MODULE__{
       block_identifier: block_identifier,
-      max_headers: max_headers,
-      skip: skip,
-      reverse: reverse == 1
+      max_headers: :binary.decode_unsigned(max_headers),
+      skip: :binary.decode_unsigned(skip),
+      reverse: :binary.decode_unsigned(reverse) == 1
     }
   end
 
   @doc """
   Handles a GetBlockHeaders message. We shoud send the block headers
-  to the peer if we have them. For now, we'll do nothing.
+  to the peer if we have them.
+
+  For now, we do nothing. This upsets Geth as it thinks we're a bad
+  peer, which, I suppose, we are.
 
   ## Examples
 
       iex> %ExWire.Packet.GetBlockHeaders{block_identifier: 5, max_headers: 10, skip: 2, reverse: true}
       ...> |> ExWire.Packet.GetBlockHeaders.handle()
-      :ok
+      {:send,
+         %ExWire.Packet.BlockHeaders{
+           headers: []
+         }}
   """
   @spec handle(ExWire.Packet.packet()) :: ExWire.Packet.handle_response()
   def handle(_packet = %__MODULE__{}) do
-    :ok
+    {:send,
+     %BlockHeaders{
+       headers: []
+     }}
   end
 end

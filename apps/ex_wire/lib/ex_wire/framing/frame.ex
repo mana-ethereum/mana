@@ -11,8 +11,11 @@ defmodule ExWire.Framing.Frame do
 
   alias ExthCrypto.{AES, MAC}
   alias ExWire.Framing.Secrets
+  require Logger
 
   @type frame :: binary()
+
+  @padding_size 16
 
   @spec frame(integer(), ExRLP.t(), Secrets.t()) :: {frame, Secrets.t()}
   def frame(
@@ -116,6 +119,13 @@ defmodule ExWire.Framing.Frame do
     expected_header_mac = ingress_mac |> MAC.final() |> Binary.take(16)
 
     if expected_header_mac != header_mac do
+      :ok =
+        Logger.error(
+          "Failed to match ingress header mac, expected: #{inspect(expected_header_mac)}, got #{
+            inspect(header_mac)
+          }"
+        )
+
       {:error, "Failed to match header ingress mac"}
     else
       {decoder_stream, header} = AES.stream_decrypt(header_enc, decoder_stream)
@@ -129,7 +139,7 @@ defmodule ExWire.Framing.Frame do
       # header_rlp = header_data_and_padding |> ExRLP.decode
       # protocol_id = Enum.at(header_rlp, 0) |> ExRLP.decode
 
-      frame_padding_bytes = padding_size(frame_size, 16)
+      frame_padding_bytes = padding_size(frame_size, @padding_size)
 
       if byte_size(frame_rest) < frame_size + frame_padding_bytes + 16 do
         {:error, "Insufficent data"}
@@ -194,9 +204,9 @@ defmodule ExWire.Framing.Frame do
     MAC.update(mac, enc_xored)
   end
 
-  @spec padding_size(integer(), integer()) :: integer()
+  @spec padding_size(non_neg_integer(), unquote(@padding_size)) :: integer()
   defp padding_size(given_size, to_size) do
-    to_size - rem(given_size, to_size)
+    rem(to_size - rem(given_size, to_size), to_size)
   end
 
   @spec padding_for(integer(), integer()) :: binary()

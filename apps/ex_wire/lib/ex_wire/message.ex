@@ -1,8 +1,9 @@
 defmodule ExWire.Message do
   @moduledoc """
-  Defines a behavior for messages so that they can be
-  easily encoded and decoded.
+  Defines a behavior for messages so that they can be easily encoded and
+  decoded for transfer from and to the wire.
   """
+
   alias ExWire.Crypto
   alias ExWire.Message.{FindNeighbours, Neighbours, Ping, Pong}
   alias ExWire.Struct.Endpoint
@@ -26,8 +27,8 @@ defmodule ExWire.Message do
   }
 
   @doc """
-  Decodes a message of given `type` based on the encoded
-  data. Effectively reverses the `decode/1` function.
+  Decodes a message of given `type` based on the encoded data. Effectively
+  reverses the `decode/1` function.
 
   ## Examples
 
@@ -56,8 +57,8 @@ defmodule ExWire.Message do
   end
 
   @doc """
-  Encoded a message by concatting its `message_id` to
-  the encoded data of the message itself.
+  Encoded a message by concating its `message_id` to the encoded data of the
+  message itself.
 
   ## Examples
 
@@ -80,7 +81,8 @@ defmodule ExWire.Message do
   end
 
   @doc """
-  Recovers public key from message.
+  Recovers the public key of a signer, given a message and its
+  signature.
 
   ## Examples
 

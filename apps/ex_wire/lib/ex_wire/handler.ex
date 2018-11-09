@@ -1,11 +1,11 @@
 defmodule ExWire.Handler do
   @moduledoc """
-  Defines a behavior for all message handlers of RLPx messages.
+  Defines a behavior for all message handlers of RLPx messages. This
+  is for the discovery v4 protocol.
 
-  Message handlers tell us how we should respond to a given incoming transmission,
-  after it has been decoded.
+  Message handlers tell us how we should respond to a given incoming
+  transmission after it has been decoded.
   """
-
   alias ExWire.{Crypto, Message}
   alias ExWire.Struct.Endpoint
   alias ExWire.Handler.{FindNeighbours, Neighbours, Ping, Pong}
@@ -41,13 +41,13 @@ defmodule ExWire.Handler do
           }
   end
 
-  @type handler_response :: :not_implented | :no_response | Message.t()
+  @type handler_response :: :not_implemented | :no_response | Message.t()
   @callback handle(Params.t()) :: handler_response
 
   @doc """
-  Decides which module to route the given message to,
-  or returns `:not_implemented` if we have no implemented
-  a handler for the message type.
+  Decides which module to route the given message to, or returns
+  `:not_implemented` if we have no implemented a handler for the
+  message type.
 
   ## Examples
 
@@ -79,7 +79,7 @@ defmodule ExWire.Handler do
 
       # TODO: Add a `no_response` test case
   """
-  @spec dispatch(Params.t(), Keyword.t()) :: handler_response
+  @spec dispatch(Params.t(), Keyword.t()) :: handler_response()
   def dispatch(params, options \\ []) do
     case @handlers[params.type] do
       nil ->

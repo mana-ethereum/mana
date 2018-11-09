@@ -7,7 +7,8 @@ defmodule ExWire.Handler.Ping do
   alias ExWire.Message.{Ping, Pong}
 
   @doc """
-  Handler for a Ping message.
+  Handler for a `Ping` message, which prepares a pong response and informs
+  the Kademlia running gen server that the peer is active.
 
   ## Examples
 

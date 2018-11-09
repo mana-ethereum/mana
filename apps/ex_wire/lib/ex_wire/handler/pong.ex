@@ -1,13 +1,14 @@
 defmodule ExWire.Handler.Pong do
   @moduledoc """
-  Module to handle a response to a Pong message, which is to do nothing.
+  Module to handle a response to a `Pong` message, which is to do nothing
+  except inform Kademlia
   """
 
   alias ExWire.{Handler, Kademlia}
   alias ExWire.Message.Pong
 
   @doc """
-  Handler for a Pong message.
+  Handler for a `Pong` message, which informs Kademlia of the response.
 
   ## Examples
 

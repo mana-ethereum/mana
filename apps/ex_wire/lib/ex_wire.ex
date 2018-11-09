@@ -3,53 +3,53 @@ defmodule ExWire do
   Main application for ExWire. We will begin listening on a port
   when this application is started.
   """
+  use Application
+
+  import Supervisor, only: [child_spec: 2]
 
   @type node_id :: binary()
-
-  use Application
 
   alias ExWire.Config
   alias ExWire.NodeDiscoverySupervisor
   alias ExWire.PeerSupervisor
   alias ExWire.Sync
   alias ExWire.TCPListeningSupervisor
-  alias MerklePatriciaTree.DB.RocksDB
 
-  def start(_type, args) do
-    import Supervisor.Spec
+  def start(_type, _args) do
+    Supervisor.start_link(
+      get_children([]),
+      strategy: :one_for_one
+    )
+  end
 
-    name = Keyword.get(args, :name, ExWire)
+  @spec get_children(Keyword.t()) :: list(Supervisor.child_spec())
+  defp get_children(_params) do
+    chain = ExWire.Config.chain()
 
     sync_children =
-      if Config.sync() do
-        db = RocksDB.init(db_name())
-
+      if Config.perform_sync?() do
         [
-          supervisor(PeerSupervisor, [:ok]),
-          worker(Sync, [db])
+          # Peer supervisor maintains a pool of outbound peers
+          child_spec({PeerSupervisor, Config.bootnodes()}, []),
+
+          # Sync coordinates asking peers for new blocks
+          child_spec({Sync, chain}, [])
         ]
       else
         []
       end
 
     node_discovery =
-      if Config.discovery() do
-        [worker(NodeDiscoverySupervisor, [])]
+      if Config.perform_discovery?() do
+        # Discovery tries to find new peers
+        [child_spec({NodeDiscoverySupervisor, []}, [])]
       else
         []
       end
 
-    tcp_listening = [TCPListeningSupervisor]
+    # Listener accepts and hands off new inbound TCP connections
+    tcp_listening = [child_spec({TCPListeningSupervisor, :ok}, [])]
 
-    children = sync_children ++ node_discovery ++ tcp_listening
-
-    opts = [strategy: :one_for_one, name: name]
-    Supervisor.start_link(children, opts)
-  end
-
-  defp db_name() do
-    environment = Config.get_environment()
-    env = environment |> to_charlist()
-    'db/mana-' ++ env
+    sync_children ++ node_discovery ++ tcp_listening
   end
 end

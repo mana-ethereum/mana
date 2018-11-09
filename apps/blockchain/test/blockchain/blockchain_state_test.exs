@@ -1,4 +1,4 @@
-defmodule Blockchain.StateTest do
+defmodule Blockchain.BlockchainStateTest do
   alias Blockchain.Account
   alias EthCommonTest.StateTestRunner
   alias MerklePatriciaTree.Trie

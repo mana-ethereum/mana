@@ -31,7 +31,7 @@ defmodule Blockchain.Blocktree do
   3. If valid, put the block into our DB
   """
   @spec verify_and_add_block(t, Chain.t(), Block.t(), TrieStorage.t(), boolean(), binary() | nil) ::
-          {:ok, {t, TrieStorage.t()}} | {:invalid, [atom()]}
+          {:ok, {t, TrieStorage.t(), EVM.hash()}} | {:invalid, [atom()]}
   def verify_and_add_block(
         blocktree,
         chain,
@@ -60,7 +60,7 @@ defmodule Blockchain.Blocktree do
 
       updated_blocktree = update_best_block(blocktree, block)
 
-      {:ok, {updated_blocktree, updated_trie}}
+      {:ok, {updated_blocktree, updated_trie, block_hash}}
     end
   end
 

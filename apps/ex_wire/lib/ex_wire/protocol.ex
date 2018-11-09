@@ -1,11 +1,14 @@
 defmodule ExWire.Protocol do
   @moduledoc """
-  Functions to handle encoding and decoding messages for
-  over the wire transfer.
+  Functions to handle encoding and decoding messages for over the wire
+  transfer.
   """
-
   alias ExWire.Crypto
   alias ExWire.Message
+
+  @type mdc :: <<_::256>>
+  @type message_mdc :: <<_::64, _::_*8>>
+  @type signed_binary :: <<_::8, _::_*8>>
 
   @doc """
   Encodes a given message by appending it to a hash of
@@ -69,7 +72,7 @@ defmodule ExWire.Protocol do
       iex> ExthCrypto.Signature.verify(ExWire.Crypto.hash("mace windu"), signature, ExthCrypto.Test.public_key())
       true
   """
-  @spec sign_binary(binary(), ExthCrypto.Key.private_key()) :: binary()
+  @spec sign_binary(binary(), ExthCrypto.Key.private_key()) :: signed_binary()
   def sign_binary(value, private_key) do
     hashed_value = Crypto.hash(value)
 
@@ -95,6 +98,6 @@ defmodule ExWire.Protocol do
          48, 254, 206, 167, 122, 154, 30, 84, 104, 71, 143, 58, 81, 64, 76,
          246, 79>>
   """
-  @spec message_mdc(binary()) :: binary()
+  @spec message_mdc(message_mdc()) :: mdc()
   def message_mdc(<<mdc::binary-size(32), _tail::binary>>), do: mdc
 end

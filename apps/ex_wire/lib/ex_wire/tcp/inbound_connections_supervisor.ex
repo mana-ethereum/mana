@@ -1,6 +1,8 @@
 defmodule ExWire.TCP.InboundConnectionsSupervisor do
   @moduledoc """
   Dynamic supervisor in charge of handling inbound tcp connections.
+
+  TODO: Why doesn't this just use peer supervisor?
   """
 
   use DynamicSupervisor
@@ -9,7 +11,7 @@ defmodule ExWire.TCP.InboundConnectionsSupervisor do
   Starts a new supervised process to handle an inbound tcp connection.
   """
   def new_connection_handler(socket) do
-    DynamicSupervisor.start_child(__MODULE__, {ExWire.P2P.Server, [:inbound, socket]})
+    DynamicSupervisor.start_child(__MODULE__, {ExWire.P2P.Server, {:inbound, socket}})
   end
 
   def start_link(args) do

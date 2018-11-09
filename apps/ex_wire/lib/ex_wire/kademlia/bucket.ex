@@ -2,7 +2,6 @@ defmodule ExWire.Kademlia.Bucket do
   @moduledoc """
   Represents a Kademlia k-bucket.
   """
-
   alias ExWire.Kademlia.{Config, Node}
   alias ExWire.Util.Timestamp
 
@@ -10,7 +9,7 @@ defmodule ExWire.Kademlia.Bucket do
 
   @type t :: %__MODULE__{
           id: integer(),
-          nodes: [Node.t()],
+          nodes: list(Node.t()),
           updated_at: integer()
         }
 
@@ -18,13 +17,13 @@ defmodule ExWire.Kademlia.Bucket do
   Creates new bucket.
 
   ## Examples
+
       iex> ExWire.Kademlia.Bucket.new(1, time: :test)
       %ExWire.Kademlia.Bucket{
         id: 1,
         nodes: [],
         updated_at: 1525704921
       }
-
   """
   @spec new(integer()) :: t()
   def new(id, options \\ [time: :actual]) do
@@ -89,7 +88,7 @@ defmodule ExWire.Kademlia.Bucket do
          updated_at: 1525704921
        }}
   """
-  @spec refresh_node(t(), Node.t(), Keyword.t()) :: {atom, t()}
+  @spec refresh_node(t(), Node.t(), Keyword.t()) :: {atom, Node.t(), t()}
   def refresh_node(bucket = %__MODULE__{}, node, options \\ [time: :actual]) do
     cond do
       member?(bucket, node) -> {:reinsert_node, node, reinsert_node(bucket, node, options)}
@@ -279,6 +278,7 @@ defmodule ExWire.Kademlia.Bucket do
       iex> head2 == node1
       true
   """
+  @spec reinsert_node(t(), Node.t(), Keyword.t()) :: t()
   def reinsert_node(bucket = %__MODULE__{}, node, options \\ []) do
     bucket
     |> remove_node(node)
@@ -301,12 +301,9 @@ defmodule ExWire.Kademlia.Bucket do
       iex> bucket |> ExWire.Kademlia.Bucket.insert_node(node) |> ExWire.Kademlia.Bucket.member?(node)
       true
   """
-  @spec member?(t(), ExWire.Struct.Peer.t()) :: boolean()
+  @spec member?(t(), Node.t()) :: boolean()
   def member?(%__MODULE__{nodes: nodes}, node) do
-    nodes
-    |> Enum.any?(fn bucket_node ->
-      bucket_node == node
-    end)
+    Enum.member?(nodes, node)
   end
 
   @doc """
@@ -318,7 +315,6 @@ defmodule ExWire.Kademlia.Bucket do
       iex> bucket |> ExWire.Kademlia.Bucket.full?()
       false
   """
-
   @spec full?(t()) :: boolean()
   def full?(%__MODULE__{nodes: nodes}) do
     Enum.count(nodes) >= Config.bucket_size()

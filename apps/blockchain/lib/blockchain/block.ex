@@ -534,7 +534,7 @@ defmodule Blockchain.Block do
       iex> {parent, _} = Blockchain.Genesis.create_block(chain, trie)
       iex> child = Blockchain.Block.gen_child_block(parent, chain)
       iex> Blockchain.Block.validate(child, chain, :parent_not_found, trie)
-      {:errors, [:non_genesis_block_requires_parent]}
+      {:invalid, [:non_genesis_block_requires_parent]}
 
       iex> trie = MerklePatriciaTree.Test.random_ets_db() |> MerklePatriciaTree.Trie.new()
       iex> chain = Blockchain.Test.ropsten_chain()
@@ -575,7 +575,7 @@ defmodule Blockchain.Block do
 
   defp validate_parent_block(block, parent_block) do
     if block.header.number > 0 and parent_block == :parent_not_found do
-      {:errors, [:non_genesis_block_requires_parent]}
+      {:invalid, [:non_genesis_block_requires_parent]}
     else
       :valid
     end
