@@ -44,7 +44,7 @@ defmodule CLI.Sync do
         with {:ok, next_block, next_block_provider_state} <-
                block_provider.get_block(block_number, block_provider_state) do
           case Blocktree.verify_and_add_block(tree, chain, next_block, trie) do
-            {:ok, {next_tree, updated_trie}} ->
+            {:ok, {next_tree, updated_trie, _block_hash}} ->
               track_progress(block_number, highest_known_block_number)
 
               updated_trie =

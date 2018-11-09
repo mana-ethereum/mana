@@ -41,8 +41,12 @@ defmodule Blockchain.BlocktreeTest do
         |> Blockchain.Block.add_rewards(trie, chain)
 
       tree = Blocktree.new_tree()
-      {:ok, {tree_1, _trie}} = Blocktree.verify_and_add_block(tree, chain, block_1, trie)
-      {:ok, {tree_2, _trie}} = Blocktree.verify_and_add_block(tree_1, chain, block_2, trie)
+
+      {:ok, {tree_1, _trie, _block_hash}} =
+        Blocktree.verify_and_add_block(tree, chain, block_1, trie)
+
+      {:ok, {tree_2, _trie, _block_hash}} =
+        Blocktree.verify_and_add_block(tree_1, chain, block_2, trie)
 
       assert tree_2.best_block.header.number == block_2.header.number
     end
@@ -69,7 +73,7 @@ defmodule Blockchain.BlocktreeTest do
 
       tree = Blockchain.Blocktree.new_tree()
 
-      {:ok, {tree_1, _new_trie}} =
+      {:ok, {tree_1, _new_trie, _block_hash}} =
         Blockchain.Blocktree.verify_and_add_block(tree, chain, gen_block, trie, false)
 
       assert tree_1.best_block.header.number == 0
@@ -108,7 +112,7 @@ defmodule Blockchain.BlocktreeTest do
 
       tree = Blockchain.Blocktree.new_tree()
 
-      {:ok, {tree_1, _trie}} =
+      {:ok, {tree_1, _trie, _block_hash}} =
         Blockchain.Blocktree.verify_and_add_block(tree, chain, block_1, trie)
 
       result = Blockchain.Blocktree.verify_and_add_block(tree_1, chain, block_2, trie)

@@ -68,7 +68,7 @@ defmodule EthCommonTest.BlockchainTestRunner do
 
     genesis_block = block_from_json(block, json_test["genesisBlockHeader"])
 
-    {:ok, {blocktree, new_state}} =
+    {:ok, {blocktree, new_state, _block_hash}} =
       Blocktree.verify_and_add_block(
         blocktree,
         chain,
