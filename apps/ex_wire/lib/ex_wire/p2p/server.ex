@@ -181,13 +181,13 @@ defmodule ExWire.P2P.Server do
   end
 
   @spec handle_subscribe(subscription(), Connection.t()) :: {:ok, Connection.t()}
-  defp handle_subscribe({_module, _function, _args} = mfa, state) do
+  defp handle_subscribe(mfa = {_module, _function, _args}, state) do
     new_state = Map.update(state, :subscribers, [mfa], fn subscribers -> [mfa | subscribers] end)
 
     {:ok, new_state}
   end
 
-  defp handle_subscribe({:server, _server_pid} = server, state) do
+  defp handle_subscribe(server = {:server, _server_pid}, state) do
     new_state =
       Map.update(state, :subscribers, [server], fn subscribers -> [server | subscribers] end)
 

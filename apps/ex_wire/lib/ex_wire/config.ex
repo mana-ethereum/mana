@@ -11,7 +11,7 @@ defmodule ExWire.Config do
   alias ExthCrypto.{Key, Signature}
   alias ExWire.Crypto
 
-  @default_port 30303
+  @default_port 30_303
   @default_public_ip [127, 0, 0, 1]
 
   @doc """

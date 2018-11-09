@@ -25,7 +25,8 @@ defmodule ExWire.NodeDiscoverySupervisor do
     port = ExWire.Config.listen_port(params)
 
     bootnodes =
-      Config.bootnodes(params)
+      params
+      |> Config.bootnodes()
       |> Enum.map(&Node.new/1)
 
     children = [

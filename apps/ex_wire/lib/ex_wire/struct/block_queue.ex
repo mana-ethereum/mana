@@ -226,11 +226,11 @@ defmodule ExWire.Struct.BlockQueue do
 
         {:ok, {new_block_tree, new_trie, block_hash}} ->
           :ok =
-            Logger.debug(
+            Logger.debug(fn ->
               "[Block Queue] Verified block #{block.header.number} (0x#{
                 Base.encode16(block_hash, case: :lower)
               }) and added to new block tree"
-            )
+            end)
 
           {backlogged_blocks, new_backlog} = Map.pop(block_queue.backlog, block_hash, [])
 

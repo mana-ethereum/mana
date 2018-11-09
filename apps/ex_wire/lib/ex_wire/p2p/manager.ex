@@ -268,11 +268,11 @@ defmodule ExWire.P2P.Manager do
     {:ok, packet_mod} = Packet.get_packet_mod(packet_type)
 
     :ok =
-      Logger.debug(
+      Logger.debug(fn ->
         "[Network] [#{peer}] Sending packet #{inspect(packet_mod)} to #{peer.host} (##{
           conn.sent_message_count + 1
         })"
-      )
+      end)
 
     packet_data = apply(packet_mod, :serialize, [packet])
 

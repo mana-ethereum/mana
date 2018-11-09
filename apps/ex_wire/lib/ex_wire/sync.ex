@@ -131,13 +131,13 @@ defmodule ExWire.Sync do
   def handle_block_headers(
         block_headers,
         peer,
-        %{
+        state = %{
           block_queue: block_queue,
           block_tree: block_tree,
           chain: chain,
           trie: trie,
           last_requested_block: last_requested_block
-        } = state
+        }
       ) do
     {next_block_queue, next_block_tree, next_trie, header_hashes} =
       Enum.reduce(block_headers.headers, {block_queue, block_tree, trie, []}, fn header,
