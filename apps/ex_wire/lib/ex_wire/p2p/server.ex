@@ -16,7 +16,7 @@ defmodule ExWire.P2P.Server do
 
   require Logger
 
-  alias ExWire.{TCP, Packet}
+  alias ExWire.{Packet, TCP}
   alias ExWire.P2P.{Connection, Manager}
   alias ExWire.Struct.Peer
 
