@@ -104,12 +104,13 @@ defmodule ExWire.Sync do
 
     :ok = Logger.debug(fn -> "[Sync] Requesting block #{next_block_to_request}" end)
 
-    PeerSupervisor.send_packet(%GetBlockHeaders{
-      block_identifier: next_block_to_request,
-      max_headers: @blocks_per_request,
-      skip: 0,
-      reverse: false
-    })
+    :ok =
+      PeerSupervisor.send_packet(%GetBlockHeaders{
+        block_identifier: next_block_to_request,
+        max_headers: @blocks_per_request,
+        skip: 0,
+        reverse: false
+      })
 
     Map.put(state, :last_requested_block, next_block_to_request + @blocks_per_request)
   end
@@ -170,9 +171,10 @@ defmodule ExWire.Sync do
         {next_block_queue, next_block_tree, next_trie, next_header_hashes}
       end)
 
-    PeerSupervisor.send_packet(%GetBlockBodies{
-      hashes: header_hashes
-    })
+    :ok =
+      PeerSupervisor.send_packet(%GetBlockBodies{
+        hashes: header_hashes
+      })
 
     {new_last_requested_block, next_trie} =
       maybe_request_new_block_or_save(
@@ -281,7 +283,7 @@ defmodule ExWire.Sync do
   end
 
   # Loads sync state from our backing database
-  @spec load_sync_state(atom()) :: {Blocktree.t(), Trie.t()}
+  @spec load_sync_state(Chain.t()) :: {Blocktree.t(), CachingTrie.t()}
   defp load_sync_state(chain) do
     db = RocksDB.init(Config.db_name(chain))
 

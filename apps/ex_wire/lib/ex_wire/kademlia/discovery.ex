@@ -33,7 +33,7 @@ defmodule ExWire.Kademlia.Discovery do
     end)
   end
 
-  @spec find_neighbours(RoutingTable.t(), Node.t()) :: :ok
+  @spec find_neighbours(RoutingTable.t(), Node.t()) :: Network.handler_action()
   defp find_neighbours(table, node) do
     find_neighbours = FindNeighbours.new(table.current_node.public_key)
 

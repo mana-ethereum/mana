@@ -133,7 +133,8 @@ defmodule ExWire.Crypto do
         185, 91, 252, 107, 196, 30, 137, 64, 224, 60, 229, 20, 168, 35, 251, 75, 143,
         85, 130, 147, 90, 33, 104, 100, 96, 18, 220, 253, 58, 85, 207>>
   """
-  @spec recover_public_key(binary(), binary(), integer()) :: binary() | no_return()
+  @spec recover_public_key(binary(), Signature.signature(), Signature.recovery_id()) ::
+          Key.public_key() | no_return()
   def recover_public_key(message, signature, recovery_id) do
     {:ok, public_key} = Signature.recover(message, signature, recovery_id)
 
@@ -149,7 +150,7 @@ defmodule ExWire.Crypto do
       iex> ExWire.Crypto.node_id_from_public_key(<<0x04, 1::256>>)
       <<1::256>>
   """
-  @spec node_id_from_public_key(binary()) :: binary()
+  @spec node_id_from_public_key(Key.public_key_der()) :: Key.public_key()
   def node_id_from_public_key(public_key) do
     Key.der_to_raw(public_key)
   end

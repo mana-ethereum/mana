@@ -64,7 +64,7 @@ defmodule ExWire.Kademlia.Node do
        }
 
   """
-  @spec new(binary(), Endpoint) :: t()
+  @spec new(binary(), Endpoint.t()) :: t()
   def new(public_key, endpoint = %Endpoint{}) do
     key = Crypto.hash(public_key)
 

@@ -122,8 +122,8 @@ defmodule ExWire.Struct.BlockQueue do
   """
   @spec add_block_struct(
           t(),
-          BlockStruct.t(),
           Blocktree.t(),
+          BlockStruct.t(),
           Chain.t(),
           Trie.t()
         ) :: {t(), Blocktree.t(), Trie.t()}

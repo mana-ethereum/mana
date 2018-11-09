@@ -205,7 +205,7 @@ defmodule ExWire.P2P.Server do
   defp handle_socket_close(state) do
     peer = Map.get(state, :peer, :unknown)
 
-    Logger.warn("[Network] [#{peer}] Peer closed connection")
+    :ok = Logger.warn(fn -> "[Network] [#{peer}] Peer closed connection" end)
 
     Process.exit(self(), :normal)
 

@@ -43,7 +43,7 @@ defmodule ExWire.TCP.Listener do
     {:noreply, state}
   end
 
-  @spec hand_over_control_of_socket(TCP.socket(), pid()) :: :ok | {:error, any()}
+  @spec hand_over_control_of_socket(TCP.socket(), pid()) :: :ok | {:error, atom()}
   defp hand_over_control_of_socket(socket, pid) do
     with :ok <- TCP.hand_over_control(socket, pid) do
       TCP.accept_messages(socket)

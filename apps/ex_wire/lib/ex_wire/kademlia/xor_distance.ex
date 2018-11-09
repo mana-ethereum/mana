@@ -41,12 +41,12 @@ defmodule ExWire.Kademlia.XorDistance do
         iex> ExWire.Kademlia.XorDistance.common_prefix(id1, id1)
         512
   """
-  @spec common_prefix(binary(), binary()) :: integer()
+  @spec common_prefix(binary(), binary()) :: non_neg_integer()
   def common_prefix(id1, id2) do
     prefix(id1, id2)
   end
 
-  @spec binary_to_bits(binary) :: [integer()]
+  @spec binary_to_bits(binary) :: [0 | 1]
   defp binary_to_bits(binary) do
     for(<<bit::1 <- binary>>, do: bit)
   end

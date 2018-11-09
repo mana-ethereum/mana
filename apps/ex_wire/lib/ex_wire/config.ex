@@ -13,6 +13,19 @@ defmodule ExWire.Config do
 
   @default_port 30_303
   @default_public_ip [127, 0, 0, 1]
+  @type env_keys ::
+          :bootnodes
+          | :caps
+          | :chain
+          | :commitment_count
+          | :discovery
+          | :network_id
+          | :node_discovery
+          | :p2p_version
+          | :private_key
+          | :protocol_version
+          | :public_ip
+          | :sync
 
   @doc """
   Returns a private key that is generated when a new session is created.
@@ -41,7 +54,7 @@ defmodule ExWire.Config do
     node_discovery_params(given_params, :network_adapter)
   end
 
-  @spec public_key() :: binary()
+  @spec public_key() :: Key.public_key()
   def public_key() do
     {:ok, public_key} = Signature.get_public_key(private_key())
 
@@ -151,8 +164,8 @@ defmodule ExWire.Config do
     )
   end
 
-  @spec get_env!(Keyword.t(), atom(), any()) :: any()
-  defp get_env!(given_params, key, default \\ nil) do
+  @spec get_env!(Keyword.t(), env_keys()) :: any()
+  def get_env!(given_params, key) do
     cond do
       keyword_res = Keyword.get(given_params, key) ->
         keyword_res
@@ -160,16 +173,13 @@ defmodule ExWire.Config do
       env_res = get_env([], key) ->
         env_res
 
-      default ->
-        default
-
       true ->
         raise ArgumentError, message: "Please set config variable: config :ex_wire, #{key}, ..."
     end
   end
 
-  @spec get_env(Keyword.t(), atom(), any()) :: any()
-  defp get_env(given_params, key, default \\ nil) do
+  @spec get_env(Keyword.t(), env_keys(), any()) :: any()
+  def get_env(given_params, key, default \\ nil) do
     if res = Keyword.get(given_params, key) do
       res
     else
@@ -177,8 +187,8 @@ defmodule ExWire.Config do
     end
   end
 
-  @spec set_env!(any(), atom()) :: any()
-  defp set_env!(value, key) do
+  @spec set_env!(any(), env_keys()) :: any()
+  def set_env!(value, key) do
     Application.put_env(:ex_wire, key, value)
 
     value

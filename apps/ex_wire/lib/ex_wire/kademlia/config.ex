@@ -26,38 +26,24 @@ defmodule ExWire.Kademlia.Config do
   # in s
   @bucket_refresh_interval 3600
 
-  @spec bucket_size() :: integer()
-  def bucket_size do
-    @bucket_size
-  end
+  @spec bucket_size() :: unquote(@bucket_size)
+  def bucket_size, do: @bucket_size
 
-  @spec concurrency() :: integer()
-  def concurrency do
-    @concurrency
-  end
+  @spec concurrency() :: unquote(@concurrency)
+  def concurrency, do: @concurrency
 
-  @spec id_size() :: integer()
-  def id_size do
-    @id_size
-  end
+  @spec id_size() :: unquote(@id_size)
+  def id_size, do: @id_size
 
-  @spec bits_per_hop() :: integer()
-  def bits_per_hop do
-    @bits_per_hop
-  end
+  @spec bits_per_hop() :: unquote(@bits_per_hop)
+  def bits_per_hop, do: @bits_per_hop
 
-  @spec eviction_check_interval() :: integer()
-  def eviction_check_interval do
-    @eviction_check_interval
-  end
+  @spec eviction_check_interval() :: unquote(@eviction_check_interval)
+  def eviction_check_interval, do: @eviction_check_interval
 
-  @spec request_timeout() :: integer
-  def request_timeout do
-    @request_timeout
-  end
+  @spec request_timeout() :: unquote(@request_timeout)
+  def request_timeout, do: @request_timeout
 
-  @spec bucket_refresh_interval() :: integer
-  def bucket_refresh_interval do
-    @bucket_refresh_interval
-  end
+  @spec bucket_refresh_interval() :: unquote(@bucket_refresh_interval)
+  def bucket_refresh_interval, do: @bucket_refresh_interval
 end

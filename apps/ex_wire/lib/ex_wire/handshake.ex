@@ -109,7 +109,7 @@ defmodule ExWire.Handshake do
           t(),
           ExthCrypto.Key.public_key(),
           ExthCrypto.Key.private_key()
-        ) :: {AuthMsgV4.t(), ExthCrypto.Key.key_pair(), nonce()}
+        ) :: AuthMsgV4.t()
   def build_auth_msg(
         handshake,
         initiator_static_public_key,
@@ -154,7 +154,9 @@ defmodule ExWire.Handshake do
 
   # TODO: Add examples
   """
-  @spec handle_ack(t(), binary()) :: {:ok, t(), Secrets.t()} | {:invalid, String.t()}
+  @spec handle_ack(t(), binary()) ::
+          {:ok, t(), Secrets.t()}
+          | {:invalid, :invalid_ECIES_encoded_message | :invalid_message_tag}
   def handle_ack(handshake = %Handshake{}, ack_data) do
     case read_ack_resp(ack_data, ExWire.Config.private_key()) do
       {:ok, ack_resp, _ack_resp_bin, _frame_rest} ->
@@ -185,7 +187,9 @@ defmodule ExWire.Handshake do
 
   TODO: Add examples
   """
-  @spec handle_auth(t(), binary()) :: {:ok, t(), Secrets.t()} | {:invalid, String.t()}
+  @spec handle_auth(t(), binary()) ::
+          {:ok, t(), Secrets.t()}
+          | {:invalid, :invalid_ECIES_encoded_message | :invalid_message_tag}
   def handle_auth(handshake = %Handshake{}, auth_data) do
     case read_auth_msg(auth_data, ExWire.Config.private_key()) do
       {:ok, auth_msg, <<>>} ->
@@ -230,7 +234,7 @@ defmodule ExWire.Handshake do
   end
 
   @spec encode_auth(AuthMsgV4.t(), ExthCrypto.Key.public_key(), ExthCrypto.Key.key_pair()) ::
-          {:ok, binary()} | {:error, String.t()}
+          binary()
   defp encode_auth(auth_msg = %AuthMsgV4{}, remote_pub, initiator_ephemeral_key_pair) do
     {:ok, encoded_auth_msg} =
       auth_msg
@@ -241,7 +245,7 @@ defmodule ExWire.Handshake do
   end
 
   @spec encode_ack(AckRespV4.t(), ExthCrypto.Key.public_key(), ExthCrypto.Key.key_pair()) ::
-          {:ok, binary()} | {:error, String.t()}
+          binary()
   defp encode_ack(ack_resp = %AckRespV4{}, remote_pub, recipient_ephemeral_key_pair) do
     {:ok, encoded_ack_resp} =
       ack_resp
@@ -258,8 +262,9 @@ defmodule ExWire.Handshake do
   Note: this will handle pre or post-EIP 8 messages. We take a different approach to other
         implementations and try EIP-8 first, and if that fails, plain.
   """
-  @spec read_auth_msg(binary(), ExthCrypto.Key.private_key()) ::
-          {:ok, AuthMsgV4.t(), binary()} | {:error, String.t()}
+  @spec read_auth_msg(<<_::16, _::_*8>>, ExthCrypto.Key.private_key()) ::
+          {:ok, AuthMsgV4.t(), binary()}
+          | {:error, :invalid_ECIES_encoded_message | :invalid_message_tag}
   def read_auth_msg(encoded_auth, my_static_private_key) do
     case EIP8.unwrap_eip_8(encoded_auth, my_static_private_key) do
       {:ok, rlp, _bin, frame_rest} ->
@@ -305,8 +310,9 @@ defmodule ExWire.Handshake do
   Note: this will handle pre- or post-EIP 8 messages. We take a different approach to other
         implementations and try EIP-8 first, and if that fails, plain.
   """
-  @spec read_ack_resp(binary(), ExthCrypto.Key.private_key()) ::
-          {:ok, AckRespV4.t(), binary(), binary()} | {:error, String.t()}
+  @spec read_ack_resp(<<_::16, _::_*8>>, ExthCrypto.Key.private_key()) ::
+          {:ok, AckRespV4.t(), binary(), binary()}
+          | {:error, :invalid_ECIES_encoded_message | :invalid_message_tag}
   def read_ack_resp(encoded_ack, my_static_private_key) do
     case EIP8.unwrap_eip_8(encoded_ack, my_static_private_key) do
       {:ok, rlp, ack_resp_bin, frame_rest} ->

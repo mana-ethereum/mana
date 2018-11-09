@@ -7,8 +7,8 @@ defmodule ExWire.Struct.Endpoint do
             udp_port: nil,
             tcp_port: nil
 
-  @type ip :: [integer()]
-  @type ip_port :: non_neg_integer()
+  @type ip :: list(integer())
+  @type ip_port :: pos_integer()
 
   @type t :: %__MODULE__{
           ip: ip,
@@ -29,7 +29,7 @@ defmodule ExWire.Struct.Endpoint do
         tcp_port: 5,
       }
   """
-  @spec decode(ExRLP.t()) :: t
+  @spec decode(ExRLP.t()) :: t()
   def decode([ip, udp_port, tcp_port]) do
     %__MODULE__{
       ip: decode_ip(ip),

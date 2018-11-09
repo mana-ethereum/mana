@@ -16,7 +16,7 @@ defmodule ExWire.TCPListeningSupervisor do
 
   @impl true
   def init(_) do
-    Logger.info("Public node URL: #{Config.public_node_url()}")
+    :ok = Logger.info(fn -> "Public node URL: #{Config.public_node_url()}" end)
 
     port = ExWire.Config.listen_port()
 

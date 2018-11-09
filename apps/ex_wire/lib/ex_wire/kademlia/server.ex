@@ -16,7 +16,7 @@ defmodule ExWire.Kademlia.Server do
   # 10s
   @pong_cleanup_period 10_000
 
-  @spec default_process_name() :: atom()
+  @spec default_process_name() :: KademliaState
   def default_process_name, do: @default_process_name
 
   @spec start_link(Keyword.t()) :: GenServer.on_start()
@@ -33,7 +33,7 @@ defmodule ExWire.Kademlia.Server do
   def init({current_node = %Node{}, network_client_name, nodes}) do
     routing_table = RoutingTable.new(current_node, network_client_name)
 
-    schedule_discovery_round(0, nodes)
+    _ = schedule_discovery_round(0, nodes)
     schedule_pongs_cleanup()
 
     {:ok, %{routing_table: routing_table}}
@@ -89,7 +89,7 @@ defmodule ExWire.Kademlia.Server do
   def handle_info({:discovery_round, nodes}, %{routing_table: routing_table}) do
     updated_table = Discovery.start(routing_table, nodes)
 
-    schedule_discovery_round(updated_table.discovery_round)
+    _ = schedule_discovery_round(updated_table.discovery_round)
 
     {:noreply, %{routing_table: updated_table}}
   end

@@ -29,14 +29,20 @@ defmodule ExWire.Network do
           }
   end
 
-  @type handler_action :: :no_action | {:sent_message, atom(), binary()}
+  @type sent_message ::
+          {:sent_message,
+           ExWire.Message.FindNeighbours
+           | ExWire.Message.Neighbours
+           | ExWire.Message.Ping
+           | ExWire.Message.Pong, binary()}
+  @type handler_action :: :no_action | sent_message()
 
   @doc """
   Top-level receiver function to process an incoming message.
   We'll first validate the message, and then pass it to
   the appropriate handler.
   """
-  @spec receive(InboundMessage.t(), Keyword.t()) :: handler_action
+  @spec receive(InboundMessage.t(), Keyword.t()) :: handler_action()
   def receive(
         inbound_message = %InboundMessage{
           data: data,
@@ -72,7 +78,7 @@ defmodule ExWire.Network do
   Function to pass message to the appropriate handler. E.g. for a ping
   we'll pass the decoded message to `ExWire.Handlers.Ping.handle/1`.
   """
-  @spec handle(InboundMessage.t(), Keyword.t()) :: handler_action
+  @spec handle(InboundMessage.t(), Keyword.t()) :: handler_action()
   def handle(
         %InboundMessage{
           data: <<
@@ -152,7 +158,7 @@ defmodule ExWire.Network do
       }
   """
   @spec send(Message.t(), pid(), Endpoint.t(), ExthCrypto.Key.private_key() | nil) ::
-          handler_action
+          sent_message()
   def send(message, server_pid, to, private_key \\ nil) do
     encoded_message = Protocol.encode(message, private_key || Config.private_key())
 

@@ -115,15 +115,16 @@ defmodule ExWire.P2P.Manager do
                   "[Network] [#{peer}] Got packet `#{inspect(packet_mod)}` from #{peer.host}"
                 end)
 
-              notify_subscribers(packet, conn_after_unframe)
+              _ = notify_subscribers(packet, conn_after_unframe)
               new_conn = handle_packet(packet_mod, packet, conn_after_unframe)
 
               new_conn
 
             :unknown_packet_type ->
-              Logger.error(fn ->
-                "[Network] [#{peer}] Got unknown packet `#{packet_type}` from #{peer.host}"
-              end)
+              :ok =
+                Logger.error(fn ->
+                  "[Network] [#{peer}] Got unknown packet `#{packet_type}` from #{peer.host}"
+                end)
 
               conn_after_unframe
           end
@@ -147,42 +148,28 @@ defmodule ExWire.P2P.Manager do
   @spec handle_packet(module(), Packet.packet(), Connection.t()) :: Connection.t()
   defp handle_packet(packet_mod, packet, conn) do
     packet_handle_response = packet_mod.handle(packet)
+    session_status = if DEVp2p.session_active?(conn.session), do: :active, else: :inactive
 
-    if not DEVp2p.session_active?(conn.session) && packet_handle_response != :activate do
-      Logger.error(fn -> "Expected message prior to activation, got: #{inspect(packet)}" end)
-    end
-
-    case packet_handle_response do
-      :ok ->
+    case {session_status, packet_handle_response} do
+      {:active, :ok} ->
         conn
 
-      :activate ->
-        new_session =
-          if DEVp2p.session_active?(conn.session) do
-            Logger.error(fn ->
-              "Attempting to re-activate active session, session=#{inspect(conn.session)}, packet=#{
-                inspect(packet)
-              }"
-            end)
-
-            conn.session
-          else
-            attempt_session_activation(conn.session, packet)
-          end
+      {:active, :activate} ->
+        new_session = attempt_session_activation(conn.session, packet)
 
         %{conn | session: new_session}
 
-      :peer_disconnect ->
-        TCP.shutdown(conn.socket)
+      {_, :peer_disconnect} ->
+        :ok = TCP.shutdown(conn.socket)
 
         conn
 
-      {:disconnect, reason} ->
+      {_, {:disconnect, reason}} ->
         disconnect_packet = Packet.Disconnect.new(reason)
 
         send_packet(conn, disconnect_packet)
 
-      {:send, return_packet} ->
+      {:active, {:send, return_packet}} ->
         send_packet(conn, return_packet)
     end
   end
@@ -194,7 +181,10 @@ defmodule ExWire.P2P.Manager do
         updated_session
 
       {:error, :handshake_incomplete} ->
-        Logger.error(fn -> "Ignoring message #{inspect(packet)} due to handshake incomplete." end)
+        :ok =
+          Logger.error(fn ->
+            "Ignoring message #{inspect(packet)} due to handshake incomplete."
+          end)
 
         session
     end
@@ -207,7 +197,7 @@ defmodule ExWire.P2P.Manager do
     end
   end
 
-  @spec notify_subscribers(Packet.packet(), Connection.t()) :: list()
+  @spec notify_subscribers(Packet.packet(), Connection.t()) :: list(any())
   defp notify_subscribers(packet, conn) do
     for subscriber <- Map.get(conn, :subscribers, []) do
       case subscriber do
@@ -243,7 +233,7 @@ defmodule ExWire.P2P.Manager do
         peer = get_peer_info(handshake.auth_msg, socket)
 
         _ = Logger.debug("[Network] Received auth. Sending ack.")
-        send_unframed_data(handshake.encoded_ack_resp, socket, peer)
+        :ok = send_unframed_data(handshake.encoded_ack_resp, socket, peer)
 
         Map.merge(conn, %{handshake: handshake, secrets: secrets, peer: peer})
 
@@ -278,7 +268,7 @@ defmodule ExWire.P2P.Manager do
 
     {frame, updated_secrets} = Frame.frame(packet_type, packet_data, secrets)
 
-    TCP.send_data(socket, frame)
+    :ok = TCP.send_data(socket, frame)
 
     Map.merge(conn, %{
       secrets: updated_secrets,

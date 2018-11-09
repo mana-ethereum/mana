@@ -9,7 +9,7 @@ defmodule ExWire.Kademlia.Bucket do
 
   @type t :: %__MODULE__{
           id: integer(),
-          nodes: [Node.t()],
+          nodes: list(Node.t()),
           updated_at: integer()
         }
 
@@ -278,6 +278,7 @@ defmodule ExWire.Kademlia.Bucket do
       iex> head2 == node1
       true
   """
+  @spec reinsert_node(t(), Node.t(), Keyword.t()) :: t()
   def reinsert_node(bucket = %__MODULE__{}, node, options \\ []) do
     bucket
     |> remove_node(node)
@@ -300,12 +301,9 @@ defmodule ExWire.Kademlia.Bucket do
       iex> bucket |> ExWire.Kademlia.Bucket.insert_node(node) |> ExWire.Kademlia.Bucket.member?(node)
       true
   """
-  @spec member?(t(), ExWire.Struct.Peer.t()) :: boolean()
+  @spec member?(t(), Node.t()) :: boolean()
   def member?(%__MODULE__{nodes: nodes}, node) do
-    nodes
-    |> Enum.any?(fn bucket_node ->
-      bucket_node == node
-    end)
+    Enum.member?(nodes, node)
   end
 
   @doc """
