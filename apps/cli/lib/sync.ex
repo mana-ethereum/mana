@@ -5,7 +5,7 @@ defmodule CLI.Sync do
   require Logger
 
   alias Blockchain.{Blocktree, Chain}
-  alias Blockchain.State
+  alias Blockchain.Blocktree.State
   alias MerklePatriciaTree.TrieStorage
 
   @type block_limit :: integer() | :infinite

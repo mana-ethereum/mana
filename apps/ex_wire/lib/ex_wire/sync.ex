@@ -21,7 +21,8 @@ defmodule ExWire.Sync do
   alias ExWire.Packet.{BlockBodies, BlockHeaders, GetBlockBodies, GetBlockHeaders}
   alias ExWire.PeerSupervisor
   alias ExWire.Struct.{BlockQueue, Peer}
-  alias Blockchain.{Blocktree, Chain, State}
+  alias Blockchain.{Blocktree, Chain}
+  alias Blockchain.Blocktree.State
   alias MerklePatriciaTree.{CachingTrie, DB.RocksDB, Trie, TrieStorage}
 
   @save_block_interval 100
