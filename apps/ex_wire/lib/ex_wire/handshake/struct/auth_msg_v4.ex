@@ -20,7 +20,7 @@ defmodule ExWire.Handshake.Struct.AuthMsgV4 do
           initiator_public_key: ExthCrypto.Key.public_key_der(),
           initiator_nonce: binary(),
           initiator_version: integer(),
-          initiator_ephemeral_public_key: ExthCrypto.Key.public_key()
+          initiator_ephemeral_public_key: ExthCrypto.Key.public_key() | nil
         }
 
   @spec serialize(t) :: ExRLP.t()
@@ -57,8 +57,8 @@ defmodule ExWire.Handshake.Struct.AuthMsgV4 do
   Sets the initiator ephemeral public key for a given auth msg, based on our secret
   and the keys passed from initiator.
   """
-  @spec set_initiator_ephemeral_public_key(t, ExthCrypto.Key.private_key()) :: t
-  def set_initiator_ephemeral_public_key(auth_msg, my_static_private_key) do
+  @spec set_initiator_ephemeral_public_key(t(), ExthCrypto.Key.private_key()) :: t()
+  def set_initiator_ephemeral_public_key(auth_msg = %__MODULE__{}, my_static_private_key) do
     shared_secret_xor_nonce =
       my_static_private_key
       |> ECDH.generate_shared_secret(auth_msg.initiator_public_key)

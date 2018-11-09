@@ -38,15 +38,15 @@ defmodule ExWire.Handshake do
   @type nonce :: <<_::256>>
   @type t :: %__MODULE__{
           initiator: boolean(),
-          remote_pub: ExthCrypto.Key.public_key(),
-          init_nonce: nonce(),
-          resp_nonce: nonce(),
+          remote_pub: ExthCrypto.Key.public_key() | nil,
+          init_nonce: nonce() | nil,
+          resp_nonce: nonce() | nil,
           random_key_pair: ExthCrypto.Key.key_pair(),
-          remote_random_pub: ExthCrypto.Key.public_key(),
-          auth_msg: AuthMsgV4.t(),
-          ack_resp: AckRespV4.t(),
-          encoded_auth_msg: binary(),
-          encoded_ack_resp: binary()
+          remote_random_pub: ExthCrypto.Key.public_key() | nil,
+          auth_msg: AuthMsgV4.t() | nil,
+          ack_resp: AckRespV4.t() | nil,
+          encoded_auth_msg: binary() | nil,
+          encoded_ack_resp: binary() | nil
         }
 
   @nonce_len 32
@@ -90,9 +90,10 @@ defmodule ExWire.Handshake do
   This message is ready to be sent to a peer to initiate the encrypted handshake.
   """
   @spec generate_auth(t()) :: t()
-  def generate_auth(handshake) do
+  def generate_auth(handshake = %__MODULE__{remote_pub: remote_pub})
+      when not is_nil(remote_pub) do
     auth_msg = build_auth_msg(handshake, ExWire.Config.public_key(), ExWire.Config.private_key())
-    encoded_auth_msg = encode(auth_msg, handshake.remote_pub, handshake.random_key_pair)
+    encoded_auth_msg = encode_auth(auth_msg, remote_pub, handshake.random_key_pair)
 
     %{
       handshake
@@ -223,12 +224,14 @@ defmodule ExWire.Handshake do
   @spec generate_ack_resp(t()) :: t()
   defp generate_ack_resp(handshake) do
     ack_resp = build_ack_resp(handshake)
-    encoded_ack_resp = encode(ack_resp, handshake.remote_pub, handshake.random_key_pair)
+    encoded_ack_resp = encode_ack(ack_resp, handshake.remote_pub, handshake.random_key_pair)
 
     %{handshake | ack_resp: ack_resp, encoded_ack_resp: encoded_ack_resp}
   end
 
-  defp encode(auth_msg = %AuthMsgV4{}, remote_pub, initiator_ephemeral_key_pair) do
+  @spec encode_auth(AuthMsgV4.t(), ExthCrypto.Key.public_key(), ExthCrypto.Key.key_pair()) ::
+          {:ok, binary()} | {:error, String.t()}
+  defp encode_auth(auth_msg = %AuthMsgV4{}, remote_pub, initiator_ephemeral_key_pair) do
     {:ok, encoded_auth_msg} =
       auth_msg
       |> AuthMsgV4.serialize()
@@ -237,7 +240,9 @@ defmodule ExWire.Handshake do
     encoded_auth_msg
   end
 
-  defp encode(ack_resp = %AckRespV4{}, remote_pub, recipient_ephemeral_key_pair) do
+  @spec encode_ack(AckRespV4.t(), ExthCrypto.Key.public_key(), ExthCrypto.Key.key_pair()) ::
+          {:ok, binary()} | {:error, String.t()}
+  defp encode_ack(ack_resp = %AckRespV4{}, remote_pub, recipient_ephemeral_key_pair) do
     {:ok, encoded_ack_resp} =
       ack_resp
       |> AckRespV4.serialize()

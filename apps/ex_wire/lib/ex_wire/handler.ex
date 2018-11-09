@@ -41,7 +41,7 @@ defmodule ExWire.Handler do
           }
   end
 
-  @type handler_response :: :not_implented | :no_response | Message.t()
+  @type handler_response :: :not_implemented | :no_response | Message.t()
   @callback handle(Params.t()) :: handler_response
 
   @doc """

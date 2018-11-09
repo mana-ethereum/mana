@@ -121,12 +121,12 @@ defmodule ExWire.Struct.BlockQueue do
   pretty much be unique).
   """
   @spec add_block_struct(
-          t,
+          t(),
           BlockStruct.t(),
           Blocktree.t(),
           Chain.t(),
           Trie.t()
-        ) :: {t, Blocktree.t(), Trie.t()}
+        ) :: {t(), Blocktree.t(), Trie.t()}
   def add_block_struct(
         block_queue = %__MODULE__{queue: queue},
         block_tree,
@@ -170,7 +170,8 @@ defmodule ExWire.Struct.BlockQueue do
   from the queue. Note: they may end up in the backlog, nonetheless, if we are
   waiting still for the parent block.
   """
-  @spec process_block_queue(t, Blocktree.t(), Chain.t(), Trie.t()) :: {t, Blocktree.t(), Trie.t()}
+  @spec process_block_queue(t(), Blocktree.t(), Chain.t(), Trie.t()) ::
+          {t(), Blocktree.t(), Trie.t()}
   def process_block_queue(
         block_queue = %__MODULE__{},
         block_tree,
@@ -184,8 +185,8 @@ defmodule ExWire.Struct.BlockQueue do
     do_process_blocks(blocks, remaining_block_queue, block_tree, chain, trie)
   end
 
-  @spec do_process_blocks(list(Block.t()), t(), BlockTree.t(), Chain.t(), Trie.t()) ::
-          {t(), BlockTree.t(), Trie.t()}
+  @spec do_process_blocks(list(Block.t()), t(), Blocktree.t(), Chain.t(), Trie.t()) ::
+          {t(), Blocktree.t(), Trie.t()}
 
   defp do_process_blocks([], block_queue, block_tree, _chain, trie),
     do: {block_queue, block_tree, trie}
@@ -199,7 +200,10 @@ defmodule ExWire.Struct.BlockQueue do
              trie,
              block_queue.do_validation
            ) do
-        {:errors, [:non_genesis_block_requires_parent]} ->
+        {:invalid, [:non_genesis_block_requires_parent]} ->
+          # Note: this is probably too slow since we see a lot of blocks without
+          #       parents and, I think, we're running the full validity check.
+
           # :ok = Logger.debug("[Block Queue] Failed to verify block due to missing parent")
 
           updated_backlog =

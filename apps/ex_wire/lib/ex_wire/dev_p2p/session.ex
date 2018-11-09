@@ -6,6 +6,7 @@ defmodule ExWire.DEVp2p.Session do
   See https://github.com/ethereum/wiki/wiki/%C3%90%CE%9EVp2p-Wire-Protocol#session-management
   """
 
+  alias ExWire.DEVp2p.Session
   alias ExWire.Packet.Hello
 
   @type t :: %__MODULE__{

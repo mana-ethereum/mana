@@ -35,8 +35,8 @@ defmodule ExWire.Packet.Status do
           total_difficulty: integer(),
           best_hash: binary(),
           genesis_hash: binary(),
-          manifest_hash: binary(),
-          block_number: integer()
+          manifest_hash: binary() | nil,
+          block_number: integer() | nil
         }
 
   defstruct [
@@ -57,7 +57,7 @@ defmodule ExWire.Packet.Status do
   best chain found in the block header, the best hash, and the genesis hash of
   our blockchain.
   """
-  @spec new(t) :: t
+  @spec new(t) :: t()
   def new(packet) do
     %__MODULE__{
       protocol_version: ExWire.Config.protocol_version(),

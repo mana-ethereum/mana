@@ -20,7 +20,7 @@ defmodule ExWire.Sync do
   alias ExWire.Config
   alias ExWire.Packet.{BlockBodies, BlockHeaders, GetBlockBodies, GetBlockHeaders}
   alias ExWire.PeerSupervisor
-  alias ExWire.Struct.BlockQueue
+  alias ExWire.Struct.{BlockQueue, Peer}
   alias Blockchain.{Blocktree, Chain, State}
   alias MerklePatriciaTree.{CachingTrie, DB.RocksDB, Trie, TrieStorage}
 
@@ -98,7 +98,7 @@ defmodule ExWire.Sync do
   Dispatches a packet of `GetBlockHeaders` to all peers for the next block
   number that we don't have in our block queue or state tree.
   """
-  @spec handle_request_next_block(BlockQueue.t(), BlockTree.t(), state()) :: state()
+  @spec handle_request_next_block(BlockQueue.t(), Blocktree.t(), state()) :: state()
   def handle_request_next_block(block_queue, block_tree, state) do
     next_block_to_request = request_next_block(block_queue, block_tree)
 

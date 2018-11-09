@@ -18,14 +18,14 @@ defmodule ExWire.P2P.Manager do
   and a `peer` to be provided. This function starts the encrypted handshake with
   the `peer`.
   """
-  @spec new_outbound_connection(port(), Peer.t()) :: Connection.t()
+  @spec new_outbound_connection(ExWire.TCP.socket(), Peer.t()) :: Connection.t()
   def new_outbound_connection(socket, peer) do
     handshake =
       peer.remote_id
       |> Handshake.new()
       |> Handshake.generate_auth()
 
-    send_unframed_data(handshake.encoded_auth_msg, socket, peer)
+    :ok = send_unframed_data(handshake.encoded_auth_msg, socket, peer)
 
     %Connection{socket: socket, peer: peer, handshake: handshake}
   end
@@ -35,7 +35,7 @@ defmodule ExWire.P2P.Manager do
   but not a `peer` at this moment. The full peer information will be obtained from
   the socket and the auth message when it arrives.
   """
-  @spec new_inbound_connection(port()) :: Connection.t()
+  @spec new_inbound_connection(ExWire.TCP.socket()) :: Connection.t()
   def new_inbound_connection(socket) do
     handshake = Handshake.new_response()
 
@@ -144,7 +144,7 @@ defmodule ExWire.P2P.Manager do
     end
   end
 
-  @spec handle_packet(module(), Packet.t(), Connection.t()) :: Connection.t()
+  @spec handle_packet(module(), Packet.packet(), Connection.t()) :: Connection.t()
   defp handle_packet(packet_mod, packet, conn) do
     packet_handle_response = packet_mod.handle(packet)
 
@@ -187,7 +187,7 @@ defmodule ExWire.P2P.Manager do
     end
   end
 
-  @spec attempt_session_activation(Session.t(), Packet.t()) :: Session.t()
+  @spec attempt_session_activation(Session.t(), Packet.packet()) :: Session.t()
   defp attempt_session_activation(session, packet) do
     case DEVp2p.handle_message(session, packet) do
       {:ok, updated_session} ->
@@ -200,14 +200,14 @@ defmodule ExWire.P2P.Manager do
     end
   end
 
-  @spec get_packet(integer(), binary()) :: {:ok, module(), Packet.t()} | :unknown_packet_type
+  @spec get_packet(integer(), binary()) :: {:ok, module(), Packet.packet()} | :unknown_packet_type
   defp get_packet(packet_type, packet_data) do
     with {:ok, packet_mod} <- Packet.get_packet_mod(packet_type) do
       {:ok, packet_mod, apply(packet_mod, :deserialize, [packet_data])}
     end
   end
 
-  @spec notify_subscribers(Packet.t(), Connection.t()) :: list()
+  @spec notify_subscribers(Packet.packet(), Connection.t()) :: list()
   defp notify_subscribers(packet, conn) do
     for subscriber <- Map.get(conn, :subscribers, []) do
       case subscriber do
@@ -260,7 +260,7 @@ defmodule ExWire.P2P.Manager do
   @doc """
   Function for sending a packet over to a peer.
   """
-  @spec send_packet(Connection.t(), Packet.t()) :: Connection.t()
+  @spec send_packet(Connection.t(), Packet.packet()) :: Connection.t()
   def send_packet(conn, packet) do
     %{socket: socket, secrets: secrets, peer: peer} = conn
 

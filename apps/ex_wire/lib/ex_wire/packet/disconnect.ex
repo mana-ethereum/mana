@@ -137,7 +137,7 @@ defmodule ExWire.Packet.Disconnect do
       iex> ExWire.Packet.Disconnect.get_reason_msg(:timeout_on_receiving_message)
       "timeout on receiving a message"
   """
-  @spec get_reason_msg(integer()) :: String.t()
+  @spec get_reason_msg(integer()) :: String.t() | nil
   def get_reason_msg(reason) do
     @reason_msgs[reason]
   end

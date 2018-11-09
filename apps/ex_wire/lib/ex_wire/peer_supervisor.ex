@@ -8,8 +8,8 @@ defmodule ExWire.PeerSupervisor do
 
   @name __MODULE__
 
-  def start_link(args) do
-    DynamicSupervisor.start_link(__MODULE__, args, name: @name)
+  def start_link(arg) do
+    DynamicSupervisor.start_link(__MODULE__, arg, name: @name)
   end
 
   @doc """

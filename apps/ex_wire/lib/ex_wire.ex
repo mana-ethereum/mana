@@ -3,10 +3,11 @@ defmodule ExWire do
   Main application for ExWire. We will begin listening on a port
   when this application is started.
   """
+  use Application
+
+  import Supervisor, only: [child_spec: 2]
 
   @type node_id :: binary()
-
-  use Application
 
   alias ExWire.Config
   alias ExWire.NodeDiscoverySupervisor
@@ -23,18 +24,16 @@ defmodule ExWire do
 
   @spec get_children(Keyword.t()) :: list(Supervisor.child_spec())
   defp get_children(_params) do
-    import Supervisor.Spec
-
     chain = ExWire.Config.chain()
 
     sync_children =
       if Config.perform_sync?() do
         [
           # Peer supervisor maintains a pool of outbound peers
-          supervisor(PeerSupervisor, [Config.bootnodes()]),
+          child_spec({PeerSupervisor, Config.bootnodes()}, []),
 
           # Sync coordinates asking peers for new blocks
-          worker(Sync, [chain])
+          child_spec({Sync, chain}, [])
         ]
       else
         []
@@ -43,13 +42,13 @@ defmodule ExWire do
     node_discovery =
       if Config.perform_discovery?() do
         # Discovery tries to find new peers
-        [worker(NodeDiscoverySupervisor, [])]
+        [child_spec({NodeDiscoverySupervisor, []}, [])]
       else
         []
       end
 
     # Listener accepts and hands off new inbound TCP connections
-    tcp_listening = [TCPListeningSupervisor]
+    tcp_listening = [child_spec({TCPListeningSupervisor, :ok}, [])]
 
     sync_children ++ node_discovery ++ tcp_listening
   end

@@ -151,7 +151,8 @@ defmodule ExWire.Network do
         }
       }
   """
-  @spec send(Message.t(), pid(), Endpoint.t(), Key.private_key() | nil) :: handler_action
+  @spec send(Message.t(), pid(), Endpoint.t(), ExthCrypto.Key.private_key() | nil) ::
+          handler_action
   def send(message, server_pid, to, private_key \\ nil) do
     encoded_message = Protocol.encode(message, private_key || Config.private_key())
 

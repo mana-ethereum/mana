@@ -12,16 +12,16 @@ defmodule ExWire.P2P.Connection do
   alias ExWire.TCP
 
   @type t :: %__MODULE__{
-          peer: Peer.t(),
+          peer: Peer.t() | nil,
           socket: TCP.socket(),
           handshake: Handshake.t(),
           secrets: Secrets.t() | nil,
-          queued_data: binary(),
-          session: Session.t(),
+          queued_data: binary() | nil,
+          session: Session.t() | nil,
           subscribers: [any()],
           sent_message_count: integer(),
           datas: [binary()],
-          last_error: any()
+          last_error: any() | nil
         }
 
   defstruct peer: nil,

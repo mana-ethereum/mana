@@ -17,7 +17,7 @@ defmodule ExWire.P2P.Server do
   require Logger
 
   alias ExWire.{TCP, Packet}
-  alias ExWire.P2P.Manager
+  alias ExWire.P2P.{Connection, Manager}
   alias ExWire.Struct.Peer
 
   @type subscription() :: {module(), atom(), list()} | {:server, pid()}
@@ -147,7 +147,7 @@ defmodule ExWire.P2P.Server do
   @doc """
   Handle inbound communication from a peer node via tcp.
   """
-  def handle_info({:tcp, socket, data}, conn) do
+  def handle_info({:tcp, _socket, data}, conn) do
     {:ok, new_conn} = handle_socket_message(data, conn)
 
     {:noreply, new_conn}

@@ -88,7 +88,7 @@ defmodule ExWire.Kademlia.Bucket do
          updated_at: 1525704921
        }}
   """
-  @spec refresh_node(t(), Node.t(), Keyword.t()) :: {atom, t()}
+  @spec refresh_node(t(), Node.t(), Keyword.t()) :: {atom, Node.t(), t()}
   def refresh_node(bucket = %__MODULE__{}, node, options \\ [time: :actual]) do
     cond do
       member?(bucket, node) -> {:reinsert_node, node, reinsert_node(bucket, node, options)}
