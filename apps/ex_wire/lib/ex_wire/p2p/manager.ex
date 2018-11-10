@@ -154,7 +154,7 @@ defmodule ExWire.P2P.Manager do
       {:active, :ok} ->
         conn
 
-      {:active, :activate} ->
+      {:inactive, :activate} ->
         new_session = attempt_session_activation(conn.session, packet)
 
         %{conn | session: new_session}

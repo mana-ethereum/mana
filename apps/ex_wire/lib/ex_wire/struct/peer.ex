@@ -11,11 +11,12 @@ defmodule ExWire.Struct.Peer do
   ]
 
   alias ExWire.Crypto
+  alias ExthCrypto.Key
 
   @type t :: %__MODULE__{
           host: :inet.socket_address() | :inet.hostname(),
           port: :inet.port_number(),
-          remote_id: String.t(),
+          remote_id: Key.public_key(),
           ident: String.t()
         }
 
@@ -50,7 +51,7 @@ defmodule ExWire.Struct.Peer do
   end
 
   @doc """
-  Returns the hex node id format of a Peer's remote_id.
+  Returns the hex node id format of a Peer's remote_id public key.
 
   ## Examples
 
@@ -58,7 +59,7 @@ defmodule ExWire.Struct.Peer do
       iex> ExWire.Struct.Peer.hex_node_id(remote_id)
       "6ce05930c72abc632c58e2e4324f7c7ea478cec0ed4fa2528982cf34483094e9cbc9216e7aa349691242576d552a2a56aaeae426c5303ded677ce455ba1acd9d"
   """
-  @spec hex_node_id(String.t()) :: String.t()
+  @spec hex_node_id(Key.public_key()) :: String.t()
   def hex_node_id(remote_id) do
     remote_id
     |> Crypto.der_to_raw()
