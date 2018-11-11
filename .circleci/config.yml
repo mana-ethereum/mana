@@ -547,29 +547,5 @@ workflows:
   primary:
     jobs:
       - build
-      - credo:
-          requires: [build]
-      - check_formatted:
-          requires: [build]
-      - dialyzer:
-          requires: [build]
-      - test:
-          requires: [build]
-      - release:
-          requires: [build]
-      - Frontier:
-          requires: [build]
-      - Homestead:
-          requires: [build]
-      - HomesteadToDaoAt5:
-          requires: [build]
-      - TangerineWhistle:
-          requires: [build]
-      - SpuriousDragon:
-          requires: [build]
-      - Byzantium:
-          requires: [build]
-      - Constantinople:
-          requires: [build]
       - network:
           requires: [build]
