@@ -6,6 +6,11 @@ defmodule ExWire.Kademlia.Server do
 
   alias ExWire.Kademlia.{Discovery, Node, RoutingTable}
 
+  @type state :: %{
+          routing_table: RoutingTable.t(),
+          ignore_pongs: boolean()
+        }
+
   @default_process_name KademliaState
 
   @max_discovery_rounds 7
@@ -40,34 +45,46 @@ defmodule ExWire.Kademlia.Server do
   end
 
   @impl true
-  def handle_cast({:refresh_node, node}, %{routing_table: table}) do
+  def handle_cast({:refresh_node, node}, state = %{routing_table: table}) do
     updated_table = RoutingTable.refresh_node(table, node)
 
-    {:noreply, %{routing_table: updated_table}}
+    {:noreply, %{state | routing_table: updated_table}}
   end
 
-  def handle_cast({:handle_pong, pong}, %{routing_table: table}) do
-    updated_table = RoutingTable.handle_pong(table, pong)
+  def handle_cast(
+        {:handle_pong, pong},
+        state = %{routing_table: table}
+      ) do
+    updated_table =
+      if Map.get(state, :ignore_pongs, false) do
+        table
+      else
+        RoutingTable.handle_pong(table, pong)
+      end
 
-    {:noreply, %{routing_table: updated_table}}
+    {:noreply, %{state | routing_table: updated_table}}
   end
 
-  def handle_cast({:handle_ping, params}, %{routing_table: table}) do
+  def handle_cast({:handle_ping, params}, state = %{routing_table: table}) do
     updated_table = RoutingTable.handle_ping(table, params)
 
-    {:noreply, %{routing_table: updated_table}}
+    {:noreply, %{state | routing_table: updated_table}}
   end
 
-  def handle_cast({:ping, node}, %{routing_table: table}) do
+  def handle_cast({:ping, node}, state = %{routing_table: table}) do
     updated_table = RoutingTable.ping(table, node)
 
-    {:noreply, %{routing_table: updated_table}}
+    {:noreply, %{state | routing_table: updated_table}}
   end
 
-  def handle_cast({:handle_neighbours, neighbours}, %{routing_table: table}) do
+  def handle_cast({:handle_neighbours, neighbours}, state = %{routing_table: table}) do
     updated_table = RoutingTable.handle_neighbours(table, neighbours)
 
-    {:noreply, %{routing_table: updated_table}}
+    {:noreply, %{state | routing_table: updated_table}}
+  end
+
+  def handle_cast({:set_ignore_pongs, ignore_pongs}, state) do
+    {:noreply, Map.put(state, :ignore_pongs, ignore_pongs)}
   end
 
   @impl true
@@ -86,20 +103,20 @@ defmodule ExWire.Kademlia.Server do
   end
 
   @impl true
-  def handle_info({:discovery_round, nodes}, %{routing_table: routing_table}) do
+  def handle_info({:discovery_round, nodes}, state = %{routing_table: routing_table}) do
     updated_table = Discovery.start(routing_table, nodes)
 
     _ = schedule_discovery_round(updated_table.discovery_round)
 
-    {:noreply, %{routing_table: updated_table}}
+    {:noreply, %{state | routing_table: updated_table}}
   end
 
-  def handle_info(:remove_expired_nodes, %{routing_table: table}) do
+  def handle_info(:remove_expired_nodes, state = %{routing_table: table}) do
     updated_table = RoutingTable.remove_expired_pongs(table)
 
     schedule_pongs_cleanup()
 
-    {:noreply, %{routing_table: updated_table}}
+    {:noreply, %{state | routing_table: updated_table}}
   end
 
   @spec schedule_discovery_round(integer(), list(Node.t())) :: reference() | :ok

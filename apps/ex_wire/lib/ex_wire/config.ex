@@ -157,8 +157,11 @@ defmodule ExWire.Config do
 
   @spec node_discovery_params(Keyword.t(), atom(), any()) :: any()
   def node_discovery_params(given_params, key, default \\ nil) do
-    Keyword.get(
-      get_env!(given_params, :node_discovery),
+    Keyword.merge(
+      get_env!([], :node_discovery),
+      given_params
+    )
+    |> Keyword.get(
       key,
       default
     )
