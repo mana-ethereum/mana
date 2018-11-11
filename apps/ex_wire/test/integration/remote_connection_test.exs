@@ -98,7 +98,7 @@ defmodule ExWire.RemoteConnectionTest do
 
         receive_neighbours()
     after
-      2_000 ->
+      60_000 ->
         raise "Expected pong, but did not receive before timeout."
     end
   end
@@ -119,7 +119,7 @@ defmodule ExWire.RemoteConnectionTest do
             receive_neighbours()
         end
     after
-      2_000 ->
+      60_000 ->
         raise "Expected neighbours, but did not receive before timeout."
     end
   end
@@ -167,7 +167,7 @@ defmodule ExWire.RemoteConnectionTest do
 
         receive_status(client_pid)
     after
-      30_000 ->
+      60_000 ->
         raise "Expected status, but did not receive before timeout."
     end
   end
@@ -186,7 +186,7 @@ defmodule ExWire.RemoteConnectionTest do
 
         receive_block_headers(client_pid)
     after
-      3_000 ->
+      60_000 ->
         raise "Expected block headers, but did not receive before timeout."
     end
   end
@@ -205,7 +205,7 @@ defmodule ExWire.RemoteConnectionTest do
 
         receive_block_bodies(client_pid)
     after
-      3_000 ->
+      60_000 ->
         raise "Expected block bodies, but did not receive before timeout."
     end
   end
