@@ -133,6 +133,40 @@ jobs:
 
       - run: mix test --exclude pending
 
+  network:
+    docker:
+      - image: circleci/elixir:1.7.4
+        environment:
+          MIX_ENV: test
+
+    working_directory: ~/app
+
+    steps:
+      - attach_workspace:
+           at: .
+
+      - run: mix local.hex --force
+      - run: mix local.rebar --force
+
+      - restore_cache:
+          keys:
+            - v8-build-cache-{{ .Branch }}
+            - v8-build-cache
+
+      - restore_cache:
+          keys:
+            - v8-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
+            - v8-mix-cache-{{ .Branch }}
+            - v8-mix-cache
+
+      - restore_cache:
+          keys:
+            - v8-env-cache-{{ arch }}-{{ .Branch }}
+            - v8-env-cache-{{ .Branch }}
+            - v8-env-cache
+
+      - run: EXT_IP_ADDRESS=$(curl ifconfig.co) mix test --only network
+
   Frontier:
     docker:
       - image: circleci/elixir:1.7.4
@@ -536,4 +570,6 @@ workflows:
       - Byzantium:
           requires: [build]
       - Constantinople:
+          requires: [build]
+      - network:
           requires: [build]

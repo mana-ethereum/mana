@@ -20,7 +20,6 @@ defmodule ExWire.RemoteConnectionTest do
   @moduletag integration: true
   @moduletag network: true
 
-  @local_peer [127, 0, 0, 1]
   @local_peer_port 35_353
   @local_tcp_port 36_363
 
@@ -55,9 +54,9 @@ defmodule ExWire.RemoteConnectionTest do
     # First, start a new client
     {:ok, client_pid} =
       ExWire.Adapter.UDP.start_link(
-        network_module: {__MODULE__, [self()]},
-        port: @local_peer_port,
-        name: :test
+        :test,
+        {__MODULE__, [self()]},
+        @local_peer_port
       )
 
     # Now, we'll send a ping / pong to verify connectivity
@@ -66,7 +65,7 @@ defmodule ExWire.RemoteConnectionTest do
     ping = %ExWire.Message.Ping{
       version: 1,
       from: %ExWire.Struct.Endpoint{
-        ip: @local_peer,
+        ip: ExWire.Config.public_ip(),
         tcp_port: @local_tcp_port,
         udp_port: @local_peer_port
       },
@@ -168,7 +167,7 @@ defmodule ExWire.RemoteConnectionTest do
 
         receive_status(client_pid)
     after
-      10_000 ->
+      30_000 ->
         raise "Expected status, but did not receive before timeout."
     end
   end

@@ -39,7 +39,7 @@ defmodule ExWire.Crypto do
   def node_id(private_key) do
     case Signature.get_public_key(private_key) do
       {:ok, <<public_key::binary()>>} ->
-        {:ok, node_id_from_public_key(public_key)}
+        {:ok, Key.der_to_raw(public_key)}
 
       {:error, reason} ->
         {:error, to_string(reason)}

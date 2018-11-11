@@ -27,7 +27,7 @@ defmodule ExWire.Handshake.Struct.AuthMsgV4 do
   def serialize(auth_msg) do
     [
       auth_msg.signature,
-      ExthCrypto.Key.der_to_raw(auth_msg.initiator_public_key),
+      auth_msg.initiator_public_key,
       auth_msg.initiator_nonce,
       :binary.encode_unsigned(auth_msg.initiator_version)
     ]
