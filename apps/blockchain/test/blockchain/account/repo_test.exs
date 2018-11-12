@@ -67,7 +67,7 @@ defmodule Blockchain.Account.RepoTest do
       address = <<1::160>>
       state_with_account = Account.reset_account(state, address)
 
-      result =
+      {_updated_repo, result} =
         state_with_account
         |> Repo.new()
         |> Repo.increment_account_nonce(address)
@@ -102,13 +102,33 @@ defmodule Blockchain.Account.RepoTest do
         |> Repo.new()
         |> Repo.transfer_wei!(from_account_address, to_account_address, transfer_wei)
 
-      new_from_account = Repo.account(updated_account_repo, from_account_address)
+      {_updated_repo, new_from_account} = Repo.account(updated_account_repo, from_account_address)
 
       assert new_from_account.balance == from_account_balance - transfer_wei
 
-      new_to_account = Repo.account(updated_account_repo, to_account_address)
+      {_updated_repo, new_to_account} = Repo.account(updated_account_repo, to_account_address)
 
       assert new_to_account.balance == transfer_wei
+    end
+  end
+
+  describe "put_account/4" do
+    test "puts clean account in state", %{state: state} do
+      repo = Repo.new(state)
+
+      account = %Blockchain.Account{
+        nonce: 5,
+        balance: 11,
+        storage_root: <<0x01>>,
+        code_hash: <<0x02>>
+      }
+
+      address = <<1>>
+
+      updated_repo = Repo.put_account(repo, address, account, :clean)
+
+      {_repo, found_account} = Repo.account(updated_repo, address)
+      assert found_account == account
     end
   end
 
@@ -117,7 +137,7 @@ defmodule Blockchain.Account.RepoTest do
       code = <<1, 2, 3>>
       address = <<2>>
 
-      {account, ^code} =
+      {_repo, account, ^code} =
         state
         |> Account.reset_account(address)
         |> Repo.new()
@@ -143,7 +163,7 @@ defmodule Blockchain.Account.RepoTest do
       code = <<5>>
       cache = %Cache{accounts_cache: %{address => {:dirty, account, code}}}
 
-      {:ok, found_code} =
+      {_repo, {:ok, found_code}} =
         state
         |> Repo.new(cache)
         |> Repo.machine_code(address)
@@ -155,7 +175,7 @@ defmodule Blockchain.Account.RepoTest do
       address = <<1>>
       code = <<5>>
 
-      {:ok, found_code} =
+      {_repo, {:ok, found_code}} =
         state
         |> Account.reset_account(address)
         |> Account.put_code(address, code)
@@ -177,7 +197,7 @@ defmodule Blockchain.Account.RepoTest do
         code_hash: <<0x01, 0x02>>
       }
 
-      found_account =
+      {_repo, found_account} =
         state
         |> Account.put_account(address, account)
         |> Repo.new()
@@ -199,7 +219,7 @@ defmodule Blockchain.Account.RepoTest do
         code_hash: <<0x01, 0x02>>
       }
 
-      found_account =
+      {_repo, found_account} =
         state
         |> Account.put_account(address, account)
         |> Repo.new()
@@ -221,7 +241,7 @@ defmodule Blockchain.Account.RepoTest do
         code_hash: <<0x01, 0x02>>
       }
 
-      found_account =
+      {_updated_repo, found_account} =
         state
         |> Account.put_account(address, account)
         |> Repo.new()
@@ -254,7 +274,7 @@ defmodule Blockchain.Account.RepoTest do
         |> Repo.new(cache)
         |> Repo.del_account(address)
 
-      {found_account, found_code} = Repo.account_with_code(account_repo, address)
+      {_repo, found_account, found_code} = Repo.account_with_code(account_repo, address)
 
       assert is_nil(found_account)
       assert is_nil(found_code)
@@ -279,7 +299,7 @@ defmodule Blockchain.Account.RepoTest do
         |> Repo.new(cache)
         |> Repo.del_account(address)
 
-      {found_account, found_code} = Repo.account_with_code(account_repo, address)
+      {_repo, found_account, found_code} = Repo.account_with_code(account_repo, address)
 
       assert is_nil(found_account)
       assert is_nil(found_code)
@@ -308,7 +328,9 @@ defmodule Blockchain.Account.RepoTest do
         |> Account.reset_account(address)
         |> Repo.new(cache)
 
-      assert Repo.account_with_code(account_repo, address) == {account, code}
+      {_repo, found_account, found_code} = Repo.account_with_code(account_repo, address)
+
+      assert {found_account, found_code} == {account, code}
     end
 
     test "fetches account from storage", %{state: state} do
@@ -319,7 +341,7 @@ defmodule Blockchain.Account.RepoTest do
         |> Account.reset_account(address)
         |> Repo.new()
 
-      result = Repo.account(account_repo, address)
+      {_repo, result} = Repo.account(account_repo, address)
 
       assert result == %Blockchain.Account{
                balance: 0,
