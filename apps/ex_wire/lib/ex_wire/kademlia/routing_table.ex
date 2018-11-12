@@ -49,7 +49,7 @@ defmodule ExWire.Kademlia.RoutingTable do
       ...>    udp_port: nil
       ...>  }
       ...> }
-      iex> {:ok, network_client_pid} = ExWire.Adapter.UDP.start_link(35351, {ExWire.Network, []}, :doctest)
+      iex> {:ok, network_client_pid} = ExWire.Adapter.UDP.start_link(:doctest, {ExWire.Network, []}, 35351)
       iex> table = ExWire.Kademlia.RoutingTable.new(node, network_client_pid)
       iex> table.buckets |> Enum.count
       256

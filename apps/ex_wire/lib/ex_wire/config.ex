@@ -57,7 +57,7 @@ defmodule ExWire.Config do
   def public_key() do
     {:ok, public_key} = Signature.get_public_key(private_key())
 
-    ExthCrypto.Key.der_to_raw(public_key)
+    public_key
   end
 
   @spec public_node_url() :: String.t()

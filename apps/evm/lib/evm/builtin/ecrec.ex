@@ -1,6 +1,6 @@
 defmodule EVM.Builtin.Ecrec do
   alias EVM.Memory
-  alias ExthCrypto.{Key, Signature}
+  alias ExthCrypto.Signature
 
   @g_ecrec 3000
 
@@ -45,7 +45,6 @@ defmodule EVM.Builtin.Ecrec do
         {:ok, public_key} ->
           padded_address =
             public_key
-            |> Key.der_to_raw()
             |> EVM.Address.new_from_public_key()
             |> EVM.Helpers.left_pad_bytes()
 

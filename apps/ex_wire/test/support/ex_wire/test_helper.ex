@@ -14,9 +14,9 @@ defmodule ExWire.TestHelper do
 
     {:ok, network_client_pid} =
       UDP.start_link(
+        String.to_atom("test#{random(1_000)}"),
         {Network, []},
-        port,
-        String.to_atom("test#{random(1_000)}")
+        port
       )
 
     table = random_node() |> RoutingTable.new(network_client_pid)
@@ -30,9 +30,9 @@ defmodule ExWire.TestHelper do
   def random_empty_table do
     {:ok, network_client_pid} =
       UDP.start_link(
+        :routing_table_test,
         {Network, []},
-        random_port_number(),
-        :routing_table_test
+        random_port_number()
       )
 
     RoutingTable.new(random_node(), network_client_pid)

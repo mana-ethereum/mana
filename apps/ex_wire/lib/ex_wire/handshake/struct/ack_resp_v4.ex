@@ -5,6 +5,8 @@ defmodule ExWire.Handshake.Struct.AckRespV4 do
   The RLPx v4 handshake ack is defined in EIP-8.
   """
 
+  alias ExthCrypto.Key
+
   defstruct [
     :recipient_ephemeral_public_key,
     :recipient_nonce,
@@ -12,7 +14,7 @@ defmodule ExWire.Handshake.Struct.AckRespV4 do
   ]
 
   @type t :: %__MODULE__{
-          recipient_ephemeral_public_key: ExthCrypto.Key.public_key(),
+          recipient_ephemeral_public_key: Key.public_key(),
           recipient_nonce: binary(),
           recipient_version: integer()
         }
@@ -20,7 +22,7 @@ defmodule ExWire.Handshake.Struct.AckRespV4 do
   @spec serialize(t) :: ExRLP.t()
   def serialize(ack_resp) do
     [
-      ack_resp.recipient_ephemeral_public_key |> ExthCrypto.Key.der_to_raw(),
+      ack_resp.recipient_ephemeral_public_key,
       ack_resp.recipient_nonce,
       ack_resp.recipient_version |> :binary.encode_unsigned()
     ]
@@ -33,8 +35,7 @@ defmodule ExWire.Handshake.Struct.AckRespV4 do
     [recipient_version | _tl] = rlp_tail
 
     %__MODULE__{
-      recipient_ephemeral_public_key:
-        recipient_ephemeral_public_key |> ExthCrypto.Key.raw_to_der(),
+      recipient_ephemeral_public_key: recipient_ephemeral_public_key,
       recipient_nonce: recipient_nonce,
       recipient_version:
         if(

@@ -7,6 +7,7 @@ defmodule ExWire.Message do
   alias ExWire.Crypto
   alias ExWire.Message.{FindNeighbours, Neighbours, Ping, Pong}
   alias ExWire.Struct.Endpoint
+  alias ExthCrypto.Key
 
   defmodule UnknownMessageError do
     defexception [:message]
@@ -102,12 +103,12 @@ defmodule ExWire.Message do
       ...>   70, 235, 163, 158, 201, 246, 223, 114, 168, 7, 7, 95, 9, 53, 165, 8, 177,
       ...>   13>>
       iex> ExWire.Message.recover_public_key(pong, signature, 1)
-      <<4, 134, 90, 99, 37, 91, 59, 182, 128, 35, 182, 191, 253, 80, 149, 17, 143, 204,
+      <<134, 90, 99, 37, 91, 59, 182, 128, 35, 182, 191, 253, 80, 149, 17, 143, 204,
       19, 231, 157, 207, 1, 79, 228, 228, 126, 6, 92, 53, 12, 124, 199, 42, 242,
       229, 62, 255, 137, 95, 17, 186, 27, 187, 106, 43, 51, 39, 28, 17, 22, 238,
       135, 15, 38, 102, 24, 234, 223, 194, 231, 138, 167, 52, 156>>
   """
-  @spec recover_public_key(t() | binary(), binary(), integer()) :: binary()
+  @spec recover_public_key(t() | binary(), binary(), integer()) :: Key.public_key()
   def recover_public_key(message, signature, recovery_id) when is_binary(message) do
     message
     |> Crypto.hash()

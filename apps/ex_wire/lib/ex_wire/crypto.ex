@@ -14,8 +14,6 @@ defmodule ExWire.Crypto do
     defexception [:message]
   end
 
-  defdelegate der_to_raw(der_bin), to: Key
-  defdelegate raw_to_der(bin), to: Key
   defdelegate hex_to_bin(hex_bin), to: Math
   defdelegate bin_to_hex(bin), to: Math
 
@@ -38,8 +36,8 @@ defmodule ExWire.Crypto do
   @spec node_id(Key.private_key()) :: {:ok, ExWire.node_id()} | {:error, String.t()}
   def node_id(private_key) do
     case Signature.get_public_key(private_key) do
-      {:ok, <<public_key::binary()>>} ->
-        {:ok, Key.der_to_raw(public_key)}
+      {:ok, public_key} ->
+        {:ok, public_key}
 
       {:error, reason} ->
         {:error, to_string(reason)}
@@ -128,7 +126,7 @@ defmodule ExWire.Crypto do
       ...>   70, 235, 163, 158, 201, 246, 223, 114, 168, 7, 7, 95, 9, 53, 165, 8, 177,
       ...>   13>>
       iex> ExWire.Crypto.recover_public_key(message, signature, 1)
-      <<4, 89, 43, 26, 95, 28, 0, 213, 63, 213, 214, 141, 7, 112, 103, 70, 144, 161,
+      <<89, 43, 26, 95, 28, 0, 213, 63, 213, 214, 141, 7, 112, 103, 70, 144, 161,
         213, 121, 174, 81, 195, 152, 74, 11, 239, 198, 197, 199, 108, 83, 254, 219,
         185, 91, 252, 107, 196, 30, 137, 64, 224, 60, 229, 20, 168, 35, 251, 75, 143,
         85, 130, 147, 90, 33, 104, 100, 96, 18, 220, 253, 58, 85, 207>>
@@ -147,11 +145,11 @@ defmodule ExWire.Crypto do
 
   ## Examples
 
-      iex> ExWire.Crypto.node_id_from_public_key(<<0x04, 1::256>>)
+      iex> ExWire.Crypto.node_id_from_public_key(<<1::256>>)
       <<1::256>>
   """
-  @spec node_id_from_public_key(Key.public_key_der()) :: Key.public_key()
+  @spec node_id_from_public_key(Key.public_key()) :: Key.public_key()
   def node_id_from_public_key(public_key) do
-    Key.der_to_raw(public_key)
+    public_key
   end
 end
