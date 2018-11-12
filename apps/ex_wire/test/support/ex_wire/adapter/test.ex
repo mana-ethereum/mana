@@ -28,20 +28,23 @@ defmodule ExWire.Adapter.Test do
   end
 
   def handle_cast(
-        {:fake_recieve,
+        {:fake_receive,
          %{
            data: data,
            remote_host: remote_host,
            timestamp: timestamp
-         }},
+         }, options},
         state = %{network: network}
       ) do
-    network.receive(%ExWire.Network.InboundMessage{
-      data: data,
-      server_pid: self(),
-      remote_host: remote_host,
-      timestamp: timestamp
-    })
+    network.receive(
+      %ExWire.Network.InboundMessage{
+        data: data,
+        server_pid: self(),
+        remote_host: remote_host,
+        timestamp: timestamp
+      },
+      options
+    )
 
     {:noreply, state}
   end

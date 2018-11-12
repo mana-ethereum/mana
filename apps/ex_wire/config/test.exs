@@ -10,4 +10,5 @@ config :ex_wire,
     supervisor_name: ExWire.NodeDiscoverySupervisor,
     port: 30_304
   ],
-  discovery: true
+  discovery: false,
+  sync: false
