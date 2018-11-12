@@ -27,23 +27,26 @@ defmodule EVM.Mock.MockAccountRepo do
 
   @impl true
   def account_exists?(mock_account_repo, address) do
-    account = get_account(mock_account_repo, :binary.decode_unsigned(address))
+    account = account(mock_account_repo, :binary.decode_unsigned(address))
 
-    !is_nil(account)
+    {mock_account_repo, !is_nil(account)}
   end
 
   @impl true
   def empty_account?(mock_account_repo, address) do
-    account_exists?(mock_account_repo, address)
+    {mock_account_repo, account_exists?(mock_account_repo, address)}
   end
 
   @impl true
-  def get_account_balance(mock_account_repo, address) do
-    account = get_account(mock_account_repo, address)
+  def account_balance(mock_account_repo, address) do
+    account = account(mock_account_repo, address)
 
-    if account do
-      account.balance
-    end
+    balance =
+      if account do
+        account.balance
+      end
+
+    {mock_account_repo, balance}
   end
 
   @impl true
@@ -54,30 +57,35 @@ defmodule EVM.Mock.MockAccountRepo do
   end
 
   defp add_wei(mock_account_repo, address, value) do
-    account = get_account(mock_account_repo, address) || new_account()
+    account = account(mock_account_repo, address) || new_account()
 
     put_account(mock_account_repo, address, %{account | balance: account.balance + value})
   end
 
   @impl true
-  def get_account_code(mock_account_repo, address) do
-    account = get_account(mock_account_repo, address)
+  def account_code(mock_account_repo, address) do
+    account = account(mock_account_repo, address)
 
-    if account do
-      account.code
-    else
-      <<>>
-    end
+    code =
+      if account do
+        account.code
+      else
+        <<>>
+      end
+
+    {mock_account_repo, code}
   end
 
   @impl true
-  def get_account_code_hash(mock_account_repo, address) do
-    account = get_account(mock_account_repo, address)
+  def account_code_hash(mock_account_repo, address) do
+    account = account(mock_account_repo, address)
 
-    unless is_nil(account), do: account.code_hash
+    hash = unless is_nil(account), do: account.code_hash
+
+    {mock_account_repo, hash}
   end
 
-  defp get_account(mock_account_repo, address) do
+  defp account(mock_account_repo, address) do
     Map.get(mock_account_repo.account_map, address)
   end
 
@@ -91,27 +99,30 @@ defmodule EVM.Mock.MockAccountRepo do
   end
 
   @impl true
-  def get_storage(mock_account_repo, address, key) do
-    case mock_account_repo.account_map[address] do
-      nil ->
-        :account_not_found
+  def storage(mock_account_repo, address, key) do
+    value =
+      case mock_account_repo.account_map[address] do
+        nil ->
+          :account_not_found
 
-      account ->
-        case account[:storage][key] do
-          nil -> :key_not_found
-          value -> {:ok, value}
-        end
-    end
+        account ->
+          case account[:storage][key] do
+            nil -> :key_not_found
+            value -> {:ok, value}
+          end
+      end
+
+    {mock_account_repo, value}
   end
 
   @impl true
-  def get_initial_storage(mock_account_repo, address, key) do
-    get_storage(mock_account_repo, address, key)
+  def initial_storage(mock_account_repo, address, key) do
+    storage(mock_account_repo, address, key)
   end
 
   @impl true
   def put_storage(mock_account_repo, address, key, value) do
-    account = get_account(mock_account_repo, address)
+    account = account(mock_account_repo, address)
 
     account =
       if account do
@@ -125,7 +136,7 @@ defmodule EVM.Mock.MockAccountRepo do
 
   @impl true
   def remove_storage(mock_account_repo, address, key) do
-    account = get_account(mock_account_repo, address)
+    account = account(mock_account_repo, address)
 
     if account do
       account = update_storage(account, key, 0)
@@ -162,8 +173,10 @@ defmodule EVM.Mock.MockAccountRepo do
   end
 
   @impl true
-  def get_account_nonce(mock_account_repo, address) do
-    get_in(mock_account_repo.account_map, [address, :nonce])
+  def account_nonce(mock_account_repo, address) do
+    nonce = get_in(mock_account_repo.account_map, [address, :nonce])
+
+    {mock_account_repo, nonce}
   end
 
   @impl true
@@ -203,7 +216,7 @@ defmodule EVM.Mock.MockAccountRepo do
 
   @impl true
   def clear_balance(mock_account_repo, address) do
-    account = get_account(mock_account_repo, address)
+    account = account(mock_account_repo, address)
 
     put_account(mock_account_repo, address, %{account | balance: 0})
   end

@@ -7,27 +7,27 @@ defmodule EVM.AccountRepo do
 
   @type t :: struct()
 
-  @callback account_exists?(t, EVM.address()) :: boolean()
+  @callback account_exists?(t, EVM.address()) :: {t, boolean()}
 
-  @callback empty_account?(t, EVM.address()) :: boolean()
+  @callback empty_account?(t, EVM.address()) :: {t, boolean()}
 
-  @callback get_account_balance(t, EVM.address()) :: nil | EVM.Wei.t()
+  @callback account_balance(t, EVM.address()) :: {t, nil | EVM.Wei.t()}
 
   @callback transfer(t, EVM.address(), EVM.address(), integer()) :: t
 
-  @callback get_account_code(t, EVM.address()) :: nil | binary()
+  @callback account_code(t, EVM.address()) :: {t, nil | binary()}
 
-  @callback get_account_nonce(t, EVM.address()) :: integer()
+  @callback account_nonce(t, EVM.address()) :: {t, integer()}
 
-  @callback get_account_code_hash(t, EVM.address()) :: binary() | nil
+  @callback account_code_hash(t, EVM.address()) :: {t | binary() | nil}
 
   @callback increment_account_nonce(t, EVM.address()) :: t()
 
-  @callback get_storage(t, EVM.address(), integer()) ::
-              {:ok, integer()} | :account_not_found | :key_not_found
+  @callback storage(t, EVM.address(), integer()) ::
+              {t | {:ok, integer()} | :account_not_found | :key_not_found}
 
-  @callback get_initial_storage(t, EVM.address(), integer()) ::
-              {:ok, integer()} | :account_not_found | :key_not_found
+  @callback initial_storage(t, EVM.address(), integer()) ::
+              {t | {:ok, integer()} | :account_not_found | :key_not_found}
 
   @callback put_storage(t, EVM.address(), integer(), integer()) :: t
 
