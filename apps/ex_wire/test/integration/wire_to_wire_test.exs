@@ -16,9 +16,9 @@ defmodule WireToWireTest do
   setup_all do
     {:ok, server} =
       ExWire.Adapter.UDP.start_link(
-        network_module: {ExWire.Network, [kademlia_process_name: :kademlia_wire_to_wire]},
-        port: @them_port,
-        name: :wire_to_wire_them
+        :wire_to_wire_them,
+        {ExWire.Network, [kademlia_process_name: :kademlia_wire_to_wire]},
+        @them_port
       )
 
     {:ok, _} =
@@ -43,9 +43,9 @@ defmodule WireToWireTest do
   test "ping / pong", %{remote_host: remote_host} do
     {:ok, client_pid} =
       ExWire.Adapter.UDP.start_link(
-        network_module: {__MODULE__, [self()]},
-        port: @us_port,
-        name: :wire_to_wire
+        :wire_to_wire,
+        {__MODULE__, [self()]},
+        @us_port
       )
 
     timestamp = ExWire.Util.Timestamp.now()
