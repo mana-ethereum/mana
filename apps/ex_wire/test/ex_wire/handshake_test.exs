@@ -126,7 +126,6 @@ defmodule HandshakeTest do
       assert auth_msg.initiator_public_key ==
                "fda1cff674c90c9a197539fe3dfb53086ace64f83ed7c6eabec741f7f381cc803e52ab2cd55d5569bce4347107a310dfd5f88a010cd2ffd1005ca406f1842877"
                |> ExthCrypto.Math.hex_to_bin()
-               |> ExthCrypto.Key.raw_to_der()
 
       assert auth_msg.initiator_nonce ==
                "7e968bba13b6c50e2c4cd7f241cc0d64d1ac25c7f5952df231ac6a2bda8ee5d6"
@@ -135,7 +134,6 @@ defmodule HandshakeTest do
       assert auth_msg.initiator_ephemeral_public_key ==
                "654d1044b69c577a44e5f01a1209523adb4026e70c62d1c13a067acabc09d2667a49821a0ad4b634554d330a15a58fe61f8a8e0544b310c6de7b0c8da7528a8d"
                |> ExthCrypto.Math.hex_to_bin()
-               |> ExthCrypto.Key.raw_to_der()
 
       assert auth_msg.initiator_version == 63
     end
@@ -167,7 +165,6 @@ defmodule HandshakeTest do
       assert auth_msg.initiator_public_key ==
                "fda1cff674c90c9a197539fe3dfb53086ace64f83ed7c6eabec741f7f381cc803e52ab2cd55d5569bce4347107a310dfd5f88a010cd2ffd1005ca406f1842877"
                |> ExthCrypto.Math.hex_to_bin()
-               |> ExthCrypto.Key.raw_to_der()
 
       assert auth_msg.initiator_nonce ==
                "7e968bba13b6c50e2c4cd7f241cc0d64d1ac25c7f5952df231ac6a2bda8ee5d6"
@@ -176,7 +173,6 @@ defmodule HandshakeTest do
       assert auth_msg.initiator_ephemeral_public_key ==
                "654d1044b69c577a44e5f01a1209523adb4026e70c62d1c13a067acabc09d2667a49821a0ad4b634554d330a15a58fe61f8a8e0544b310c6de7b0c8da7528a8d"
                |> ExthCrypto.Math.hex_to_bin()
-               |> ExthCrypto.Key.raw_to_der()
 
       assert auth_msg.initiator_version == 4
     end
@@ -209,7 +205,6 @@ defmodule HandshakeTest do
       assert auth_msg.initiator_public_key ==
                "fda1cff674c90c9a197539fe3dfb53086ace64f83ed7c6eabec741f7f381cc803e52ab2cd55d5569bce4347107a310dfd5f88a010cd2ffd1005ca406f1842877"
                |> ExthCrypto.Math.hex_to_bin()
-               |> ExthCrypto.Key.raw_to_der()
 
       assert auth_msg.initiator_nonce ==
                "7e968bba13b6c50e2c4cd7f241cc0d64d1ac25c7f5952df231ac6a2bda8ee5d6"
@@ -218,7 +213,6 @@ defmodule HandshakeTest do
       assert auth_msg.initiator_ephemeral_public_key ==
                "654d1044b69c577a44e5f01a1209523adb4026e70c62d1c13a067acabc09d2667a49821a0ad4b634554d330a15a58fe61f8a8e0544b310c6de7b0c8da7528a8d"
                |> ExthCrypto.Math.hex_to_bin()
-               |> ExthCrypto.Key.raw_to_der()
 
       assert auth_msg.initiator_version == 56
     end
@@ -253,7 +247,6 @@ defmodule HandshakeTest do
       assert ack_resp.recipient_ephemeral_public_key ==
                "b6d82fa3409da933dbf9cb0140c5dde89f4e64aec88d476af648880f4a10e1e49fe35ef3e69e93dd300b4797765a747c6384a6ecf5db9c2690398607a86181e4"
                |> ExthCrypto.Math.hex_to_bin()
-               |> ExthCrypto.Key.raw_to_der()
 
       assert ack_resp.recipient_version == 63
     end
@@ -295,7 +288,6 @@ defmodule HandshakeTest do
       assert ack_resp.recipient_ephemeral_public_key ==
                "b6d82fa3409da933dbf9cb0140c5dde89f4e64aec88d476af648880f4a10e1e49fe35ef3e69e93dd300b4797765a747c6384a6ecf5db9c2690398607a86181e4"
                |> ExthCrypto.Math.hex_to_bin()
-               |> ExthCrypto.Key.raw_to_der()
 
       assert ack_resp.recipient_version == 4
     end
@@ -337,7 +329,6 @@ defmodule HandshakeTest do
       assert ack_resp.recipient_ephemeral_public_key ==
                "b6d82fa3409da933dbf9cb0140c5dde89f4e64aec88d476af648880f4a10e1e49fe35ef3e69e93dd300b4797765a747c6384a6ecf5db9c2690398607a86181e4"
                |> ExthCrypto.Math.hex_to_bin()
-               |> ExthCrypto.Key.raw_to_der()
 
       assert ack_resp.recipient_version == 57
     end

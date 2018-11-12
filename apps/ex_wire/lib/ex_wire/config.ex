@@ -9,7 +9,6 @@ defmodule ExWire.Config do
   alias Blockchain.Chain
   alias ExthCrypto.ECIES.ECDH
   alias ExthCrypto.{Key, Signature}
-  alias ExWire.Crypto
 
   @default_port 30_303
   @default_public_ip [127, 0, 0, 1]
@@ -89,7 +88,7 @@ defmodule ExWire.Config do
 
   @spec node_id() :: ExWire.node_id()
   def node_id() do
-    Crypto.node_id_from_public_key(public_key())
+    ExWire.Crypto.node_id_from_public_key(public_key())
   end
 
   @spec listen_port(Keyword.t()) :: integer()
