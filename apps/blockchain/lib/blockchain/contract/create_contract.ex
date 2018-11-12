@@ -50,8 +50,9 @@ defmodule Blockchain.Contract.CreateContract do
   @spec execute(t()) :: {:ok | :error, {Repo.t(), EVM.Gas.t(), EVM.SubState.t(), binary() | <<>>}}
   def execute(params) do
     original_account_repo = params.account_repo
-    contract_address = new_account_address(params)
-    account = Repo.account(original_account_repo, contract_address)
+    {updated_repo, contract_address} = new_account_address(params)
+    {updated_repo, account} = Repo.account(updated_repo, contract_address)
+    params = %{params | account_repo: updated_repo}
 
     if is_nil(account) || Account.uninitialized_contract?(account) do
       result = {rem_gas, _, _, output} = create(params, contract_address)
@@ -130,13 +131,13 @@ defmodule Blockchain.Contract.CreateContract do
 
   @spec init_account(t, EVM.address()) :: Repo.t()
   defp init_account(params, address) do
-    account = Repo.account(params.account_repo, address)
+    {updated_repo, account} = Repo.account(params.account_repo, address)
 
     account_repo =
       if is_nil(account) do
-        Repo.reset_account(params.account_repo, address)
+        Repo.reset_account(updated_repo, address)
       else
-        params.account_repo
+        updated_repo
       end
 
     account_repo
@@ -203,8 +204,8 @@ defmodule Blockchain.Contract.CreateContract do
     if params.new_account_address do
       params.new_account_address
     else
-      sender_account = Repo.account(params.account_repo, params.sender)
-      Account.Address.new(params.sender, sender_account.nonce)
+      {updated_repo, sender_account} = Repo.account(params.account_repo, params.sender)
+      {updated_repo, Account.Address.new(params.sender, sender_account.nonce)}
     end
   end
 end

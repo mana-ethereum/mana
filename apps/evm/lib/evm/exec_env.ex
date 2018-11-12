@@ -92,7 +92,9 @@ defmodule EVM.ExecEnv do
 
   @spec get_storage(t(), integer()) :: atom() | {:ok, integer()}
   def get_storage(%{account_repo: account_repo, address: address}, key) do
-    AccountRepo.repo(account_repo).get_storage(account_repo, address, key)
+    {_repo, result} = AccountRepo.repo(account_repo).get_storage(account_repo, address, key)
+
+    result
   end
 
   @spec get_initial_storage(t(), integer()) :: atom() | {:ok, integer()}

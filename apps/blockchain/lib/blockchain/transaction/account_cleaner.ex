@@ -5,12 +5,12 @@ defmodule Blockchain.Transaction.AccountCleaner do
   def clean_touched_accounts(account_repo, accounts, config) do
     if config.clean_touched_accounts do
       Enum.reduce(accounts, account_repo, fn address, new_account_repo ->
-        account = Repo.account(new_account_repo, address)
+        {updated_repo, account} = Repo.account(new_account_repo, address)
 
         if account && Account.empty?(account) do
-          Repo.del_account(new_account_repo, address)
+          Repo.del_account(updated_repo, address)
         else
-          new_account_repo
+          updated_repo
         end
       end)
     else

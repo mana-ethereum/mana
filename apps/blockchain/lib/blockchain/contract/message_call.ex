@@ -78,7 +78,8 @@ defmodule Blockchain.Contract.MessageCall do
     run = MessageCall.get_run_function(params.recipient, params.config)
 
     # Note, this could fail if machine code is not in state
-    {:ok, machine_code} = Repo.machine_code(params.account_repo, params.contract)
+    {updated_repo, {:ok, machine_code}} = Repo.machine_code(params.account_repo, params.contract)
+    params = %{params | account_repo: updated_repo}
 
     # Initiates message call by transfering balance from sender to receiver.
     # This covers Eq.(101), Eq.(102), Eq.(103) and Eq.(104) of the Yellow Paper.
