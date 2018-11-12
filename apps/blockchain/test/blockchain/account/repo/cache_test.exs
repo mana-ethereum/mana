@@ -238,7 +238,7 @@ defmodule Blockchain.Account.Repo.CacheTest do
 
       code = <<2, 99>>
 
-      cache = %Cache{accounts_cache: %{address => {new_account, code}}}
+      cache = %Cache{accounts_cache: %{address => {:dirty, new_account, code}}}
 
       committed_state = Cache.commit_accounts(cache, state_with_account)
 
@@ -247,6 +247,34 @@ defmodule Blockchain.Account.Repo.CacheTest do
 
       {:ok, found_code} = Account.get_machine_code(committed_state, address)
       assert found_code == code
+    end
+
+    test "does not update account if account in cache is clean" do
+      ets_db = MerklePatriciaTree.Test.random_ets_db()
+      state = MerklePatriciaTree.Trie.new(ets_db)
+      address = <<1>>
+
+      # we need to create a blank account with storage
+      state_with_account = Account.reset_account(state, address)
+
+      new_account = %Account{
+        nonce: 5,
+        balance: 10,
+        storage_root: <<0x00, 0x01>>,
+        code_hash: <<0x01, 0x02>>
+      }
+
+      code = <<2, 99>>
+
+      cache = %Cache{accounts_cache: %{address => {:clean, new_account, code}}}
+
+      committed_state = Cache.commit_accounts(cache, state_with_account)
+
+      found_account = Account.get_account(committed_state, address)
+      assert found_account == %Account{}
+
+      {:ok, found_code} = Account.get_machine_code(committed_state, address)
+      assert found_code == ""
     end
 
     test "creates new account from cache" do
@@ -261,7 +289,7 @@ defmodule Blockchain.Account.Repo.CacheTest do
         code_hash: <<0x01, 0x02>>
       }
 
-      cache = %Cache{accounts_cache: %{address => {new_account, nil}}}
+      cache = %Cache{accounts_cache: %{address => {:dirty, new_account, nil}}}
 
       committed_state = Cache.commit_accounts(cache, state)
 

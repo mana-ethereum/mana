@@ -50,9 +50,9 @@ defmodule Blockchain.Account.Repo do
     |> new()
   end
 
-  @spec put_account(t(), Address.t(), Account.t()) :: t()
-  def put_account(account_repo, address, account) do
-    updated_cache = Cache.update_account(account_repo.cache, address, {account, nil})
+  @spec put_account(t(), Address.t(), Account.t(), atom()) :: t()
+  def put_account(account_repo, address, account, state \\ :dirty) do
+    updated_cache = Cache.update_account(account_repo.cache, address, {state, account, nil})
 
     %{account_repo | cache: updated_cache}
   end
@@ -67,7 +67,9 @@ defmodule Blockchain.Account.Repo do
     {account, code} = account_with_code(account_repo, address)
 
     updated_account = %{account | storage_root: MerklePatriciaTree.Trie.empty_trie_root_hash()}
-    updated_cache = Cache.update_account(account_repo.cache, address, {updated_account, code})
+
+    updated_cache =
+      Cache.update_account(account_repo.cache, address, {:dirty, updated_account, code})
 
     %{account_repo | cache: updated_cache}
   end
@@ -79,7 +81,8 @@ defmodule Blockchain.Account.Repo do
     {account, code} = account_with_code(account_repo, address)
     updated_account = %{account | nonce: account.nonce + 1}
 
-    updated_cache = Cache.update_account(account_repo.cache, address, {updated_account, code})
+    updated_cache =
+      Cache.update_account(account_repo.cache, address, {:dirty, updated_account, code})
 
     %{account_repo | cache: updated_cache}
   end
@@ -110,8 +113,8 @@ defmodule Blockchain.Account.Repo do
 
         updated_cache =
           account_repo.cache
-          |> Cache.update_account(from, {new_from_account, from_account_code})
-          |> Cache.update_account(to, {new_to_account, to_account_code})
+          |> Cache.update_account(from, {:dirty, new_from_account, from_account_code})
+          |> Cache.update_account(to, {:dirty, new_to_account, to_account_code})
 
         %{account_repo | cache: updated_cache}
     end
@@ -129,7 +132,8 @@ defmodule Blockchain.Account.Repo do
 
     if updated_account.balance < 0, do: raise("wei reduced to less than zero")
 
-    updated_cache = Cache.update_account(account_repo.cache, address, {updated_account, code})
+    updated_cache =
+      Cache.update_account(account_repo.cache, address, {:dirty, updated_account, code})
 
     %{account_repo | cache: updated_cache}
   end
@@ -138,7 +142,7 @@ defmodule Blockchain.Account.Repo do
   def del_account(account_repo, address) do
     updated_cache =
       account_repo.cache
-      |> Cache.update_account(address, {nil, nil})
+      |> Cache.update_account(address, {:dirty, nil, nil})
       |> Cache.reset_account_storage_cache(address)
 
     %{account_repo | cache: updated_cache}
@@ -158,7 +162,7 @@ defmodule Blockchain.Account.Repo do
     updated_account = %{(account || %Account{}) | code_hash: kec}
 
     updated_cache =
-      Cache.update_account(account_repo.cache, address, {updated_account, machine_code})
+      Cache.update_account(account_repo.cache, address, {:dirty, updated_account, machine_code})
 
     %{account_repo | cache: updated_cache}
   end
@@ -180,14 +184,15 @@ defmodule Blockchain.Account.Repo do
 
     updated_account = %{account | balance: 0}
 
-    updated_cache = Cache.update_account(account_repo.cache, address, {updated_account, code})
+    updated_cache =
+      Cache.update_account(account_repo.cache, address, {:dirty, updated_account, code})
 
     %{account_repo | cache: updated_cache}
   end
 
   @spec reset_account(t(), Address.t()) :: t()
   def reset_account(account_repo, address, account \\ %Account{}) do
-    updated_cache = Cache.update_account(account_repo.cache, address, {account, nil})
+    updated_cache = Cache.update_account(account_repo.cache, address, {:dirty, account, nil})
 
     %{account_repo | cache: updated_cache}
   end
@@ -199,21 +204,16 @@ defmodule Blockchain.Account.Repo do
         account_from_storage(account_repo.state, address)
 
     case found_account do
-      {account, code} -> {account, code}
+      {_status, account, code} -> {account, code}
       account -> {account, nil}
     end
   end
 
   @spec account(t(), Address.t()) :: Account.t() | nil
   def account(account_repo, address) do
-    found_account =
-      account_from_cache(account_repo.cache, address) ||
-        account_from_storage(account_repo.state, address)
+    {account, _code} = account_with_code(account_repo, address)
 
-    case found_account do
-      {account, _code} -> account
-      account -> account
-    end
+    account
   end
 
   @spec account_from_storage(Trie.t(), Address.t()) :: Account.t() | nil
