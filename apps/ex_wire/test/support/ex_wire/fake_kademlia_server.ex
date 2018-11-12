@@ -1,4 +1,8 @@
 defmodule ExWire.FakeKademliaServer do
+  @moduledoc """
+  GenServer to mimic the behaviour of the real Kademlia server, meant to
+  reduce dependencies in tests that rely on Kademlia indirectly.
+  """
   use GenServer
 
   def start_link(neighbours) do
