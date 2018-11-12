@@ -87,6 +87,7 @@ defmodule ExWire.Handler do
         :not_implemented
 
       mod when is_atom(mod) ->
+        Exth.trace(fn -> "Handling #{mod} message from #{inspect(params.remote_host.ip)}" end)
         apply(mod, :handle, [params, options])
     end
   end

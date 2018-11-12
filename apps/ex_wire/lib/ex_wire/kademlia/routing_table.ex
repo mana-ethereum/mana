@@ -229,24 +229,27 @@ defmodule ExWire.Kademlia.RoutingTable do
    - If a pong is expired, we do nothing.
   """
   @spec handle_pong(t(), Pong.t()) :: t()
-  def handle_pong(table = %__MODULE__{expected_pongs: pongs}, %Pong{
-        hash: hash,
-        timestamp: timestamp
-      }) do
+  def handle_pong(
+        table = %__MODULE__{expected_pongs: pongs},
+        %Pong{
+          hash: hash,
+          timestamp: timestamp
+        }
+      ) do
     {node, updated_pongs} = Map.pop(pongs, hash)
 
-    table = %{table | expected_pongs: updated_pongs}
+    table_without_expected_pong = %{table | expected_pongs: updated_pongs}
 
     if timestamp > Timestamp.now() do
       case node do
         {removal_candidate, _insertion_candidate, _} ->
-          refresh_node(table, removal_candidate)
+          refresh_node(table_without_expected_pong, removal_candidate)
 
         _ ->
-          table
+          table_without_expected_pong
       end
     else
-      table
+      table_without_expected_pong
     end
   end
 

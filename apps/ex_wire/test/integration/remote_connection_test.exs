@@ -10,7 +10,7 @@ defmodule ExWire.RemoteConnectionTest do
 
   If you do set, set the `REMOTE_TEST_PEER` environment variable to the full `enode://...` address.
   """
-  use ExUnit.Case, async: true
+  use ExUnit.Case
 
   require Logger
 
@@ -20,7 +20,6 @@ defmodule ExWire.RemoteConnectionTest do
   @moduletag integration: true
   @moduletag network: true
 
-  @local_peer [127, 0, 0, 1]
   @local_peer_port 35_353
   @local_tcp_port 36_363
 
@@ -32,8 +31,7 @@ defmodule ExWire.RemoteConnectionTest do
     send(pid, {:incoming_packet, inbound_packet})
   end
 
-  @remote_test_peer System.get_env("REMOTE_TEST_PEER") ||
-                      ExWire.Config.chain().nodes |> List.last()
+  @remote_test_peer System.get_env("REMOTE_TEST_PEER") || List.first(ExWire.Config.chain().nodes)
 
   test "connect to remote peer for discovery" do
     %URI{
@@ -67,7 +65,7 @@ defmodule ExWire.RemoteConnectionTest do
     ping = %ExWire.Message.Ping{
       version: 1,
       from: %ExWire.Struct.Endpoint{
-        ip: @local_peer,
+        ip: ExWire.Config.public_ip(),
         tcp_port: @local_tcp_port,
         udp_port: @local_peer_port
       },
@@ -100,7 +98,7 @@ defmodule ExWire.RemoteConnectionTest do
 
         receive_neighbours()
     after
-      2_000 ->
+      60_000 ->
         raise "Expected pong, but did not receive before timeout."
     end
   end
@@ -111,9 +109,17 @@ defmodule ExWire.RemoteConnectionTest do
         # Check the message looks good
         message = decode_message(inbound_message)
 
-        assert Enum.count(message.nodes) > 5
+        case message do
+          %ExWire.Message.Neighbours{nodes: nodes} ->
+            assert Enum.count(nodes) > 5
+
+          _ ->
+            Exth.trace(fn -> "Expecting neighbors packet, got: #{inspect(message)}" end)
+
+            receive_neighbours()
+        end
     after
-      2_000 ->
+      60_000 ->
         raise "Expected neighbours, but did not receive before timeout."
     end
   end
@@ -133,9 +139,7 @@ defmodule ExWire.RemoteConnectionTest do
   test "connect to remote peer for handshake" do
     {:ok, peer} = ExWire.Struct.Peer.from_uri(@remote_test_peer)
 
-    {:ok, client_pid} = P2P.start_link(:outbound, peer)
-
-    P2P.subscribe(client_pid, {__MODULE__, :receive_packet, [self()]})
+    {:ok, client_pid} = P2P.start_link(:outbound, peer, [{__MODULE__, :receive_packet, [self()]}])
 
     receive_status(client_pid)
   end
@@ -159,12 +163,11 @@ defmodule ExWire.RemoteConnectionTest do
         receive_block_headers(client_pid)
 
       {:incoming_packet, packet} ->
-        if System.get_env("TRACE"),
-          do: _ = Logger.debug(fn -> "Expecting status packet, got: #{inspect(packet)}" end)
+        Exth.trace(fn -> "Expecting status packet, got: #{inspect(packet)}" end)
 
         receive_status(client_pid)
     after
-      10_000 ->
+      60_000 ->
         raise "Expected status, but did not receive before timeout."
     end
   end
@@ -179,13 +182,11 @@ defmodule ExWire.RemoteConnectionTest do
         receive_block_bodies(client_pid)
 
       {:incoming_packet, packet} ->
-        if System.get_env("TRACE"),
-          do:
-            _ = Logger.debug(fn -> "Expecting block headers packet, got: #{inspect(packet)}" end)
+        Exth.trace(fn -> "Expecting block headers packet, got: #{inspect(packet)}" end)
 
         receive_block_headers(client_pid)
     after
-      3_000 ->
+      60_000 ->
         raise "Expected block headers, but did not receive before timeout."
     end
   end
@@ -194,18 +195,17 @@ defmodule ExWire.RemoteConnectionTest do
     receive do
       {:incoming_packet, _packet = %Packet.BlockBodies{blocks: [block]}} ->
         # This is a genesis block
-        assert block.transactions_list == []
+        assert block.transactions == []
         assert block.ommers == []
 
         :ok = Logger.warn("Successfully received genesis block from peer.")
 
       {:incoming_packet, packet} ->
-        if System.get_env("TRACE"),
-          do: _ = Logger.debug(fn -> "Expecting block bodies packet, got: #{inspect(packet)}" end)
+        Exth.trace(fn -> "Expecting block bodies packet, got: #{inspect(packet)}" end)
 
         receive_block_bodies(client_pid)
     after
-      3_000 ->
+      60_000 ->
         raise "Expected block bodies, but did not receive before timeout."
     end
   end
