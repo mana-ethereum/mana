@@ -54,7 +54,8 @@ release :mana do
     evm: :permanent,
     ex_wire: :permanent,
     exth_crypto: :permanent,
-    merkle_patricia_tree: :permanent
+    merkle_patricia_tree: :permanent,
+    jsonrpc2: :permanent
   ]
 end
 
