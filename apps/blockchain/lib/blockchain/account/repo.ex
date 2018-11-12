@@ -197,7 +197,7 @@ defmodule Blockchain.Account.Repo do
     %{account_repo | cache: updated_cache}
   end
 
-  @spec account_with_code(t(), Address.t()) :: Account.t() | Cache.account_code_tuple() | nil
+  @spec account_with_code(t(), Address.t()) :: {Cache.maybe_account(), Cache.maybe_code()}
   def account_with_code(account_repo, address) do
     found_account =
       account_from_cache(account_repo.cache, address) ||
