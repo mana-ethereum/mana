@@ -19,12 +19,11 @@ defmodule Blockchain.Hardfork.DaoTest do
       new_repo = Dao.execute(repo, chain)
 
       Enum.each(dao_accounts, fn account ->
-        {_repo, balance} = Account.Repo.get_account_balance(new_repo, account)
+        {_repo, balance} = Account.Repo.account_balance(new_repo, account)
         assert balance == 0
       end)
 
-      {_repo, beneficiary_balance} =
-        Account.Repo.get_account_balance(new_repo, beneficiary_account)
+      {_repo, beneficiary_balance} = Account.Repo.account_balance(new_repo, beneficiary_account)
 
       assert beneficiary_balance == Enum.count(dao_accounts) * 10
     end
