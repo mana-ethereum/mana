@@ -135,12 +135,17 @@ defmodule ExWire.Config do
 
   @spec bootnodes(Keyword.t()) :: [String.t()]
   def bootnodes(given_params \\ []) do
-    case get_env(given_params, :bootnodes) do
-      nodes when is_list(nodes) ->
-        nodes
+    if conf_ip = System.get_env("BOOTNODES") do
+      conf_ip
+      |> String.split(",")
+    else
+      case get_env(given_params, :bootnodes) do
+        nodes when is_list(nodes) ->
+          nodes
 
-      :from_chain ->
-        chain().nodes
+        :from_chain ->
+          chain().nodes
+      end
     end
   end
 
