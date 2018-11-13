@@ -30,19 +30,31 @@ defmodule ExWire.NodeDiscoverySupervisor do
       |> Enum.map(&Node.new/1)
 
     children = [
-      {KademliaServer,
-       [
-         name: kademlia_name,
-         current_node: current_node(params),
-         network_client_name: udp_process_name,
-         nodes: bootnodes
-       ]},
-      {udp_module,
-       [
-         name: udp_process_name,
-         network_module: {Network, [kademlia_process_name: kademlia_name]},
-         port: port
-       ]}
+      %{
+        id: KademliaServer,
+        start: {
+          KademliaServer,
+          :start_link,
+          [
+            [
+              name: kademlia_name,
+              current_node: current_node(params),
+              network_client_name: udp_process_name,
+              nodes: bootnodes
+            ]
+          ]
+        }
+      },
+      %{
+        id: udp_module,
+        start:
+          {udp_module, :start_link,
+           [
+             udp_process_name,
+             {Network, [kademlia_process_name: kademlia_name]},
+             port
+           ]}
+      }
     ]
 
     Supervisor.init(children, strategy: :rest_for_one)
