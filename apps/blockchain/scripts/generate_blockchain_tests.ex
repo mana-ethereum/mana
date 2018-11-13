@@ -160,7 +160,7 @@ defmodule GenerateBlockchainTests do
 
     genesis_block = block_from_json(block, json_test["genesisBlockHeader"])
 
-    {:ok, {blocktree, new_state}} =
+    {:ok, {blocktree, new_state, _hash}} =
       Blocktree.verify_and_add_block(
         blocktree,
         chain,
@@ -192,7 +192,7 @@ defmodule GenerateBlockchainTests do
             )
 
           case Blocktree.verify_and_add_block(acc, chain, block, state_acc) do
-            {:ok, {blocktree, new_state}} -> {blocktree, new_state}
+            {:ok, {blocktree, new_state, _hash}} -> {blocktree, new_state}
             _ -> {acc, state_acc}
           end
 
@@ -232,6 +232,7 @@ defmodule GenerateBlockchainTests do
   end
 
   defp ommers_from_json(nil), do: :ok
+
   defp ommers_from_json(json_ommers) do
     Enum.map(json_ommers, fn json_ommer ->
       %Header{
@@ -255,6 +256,7 @@ defmodule GenerateBlockchainTests do
   end
 
   defp transactions_from_json(nil), do: :ok
+
   defp transactions_from_json(json_transactions) do
     Enum.map(json_transactions || [], fn json_transaction ->
       init =
