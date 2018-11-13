@@ -61,10 +61,25 @@ defmodule ExWireTest do
       timestamp: timestamp
     }
 
-    fake_send(find_neighbours, timestamp + 1)
+    {:ok, kademlia_process} =
+      ExWire.FakeKademliaServer.start_link([
+        %ExWire.Kademlia.Node{
+          public_key: <<1::256>>,
+          key: <<1::160>>,
+          endpoint: %ExWire.Struct.Endpoint{
+            ip: [52, 169, 14, 227],
+            tcp_port: nil,
+            udp_port: 30_303
+          }
+        }
+      ])
+
+    fake_send(find_neighbours, timestamp + 1, kademlia_process_name: kademlia_process)
 
     params = %{data: FindNeighbours.encode(find_neighbours), remote_host: %Endpoint{}}
-    neighbours = FindNeighboursHandler.fetch_neighbours(params, [])
+
+    neighbours =
+      FindNeighboursHandler.fetch_neighbours(params, kademlia_process_name: kademlia_process)
 
     response = %Neighbours{
       nodes: neighbours,
@@ -80,16 +95,17 @@ defmodule ExWireTest do
     assert_receive(%{data: ^message, to: @us})
   end
 
-  def fake_send(message, timestamp) do
+  def fake_send(message, timestamp, options \\ []) do
     encoded_message = Protocol.encode(message, ExWire.Config.private_key())
 
     GenServer.cast(:ex_wire_test, {
-      :fake_recieve,
+      :fake_receive,
       %{
         data: encoded_message,
         remote_host: @us,
         timestamp: timestamp
-      }
+      },
+      options
     })
 
     <<hash::256, _::binary>> = encoded_message

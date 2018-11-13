@@ -10,6 +10,7 @@ defmodule ExWire.P2P.Manager do
   alias ExWire.Framing.Frame
   alias ExWire.{DEVp2p, Handshake, Packet, TCP}
   alias ExWire.DEVp2p.Session
+  alias ExWire.Handshake.Struct.AuthMsgV4
   alias ExWire.P2P.Connection
   alias ExWire.Struct.Peer
 
@@ -154,7 +155,7 @@ defmodule ExWire.P2P.Manager do
       {:active, :ok} ->
         conn
 
-      {:active, :activate} ->
+      {:inactive, :activate} ->
         new_session = attempt_session_activation(conn.session, packet)
 
         %{conn | session: new_session}
@@ -210,11 +211,11 @@ defmodule ExWire.P2P.Manager do
   @spec handle_acknowledgement_received(binary(), Connection.t()) :: Connection.t()
   defp handle_acknowledgement_received(data, conn = %{peer: peer}) do
     case Handshake.handle_ack(conn.handshake, data) do
-      {:ok, handshake, secrets} ->
-        _ =
+      {:ok, handshake, secrets, queued_data} ->
+        :ok =
           Logger.debug(fn -> "[Network] [#{peer}] Got ack from #{peer.host}, deriving secrets" end)
 
-        Map.merge(conn, %{handshake: handshake, secrets: secrets})
+        Map.merge(conn, %{handshake: handshake, secrets: secrets, queued_data: queued_data})
 
       {:invalid, reason} ->
         :ok =
@@ -232,7 +233,7 @@ defmodule ExWire.P2P.Manager do
       {:ok, handshake, secrets} ->
         peer = get_peer_info(handshake.auth_msg, socket)
 
-        _ = Logger.debug("[Network] Received auth. Sending ack.")
+        :ok = Logger.debug("[Network] Received auth. Sending ack.")
         :ok = send_unframed_data(handshake.encoded_ack_resp, socket, peer)
 
         Map.merge(conn, %{handshake: handshake, secrets: secrets, peer: peer})
@@ -296,7 +297,7 @@ defmodule ExWire.P2P.Manager do
     DEVp2p.hello_sent(session, hello)
   end
 
-  @spec get_peer_info(ExWire.Handshake.Struct.AuthMsgV4.t(), TCP.socket()) :: Peer.t()
+  @spec get_peer_info(AuthMsgV4.t(), TCP.socket()) :: Peer.t()
   defp get_peer_info(auth_msg, socket) do
     {host, port} = TCP.peer_info(socket)
     remote_id = Peer.hex_node_id(auth_msg.initiator_public_key)

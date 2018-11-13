@@ -110,7 +110,7 @@ defmodule ExWire.P2P.Server do
   def init(opts = %{is_outbound: true, peer: peer}) do
     {:ok, socket} = TCP.connect(peer.host, peer.port)
 
-    _ =
+    :ok =
       Logger.debug(fn ->
         "[Network] [#{peer}] Established outbound connection with #{peer.host}."
       end)
