@@ -169,7 +169,7 @@ defmodule Blockchain.Account.Repo do
     %{account_repo | cache: updated_cache}
   end
 
-  @spec machine_code(t(), Address.t()) :: {:ok, binary()} | :not_found
+  @spec machine_code(t(), Address.t()) :: {t(), {:ok, binary()} | :not_found}
   def machine_code(account_repo, address) do
     {updated_repo, _account, code} = account_with_code(account_repo, address)
 
@@ -199,7 +199,7 @@ defmodule Blockchain.Account.Repo do
     %{account_repo | cache: updated_cache}
   end
 
-  @spec account_with_code(t(), Address.t()) :: {Cache.maybe_account(), Cache.maybe_code()}
+  @spec account_with_code(t(), Address.t()) :: {t(), Cache.maybe_account(), Cache.maybe_code()}
   def account_with_code(account_repo, address) do
     cached_account = account_from_cache(account_repo.cache, address)
 
@@ -225,7 +225,7 @@ defmodule Blockchain.Account.Repo do
     end
   end
 
-  @spec account(t(), Address.t()) :: Account.t() | nil
+  @spec account(t(), Address.t()) :: {t(), Account.t() | nil}
   def account(account_repo, address) do
     {repo, account, _code} = account_with_code(account_repo, address)
 
@@ -401,12 +401,12 @@ defmodule Blockchain.Account.Repo do
 
     case cached_value do
       nil ->
-        {_updated_account_repo, account} = account(account_repo, address)
+        {updated_account_repo, account} = account(account_repo, address)
 
-        Account.get_storage(account_repo.state, account, key)
+        {updated_account_repo, Account.get_storage(account_repo.state, account, key)}
 
       _ ->
-        {:ok, cached_value}
+        {account_repo, {:ok, cached_value}}
     end
   end
 
@@ -459,7 +459,7 @@ defmodule Blockchain.Account.Repo do
   @impl true
   def remove_storage(account_repo, evm_address, key) do
     address = Account.Address.from(evm_address)
-    account = account(account_repo, address)
+    {_updated_repo, account} = account(account_repo, address)
 
     if account do
       updated_cache = Cache.remove_current_value(account_repo.cache, address, key)

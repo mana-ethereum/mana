@@ -19,15 +19,15 @@ defmodule EVM.AccountRepo do
 
   @callback account_nonce(t, EVM.address()) :: {t, integer()}
 
-  @callback account_code_hash(t, EVM.address()) :: {t | binary() | nil}
+  @callback account_code_hash(t, EVM.address()) :: {t, binary() | nil}
 
   @callback increment_account_nonce(t, EVM.address()) :: t()
 
   @callback storage(t, EVM.address(), integer()) ::
-              {t | {:ok, integer()} | :account_not_found | :key_not_found}
+              {t, {:ok, integer()} | :account_not_found | :key_not_found}
 
   @callback initial_storage(t, EVM.address(), integer()) ::
-              {t | {:ok, integer()} | :account_not_found | :key_not_found}
+              {t, {:ok, integer()} | :account_not_found | :key_not_found}
 
   @callback put_storage(t, EVM.address(), integer(), integer()) :: t
 
