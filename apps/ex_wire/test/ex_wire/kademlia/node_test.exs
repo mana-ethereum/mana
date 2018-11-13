@@ -2,7 +2,7 @@ defmodule ExWire.Kademlia.NodeTest do
   use ExUnit.Case, async: true
   doctest ExWire.Kademlia.Node
 
-  alias ExthCrypto.{Key, Math}
+  alias ExthCrypto.Math
   alias ExWire.Message
 
   describe "from_handler_params/1" do
@@ -50,7 +50,6 @@ defmodule ExWire.Kademlia.NodeTest do
     uri
     |> parse_public_key()
     |> Math.hex_to_bin()
-    |> Key.raw_to_der()
   end
 
   defp parse_public_key(uri) do

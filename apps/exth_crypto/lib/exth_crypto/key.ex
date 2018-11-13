@@ -4,24 +4,29 @@ defmodule ExthCrypto.Key do
   """
 
   @type symmetric_key :: binary()
-  @type public_key_der :: <<_::16, _::_*8>>
+  @type public_der_encoded_key_material :: <<_::16, _::_*8>>
+  @type public_key_der :: {:public_der, public_der_encoded_key_material()}
   @type public_key :: <<_::8, _::_*8>>
-  @type private_key_der :: binary()
-  @type private_key :: binary()
-  @type key_pair :: {public_key, private_key}
+
+  @type private_key :: <<_::8, _::_*8>>
+
+  @type key_pair :: {public_key(), private_key()}
+
+  @spec public_der_key(public_der_encoded_key_material()) :: public_key_der()
+  def public_der_key(der = <<0x04, _::binary()>>) do
+    {:public_der, der}
+  end
 
   @doc """
   Converts a key from der to raw format.
 
   ## Examples
 
-      iex> ExthCrypto.Key.der_to_raw(<<0x04, 0x01>>)
+      iex> ExthCrypto.Key.public_der_to_raw({:public_der, <<0x04, 0x01>>})
       <<0x01>>
   """
-  @spec der_to_raw(public_key_der()) :: public_key()
-  def der_to_raw(public_key_der) do
-    <<0x04, public_key::binary()>> = public_key_der
-
+  @spec public_der_to_raw(public_key_der()) :: public_key()
+  def public_der_to_raw({:public_der, <<0x04, public_key::binary()>>}) do
     public_key
   end
 
@@ -30,11 +35,11 @@ defmodule ExthCrypto.Key do
 
   ## Examples
 
-      iex> ExthCrypto.Key.der_to_raw(<<0x04, 0x01>>)
-      <<0x01>>
+      iex> ExthCrypto.Key.public_raw_to_der(<<0x01>>)
+      {:public_der, <<0x04, 0x01>>}
   """
-  @spec raw_to_der(public_key()) :: public_key_der()
-  def raw_to_der(public_key) do
-    <<0x04>> <> public_key
+  @spec public_raw_to_der(public_key()) :: public_key_der()
+  def public_raw_to_der(public_key) do
+    {:public_der, <<0x04>> <> public_key}
   end
 end
