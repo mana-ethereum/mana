@@ -254,15 +254,21 @@ defmodule EVM.Operation.SystemTest do
 
       assert Stack.peek(machine_state.stack) == 0
 
-      assert AccountRepo.repo(exec_env.account_repo).get_account_balance(
-               exec_env.account_repo,
-               <<0::160>>
-             ) == 100
+      {_repo, balance1} =
+        AccountRepo.repo(exec_env.account_repo).account_balance(
+          exec_env.account_repo,
+          <<0::160>>
+        )
 
-      assert AccountRepo.repo(exec_env.account_repo).get_account_balance(
-               exec_env.account_repo,
-               <<1::160>>
-             ) == 100
+      assert balance1 == 100
+
+      {_repo, balance2} =
+        AccountRepo.repo(exec_env.account_repo).account_balance(
+          exec_env.account_repo,
+          <<1::160>>
+        )
+
+      assert balance2 == 100
     end
   end
 end

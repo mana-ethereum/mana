@@ -127,8 +127,9 @@ defmodule EVM.Operation.StackMemoryStorageAndFlow do
       iex> key = 0x11223344556677889900
       iex> value = 0x111222333444555
       iex> account_repo = EVM.Mock.MockAccountRepo.new()
-      iex> EVM.Operation.StackMemoryStorageAndFlow.sstore([key, value], %{exec_env: %EVM.ExecEnv{address: address, account_repo: account_repo}})[:exec_env].account_repo
-      ...> |> EVM.AccountRepo.repo(account_repo).get_storage(address, key)
+      iex> repo = EVM.Operation.StackMemoryStorageAndFlow.sstore([key, value], %{exec_env: %EVM.ExecEnv{address: address, account_repo: account_repo}})[:exec_env].account_repo
+      iex> {_repo, result} = EVM.AccountRepo.repo(account_repo).storage(repo, address, key)
+      iex> result
       {:ok, 0x111222333444555}
 
       iex> address = 0x0000000000000000000000000000000000000001

@@ -21,8 +21,8 @@ defmodule EVM.Operation.System do
   """
   @spec create(Operation.stack_args(), Operation.op_result()) :: Operation.op_result()
   def create([value, input_offset, input_size], vm_map = %{exec_env: exec_env}) do
-    nonce =
-      AccountRepo.repo(exec_env.account_repo).get_account_nonce(
+    {_repo, nonce} =
+      AccountRepo.repo(exec_env.account_repo).account_nonce(
         exec_env.account_repo,
         exec_env.address
       )
@@ -267,8 +267,8 @@ defmodule EVM.Operation.System do
        ) do
     {data, machine_state} = EVM.Memory.read(machine_state, input_offset, input_size)
 
-    account_balance =
-      AccountRepo.repo(exec_env.account_repo).get_account_balance(
+    {_repo, account_balance} =
+      AccountRepo.repo(exec_env.account_repo).account_balance(
         exec_env.account_repo,
         exec_env.address
       )

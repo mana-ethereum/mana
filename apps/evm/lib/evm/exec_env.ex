@@ -127,7 +127,7 @@ defmodule EVM.ExecEnv do
   def transfer_balance_to(exec_env, to) do
     %{account_repo: account_repo, address: address} = exec_env
 
-    balance = AccountRepo.repo(account_repo).account_balance(account_repo, address)
+    {_repo, balance} = AccountRepo.repo(account_repo).account_balance(account_repo, address)
 
     transfer_wei_to(exec_env, to, balance)
   end
@@ -147,13 +147,13 @@ defmodule EVM.ExecEnv do
 
   @spec non_existent_account?(t(), EVM.Address.t()) :: boolean()
   def non_existent_account?(exec_env, address) do
-    {_repo, result} =
-      !AccountRepo.repo(exec_env.account_repo).account_exists?(
+    {_repo, account_exists} =
+      AccountRepo.repo(exec_env.account_repo).account_exists?(
         exec_env.account_repo,
         address
       )
 
-    result
+    !account_exists
   end
 
   @spec non_existent_or_empty_account?(t(), EVM.Address.t()) :: boolean()

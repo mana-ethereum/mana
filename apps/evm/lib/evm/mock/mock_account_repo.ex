@@ -34,7 +34,7 @@ defmodule EVM.Mock.MockAccountRepo do
 
   @impl true
   def empty_account?(mock_account_repo, address) do
-    {mock_account_repo, account_exists?(mock_account_repo, address)}
+    account_exists?(mock_account_repo, address)
   end
 
   @impl true

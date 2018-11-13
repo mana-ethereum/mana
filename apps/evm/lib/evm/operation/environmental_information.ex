@@ -38,11 +38,14 @@ defmodule EVM.Operation.EnvironmentalInformation do
   def balance([address], %{exec_env: exec_env, machine_state: machine_state}) do
     wrapped_address = Helpers.wrap_address(address)
 
+    {_repo, balance} =
+      AccountRepo.repo(exec_env.account_repo).account_balance(
+        exec_env.account_repo,
+        wrapped_address
+      )
+
     balance =
-      case AccountRepo.repo(exec_env.account_repo).get_account_balance(
-             exec_env.account_repo,
-             wrapped_address
-           ) do
+      case balance do
         nil -> 0
         balance -> balance
       end
@@ -246,8 +249,8 @@ defmodule EVM.Operation.EnvironmentalInformation do
   def extcodesize([address], %{exec_env: exec_env, machine_state: machine_state}) do
     wrapped_address = Helpers.wrap_address(address)
 
-    account_code =
-      AccountRepo.repo(exec_env.account_repo).get_account_code(
+    {_repo, account_code} =
+      AccountRepo.repo(exec_env.account_repo).account_code(
         exec_env.account_repo,
         wrapped_address
       )
@@ -295,8 +298,8 @@ defmodule EVM.Operation.EnvironmentalInformation do
       }) do
     wrapped_address = Helpers.wrap_address(address)
 
-    account_code =
-      AccountRepo.repo(exec_env.account_repo).get_account_code(
+    {_repo, account_code} =
+      AccountRepo.repo(exec_env.account_repo).account_code(
         exec_env.account_repo,
         wrapped_address
       )
@@ -311,8 +314,8 @@ defmodule EVM.Operation.EnvironmentalInformation do
   def extcodehash([address], %{exec_env: exec_env}) do
     wrapped_address = Address.new(address)
 
-    hash =
-      AccountRepo.repo(exec_env.account_repo).get_account_code_hash(
+    {_repo, hash} =
+      AccountRepo.repo(exec_env.account_repo).account_code_hash(
         exec_env.account_repo,
         wrapped_address
       )
