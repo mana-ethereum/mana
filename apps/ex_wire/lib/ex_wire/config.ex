@@ -83,7 +83,13 @@ defmodule ExWire.Config do
 
   @spec public_ip(Keyword.t()) :: [integer()]
   def public_ip(given_params \\ []) do
-    get_env(given_params, :public_ip, @default_public_ip)
+    if conf_ip = System.get_env("EXT_IP_ADDRESS") do
+      conf_ip
+      |> String.split(".")
+      |> Enum.map(&String.to_integer/1)
+    else
+      get_env(given_params, :public_ip, @default_public_ip)
+    end
   end
 
   @spec node_id() :: ExWire.node_id()

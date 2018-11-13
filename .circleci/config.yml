@@ -14,21 +14,21 @@ jobs:
 
       - restore_cache:
           keys:
-            - v8-env-cache-{{ arch }}-{{ .Branch }}
-            - v8-env-cache-{{ .Branch }}
-            - v8-env-cache
+            - v10-env-cache-{{ arch }}-{{ .Branch }}
+            - v10-env-cache-{{ .Branch }}
+            - v10-env-cache
 
       - restore_cache:
           keys:
-            - v8-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
-            - v8-mix-cache-{{ .Branch }}
-            - v8-mix-cache
+            - v10-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
+            - v10-mix-cache-{{ .Branch }}
+            - v10-mix-cache
 
       - restore_cache:
           keys:
-            - v8-build-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
-            - v8-build-cache-{{ .Branch }}
-            - v8-build-cache
+            - v10-build-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
+            - v10-build-cache-{{ .Branch }}
+            - v10-build-cache
 
       - run: echo 'export PATH=~/.cargo/bin:$PATH' >> $BASH_ENV
 
@@ -37,41 +37,41 @@ jobs:
           no_output_timeout: 2400
 
       - save_cache:
-          key: v8-env-cache-{{ arch }}-{{ .Branch }}
+          key: v10-env-cache-{{ arch }}-{{ .Branch }}
           paths:
             - $HOME/.cargo
             - $HOME/.rustup
 
       - save_cache:
-          key: v8-env-cache-{{ .Branch }}
+          key: v10-env-cache-{{ .Branch }}
           paths:
             - $HOME/.cargo
             - $HOME/.rustup
 
       - save_cache:
-          key: v8-env-cache
+          key: v10-env-cache
           paths:
             - $HOME/.cargo
             - $HOME/.rustup
 
       - save_cache:
-          key: v8-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
+          key: v10-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
           paths: "deps"
       - save_cache:
-          key: v8-mix-cache-{{ .Branch }}
+          key: v10-mix-cache-{{ .Branch }}
           paths: "deps"
       - save_cache:
-          key: v8-mix-cache
+          key: v10-mix-cache
           paths: "deps"
 
       - save_cache:
-          key: v8-build-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
+          key: v10-build-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
           paths: "_build"
       - save_cache:
-          key: v8-build-cache-{{ .Branch }}
+          key: v10-build-cache-{{ .Branch }}
           paths: "_build"
       - save_cache:
-          key: v8-build-cache
+          key: v10-build-cache
           paths: "_build"
 
       - run:
@@ -116,22 +116,56 @@ jobs:
 
       - restore_cache:
           keys:
-            - v8-build-cache-{{ .Branch }}
-            - v8-build-cache
+            - v10-build-cache-{{ .Branch }}
+            - v10-build-cache
 
       - restore_cache:
           keys:
-            - v8-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
-            - v8-mix-cache-{{ .Branch }}
-            - v8-mix-cache
+            - v10-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
+            - v10-mix-cache-{{ .Branch }}
+            - v10-mix-cache
 
       - restore_cache:
           keys:
-            - v8-env-cache-{{ arch }}-{{ .Branch }}
-            - v8-env-cache-{{ .Branch }}
-            - v8-env-cache
+            - v10-env-cache-{{ arch }}-{{ .Branch }}
+            - v10-env-cache-{{ .Branch }}
+            - v10-env-cache
 
       - run: mix test --exclude pending
+
+  network:
+    docker:
+      - image: circleci/elixir:1.7.4
+        environment:
+          MIX_ENV: test
+
+    working_directory: ~/app
+
+    steps:
+      - attach_workspace:
+           at: .
+
+      - run: mix local.hex --force
+      - run: mix local.rebar --force
+
+      - restore_cache:
+          keys:
+            - v10-build-cache-{{ .Branch }}
+            - v10-build-cache
+
+      - restore_cache:
+          keys:
+            - v10-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
+            - v10-mix-cache-{{ .Branch }}
+            - v10-mix-cache
+
+      - restore_cache:
+          keys:
+            - v10-env-cache-{{ arch }}-{{ .Branch }}
+            - v10-env-cache-{{ .Branch }}
+            - v10-env-cache
+
+      - run: EXT_IP_ADDRESS=$(curl ifconfig.co) mix test --only network
 
   Frontier:
     docker:
@@ -150,20 +184,20 @@ jobs:
 
       - restore_cache:
           keys:
-            - v8-build-cache-{{ .Branch }}
-            - v8-build-cache
+            - v10-build-cache-{{ .Branch }}
+            - v10-build-cache
 
       - restore_cache:
           keys:
-            - v8-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
-            - v8-mix-cache-{{ .Branch }}
-            - v8-mix-cache
+            - v10-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
+            - v10-mix-cache-{{ .Branch }}
+            - v10-mix-cache
 
       - restore_cache:
           keys:
-            - v8-env-cache-{{ arch }}-{{ .Branch }}
-            - v8-env-cache-{{ .Branch }}
-            - v8-env-cache
+            - v10-env-cache-{{ arch }}-{{ .Branch }}
+            - v10-env-cache-{{ .Branch }}
+            - v10-env-cache
 
       - run: mix cmd --app blockchain mix test --exclude test --include Frontier
 
@@ -184,20 +218,20 @@ jobs:
 
       - restore_cache:
           keys:
-            - v8-build-cache-{{ .Branch }}
-            - v8-build-cache
+            - v10-build-cache-{{ .Branch }}
+            - v10-build-cache
 
       - restore_cache:
           keys:
-            - v8-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
-            - v8-mix-cache-{{ .Branch }}
-            - v8-mix-cache
+            - v10-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
+            - v10-mix-cache-{{ .Branch }}
+            - v10-mix-cache
 
       - restore_cache:
           keys:
-            - v8-env-cache-{{ arch }}-{{ .Branch }}
-            - v8-env-cache-{{ .Branch }}
-            - v8-env-cache
+            - v10-env-cache-{{ arch }}-{{ .Branch }}
+            - v10-env-cache-{{ .Branch }}
+            - v10-env-cache
 
       - run: mix cmd --app blockchain mix test --exclude test --include Homestead
 
@@ -218,20 +252,20 @@ jobs:
 
       - restore_cache:
           keys:
-            - v8-build-cache-{{ .Branch }}
-            - v8-build-cache
+            - v10-build-cache-{{ .Branch }}
+            - v10-build-cache
 
       - restore_cache:
           keys:
-            - v8-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
-            - v8-mix-cache-{{ .Branch }}
-            - v8-mix-cache
+            - v10-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
+            - v10-mix-cache-{{ .Branch }}
+            - v10-mix-cache
 
       - restore_cache:
           keys:
-            - v8-env-cache-{{ arch }}-{{ .Branch }}
-            - v8-env-cache-{{ .Branch }}
-            - v8-env-cache
+            - v10-env-cache-{{ arch }}-{{ .Branch }}
+            - v10-env-cache-{{ .Branch }}
+            - v10-env-cache
 
       - run: mix cmd --app blockchain mix test --exclude test --include HomesteadToDaoAt5
 
@@ -252,20 +286,20 @@ jobs:
 
       - restore_cache:
           keys:
-            - v8-build-cache-{{ .Branch }}
-            - v8-build-cache
+            - v10-build-cache-{{ .Branch }}
+            - v10-build-cache
 
       - restore_cache:
           keys:
-            - v8-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
-            - v8-mix-cache-{{ .Branch }}
-            - v8-mix-cache
+            - v10-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
+            - v10-mix-cache-{{ .Branch }}
+            - v10-mix-cache
 
       - restore_cache:
           keys:
-            - v8-env-cache-{{ arch }}-{{ .Branch }}
-            - v8-env-cache-{{ .Branch }}
-            - v8-env-cache
+            - v10-env-cache-{{ arch }}-{{ .Branch }}
+            - v10-env-cache-{{ .Branch }}
+            - v10-env-cache
 
       - run: mix cmd --app blockchain mix test --exclude test --include TangerineWhistle
 
@@ -286,20 +320,20 @@ jobs:
 
       - restore_cache:
           keys:
-            - v8-build-cache-{{ .Branch }}
-            - v8-build-cache
+            - v10-build-cache-{{ .Branch }}
+            - v10-build-cache
 
       - restore_cache:
           keys:
-            - v8-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
-            - v8-mix-cache-{{ .Branch }}
-            - v8-mix-cache
+            - v10-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
+            - v10-mix-cache-{{ .Branch }}
+            - v10-mix-cache
 
       - restore_cache:
           keys:
-            - v8-env-cache-{{ arch }}-{{ .Branch }}
-            - v8-env-cache-{{ .Branch }}
-            - v8-env-cache
+            - v10-env-cache-{{ arch }}-{{ .Branch }}
+            - v10-env-cache-{{ .Branch }}
+            - v10-env-cache
 
       - run: mix cmd --app blockchain mix test --exclude test --include SpuriousDragon
 
@@ -320,20 +354,20 @@ jobs:
 
       - restore_cache:
           keys:
-            - v8-build-cache-{{ .Branch }}
-            - v8-build-cache
+            - v10-build-cache-{{ .Branch }}
+            - v10-build-cache
 
       - restore_cache:
           keys:
-            - v8-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
-            - v8-mix-cache-{{ .Branch }}
-            - v8-mix-cache
+            - v10-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
+            - v10-mix-cache-{{ .Branch }}
+            - v10-mix-cache
 
       - restore_cache:
           keys:
-            - v8-env-cache-{{ arch }}-{{ .Branch }}
-            - v8-env-cache-{{ .Branch }}
-            - v8-env-cache
+            - v10-env-cache-{{ arch }}-{{ .Branch }}
+            - v10-env-cache-{{ .Branch }}
+            - v10-env-cache
 
       - run: mix cmd --app blockchain mix test --exclude test --include Byzantium
 
@@ -354,20 +388,20 @@ jobs:
 
       - restore_cache:
           keys:
-            - v8-build-cache-{{ .Branch }}
-            - v8-build-cache
+            - v10-build-cache-{{ .Branch }}
+            - v10-build-cache
 
       - restore_cache:
           keys:
-            - v8-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
-            - v8-mix-cache-{{ .Branch }}
-            - v8-mix-cache
+            - v10-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
+            - v10-mix-cache-{{ .Branch }}
+            - v10-mix-cache
 
       - restore_cache:
           keys:
-            - v8-env-cache-{{ arch }}-{{ .Branch }}
-            - v8-env-cache-{{ .Branch }}
-            - v8-env-cache
+            - v10-env-cache-{{ arch }}-{{ .Branch }}
+            - v10-env-cache-{{ .Branch }}
+            - v10-env-cache
 
       - run:
           command: mix cmd --app blockchain mix test --exclude test --include Constantinople
@@ -393,26 +427,26 @@ jobs:
 
       - restore_cache:
           keys:
-            - v8-build-cache-{{ .Branch }}
-            - v8-build-cache
+            - v10-build-cache-{{ .Branch }}
+            - v10-build-cache
 
       - restore_cache:
           keys:
-            - v8-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
-            - v8-mix-cache-{{ .Branch }}
-            - v8-mix-cache
+            - v10-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
+            - v10-mix-cache-{{ .Branch }}
+            - v10-mix-cache
 
       - restore_cache:
           keys:
-            - v8-env-cache-{{ arch }}-{{ .Branch }}
-            - v8-env-cache-{{ .Branch }}
-            - v8-env-cache
+            - v10-env-cache-{{ arch }}-{{ .Branch }}
+            - v10-env-cache-{{ .Branch }}
+            - v10-env-cache
 
       - restore_cache:
           keys:
-            - v8-plt-cache-{{ ".tool-versions" }}-{{ checksum "mix.lock" }}
-            - v8-plt-cache-{{ ".tool-versions" }}-{{ checksum "mix.exs" }}
-            - v8-plt-cache-{{ ".tool-versions" }}
+            - v10-plt-cache-{{ ".tool-versions" }}-{{ checksum "mix.lock" }}
+            - v10-plt-cache-{{ ".tool-versions" }}-{{ checksum "mix.exs" }}
+            - v10-plt-cache-{{ ".tool-versions" }}
 
       - run:
           name: Unpack PLT cache
@@ -432,17 +466,17 @@ jobs:
             cp ~/.mix/dialyxir*.plt plts/
 
       - save_cache:
-          key: v8-plt-cache-{{ ".tool-versions" }}-{{ checksum "mix.lock" }}
+          key: v10-plt-cache-{{ ".tool-versions" }}-{{ checksum "mix.lock" }}
           paths:
             - plts
 
       - save_cache:
-          key: v8-plt-cache-{{ ".tool-versions" }}-{{ checksum "mix.exs" }}
+          key: v10-plt-cache-{{ ".tool-versions" }}-{{ checksum "mix.exs" }}
           paths:
             - plts
 
       - save_cache:
-          key: v8-plt-cache-{{ ".tool-versions" }}
+          key: v10-plt-cache-{{ ".tool-versions" }}
           paths:
             - plts
 
@@ -537,3 +571,9 @@ workflows:
           requires: [build]
       - Constantinople:
           requires: [build]
+      - network:
+          requires: [build]
+          filters:
+            branches:
+              only:
+                - /.*network$/

@@ -1,6 +1,6 @@
 defmodule ExWire.TestHelper do
   @moduledoc """
-    Helper methods shared across test files.
+  Helper methods shared across test files.
   """
 
   alias ExWire.Adapter.UDP
