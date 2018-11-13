@@ -132,13 +132,13 @@ Ethereum common tests are created for all clients to test against. See the [comm
 
 | Hardfork          | [BlockchainTests] passing | [GeneralStateTests] passing | Complete? |
 | ----------------- | ------------------------- | --------------------------- | --------- |
-| Frontier          | 100% (1320/1320)          | 100% (1033/1033)            | ✓         |
-| Homestead         | 100% (2203/2203)          | 100% (2061/2061)            | ✓         |
+| Frontier          | 100% (1328/1328)          | 100% (1041/1041)            | ✓         |
+| Homestead         | 100% (2211/2211)          | 100% (2069/2069)            | ✓         |
 | HomesteadToDaoAt5 | 100% (4/4)                | N/A                         | ✓         |
-| TangerineWhistle  | 100% (1262/1262)          | 100% (1112/1112)            | ✓         |
-| SpuriousDragon    | 100% (1193/1193)          | 100% (1172/1172)            | ✓         |
-| Byzantium         | 100% (4945/4945)          | 100% (4790/4790)            | ✓         |
-| Constantinople    | 100% (5369/5369)          | 100% (5331/5331)            | ✓         |
+| TangerineWhistle  | 100% (1270/1270)          | 100% (1120/1120)            | ✓         |
+| SpuriousDragon    | 100% (1201/1201)          | 100% (1180/1180)            | ✓         |
+| Byzantium         | 100% (4945/4945)          | 100% (4800/4800)            | ✓         |
+| Constantinople    | 100% (5369/5369)          | 100% (5341/5341)            | ✓         |
 
 View the community [Constantinople Project Tracker](https://github.com/ethereum/pm/issues/53).
 
