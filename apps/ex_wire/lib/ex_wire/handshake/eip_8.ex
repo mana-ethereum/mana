@@ -7,6 +7,7 @@ defmodule ExWire.Handshake.EIP8 do
   """
 
   require Logger
+  alias ExthCrypto.Key
 
   # Amount of bytes added when encrypting with ECIES.
   # EIP Question: This is magic, isn't it? Definitely magic.
@@ -25,8 +26,8 @@ defmodule ExWire.Handshake.EIP8 do
   """
   @spec wrap_eip_8(
           ExRLP.t(),
-          ExthCrypto.Key.public_key(),
-          {ExthCrypto.Key.public_key(), ExthCrypto.Key.private_key()} | nil,
+          Key.public_key(),
+          {Key.public_key(), Key.private_key()} | nil,
           ExthCrypto.Cipher.init_vector() | nil
         ) :: {:ok, binary()} | {:error, String.t()}
   def wrap_eip_8(
@@ -104,7 +105,7 @@ defmodule ExWire.Handshake.EIP8 do
           152, 53, 88, 100, 245, 144, 55, 227, 38, 231, 236, 155, 45, 148, 117, 128>>,
         ""}
   """
-  @spec unwrap_eip_8(binary(), ExthCrypto.Key.private_key()) ::
+  @spec unwrap_eip_8(binary(), Key.private_key()) ::
           {:ok, ExRLP.t(), binary(), binary()} | {:error, String.t()}
   def unwrap_eip_8(encoded_packet, my_static_private_key) do
     <<auth_size_int::size(16), _::binary()>> = encoded_packet

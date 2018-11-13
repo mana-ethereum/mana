@@ -4,8 +4,9 @@ defmodule EVM.Address do
   """
 
   alias ExthCrypto.Hash.Keccak
+  alias ExthCrypto.Key
 
-  @type t :: binary() | non_neg_integer()
+  @type t :: <<_::160>>
   @size 20
   @type address_size :: unquote(@size)
   @max round(:math.pow(2, @size * EVM.byte_size()))
@@ -38,7 +39,7 @@ defmodule EVM.Address do
   @doc """
   Returns an address given an address and a nonce.
   """
-  @spec new(integer(), integer()) :: binary()
+  @spec new(binary(), integer()) :: t()
   def new(address, nonce) do
     [address, nonce]
     |> ExRLP.encode()
@@ -49,7 +50,7 @@ defmodule EVM.Address do
   @doc """
   Returns an address for create2 opcode.
   """
-  @spec new(integer(), non_neg_integer() | binary(), binary() | non_neg_integer()) :: binary()
+  @spec new(integer(), non_neg_integer() | binary(), binary() | non_neg_integer()) :: t()
   def new(address, salt, init_code) do
     binary_address = new(address)
 
@@ -86,8 +87,8 @@ defmodule EVM.Address do
   iex> EVM.Address.new_from_private_key(private_key)
   <<183, 161, 2, 91, 175, 48, 3, 246, 115, 36, 48, 226, 12, 217, 183, 109, 149, 51, 145, 179>>
   """
-  @spec new_from_private_key(binary()) :: binary()
-  def new_from_private_key(private_key) do
+  @spec new_from_private_key(Key.private_key()) :: t()
+  def(new_from_private_key(private_key)) do
     private_key
     |> ExthCrypto.Signature.get_public_key()
     |> elem(1)
@@ -102,7 +103,7 @@ defmodule EVM.Address do
   iex> EVM.Address.new_from_public_key(public_key)
   <<250, 252, 98, 50, 69, 173, 209, 14, 110, 229, 201, 136, 108, 45, 20, 50, 147, 102, 120, 66>>
   """
-  @spec new_from_public_key(binary()) :: binary()
+  @spec new_from_public_key(Key.public_key()) :: t()
   def new_from_public_key(public_key) do
     public_key
     |> Keccak.kec()

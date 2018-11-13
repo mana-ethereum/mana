@@ -6,6 +6,7 @@ defmodule ExWire.Handshake.Struct.AuthMsgV4 do
   """
 
   alias ExthCrypto.ECIES.ECDH
+  alias ExthCrypto.{Key, Signature}
 
   defstruct [
     :signature,
@@ -16,18 +17,18 @@ defmodule ExWire.Handshake.Struct.AuthMsgV4 do
   ]
 
   @type t :: %__MODULE__{
-          signature: ExthCrypto.Signature.compact_signature(),
-          initiator_public_key: ExthCrypto.Key.public_key_der(),
+          signature: Signature.compact_signature(),
+          initiator_public_key: Key.public_key(),
           initiator_nonce: binary(),
           initiator_version: integer(),
-          initiator_ephemeral_public_key: ExthCrypto.Key.public_key() | nil
+          initiator_ephemeral_public_key: Key.public_key() | nil
         }
 
   @spec serialize(t()) :: ExRLP.t()
   def serialize(auth_msg) do
     [
       auth_msg.signature,
-      ExthCrypto.Key.der_to_raw(auth_msg.initiator_public_key),
+      auth_msg.initiator_public_key,
       auth_msg.initiator_nonce,
       :binary.encode_unsigned(auth_msg.initiator_version)
     ]
@@ -42,7 +43,7 @@ defmodule ExWire.Handshake.Struct.AuthMsgV4 do
 
     %__MODULE__{
       signature: signature,
-      initiator_public_key: initiator_public_key |> ExthCrypto.Key.raw_to_der(),
+      initiator_public_key: initiator_public_key,
       initiator_nonce: initiator_nonce,
       initiator_version:
         if(
@@ -57,18 +58,21 @@ defmodule ExWire.Handshake.Struct.AuthMsgV4 do
   Sets the initiator ephemeral public key for a given auth msg, based on our secret
   and the keys passed from initiator.
   """
-  @spec set_initiator_ephemeral_public_key(t(), ExthCrypto.Key.private_key()) :: t()
+  @spec set_initiator_ephemeral_public_key(t(), Key.private_key()) :: t()
   def set_initiator_ephemeral_public_key(auth_msg = %__MODULE__{}, my_static_private_key) do
     shared_secret_xor_nonce =
       my_static_private_key
       |> ECDH.generate_shared_secret(auth_msg.initiator_public_key)
       |> ExthCrypto.Math.xor(auth_msg.initiator_nonce)
 
-    {signature, recovery_id} = ExthCrypto.Signature.split_compact_format(auth_msg.signature)
+    {signature, recovery_id} = Signature.split_compact_format(auth_msg.signature)
 
     {:ok, initiator_ephemeral_public_key} =
-      ExthCrypto.Signature.recover(shared_secret_xor_nonce, signature, recovery_id)
+      Signature.recover(shared_secret_xor_nonce, signature, recovery_id)
 
-    %{auth_msg | initiator_ephemeral_public_key: initiator_ephemeral_public_key}
+    %{
+      auth_msg
+      | initiator_ephemeral_public_key: initiator_ephemeral_public_key
+    }
   end
 end
