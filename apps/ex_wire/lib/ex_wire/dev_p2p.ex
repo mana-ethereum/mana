@@ -24,7 +24,7 @@ defmodule ExWire.DEVp2p do
   ## Examples
 
   iex> ExWire.DEVp2p.build_hello().client_id
-  "mana/0.1.1"
+  "mana-0.1.1"
   """
   @spec build_hello() :: Packet.Hello.t()
   def build_hello() do
