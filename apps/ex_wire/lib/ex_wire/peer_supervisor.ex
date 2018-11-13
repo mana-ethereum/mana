@@ -27,7 +27,7 @@ defmodule ExWire.PeerSupervisor do
 
     spec = {ExWire.P2P.Server, {:outbound, peer, [{:server, ExWire.Sync}]}}
 
-    DynamicSupervisor.start_child(@name, spec)
+    {:ok, _pid} = DynamicSupervisor.start_child(@name, spec)
   end
 
   @doc """
@@ -46,6 +46,13 @@ defmodule ExWire.PeerSupervisor do
       end
 
     if Enum.member?(results, :ok), do: :ok, else: :unsent
+  end
+
+  @spec connected_peer_count() :: non_neg_integer()
+  def connected_peer_count() do
+    @name
+    |> DynamicSupervisor.which_children()
+    |> Enum.count()
   end
 
   @impl true

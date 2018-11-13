@@ -1,4 +1,10 @@
 defmodule ExWire.NodeDiscoveryTest do
+  @moduledoc """
+  To set against parity, you can run:
+    parity --nat none --config dev --logging network,discovery=trace
+
+  Then set the environment variable `REMOTE_TEST_PEER=enode://...`
+  """
   use ExUnit.Case, async: true
   alias ExWire.Adapter.UDP
   alias ExWire.{Config, Kademlia, Network}
@@ -10,7 +16,8 @@ defmodule ExWire.NodeDiscoveryTest do
   @moduletag integration: true
   @moduletag network: true
 
-  @remote_address System.get_env("REMOTE_TEST_PEER") || ExWire.Config.chain().nodes |> List.last()
+  @remote_address System.get_env("REMOTE_TEST_PEER") || List.last(ExWire.Config.chain().nodes)
+
   @bootnodes [
     "enode://6332792c4a00e3e4ee0926ed89e0d27ef985424d97b6a45bf0f23e51f0dcb5e66b875777506458aea7af6f9e4ffb69f43f3778ee73c81ed9d34c51c4b16b0b0f@52.232.243.152:30303",
     "enode://94c15d1b9e2fe7ce56e458b9a3b672ef11894ddedd0c6f247e0f1d3487f52b66208fb4aeb8179fce6e3a749ea93ed147c37976d67af557508d199d9594c35f09@192.81.208.223:30303",
@@ -50,7 +57,7 @@ defmodule ExWire.NodeDiscoveryTest do
     expected_node = expected_node()
     Kademlia.ping(expected_node, process_name: kademlia_name)
 
-    Process.sleep(1_000)
+    Process.sleep(5_000)
 
     routing_table = Kademlia.routing_table(process_name: kademlia_name)
     assert RoutingTable.member?(routing_table, expected_node())
@@ -60,14 +67,22 @@ defmodule ExWire.NodeDiscoveryTest do
     kademlia_name: kademlia_name,
     udp_name: udp_name
   } do
+    # We want to make sure we sent pings and awaiting pongs, but if they
+    # come in quickly, then they won't be there. So we set this flag
+    # to ignore the responses and keep the pings listed in the routing table.
+    GenServer.cast(kademlia_name, {:set_ignore_pongs, true})
+
     find_neighbours = FindNeighbours.new(Config.node_id())
 
     Network.send(find_neighbours, udp_name, remote_endpoint())
-
-    Process.sleep(2_000)
+    Process.sleep(10_000)
 
     routing_table = Kademlia.routing_table(process_name: kademlia_name)
-    pings_count = routing_table.expected_pongs |> Map.values() |> Enum.count()
+
+    pings_count =
+      routing_table.expected_pongs
+      |> Map.values()
+      |> Enum.count()
 
     assert pings_count > 0
   end

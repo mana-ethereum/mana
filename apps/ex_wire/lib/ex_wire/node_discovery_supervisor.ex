@@ -1,7 +1,7 @@
 defmodule ExWire.NodeDiscoverySupervisor do
   @moduledoc """
   The Node Discovery Supervisor manages two processes. The first process is
-  Kademlia algorithm's routing table state: `ExWire.Kademlia.Server`, the
+  Kademlia algorithm's routing table state `ExWire.Kademlia.Server`, the
   second one is process that sends and receives all messages that are used
   for node discovery (ping, pong, ...).
   """
@@ -20,7 +20,6 @@ defmodule ExWire.NodeDiscoverySupervisor do
 
   def init(params) do
     kademlia_name = Keyword.get(params, :kademlia_process_name, KademliaState)
-
     {udp_module, udp_process_name} = ExWire.Config.udp_network_adapter(params)
     port = ExWire.Config.listen_port(params)
 
@@ -30,19 +29,31 @@ defmodule ExWire.NodeDiscoverySupervisor do
       |> Enum.map(&Node.new/1)
 
     children = [
-      {KademliaServer,
-       [
-         name: kademlia_name,
-         current_node: current_node(params),
-         network_client_name: udp_process_name,
-         nodes: bootnodes
-       ]},
-      {udp_module,
-       [
-         name: udp_process_name,
-         network_module: {Network, [kademlia_process_name: kademlia_name]},
-         port: port
-       ]}
+      %{
+        id: KademliaServer,
+        start: {
+          KademliaServer,
+          :start_link,
+          [
+            [
+              name: kademlia_name,
+              current_node: current_node(params),
+              network_client_name: udp_process_name,
+              nodes: bootnodes
+            ]
+          ]
+        }
+      },
+      %{
+        id: udp_module,
+        start:
+          {udp_module, :start_link,
+           [
+             udp_process_name,
+             {Network, [kademlia_process_name: kademlia_name]},
+             port
+           ]}
+      }
     ]
 
     Supervisor.init(children, strategy: :rest_for_one)

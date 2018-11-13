@@ -10,12 +10,13 @@ defmodule ExWire.Struct.Peer do
     :ident
   ]
 
+  alias ExthCrypto.Key
   alias ExWire.Crypto
 
   @type t :: %__MODULE__{
           host: :inet.socket_address() | :inet.hostname(),
           port: :inet.port_number(),
-          remote_id: String.t(),
+          remote_id: Key.public_key(),
           ident: String.t()
         }
 
@@ -28,7 +29,7 @@ defmodule ExWire.Struct.Peer do
       %ExWire.Struct.Peer{
         host: "13.84.180.240",
         port: 30303,
-        remote_id: <<4, 108, 224, 89, 48, 199, 42, 188, 99, 44, 88, 226, 228, 50, 79, 124, 126, 164, 120, 206, 192, 237, 79, 162, 82, 137, 130, 207, 52, 72, 48, 148, 233, 203, 201, 33, 110, 122, 163, 73, 105, 18, 66, 87, 109, 85, 42, 42, 86, 170, 234, 228, 38, 197, 48, 61, 237, 103, 124, 228, 85, 186, 26, 205, 157>>,
+        remote_id: <<108, 224, 89, 48, 199, 42, 188, 99, 44, 88, 226, 228, 50, 79, 124, 126, 164, 120, 206, 192, 237, 79, 162, 82, 137, 130, 207, 52, 72, 48, 148, 233, 203, 201, 33, 110, 122, 163, 73, 105, 18, 66, 87, 109, 85, 42, 42, 86, 170, 234, 228, 38, 197, 48, 61, 237, 103, 124, 228, 85, 186, 26, 205, 157>>,
         ident: "6ce059...1acd9d"
       }
   """
@@ -37,7 +38,6 @@ defmodule ExWire.Struct.Peer do
     remote_id =
       remote_id_hex
       |> Crypto.hex_to_bin()
-      |> Crypto.raw_to_der()
 
     ident = Binary.take(remote_id_hex, 6) <> "..." <> Binary.take(remote_id_hex, -6)
 
@@ -50,18 +50,17 @@ defmodule ExWire.Struct.Peer do
   end
 
   @doc """
-  Returns the hex node id format of a Peer's remote_id.
+  Returns the hex node id format of a Peer's remote_id public key.
 
   ## Examples
 
-      iex> remote_id = <<4, 108, 224, 89, 48, 199, 42, 188, 99, 44, 88, 226, 228, 50, 79, 124, 126, 164, 120, 206, 192, 237, 79, 162, 82, 137, 130, 207, 52, 72, 48, 148, 233, 203, 201, 33, 110, 122, 163, 73, 105, 18, 66, 87, 109, 85, 42, 42, 86, 170, 234, 228, 38, 197, 48, 61, 237, 103, 124, 228, 85, 186, 26, 205, 157>>
+      iex> remote_id = <<108, 224, 89, 48, 199, 42, 188, 99, 44, 88, 226, 228, 50, 79, 124, 126, 164, 120, 206, 192, 237, 79, 162, 82, 137, 130, 207, 52, 72, 48, 148, 233, 203, 201, 33, 110, 122, 163, 73, 105, 18, 66, 87, 109, 85, 42, 42, 86, 170, 234, 228, 38, 197, 48, 61, 237, 103, 124, 228, 85, 186, 26, 205, 157>>
       iex> ExWire.Struct.Peer.hex_node_id(remote_id)
       "6ce05930c72abc632c58e2e4324f7c7ea478cec0ed4fa2528982cf34483094e9cbc9216e7aa349691242576d552a2a56aaeae426c5303ded677ce455ba1acd9d"
   """
-  @spec hex_node_id(String.t()) :: String.t()
+  @spec hex_node_id(Key.public_key()) :: String.t()
   def hex_node_id(remote_id) do
     remote_id
-    |> Crypto.der_to_raw()
     |> Crypto.bin_to_hex()
   end
 
@@ -74,7 +73,7 @@ defmodule ExWire.Struct.Peer do
       {:ok, %ExWire.Struct.Peer{
         host: "13.84.180.240",
         port: 30303,
-        remote_id: <<4, 108, 224, 89, 48, 199, 42, 188, 99, 44, 88, 226, 228, 50, 79, 124, 126, 164, 120, 206, 192, 237, 79, 162, 82, 137, 130, 207, 52, 72, 48, 148, 233, 203, 201, 33, 110, 122, 163, 73, 105, 18, 66, 87, 109, 85, 42, 42, 86, 170, 234, 228, 38, 197, 48, 61, 237, 103, 124, 228, 85, 186, 26, 205, 157>>,
+        remote_id: <<108, 224, 89, 48, 199, 42, 188, 99, 44, 88, 226, 228, 50, 79, 124, 126, 164, 120, 206, 192, 237, 79, 162, 82, 137, 130, 207, 52, 72, 48, 148, 233, 203, 201, 33, 110, 122, 163, 73, 105, 18, 66, 87, 109, 85, 42, 42, 86, 170, 234, 228, 38, 197, 48, 61, 237, 103, 124, 228, 85, 186, 26, 205, 157>>,
         ident: "6ce059...1acd9d"
       }}
 

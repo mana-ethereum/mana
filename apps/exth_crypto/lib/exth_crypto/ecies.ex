@@ -59,8 +59,8 @@ defmodule ExthCrypto.ECIES do
     # First, create a new ephemeral key pair (SEC1 - §5.1.3 - Step 1)
     {my_ephemeral_public_key, my_ephemeral_private_key} =
       case my_ephemeral_key_pair do
-        {my_ephemeral_public_key, my_ephemeral_private_key} ->
-          {my_ephemeral_public_key, my_ephemeral_private_key}
+        keypair = {_public_key, _private_key} ->
+          keypair
 
         nil ->
           ECDH.new_ecdh_keypair(@curve_name)
@@ -102,12 +102,8 @@ defmodule ExthCrypto.ECIES do
       message_tag =
         MAC.mac(init_vector <> encoded_message <> shared_info_2, key_mac_hashed, params.mac)
 
-      # Remove DER encoding byte
-      my_ephemeral_public_key_raw = ExthCrypto.Key.der_to_raw(my_ephemeral_public_key)
-
       # return 0x04 || R || AsymmetricEncrypt(shared-secret, plaintext) || tag
-      {:ok,
-       <<0x04>> <> my_ephemeral_public_key_raw <> init_vector <> encoded_message <> message_tag}
+      {:ok, <<0x04>> <> my_ephemeral_public_key <> init_vector <> encoded_message <> message_tag}
     end
   end
 
@@ -174,12 +170,10 @@ defmodule ExthCrypto.ECIES do
 
         # SEC1 - §5.1.4 - Steps 4, 5
         # Generate a shared secret based on our ephemeral private key and the ephemeral public key from the message
-        her_ephemeral_public_key = ExthCrypto.Key.raw_to_der(her_ephemeral_public_key_raw)
-
         shared_secret =
           ECDH.generate_shared_secret(
             my_static_private_key,
-            her_ephemeral_public_key,
+            her_ephemeral_public_key_raw,
             @curve_name
           )
 

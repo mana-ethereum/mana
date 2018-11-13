@@ -9,7 +9,6 @@ defmodule ExWire.Config do
   alias Blockchain.Chain
   alias ExthCrypto.ECIES.ECDH
   alias ExthCrypto.{Key, Signature}
-  alias ExWire.Crypto
 
   @default_port 30_303
   @default_public_ip [127, 0, 0, 1]
@@ -84,12 +83,18 @@ defmodule ExWire.Config do
 
   @spec public_ip(Keyword.t()) :: [integer()]
   def public_ip(given_params \\ []) do
-    get_env(given_params, :public_ip, @default_public_ip)
+    if conf_ip = System.get_env("EXT_IP_ADDRESS") do
+      conf_ip
+      |> String.split(".")
+      |> Enum.map(&String.to_integer/1)
+    else
+      get_env(given_params, :public_ip, @default_public_ip)
+    end
   end
 
   @spec node_id() :: ExWire.node_id()
   def node_id() do
-    Crypto.node_id_from_public_key(public_key())
+    ExWire.Crypto.node_id_from_public_key(public_key())
   end
 
   @spec listen_port(Keyword.t()) :: integer()
@@ -130,12 +135,17 @@ defmodule ExWire.Config do
 
   @spec bootnodes(Keyword.t()) :: [String.t()]
   def bootnodes(given_params \\ []) do
-    case get_env(given_params, :bootnodes) do
-      nodes when is_list(nodes) ->
-        nodes
+    if conf_ip = System.get_env("BOOTNODES") do
+      conf_ip
+      |> String.split(",")
+    else
+      case get_env(given_params, :bootnodes) do
+        nodes when is_list(nodes) ->
+          nodes
 
-      :from_chain ->
-        chain().nodes
+        :from_chain ->
+          chain().nodes
+      end
     end
   end
 

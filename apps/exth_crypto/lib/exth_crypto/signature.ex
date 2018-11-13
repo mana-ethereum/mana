@@ -8,6 +8,8 @@ defmodule ExthCrypto.Signature do
   functionality.
   """
 
+  alias ExthCrypto.Key
+
   # 512 = 64 * 8
   @type signature :: <<_::512>>
   @type r :: integer()
@@ -33,8 +35,8 @@ defmodule ExthCrypto.Signature do
 
   ## Examples
 
-      iex> ExthCrypto.Signature.get_public_key(ExthCrypto.Test.private_key)
-      {:ok, <<4, 54, 241, 224, 126, 85, 135, 69, 213, 129, 115, 3, 41, 161, 217, 87, 215,
+      iex> ExthCrypto.Signature.get_public_key(ExthCrypto.Test.private_key())
+      {:ok, <<54, 241, 224, 126, 85, 135, 69, 213, 129, 115, 3, 41, 161, 217, 87, 215,
              159, 64, 17, 167, 128, 113, 172, 232, 46, 34, 145, 136, 72, 160, 207, 161,
              171, 255, 26, 163, 160, 158, 227, 196, 92, 62, 119, 84, 156, 99, 224, 155,
              120, 250, 153, 134, 180, 218, 177, 186, 200, 199, 106, 97, 103, 50, 215, 114>>}
@@ -43,11 +45,17 @@ defmodule ExthCrypto.Signature do
       {:error, "Private key size not 32 bytes"}
   """
   @spec get_public_key(ExthCrypto.Key.private_key()) ::
-          {:ok, ExthCrypto.Key.public_key_der()} | {:error, String.t()}
+          {:ok, ExthCrypto.Key.public_key()} | {:error, String.t()}
   def get_public_key(private_key) do
     case :libsecp256k1.ec_pubkey_create(private_key, :uncompressed) do
-      {:ok, public_key} -> {:ok, public_key}
-      {:error, reason} -> {:error, to_string(reason)}
+      {:ok, public_key_der} ->
+        {:ok,
+         public_key_der
+         |> Key.public_der_key()
+         |> Key.public_der_to_raw()}
+
+      {:error, reason} ->
+        {:error, to_string(reason)}
     end
   end
 
@@ -93,7 +101,9 @@ defmodule ExthCrypto.Signature do
   """
   @spec verify(binary(), signature, ExthCrypto.Key.public_key()) :: boolean()
   def verify(digest, signature, public_key) do
-    case :libsecp256k1.ecdsa_verify_compact(digest, signature, public_key) do
+    {:public_der, public_key_material} = Key.public_raw_to_der(public_key)
+
+    case :libsecp256k1.ecdsa_verify_compact(digest, signature, public_key_material) do
       :ok -> true
       :error -> false
     end
@@ -110,24 +120,30 @@ defmodule ExthCrypto.Signature do
       iex> msg = ExthCrypto.Math.nonce(32)
       iex> {signature, _r, _s, recovery_id} = ExthCrypto.Signature.sign_digest(msg, ExthCrypto.Test.private_key(:key_a))
       iex> ExthCrypto.Signature.recover(msg, signature, recovery_id)
-      {:ok, <<4, 54, 241, 224, 126, 85, 135, 69, 213, 129, 115, 3, 41, 161, 217, 87, 215,
+      {:ok, <<54, 241, 224, 126, 85, 135, 69, 213, 129, 115, 3, 41, 161, 217, 87, 215,
               159, 64, 17, 167, 128, 113, 172, 232, 46, 34, 145, 136, 72, 160, 207, 161,
               171, 255, 26, 163, 160, 158, 227, 196, 92, 62, 119, 84, 156, 99, 224, 155,
               120, 250, 153, 134, 180, 218, 177, 186, 200, 199, 106, 97, 103, 50, 215, 114>>}
 
       iex> {signature, _r, _s, recovery_id} = ExthCrypto.Signature.sign_digest(msg = ExthCrypto.Math.nonce(32), ExthCrypto.Test.private_key(:key_a))
       iex> ExthCrypto.Signature.recover(msg, signature, recovery_id)
-      {:ok, <<4, 54, 241, 224, 126, 85, 135, 69, 213, 129, 115, 3, 41, 161, 217, 87, 215,
+      {:ok, <<54, 241, 224, 126, 85, 135, 69, 213, 129, 115, 3, 41, 161, 217, 87, 215,
               159, 64, 17, 167, 128, 113, 172, 232, 46, 34, 145, 136, 72, 160, 207, 161,
               171, 255, 26, 163, 160, 158, 227, 196, 92, 62, 119, 84, 156, 99, 224, 155,
               120, 250, 153, 134, 180, 218, 177, 186, 200, 199, 106, 97, 103, 50, 215, 114>>}
   """
   @spec recover(binary(), signature, recovery_id) ::
-          {:ok, ExthCrypto.Key.public_key_der()} | {:error, String.t()}
+          {:ok, ExthCrypto.Key.public_key()} | {:error, String.t()}
   def recover(digest, signature, recovery_id) do
     case :libsecp256k1.ecdsa_recover_compact(digest, signature, :uncompressed, recovery_id) do
-      {:ok, public_key} -> {:ok, public_key}
-      {:error, reason} -> {:error, to_string(reason)}
+      {:ok, public_key_der} ->
+        {:ok,
+         public_key_der
+         |> Key.public_der_key()
+         |> Key.public_der_to_raw()}
+
+      {:error, reason} ->
+        {:error, to_string(reason)}
     end
   end
 
