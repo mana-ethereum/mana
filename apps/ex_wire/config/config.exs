@@ -20,7 +20,8 @@ config :ex_wire,
     kademlia_process_name: KademliaState,
     supervisor_name: ExWire.NodeDiscoverySupervisor,
     port: 30_304
-  ]
+  ],
+  mana_version: String.trim(File.read!("MANA_VERSION"))
 
 config :ex_wire, :environment, Mix.env()
 import_config "#{Mix.env()}.exs"

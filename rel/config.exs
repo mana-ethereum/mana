@@ -46,7 +46,7 @@ end
 # will be used by default
 
 release :mana do
-  set version: "0.1.0"
+  set version: String.trim(File.read!("MANA_VERSION"))
   set applications: [
     :runtime_tools,
     blockchain: :permanent,
