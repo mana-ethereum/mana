@@ -202,7 +202,7 @@ defmodule Blockchain.Contract.CreateContract do
 
   defp new_account_address(params) do
     if params.new_account_address do
-      params.new_account_address
+      {params.account_repo, params.new_account_address}
     else
       {updated_repo, sender_account} = Repo.account(params.account_repo, params.sender)
       {updated_repo, Account.Address.new(params.sender, sender_account.nonce)}

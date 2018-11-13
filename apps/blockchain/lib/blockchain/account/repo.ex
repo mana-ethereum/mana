@@ -328,9 +328,11 @@ defmodule Blockchain.Account.Repo do
 
   @impl true
   def account_code_hash(account_repo, address) do
-    account = account(account_repo, address)
+    {repo, account} = account(account_repo, address)
 
-    unless is_nil(account), do: account.code_hash
+    code_hash = unless is_nil(account), do: account.code_hash
+
+    {repo, code_hash}
   end
 
   @doc """
@@ -411,17 +413,19 @@ defmodule Blockchain.Account.Repo do
   @impl true
   def account_exists?(account_repo, evm_address) do
     address = Account.Address.from(evm_address)
-    account = account(account_repo, address)
+    {repo, account} = account(account_repo, address)
 
-    !is_nil(account)
+    {repo, !is_nil(account)}
   end
 
   @impl true
   def empty_account?(account_repo, evm_address) do
     address = Account.Address.from(evm_address)
-    account = account(account_repo, address)
+    {repo, account} = account(account_repo, address)
 
-    !is_nil(account) && Account.empty?(account)
+    empty_flag = !is_nil(account) && Account.empty?(account)
+
+    {repo, empty_flag}
   end
 
   @doc """
