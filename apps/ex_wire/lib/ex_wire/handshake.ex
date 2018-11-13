@@ -156,15 +156,15 @@ defmodule ExWire.Handshake do
   # TODO: Add examples
   """
   @spec handle_ack(t(), binary()) ::
-          {:ok, t(), Secrets.t()}
+          {:ok, t(), Secrets.t(), binary()}
           | {:invalid, :invalid_ECIES_encoded_message | :invalid_message_tag}
   def handle_ack(handshake = %Handshake{}, ack_data) do
     case read_ack_resp(ack_data, ExWire.Config.private_key()) do
-      {:ok, ack_resp, _ack_resp_bin, _frame_rest} ->
-        updated_handshake = add_ack_data(handshake, ack_resp, ack_data)
+      {:ok, ack_resp, ack_resp_bin, frame_rest} ->
+        updated_handshake = add_ack_data(handshake, ack_resp, ack_resp_bin)
         secrets = ExWire.Framing.Secrets.derive_secrets(updated_handshake)
 
-        {:ok, updated_handshake, secrets}
+        {:ok, updated_handshake, secrets, frame_rest}
 
       {:error, reason} ->
         {:invalid, reason}

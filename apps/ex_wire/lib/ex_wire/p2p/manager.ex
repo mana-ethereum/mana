@@ -211,11 +211,11 @@ defmodule ExWire.P2P.Manager do
   @spec handle_acknowledgement_received(binary(), Connection.t()) :: Connection.t()
   defp handle_acknowledgement_received(data, conn = %{peer: peer}) do
     case Handshake.handle_ack(conn.handshake, data) do
-      {:ok, handshake, secrets} ->
+      {:ok, handshake, secrets, queued_data} ->
         :ok =
           Logger.debug(fn -> "[Network] [#{peer}] Got ack from #{peer.host}, deriving secrets" end)
 
-        Map.merge(conn, %{handshake: handshake, secrets: secrets})
+        Map.merge(conn, %{handshake: handshake, secrets: secrets, queued_data: queued_data})
 
       {:invalid, reason} ->
         :ok =

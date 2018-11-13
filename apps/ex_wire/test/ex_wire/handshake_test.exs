@@ -93,8 +93,8 @@ defmodule HandshakeTest do
 
       set_environment(my_static_private_key)
 
-      {:ok, my_updated_handshake, my_secrets} =
-        Handshake.handle_ack(my_handshake, her_handshake.encoded_ack_resp)
+      assert {:ok, my_updated_handshake, my_secrets, <<>>} =
+               Handshake.handle_ack(my_handshake, her_handshake.encoded_ack_resp)
 
       assert my_updated_handshake.ack_resp == her_handshake.ack_resp
       assert %ExWire.Framing.Secrets{} = my_secrets
