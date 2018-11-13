@@ -4,7 +4,7 @@ defmodule EVM.Refunds.Sstore do
   # Refund given (added into refund counter) when the storage value is set to zero from non-zero.
   @storage_refund 15_000
 
-  @spec refund({integer(), integer()}, ExecEnv.t()) :: integer()
+  @spec refund({integer(), integer()}, ExecEnv.t()) :: {ExecEnv.t(), integer()}
   def refund({key, new_value}, exec_env) do
     if exec_env.config.eip1283_sstore_gas_cost_changed do
       eip1283_sstore_refund({key, new_value}, exec_env)
@@ -14,23 +14,31 @@ defmodule EVM.Refunds.Sstore do
   end
 
   defp basic_sstore_refund({key, new_value}, exec_env) do
-    case ExecEnv.get_storage(exec_env, key) do
-      {:ok, value} ->
-        if value != 0 && new_value == 0 do
-          @storage_refund
-        else
-          0
-        end
+    {updated_exec_env, current_value} = ExecEnv.storage(exec_env, key)
 
-      _ ->
-        0
-    end
+    refund =
+      case current_value do
+        {:ok, value} ->
+          if value != 0 && new_value == 0 do
+            @storage_refund
+          else
+            0
+          end
+
+        _ ->
+          0
+      end
+
+    {updated_exec_env, refund}
   end
 
   defp eip1283_sstore_refund({key, new_value}, exec_env) do
-    initial_value = get_initial_value(exec_env, key)
-    current_value = get_current_value(exec_env, key)
-    get_refund(initial_value, current_value, new_value)
+    {updated_exec_env, initial_value} = initial_value(exec_env, key)
+    {updated_exec_env, current_value} = current_value(updated_exec_env, key)
+
+    refund = get_refund(initial_value, current_value, new_value)
+
+    {updated_exec_env, refund}
   end
 
   defp get_refund(_, _current_value = value, _new_value = value), do: 0
@@ -67,19 +75,29 @@ defmodule EVM.Refunds.Sstore do
     first_refund + second_refund
   end
 
-  defp get_initial_value(exec_env, key) do
-    case ExecEnv.get_initial_storage(exec_env, key) do
-      :account_not_found -> 0
-      :key_not_found -> 0
-      {:ok, value} -> value
-    end
+  defp initial_value(exec_env, key) do
+    {updated_exec_env, result} = ExecEnv.initial_storage(exec_env, key)
+
+    value =
+      case result do
+        :account_not_found -> 0
+        :key_not_found -> 0
+        {:ok, value} -> value
+      end
+
+    {updated_exec_env, value}
   end
 
-  defp get_current_value(exec_env, key) do
-    case ExecEnv.get_storage(exec_env, key) do
-      :account_not_found -> 0
-      :key_not_found -> 0
-      {:ok, value} -> value
-    end
+  defp current_value(exec_env, key) do
+    {updated_exec_env, result} = ExecEnv.storage(exec_env, key)
+
+    value =
+      case result do
+        :account_not_found -> 0
+        :key_not_found -> 0
+        {:ok, value} -> value
+      end
+
+    {updated_exec_env, value}
   end
 end

@@ -34,7 +34,8 @@ defmodule EVM.Refunds do
       ...> } |> EVM.ExecEnv.put_storage(5,4)
       iex> machine_state = %EVM.MachineState{stack: [5 , 0]}
       iex> sub_state = %EVM.SubState{}
-      iex> EVM.Refunds.refund(machine_state, sub_state, exec_env)
+      iex> {_exec_env, refund} = EVM.Refunds.refund(machine_state, sub_state, exec_env)
+      iex> refund
       15000
   """
   @spec refund(MachineState.t(), SubState.t(), ExecEnv.t()) ::
@@ -42,7 +43,11 @@ defmodule EVM.Refunds do
   def refund(machine_state, sub_state, exec_env) do
     operation = MachineCode.current_operation(machine_state, exec_env)
     inputs = Operation.inputs(operation, machine_state)
-    refund(operation.sym, inputs, machine_state, sub_state, exec_env)
+
+    case refund(operation.sym, inputs, machine_state, sub_state, exec_env) do
+      {updated_exec_env, refund} -> {updated_exec_env, refund}
+      refund -> {exec_env, refund}
+    end
   end
 
   @doc """
@@ -58,7 +63,7 @@ defmodule EVM.Refunds do
       ...> }
       iex> machine_state = %EVM.MachineState{}
       iex> sub_state = %EVM.SubState{}
-      iex> EVM.Refunds.refund(:selfdestruct, [], machine_state, sub_state, exec_env)
+      iex>  EVM.Refunds.refund(:selfdestruct, [], machine_state, sub_state, exec_env)
       24000
 
       iex> account_repo = EVM.Mock.MockAccountRepo.new()
@@ -69,7 +74,8 @@ defmodule EVM.Refunds do
       ...> } |> EVM.ExecEnv.put_storage(5,4)
       iex> machine_state = %EVM.MachineState{}
       iex> sub_state = %EVM.SubState{}
-      iex> EVM.Refunds.refund(:sstore, [5, 0], machine_state, sub_state, exec_env)
+      iex> {_exec_env, refund} = EVM.Refunds.refund(:sstore, [5, 0], machine_state, sub_state, exec_env)
+      iex> refund
       15000
   """
 

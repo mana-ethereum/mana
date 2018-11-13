@@ -200,7 +200,7 @@ defmodule EVM.Functions do
   @spec not_enough_gas?(MachineState.t(), ExecEnv.t()) ::
           {:halt, :out_of_gas} | {:continue, Gas.cost_with_status()}
   defp not_enough_gas?(machine_state, exec_env) do
-    cost_with_status = Gas.cost_with_status(machine_state, exec_env)
+    {_updated_exec_env, cost_with_status} = Gas.cost_with_status(machine_state, exec_env)
 
     cost =
       case cost_with_status do

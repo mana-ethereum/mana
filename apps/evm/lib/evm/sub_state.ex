@@ -87,9 +87,9 @@ defmodule EVM.SubState do
   """
   @spec add_refund(MachineState.t(), t(), ExecEnv.t()) :: t()
   def add_refund(machine_state, sub_state, exec_env) do
-    refund = Refunds.refund(machine_state, sub_state, exec_env)
+    {updated_exec_env, refund} = Refunds.refund(machine_state, sub_state, exec_env)
 
-    %{sub_state | refund: sub_state.refund + refund}
+    {updated_exec_env, %{sub_state | refund: sub_state.refund + refund}}
   end
 
   @doc """

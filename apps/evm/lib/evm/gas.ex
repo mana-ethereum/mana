@@ -134,36 +134,50 @@ defmodule EVM.Gas do
 
   ## Examples
 
-      # TODO: Figure out how to hand in state
-      iex> EVM.Gas.cost(%EVM.MachineState{}, %EVM.ExecEnv{})
+      iex> {_exec_env, cost} = EVM.Gas.cost(%EVM.MachineState{}, %EVM.ExecEnv{})
+      iex> cost
       0
   """
-  @spec cost(MachineState.t(), ExecEnv.t()) :: t
+  @spec cost(MachineState.t(), ExecEnv.t()) :: {ExecEnv.t(), t()}
   def cost(machine_state, exec_env) do
-    case cost_with_status(machine_state, exec_env) do
-      {:original, cost} -> cost
-      {:changed, value, _} -> value
-    end
+    {updated_exec_env, cost_with_status} = cost_with_status(machine_state, exec_env)
+
+    cost =
+      case cost_with_status do
+        {:original, cost} -> cost
+        {:changed, value, _} -> value
+      end
+
+    {updated_exec_env, cost}
   end
 
-  @spec cost_with_status(MachineState.t(), ExecEnv.t()) :: cost_with_status()
+  @spec cost_with_status(MachineState.t(), ExecEnv.t()) :: {ExecEnv.t(), cost_with_status()}
   def cost_with_status(machine_state, exec_env) do
     operation = MachineCode.current_operation(machine_state, exec_env)
     inputs = Operation.inputs(operation, machine_state)
-    operation_cost = operation_cost(operation.sym, inputs, machine_state, exec_env)
+
+    {updated_exec_env, operation_cost} =
+      case operation_cost(operation.sym, inputs, machine_state, exec_env) do
+        {updated_exec_env, cost} -> {updated_exec_env, cost}
+        cost -> {exec_env, cost}
+      end
+
     memory_cost = memory_cost(operation.sym, inputs, machine_state)
 
     gas_cost = memory_cost + operation_cost
 
-    if exec_env.config.should_fail_nested_operation_lack_of_gas do
-      {:original, gas_cost}
-    else
-      gas_cost_for_nested_operation(operation.sym,
-        inputs: inputs,
-        original_cost: gas_cost,
-        machine_state: machine_state
-      )
-    end
+    cost_with_status =
+      if exec_env.config.should_fail_nested_operation_lack_of_gas do
+        {:original, gas_cost}
+      else
+        gas_cost_for_nested_operation(operation.sym,
+          inputs: inputs,
+          original_cost: gas_cost,
+          machine_state: machine_state
+        )
+      end
+
+    {updated_exec_env, cost_with_status}
   end
 
   def memory_cost(:calldatacopy, [memory_offset, _call_data_start, length], machine_state) do
@@ -369,24 +383,31 @@ defmodule EVM.Gas do
   def operation_cost(:selfdestruct, [address | _], _, exec_env) do
     address = Address.new(address)
 
-    is_new_account =
-      cond do
-        !exec_env.config.empty_account_value_transfer &&
-            ExecEnv.non_existent_account?(exec_env, address) ->
-          true
+    {updated_exec_env, non_existent_account} = ExecEnv.non_existent_account?(exec_env, address)
 
-        exec_env.config.empty_account_value_transfer &&
-          ExecEnv.non_existent_or_empty_account?(exec_env, address) &&
-            ExecEnv.get_balance(exec_env) > 0 ->
-          true
+    {updated_exec_env, empty_account} =
+      ExecEnv.non_existent_or_empty_account?(updated_exec_env, address)
+
+    {updated_exec_env, is_new_account} =
+      cond do
+        !exec_env.config.empty_account_value_transfer && non_existent_account ->
+          {updated_exec_env, true}
+
+        exec_env.config.empty_account_value_transfer && empty_account ->
+          {updated_exec_env, balance} = ExecEnv.balance(updated_exec_env)
+
+          if balance > 0, do: {updated_exec_env, true}, else: {updated_exec_env, false}
 
         true ->
-          false
+          {updated_exec_env, false}
       end
 
-    Configuration.for(exec_env.config).selfdestruct_cost(exec_env.config,
-      new_account: is_new_account
-    )
+    cost =
+      Configuration.for(exec_env.config).selfdestruct_cost(exec_env.config,
+        new_account: is_new_account
+      )
+
+    {updated_exec_env, cost}
   end
 
   def operation_cost(
@@ -397,8 +418,11 @@ defmodule EVM.Gas do
       ) do
     to_address = Address.new(to_address)
 
-    exec_env.config.call_cost + call_value_cost(value) +
-      new_account_cost(exec_env, to_address, value) + call_gas
+    {updated_exec_env, new_account_cost} = new_account_cost(exec_env, to_address, value)
+
+    cost = exec_env.config.call_cost + call_value_cost(value) + new_account_cost + call_gas
+
+    {updated_exec_env, cost}
   end
 
   def operation_cost(
@@ -410,7 +434,11 @@ defmodule EVM.Gas do
     to_address = Address.new(to_address)
     value = 0
 
-    exec_env.config.call_cost + new_account_cost(exec_env, to_address, value) + gas_limit
+    {updated_exec_env, new_account_cost} = new_account_cost(exec_env, to_address, value)
+
+    cost = exec_env.config.call_cost + new_account_cost + gas_limit
+
+    {updated_exec_env, cost}
   end
 
   def operation_cost(
@@ -515,17 +543,20 @@ defmodule EVM.Gas do
   defp call_value_cost(_), do: @g_callvalue
 
   defp new_account_cost(exec_env, address, value) do
-    cond do
-      !exec_env.config.empty_account_value_transfer &&
-          ExecEnv.non_existent_account?(exec_env, address) ->
-        @g_newaccount
+    {updated_exec_env, non_existent_account} = ExecEnv.non_existent_account?(exec_env, address)
 
-      exec_env.config.empty_account_value_transfer && value > 0 &&
-          ExecEnv.non_existent_or_empty_account?(exec_env, address) ->
-        @g_newaccount
+    {updated_exec_env, empty_account} =
+      ExecEnv.non_existent_or_empty_account?(updated_exec_env, address)
+
+    cond do
+      !exec_env.config.empty_account_value_transfer && non_existent_account ->
+        {updated_exec_env, @g_newaccount}
+
+      exec_env.config.empty_account_value_transfer && value > 0 && empty_account ->
+        {updated_exec_env, @g_newaccount}
 
       true ->
-        0
+        {updated_exec_env, 0}
     end
   end
 
@@ -610,51 +641,69 @@ defmodule EVM.Gas do
   end
 
   defp eip1283_sstore_gas_cost([key, new_value], exec_env) do
-    initial_value = get_initial_value(exec_env, key)
-    current_value = get_current_value(exec_env, key)
+    {updated_exec_env, initial_value} = get_initial_value(exec_env, key)
+    {updated_exec_env, current_value} = get_current_value(updated_exec_env, key)
 
-    cond do
-      current_value == new_value -> @g_sload
-      initial_value == current_value && initial_value == 0 -> @g_sset
-      initial_value == current_value && initial_value != 0 -> @g_sreset
-      true -> @g_sload
-    end
+    cost =
+      cond do
+        current_value == new_value -> @g_sload
+        initial_value == current_value && initial_value == 0 -> @g_sset
+        initial_value == current_value && initial_value != 0 -> @g_sreset
+        true -> @g_sload
+      end
+
+    {updated_exec_env, cost}
   end
 
   defp basic_sstore_gas_cost([key, new_value], exec_env) do
-    case ExecEnv.get_storage(exec_env, key) do
-      :account_not_found ->
-        @g_sset
+    {updated_exec_env, result} = ExecEnv.storage(exec_env, key)
 
-      :key_not_found ->
-        if new_value != 0 do
+    cost =
+      case result do
+        :account_not_found ->
           @g_sset
-        else
-          @g_sreset
-        end
 
-      {:ok, value} ->
-        if new_value != 0 && value == 0 do
-          @g_sset
-        else
-          @g_sreset
-        end
-    end
+        :key_not_found ->
+          if new_value != 0 do
+            @g_sset
+          else
+            @g_sreset
+          end
+
+        {:ok, value} ->
+          if new_value != 0 && value == 0 do
+            @g_sset
+          else
+            @g_sreset
+          end
+      end
+
+    {updated_exec_env, cost}
   end
 
   defp get_initial_value(exec_env, key) do
-    case ExecEnv.get_initial_storage(exec_env, key) do
-      :account_not_found -> 0
-      :key_not_found -> 0
-      {:ok, value} -> value
-    end
+    {updated_exec_env, result} = ExecEnv.initial_storage(exec_env, key)
+
+    value =
+      case result do
+        :account_not_found -> 0
+        :key_not_found -> 0
+        {:ok, value} -> value
+      end
+
+    {updated_exec_env, value}
   end
 
   defp get_current_value(exec_env, key) do
-    case ExecEnv.get_storage(exec_env, key) do
-      :account_not_found -> 0
-      :key_not_found -> 0
-      {:ok, value} -> value
-    end
+    {updated_exec_env, result} = ExecEnv.storage(exec_env, key)
+
+    value =
+      case result do
+        :account_not_found -> 0
+        :key_not_found -> 0
+        {:ok, value} -> value
+      end
+
+    {updated_exec_env, value}
   end
 end
