@@ -116,10 +116,14 @@ defmodule JSONRPC2.Server.Handler do
     :invalid_request
   end
 
-  defp valid_request?(version, method, params, id) do
-    version == "2.0" and is_binary(method) and (is_list(params) or is_map(params)) and
-      (id in [:undefined, nil] or is_binary(id) or is_number(id))
+  defp valid_request?("2.0", method, params, id) when is_binary(method) do
+    case is_list(params) or is_map(params) do
+      true -> id in [:undefined, nil] or is_binary(id) or is_number(id)
+      false -> false
+    end
   end
+
+  defp valid_request?(_version, _method, _params, _id), do: false
 
   defp merge_responses(responses) do
     case for({:reply, reply} <- responses, do: reply) do
