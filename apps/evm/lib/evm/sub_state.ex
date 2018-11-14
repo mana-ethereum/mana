@@ -82,7 +82,8 @@ defmodule EVM.SubState do
       ...> } |> EVM.ExecEnv.put_storage(5, 4)
       iex> machine_state = %EVM.MachineState{gas: 10, stack: [5 , 0], program_counter: 0}
       iex> sub_state = %EVM.SubState{}
-      iex> EVM.SubState.add_refund(machine_state, sub_state, exec_env)
+      iex> {_exec_env, sub_state} = EVM.SubState.add_refund(machine_state, sub_state, exec_env)
+      iex> sub_state
       %EVM.SubState{refund: 15000}
   """
   @spec add_refund(MachineState.t(), t(), ExecEnv.t()) :: t()

@@ -87,8 +87,9 @@ defmodule EVM.Operation.StackMemoryStorageAndFlow do
       iex> value = 0x111222333444555
       iex> account_repo = EVM.Mock.MockAccountRepo.new()
       iex> account_repo = EVM.Operation.StackMemoryStorageAndFlow.sstore([key, value], %{exec_env: %EVM.ExecEnv{address: address, account_repo: account_repo}})[:exec_env].account_repo
-      iex> EVM.Operation.StackMemoryStorageAndFlow.sload([key], %{exec_env: %EVM.ExecEnv{account_repo: account_repo, address: address}})
-      0x111222333444555
+      iex> result = EVM.Operation.StackMemoryStorageAndFlow.sload([key], %{exec_env: %EVM.ExecEnv{account_repo: account_repo, address: address}, machine_state: %EVM.MachineState{}})
+      iex> result[:stack]
+      [0x111222333444555]
 
       iex> address = 0x0000000000000000000000000000000000000001
       iex> key = 0x11223344556677889900
@@ -96,21 +97,27 @@ defmodule EVM.Operation.StackMemoryStorageAndFlow do
       iex> value = 0x111222333444555
       iex> account_repo = EVM.Mock.MockAccountRepo.new()
       iex> account_repo = EVM.Operation.StackMemoryStorageAndFlow.sstore([key, value], %{exec_env: %EVM.ExecEnv{address: address, account_repo: account_repo}})[:exec_env].account_repo
-      iex> EVM.Operation.StackMemoryStorageAndFlow.sload([other_key], %{exec_env: %EVM.ExecEnv{account_repo: account_repo}})
-      0x0
+      iex> result = EVM.Operation.StackMemoryStorageAndFlow.sload([other_key], %{exec_env: %EVM.ExecEnv{account_repo: account_repo}, machine_state: %EVM.MachineState{}})
+      iex> result[:stack]
+      [0x0]
   """
   @spec sload(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
-  def sload([key], %{exec_env: exec_env}) do
-    case ExecEnv.storage(exec_env, key) do
-      :account_not_found ->
-        0
+  def sload([key], %{exec_env: exec_env, machine_state: machine_state}) do
+    {updated_exec_env, result} = ExecEnv.storage(exec_env, key)
 
-      :key_not_found ->
-        0
+    value =
+      case result do
+        :account_not_found ->
+          0
 
-      {:ok, value} ->
-        value
-    end
+        :key_not_found ->
+          0
+
+        {:ok, value} ->
+          value
+      end
+
+    %{exec_env: updated_exec_env, stack: Stack.push(machine_state.stack, value)}
   end
 
   @doc """
@@ -141,9 +148,11 @@ defmodule EVM.Operation.StackMemoryStorageAndFlow do
   @spec sstore(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def sstore([key, value], %{exec_env: exec_env}) do
     if value == 0 do
-      case ExecEnv.storage(exec_env, key) do
-        {:ok, _value} -> %{exec_env: ExecEnv.remove_storage(exec_env, key)}
-        _ -> %{exec_env: exec_env}
+      {updated_exec_env, result} = ExecEnv.storage(exec_env, key)
+
+      case result do
+        {:ok, _value} -> %{exec_env: ExecEnv.remove_storage(updated_exec_env, key)}
+        _ -> %{exec_env: updated_exec_env}
       end
     else
       exec_env = ExecEnv.put_storage(exec_env, key, value)
