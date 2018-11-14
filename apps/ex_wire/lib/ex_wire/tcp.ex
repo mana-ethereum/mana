@@ -35,9 +35,10 @@ defmodule ExWire.TCP do
     :gen_tcp.shutdown(socket, :read_write)
   end
 
-  @spec connect(binary(), char()) :: {:ok, socket()} | {:error, atom()}
+  @spec connect(:inet.socket_address() | :inet.hostname(), char()) ::
+          {:ok, socket()} | {:error, atom()}
   def connect(host, port_number) do
-    :gen_tcp.connect(String.to_charlist(host), port_number, [:binary])
+    :gen_tcp.connect(host, port_number, [:binary])
   end
 
   @spec peer_info(socket()) :: {binary(), integer()}
