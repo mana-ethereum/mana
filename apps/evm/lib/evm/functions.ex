@@ -79,19 +79,22 @@ defmodule EVM.Functions do
 
       iex> machine_code = <<EVM.Operation.encode(:jump), EVM.Operation.encode(:jumpdest)>>
       iex> exec_env = EVM.ExecEnv.set_valid_jump_destinations(%EVM.ExecEnv{machine_code: machine_code})
-      iex> EVM.Functions.is_exception_halt?(%EVM.MachineState{program_counter: 0, gas: 0xffff, stack: [1]}, exec_env)
-      {:continue, {:original, 8}}
+      iex> {:continue, _exec_env, cost} =  EVM.Functions.is_exception_halt?(%EVM.MachineState{program_counter: 0, gas: 0xffff, stack: [1]}, exec_env)
+      iex> cost
+      {:original, 8}
 
       iex> EVM.Functions.is_exception_halt?(%EVM.MachineState{program_counter: 0, gas: 0xffff, stack: [1, 5]}, %EVM.ExecEnv{machine_code: <<EVM.Operation.encode(:jumpi)>>})
       {:halt, :invalid_jump_destination}
 
       iex> machine_code = <<EVM.Operation.encode(:jumpi), EVM.Operation.encode(:jumpdest)>>
       iex> exec_env = EVM.ExecEnv.set_valid_jump_destinations(%EVM.ExecEnv{machine_code: machine_code})
-      iex> EVM.Functions.is_exception_halt?(%EVM.MachineState{program_counter: 0, gas: 0xffff, stack: [1, 5]}, exec_env)
-      {:continue, {:original, 10}}
+      iex> {:continue, _exec_env, cost} = EVM.Functions.is_exception_halt?(%EVM.MachineState{program_counter: 0, gas: 0xffff, stack: [1, 5]}, exec_env)
+      iex> cost
+      {:original, 10}
 
-      iex> EVM.Functions.is_exception_halt?(%EVM.MachineState{program_counter: 0, gas: 0xffff, stack: (for _ <- 1..1024, do: 0x0)}, %EVM.ExecEnv{machine_code: <<EVM.Operation.encode(:stop)>>})
-      {:continue, {:original, 0}}
+      iex> {:continue, _exec_env, cost} = EVM.Functions.is_exception_halt?(%EVM.MachineState{program_counter: 0, gas: 0xffff, stack: (for _ <- 1..1024, do: 0x0)}, %EVM.ExecEnv{machine_code: <<EVM.Operation.encode(:stop)>>})
+      iex> cost
+      {:original, 0}
 
       iex> EVM.Functions.is_exception_halt?(%EVM.MachineState{program_counter: 0, gas: 0xffff, stack: (for _ <- 1..1024, do: 0x0)}, %EVM.ExecEnv{machine_code: <<EVM.Operation.encode(:push1)>>})
       {:halt, :stack_overflow}
@@ -100,7 +103,7 @@ defmodule EVM.Functions do
       {:halt, :invalid_instruction}
   """
   @spec is_exception_halt?(MachineState.t(), ExecEnv.t()) ::
-          {:continue, Gas.cost_with_status()} | {:halt, atom()}
+          {:continue, ExecEnv.t(), Gas.cost_with_status()} | {:halt, atom()}
   # credo:disable-for-next-line
   def is_exception_halt?(machine_state, exec_env) do
     operation = Operation.get_operation_at(exec_env.machine_code, machine_state.program_counter)
@@ -198,9 +201,9 @@ defmodule EVM.Functions do
   end
 
   @spec not_enough_gas?(MachineState.t(), ExecEnv.t()) ::
-          {:halt, :out_of_gas} | {:continue, Gas.cost_with_status()}
+          {:halt, :out_of_gas} | {:continue, ExecEnv.t(), Gas.cost_with_status()}
   defp not_enough_gas?(machine_state, exec_env) do
-    {_updated_exec_env, cost_with_status} = Gas.cost_with_status(machine_state, exec_env)
+    {updated_exec_env, cost_with_status} = Gas.cost_with_status(machine_state, exec_env)
 
     cost =
       case cost_with_status do
@@ -211,7 +214,7 @@ defmodule EVM.Functions do
     if cost > machine_state.gas do
       {:halt, :out_of_gas}
     else
-      {:continue, cost_with_status}
+      {:continue, updated_exec_env, cost_with_status}
     end
   end
 

@@ -96,9 +96,9 @@ defmodule EVM.VM do
         # Question: should we return the original sub-state?
         {original_machine_state, original_sub_state, original_exec_env, :failed}
 
-      {:continue, cost_with_status} ->
+      {:continue, updated_exec_env, cost_with_status} ->
         {n_machine_state, n_sub_state, n_exec_env} =
-          cycle(machine_state, sub_state, exec_env, cost_with_status)
+          cycle(machine_state, sub_state, updated_exec_env, cost_with_status)
 
         case Functions.is_normal_halting?(machine_state, exec_env) do
           # continue execution
@@ -137,10 +137,10 @@ defmodule EVM.VM do
     inputs = Operation.inputs(operation, machine_state)
 
     machine_state = MachineState.subtract_gas(machine_state, cost_with_status)
-    {_exec_env, sub_state} = SubState.add_refund(machine_state, sub_state, exec_env)
+    {updated_exec_env, sub_state} = SubState.add_refund(machine_state, sub_state, exec_env)
 
     {n_machine_state, n_sub_state, n_exec_env} =
-      Operation.run(operation, machine_state, sub_state, exec_env)
+      Operation.run(operation, machine_state, sub_state, updated_exec_env)
 
     final_machine_state =
       n_machine_state
