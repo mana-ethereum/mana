@@ -90,7 +90,7 @@ defmodule EVM.ExecEnv do
     Map.put(exec_env, :account_repo, account_repo)
   end
 
-  @spec storage(t(), integer()) :: atom() | {t(), atom() | {:ok, integer()}}
+  @spec storage(t(), integer()) :: {t(), atom() | {:ok, integer()}}
   def storage(exec_env = %{account_repo: account_repo, address: address}, key) do
     {updated_repo, value} = AccountRepo.repo(account_repo).storage(account_repo, address, key)
 

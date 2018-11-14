@@ -86,7 +86,7 @@ defmodule EVM.SubState do
       iex> sub_state
       %EVM.SubState{refund: 15000}
   """
-  @spec add_refund(MachineState.t(), t(), ExecEnv.t()) :: t()
+  @spec add_refund(MachineState.t(), t(), ExecEnv.t()) :: {ExecEnv.t(), t()}
   def add_refund(machine_state, sub_state, exec_env) do
     {updated_exec_env, refund} = Refunds.refund(machine_state, sub_state, exec_env)
 
