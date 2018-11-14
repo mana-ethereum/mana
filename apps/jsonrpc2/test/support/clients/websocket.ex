@@ -73,7 +73,7 @@ defmodule JSONRPC2.Clients.WebSocket do
 
     external_request_id = external_request_id_int
 
-    {:ok, data} = Request.serialized_request({method, params, external_request_id}, Jason)
+    {:ok, data} = Request.serialized_request({method, params, external_request_id})
 
     {:ok, external_request_id, data}
   end
@@ -85,7 +85,7 @@ defmodule JSONRPC2.Clients.WebSocket do
   end
 
   defp handle_data(data, state) do
-    case Response.deserialize_response(data, Jason) do
+    case Response.deserialize_response(data) do
       {:ok, {nil, result}} ->
         _ =
           Logger.error([

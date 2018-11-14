@@ -49,6 +49,8 @@ defmodule JSONRPC2 do
   end
 
   defp get_ipc_child(%{enabled: true, path: path}) do
+    dirname = Path.dirname(path)
+    :ok = File.mkdir_p(dirname)
     _ = File.rm(path)
     TCP.child_spec(SpecHandler, 0, transport_opts: [{:ifaddr, {:local, path}}])
   end

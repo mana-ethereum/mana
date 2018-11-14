@@ -8,24 +8,6 @@ defmodule JSONRPC2.Servers.TCP do
   @default_timeout 1000 * 60 * 60
 
   @doc """
-  Start a server with the given `handler` on `port` with `opts`.
-
-  Available options:
-    * `name` - a unique name that can be used to stop the server later. Defaults to the value of
-      `handler`.
-    * `num_acceptors` - number of acceptor processes to start. Defaults to 100.
-    * `transport` - ranch transport to use. Defaults to `:ranch_tcp`.
-    * `transport_opts` - ranch transport options. For `:ranch_tcp`, see
-      [here](http://ninenines.eu/docs/en/ranch/1.2/manual/ranch_tcp/).
-    * `timeout` - disconnect after this amount of milliseconds without a packet from a client.
-      Defaults to 1 hour.
-  """
-  @spec start_listener(module, :inet.port_number(), Keyword.t()) :: {:ok, pid}
-  def start_listener(handler, port, opts \\ []) do
-    apply(:ranch, :start_listener, ranch_args(handler, port, opts))
-  end
-
-  @doc """
   Returns a supervisor child spec for the given `handler` on `port` with `opts`.
 
   Allows you to embed a server directly in your app's supervision tree, rather

@@ -26,14 +26,13 @@ defmodule JSONRPC2.Clients.HTTP do
         http_method \\ :post,
         hackney_opts \\ []
       ) do
-    serializer = Jason
-    {:ok, payload} = Request.serialized_request({method, params, 0}, serializer)
+    {:ok, payload} = Request.serialized_request({method, params, 0})
     response = :hackney.request(http_method, url, headers, payload, hackney_opts)
 
     with(
       {:ok, 200, _headers, body_ref} <- response,
       {:ok, body} <- :hackney.body(body_ref),
-      {:ok, {_, result}} <- Response.deserialize_response(body, serializer)
+      {:ok, {_, result}} <- Response.deserialize_response(body)
     ) do
       result
     else
@@ -66,8 +65,8 @@ defmodule JSONRPC2.Clients.HTTP do
         http_method \\ :post,
         hackney_opts \\ []
       ) do
-    serializer = Jason
-    {:ok, payload} = Request.serialized_request({method, params}, serializer)
+
+    {:ok, payload} = Request.serialized_request({method, params})
 
     case :hackney.request(http_method, url, headers, payload, hackney_opts) do
       {:ok, 200, _headers, _body_ref} -> :ok

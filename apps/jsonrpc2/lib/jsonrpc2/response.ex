@@ -10,9 +10,9 @@ defmodule JSONRPC2.Response do
   @doc """
   Deserialize the given `response` using `serializer`.
   """
-  @spec deserialize_response(String.t(), module) :: {:ok, id_and_response} | {:error, any}
-  def deserialize_response(response, serializer) do
-    case serializer.decode(response) do
+  @spec deserialize_response(String.t()) :: {:ok, id_and_response} | {:error, any}
+  def deserialize_response(response) do
+    case Jason.decode(response) do
       {:ok, response} -> id_and_response(response)
       {:error, error} -> {:error, error}
       {:error, error, _} -> {:error, error}

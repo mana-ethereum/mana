@@ -1,23 +1,11 @@
 defmodule JSONRPC2.Clients.TCP.Protocol do
-  @moduledoc false
-
-  if Code.ensure_loaded?(:shackle_client) do
-    @behaviour :shackle_client
-  end
-
+  use GenServer
   require Logger
   alias JSONRPC2.Request
   alias JSONRPC2.Response
-
-  def init(_) do
-    {:ok, %{request_counter: 0}}
-  end
-
-  def setup(_socket, state) do
-    {:ok, state}
-  end
-
-  def handle_request({:call, method, params, string_id}, state) do
+  @moduledoc false
+  # API
+  def handle_call({:call, method, params, string_id}, _from, state) do
     external_request_id_int = external_request_id(state.request_counter)
 
     external_request_id =
@@ -29,20 +17,70 @@ defmodule JSONRPC2.Clients.TCP.Protocol do
 
     {:ok, data} =
       {method, params, external_request_id}
-      |> Request.serialized_request(Jason)
+      |> Request.serialized_request
 
     new_state = %{state | request_counter: external_request_id_int + 1}
-    {:ok, external_request_id, [data, "\r\n"], new_state}
+
+    response =
+      state.socket
+      |> :gen_tcp.send([data, "\r\n"])
+      |> receive_response(state.socket, 55_000)
+      |> handle_data
+
+    {:reply, response, new_state}
   end
 
-  def handle_request({:notify, method, params}, state) do
-    {:ok, data} = Request.serialized_request({method, params}, Jason)
+  # API
 
-    {:ok, nil, [data, "\r\n"], state}
+  def start_link(path) do
+    GenServer.start_link(__MODULE__, path)
   end
 
-  def handle_data(data, state) do
-    case Response.deserialize_response(data, Jason) do
+  def init(path) do
+    opts = [:binary, active: false, reuseaddr: true]
+    response = :gen_tcp.connect({:local, path}, 0, opts)
+
+    case response do
+      {:ok, socket} -> {:ok, %{request_counter: 0, socket: socket}}
+      {:error, reason} -> {:error, reason}
+    end
+  end
+
+  def receive_response(data, socket, timeout, result \\ <<>>)
+
+  def receive_response({:error, reason}, _socket, _timeout, _result) do
+    {:error, reason}
+  end
+
+  def receive_response(:ok, socket, timeout, result) do
+    with {:ok, response} <- :gen_tcp.recv(socket, 0, timeout) do
+      new_result = result <> response
+
+      if String.ends_with?(response, "\n") do
+        {:ok, new_result}
+      else
+        receive_response(:ok, socket, timeout, new_result)
+      end
+    end
+  end
+
+  def receive_response(data, _socket, _timeout, _result) do
+    {:error, data}
+  end
+
+  defp handle_data({:error, data}) do
+    _ =
+      Logger.error([
+        inspect(__MODULE__),
+        " received invalid response, error: ",
+        inspect(data)
+      ])
+
+    {:ok, []}
+  end
+
+  defp handle_data({:ok, data}) do
+    case Response.deserialize_response(data) do
       {:ok, {nil, result}} ->
         _ =
           Logger.error([
@@ -51,10 +89,10 @@ defmodule JSONRPC2.Clients.TCP.Protocol do
             inspect(result)
           ])
 
-        {:ok, [], state}
+        {:ok, []}
 
       {:ok, {id, result}} ->
-        {:ok, [{id, result}], state}
+        {:ok, [{id, result}]}
 
       {:error, error} ->
         _ =
@@ -64,12 +102,8 @@ defmodule JSONRPC2.Clients.TCP.Protocol do
             inspect(error)
           ])
 
-        {:ok, [], state}
+        {:ok, []}
     end
-  end
-
-  def terminate(_state) do
-    :ok
   end
 
   defp external_request_id(request_counter) do

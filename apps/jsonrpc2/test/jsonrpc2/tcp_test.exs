@@ -1,50 +1,44 @@
 defmodule JSONRPC2.TCPTest do
-  use ExUnit.Case, async: true
-  alias JSONRPC2.Clients.TCP
+  use ExUnit.Case, async: false
+  alias JSONRPC2.Clients.TCP, as: TCPClient
   alias JSONRPC2.Servers.TCP, as: TCPServer
   alias JSONRPC2.SpecHandlerTest
 
-  setup do
-    port = :rand.uniform(65_535 - 1025) + 1025
+  setup_all do
+    ipc = Application.get_env(:jsonrpc2, :ipc)
+    dirname = Path.dirname(ipc.path)
+    :ok = File.mkdir_p(dirname)
+    _ = File.rm(ipc.path)
 
-    {:ok, pid} = TCPServer.start_listener(SpecHandlerTest, port, name: __MODULE__)
+    {:ok, pid} =
+      Supervisor.start_link(
+        [
+          TCPServer.child_spec(SpecHandlerTest, 0, transport_opts: [{:ifaddr, {:local, ipc.path}}])
+        ],
+        strategy: :one_for_one
+      )
 
-    :ok = TCP.start("localhost", port, __MODULE__)
+    {:ok, client_pid} = TCPClient.start(ipc.path)
 
     on_exit(fn ->
       ref = Process.monitor(pid)
-      TCP.stop(__MODULE__)
-      TCPServer.stop(__MODULE__)
+      _ = Process.exit(pid, :kill)
 
       receive do
-        {:DOWN, ^ref, :process, ^pid, :shutdown} -> :ok
+        {:DOWN, ^ref, :process, _, _} -> :ok
       end
     end)
+
+    {:ok, %{client_pid: client_pid}}
   end
 
-  test "call" do
-    assert TCP.call(__MODULE__, "subtract", [2, 1]) == {:ok, 1}
+  test "call", %{client_pid: client_pid} do
+    assert TCPClient.call(client_pid, "subtract", [2, 1]) == {:ok, 1}
 
-    assert TCP.call(__MODULE__, "subtract", [2, 1], true) == {:ok, 1}
+    assert TCPClient.call(client_pid, "subtract", [2, 1], true) == {:ok, 1}
 
-    assert TCP.call(__MODULE__, "subtract", [2, 1], string_id: true) == {:ok, 1}
+    assert TCPClient.call(client_pid, "subtract", [2, 1], string_id: true) == {:ok, 1}
 
-    assert TCP.call(__MODULE__, "subtract", [2, 1], timeout: 2_000) == {:ok, 1}
-  end
-
-  test "cast" do
-    {:ok, request_id} = TCP.cast(__MODULE__, "subtract", [2, 1], timeout: 1_000)
-    assert TCP.receive_response(request_id) == {:ok, 1}
-
-    {:ok, request_id} = TCP.cast(__MODULE__, "subtract", [2, 1], true)
-    assert TCP.receive_response(request_id) == {:ok, 1}
-
-    {:ok, request_id} = TCP.cast(__MODULE__, "subtract", [2, 1], string_id: true, timeout: 2_000)
-
-    assert TCP.receive_response(request_id) == {:ok, 1}
-  end
-
-  test "notify" do
-    {:ok, _request_id} = TCP.notify(__MODULE__, "subtract", [2, 1])
+    assert TCPClient.call(client_pid, "subtract", [2, 1], timeout: 2_000) == {:ok, 1}
   end
 end
