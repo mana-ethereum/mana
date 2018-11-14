@@ -157,18 +157,6 @@ defmodule JSONRPC2.Server.Handler do
           Kernel.reraise(other_e, stacktrace)
       end
   catch
-    :throw, error when error in @throwable_errors ->
-      standard_error_response(error, id)
-
-    :throw, {error, data} when error in @throwable_errors ->
-      standard_error_response(error, data, id)
-
-    :throw, {:jsonrpc2, code, message} when is_integer(code) and is_binary(message) ->
-      error_response(code, message, id)
-
-    :throw, {:jsonrpc2, code, message, data} when is_integer(code) and is_binary(message) ->
-      error_response(code, message, data, id)
-
     kind, payload ->
       stacktrace = System.stacktrace()
       :ok = log_error(module, method, params, kind, payload, stacktrace)
@@ -191,6 +179,28 @@ defmodule JSONRPC2.Server.Handler do
       ":\n\n",
       Exception.format(kind, payload, stacktrace)
     ])
+  end
+
+  defp result_response({:error, error}, id) when error in @throwable_errors do
+    standard_error_response(error, id)
+  end
+
+  defp result_response({:error, {error, data}}, id) when error in @throwable_errors do
+    standard_error_response(error, data, id)
+  end
+
+  defp result_response({:error, {:jsonrpc2, code, message}}, id)
+       when is_integer(code) and is_binary(message) do
+    error_response(code, message, id)
+  end
+
+  defp result_response({:error, {:jsonrpc2, code, message, data}}, id)
+       when is_integer(code) and is_binary(message) do
+    error_response(code, message, data, id)
+  end
+
+  defp result_response({:error, other}, _id) do
+    throw(other)
   end
 
   defp result_response(_result, :undefined) do
