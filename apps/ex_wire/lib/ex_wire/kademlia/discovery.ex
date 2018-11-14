@@ -16,13 +16,14 @@ defmodule ExWire.Kademlia.Discovery do
 
     this_round_nodes = RoutingTable.discovery_nodes(table)
 
-    if Config.perform_sync?() do
-      for node <- this_round_nodes do
-        node
-        |> Peer.from_node()
-        |> PeerSupervisor.new_peer()
+    _ =
+      if Config.perform_sync?() do
+        for node <- this_round_nodes do
+          node
+          |> Peer.from_node()
+          |> PeerSupervisor.new_peer()
+        end
       end
-    end
 
     Enum.each(this_round_nodes, fn node ->
       find_neighbours(table, node)

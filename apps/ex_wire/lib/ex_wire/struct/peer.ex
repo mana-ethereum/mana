@@ -173,7 +173,7 @@ defmodule ExWire.Struct.Peer do
   @spec from_node(Node.t()) :: t()
   def from_node(kademlia_node) do
     __MODULE__.new(
-      List.to_tuple(kademlia_node.endpoint.ip),
+      Enum.join(List.to_tuple(kademlia_node.endpoint.ip), "."),
       kademlia_node.endpoint.tcp_port,
       Crypto.bin_to_hex(kademlia_node.public_key)
     )

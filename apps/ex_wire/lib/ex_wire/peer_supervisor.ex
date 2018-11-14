@@ -34,15 +34,17 @@ defmodule ExWire.PeerSupervisor do
     peer_count = connected_peer_count()
 
     if peer_count < @max_peers do
-      Logger.debug(fn ->
-        "[PeerSup] Connecting to peer #{peer} (#{peer_count} of #{@max_peers} peers)"
-      end)
+      :ok =
+        Logger.debug(fn ->
+          "[PeerSup] Connecting to peer #{peer} (#{peer_count} of #{@max_peers} peers)"
+        end)
 
       spec = {Server, {:outbound, peer, [{:server, ExWire.Sync}]}}
 
       {:ok, _pid} = DynamicSupervisor.start_child(@name, spec)
     else
-      Logger.debug(fn -> "[PeerSup] Not connecting due to max peers (#{@max_peers}) reached" end)
+      :ok =
+        Logger.debug(fn -> "[PeerSup] Not connecting due to max peers (#{@max_peers}) reached" end)
     end
   end
 
@@ -108,13 +110,14 @@ defmodule ExWire.PeerSupervisor do
 
   @impl true
   def init(peer_enode_urls) do
-    Task.start_link(fn ->
-      for peer_enode_url <- peer_enode_urls do
-        {:ok, peer} = ExWire.Struct.Peer.from_uri(peer_enode_url)
+    _ =
+      Task.start_link(fn ->
+        for peer_enode_url <- peer_enode_urls do
+          {:ok, peer} = ExWire.Struct.Peer.from_uri(peer_enode_url)
 
-        new_peer(peer)
-      end
-    end)
+          new_peer(peer)
+        end
+      end)
 
     {:ok, _} = DynamicSupervisor.init(strategy: :one_for_one)
   end
