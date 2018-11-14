@@ -38,18 +38,23 @@ defmodule EVM.Operation.EnvironmentalInformation do
   def balance([address], %{exec_env: exec_env, machine_state: machine_state}) do
     wrapped_address = Helpers.wrap_address(address)
 
+    {updated_repo, balance} =
+      AccountRepo.repo(exec_env.account_repo).account_balance(
+        exec_env.account_repo,
+        wrapped_address
+      )
+
+    updated_exec_env = %{exec_env | account_repo: updated_repo}
+
     balance =
-      case AccountRepo.repo(exec_env.account_repo).get_account_balance(
-             exec_env.account_repo,
-             wrapped_address
-           ) do
+      case balance do
         nil -> 0
         balance -> balance
       end
 
     machine_state = %{machine_state | stack: Stack.push(machine_state.stack, balance)}
 
-    %{machine_state: machine_state}
+    %{machine_state: machine_state, exec_env: updated_exec_env}
   end
 
   @doc """
@@ -246,11 +251,13 @@ defmodule EVM.Operation.EnvironmentalInformation do
   def extcodesize([address], %{exec_env: exec_env, machine_state: machine_state}) do
     wrapped_address = Helpers.wrap_address(address)
 
-    account_code =
-      AccountRepo.repo(exec_env.account_repo).get_account_code(
+    {updated_repo, account_code} =
+      AccountRepo.repo(exec_env.account_repo).account_code(
         exec_env.account_repo,
         wrapped_address
       )
+
+    updated_exec_env = %{exec_env | account_repo: updated_repo}
 
     extcodesize =
       if account_code do
@@ -261,7 +268,7 @@ defmodule EVM.Operation.EnvironmentalInformation do
 
     machine_state = %{machine_state | stack: Stack.push(machine_state.stack, extcodesize)}
 
-    %{machine_state: machine_state}
+    %{machine_state: machine_state, exec_env: updated_exec_env}
   end
 
   @doc """
@@ -274,19 +281,16 @@ defmodule EVM.Operation.EnvironmentalInformation do
       iex> code = <<54>>
       iex> account_map = %{<<0::160>> => %{code: code}}
       iex> account_repo = EVM.Mock.MockAccountRepo.new(account_map)
-      iex> EVM.Operation.EnvironmentalInformation.extcodecopy([<<0::160>>, 0, 0, 1], %{exec_env: %EVM.ExecEnv{account_repo: account_repo}, machine_state: %EVM.MachineState{}, state: state})
-      %{
-        machine_state:
-          %EVM.MachineState{
-            active_words: 1,
-            gas: nil,
-            last_return_data: <<>>,
-            memory: "6",
-            previously_active_words: 0,
-            program_counter: 0,
-            stack: []
-         }
-       }
+      iex> EVM.Operation.EnvironmentalInformation.extcodecopy([<<0::160>>, 0, 0, 1], %{exec_env: %EVM.ExecEnv{account_repo: account_repo}, machine_state: %EVM.MachineState{}, state: state})[:machine_state]
+      %EVM.MachineState{
+         active_words: 1,
+         gas: nil,
+         last_return_data: <<>>,
+         memory: "6",
+         previously_active_words: 0,
+         program_counter: 0,
+         stack: []
+      }
   """
   @spec extcodecopy(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def extcodecopy([address, mem_offset, code_offset, size], %{
@@ -295,33 +299,40 @@ defmodule EVM.Operation.EnvironmentalInformation do
       }) do
     wrapped_address = Helpers.wrap_address(address)
 
-    account_code =
-      AccountRepo.repo(exec_env.account_repo).get_account_code(
+    {updated_repo, account_code} =
+      AccountRepo.repo(exec_env.account_repo).account_code(
         exec_env.account_repo,
         wrapped_address
       )
+
+    updated_exec_env = %{exec_env | account_repo: updated_repo}
 
     data = Memory.read_zeroed_memory(account_code, code_offset, size)
     machine_state = Memory.write(machine_state, mem_offset, data)
 
-    %{machine_state: machine_state}
+    %{machine_state: machine_state, exec_env: updated_exec_env}
   end
 
   @spec extcodehash(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
-  def extcodehash([address], %{exec_env: exec_env}) do
+  def extcodehash([address], %{exec_env: exec_env, machine_state: machine_state}) do
     wrapped_address = Address.new(address)
 
-    hash =
-      AccountRepo.repo(exec_env.account_repo).get_account_code_hash(
+    {updated_repo, hash} =
+      AccountRepo.repo(exec_env.account_repo).account_code_hash(
         exec_env.account_repo,
         wrapped_address
       )
 
-    if is_nil(hash) do
-      0
-    else
-      hash
-    end
+    updated_exec_env = %{exec_env | account_repo: updated_repo}
+
+    stack_value =
+      if is_nil(hash) do
+        0
+      else
+        hash
+      end
+
+    %{exec_env: updated_exec_env, stack: Stack.push(machine_state.stack, stack_value)}
   end
 
   @doc """

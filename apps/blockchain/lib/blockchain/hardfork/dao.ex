@@ -13,8 +13,9 @@ defmodule Blockchain.Hardfork.Dao do
 
   defp transfer_all_balances(accounts, to: to, repo: repo) do
     Enum.reduce(accounts, repo, fn account, current_repo ->
-      balance = Account.Repo.get_account_balance(repo, account)
-      Account.Repo.transfer(current_repo, account, to, balance)
+      {updated_repo, balance} = Account.Repo.account_balance(current_repo, account)
+
+      Account.Repo.transfer(updated_repo, account, to, balance)
     end)
   end
 

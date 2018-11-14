@@ -97,8 +97,8 @@ defmodule EVM.MessageCall do
   defp sufficient_funds?(message_call) do
     account_repo = message_call.current_exec_env.account_repo
 
-    sender_balance =
-      AccountRepo.repo(account_repo).get_account_balance(
+    {_repo, sender_balance} =
+      AccountRepo.repo(account_repo).account_balance(
         account_repo,
         message_call.sender
       )
@@ -246,8 +246,8 @@ defmodule EVM.MessageCall do
   defp prepare_call_execution_env(message_call) do
     account_repo = message_call.current_exec_env.account_repo
 
-    machine_code =
-      AccountRepo.repo(account_repo).get_account_code(
+    {_repo, machine_code} =
+      AccountRepo.repo(account_repo).account_code(
         account_repo,
         message_call.code_owner
       )

@@ -10,9 +10,9 @@ defmodule Blockchain.Account.Repo.Cache do
         }
   @type maybe_code :: EVM.MachineCode.t() | nil
   @type maybe_account :: Account.t() | nil
-  @type account_code_tuple :: {maybe_account, maybe_code}
+  @type account_code_tuple :: {:dirty | :clean, maybe_account, maybe_code}
   @type storage_cache :: %{Address.t() => key_cache()}
-  @type cached_account_info :: Account.t() | account_code_tuple | nil
+  @type cached_account_info :: account_code_tuple | nil
   @type accounts_cache :: %{Address.t() => cached_account_info}
   @type t :: %__MODULE__{
           storage_cache: storage_cache(),
@@ -123,7 +123,7 @@ defmodule Blockchain.Account.Repo.Cache do
     end)
   end
 
-  defp commit_account_cache({address, {account, code}}, state) do
+  defp commit_account_cache({address, {:dirty, account, code}}, state) do
     if is_nil(account) do
       Account.del_account(state, address)
     else
@@ -132,6 +132,8 @@ defmodule Blockchain.Account.Repo.Cache do
       if code, do: Account.put_code(state_with_account, address, code), else: state_with_account
     end
   end
+
+  defp commit_account_cache({_address, {:clean, _account, _code}}, state), do: state
 
   defp commit_account_storage_cache({address, account_cache}, state) do
     account_cache

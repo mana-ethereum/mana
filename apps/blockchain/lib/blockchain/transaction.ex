@@ -391,11 +391,12 @@ defmodule Blockchain.Transaction do
 
   ## Examples
 
-      iex> MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
+      iex> repo = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
       ...> |> Blockchain.Account.Repo.new()
       ...> |> Blockchain.Account.Repo.put_account(<<0x01::160>>, %Blockchain.Account{balance: 1000, nonce: 7})
       ...> |> Blockchain.Transaction.begin_transaction(<<0x01::160>>, %Blockchain.Transaction{gas_price: 3, gas_limit: 100})
-      ...> |> Blockchain.Account.Repo.account(<<0x01::160>>)
+      iex> {_repo, account} = Blockchain.Account.Repo.account(repo, <<0x01::160>>)
+      iex> account
       %Blockchain.Account{balance: 700, nonce: 8}
   """
   @spec begin_transaction(Repo.t(), EVM.address(), t) :: Repo.t()
@@ -421,9 +422,11 @@ defmodule Blockchain.Transaction do
       ...>   |> Blockchain.Account.put_account(<<0x02::160>>, %Blockchain.Account{balance: 22})
       ...>   |> Blockchain.Account.Repo.new()
       ...>   |> Blockchain.Transaction.pay_and_refund_gas(<<0x01::160>>, trx, 5, %Block.Header{beneficiary: <<0x02::160>>})
-      ...>   Blockchain.Account.Repo.account(account_repo, <<0x01::160>>)
+      iex> {_repo, account} = Blockchain.Account.Repo.account(account_repo, <<0x01::160>>)
+      iex> account
       %Blockchain.Account{balance: 61}
-      ...>   Blockchain.Account.Repo.account(account_repo, <<0x02::160>>)
+      iex> {_repo, account} = Blockchain.Account.Repo.account(account_repo, <<0x02::160>>)
+      iex> account
       %Blockchain.Account{balance: 272}
   """
   @spec pay_and_refund_gas(Repo.t(), EVM.address(), t, Gas.t(), Block.Header.t()) :: Repo.t()

@@ -80,15 +80,21 @@ defmodule EVM.MessageCallTest do
     %{exec_env: exec_env} = MessageCall.call(message_call)
     account_repo = exec_env.account_repo
 
-    assert AccountRepo.repo(account_repo).get_account_balance(
-             account_repo,
-             recipient_account.address
-           ) == recipient_account.balance + message_call.value
+    {_repo, recipient_balance} =
+      AccountRepo.repo(account_repo).account_balance(
+        account_repo,
+        recipient_account.address
+      )
 
-    assert AccountRepo.repo(account_repo).get_account_balance(
-             account_repo,
-             current_account.address
-           ) == current_account.balance - message_call.value
+    assert recipient_balance == recipient_account.balance + message_call.value
+
+    {_repo, current_account_balance} =
+      AccountRepo.repo(account_repo).account_balance(
+        account_repo,
+        current_account.address
+      )
+
+    assert current_account_balance == current_account.balance - message_call.value
   end
 
   test "fails if stack is too deep, only returning the machine state" do

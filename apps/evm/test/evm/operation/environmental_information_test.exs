@@ -87,8 +87,9 @@ defmodule EVM.Operation.EnvironmentalInformationTest do
       vm_map = %{exec_env: exec_env, machine_state: machine_state}
 
       result = EVM.Operation.EnvironmentalInformation.extcodecopy(params, vm_map)
+      expected_machine_state = result[:machine_state]
 
-      assert result == %{machine_state: machine_state}
+      assert expected_machine_state == machine_state
     end
   end
 end

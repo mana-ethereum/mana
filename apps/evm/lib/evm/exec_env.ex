@@ -90,19 +90,33 @@ defmodule EVM.ExecEnv do
     Map.put(exec_env, :account_repo, account_repo)
   end
 
-  @spec get_storage(t(), integer()) :: atom() | {:ok, integer()}
-  def get_storage(%{account_repo: account_repo, address: address}, key) do
-    AccountRepo.repo(account_repo).get_storage(account_repo, address, key)
+  @spec storage(t(), integer()) :: {t(), atom() | {:ok, integer()}}
+  def storage(exec_env = %{account_repo: account_repo, address: address}, key) do
+    {updated_repo, value} = AccountRepo.repo(account_repo).storage(account_repo, address, key)
+
+    updated_exec_env = %{exec_env | account_repo: updated_repo}
+
+    {updated_exec_env, value}
   end
 
-  @spec get_initial_storage(t(), integer()) :: atom() | {:ok, integer()}
-  def get_initial_storage(%{account_repo: account_repo, address: address}, key) do
-    AccountRepo.repo(account_repo).get_initial_storage(account_repo, address, key)
+  @spec initial_storage(t(), integer()) :: {t(), atom() | {:ok, integer()}}
+  def initial_storage(exec_env = %{account_repo: account_repo, address: address}, key) do
+    {updated_repo, value} =
+      AccountRepo.repo(account_repo).initial_storage(account_repo, address, key)
+
+    updated_exec_env = %{exec_env | account_repo: updated_repo}
+
+    {updated_exec_env, value}
   end
 
-  @spec get_balance(t()) :: EVM.Wei.t()
-  def get_balance(%{account_repo: account_repo, address: address}) do
-    AccountRepo.repo(account_repo).get_account_balance(account_repo, address)
+  @spec balance(t()) :: {t(), EVM.Wei.t()}
+  def balance(exec_env = %{account_repo: account_repo, address: address}) do
+    {updated_repo, balance} =
+      AccountRepo.repo(account_repo).account_balance(account_repo, address)
+
+    updated_exec_env = %{exec_env | account_repo: updated_repo}
+
+    {updated_exec_env, balance}
   end
 
   @spec remove_storage(t(), integer()) :: t()
@@ -123,9 +137,12 @@ defmodule EVM.ExecEnv do
   def transfer_balance_to(exec_env, to) do
     %{account_repo: account_repo, address: address} = exec_env
 
-    balance = AccountRepo.repo(account_repo).get_account_balance(account_repo, address)
+    {updated_repo, balance} =
+      AccountRepo.repo(account_repo).account_balance(account_repo, address)
 
-    transfer_wei_to(exec_env, to, balance)
+    updated_exec_env = %{exec_env | account_repo: updated_repo}
+
+    transfer_wei_to(updated_exec_env, to, balance)
   end
 
   @spec transfer_wei_to(t(), EVM.Address.t(), integer()) :: t()
@@ -141,22 +158,33 @@ defmodule EVM.ExecEnv do
     %{exec_env | account_repo: account_repo}
   end
 
-  @spec non_existent_account?(t(), EVM.Address.t()) :: boolean()
+  @spec non_existent_account?(t(), EVM.Address.t()) :: {t(), boolean()}
   def non_existent_account?(exec_env, address) do
-    !AccountRepo.repo(exec_env.account_repo).account_exists?(
-      exec_env.account_repo,
-      address
-    )
+    {updated_repo, account_exists} =
+      AccountRepo.repo(exec_env.account_repo).account_exists?(
+        exec_env.account_repo,
+        address
+      )
+
+    updated_exec_env = %{exec_env | account_repo: updated_repo}
+
+    {updated_exec_env, !account_exists}
   end
 
-  @spec non_existent_or_empty_account?(t(), EVM.Address.t()) :: boolean()
+  @spec non_existent_or_empty_account?(t(), EVM.Address.t()) :: {t(), boolean()}
   def non_existent_or_empty_account?(exec_env, address) do
-    is_empty_account =
+    {updated_repo, is_empty_account} =
       AccountRepo.repo(exec_env.account_repo).empty_account?(
         exec_env.account_repo,
         address
       )
 
-    is_empty_account || non_existent_account?(exec_env, address)
+    updated_exec_env = %{exec_env | account_repo: updated_repo}
+
+    if is_empty_account do
+      {updated_exec_env, true}
+    else
+      non_existent_account?(updated_exec_env, address)
+    end
   end
 end

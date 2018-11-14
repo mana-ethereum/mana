@@ -21,11 +21,14 @@ defmodule EVM.Operation.System do
   """
   @spec create(Operation.stack_args(), Operation.op_result()) :: Operation.op_result()
   def create([value, input_offset, input_size], vm_map = %{exec_env: exec_env}) do
-    nonce =
-      AccountRepo.repo(exec_env.account_repo).get_account_nonce(
+    {updated_repo, nonce} =
+      AccountRepo.repo(exec_env.account_repo).account_nonce(
         exec_env.account_repo,
         exec_env.address
       )
+
+    updated_exec_env = %{exec_env | account_repo: updated_repo}
+    vm_map = %{vm_map | exec_env: updated_exec_env}
 
     new_account_address = Address.new(exec_env.address, nonce)
 
@@ -267,11 +270,13 @@ defmodule EVM.Operation.System do
        ) do
     {data, machine_state} = EVM.Memory.read(machine_state, input_offset, input_size)
 
-    account_balance =
-      AccountRepo.repo(exec_env.account_repo).get_account_balance(
+    {updated_repo, account_balance} =
+      AccountRepo.repo(exec_env.account_repo).account_balance(
         exec_env.account_repo,
         exec_env.address
       )
+
+    exec_env = %{exec_env | account_repo: updated_repo}
 
     block_header = BlockHeaderInfo.block_header(exec_env.block_header_info)
 

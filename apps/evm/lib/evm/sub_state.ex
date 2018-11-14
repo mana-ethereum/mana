@@ -82,14 +82,15 @@ defmodule EVM.SubState do
       ...> } |> EVM.ExecEnv.put_storage(5, 4)
       iex> machine_state = %EVM.MachineState{gas: 10, stack: [5 , 0], program_counter: 0}
       iex> sub_state = %EVM.SubState{}
-      iex> EVM.SubState.add_refund(machine_state, sub_state, exec_env)
+      iex> {_exec_env, sub_state} = EVM.SubState.add_refund(machine_state, sub_state, exec_env)
+      iex> sub_state
       %EVM.SubState{refund: 15000}
   """
-  @spec add_refund(MachineState.t(), t(), ExecEnv.t()) :: t()
+  @spec add_refund(MachineState.t(), t(), ExecEnv.t()) :: {ExecEnv.t(), t()}
   def add_refund(machine_state, sub_state, exec_env) do
-    refund = Refunds.refund(machine_state, sub_state, exec_env)
+    {updated_exec_env, refund} = Refunds.refund(machine_state, sub_state, exec_env)
 
-    %{sub_state | refund: sub_state.refund + refund}
+    {updated_exec_env, %{sub_state | refund: sub_state.refund + refund}}
   end
 
   @doc """
