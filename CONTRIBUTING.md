@@ -2,7 +2,7 @@
 
 Thank your for contributing to this project! We welcome collaborators and expect users to follow our [code of conduct](CODE_OF_CONDUCT.md) when submitting code or comments.
 
-1. Fork the repo (https://github.com/poanetwork/mana/fork).
+1. Fork the repo (https://github.com/mana-ethereum/mana/fork).
 2. Create your feature branch (`git checkout -b my-new-feature`).
 3. Write tests that cover your work.
 4. Ensure CI rules are satisfied. 
@@ -21,12 +21,12 @@ Thank your for contributing to this project! We welcome collaborators and expect
 
 
 ### Issues
-Creating and discussing [Issues](https://github.com/poanetwork/mana/issues) provides significant value to the project. If you find a bug you can report it in an Issue.     
+Creating and discussing [Issues](https://github.com/mana-ethereum/mana/issues) provides significant value to the project. If you find a bug you can report it in an Issue.     
 
 ### Pull Requests (PR)
 
 Before submitting a PR:
-1. Add a test for the new or updated functionality. For tests that are simple and would make sense in documentation add a doctest. For more complicated tests add a regular test. If you're not sure which type to add ask in [Gitter](https://gitter.im/poanetwork/mana).
+1. Add a test for the new or updated functionality. For tests that are simple and would make sense in documentation add a doctest. For more complicated tests add a regular test. If you're not sure which type to add ask in [Gitter](https://gitter.im/mana-ethereum/mana).
 2. Run `mix format` to format your code.
 3. Run `mix credo` and fix any errors and warnings.
 

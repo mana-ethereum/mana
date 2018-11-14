@@ -37,24 +37,6 @@ jobs:
           no_output_timeout: 2400
 
       - save_cache:
-          key: v10-env-cache-{{ arch }}-{{ .Branch }}
-          paths:
-            - $HOME/.cargo
-            - $HOME/.rustup
-
-      - save_cache:
-          key: v10-env-cache-{{ .Branch }}
-          paths:
-            - $HOME/.cargo
-            - $HOME/.rustup
-
-      - save_cache:
-          key: v10-env-cache
-          paths:
-            - $HOME/.cargo
-            - $HOME/.rustup
-
-      - save_cache:
           key: v10-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
           paths: "deps"
       - save_cache:
@@ -419,8 +401,6 @@ jobs:
     steps:
       - attach_workspace:
           at: .
-      - run: curl https://sh.rustup.rs -sSf | sh -s -- -y
-      - run: echo 'export PATH=~/.cargo/bin:$PATH' >> $BASH_ENV
 
       - run: mix local.hex --force
       - run: mix local.rebar --force
@@ -525,8 +505,6 @@ jobs:
     steps:
       - attach_workspace:
            at: .
-      - run: curl https://sh.rustup.rs -sSf | sh -s -- -y
-      - run: echo 'export PATH=~/.cargo/bin:$PATH' >> $BASH_ENV
       - run: mix local.hex --force
       - run: mix local.rebar --force
       - run: mix compile
