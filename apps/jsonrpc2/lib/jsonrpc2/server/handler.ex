@@ -34,6 +34,13 @@ defmodule JSONRPC2.Server.Handler do
 
   require Logger
 
+  @parse_error {-32_700, "Parse error"}
+  @invalid_request {-32_600, "Invalid Request"}
+  @method_not_found {-32_601, "Method not found"}
+  @invalid_params {-32_602, "Invalid params"}
+  @internal_error {-32_603, "Internal error"}
+  @server_error {-32_000, "Server error"}
+
   @doc """
   Respond to a request for `method` with `params`.
 
@@ -248,12 +255,12 @@ defmodule JSONRPC2.Server.Handler do
     }
   end
 
-  defp error_code_and_message(:parse_error), do: {-32_700, "Parse error"}
-  defp error_code_and_message(:invalid_request), do: {-32_600, "Invalid Request"}
-  defp error_code_and_message(:method_not_found), do: {-32_601, "Method not found"}
-  defp error_code_and_message(:invalid_params), do: {-32_602, "Invalid params"}
-  defp error_code_and_message(:internal_error), do: {-32_603, "Internal error"}
-  defp error_code_and_message(:server_error), do: {-32_000, "Server error"}
+  defp error_code_and_message(:parse_error), do: @parse_error
+  defp error_code_and_message(:invalid_request), do: @invalid_request
+  defp error_code_and_message(:method_not_found), do: @method_not_found
+  defp error_code_and_message(:invalid_params), do: @invalid_params
+  defp error_code_and_message(:internal_error), do: @internal_error
+  defp error_code_and_message(:server_error), do: @server_error
 
   defp encode_response(:noreply, _module, _json) do
     :noreply
