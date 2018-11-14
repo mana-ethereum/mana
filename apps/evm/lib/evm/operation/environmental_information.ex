@@ -281,19 +281,16 @@ defmodule EVM.Operation.EnvironmentalInformation do
       iex> code = <<54>>
       iex> account_map = %{<<0::160>> => %{code: code}}
       iex> account_repo = EVM.Mock.MockAccountRepo.new(account_map)
-      iex> EVM.Operation.EnvironmentalInformation.extcodecopy([<<0::160>>, 0, 0, 1], %{exec_env: %EVM.ExecEnv{account_repo: account_repo}, machine_state: %EVM.MachineState{}, state: state})
-      %{
-        machine_state:
-          %EVM.MachineState{
-            active_words: 1,
-            gas: nil,
-            last_return_data: <<>>,
-            memory: "6",
-            previously_active_words: 0,
-            program_counter: 0,
-            stack: []
-         }
-       }
+      iex> EVM.Operation.EnvironmentalInformation.extcodecopy([<<0::160>>, 0, 0, 1], %{exec_env: %EVM.ExecEnv{account_repo: account_repo}, machine_state: %EVM.MachineState{}, state: state})[:machine_state]
+      %EVM.MachineState{
+         active_words: 1,
+         gas: nil,
+         last_return_data: <<>>,
+         memory: "6",
+         previously_active_words: 0,
+         program_counter: 0,
+         stack: []
+      }
   """
   @spec extcodecopy(Operation.stack_args(), Operation.vm_map()) :: Operation.op_result()
   def extcodecopy([address, mem_offset, code_offset, size], %{

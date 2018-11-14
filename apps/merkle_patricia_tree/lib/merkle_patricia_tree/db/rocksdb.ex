@@ -20,6 +20,8 @@ defmodule MerklePatriciaTree.DB.RocksDB do
   Retrieves a key from the database.
   """
   @impl true
+  def get(_db_ref, nil), do: :not_found
+
   def get(db_ref, key), do: :rocksdb.get(db_ref, key, [])
 
   @doc """
