@@ -19,7 +19,7 @@ defmodule Mana.MixProject do
       dialyzer: [
         flags: [:underspecs, :unknown, :unmatched_returns],
         ignore_warnings: ".dialyzer.ignore-warnings",
-        plt_add_apps: [:mix, :iex, :ex_unit, :shackle, :ranch, :plug, :hackney, :jason, :websockex, :cowboy]
+        plt_add_apps: [:mix, :iex, :ex_unit, :ranch, :plug, :hackney, :jason, :websockex, :cowboy]
       ],
       deps: deps()
     ]

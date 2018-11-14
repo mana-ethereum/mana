@@ -15,7 +15,6 @@ defmodule JSONRPC2.Response do
     case Jason.decode(response) do
       {:ok, response} -> id_and_response(response)
       {:error, error} -> {:error, error}
-      {:error, error, _} -> {:error, error}
     end
   end
 

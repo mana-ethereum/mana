@@ -65,7 +65,6 @@ defmodule JSONRPC2.Clients.HTTP do
         http_method \\ :post,
         hackney_opts \\ []
       ) do
-
     {:ok, payload} = Request.serialized_request({method, params})
 
     case :hackney.request(http_method, url, headers, payload, hackney_opts) do

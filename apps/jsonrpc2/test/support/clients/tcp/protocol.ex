@@ -17,7 +17,7 @@ defmodule JSONRPC2.Clients.TCP.Protocol do
 
     {:ok, data} =
       {method, params, external_request_id}
-      |> Request.serialized_request
+      |> Request.serialized_request()
 
     new_state = %{state | request_counter: external_request_id_int + 1}
 

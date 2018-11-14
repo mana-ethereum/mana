@@ -2,6 +2,8 @@ defmodule JSONRPC2.Request do
   @moduledoc """
   JSON-RPC 2.0 Request object utilites.
   """
+  alias Jason.EncodeError
+  alias Protocol.UndefinedError
 
   @type request ::
           {JSONRPC2.method(), JSONRPC2.params()}
@@ -10,9 +12,9 @@ defmodule JSONRPC2.Request do
   @doc """
   Returns a serialized `request` using `serializer`.
 
-  See the README for more information on serializers.
   """
-  @spec serialized_request(request) :: {:ok, binary()} | {:error, any}
+  @spec serialized_request(request) ::
+          {:ok, binary()} | {:error, EncodeError.t() | %UndefinedError{}}
   def serialized_request(request) do
     Jason.encode(request(request))
   end

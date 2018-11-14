@@ -6,7 +6,7 @@ defmodule JSONRPC2.WebSocketTest do
   alias JSONRPC2.SpecHandlerTest
 
   setup_all do
-    port = :rand.uniform(65_535 - 1025) + 1025
+    port = 56_753
 
     {:ok, pid} =
       start_supervised(WebSocketHTTP.child_spec(:http, :ws, SpecHandlerTest, port: port))

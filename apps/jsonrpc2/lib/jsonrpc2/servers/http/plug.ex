@@ -23,7 +23,7 @@ defmodule JSONRPC2.Servers.HTTP.Plug do
         plug_parsers_opts: [
           parsers: [:json],
           pass: ["*/*"],
-          json_decoder: Application.get_env(:jsonrpc2, :serializer)
+          json_decoder: Jason
         ]
       ]
   """

@@ -2,11 +2,9 @@ defmodule JSONRPC2 do
   @moduledoc ~S"""
   `JSONRPC2` is an Elixir library for JSON-RPC 2.0.
 
-  It includes request and response utility modules, a transport-agnostic server handler, a
-  line-based TCP server and client, which are based on [Ranch](https://github.com/ninenines/ranch)
-  and [shackle](https://github.com/lpgauth/shackle), respectively, and a JSON-in-the-body HTTP(S)
-  server and client, based on [Plug](https://github.com/elixir-lang/plug) and
-  [hackney](https://github.com/benoitc/hackney), respectively.
+  It includes request and response utility modules, a transport-agnostic server handler, UNIX domain socket server and client (in tests),
+  which are based on [Ranch] and a JSON-in-the-body HTTP(S) and Websockets server and client (in tests),
+  based on [Plug](https://github.com/elixir-lang/plug) and [hackney](https://github.com/benoitc/hackney), respectively.
 
   """
   use Application
@@ -14,9 +12,6 @@ defmodule JSONRPC2 do
   alias JSONRPC2.Servers.TCP
   alias JSONRPC2.Servers.WebSocketHTTP
   alias JSONRPC2.SpecHandler
-
-  @typedoc "A JSON-RPC 2.0 method."
-  @type method :: String.t()
 
   @typedoc "A decoded JSON object."
   @type json ::
@@ -28,6 +23,8 @@ defmodule JSONRPC2 do
           | String.t()
           | [json]
           | %{optional(String.t()) => json}
+  @typedoc "A JSON-RPC 2.0 method."
+  @type method :: String.t()
 
   @typedoc "A JSON-RPC 2.0 params value."
   @type params :: [json] | %{optional(String.t()) => json}
@@ -43,50 +40,58 @@ defmodule JSONRPC2 do
     ipc_child = get_ipc_child(ipc)
     http_ws_child = get_http_ws_child(http, ws)
 
-    Supervisor.start_link(List.flatten([ipc_child | [http_ws_child]]),
+    children =
+      Enum.filter([ipc_child, http_ws_child], fn
+        nil -> false
+        _ -> true
+      end)
+
+    Supervisor.start_link(children,
       strategy: :one_for_one
     )
   end
 
-  defp get_ipc_child(%{enabled: true, path: path}) do
+  @spec get_ipc_child(Keyword.t()) :: Supervisor.child_spec() | nil
+  defp get_ipc_child(enabled: true, path: path) do
     dirname = Path.dirname(path)
     :ok = File.mkdir_p(dirname)
     _ = File.rm(path)
     TCP.child_spec(SpecHandler, 0, transport_opts: [{:ifaddr, {:local, path}}])
   end
 
-  defp get_ipc_child(%{enabled: false, path: _path}), do: []
+  defp get_ipc_child(enabled: false, path: _path), do: nil
 
+  @spec get_http_ws_child(Keyword.t(), Keyword.t()) :: Supervisor.child_spec() | nil
   defp get_http_ws_child(
-         _http_config = %{enabled: true, port: http_port},
-         _ws_config = %{enabled: true, port: ws_port}
+         _http_config = [enabled: true, port: http_port],
+         _ws_config = [enabled: true, port: ws_port]
        ) do
     case http_port do
       ^ws_port ->
         WebSocketHTTP.child_spec(:http, :web_ws, SpecHandler, port: http_port)
 
       _ ->
-        raise ArgumentError, "WS and HTTP ports don't match"
+        raise(ArgumentError, "HTTP port #{http_port} and WS port #{ws_port} don't match")
     end
   end
 
   defp get_http_ws_child(
-         _http_config = %{enabled: true, port: port},
-         _ws_config = %{enabled: false}
+         _http_config = [enabled: true, port: port],
+         _ws_config = [enabled: false, port: _port]
        ) do
     WebSocketHTTP.child_spec(:http, :web, SpecHandler, port: port)
   end
 
   defp get_http_ws_child(
-         _http_config = %{enabled: false},
-         _ws_config = %{enabled: true, port: port}
+         _http_config = [enabled: false, port: _port],
+         _ws_config = [enabled: true, port: port]
        ) do
     WebSocketHTTP.child_spec(:http, :ws, SpecHandler, port: port)
   end
 
   defp get_http_ws_child(
-         _http_config = %{enabled: false},
-         _ws_config = %{enabled: false, port: _port}
+         _http_config = [enabled: false, port: _],
+         _ws_config = [enabled: false, port: _]
        ),
-       do: []
+       do: nil
 end

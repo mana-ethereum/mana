@@ -1,23 +1,14 @@
 defmodule JSONRPC2.HTTPTest do
-  use ExUnit.Case, async: false
+  use ExUnit.Case, async: true
   alias JSONRPC2.Clients.HTTP
   alias JSONRPC2.Servers.WebSocketHTTP
   alias JSONRPC2.SpecHandlerTest
 
   setup_all do
-    port = :rand.uniform(65_535 - 1025) + 1025
+    port = 56_752
 
-    {:ok, pid} =
+    {:ok, _pid} =
       start_supervised(WebSocketHTTP.child_spec(:http, :web, SpecHandlerTest, port: port))
-
-    on_exit(fn ->
-      ref = Process.monitor(pid)
-      _ = Process.exit(pid, :kill)
-
-      receive do
-        {:DOWN, ^ref, :process, _, _} -> :ok
-      end
-    end)
 
     {:ok, %{port: port}}
   end

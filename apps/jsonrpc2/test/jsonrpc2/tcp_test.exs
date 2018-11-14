@@ -1,24 +1,25 @@
 defmodule JSONRPC2.TCPTest do
-  use ExUnit.Case, async: false
+  use ExUnit.Case, async: true
   alias JSONRPC2.Clients.TCP, as: TCPClient
   alias JSONRPC2.Servers.TCP, as: TCPServer
   alias JSONRPC2.SpecHandlerTest
 
   setup_all do
     ipc = Application.get_env(:jsonrpc2, :ipc)
-    dirname = Path.dirname(ipc.path)
+    path = ipc[:path]
+    dirname = Path.dirname(path)
     :ok = File.mkdir_p(dirname)
-    _ = File.rm(ipc.path)
+    _ = File.rm(path)
 
     {:ok, pid} =
       Supervisor.start_link(
         [
-          TCPServer.child_spec(SpecHandlerTest, 0, transport_opts: [{:ifaddr, {:local, ipc.path}}])
+          TCPServer.child_spec(SpecHandlerTest, 0, transport_opts: [{:ifaddr, {:local, path}}])
         ],
         strategy: :one_for_one
       )
 
-    {:ok, client_pid} = TCPClient.start(ipc.path)
+    {:ok, client_pid} = TCPClient.start(path)
 
     on_exit(fn ->
       ref = Process.monitor(pid)

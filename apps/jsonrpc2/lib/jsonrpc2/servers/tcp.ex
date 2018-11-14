@@ -23,7 +23,7 @@ defmodule JSONRPC2.Servers.TCP do
     * `timeout` - disconnect after this amount of milliseconds without a packet from a client.
       Defaults to 1 hour.
   """
-  @spec child_spec(module, :inet.port_number(), Keyword.t()) :: {:ok, pid}
+  @spec child_spec(module, :inet.port_number(), Keyword.t()) :: Supervisor.child_spec()
   def child_spec(handler, port, opts \\ []) do
     apply(:ranch, :child_spec, ranch_args(handler, port, opts))
   end

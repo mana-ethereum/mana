@@ -53,37 +53,31 @@ defmodule JSONRPC2.Server.Handler do
     quote do
       @spec handle(String.t()) :: {:reply, String.t()} | :noreply
       def handle(json) do
-        serializer = Jason
-
-        unquote(__MODULE__).handle(__MODULE__, serializer, json)
+        unquote(__MODULE__).handle(__MODULE__, json)
       end
     end
   end
 
   @doc false
-  def handle(module, serializer, json) when is_binary(json) do
+  def handle(module, json) when is_binary(json) do
     data =
-      case serializer.decode(json) do
+      case Jason.decode(json) do
         {:ok, decoded_request} ->
           collate_for_dispatch(parse(decoded_request), module)
 
         {:error, _error} ->
           standard_error_response(:parse_error, nil)
-
-        {:error, :invalid, _number} ->
-          standard_error_response(:parse_error, nil)
       end
 
     data
-    |> encode_response(module, serializer, json)
+    |> encode_response(module, json)
   end
 
-  def handle(module, serializer, json) do
-    data = parse(json)
-
-    data
+  def handle(module, json) do
+    json
+    |> parse
     |> collate_for_dispatch(module)
-    |> encode_response(module, serializer, json)
+    |> encode_response(module, json)
   end
 
   defp collate_for_dispatch(batch_rpc, module)
@@ -95,6 +89,10 @@ defmodule JSONRPC2.Server.Handler do
     dispatch(module, rpc)
   end
 
+  @spec parse(list(map()) | map()) ::
+          {JSONRPC2.method(), JSONRPC2.params(), JSONRPC2.id()}
+          | list({JSONRPC2.method(), JSONRPC2.params(), JSONRPC2.id()} | :invalid_request)
+          | :invalid_request
   defp parse(requests) when is_list(requests) do
     for request <- requests, do: parse(request)
   end
@@ -126,7 +124,10 @@ defmodule JSONRPC2.Server.Handler do
   defp valid_request?(_version, _method, _params, _id), do: false
 
   defp merge_responses(responses) do
-    case for({:reply, reply} <- responses, do: reply) do
+    # matches all responses into reply list and returns it
+    reply = for({:reply, reply} <- responses, do: reply)
+
+    case reply do
       [] -> :noreply
       replies -> {:reply, replies}
     end
@@ -254,12 +255,12 @@ defmodule JSONRPC2.Server.Handler do
   defp error_code_and_message(:internal_error), do: {-32_603, "Internal error"}
   defp error_code_and_message(:server_error), do: {-32_000, "Server error"}
 
-  defp encode_response(:noreply, _module, _serializer, _json) do
+  defp encode_response(:noreply, _module, _json) do
     :noreply
   end
 
-  defp encode_response({:reply, reply}, module, serializer, json) do
-    case serializer.encode(reply) do
+  defp encode_response({:reply, reply}, module, json) do
+    case Jason.encode(reply) do
       {:ok, encoded_reply} ->
         {:reply, encoded_reply}
 
@@ -277,7 +278,7 @@ defmodule JSONRPC2.Server.Handler do
           ])
 
         standard_error_response(:internal_error, nil)
-        |> encode_response(module, serializer, json)
+        |> encode_response(module, json)
     end
   end
 end
