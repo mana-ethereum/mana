@@ -10,7 +10,8 @@ defmodule Mana.MixProject do
         :evm,
         :ex_wire,
         :exth_crypto,
-        :merkle_patricia_tree
+        :merkle_patricia_tree,
+        :jsonrpc2
       ],
       elixirc_options: [warnings_as_errors: true],
       elixir: "~> 1.7.4",
@@ -18,7 +19,7 @@ defmodule Mana.MixProject do
       dialyzer: [
         flags: [:underspecs, :unknown, :unmatched_returns],
         ignore_warnings: ".dialyzer.ignore-warnings",
-        plt_add_apps: [:mix, :iex, :ex_unit]
+        plt_add_apps: [:mix, :iex, :ex_unit, :ranch, :plug, :hackney, :jason, :websockex, :cowboy]
       ],
       deps: deps()
     ]
@@ -36,7 +37,7 @@ defmodule Mana.MixProject do
       {:dialyxir, "~> 1.0.0-rc.4", only: [:dev, :test], runtime: false},
       {:ethereumex, "~> 0.5.1"},
       {:jason, "~> 1.1"},
-      {:credo, "~> 0.10.0", only: [:dev, :test], runtime: false},
+      {:credo, "~> 1.0.0-rc1", only: [:dev, :test], runtime: false},
       {:distillery, "~> 2.0", runtime: false}
     ]
   end
