@@ -51,9 +51,8 @@ defmodule Blockchain.Account.Repo do
   end
 
   @spec put_account(t(), Address.t(), Account.t(), atom()) :: t()
-  def put_account(account_repo, address, account, state \\ :dirty) do
-    if state != :dirty && state != :clean, do: raise("wrong account state")
-
+  def put_account(account_repo, address, account, state \\ :dirty)
+      when state in [:dirty, :clean] do
     updated_cache = Cache.update_account(account_repo.cache, address, {state, account, nil})
 
     %{account_repo | cache: updated_cache}
@@ -459,14 +458,14 @@ defmodule Blockchain.Account.Repo do
   @impl true
   def remove_storage(account_repo, evm_address, key) do
     address = Account.Address.from(evm_address)
-    {_updated_repo, account} = account(account_repo, address)
+    {updated_repo, account} = account(account_repo, address)
 
     if account do
-      updated_cache = Cache.remove_current_value(account_repo.cache, address, key)
+      updated_cache = Cache.remove_current_value(updated_repo.cache, address, key)
 
       %{account_repo | cache: updated_cache}
     else
-      account_repo
+      updated_repo
     end
   end
 
