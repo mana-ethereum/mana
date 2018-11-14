@@ -8,8 +8,8 @@ defmodule ExWire.PeerSupervisor do
 
   require Logger
 
-  alias ExWire.Packet
   alias ExWire.P2P.Server
+  alias ExWire.Packet
   alias ExWire.Struct.Peer
 
   @type node_selector :: :all | :random | :last
