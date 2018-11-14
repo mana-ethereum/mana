@@ -6,7 +6,7 @@ Elixir Client for RLPx, DevP2P and Eth Wire Protocol.
 
 For the time being, this can be used to sync the block chain from a given network (currently defaulted to Ropsten).
 
-You can run `iex -S mix` and you should see:
+You can run `EXT_IP_ADDRESS=$(curl ifconfig.co) iex -S mix` and you should see:
 
 ```
 12:59:23.818 [debug] [Network] [6ce059...1acd9d] Established outbound connection with 13.84.180.240, sending auth.
@@ -33,6 +33,15 @@ You can run `iex -S mix` and you should see:
 
 12:59:24.595 [debug] [Block Queue] Verified block and added to new block tree
 ```
+
+To run against just a local node, run:
+
+Run geth, e.g.:
+`geth --testnet --nat none`
+
+Get the enode address and then run ExWire:
+
+`BOOTNODES=enode://... DISCOVERY=false mix run --no-halt`
 
 In the future, we will continue to grow and built out a proper syncing ability.
 It's likely the proper interface (with CLI tools) will not be this module directly, but instead a general CLI which calls into this module.

@@ -12,6 +12,7 @@ defmodule ExWire.Struct.Peer do
 
   alias ExthCrypto.Key
   alias ExWire.Crypto
+  alias ExWire.Kademlia.Node
 
   @type t :: %__MODULE__{
           host: :inet.socket_address() | :inet.hostname(),
@@ -136,6 +137,46 @@ defmodule ExWire.Struct.Peer do
       {:error, _} ->
         hostname_chars
     end
+  end
+
+  @doc """
+  Creates a node struct from a Kademlia node.
+
+  ## Examples
+
+      iex> %ExWire.Kademlia.Node{
+      ...>  endpoint: %ExWire.Struct.Endpoint{
+      ...>    ip: [52, 169, 14, 227],
+      ...>    tcp_port: nil,
+      ...>    udp_port: 30303
+      ...>  },
+      ...>  key: <<202, 107, 222, 100, 235, 37, 246, 148, 81, 241, 131, 186, 231, 136, 53,
+      ...>    244, 150, 181, 223, 94, 85, 8, 248, 17, 242, 130, 233, 242, 131, 19, 153,
+      ...>    173>>,
+      ...>  public_key: <<32, 201, 173, 151, 192, 129, 214, 51, 151, 215, 182, 133, 164,
+      ...>    18, 34, 122, 64, 226, 60, 139, 220, 102, 136, 198, 243, 126, 151, 207, 188,
+      ...>    34, 210, 180, 209, 219, 21, 16, 216, 246, 30, 106, 136, 102, 173, 127, 14,
+      ...>    23, 192, 43, 20, 24, 45, 55, 234, 124, 60, 139, 156, 38, 131, 174, 182, 183,
+      ...>    51, 161>>
+      ...> } |> ExWire.Struct.Peer.from_node()
+      %ExWire.Struct.Peer{
+        host: {52, 169, 14, 227},
+        ident: "20c9ad...b733a1",
+        port: nil,
+        remote_id: <<32, 201, 173, 151, 192, 129, 214, 51, 151, 215, 182, 133, 164,
+          18, 34, 122, 64, 226, 60, 139, 220, 102, 136, 198, 243, 126, 151, 207, 188,
+          34, 210, 180, 209, 219, 21, 16, 216, 246, 30, 106, 136, 102, 173, 127, 14,
+          23, 192, 43, 20, 24, 45, 55, 234, 124, 60, 139, 156, 38, 131, 174, 182, 183,
+          51, 161>>
+      }
+  """
+  @spec from_node(Node.t()) :: t()
+  def from_node(kademlia_node) do
+    __MODULE__.new(
+      List.to_tuple(kademlia_node.endpoint.ip),
+      kademlia_node.endpoint.tcp_port,
+      Crypto.bin_to_hex(kademlia_node.public_key)
+    )
   end
 end
 

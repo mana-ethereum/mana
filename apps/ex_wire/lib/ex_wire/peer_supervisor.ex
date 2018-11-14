@@ -6,9 +6,17 @@ defmodule ExWire.PeerSupervisor do
   """
   use DynamicSupervisor
 
+  require Logger
+
   alias ExWire.Packet
+  alias ExWire.P2P.Server
+  alias ExWire.Struct.Peer
+
+  @type node_selector :: :all | :random | :last
 
   @name __MODULE__
+
+  @max_peers 10
 
   @spec start_link(list(String.t())) :: Supervisor.on_start()
   def start_link(nodes) do
@@ -16,36 +24,79 @@ defmodule ExWire.PeerSupervisor do
   end
 
   @doc """
-  Creates an outbound connection with peer.
+  Initiates an outbound connection with peer.
 
-  This function should be called when the Discovery portion of mana discovers new
-  nodes.
+  This function should be called when we want connect to a new peer, this may
+  come from start-up or via discovery (e.g. a find neighbors response).
   """
-  @spec start_child(String.t()) :: DynamicSupervisor.on_start_child()
-  def start_child(peer_enode_url) do
-    {:ok, peer} = ExWire.Struct.Peer.from_uri(peer_enode_url)
+  @spec new_peer(Peer.t()) :: any()
+  def new_peer(peer) do
+    peer_count = connected_peer_count()
 
-    spec = {ExWire.P2P.Server, {:outbound, peer, [{:server, ExWire.Sync}]}}
+    if peer_count < @max_peers do
+      Logger.debug(fn ->
+        "[PeerSup] Connecting to peer #{peer} (#{peer_count} of #{@max_peers} peers)"
+      end)
 
-    {:ok, _pid} = DynamicSupervisor.start_child(@name, spec)
+      spec = {Server, {:outbound, peer, [{:server, ExWire.Sync}]}}
+
+      {:ok, _pid} = DynamicSupervisor.start_child(@name, spec)
+    else
+      Logger.debug(fn -> "[PeerSup] Not connecting due to max peers (#{@max_peers}) reached" end)
+    end
   end
 
   @doc """
   Sends a packet to all active TCP connections. This is useful when we want to, for instance,
   ask for a `GetBlockBody` from all peers for a given block hash.
   """
-  @spec send_packet(Packet.packet()) :: :ok | :unsent
-  def send_packet(packet) do
+  @spec send_packet(Packet.packet(), node_selector()) :: :ok | :unsent
+  def send_packet(packet, node_selector) do
     # Send to all of the Supervisor's children...
     # ... not the best.
 
     results =
-      for {_id, child, _type, _modules} <- DynamicSupervisor.which_children(@name) do
-        # Children which are being restarted by not have a child_pid at this time.
-        if is_pid(child), do: ExWire.P2P.Server.send_packet(child, packet)
+      for child <- find_children(node_selector) do
+        Exth.inspect(fn ->
+          "[PeerSup] Sending #{to_string(packet.__struct__)} packet to peer #{
+            inspect(Server.get_peer(child).ident)
+          }"
+        end)
+
+        Server.send_packet(child, packet)
       end
 
     if Enum.member?(results, :ok), do: :ok, else: :unsent
+  end
+
+  @spec find_children(node_selector()) :: list(pid())
+  defp find_children(node_selector) do
+    children =
+      for {_id, child, _type, _modules} <- do_find_children(node_selector) do
+        child
+      end
+
+    # Children which are being restarted by not have a child_pid at this time.
+    Enum.filter(children, &is_pid/1)
+  end
+
+  @spec do_find_children(node_selector()) :: list(any())
+  defp do_find_children(:all) do
+    DynamicSupervisor.which_children(@name)
+  end
+
+  defp do_find_children(:last) do
+    @name
+    |> DynamicSupervisor.which_children()
+    |> List.last()
+    |> List.wrap()
+  end
+
+  defp do_find_children(:random) do
+    @name
+    |> DynamicSupervisor.which_children()
+    |> Enum.random()
+    |> List.wrap()
   end
 
   @spec connected_peer_count() :: non_neg_integer()
@@ -56,12 +107,15 @@ defmodule ExWire.PeerSupervisor do
   end
 
   @impl true
-  def init(nodes) do
-    {:ok, _} =
-      Task.start_link(fn ->
-        for node <- nodes, do: start_child(node)
-      end)
+  def init(peer_enode_urls) do
+    Task.start_link(fn ->
+      for peer_enode_url <- peer_enode_urls do
+        {:ok, peer} = ExWire.Struct.Peer.from_uri(peer_enode_url)
 
-    DynamicSupervisor.init(strategy: :one_for_one)
+        new_peer(peer)
+      end
+    end)
+
+    {:ok, _} = DynamicSupervisor.init(strategy: :one_for_one)
   end
 end
