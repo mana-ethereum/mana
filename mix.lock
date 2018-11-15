@@ -38,5 +38,5 @@
   "rocksdb": {:hex, :rocksdb, "0.23.3", "1e088c3870265d4c037c4ca274c4153dae739ce48d3c6536230c6b22226ff44e", [:rebar3], [], "hexpm"},
   "ssl_verify_fun": {:hex, :ssl_verify_fun, "1.1.4", "f0eafff810d2041e93f915ef59899c923f4568f4585904d010387ed74988e77b", [:make, :mix, :rebar3], [], "hexpm"},
   "unicode_util_compat": {:hex, :unicode_util_compat, "0.4.1", "d869e4c68901dd9531385bb0c8c40444ebf624e60b6962d95952775cac5e90cd", [:rebar3], [], "hexpm"},
-  "websockex": {:git, "https://github.com/InoMurko/websockex.git", "d49cc68030179952db41d61cbcf46bfbc50094b8", [branch: "master"]},
+  "websockex": {:git, "https://github.com/mana-ethereum/websockex.git", "d49cc68030179952db41d61cbcf46bfbc50094b8", [branch: "master"]},
 }

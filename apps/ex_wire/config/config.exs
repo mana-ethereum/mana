@@ -20,7 +20,18 @@ config :ex_wire,
     kademlia_process_name: KademliaState,
     supervisor_name: ExWire.NodeDiscoverySupervisor,
     port: 30_304
-  ]
+  ],
+  mana_version:
+    :erlang.apply(
+      fn ->
+        if String.contains?(System.cwd!(), "apps") do
+          String.trim(File.read!(Enum.join(["../../", "MANA_VERSION"])))
+        else
+          String.trim(File.read!(Enum.join([System.cwd!(), "/MANA_VERSION"])))
+        end
+      end,
+      []
+    )
 
 config :ex_wire, :environment, Mix.env()
 import_config "#{Mix.env()}.exs"

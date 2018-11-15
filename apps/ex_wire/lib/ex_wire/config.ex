@@ -128,8 +128,7 @@ defmodule ExWire.Config do
 
   @spec client_id() :: String.t()
   def client_id() do
-    version = Mix.Project.config()[:version]
-    "mana/#{version}"
+    Application.get_env(:ex_wire, :mana_version)
   end
 
   @spec perform_sync?(Keyword.t()) :: boolean()

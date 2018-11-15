@@ -17,7 +17,7 @@ defmodule JSONRPC2.Mixfile do
       elixirc_paths: elixirc_paths(Mix.env()),
       description: description(),
       name: "JSONRPC2",
-       elixirc_paths: elixirc_paths(Mix.env()),
+      elixirc_paths: elixirc_paths(Mix.env()),
       elixirc_options: [warnings_as_errors: true],
       elixir: "~> 1.7.4",
       start_permanent: Mix.env() == :prod,
@@ -29,9 +29,7 @@ defmodule JSONRPC2.Mixfile do
   end
 
   def application do
-    [applications: [:logger, :cowboy, :ranch, :plug, :plug_cowboy],
-    mod: {JSONRPC2, []}
-    ]
+    [applications: [:logger, :cowboy, :ranch, :plug, :plug_cowboy], mod: {JSONRPC2, []}]
   end
 
   defp deps do
@@ -45,7 +43,8 @@ defmodule JSONRPC2.Mixfile do
       {:credo, "~> 1.0.0-rc1", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.0.0-rc.4", only: [:dev, :test], runtime: false},
       {:hackney, "~> 1.6", only: [:test]},
-      {:websockex, git: "https://github.com/InoMurko/websockex.git", branch: "master", only: [:test]},
+      {:websockex,
+       git: "https://github.com/mana-ethereum/websockex.git", branch: "master", only: [:test]},
       {:ex_doc, "~> 0.19", only: :dev, runtime: false}
     ]
   end
