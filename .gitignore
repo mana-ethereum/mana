@@ -15,3 +15,5 @@ apps/*/db
 
 # Ignore secret files
 apps/blockchain/config/dev.secret.exs
+COOKIE
+MANA_VERSION

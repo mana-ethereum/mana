@@ -22,15 +22,38 @@ use Mix.Releases.Config,
 # and environment configuration is called a profile
 
 environment :dev do
-  # If you are running Phoenix, you should make sure that
-  # server: true is set and the code reloader is disabled,
-  # even in dev mode.
-  # It is recommended that you build with MIX_ENV=prod and pass
-  # the --env flag to Distillery explicitly if you want to use
-  # dev mode.
+  set(
+    commands: [
+      sync: "rel/commands/sync"
+    ]
+  )
+
   set(dev_mode: true)
   set(include_erts: true)
-  set(cookie: :"bAFS)[qmAg0XFS5`7Ncbz,$J:K3Tv)t@{OIPWJb`;N!k%z^H,^(L}:qI_$Tp8>EX")
+
+  set(
+    cookie:
+      :erlang.apply(
+        fn ->
+          cookie_path =
+            case String.contains?(System.cwd!(), "apps") do
+              true ->
+                Enum.join(["../../", "COOKIE"])
+
+              false ->
+                Enum.join([System.cwd!(), "/COOKIE"])
+            end
+
+          cookie =
+            :crypto.strong_rand_bytes(32)
+            |> Base.encode32()
+
+          :ok = File.write!(cookie_path, cookie)
+          :erlang.binary_to_atom(cookie, :utf8)
+        end,
+        []
+      )
+  )
 end
 
 environment :prod do

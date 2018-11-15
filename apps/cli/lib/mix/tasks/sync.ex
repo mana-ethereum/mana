@@ -23,30 +23,73 @@ defmodule Mix.Tasks.Sync do
       mix sync --chain ropsten --provider-url https://ropsten.infura.io
 
       mix sync --chain ropsten --provider-url ipc:///path/to/file
+
+      or release
+
+      mana sync --chain ropsten --provider-url https://ropsten.infura.io --
+
+      mana sync --chain ropsten --provider-url ipc:///path/to/file
   """
   use Mix.Task
   require Logger
+  alias CLI.StateSupervisor
+  alias CLI.Parser
 
   @shortdoc "Starts sync with a provider (e.g. Infura)"
   def run(args) do
-    case CLI.Parser.sync_args(args) do
+    case Parser.sync_args(args) do
       {:ok,
-       %{
-         chain_id: chain_id,
-         provider: provider,
-         provider_args: provider_args,
-         provider_info: provider_info
+       chain = %{
+         chain_id: _chain_id,
+         provider: _provider,
+         provider_args: _provider_args,
+         provider_info: _provider_info,
+         debug: _debug
        }} ->
-        :ok =
-          Logger.warn("Starting sync with #{Atom.to_string(chain_id)} via #{provider_info}...")
-
-        # Kick off a sync
-        CLI.sync(chain_id, provider, provider_args)
+        setup(chain)
 
       {:error, error} ->
         _ = Logger.error("Error: #{error}")
         Logger.flush()
         System.halt(1)
     end
+  end
+
+  defp setup(chain = %{
+         chain_id: chain_id,
+         provider: provider,
+         provider_args: provider_args,
+         provider_info: provider_info,
+         debug: true
+       }) do
+    {:ok, _pid} = :net_kernel.start([:"mana@127.0.0.1", :longnames])
+
+    true =
+      :erlang.set_cookie(
+        node(),
+        Application.get_env(:cli, :cookie)
+      )
+
+    :ok = Logger.warn("Starting sync with #{Atom.to_string(chain_id)} via #{provider_info}
+            ...")
+
+    {:ok, _pid} = StateSupervisor.start_link(chain)
+    # Kick off a sync
+    CLI.sync(chain_id, provider, provider_args)
+  end
+
+  defp setup(chain = %{
+         chain_id: chain_id,
+         provider: provider,
+         provider_args: provider_args,
+         provider_info: provider_info,
+         debug: false
+       }) do
+    :ok = Logger.warn("Starting sync with #{Atom.to_string(chain_id)} via #{provider_info}
+            ...")
+
+    {:ok, _pid} = StateSupervisor.start_link(chain)
+    # Kick off a sync
+    CLI.sync(chain_id, provider, provider_args)
   end
 end

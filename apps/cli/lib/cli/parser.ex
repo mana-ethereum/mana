@@ -60,28 +60,36 @@ defmodule CLI.Parser do
              provider: module(),
              provider_args: [any()],
              provider_info: String.t(),
-             chain_id: atom()
+             chain_id: atom(),
+             debug: boolean()
            }}
           | {:error, String.t()}
   def sync_args(args) do
     {kw_args, _extra} =
       OptionParser.parse!(args,
-        switches: [chain: :string, provider: :string, provider_url: :string]
+        switches: [chain: :string, provider: :string, provider_url: :string, debug: :boolean]
       )
 
-    with {:ok, chain_id} <- get_chain_id(kw_args) do
-      with {:ok, provider_url} <- get_provider_url(kw_args, chain_id) do
-        with {:ok, {provider, provider_args, provider_info}} = get_provider(kw_args, provider_url) do
-          {:ok,
-           %{
-             provider: provider,
-             provider_args: provider_args,
-             provider_info: provider_info,
-             chain_id: chain_id
-           }}
-        end
-      end
+    with {:ok, chain_id} <- get_chain_id(kw_args),
+         {:ok, provider_url} <- get_provider_url(kw_args, chain_id),
+         {:ok, {provider, provider_args, provider_info}} = get_provider(kw_args, provider_url),
+         {:ok, debug} = get_debug(kw_args) do
+      {:ok,
+       %{
+         provider: provider,
+         provider_args: provider_args,
+         provider_info: provider_info,
+         chain_id: chain_id,
+         debug: debug
+       }}
     end
+  end
+
+  @spec get_debug(debug: boolean()) :: {:ok, atom()} | {:error, String.t()}
+  defp get_debug(kw_args) do
+    debug = Keyword.get(kw_args, :debug, false)
+
+    {:ok, debug}
   end
 
   @spec get_chain_id(chain: String.t()) :: {:ok, atom()} | {:error, String.t()}
