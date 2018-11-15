@@ -12,8 +12,8 @@ defmodule EVM.Mixfile do
       description: "Ethereum's Virtual Machine",
       package: [
         maintainers: ["Ayrat Badykov", "Mason Forest"],
-        licenses: ["LGPL v3"],
-        links: %{"GitHub" => "https://github.com/poanetwork/mana/apps/evm"}
+        licenses: ["MIT", "Apache 2"],
+        links: %{"GitHub" => "https://github.com/mana-ethereum/mana/tree/master/apps/evm"}
       ],
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
