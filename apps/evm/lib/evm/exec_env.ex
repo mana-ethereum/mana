@@ -109,7 +109,7 @@ defmodule EVM.ExecEnv do
     {updated_exec_env, value}
   end
 
-  @spec balance(t(), EVM.Address.t()) :: {t(), EVM.Wei.t()}
+  @spec balance(t(), EVM.Address.t()) :: {t(), EVM.Wei.t() | nil}
   def balance(exec_env = %{account_repo: account_repo}, address) do
     {updated_repo, balance} =
       AccountRepo.repo(account_repo).account_balance(account_repo, address)
