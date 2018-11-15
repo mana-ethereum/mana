@@ -262,9 +262,7 @@ defmodule EVM.Operation.System do
        ) do
     {data, machine_state} = EVM.Memory.read(machine_state, input_offset, input_size)
 
-    {updated_repo, account_balance} = ExecEnv.balance(exec_env, exec_env.address)
-
-    exec_env = %{exec_env | account_repo: updated_repo}
+    {exec_env, account_balance} = ExecEnv.balance(exec_env, exec_env.address)
 
     is_allowed =
       value <= account_balance and exec_env.stack_depth < EVM.Functions.max_stack_depth()
