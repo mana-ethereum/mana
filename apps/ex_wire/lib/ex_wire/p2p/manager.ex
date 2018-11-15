@@ -113,7 +113,7 @@ defmodule ExWire.P2P.Manager do
             {:ok, packet_mod, packet} ->
               :ok =
                 Logger.debug(fn ->
-                  "[Network] [#{peer}] Got packet `#{inspect(packet_mod)}` from #{peer.host}"
+                  "[Network] [#{peer}] Got packet `#{inspect(packet_mod)}` from #{peer.host_name}"
                 end)
 
               _ = notify_subscribers(packet, conn_after_unframe)
@@ -124,7 +124,7 @@ defmodule ExWire.P2P.Manager do
             :unknown_packet_type ->
               :ok =
                 Logger.error(fn ->
-                  "[Network] [#{peer}] Got unknown packet `#{packet_type}` from #{peer.host}"
+                  "[Network] [#{peer}] Got unknown packet `#{packet_type}` from #{peer.host_name}"
                 end)
 
               conn_after_unframe
@@ -139,7 +139,7 @@ defmodule ExWire.P2P.Manager do
       {:error, reason} ->
         _ =
           Logger.error(
-            "[Network] [#{peer}] Failed to read incoming packet from #{peer.host} `#{reason}`)"
+            "[Network] [#{peer}] Failed to read incoming packet from #{peer.host_name} `#{reason}`)"
           )
 
         %{conn | last_error: reason}
@@ -213,7 +213,9 @@ defmodule ExWire.P2P.Manager do
     case Handshake.handle_ack(conn.handshake, data) do
       {:ok, handshake, secrets, queued_data} ->
         :ok =
-          Logger.debug(fn -> "[Network] [#{peer}] Got ack from #{peer.host}, deriving secrets" end)
+          Logger.debug(fn ->
+            "[Network] [#{peer}] Got ack from #{peer.host_name}, deriving secrets"
+          end)
 
         Map.merge(conn, %{handshake: handshake, secrets: secrets, queued_data: queued_data})
 
@@ -260,7 +262,7 @@ defmodule ExWire.P2P.Manager do
 
     :ok =
       Logger.debug(fn ->
-        "[Network] [#{peer}] Sending packet #{inspect(packet_mod)} to #{peer.host} (##{
+        "[Network] [#{peer}] Sending packet #{inspect(packet_mod)} to #{peer.host_name} (##{
           conn.sent_message_count + 1
         })"
       end)
@@ -282,7 +284,7 @@ defmodule ExWire.P2P.Manager do
     _ =
       Logger.debug(fn ->
         "[Network] [#{peer}] Sending raw data message of length #{byte_size(data)} byte(s) to #{
-          peer.host
+          peer.host_name
         }"
       end)
 

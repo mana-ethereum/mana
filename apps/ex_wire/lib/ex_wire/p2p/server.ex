@@ -147,7 +147,7 @@ defmodule ExWire.P2P.Server do
 
     :ok =
       Logger.debug(fn ->
-        "[Network] [#{peer}] Established outbound connection with #{peer.host}."
+        "[Network] [#{peer}] Established outbound connection with #{peer.host_name}."
       end)
 
     new_conn =

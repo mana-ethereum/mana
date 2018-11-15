@@ -5,6 +5,7 @@ defmodule ExWire.Struct.Peer do
 
   defstruct [
     :host,
+    :host_name,
     :port,
     :remote_id,
     :ident
@@ -16,6 +17,7 @@ defmodule ExWire.Struct.Peer do
 
   @type t :: %__MODULE__{
           host: :inet.socket_address() | :inet.hostname(),
+          host_name: String.t(),
           port: :inet.port_number(),
           remote_id: Key.public_key(),
           ident: String.t()
@@ -29,6 +31,7 @@ defmodule ExWire.Struct.Peer do
       iex> ExWire.Struct.Peer.new({13, 84, 180, 240}, 30303, "6ce05930c72abc632c58e2e4324f7c7ea478cec0ed4fa2528982cf34483094e9cbc9216e7aa349691242576d552a2a56aaeae426c5303ded677ce455ba1acd9d")
       %ExWire.Struct.Peer{
         host: {13, 84, 180, 240},
+        host_name: "13.84.180.240",
         port: 30303,
         remote_id: <<108, 224, 89, 48, 199, 42, 188, 99, 44, 88, 226, 228, 50, 79, 124, 126, 164, 120, 206, 192, 237, 79, 162, 82, 137, 130, 207, 52, 72, 48, 148, 233, 203, 201, 33, 110, 122, 163, 73, 105, 18, 66, 87, 109, 85, 42, 42, 86, 170, 234, 228, 38, 197, 48, 61, 237, 103, 124, 228, 85, 186, 26, 205, 157>>,
         ident: "6ce059...1acd9d"
@@ -44,6 +47,7 @@ defmodule ExWire.Struct.Peer do
 
     %__MODULE__{
       host: host,
+      host_name: inet_host_to_uri_host(host),
       port: port,
       remote_id: remote_id,
       ident: ident
@@ -73,6 +77,7 @@ defmodule ExWire.Struct.Peer do
       iex> ExWire.Struct.Peer.from_uri("enode://6ce05930c72abc632c58e2e4324f7c7ea478cec0ed4fa2528982cf34483094e9cbc9216e7aa349691242576d552a2a56aaeae426c5303ded677ce455ba1acd9d@13.84.180.240:30303")
       {:ok, %ExWire.Struct.Peer{
         host: {13, 84, 180, 240},
+        host_name: "13.84.180.240",
         port: 30303,
         remote_id: <<108, 224, 89, 48, 199, 42, 188, 99, 44, 88, 226, 228, 50, 79, 124, 126, 164, 120, 206, 192, 237, 79, 162, 82, 137, 130, 207, 52, 72, 48, 148, 233, 203, 201, 33, 110, 122, 163, 73, 105, 18, 66, 87, 109, 85, 42, 42, 86, 170, 234, 228, 38, 197, 48, 61, 237, 103, 124, 228, 85, 186, 26, 205, 157>>,
         ident: "6ce059...1acd9d"
@@ -81,6 +86,7 @@ defmodule ExWire.Struct.Peer do
       iex> ExWire.Struct.Peer.from_uri("enode://6ce05930c72abc632c58e2e4324f7c7ea478cec0ed4fa2528982cf34483094e9cbc9216e7aa349691242576d552a2a56aaeae426c5303ded677ce455ba1acd9d@[::]:30303")
       {:ok, %ExWire.Struct.Peer{
         host: {0, 0, 0, 0, 0, 0, 0, 0},
+        host_name: "0::0::0::0::0::0::0::0",
         port: 30303,
         remote_id: <<108, 224, 89, 48, 199, 42, 188, 99, 44, 88, 226, 228, 50, 79, 124, 126, 164, 120, 206, 192, 237, 79, 162, 82, 137, 130, 207, 52, 72, 48, 148, 233, 203, 201, 33, 110, 122, 163, 73, 105, 18, 66, 87, 109, 85, 42, 42, 86, 170, 234, 228, 38, 197, 48, 61, 237, 103, 124, 228, 85, 186, 26, 205, 157>>,
         ident: "6ce059...1acd9d"
@@ -89,6 +95,7 @@ defmodule ExWire.Struct.Peer do
       iex> ExWire.Struct.Peer.from_uri("enode://6ce05930c72abc632c58e2e4324f7c7ea478cec0ed4fa2528982cf34483094e9cbc9216e7aa349691242576d552a2a56aaeae426c5303ded677ce455ba1acd9d@google.com:30303")
       {:ok, %ExWire.Struct.Peer{
         host: 'google.com',
+        host_name: "google.com",
         port: 30303,
         remote_id: <<108, 224, 89, 48, 199, 42, 188, 99, 44, 88, 226, 228, 50, 79, 124, 126, 164, 120, 206, 192, 237, 79, 162, 82, 137, 130, 207, 52, 72, 48, 148, 233, 203, 201, 33, 110, 122, 163, 73, 105, 18, 66, 87, 109, 85, 42, 42, 86, 170, 234, 228, 38, 197, 48, 61, 237, 103, 124, 228, 85, 186, 26, 205, 157>>,
         ident: "6ce059...1acd9d"
@@ -140,6 +147,38 @@ defmodule ExWire.Struct.Peer do
   end
 
   @doc """
+  Takes a given erlang-style host and converts it to a normal
+  host string.
+
+  # Examples
+
+      iex> ExWire.Struct.Peer.inet_host_to_uri_host({127, 0, 0, 1})
+      "127.0.0.1"
+
+      iex> ExWire.Struct.Peer.inet_host_to_uri_host({0, 0, 0, 0, 0, 0, 0, 1})
+      "0::0::0::0::0::0::0::1"
+
+      iex> ExWire.Struct.Peer.inet_host_to_uri_host('google.com')
+      "google.com"
+  """
+  @spec inet_host_to_uri_host(:inet.socket_address() | :inet.hostname()) :: String.t()
+  def inet_host_to_uri_host(host = {_, _, _, _}) do
+    host
+    |> Tuple.to_list()
+    |> Enum.join(".")
+  end
+
+  def inet_host_to_uri_host(host) when is_tuple(host) do
+    host
+    |> Tuple.to_list()
+    |> Enum.join("::")
+  end
+
+  def inet_host_to_uri_host(host) when is_list(host) do
+    to_string(host)
+  end
+
+  @doc """
   Creates a node struct from a Kademlia node.
 
   ## Examples
@@ -161,6 +200,7 @@ defmodule ExWire.Struct.Peer do
       ...> } |> ExWire.Struct.Peer.from_node()
       %ExWire.Struct.Peer{
         host: {52, 169, 14, 227},
+        host_name: "52.169.14.227",
         ident: "20c9ad...b733a1",
         port: nil,
         remote_id: <<32, 201, 173, 151, 192, 129, 214, 51, 151, 215, 182, 133, 164,
@@ -173,7 +213,7 @@ defmodule ExWire.Struct.Peer do
   @spec from_node(Node.t()) :: t()
   def from_node(kademlia_node) do
     __MODULE__.new(
-      Enum.join(List.to_tuple(kademlia_node.endpoint.ip), "."),
+      List.to_tuple(kademlia_node.endpoint.ip),
       kademlia_node.endpoint.tcp_port,
       Crypto.bin_to_hex(kademlia_node.public_key)
     )
