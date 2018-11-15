@@ -44,7 +44,7 @@ defmodule JSONRPC2.Mixfile do
       {:dialyxir, "~> 1.0.0-rc.4", only: [:dev, :test], runtime: false},
       {:hackney, "~> 1.6", only: [:test]},
       {:websockex,
-       git: "https://github.com/InoMurko/websockex.git", branch: "master", only: [:test]},
+       git: "https://github.com/mana-ethereum/websockex.git", branch: "master", only: [:test]},
       {:ex_doc, "~> 0.19", only: :dev, runtime: false}
     ]
   end
