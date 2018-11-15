@@ -37,7 +37,7 @@ defmodule Cli.MixProject do
 
       # External deps
       {:ethereumex, "~> 0.5.1"},
-      {:progress_bar, "~> 1.6.1"}
+      {:progress_bar, "~> 1.7.0"}
     ]
   end
 end
