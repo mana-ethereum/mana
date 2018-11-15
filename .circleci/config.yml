@@ -351,7 +351,9 @@ jobs:
             - v10-env-cache-{{ .Branch }}
             - v10-env-cache
 
-      - run: mix cmd --app blockchain mix test --exclude test --include Byzantium
+      - run:
+          command: mix cmd --app blockchain mix test --exclude test --include Byzantium
+          no_output_timeout: 2400
 
   Constantinople:
     docker:
