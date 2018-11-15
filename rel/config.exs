@@ -8,14 +8,13 @@
 |> Enum.map(&Code.eval_file(&1))
 
 use Mix.Releases.Config,
-    # This sets the default release built by `mix release`
-    default_release: :default,
-    # This sets the default environment used by `mix release`
-    default_environment: Mix.env()
+  # This sets the default release built by `mix release`
+  default_release: :default,
+  # This sets the default environment used by `mix release`
+  default_environment: Mix.env()
 
 # For a full list of config options for both releases
 # and environments, visit https://hexdocs.pm/distillery/config/distillery.html
-
 
 # You may define one or more environments in this file,
 # an environment's settings will override those of a release
@@ -29,15 +28,15 @@ environment :dev do
   # It is recommended that you build with MIX_ENV=prod and pass
   # the --env flag to Distillery explicitly if you want to use
   # dev mode.
-  set dev_mode: true
-  set include_erts: true
-  set cookie: :"bAFS)[qmAg0XFS5`7Ncbz,$J:K3Tv)t@{OIPWJb`;N!k%z^H,^(L}:qI_$Tp8>EX"
+  set(dev_mode: true)
+  set(include_erts: true)
+  set(cookie: :"bAFS)[qmAg0XFS5`7Ncbz,$J:K3Tv)t@{OIPWJb`;N!k%z^H,^(L}:qI_$Tp8>EX")
 end
 
 environment :prod do
-  set include_erts: true
-  set include_src: false
-  set cookie: :"Wxv5K^qhnRXWBRLt0R/V_$u3!(Hz~Um%U5MrXVJzpvb,{43bHM8G*0:RokSbah]%"
+  set(include_erts: true)
+  set(include_src: false)
+  set(cookie: :"Wxv5K^qhnRXWBRLt0R/V_$u3!(Hz~Um%U5MrXVJzpvb,{43bHM8G*0:RokSbah]%")
 end
 
 # You may define one or more releases in this file.
@@ -46,16 +45,32 @@ end
 # will be used by default
 
 release :mana do
-  set version: "0.1.0"
-  set applications: [
-    :runtime_tools,
-    blockchain: :permanent,
-    cli: :permanent,
-    evm: :permanent,
-    ex_wire: :permanent,
-    exth_crypto: :permanent,
-    merkle_patricia_tree: :permanent,
-    jsonrpc2: :permanent
-  ]
-end
+  set(
+    version:
+      :erlang.apply(
+        fn ->
+          case String.contains?(System.cwd!(), "apps") do
+            true ->
+              String.trim(File.read!(Enum.join(["../../", "MANA_VERSION"])))
 
+            false ->
+              String.trim(File.read!(Enum.join([System.cwd!(), "/MANA_VERSION"])))
+          end
+        end,
+        []
+      )
+  )
+
+  set(
+    applications: [
+      :runtime_tools,
+      blockchain: :permanent,
+      cli: :permanent,
+      evm: :permanent,
+      ex_wire: :permanent,
+      exth_crypto: :permanent,
+      merkle_patricia_tree: :permanent,
+      jsonrpc2: :permanent
+    ]
+  )
+end
