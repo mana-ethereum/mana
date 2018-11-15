@@ -24,12 +24,10 @@ config :ex_wire,
   mana_version:
     :erlang.apply(
       fn ->
-        case String.contains?(System.cwd!(), "apps") do
-          true ->
-            String.trim(File.read!(Enum.join(["../../", "MANA_VERSION"])))
-
-          false ->
-            String.trim(File.read!(Enum.join([System.cwd!(), "/MANA_VERSION"])))
+        if String.contains?(System.cwd!(), "apps") do
+          String.trim(File.read!(Enum.join(["../../", "MANA_VERSION"])))
+        else
+          String.trim(File.read!(Enum.join([System.cwd!(), "/MANA_VERSION"])))
         end
       end,
       []
