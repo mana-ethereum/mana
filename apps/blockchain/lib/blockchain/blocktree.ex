@@ -41,20 +41,20 @@ defmodule Blockchain.Blocktree do
         do_validate \\ true,
         specified_block_hash \\ nil
       ) do
-        IO.inspect Block.get_parent_block(block, trie), label: "parent block result"
+
     parent =
       case Block.get_parent_block(block, trie) do
         :genesis -> nil
         {:ok, parent} -> parent
         :not_found -> :parent_not_found
       end
-
+    #IO.inspect parent, label: "parent block result"
     validation =
       if do_validate,
         do: Block.validate(block, chain, parent, trie, state_trie),
         else: {:valid, trie, state_trie}
 
-    with {:valid, trie} <- validation do
+    with {:valid, trie, state_trie} <- validation do
       {:ok, {block_hash, updated_trie}} = Block.put_block(block, trie, specified_block_hash)
 
       # Cache computed block hash
@@ -62,7 +62,7 @@ defmodule Blockchain.Blocktree do
 
       updated_blocktree = update_best_block(blocktree, block)
 
-      {:ok, {updated_blocktree, updated_trie, block_hash}}
+      {:ok, {updated_blocktree, updated_trie, state_trie, block_hash}}
     end
   end
 

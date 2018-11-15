@@ -574,8 +574,8 @@ defmodule Blockchain.Block do
   end
 
   defp validate_parent_block(block, parent_block) do
-    IO.inspect block.header.number
-    IO.inspect parent_block
+    #IO.inspect "Block number: #{block.header.number}"
+    #IO.inspect "Parent Block: #{parent_block}"
     if block.header.number > 0 and parent_block == :parent_not_found do
       {:invalid, [:non_genesis_block_requires_parent]}
     else

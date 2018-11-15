@@ -31,6 +31,7 @@ defmodule CLI do
 
     blocktree = State.load_tree(db)
 
+    {:ok, {_, updated_trie}} = Blocktree.get_best_block(blocktree, chain, trie)
     {:ok, {current_block, updated_state_trie}} = Blocktree.get_best_block(blocktree, chain, state_trie)
 
     with {:ok, highest_known_block_number} <-
@@ -48,7 +49,7 @@ defmodule CLI do
       Sync.sync_new_blocks(
         block_provider,
         block_provider_state,
-        trie,
+        updated_trie,
         updated_state_trie,
         chain,
         blocktree,
