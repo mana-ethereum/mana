@@ -11,8 +11,6 @@ defmodule EVM.Operation.System do
     SubState
   }
 
-  @dialyzer {:no_return, callcode: 2, create: 2, create2: 2}
-
   @doc """
   Create a new account with associated code.
   """
