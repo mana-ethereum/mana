@@ -2,9 +2,10 @@ defmodule ExWire.Kademlia.Discovery do
   @moduledoc """
   Module that handles node discovery logic.
   """
+  alias ExWire.{Config, Network, PeerSupervisor}
   alias ExWire.Kademlia.{Node, RoutingTable}
   alias ExWire.Message.FindNeighbours
-  alias ExWire.Network
+  alias ExWire.Struct.Peer
 
   @doc """
   Starts discovery round.
@@ -14,6 +15,15 @@ defmodule ExWire.Kademlia.Discovery do
     table = add_bootnodes(table, bootnodes)
 
     this_round_nodes = RoutingTable.discovery_nodes(table)
+
+    _ =
+      if Config.perform_sync?() do
+        for node <- this_round_nodes do
+          node
+          |> Peer.from_node()
+          |> PeerSupervisor.new_peer()
+        end
+      end
 
     Enum.each(this_round_nodes, fn node ->
       find_neighbours(table, node)

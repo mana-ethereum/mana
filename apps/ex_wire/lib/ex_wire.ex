@@ -26,11 +26,17 @@ defmodule ExWire do
   defp get_children(_params) do
     chain = ExWire.Config.chain()
 
+    perform_discovery = Config.perform_discovery?()
+
     sync_children =
       if Config.perform_sync?() do
+        # If we're not performing discovery, let's immediately connect
+        # to the bootnodes given. Otherwise, we'll connect to discovered nodes.
+        start_nodes = if perform_discovery, do: [], else: Config.bootnodes()
+
         [
           # Peer supervisor maintains a pool of outbound peers
-          child_spec({PeerSupervisor, Config.bootnodes()}, []),
+          child_spec({PeerSupervisor, start_nodes}, []),
 
           # Sync coordinates asking peers for new blocks
           child_spec({Sync, chain}, [])
@@ -40,7 +46,7 @@ defmodule ExWire do
       end
 
     node_discovery =
-      if Config.perform_discovery?() do
+      if perform_discovery do
         # Discovery tries to find new peers
         [child_spec({NodeDiscoverySupervisor, []}, [])]
       else

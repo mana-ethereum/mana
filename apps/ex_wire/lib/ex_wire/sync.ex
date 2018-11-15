@@ -27,7 +27,7 @@ defmodule ExWire.Sync do
 
   @save_block_interval 100
   @blocks_per_request 100
-  @startup_delay 2_000
+  @startup_delay 10_000
   @retry_delay 5_000
 
   @type state :: %{
@@ -91,7 +91,7 @@ defmodule ExWire.Sync do
   end
 
   def handle_info({:packet, packet, peer}, state) do
-    :ok = Logger.info(fn -> "[Sync] Ignoring packet #{packet.__struct__} from #{peer}" end)
+    :ok = Exth.trace(fn -> "[Sync] Ignoring packet #{packet.__struct__} from #{peer}" end)
 
     {:noreply, state}
   end
@@ -108,12 +108,15 @@ defmodule ExWire.Sync do
       :ok = Logger.debug(fn -> "[Sync] Requesting block #{next_block_to_request}" end)
 
       :ok =
-        PeerSupervisor.send_packet(%GetBlockHeaders{
-          block_identifier: next_block_to_request,
-          max_headers: @blocks_per_request,
-          skip: 0,
-          reverse: false
-        })
+        PeerSupervisor.send_packet(
+          %GetBlockHeaders{
+            block_identifier: next_block_to_request,
+            max_headers: @blocks_per_request,
+            skip: 0,
+            reverse: false
+          },
+          :random
+        )
 
       Map.put(state, :last_requested_block, next_block_to_request + @blocks_per_request)
     else
@@ -185,9 +188,12 @@ defmodule ExWire.Sync do
       end)
 
     :ok =
-      PeerSupervisor.send_packet(%GetBlockBodies{
-        hashes: header_hashes
-      })
+      PeerSupervisor.send_packet(
+        %GetBlockBodies{
+          hashes: header_hashes
+        },
+        :random
+      )
 
     {new_last_requested_block, next_trie} =
       maybe_request_new_block_or_save(

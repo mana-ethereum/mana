@@ -20,6 +20,8 @@ defmodule ExWire.P2P.Server do
   alias ExWire.P2P.{Connection, Manager}
   alias ExWire.Struct.Peer
 
+  @type state :: Connection.t()
+
   @type subscription() :: {module(), atom(), list()} | {:server, pid()}
 
   @doc """
@@ -104,23 +106,21 @@ defmodule ExWire.P2P.Server do
   end
 
   @doc """
+  Client function to get peer associated with this gen server
+  """
+  @spec get_peer(pid()) :: Peer.t()
+  def get_peer(pid) do
+    GenServer.call(pid, :get_peer)
+  end
+
+  @doc """
   Initialize by opening up a `gen_tcp` connection to given host and port.
   """
-  @spec init(map()) :: {:ok, Connection.t()}
+  @spec init(map()) :: {:ok, state()}
   def init(opts = %{is_outbound: true, peer: peer}) do
-    {:ok, socket} = TCP.connect(peer.host, peer.port)
+    Process.send_after(self(), {:connect, opts}, 0)
 
-    :ok =
-      Logger.debug(fn ->
-        "[Network] [#{peer}] Established outbound connection with #{peer.host}."
-      end)
-
-    state =
-      socket
-      |> Manager.new_outbound_connection(peer)
-      |> Map.put(:subscribers, Map.get(opts, :subscribers, []))
-
-    {:ok, state}
+    {:ok, %Connection{peer: peer}}
   end
 
   def init(opts = %{is_outbound: false, socket: socket}) do
@@ -132,16 +132,30 @@ defmodule ExWire.P2P.Server do
     {:ok, state}
   end
 
-  @doc """
-  Allows a client to subscribe to incoming packets. Subscribers must be in the form
-  of `{module, function, args}`, in which case we'll call `module.function(packet, ...args)`,
-  or `{:server, server_pid}` for a GenServer, in which case we'll send a message
-  `{:packet, packet, peer}`.
-  """
+  def handle_call(:get_peer, _from, state = %{peer: peer}) do
+    {:reply, peer, state}
+  end
+
   def handle_call({:subscribe, subscription}, _from, state) do
     {:ok, new_state} = handle_subscribe(subscription, state)
 
     {:reply, :ok, new_state}
+  end
+
+  def handle_info({:connect, opts}, %{peer: peer}) do
+    {:ok, socket} = TCP.connect(peer.host, peer.port)
+
+    :ok =
+      Logger.debug(fn ->
+        "[Network] [#{peer}] Established outbound connection with #{peer.host_name}."
+      end)
+
+    new_conn =
+      socket
+      |> Manager.new_outbound_connection(peer)
+      |> Map.put(:subscribers, Map.get(opts, :subscribers, []))
+
+    {:noreply, new_conn}
   end
 
   @doc """
@@ -180,7 +194,11 @@ defmodule ExWire.P2P.Server do
     {:noreply, new_state}
   end
 
-  @spec handle_subscribe(subscription(), Connection.t()) :: {:ok, Connection.t()}
+  # Allows a client to subscribe to incoming packets. Subscribers must be in the form
+  # of `{module, function, args}`, in which case we'll call `module.function(packet, ...args)`,
+  # or `{:server, server_pid}` for a GenServer, in which case we'll send a message
+  # `{:packet, packet, peer}`.
+  @spec handle_subscribe(subscription(), state()) :: {:ok, state()}
   defp handle_subscribe(mfa = {_module, _function, _args}, state) do
     new_state = Map.update(state, :subscribers, [mfa], fn subscribers -> [mfa | subscribers] end)
 
@@ -194,14 +212,14 @@ defmodule ExWire.P2P.Server do
     {:ok, new_state}
   end
 
-  @spec handle_socket_message(binary(), Connection.t()) :: {:ok, Connection.t()}
+  @spec handle_socket_message(binary(), state()) :: {:ok, state()}
   defp handle_socket_message(data, state) do
     new_state = Manager.handle_message(state, data)
 
     {:ok, new_state}
   end
 
-  @spec handle_socket_close(Connection.t()) :: {:ok, Connection.t()}
+  @spec handle_socket_close(state()) :: {:ok, state()}
   defp handle_socket_close(state) do
     peer = Map.get(state, :peer, :unknown)
 
@@ -212,14 +230,14 @@ defmodule ExWire.P2P.Server do
     {:ok, state}
   end
 
-  @spec handle_send(Packet.packet(), Connection.t()) :: {:ok, Connection.t()}
+  @spec handle_send(Packet.packet(), state()) :: {:ok, state()}
   defp handle_send(packet, state) do
     new_state = Manager.send_packet(state, packet)
 
     {:ok, new_state}
   end
 
-  @spec handle_disconnection(TCP.socket(), Connection.t()) :: {:ok, Connection.t()}
+  @spec handle_disconnection(TCP.socket(), state()) :: {:ok, state()}
   defp handle_disconnection(socket, state) do
     :ok = TCP.shutdown(socket)
     new_state = Map.delete(state, :socket)

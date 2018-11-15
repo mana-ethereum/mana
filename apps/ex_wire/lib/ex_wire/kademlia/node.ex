@@ -50,7 +50,7 @@ defmodule ExWire.Kademlia.Node do
       %ExWire.Kademlia.Node{
         endpoint: %ExWire.Struct.Endpoint{
           ip: [52, 169, 14, 227],
-          tcp_port: nil,
+          tcp_port: 30303,
           udp_port: 30303
         },
         key: <<202, 107, 222, 100, 235, 37, 246, 148, 81, 241, 131, 186, 231, 136, 53,
@@ -91,7 +91,8 @@ defmodule ExWire.Kademlia.Node do
 
     endpoint = %Endpoint{
       ip: remote_ip,
-      udp_port: remote_peer_port
+      udp_port: remote_peer_port,
+      tcp_port: remote_peer_port
     }
 
     public_key = Crypto.hex_to_bin(remote_id)

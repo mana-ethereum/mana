@@ -78,7 +78,11 @@ defmodule ExWire.Config do
 
   @spec perform_discovery?(Keyword.t()) :: boolean()
   def perform_discovery?(given_params \\ []) do
-    get_env(given_params, :discovery, false)
+    if discovery_str = System.get_env("DISCOVERY") do
+      coerce_boolean(discovery_str)
+    else
+      get_env(given_params, :discovery, false)
+    end
   end
 
   @spec public_ip(Keyword.t()) :: [integer()]
@@ -203,4 +207,12 @@ defmodule ExWire.Config do
 
     value
   end
+
+  @spec coerce_boolean(String.t()) :: boolean()
+  defp coerce_boolean("TRUE"), do: true
+  defp coerce_boolean("true"), do: true
+  defp coerce_boolean("T"), do: true
+  defp coerce_boolean("t"), do: true
+  defp coerce_boolean("1"), do: true
+  defp coerce_boolean(_), do: false
 end
