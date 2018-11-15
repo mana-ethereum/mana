@@ -1,5 +1,5 @@
 defmodule EVM.Operation.EnvironmentalInformation do
-  alias EVM.{AccountRepo, Address, Helpers, Memory, Operation, Stack}
+  alias EVM.{Address, ExecEnv, Helpers, Memory, Operation, Stack}
 
   @doc """
   Get address of currently executing account.
@@ -38,13 +38,7 @@ defmodule EVM.Operation.EnvironmentalInformation do
   def balance([address], %{exec_env: exec_env, machine_state: machine_state}) do
     wrapped_address = Helpers.wrap_address(address)
 
-    {updated_repo, balance} =
-      AccountRepo.repo(exec_env.account_repo).account_balance(
-        exec_env.account_repo,
-        wrapped_address
-      )
-
-    updated_exec_env = %{exec_env | account_repo: updated_repo}
+    {updated_exec_env, balance} = ExecEnv.balance(exec_env, wrapped_address)
 
     balance =
       case balance do
@@ -251,13 +245,7 @@ defmodule EVM.Operation.EnvironmentalInformation do
   def extcodesize([address], %{exec_env: exec_env, machine_state: machine_state}) do
     wrapped_address = Helpers.wrap_address(address)
 
-    {updated_repo, account_code} =
-      AccountRepo.repo(exec_env.account_repo).account_code(
-        exec_env.account_repo,
-        wrapped_address
-      )
-
-    updated_exec_env = %{exec_env | account_repo: updated_repo}
+    {updated_exec_env, account_code} = ExecEnv.account_code(exec_env, wrapped_address)
 
     extcodesize =
       if account_code do
@@ -299,13 +287,7 @@ defmodule EVM.Operation.EnvironmentalInformation do
       }) do
     wrapped_address = Helpers.wrap_address(address)
 
-    {updated_repo, account_code} =
-      AccountRepo.repo(exec_env.account_repo).account_code(
-        exec_env.account_repo,
-        wrapped_address
-      )
-
-    updated_exec_env = %{exec_env | account_repo: updated_repo}
+    {updated_exec_env, account_code} = ExecEnv.account_code(exec_env, wrapped_address)
 
     data = Memory.read_zeroed_memory(account_code, code_offset, size)
     machine_state = Memory.write(machine_state, mem_offset, data)
@@ -317,13 +299,7 @@ defmodule EVM.Operation.EnvironmentalInformation do
   def extcodehash([address], %{exec_env: exec_env, machine_state: machine_state}) do
     wrapped_address = Address.new(address)
 
-    {updated_repo, hash} =
-      AccountRepo.repo(exec_env.account_repo).account_code_hash(
-        exec_env.account_repo,
-        wrapped_address
-      )
-
-    updated_exec_env = %{exec_env | account_repo: updated_repo}
+    {updated_exec_env, hash} = ExecEnv.code_hash(exec_env, wrapped_address)
 
     stack_value =
       if is_nil(hash) do
