@@ -6,12 +6,14 @@ config :cli,
   cookie:
     :erlang.apply(
       fn ->
-        if String.contains?(System.cwd!(), "apps") do
-          String.trim(File.read!(Enum.join(["../../", "COOKIE"])))
-        else
-          String.trim(File.read!(Enum.join([System.cwd!(), "/COOKIE"])))
-        end
-        |> :erlang.binary_to_atom(:utf8)
+        cookie =
+          if String.contains?(System.cwd!(), "apps") do
+            String.trim(File.read!(Enum.join(["../../", "COOKIE"])))
+          else
+            String.trim(File.read!(Enum.join([System.cwd!(), "/COOKIE"])))
+          end
+
+        :erlang.binary_to_atom(cookie, :utf8)
       end,
       []
     )

@@ -32,8 +32,8 @@ defmodule Mix.Tasks.Sync do
   """
   use Mix.Task
   require Logger
-  alias CLI.StateSupervisor
   alias CLI.Parser
+  alias CLI.StateSupervisor
 
   @shortdoc "Starts sync with a provider (e.g. Infura)"
   def run(args) do
@@ -55,13 +55,15 @@ defmodule Mix.Tasks.Sync do
     end
   end
 
-  defp setup(chain = %{
-         chain_id: chain_id,
-         provider: provider,
-         provider_args: provider_args,
-         provider_info: provider_info,
-         debug: true
-       }) do
+  defp setup(
+         chain = %{
+           chain_id: chain_id,
+           provider: provider,
+           provider_args: provider_args,
+           provider_info: provider_info,
+           debug: true
+         }
+       ) do
     {:ok, _pid} = :net_kernel.start([:"mana@127.0.0.1", :longnames])
 
     true =
@@ -78,13 +80,15 @@ defmodule Mix.Tasks.Sync do
     CLI.sync(chain_id, provider, provider_args)
   end
 
-  defp setup(chain = %{
-         chain_id: chain_id,
-         provider: provider,
-         provider_args: provider_args,
-         provider_info: provider_info,
-         debug: false
-       }) do
+  defp setup(
+         chain = %{
+           chain_id: chain_id,
+           provider: provider,
+           provider_args: provider_args,
+           provider_info: provider_info,
+           debug: false
+         }
+       ) do
     :ok = Logger.warn("Starting sync with #{Atom.to_string(chain_id)} via #{provider_info}
             ...")
 

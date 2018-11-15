@@ -81,6 +81,7 @@ jobs:
             - ethereum_common_tests
             - rel
             - MANA_VERSION
+            - COOKIE
 
   test:
     docker:

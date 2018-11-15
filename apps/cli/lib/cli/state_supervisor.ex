@@ -1,6 +1,7 @@
 defmodule CLI.StateSupervisor do
   use Supervisor
   alias CLI.State
+
   @moduledoc """
   Supervising CLI State and creating the ETS table that would hold chain changes for JSONRPC.
   """
