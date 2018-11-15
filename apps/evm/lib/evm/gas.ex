@@ -395,7 +395,8 @@ defmodule EVM.Gas do
           {updated_exec_env, true}
 
         exec_env.config.empty_account_value_transfer && empty_account ->
-          {updated_exec_env, balance} = ExecEnv.balance(updated_exec_env)
+          {updated_exec_env, balance} =
+            ExecEnv.balance(updated_exec_env, updated_exec_env.address)
 
           if balance > 0, do: {updated_exec_env, true}, else: {updated_exec_env, false}
 

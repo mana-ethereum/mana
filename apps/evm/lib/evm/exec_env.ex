@@ -109,8 +109,8 @@ defmodule EVM.ExecEnv do
     {updated_exec_env, value}
   end
 
-  @spec balance(t()) :: {t(), EVM.Wei.t()}
-  def balance(exec_env = %{account_repo: account_repo, address: address}) do
+  @spec balance(t(), EVM.Address.t()) :: {t(), EVM.Wei.t() | nil}
+  def balance(exec_env = %{account_repo: account_repo}, address) do
     {updated_repo, balance} =
       AccountRepo.repo(account_repo).account_balance(account_repo, address)
 
@@ -186,5 +186,75 @@ defmodule EVM.ExecEnv do
     else
       non_existent_account?(updated_exec_env, address)
     end
+  end
+
+  @spec account_code(t(), EVM.Address.t()) :: {t(), nil | binary()}
+  def account_code(exec_env, address) do
+    {updated_repo, code} =
+      AccountRepo.repo(exec_env.account_repo).account_code(exec_env.account_repo, address)
+
+    updated_exec_env = %{exec_env | account_repo: updated_repo}
+
+    {updated_exec_env, code}
+  end
+
+  @spec code_hash(t(), EVM.Address.t()) :: {t(), binary() | nil}
+  def code_hash(exec_env, address) do
+    {updated_repo, code_hash} =
+      AccountRepo.repo(exec_env.account_repo).account_code_hash(exec_env.account_repo, address)
+
+    updated_exec_env = %{exec_env | account_repo: updated_repo}
+
+    {updated_exec_env, code_hash}
+  end
+
+  @spec account_nonce(t(), EVM.Address.t()) :: {t(), integer()}
+  def account_nonce(exec_env, address) do
+    {updated_repo, nonce} =
+      AccountRepo.repo(exec_env.account_repo).account_nonce(
+        exec_env.account_repo,
+        address
+      )
+
+    updated_exec_env = %{exec_env | account_repo: updated_repo}
+
+    {updated_exec_env, nonce}
+  end
+
+  @spec increment_account_nonce(t(), EVM.Address.t()) :: t()
+  def increment_account_nonce(exec_env, address) do
+    updated_repo =
+      AccountRepo.repo(exec_env.account_repo).increment_account_nonce(
+        exec_env.account_repo,
+        address
+      )
+
+    %{exec_env | account_repo: updated_repo}
+  end
+
+  def create_contract(exec_env, address, available_gas, value, data) do
+    block_header = BlockHeaderInfo.block_header(exec_env.block_header_info)
+
+    AccountRepo.repo(exec_env.account_repo).create_contract(
+      exec_env.account_repo,
+      # sender
+      exec_env.address,
+      # originator
+      exec_env.originator,
+      # available_gas
+      available_gas,
+      # gas_price
+      exec_env.gas_price,
+      # endowment
+      value,
+      # init_code
+      data,
+      # stack_depth
+      exec_env.stack_depth + 1,
+      # block_header
+      block_header,
+      address,
+      exec_env.config
+    )
   end
 end

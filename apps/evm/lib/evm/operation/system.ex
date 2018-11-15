@@ -1,7 +1,4 @@
 defmodule EVM.Operation.System do
-  alias EVM.AccountRepo
-  alias EVM.BlockHeaderInfo
-
   alias EVM.{
     Address,
     ExecEnv,
@@ -14,20 +11,13 @@ defmodule EVM.Operation.System do
     SubState
   }
 
-  @dialyzer {:no_return, callcode: 2}
-
   @doc """
   Create a new account with associated code.
   """
   @spec create(Operation.stack_args(), Operation.op_result()) :: Operation.op_result()
   def create([value, input_offset, input_size], vm_map = %{exec_env: exec_env}) do
-    {updated_repo, nonce} =
-      AccountRepo.repo(exec_env.account_repo).account_nonce(
-        exec_env.account_repo,
-        exec_env.address
-      )
+    {updated_exec_env, nonce} = ExecEnv.account_nonce(exec_env, exec_env.address)
 
-    updated_exec_env = %{exec_env | account_repo: updated_repo}
     vm_map = %{vm_map | exec_env: updated_exec_env}
 
     new_account_address = Address.new(exec_env.address, nonce)
@@ -270,15 +260,7 @@ defmodule EVM.Operation.System do
        ) do
     {data, machine_state} = EVM.Memory.read(machine_state, input_offset, input_size)
 
-    {updated_repo, account_balance} =
-      AccountRepo.repo(exec_env.account_repo).account_balance(
-        exec_env.account_repo,
-        exec_env.address
-      )
-
-    exec_env = %{exec_env | account_repo: updated_repo}
-
-    block_header = BlockHeaderInfo.block_header(exec_env.block_header_info)
+    {exec_env, account_balance} = ExecEnv.balance(exec_env, exec_env.address)
 
     is_allowed =
       value <= account_balance and exec_env.stack_depth < EVM.Functions.max_stack_depth()
@@ -294,35 +276,9 @@ defmodule EVM.Operation.System do
 
     {status, {updated_account_repo, n_gas, n_sub_state, output}} =
       if is_allowed do
-        account_repo =
-          AccountRepo.repo(exec_env.account_repo).increment_account_nonce(
-            exec_env.account_repo,
-            exec_env.address
-          )
-
-        n_exec_env = %{exec_env | account_repo: account_repo}
-
-        AccountRepo.repo(exec_env.account_repo).create_contract(
-          n_exec_env.account_repo,
-          # sender
-          n_exec_env.address,
-          # originator
-          n_exec_env.originator,
-          # available_gas
-          available_gas,
-          # gas_price
-          n_exec_env.gas_price,
-          # endowment
-          value,
-          # init_code
-          data,
-          # stack_depth
-          n_exec_env.stack_depth + 1,
-          # block_header
-          block_header,
-          new_account_address,
-          exec_env.config
-        )
+        exec_env
+        |> ExecEnv.increment_account_nonce(exec_env.address)
+        |> ExecEnv.create_contract(new_account_address, available_gas, value, data)
       else
         {:error, {exec_env.account_repo, available_gas, SubState.empty(), <<>>}}
       end

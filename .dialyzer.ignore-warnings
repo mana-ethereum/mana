@@ -1,3 +1,8 @@
+------------------------------
+# operations/system.ex
+------------------------------
+apps/evm/lib/evm/operation/system.ex:29: Function create2/2 has no local return
+
 -------------------------------
  # blockchain/block.ex warnings
  -------------------------------
@@ -62,4 +67,3 @@ apps/blockchain/lib/mix/tasks/sync/from_file.ex
 -------------------------------
 apps/blockchain/lib/eth_common_test/blockchain_test_runner.ex
 apps/blockchain/lib/eth_common_test/state_test_runner.ex
-
