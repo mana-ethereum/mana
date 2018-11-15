@@ -18,16 +18,20 @@ defmodule CLI do
   """
   @spec sync(atom(), module(), [any()]) :: {:ok, Blocktree.t()} | {:error, any()}
   def sync(chain_id, block_provider, block_provider_args \\ []) do
+    IO.inspect Config.db_name(chain_id)
+    IO.inspect "#{Config.db_name(chain_id)}-state"
     db = RocksDB.init(Config.db_name(chain_id))
+    state_db = RocksDB.init('#{Config.db_name(chain_id)}-state')
 
     trie = db |> Trie.new() |> CachingTrie.new()
+    state_trie = state_db |> Trie.new() |> CachingTrie.new()
     chain = Chain.load_chain(chain_id)
 
     {:ok, block_provider_state} = apply(block_provider, :setup, block_provider_args)
 
     blocktree = State.load_tree(db)
 
-    {:ok, {current_block, updated_trie}} = Blocktree.get_best_block(blocktree, chain, trie)
+    {:ok, {current_block, updated_state_trie}} = Blocktree.get_best_block(blocktree, chain, state_trie)
 
     with {:ok, highest_known_block_number} <-
            block_provider.get_block_number(block_provider_state) do
@@ -44,7 +48,8 @@ defmodule CLI do
       Sync.sync_new_blocks(
         block_provider,
         block_provider_state,
-        updated_trie,
+        trie,
+        updated_state_trie,
         chain,
         blocktree,
         current_block.header.number + 1,

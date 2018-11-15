@@ -546,12 +546,12 @@ defmodule Blockchain.Block do
       iex> status
       :valid
   """
-  @spec validate(t, Chain.t(), t, TrieStorage.t()) ::
-          {:valid, TrieStorage.t()} | {:invalid, [atom()]}
-  def validate(block, chain, parent_block, db) do
+  @spec validate(t, Chain.t(), t, TrieStorage.t(), TrieStorage.t()) ::
+          {:valid, TrieStorage.t(), TrieStorage.t()} | {:invalid, [atom()]}
+  def validate(block, chain, parent_block, trie, state_trie) do
     with :valid <- validate_parent_block(block, parent_block),
          :valid <- validate_header(block, parent_block, chain) do
-      HolisticValidity.validate(block, chain, parent_block, db)
+      HolisticValidity.validate(block, chain, parent_block, trie, state_trie)
     end
   end
 
@@ -574,6 +574,8 @@ defmodule Blockchain.Block do
   end
 
   defp validate_parent_block(block, parent_block) do
+    IO.inspect block.header.number
+    IO.inspect parent_block
     if block.header.number > 0 and parent_block == :parent_not_found do
       {:invalid, [:non_genesis_block_requires_parent]}
     else
@@ -591,16 +593,16 @@ defmodule Blockchain.Block do
   The trie db refers to where we expect our trie to exist, e.g.
   in `:ets` or `:rocksdb`. See `MerklePatriciaTree.DB`.
   """
-  @spec add_transactions(t, [Transaction.t()], DB.db(), Chain.t()) :: t
-  def add_transactions(block, transactions, trie, chain) do
-    {updated_block, updated_trie} = process_hardfork_specifics(block, chain, trie)
+  # @spec add_transactions(t, [Transaction.t()], TrieStorage.t(), TrieStorage.t(), Chain.t()) :: t
+  def add_transactions(block, transactions, trie, state_trie, chain) do
+    {updated_block, updated_state_trie} = process_hardfork_specifics(block, chain, state_trie)
 
-    {updated_block, updated_trie} =
-      do_add_transactions(updated_block, transactions, updated_trie, chain)
+    {updated_block, updated_trie, updated_state_trie} =
+      do_add_transactions(updated_block, transactions, trie, updated_state_trie, chain)
 
     updated_block = calculate_logs_bloom(updated_block)
 
-    {updated_block, updated_trie}
+    {updated_block, updated_trie, updated_state_trie}
   end
 
   defp process_hardfork_specifics(block, chain, trie) do
@@ -618,38 +620,39 @@ defmodule Blockchain.Block do
     end
   end
 
-  @spec do_add_transactions(t, [Transaction.t()], DB.db(), Chain.t(), integer()) ::
+  @spec do_add_transactions(t, [Transaction.t()], TrieStorage.t(), TrieStorage.t(), Chain.t(), integer()) ::
           {t, TrieStorage.t()}
-  defp do_add_transactions(block, transactions, state, chain, trx_count \\ 0)
+  defp do_add_transactions(block, transactions, trie, state_trie, chain, trx_count \\ 0)
 
-  defp do_add_transactions(block, [], trie, _, _), do: {block, trie}
+  defp do_add_transactions(block, [], trie, state_trie, _, _), do: {block, trie, state_trie}
 
   defp do_add_transactions(
          block = %__MODULE__{header: header},
          [trx | transactions],
          trie,
+         state_trie,
          chain,
          trx_count
        ) do
-    state = TrieStorage.set_root_hash(trie, header.state_root)
+    state_trie = TrieStorage.set_root_hash(state_trie, header.state_root)
 
     {new_account_repo, gas_used, receipt} =
-      Transaction.execute_with_validation(state, trx, header, chain)
+      Transaction.execute_with_validation(state_trie, trx, header, chain)
 
-    new_state = Repo.commit(new_account_repo).state
+    updated_state_trie = Repo.commit(new_account_repo).state_trie
 
     total_gas_used = block.header.gas_used + gas_used
     receipt = %{receipt | cumulative_gas: total_gas_used}
 
     updated_block =
       block
-      |> put_state(new_state)
+      |> put_state(updated_state_trie)
       |> put_gas_used(total_gas_used)
 
-    {updated_block, updated_state} = put_receipt(updated_block, trx_count, receipt, new_state)
-    {updated_block, updated_state} = put_transaction(updated_block, trx_count, trx, updated_state)
+    {updated_block, updated_trie} = put_receipt(updated_block, trx_count, receipt, trie)
+    {updated_block, updated_trie} = put_transaction(updated_block, trx_count, trx, updated_trie)
 
-    do_add_transactions(updated_block, transactions, updated_state, chain, trx_count + 1)
+    do_add_transactions(updated_block, transactions, updated_trie, updated_state_trie, chain, trx_count + 1)
   end
 
   @spec calculate_logs_bloom(t()) :: t()

@@ -84,13 +84,13 @@ defmodule Blockchain.Genesis do
       # TODO: Add test case with initial storage
   """
   @spec create_block(Chain.t(), TrieStorage.t()) :: {Block.t(), TrieStorage.t()}
-  def create_block(chain, trie) do
+  def create_block(chain, state_trie) do
     header = create_header(chain.genesis)
     block = %Block{header: header}
     accounts = Enum.into(chain.accounts, [])
 
     state =
-      Enum.reduce(accounts, trie, fn {address, account_map}, trie_acc ->
+      Enum.reduce(accounts, state_trie, fn {address, account_map}, trie_acc ->
         if is_nil(account_map[:balance]) do
           trie_acc
         else
@@ -126,11 +126,11 @@ defmodule Blockchain.Genesis do
   end
 
   @spec create_account(TrieStorage.t(), EVM.address(), map()) :: {Account.t(), TrieStorage.t()}
-  def create_account(trie, address, account_map) do
+  def create_account(state_trie, address, account_map) do
     storage =
       if account_map[:storage_root],
-        do: TrieStorage.set_root_hash(trie, account_map[:storage_root]),
-        else: TrieStorage.set_root_hash(trie, MerklePatriciaTree.Trie.empty_trie_root_hash())
+        do: TrieStorage.set_root_hash(state_trie, account_map[:storage_root]),
+        else: TrieStorage.set_root_hash(state_trie, MerklePatriciaTree.Trie.empty_trie_root_hash())
 
     storage =
       if account_map[:storage] do

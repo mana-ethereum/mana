@@ -50,12 +50,12 @@ defmodule Blockchain.Block.HolisticValidity do
       ...> |> Blockchain.Block.validate(chain, parent_block, db)
       {:invalid, [:receipts_root_mismatch, :transactions_root_mismatch, :ommers_hash_mismatch, :state_root_mismatch]}
   """
-  @spec validate(Block.t(), Chain.t(), Block.t() | nil, TrieStorage.t()) ::
-          {:valid, TrieStorage.t()} | {:invalid, [atom()]}
-  def validate(block, chain, parent_block, trie) do
-    {base_block, state} =
+  @spec validate(Block.t(), Chain.t(), Block.t() | nil, TrieStorage.t(), TrieStorage.t()) ::
+          {:valid, TrieStorage.t(), TrieStorage.t()} | {:invalid, [atom()]}
+  def validate(block, chain, parent_block, trie, state_trie) do
+    {base_block, state_trie} =
       if is_nil(parent_block) do
-        Genesis.create_block(chain, trie)
+        Genesis.create_block(chain, state_trie)
       else
         {Block.gen_child_block(
            parent_block,
@@ -64,16 +64,16 @@ defmodule Blockchain.Block.HolisticValidity do
            timestamp: block.header.timestamp,
            gas_limit: block.header.gas_limit,
            extra_data: block.header.extra_data
-         ), trie}
+         ), state_trie}
       end
 
     child_block_with_ommers = Block.add_ommers(base_block, block.ommers)
 
-    {child_block_with_transactions, updated_trie} =
-      Block.add_transactions(child_block_with_ommers, block.transactions, state, chain)
+    {child_block_with_transactions, updated_trie, updated_state_trie} =
+      Block.add_transactions(child_block_with_ommers, block.transactions, trie, state_trie, chain)
 
-    {child_block, updated_trie} =
-      Block.add_rewards(child_block_with_transactions, updated_trie, chain)
+    {child_block, updated_state_trie} =
+      Block.add_rewards(child_block_with_transactions, updated_state_trie, chain)
 
     # The following checks Holistic Validity,
     # as defined in Eq.(31), section 4.3.2 of Yellow Paper
@@ -87,7 +87,7 @@ defmodule Blockchain.Block.HolisticValidity do
       |> check_logs_bloom(child_block, block)
 
     if errors == [] do
-      {:valid, updated_trie}
+      {:valid, updated_trie, updated_state_trie}
     else
       {:invalid, errors}
     end

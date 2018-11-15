@@ -21,6 +21,7 @@ defmodule CLI.Sync do
           module(),
           any(),
           TrieStorage.t(),
+          TrieStorage.t(),
           Chain.t(),
           Blocktree.t(),
           block_limit(),
@@ -30,6 +31,7 @@ defmodule CLI.Sync do
         block_provider,
         block_provider_state,
         trie,
+        state_trie,
         chain,
         tree,
         block_number,
@@ -43,8 +45,8 @@ defmodule CLI.Sync do
       {:continue, next_block_limit} ->
         with {:ok, next_block, next_block_provider_state} <-
                block_provider.get_block(block_number, block_provider_state) do
-          case Blocktree.verify_and_add_block(tree, chain, next_block, trie) do
-            {:ok, {next_tree, updated_trie, _block_hash}} ->
+          case Blocktree.verify_and_add_block(tree, chain, next_block, trie, state_trie) do
+            {:ok, {next_tree, updated_trie, updated_state_trie, _block_hash}} ->
               track_progress(block_number, highest_known_block_number)
 
               updated_trie =
@@ -66,6 +68,7 @@ defmodule CLI.Sync do
                 block_provider,
                 next_block_provider_state,
                 updated_trie,
+                updated_state_trie,
                 chain,
                 next_tree,
                 block_number + 1,

@@ -37,9 +37,11 @@ defmodule Blockchain.Blocktree do
         chain,
         block,
         trie,
+        state_trie,
         do_validate \\ true,
         specified_block_hash \\ nil
       ) do
+        IO.inspect Block.get_parent_block(block, trie), label: "parent block result"
     parent =
       case Block.get_parent_block(block, trie) do
         :genesis -> nil
@@ -49,8 +51,8 @@ defmodule Blockchain.Blocktree do
 
     validation =
       if do_validate,
-        do: Block.validate(block, chain, parent, trie),
-        else: {:valid, trie}
+        do: Block.validate(block, chain, parent, trie, state_trie),
+        else: {:valid, trie, state_trie}
 
     with {:valid, trie} <- validation do
       {:ok, {block_hash, updated_trie}} = Block.put_block(block, trie, specified_block_hash)

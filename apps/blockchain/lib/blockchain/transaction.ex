@@ -172,16 +172,16 @@ defmodule Blockchain.Transaction do
   @spec execute_with_validation(Trie.t(), t, Header.t(), Chain.t()) ::
           {Repo.t(), Gas.t(), Receipt.t()}
   def execute_with_validation(
-        state,
+        state_trie,
         tx,
         block_header,
         chain
       ) do
-    validation_result = Validity.validate(state, tx, block_header, chain)
+    validation_result = Validity.validate(state_trie, tx, block_header, chain)
 
     case validation_result do
-      :valid -> execute(state, tx, block_header, chain)
-      {:invalid, _} -> {Repo.new(state), 0, %Receipt{}}
+      :valid -> execute(state_trie, tx, block_header, chain)
+      {:invalid, _} -> {Repo.new(state_trie), 0, %Receipt{}}
     end
   end
 
@@ -200,11 +200,11 @@ defmodule Blockchain.Transaction do
   Υ^l, Y^z} in the Transaction Execution section of the Yellow Paper.
   """
   @spec execute(Trie.t(), t, Header.t(), Chain.t()) :: {Repo.t(), Gas.t(), Receipt.t()}
-  def execute(state, tx, block_header, chain) do
+  def execute(state_trie, tx, block_header, chain) do
     {:ok, sender} = Transaction.Signature.sender(tx, chain.params.network_id)
 
     evm_config = Chain.evm_config(chain, block_header.number)
-    initial_account_repo = Repo.new(state)
+    initial_account_repo = Repo.new(state_trie)
 
     {updated_account_repo, remaining_gas, sub_state, status} =
       initial_account_repo
@@ -217,7 +217,7 @@ defmodule Blockchain.Transaction do
       if empty_contract_creation?(tx) && evm_config.clean_touched_accounts do
         account_repo_after_execution = Repo.commit(updated_account_repo)
 
-        root_hash = TrieStorage.root_hash(account_repo_after_execution.state)
+        root_hash = TrieStorage.root_hash(account_repo_after_execution.state_trie)
 
         receipt =
           create_receipt(
@@ -253,7 +253,7 @@ defmodule Blockchain.Transaction do
           )
           |> Repo.commit()
 
-        root_hash = TrieStorage.root_hash(account_repo_after_execution.state)
+        root_hash = TrieStorage.root_hash(account_repo_after_execution.state_trie)
 
         receipt =
           create_receipt(
