@@ -59,7 +59,7 @@ defmodule ExWire.Sync do
     {block_tree, trie} = load_sync_state(chain)
     block_queue = %BlockQueue{}
 
-    Process.send_after(self(), {:request_next_block, block_queue, block_tree}, @startup_delay)
+    request_next_block(@startup_delay)
 
     {:ok,
      %{
@@ -71,12 +71,19 @@ defmodule ExWire.Sync do
      }}
   end
 
+  defp request_next_block(timeout \\ 0) do
+    Process.send_after(self(), :request_next_block, timeout)
+  end
+
   @doc """
   When were receive a block header, we'll add it to our block queue. When we
   receive the corresponding block body, we'll add that as well.
   """
   @impl true
-  def handle_info({:request_next_block, block_queue, block_tree}, state) do
+  def handle_info(
+        :request_next_block,
+        state = %{block_queue: block_queue, block_tree: block_tree}
+      ) do
     new_state = handle_request_next_block(block_queue, block_tree, state)
 
     {:noreply, new_state}
@@ -102,32 +109,34 @@ defmodule ExWire.Sync do
   """
   @spec handle_request_next_block(BlockQueue.t(), Blocktree.t(), state()) :: state()
   def handle_request_next_block(block_queue, block_tree, state) do
-    next_block_to_request = request_next_block(block_queue, block_tree)
+    next_block_to_request = get_next_block_to_request(block_queue, block_tree)
 
-    if PeerSupervisor.connected_peer_count() > 0 do
-      :ok = Logger.debug(fn -> "[Sync] Requesting block #{next_block_to_request}" end)
+    :ok = Logger.debug(fn -> "[Sync] Requesting block headers to #{next_block_to_request}" end)
 
-      :ok =
-        PeerSupervisor.send_packet(
-          %GetBlockHeaders{
-            block_identifier: next_block_to_request,
-            max_headers: @blocks_per_request,
-            skip: 0,
-            reverse: false
-          },
-          :random
-        )
+    packet_res =
+      PeerSupervisor.send_packet(
+        %GetBlockHeaders{
+          block_identifier: next_block_to_request,
+          max_headers: @blocks_per_request,
+          skip: 0,
+          reverse: false
+        },
+        :random
+      )
 
-      Map.put(state, :last_requested_block, next_block_to_request + @blocks_per_request)
-    else
-      :ok =
-        Logger.debug(fn ->
-          "[Sync] No connected peers to sync, trying again in #{@retry_delay / 1000} second(s)"
-        end)
+    case packet_res do
+      :ok ->
+        Map.put(state, :last_requested_block, next_block_to_request + @blocks_per_request)
 
-      Process.send_after(self(), {:request_next_block, block_queue, block_tree}, @retry_delay)
+      :unsent ->
+        :ok =
+          Logger.debug(fn ->
+            "[Sync] No connected peers to sync, trying again in #{@retry_delay / 1000} second(s)"
+          end)
 
-      state
+        request_next_block(@retry_delay)
+
+        state
     end
   end
 
@@ -140,7 +149,7 @@ defmodule ExWire.Sync do
         Otherwise, we request the block bodies for the blocks we don't
         know about.
 
-  Note: we process blocks in memroy and save our state tree every so often.
+  Note: we process blocks in memory and save our state tree every so often.
   Note: this mimics a lot of the logic from block bodies since a header
         of an empty block *is* a complete block.
   """
@@ -152,8 +161,7 @@ defmodule ExWire.Sync do
           block_queue: block_queue,
           block_tree: block_tree,
           chain: chain,
-          trie: trie,
-          last_requested_block: last_requested_block
+          trie: trie
         }
       ) do
     {next_block_queue, next_block_tree, next_trie, header_hashes} =
@@ -195,20 +203,18 @@ defmodule ExWire.Sync do
         :random
       )
 
-    {new_last_requested_block, next_trie} =
+    next_trie =
       maybe_request_new_block_or_save(
         block_tree,
         next_block_tree,
         next_trie,
-        next_block_queue,
-        last_requested_block
+        next_block_queue
       )
 
     state
     |> Map.put(:block_queue, next_block_queue)
     |> Map.put(:block_tree, next_block_tree)
     |> Map.put(:trie, next_trie)
-    |> Map.put(:last_requested_block, new_last_requested_block)
   end
 
   @doc """
@@ -226,8 +232,7 @@ defmodule ExWire.Sync do
           block_queue: block_queue,
           block_tree: block_tree,
           chain: chain,
-          trie: trie,
-          last_requested_block: last_requested_block
+          trie: trie
         }
       ) do
     {next_block_queue, next_block_tree, next_trie} =
@@ -237,20 +242,18 @@ defmodule ExWire.Sync do
         BlockQueue.add_block_struct(block_queue, block_tree, block_body, chain, trie)
       end)
 
-    {new_last_requested_block, next_trie} =
+    next_trie =
       maybe_request_new_block_or_save(
         block_tree,
         next_block_tree,
         next_trie,
-        next_block_queue,
-        last_requested_block
+        next_block_queue
       )
 
     state
     |> Map.put(:block_queue, next_block_queue)
     |> Map.put(:block_tree, next_block_tree)
     |> Map.put(:trie, next_trie)
-    |> Map.put(:last_requested_block, new_last_requested_block)
   end
 
   @doc """
@@ -258,8 +261,8 @@ defmodule ExWire.Sync do
   dispatches a request to all connected peers for that block and the
   next `n` blocks after it.
   """
-  @spec request_next_block(BlockQueue.t(), Blocktree.t()) :: integer()
-  def request_next_block(block_queue, block_tree) do
+  @spec get_next_block_to_request(BlockQueue.t(), Blocktree.t()) :: integer()
+  def get_next_block_to_request(block_queue, block_tree) do
     # This is the best we know about
     next_number =
       case block_tree.best_block do
@@ -281,23 +284,26 @@ defmodule ExWire.Sync do
           Blocktree.t(),
           Blocktree.t(),
           Trie.t(),
-          BlockQueue.t(),
-          integer()
-        ) :: {integer(), Trie.t()}
+          BlockQueue.t()
+        ) :: Trie.t()
   defp maybe_request_new_block_or_save(
          block_tree,
          next_block_tree,
          trie,
-         block_queue,
-         last_requested_block
+         block_queue
        ) do
-    # We can make this better, but it's basically "if we change, request another block"
     if block_tree != next_block_tree do
+      # Let's consider saving the trie if it's changed
       maybe_commited_trie = maybe_save_sync_state(next_block_tree, trie)
 
-      {request_next_block(block_queue, next_block_tree), maybe_commited_trie}
+      # Also, let's pull a new block
+      if block_queue.queue == %{} do
+        request_next_block()
+      end
+
+      maybe_commited_trie
     else
-      {last_requested_block, trie}
+      trie
     end
   end
 

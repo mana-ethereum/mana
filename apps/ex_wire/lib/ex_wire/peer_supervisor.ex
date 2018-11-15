@@ -59,7 +59,7 @@ defmodule ExWire.PeerSupervisor do
 
     results =
       for child <- find_children(node_selector) do
-        Exth.inspect(fn ->
+        Exth.trace(fn ->
           "[PeerSup] Sending #{to_string(packet.__struct__)} packet to peer #{
             inspect(Server.get_peer(child).ident)
           }"
