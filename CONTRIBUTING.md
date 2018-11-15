@@ -2,11 +2,13 @@
 
 Thank your for contributing to this project! We welcome collaborators and expect users to follow our [code of conduct](CODE_OF_CONDUCT.md) when submitting code or comments.
 
+Note: The base branch requires [all commits to be signed](https://help.github.com/articles/about-commit-signature-verification). 
+
 1. Fork the repo (https://github.com/mana-ethereum/mana/fork).
 2. Create your feature branch (`git checkout -b my-new-feature`).
 3. Write tests that cover your work.
 4. Ensure CI rules are satisfied. 
-5. Commit your changes (`git commit -am 'Add some feature'`).
+5. Commit your changes (`git commit -S -a -m 'Add some feature'`).
 6. Push to your branch (`git push origin my-new-feature`).
 7. Create a new PR (Pull Request).
 

@@ -59,17 +59,15 @@ Once syncing begins you will see a timestamp and a running list of verified bloc
 [Infura API key here]: https://infura.io/register
 
 ### Known Sync Issues
-_Updated 11/6/2018_
+_Updated 11/15/2018_
 
-- Mainnet syncing slows considerably due to the [transaction spam attack]
-that impacted Ethereum in late 2016. We are currently synced to ~ block [2469000] and counting.
-- Ropsten fails on block [2444903] with `receipts_root_mismatch`,
-  `gas_used_mismatch` and `state_root_mismatch` errors - see [#580].
+- Mainnet syncing is currently paused at block 2469002 as we investigate slow `BALANCE` calls [#610].
+- Ropsten sync is in progress, current block is ~ 3148000 - May 2018.
 
 [transaction spam attack]: https://blog.ethereum.org/2016/09/22/transaction-spam-attack-next-steps/
 [2469000]: https://etherscan.io/block/2,469,000
 [2444903]: https://ropsten.etherscan.io/txs?block=2444903
-[#580]: https://github.com/mana-ethereum/mana/issues/580
+[#610]: https://github.com/mana-ethereum/mana/issues/610
 
 ### Helpful debugging tools
 
