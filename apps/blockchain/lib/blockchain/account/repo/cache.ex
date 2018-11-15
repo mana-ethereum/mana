@@ -5,8 +5,11 @@ defmodule Blockchain.Account.Repo.Cache do
 
   defstruct storage_cache: %{}, accounts_cache: %{}
 
+  @type current_value :: integer() | :deleted
+  @type initial_value :: integer() | nil | :account_not_found | :key_not_found
+
   @type key_cache() :: %{
-          integer() => %{current_value: integer() | :deleted, initial_value: integer() | nil}
+          integer() => %{current_value: current_value(), initial_value: initial_value()}
         }
   @type maybe_code :: EVM.MachineCode.t() | nil
   @type maybe_account :: Account.t() | nil

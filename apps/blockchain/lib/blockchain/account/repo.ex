@@ -377,26 +377,23 @@ defmodule Blockchain.Account.Repo do
   @impl true
   def storage(account_repo, evm_address, key) do
     address = Account.Address.from(evm_address)
-    cached_value = Cache.current_value(account_repo.cache, address, key)
+
+    cached_value =
+      Cache.current_value(account_repo.cache, address, key) ||
+        Cache.initial_value(account_repo.cache, address, key)
 
     case cached_value do
       nil ->
-        {updated_repo, account} = account(account_repo, address)
-        stored_value = Account.get_storage(account_repo.state, account, key)
-
-        found_value =
-          case stored_value do
-            :account_not_found ->
-              if account, do: :key_not_found, else: :account_not_found
-
-            stored_value ->
-              stored_value
-          end
-
-        {updated_repo, found_value}
+        cache_and_get_initial_storage_value(account_repo, address, key)
 
       :deleted ->
         {account_repo, :key_not_found}
+
+      :key_not_found ->
+        {account_repo, :key_not_found}
+
+      :account_not_found ->
+        {account_repo, :account_not_found}
 
       _ ->
         {account_repo, {:ok, cached_value}}
@@ -410,11 +407,15 @@ defmodule Blockchain.Account.Repo do
 
     case cached_value do
       nil ->
-        {updated_account_repo, account} = account(account_repo, address)
+        cache_and_get_initial_storage_value(account_repo, address, key)
 
-        {updated_account_repo, Account.get_storage(account_repo.state, account, key)}
+      :account_not_found ->
+        {account_repo, :account_not_found}
 
-      _ ->
+      :key_not_found ->
+        {account_repo, :key_not_found}
+
+      cached_value ->
         {account_repo, {:ok, cached_value}}
     end
   end
@@ -575,5 +576,31 @@ defmodule Blockchain.Account.Repo do
     }
 
     Contract.create(params)
+  end
+
+  defp cache_and_get_initial_storage_value(account_repo, address, key) do
+    {updated_repo, account} = account(account_repo, address)
+    stored_value = Account.get_storage(updated_repo.state, account, key)
+
+    found_value =
+      case stored_value do
+        :account_not_found ->
+          if account, do: :key_not_found, else: :account_not_found
+
+        stored_value ->
+          stored_value
+      end
+
+    value_to_cache =
+      case found_value do
+        {:ok, value} -> value
+        status -> status
+      end
+
+    updated_cache = Cache.add_initial_value(updated_repo.cache, address, key, value_to_cache)
+
+    updated_account_repo = %{account_repo | cache: updated_cache}
+
+    {updated_account_repo, found_value}
   end
 end
