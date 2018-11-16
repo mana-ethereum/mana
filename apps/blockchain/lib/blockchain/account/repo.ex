@@ -208,12 +208,7 @@ defmodule Blockchain.Account.Repo do
       else
         storage_account = account_from_storage(account_repo.state, address)
 
-        updated_repo =
-          if storage_account do
-            put_account(account_repo, address, storage_account, :clean)
-          else
-            account_repo
-          end
+        updated_repo = put_account(account_repo, address, storage_account, :clean)
 
         {storage_account, updated_repo}
       end

@@ -350,5 +350,17 @@ defmodule Blockchain.Account.RepoTest do
                storage_root: Account.empty_trie()
              }
     end
+
+    test "caches not found account in the storage", %{state: state} do
+      address = <<999>>
+
+      account_repo = Repo.new(state)
+
+      {updated_repo, result} = Repo.account(account_repo, address)
+
+      assert is_nil(result)
+
+      assert Cache.account(updated_repo.cache, address) == {:clean, nil, nil}
+    end
   end
 end
