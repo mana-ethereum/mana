@@ -5,12 +5,6 @@ defmodule CLI.Config do
   the block tree.
   """
 
-  @doc """
-  The name of the database (e.g. for RocksDB) to store loaded blocks in.
-  ## Examples
-      iex> CLI.Config.db_name(:ropsten)
-      'db/mana-ropsten'
-  """
   @spec db_name(atom()) :: nonempty_charlist()
   def db_name(chain_id) do
     path = "#{System.cwd!()}/db/mana-#{Atom.to_string(chain_id)}"
