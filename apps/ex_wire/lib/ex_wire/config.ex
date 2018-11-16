@@ -25,6 +25,31 @@ defmodule ExWire.Config do
           | :protocol_version
           | :public_ip
           | :sync
+          | :db_root
+
+  @type bootnodes :: :from_chain | [binary()]
+  @type chain :: :foundation | :ropsten
+  @type discovery :: boolean()
+  @type sync :: boolean()
+
+  @type configure :: [{env_keys, any()}]
+
+  @doc """
+  Allows application to configure ExWire before it starts.
+  """
+  @spec configure!(configure) :: [any()] | no_return()
+  def configure!(kw_args) do
+    if Enum.member?(Application.started_applications(), :ex_wire) do
+      ## you could do something like:
+      ## Application.stop(:ex_wire)
+      ## :ok = Application.start(:ex_wire)
+      throw("Cannot configure ExWire after started")
+    end
+
+    for {env_key, env_val} <- kw_args do
+      Application.put_env(:ex_wire, env_key, env_val, persistent: true)
+    end
+  end
 
   @doc """
   Returns a private key that is generated when a new session is created.
@@ -162,7 +187,9 @@ defmodule ExWire.Config do
 
   @spec db_name(Chain.t()) :: nonempty_charlist()
   def db_name(chain) do
-    'db/mana-' ++ String.to_charlist(chain.name)
+    db_root = get_env!([], :db_root)
+    chain_db_path = Path.join(db_root, "mana-#{String.downcase(chain.name)}")
+    String.to_charlist(chain_db_path)
   end
 
   @spec commitment_count(Keyword.t()) :: integer()

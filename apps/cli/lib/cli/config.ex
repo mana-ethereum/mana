@@ -16,8 +16,6 @@ defmodule CLI.Config do
     path = "#{System.cwd!()}/db/mana-#{Atom.to_string(chain_id)}"
     dirname = Path.dirname(path)
     :ok = File.mkdir_p(dirname)
-
-    "#{System.cwd!()}/db/mana-#{Atom.to_string(chain_id)}"
-    |> String.to_charlist()
+    String.to_charlist(path)
   end
 end

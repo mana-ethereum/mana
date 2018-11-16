@@ -4,13 +4,13 @@ use Mix.Config
 
 config :cli,
   cookie:
-    :erlang.apply(
+    apply(
       fn ->
         cookie =
           if String.contains?(System.cwd!(), "apps") do
-            String.trim(File.read!(Enum.join(["../../", "COOKIE"])))
+            String.trim(File.read!(Path.join(["../../", "COOKIE"])))
           else
-            String.trim(File.read!(Enum.join([System.cwd!(), "/COOKIE"])))
+            String.trim(File.read!(Path.join([System.cwd!(), "COOKIE"])))
           end
 
         :erlang.binary_to_atom(cookie, :utf8)

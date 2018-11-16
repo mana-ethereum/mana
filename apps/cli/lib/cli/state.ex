@@ -9,7 +9,7 @@ defmodule CLI.State do
     GenServer.start_link(__MODULE__, chain, name: __MODULE__)
   end
 
-  def init(_chain) do
-    {:ok, %{}}
+  def init(chain) do
+    {:ok, chain}
   end
 end

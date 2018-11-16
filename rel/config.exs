@@ -24,7 +24,9 @@ use Mix.Releases.Config,
 environment :dev do
   set(
     commands: [
-      sync: "rel/commands/sync"
+      # we can replace sync with whatever, 'run' too for example
+      sync: "rel/commands/sync",
+      run: "rel/commands/sync"
     ]
   )
 
@@ -33,15 +35,15 @@ environment :dev do
 
   set(
     cookie:
-      :erlang.apply(
+      apply(
         fn ->
           cookie_path =
             case String.contains?(System.cwd!(), "apps") do
               true ->
-                Enum.join(["../../", "COOKIE"])
+                Path.join(["../../", "COOKIE"])
 
               false ->
-                Enum.join([System.cwd!(), "/COOKIE"])
+                Path.join([System.cwd!(), "COOKIE"])
             end
 
           cookie =
@@ -70,14 +72,14 @@ end
 release :mana do
   set(
     version:
-      :erlang.apply(
+      apply(
         fn ->
           case String.contains?(System.cwd!(), "apps") do
             true ->
-              String.trim(File.read!(Enum.join(["../../", "MANA_VERSION"])))
+              String.trim(File.read!(Path.join(["../../", "MANA_VERSION"])))
 
             false ->
-              String.trim(File.read!(Enum.join([System.cwd!(), "/MANA_VERSION"])))
+              String.trim(File.read!(Path.join([System.cwd!(), "MANA_VERSION"])))
           end
         end,
         []

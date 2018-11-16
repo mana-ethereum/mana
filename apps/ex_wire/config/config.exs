@@ -21,13 +21,24 @@ config :ex_wire,
     supervisor_name: ExWire.NodeDiscoverySupervisor,
     port: 30_304
   ],
-  mana_version:
-    :erlang.apply(
+  db_root:
+    apply(
       fn ->
         if String.contains?(System.cwd!(), "apps") do
-          String.trim(File.read!(Enum.join(["../../", "MANA_VERSION"])))
+          Path.join([System.cwd!(), "/../../", "db"])
         else
-          String.trim(File.read!(Enum.join([System.cwd!(), "/MANA_VERSION"])))
+          Path.join([System.cwd!(), "/db"])
+        end
+      end,
+      []
+    ),
+  mana_version:
+    apply(
+      fn ->
+        if String.contains?(System.cwd!(), "apps") do
+          String.trim(File.read!(Path.join(["../../", "MANA_VERSION"])))
+        else
+          String.trim(File.read!(Path.join([System.cwd!(), "MANA_VERSION"])))
         end
       end,
       []

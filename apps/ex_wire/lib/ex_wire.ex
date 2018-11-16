@@ -14,6 +14,7 @@ defmodule ExWire do
   alias ExWire.PeerSupervisor
   alias ExWire.Sync
   alias ExWire.TCPListeningSupervisor
+  require Logger
 
   def start(_type, _args) do
     Supervisor.start_link(
