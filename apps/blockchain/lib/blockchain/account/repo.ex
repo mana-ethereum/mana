@@ -170,10 +170,36 @@ defmodule Blockchain.Account.Repo do
 
   @spec machine_code(t(), Address.t()) :: {t(), {:ok, binary()} | :not_found}
   def machine_code(account_repo, address) do
-    {updated_repo, _account, code} = account_with_code(account_repo, address)
+    {updated_repo, account, code} = account_with_code(account_repo, address)
+
+    cond do
+      is_nil(account) ->
+        :not_found
+
+      is_nil(code) ->
+        found_code = Account.machine_code(updated_repo.state, account)
+
+        value_to_cache =
+          case found_code do
+            {:ok, found_code} -> found_code
+            :not_found -> :not_found
+          end
+
+        {status, account, _} = account_from_cache(updated_repo.cache, address)
+
+        updated_cache =
+          Cache.update_account(updated_repo.cache, address, {status, account, value_to_cache})
+
+        repo_with_cached_code = %{updated_repo | cache: updated_cache}
+
+        {repo_with_cached_code, found_code}
+
+      true ->
+        code
+    end
 
     case code do
-      nil -> {updated_repo, Account.get_machine_code(account_repo.state, address)}
+      nil -> {updated_repo, Account.machine_code(account_repo.state, address)}
       code -> {updated_repo, {:ok, code}}
     end
   end

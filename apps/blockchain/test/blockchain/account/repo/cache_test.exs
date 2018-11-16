@@ -245,7 +245,7 @@ defmodule Blockchain.Account.Repo.CacheTest do
       found_account = Account.get_account(committed_state, address)
       assert %{found_account | code_hash: new_account.code_hash} == new_account
 
-      {:ok, found_code} = Account.get_machine_code(committed_state, address)
+      {:ok, found_code} = Account.machine_code(committed_state, address)
       assert found_code == code
     end
 
@@ -273,7 +273,7 @@ defmodule Blockchain.Account.Repo.CacheTest do
       found_account = Account.get_account(committed_state, address)
       assert found_account == %Account{}
 
-      {:ok, found_code} = Account.get_machine_code(committed_state, address)
+      {:ok, found_code} = Account.machine_code(committed_state, address)
       assert found_code == ""
     end
 
