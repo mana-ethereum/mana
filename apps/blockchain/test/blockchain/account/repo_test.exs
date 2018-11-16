@@ -204,9 +204,9 @@ defmodule Blockchain.Account.RepoTest do
 
       updated_state = Account.put_code(updated_repo.state, address, <<7>>)
 
-      repo_with_new_code = %{update_repo | state: updated_state}
+      repo_with_new_code = %{updated_repo | state: updated_state}
 
-      {_repo, {:ok, found_code} = Repo.machine_code(repo_with_new_code, address)
+      {_repo, {:ok, found_code}} = Repo.machine_code(repo_with_new_code, address)
 
       assert found_code == code
     end
