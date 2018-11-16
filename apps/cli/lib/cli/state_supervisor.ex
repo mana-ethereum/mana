@@ -11,8 +11,8 @@ defmodule CLI.StateSupervisor do
 
   def init(chain) do
     :cli = :ets.new(:cli, [:set, :public, :named_table])
-    children = [worker(State, [chain])]
+    children = [{State, [chain]}]
 
-    supervise(children, strategy: :one_for_one)
+    Supervisor.init(children, strategy: :one_for_one)
   end
 end
