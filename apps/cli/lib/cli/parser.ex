@@ -5,8 +5,8 @@ defmodule CLI.Parser do
   @type sync_arg_keywords :: [provider: String.t(), provider_url: String.t()]
 
   @default_chain_name "ropsten"
-  @default_no_discovery false
-  @default_no_sync false
+  @default_no_discovery true
+  @default_no_sync true
   @default_bootnodes "from_chain"
   @default_debug false
 
@@ -21,7 +21,7 @@ defmodule CLI.Parser do
 
   ## Examples
 
-      iex> CLI.Parser.ManaParser.mana_args(["--chain", "ropsten", "--discovery", "false", "--sync", "false"])
+      iex> CLI.Parser.mana_args(["--chain", "ropsten", "--discovery", "false", "--sync", "false"])
       {:ok, %{
         chain_name: :ropsten,
         discovery: false,
@@ -30,7 +30,7 @@ defmodule CLI.Parser do
         debug: false
       }}
 
-      iex> CLI.Parser.ManaParser.mana_args(["--chain", "foundation", "--bootnodes", "enode://google.com,enode://apple.com"])
+      iex> CLI.Parser.mana_args(["--chain", "foundation", "--bootnodes", "enode://google.com,enode://apple.com"])
       {:ok, %{
         chain_name: :foundation,
         discovery: true,
@@ -39,7 +39,7 @@ defmodule CLI.Parser do
         debug: false
       }}
 
-      iex> CLI.Parser.ManaParser.mana_args([])
+      iex> CLI.Parser.mana_args([])
       {:ok, %{
         chain_name: :ropsten,
         discovery: true,
@@ -48,7 +48,7 @@ defmodule CLI.Parser do
         debug: false
       }}
 
-      iex> CLI.Parser.ManaParser.mana_args(["--chain", "pony"])
+      iex> CLI.Parser.mana_args(["--chain", "pony"])
       {:error, "Invalid chain: pony"}
   """
   @spec mana_args([String.t()]) ::
@@ -102,7 +102,7 @@ defmodule CLI.Parser do
       kw_args
       |> Keyword.get(:discovery, @default_no_discovery)
 
-    {:ok, String.to_existing_atom(discovery)}
+    {:ok, to_bool(discovery)}
   end
 
   @spec get_sync(sync: boolean()) :: {:ok, boolean()} | {:error, String.t()}
@@ -111,7 +111,7 @@ defmodule CLI.Parser do
       kw_args
       |> Keyword.get(:sync, @default_no_sync)
 
-    {:ok, String.to_existing_atom(sync)}
+    {:ok, to_bool(sync)}
   end
 
   @spec get_debug(debug: boolean()) :: {:ok, boolean()} | {:error, String.t()}
@@ -120,7 +120,7 @@ defmodule CLI.Parser do
       kw_args
       |> Keyword.get(:sync, @default_debug)
 
-    {:ok, String.to_existing_atom(debug)}
+    {:ok, to_bool(debug)}
   end
 
   @spec get_bootnodes(bootnodes: String.t()) ::
@@ -149,4 +149,10 @@ defmodule CLI.Parser do
   def integer_id_from_string("ropsten"), do: {:ok, 3}
   def integer_id_from_string("foundation"), do: {:ok, 1}
   def integer_id_from_string(_), do: :not_found
+
+  def to_bool("true"), do: true
+  def to_bool("false"), do: false
+  def to_bool(true), do: true
+  def to_bool(false), do: false
+  def to_bool(_), do: false
 end
