@@ -184,6 +184,32 @@ defmodule Blockchain.Account.RepoTest do
 
       assert found_code == code
     end
+
+    test "caches machine code and then always reads it from cache", %{state: state} do
+      address = <<1>>
+      code = <<5>>
+
+      {updated_repo, {:ok, found_code}} =
+        state
+        |> Account.reset_account(address)
+        |> Account.put_code(address, code)
+        |> Repo.new()
+        |> Repo.machine_code(address)
+
+      assert found_code == code
+
+      {:clean, _cached_account, found_code} = Cache.account(updated_repo.cache, address)
+
+      assert found_code == code
+
+      updated_state = Account.put_code(updated_repo.state, address, <<7>>)
+
+      repo_with_new_code = %{update_repo | state: updated_state}
+
+      {_repo, {:ok, found_code} = Repo.machine_code(repo_with_new_code, address)
+
+      assert found_code == code
+    end
   end
 
   describe "clear_balance/2" do

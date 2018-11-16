@@ -174,7 +174,7 @@ defmodule Blockchain.Account.Repo do
 
     cond do
       is_nil(account) ->
-        :not_found
+        {updated_repo, {:ok, <<>>}}
 
       is_nil(code) ->
         found_code = Account.machine_code(updated_repo.state, account)
@@ -195,12 +195,7 @@ defmodule Blockchain.Account.Repo do
         {repo_with_cached_code, found_code}
 
       true ->
-        code
-    end
-
-    case code do
-      nil -> {updated_repo, Account.machine_code(account_repo.state, address)}
-      code -> {updated_repo, {:ok, code}}
+        {updated_repo, {:ok, code}}
     end
   end
 
