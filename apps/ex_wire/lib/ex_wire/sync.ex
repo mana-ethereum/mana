@@ -203,18 +203,13 @@ defmodule ExWire.Sync do
         :random
       )
 
-    next_trie =
-      maybe_request_new_block_or_save(
-        block_tree,
-        next_block_tree,
-        next_trie,
-        next_block_queue
-      )
+    next_maybe_saved_trie = maybe_save(block_tree, next_block_tree, next_trie)
+    :ok = maybe_request_next_block(next_block_queue)
 
     state
     |> Map.put(:block_queue, next_block_queue)
     |> Map.put(:block_tree, next_block_tree)
-    |> Map.put(:trie, next_trie)
+    |> Map.put(:trie, next_maybe_saved_trie)
   end
 
   @doc """
@@ -242,27 +237,20 @@ defmodule ExWire.Sync do
         BlockQueue.add_block_struct(block_queue, block_tree, block_body, chain, trie)
       end)
 
-    next_trie =
-      maybe_request_new_block_or_save(
-        block_tree,
-        next_block_tree,
-        next_trie,
-        next_block_queue
-      )
+    next_maybe_saved_trie = maybe_save(block_tree, next_block_tree, next_trie)
+    :ok = maybe_request_next_block(next_block_queue)
 
     state
     |> Map.put(:block_queue, next_block_queue)
     |> Map.put(:block_tree, next_block_tree)
-    |> Map.put(:trie, next_trie)
+    |> Map.put(:trie, next_maybe_saved_trie)
   end
 
-  @doc """
-  Determines the next block we don't yet have in our blocktree and
-  dispatches a request to all connected peers for that block and the
-  next `n` blocks after it.
-  """
+  # Determines the next block we don't yet have in our blocktree and
+  # dispatches a request to all connected peers for that block and the
+  # next `n` blocks after it.
   @spec get_next_block_to_request(BlockQueue.t(), Blocktree.t()) :: integer()
-  def get_next_block_to_request(block_queue, block_tree) do
+  defp get_next_block_to_request(block_queue, block_tree) do
     # This is the best we know about
     next_number =
       case block_tree.best_block do
@@ -280,30 +268,20 @@ defmodule ExWire.Sync do
     |> Enum.at(0)
   end
 
-  @spec maybe_request_new_block_or_save(
-          Blocktree.t(),
-          Blocktree.t(),
-          Trie.t(),
-          BlockQueue.t()
-        ) :: Trie.t()
-  defp maybe_request_new_block_or_save(
-         block_tree,
-         next_block_tree,
-         trie,
-         block_queue
-       ) do
+  @spec maybe_save(Blocktree.t(), Blocktree.t(), Trie.t()) :: Trie.t()
+  defp maybe_save(block_tree, next_block_tree, trie) do
     if block_tree != next_block_tree do
-      # Let's consider saving the trie if it's changed
-      maybe_commited_trie = maybe_save_sync_state(next_block_tree, trie)
-
-      # Also, let's pull a new block
-      if block_queue.queue == %{} do
-        request_next_block()
-      end
-
-      maybe_commited_trie
+      maybe_save_sync_state(next_block_tree, trie)
     else
       trie
+    end
+  end
+
+  @spec maybe_request_next_block(BlockQueue.t()) :: :ok
+  defp maybe_request_next_block(block_queue) do
+    # Let's pull a new block if we have none left
+    if block_queue.queue == %{} do
+      request_next_block()
     end
   end
 
