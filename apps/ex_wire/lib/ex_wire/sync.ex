@@ -280,9 +280,10 @@ defmodule ExWire.Sync do
   @spec maybe_request_next_block(BlockQueue.t()) :: :ok
   defp maybe_request_next_block(block_queue) do
     # Let's pull a new block if we have none left
-    if block_queue.queue == %{} do
-      request_next_block()
-    end
+    _ =
+      if block_queue.queue == %{} do
+        request_next_block()
+      end
 
     :ok
   end
