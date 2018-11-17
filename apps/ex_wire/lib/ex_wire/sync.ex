@@ -283,6 +283,8 @@ defmodule ExWire.Sync do
     if block_queue.queue == %{} do
       request_next_block()
     end
+
+    :ok
   end
 
   # Loads sync state from our backing database
