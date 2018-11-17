@@ -75,13 +75,11 @@ defmodule ExWire.DEVp2pCommunicationTest do
     Peer.new(host, port, node_id)
   end
 
-  @spec get_host() :: String.t()
+  @spec get_host() :: :inet.socket_address()
   defp get_host do
     {:ok, hostname} = :inet.gethostname()
     {:ok, {_, _, _, _, _, [host_tuple]}} = :inet.gethostbyname(hostname)
 
     host_tuple
-    |> :inet.ntoa()
-    |> to_string()
   end
 end
