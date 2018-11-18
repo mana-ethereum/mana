@@ -38,7 +38,8 @@ defmodule Mana.MixProject do
       {:ethereumex, "~> 0.5.1"},
       {:jason, "~> 1.1"},
       {:credo, "~> 1.0.0-rc1", only: [:dev, :test], runtime: false},
-      {:distillery, "~> 2.0", runtime: false}
+      {:distillery, "~> 2.0", runtime: false},
+      {:artificery, github: "mana-ethereum/artificery", branch: "hayesgm/allow-extra-args", override: true}
     ]
   end
 end

@@ -29,7 +29,7 @@ defmodule Mix.Tasks.Sync do
 
   @shortdoc "Starts sync with a provider (e.g. Infura)"
   def run(args) do
-    case CLI.Parser.sync_args(args) do
+    case CLI.Parser.SyncParser.sync_args(args) do
       {:ok,
        %{
          chain_id: chain_id,

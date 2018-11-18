@@ -1,4 +1,4 @@
-defmodule CLI.Parser do
+defmodule CLI.Parser.SyncParser do
   @moduledoc """
   Parses for command line arguments for the CLI.
   """
@@ -19,7 +19,7 @@ defmodule CLI.Parser do
 
   ## Examples
 
-      iex> CLI.Parser.sync_args(["--provider", "rpc", "--provider-url", "https://mainnet.infura.io"])
+      iex> CLI.Parser.SyncParser.sync_args(["--provider", "rpc", "--provider-url", "https://mainnet.infura.io"])
       {:ok, %{
         chain_id: :ropsten,
         provider: CLI.BlockProvider.RPC,
@@ -27,7 +27,7 @@ defmodule CLI.Parser do
         provider_info: "RPC"
       }}
 
-      iex> CLI.Parser.sync_args(["--provider-url", "ipc:///path/to/file"])
+      iex> CLI.Parser.SyncParser.sync_args(["--provider-url", "ipc:///path/to/file"])
       {:ok, %{
         chain_id: :ropsten,
         provider: CLI.BlockProvider.RPC,
@@ -35,7 +35,7 @@ defmodule CLI.Parser do
         provider_info: "RPC"
       }}
 
-      iex> CLI.Parser.sync_args([])
+      iex> CLI.Parser.SyncParser.sync_args([])
       {:ok, %{
         chain_id: :ropsten,
         provider: CLI.BlockProvider.RPC,
@@ -43,7 +43,7 @@ defmodule CLI.Parser do
         provider_info: "RPC"
       }}
 
-      iex> CLI.Parser.sync_args(["--chain", "foundation"])
+      iex> CLI.Parser.SyncParser.sync_args(["--chain", "foundation"])
       {:ok, %{
         chain_id: :foundation,
         provider: CLI.BlockProvider.RPC,
@@ -51,7 +51,7 @@ defmodule CLI.Parser do
         provider_info: "RPC"
       }}
 
-      iex> CLI.Parser.sync_args(["--chain", "pony"])
+      iex> CLI.Parser.SyncParser.sync_args(["--chain", "pony"])
       {:error, "Invalid chain: pony"}
   """
   @spec sync_args([String.t()]) ::

@@ -1,5 +1,5 @@
 %{
-  "artificery": {:hex, :artificery, "0.2.6", "f602909757263f7897130cbd006b0e40514a541b148d366ad65b89236b93497a", [:mix], [], "hexpm"},
+  "artificery": {:git, "https://github.com/mana-ethereum/artificery.git", "ab17493a5059a35a51752a66e97213c1c06d9ff9", [branch: "hayesgm/allow-extra-args"]},
   "binary": {:hex, :binary, "0.0.5", "20d816f7274ea34f1b673b4cff2fdb9ebec9391a7a68c349070d515c66b1b2cf", [:mix], [], "hexpm"},
   "bn": {:hex, :bn, "0.2.1", "06bf8731b05fc96031de7ad5cba40cebf910e97a338798ce67bef8307c45cff3", [:mix], [], "hexpm"},
   "bunt": {:hex, :bunt, "0.2.0", "951c6e801e8b1d2cbe58ebbd3e616a869061ddadcc4863d0a2182541acae9a38", [:mix], [], "hexpm"},

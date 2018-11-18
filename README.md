@@ -58,6 +58,16 @@ Once syncing begins you will see a timestamp and a running list of verified bloc
 [command-line interface]: https://github.com/mana-ethereum/mana/tree/master/apps/cli
 [Infura API key here]: https://infura.io/register
 
+### Releases
+
+To build a release, run: `mix release`, which will build a release in `_build/dev/rel/mana/bin/mana`.
+
+Then you can run:
+
+`_build/dev/rel/mana/bin/mana run --no-discovery --bootnodes enode://...`
+
+which will start a DevP2P sync with a local peer.
+
 ### Known Sync Issues
 _Updated 11/15/2018_
 
