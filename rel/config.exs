@@ -1,3 +1,33 @@
+defer = fn fun ->
+  apply(fun, [])
+end
+
+app_root = fn ->
+  if String.contains?(System.cwd!(), "apps") do
+    Path.join([System.cwd!(), "/../../"])
+  else
+    System.cwd!()
+  end
+end
+
+cookie =
+  defer.(fn ->
+    cookie_bytes =
+      :crypto.strong_rand_bytes(32)
+      |> Base.encode32()
+
+    :ok = File.write!(Path.join(app_root.(), ".erlang_cookie"), cookie_bytes)
+    :erlang.binary_to_atom(cookie_bytes, :utf8)
+  end)
+
+mana_version =
+  defer.(fn ->
+    [app_root.(), "MANA_VERSION"]
+    |> Path.join()
+    |> File.read!()
+    |> String.trim()
+  end)
+
 # Import all plugins from `rel/plugins`
 # They can then be used by adding `plugin MyPlugin` to
 # either an environment, or release definition, where
@@ -45,21 +75,7 @@ end
 # will be used by default
 
 release :mana do
-  set(
-    version:
-      :erlang.apply(
-        fn ->
-          case String.contains?(System.cwd!(), "apps") do
-            true ->
-              String.trim(File.read!(Enum.join(["../../", "MANA_VERSION"])))
-
-            false ->
-              String.trim(File.read!(Enum.join([System.cwd!(), "/MANA_VERSION"])))
-          end
-        end,
-        []
-      )
-  )
+  set(version: mana_version)
 
   set(
     applications: [
@@ -71,6 +87,14 @@ release :mana do
       exth_crypto: :permanent,
       merkle_patricia_tree: :permanent,
       jsonrpc2: :permanent
+    ]
+  )
+
+  set(cookie: cookie)
+
+  set(
+    commands: [
+      run: "rel/commands/mana.sh"
     ]
   )
 end

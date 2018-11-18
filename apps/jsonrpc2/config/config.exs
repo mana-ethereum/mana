@@ -1,19 +1,29 @@
 use Mix.Config
 
+defer = fn fun ->
+  apply(fun, [])
+end
+
+app_root = fn ->
+  if String.contains?(System.cwd!(), "apps") do
+    Path.join([System.cwd!(), "/../../"])
+  else
+    System.cwd!()
+  end
+end
+
+mana_version =
+  defer.(fn ->
+    [app_root.(), "MANA_VERSION"]
+    |> Path.join()
+    |> File.read!()
+    |> String.trim()
+  end)
+
 config :jsonrpc2,
-  ipc: [enabled: true, path: Enum.join([System.user_home!(), "/.ethereum", "/mana.ipc"])],
+  ipc: [enabled: true, path: Path.join([System.user_home!(), ".ethereum", "mana.ipc"])],
   http: [enabled: true, port: 4000],
   ws: [enabled: true, port: 4000],
-  mana_version:
-    :erlang.apply(
-      fn ->
-        if String.contains?(System.cwd!(), "apps") do
-          String.trim(File.read!(Enum.join(["../../", "MANA_VERSION"])))
-        else
-          String.trim(File.read!(Enum.join([System.cwd!(), "/MANA_VERSION"])))
-        end
-      end,
-      []
-    )
+  mana_version: mana_version
 
 import_config "#{Mix.env()}.exs"

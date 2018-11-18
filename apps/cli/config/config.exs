@@ -2,6 +2,39 @@
 # and its dependencies with the aid of the Mix.Config module.
 use Mix.Config
 
+defer = fn fun ->
+  apply(fun, [])
+end
+
+app_root = fn ->
+  if String.contains?(System.cwd!(), "apps") do
+    Path.join([System.cwd!(), "/../../"])
+  else
+    System.cwd!()
+  end
+end
+
+cookie =
+  defer.(fn ->
+    cookie_resp =
+      [app_root.(), ".erlang_cookie"]
+      |> Path.join()
+      |> File.read()
+
+    case cookie_resp do
+      {:ok, cookie} ->
+        cookie
+        |> String.trim()
+        |> :erlang.binary_to_atom(:utf8)
+
+      _ ->
+        nil
+    end
+  end)
+
+config :cli,
+  cookie: cookie
+
 # This configuration is loaded before any dependency and is restricted
 # to this project. If another project depends on this project, this
 # file won't be loaded nor affect the parent project. For this reason,

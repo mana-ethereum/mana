@@ -2,6 +2,28 @@
 # and its dependencies with the aid of the Mix.Config module.
 use Mix.Config
 
+defer = fn fun ->
+  apply(fun, [])
+end
+
+app_root = fn ->
+  if String.contains?(System.cwd!(), "apps") do
+    Path.join([System.cwd!(), "/../../"])
+  else
+    System.cwd!()
+  end
+end
+
+db_root = defer.(fn -> Path.join([app_root.(), "/db"]) end)
+
+mana_version =
+  defer.(fn ->
+    [app_root.(), "MANA_VERSION"]
+    |> Path.join()
+    |> File.read!()
+    |> String.trim()
+  end)
+
 config :ex_wire,
   p2p_version: 0x04,
   protocol_version: 63,
@@ -21,17 +43,8 @@ config :ex_wire,
     supervisor_name: ExWire.NodeDiscoverySupervisor,
     port: 30_304
   ],
-  mana_version:
-    :erlang.apply(
-      fn ->
-        if String.contains?(System.cwd!(), "apps") do
-          String.trim(File.read!(Enum.join(["../../", "MANA_VERSION"])))
-        else
-          String.trim(File.read!(Enum.join([System.cwd!(), "/MANA_VERSION"])))
-        end
-      end,
-      []
-    )
+  db_root: db_root,
+  mana_version: mana_version
 
 config :ex_wire, :environment, Mix.env()
 import_config "#{Mix.env()}.exs"

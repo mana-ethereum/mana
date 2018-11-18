@@ -6,7 +6,7 @@ erl_crash.dump
 *.beam
 apps/*/config/dev.exs
 
-/db
+/db/*
 apps/*/db
 
 # Ignore generated code from yecc and leex
@@ -15,3 +15,7 @@ apps/*/db
 
 # Ignore secret files
 apps/blockchain/config/dev.secret.exs
+
+.erlang_cookie
+
+!/**/.gitkeep
