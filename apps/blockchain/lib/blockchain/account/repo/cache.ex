@@ -147,6 +147,7 @@ defmodule Blockchain.Account.Repo.Cache do
   defp commit_key_cache(address, {key, key_cache}, state) do
     case Map.get(key_cache, :current_value) do
       :deleted -> Account.remove_storage(state, address, key)
+      nil -> state
       value -> Account.put_storage(state, address, key, value)
     end
   end
