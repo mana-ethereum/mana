@@ -389,4 +389,37 @@ defmodule Blockchain.Account.RepoTest do
       assert Cache.account(updated_repo.cache, address) == {:clean, nil, nil}
     end
   end
+
+  describe "storage/3" do
+    test "saves value to cache if it wasn't there", %{state: state} do
+      address = Account.Address.from(<<1>>)
+      key = 5
+      value = 6
+
+      account = %Account{
+        nonce: 5,
+        balance: 10,
+        storage_root: Account.empty_trie(),
+        code_hash: Account.empty_keccak()
+      }
+
+      account_repo =
+        state
+        |> Account.put_account(address, account)
+        |> Account.put_storage(address, key, value)
+        |> Repo.new()
+
+      {repo, {:ok, found_value}} = Repo.storage(account_repo, address, key)
+
+      assert found_value == value
+
+      assert Cache.initial_value(repo.cache, address, key) == value
+
+      new_state = Account.put_storage(account_repo.state, address, key, 77)
+      new_repo = Repo.new(new_state, repo.cache)
+
+      {_repo, {:ok, found_value}} = Repo.storage(new_repo, address, key)
+      assert found_value == value
+    end
+  end
 end

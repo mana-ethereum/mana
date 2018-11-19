@@ -5,8 +5,11 @@ defmodule Blockchain.Account.Repo.Cache do
 
   defstruct storage_cache: %{}, accounts_cache: %{}
 
+  @type current_value :: integer() | :deleted
+  @type initial_value :: integer() | nil | :account_not_found | :key_not_found
+
   @type key_cache() :: %{
-          integer() => %{current_value: integer() | :deleted, initial_value: integer() | nil}
+          integer() => %{current_value: current_value(), initial_value: initial_value()}
         }
   @type maybe_code :: EVM.MachineCode.t() | nil
   @type maybe_account :: Account.t() | nil
@@ -24,7 +27,7 @@ defmodule Blockchain.Account.Repo.Cache do
     key_value(cache_struct.storage_cache, address, key, :current_value)
   end
 
-  @spec initial_value(t(), Address.t(), integer()) :: integer() | nil
+  @spec initial_value(t(), Address.t(), integer()) :: initial_value()
   def initial_value(cache_struct, address, key) do
     key_value(cache_struct.storage_cache, address, key, :initial_value)
   end
@@ -38,7 +41,7 @@ defmodule Blockchain.Account.Repo.Cache do
     %{cache_struct | storage_cache: updated_cache}
   end
 
-  @spec add_initial_value(t(), Address.t(), integer(), integer()) :: t()
+  @spec add_initial_value(t(), Address.t(), integer(), initial_value()) :: t()
   def add_initial_value(cache_struct, address, key, value) do
     cache_update = %{key => %{initial_value: value}}
 
@@ -144,6 +147,7 @@ defmodule Blockchain.Account.Repo.Cache do
   defp commit_key_cache(address, {key, key_cache}, state) do
     case Map.get(key_cache, :current_value) do
       :deleted -> Account.remove_storage(state, address, key)
+      nil -> state
       value -> Account.put_storage(state, address, key, value)
     end
   end
