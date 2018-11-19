@@ -512,7 +512,7 @@ defmodule Blockchain.Account do
       ...> |> Blockchain.Account.machine_code(<<0x01::160>>)
       {:ok, <<1, 2, 3>>}
   """
-  @spec machine_code(EVM.state(), Address.t() | t()) :: {:ok, binary()} | :not_found
+  @spec machine_code(TrieStorage.t(), Address.t() | t()) :: {:ok, binary()} | :not_found
   def machine_code(state, contract_address) when is_binary(contract_address) do
     # TODO: Do we have a standard for default account values
     account = get_account(state, contract_address) || %__MODULE__{}
