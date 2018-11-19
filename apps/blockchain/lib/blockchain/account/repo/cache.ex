@@ -27,7 +27,7 @@ defmodule Blockchain.Account.Repo.Cache do
     key_value(cache_struct.storage_cache, address, key, :current_value)
   end
 
-  @spec initial_value(t(), Address.t(), integer()) :: integer() | nil
+  @spec initial_value(t(), Address.t(), integer()) :: initial_value()
   def initial_value(cache_struct, address, key) do
     key_value(cache_struct.storage_cache, address, key, :initial_value)
   end
@@ -41,7 +41,7 @@ defmodule Blockchain.Account.Repo.Cache do
     %{cache_struct | storage_cache: updated_cache}
   end
 
-  @spec add_initial_value(t(), Address.t(), integer(), integer()) :: t()
+  @spec add_initial_value(t(), Address.t(), integer(), initial_value()) :: t()
   def add_initial_value(cache_struct, address, key, value) do
     cache_update = %{key => %{initial_value: value}}
 
