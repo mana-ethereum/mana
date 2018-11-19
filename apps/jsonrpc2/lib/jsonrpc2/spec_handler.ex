@@ -4,12 +4,25 @@ defmodule JSONRPC2.SpecHandler do
   alias Blockchain.Block
   alias Blockchain.Blocktree
   alias ExthCrypto.Hash.Keccak
+  alias ExthCrypto.Math
   alias ExWire.PeerSupervisor
   alias ExWire.Sync
+  # TODO split methods into separate modules per topic
   # web3 Methods
 
-  def handle_request("web3_clientVersion", _), do: Application.get_env(:jsonrpc2, :mana_version)
-  def handle_request("web3_sha3", [param = "0x" <> _]), do: Keccak.kec(param)
+  def handle_request("web3_clientVersion", _),
+    do: "#{Application.get_env(:jsonrpc2, :mana_version)}"
+
+  def handle_request("web3_sha3", [param = "0x" <> _]) do
+    "0x" <>
+      (param
+       |> Math.hex_to_bin()
+       |> Keccak.kec()
+       |> Math.bin_to_hex())
+  rescue
+    _ ->
+      {:error, :invalid_params}
+  end
 
   # net Methods
   def handle_request("net_version", _), do: Application.get_env(:ex_wire, :network_id)

@@ -48,6 +48,10 @@ defmodule JSONRPC2.ErrorHandlerTest do
     {:error, :method_not_found}
   end
 
+  def handle_request("get_best_block_in_the_universe", _) do
+    {:error, :not_supported}
+  end
+
   def handle_request("invalid_params", params) do
     {:error, {:invalid_params, params}}
   end
