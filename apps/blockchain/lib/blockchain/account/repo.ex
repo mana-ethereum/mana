@@ -578,29 +578,36 @@ defmodule Blockchain.Account.Repo do
     Contract.create(params)
   end
 
+  @spec cache_and_get_initial_storage_value(t(), Address.t(), integer()) ::
+          {t(), :key_not_found | :account_not_found | {:ok, integer()}}
   defp cache_and_get_initial_storage_value(account_repo, address, key) do
     {updated_repo, account} = account(account_repo, address)
-    stored_value = Account.get_storage(updated_repo.state, account, key)
 
-    found_value =
-      case stored_value do
-        :account_not_found ->
-          if account, do: :key_not_found, else: :account_not_found
+    if account do
+      stored_value = Account.get_storage(updated_repo.state, account, key)
 
-        stored_value ->
-          stored_value
-      end
+      found_value =
+        case stored_value do
+          :account_not_found ->
+            if account, do: :key_not_found, else: :account_not_found
 
-    value_to_cache =
-      case found_value do
-        {:ok, value} -> value
-        status -> status
-      end
+          stored_value ->
+            stored_value
+        end
 
-    updated_cache = Cache.add_initial_value(updated_repo.cache, address, key, value_to_cache)
+      value_to_cache =
+        case found_value do
+          {:ok, value} -> value
+          status -> status
+        end
 
-    updated_account_repo = %{account_repo | cache: updated_cache}
+      updated_cache = Cache.add_initial_value(updated_repo.cache, address, key, value_to_cache)
 
-    {updated_account_repo, found_value}
+      updated_account_repo = %{account_repo | cache: updated_cache}
+
+      {updated_account_repo, found_value}
+    else
+      {updated_repo, :account_not_found}
+    end
   end
 end
