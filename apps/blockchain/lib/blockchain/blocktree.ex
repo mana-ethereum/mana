@@ -7,7 +7,9 @@ defmodule Blockchain.Blocktree do
     defexception [:message]
   end
 
-  alias Blockchain.{Block, Chain, Genesis}
+  alias Blockchain.Block
+  alias Blockchain.Chain
+  alias Blockchain.Genesis
   alias MerklePatriciaTree.TrieStorage
 
   defstruct best_block: nil

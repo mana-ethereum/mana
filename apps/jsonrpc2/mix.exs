@@ -34,6 +34,8 @@ defmodule JSONRPC2.Mixfile do
 
   defp deps do
     [
+      # in app
+      {:ex_wire, in_umbrella: true},
       {:cowboy, "~> 2.5"},
       {:jason, "~> 1.1"},
       {:ranch, "~> 1.6"},

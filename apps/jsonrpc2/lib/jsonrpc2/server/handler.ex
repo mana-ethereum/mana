@@ -38,6 +38,7 @@ defmodule JSONRPC2.Server.Handler do
   @invalid_request {-32_600, "Invalid Request"}
   @method_not_found {-32_601, "Method not found"}
   @invalid_params {-32_602, "Invalid params"}
+  @not_supported {-32_604, "Not supported"}
   @internal_error {-32_603, "Internal error"}
   @server_error {-32_000, "Server error"}
 
@@ -140,7 +141,13 @@ defmodule JSONRPC2.Server.Handler do
     end
   end
 
-  @throwable_errors [:method_not_found, :invalid_params, :internal_error, :server_error]
+  @throwable_errors [
+    :method_not_found,
+    :invalid_params,
+    :internal_error,
+    :server_error,
+    :not_supported
+  ]
 
   defp dispatch(module, {method, params, id}) do
     result_response(module.handle_request(method, params), id)
@@ -269,6 +276,7 @@ defmodule JSONRPC2.Server.Handler do
   defp error_code_and_message(:invalid_request), do: @invalid_request
   defp error_code_and_message(:method_not_found), do: @method_not_found
   defp error_code_and_message(:invalid_params), do: @invalid_params
+  defp error_code_and_message(:not_supported), do: @not_supported
   defp error_code_and_message(:internal_error), do: @internal_error
   defp error_code_and_message(:server_error), do: @server_error
 
