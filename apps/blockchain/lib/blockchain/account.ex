@@ -504,19 +504,23 @@ defmodule Blockchain.Account do
   ## Examples
 
       iex> MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
-      ...> |> Blockchain.Account.get_machine_code(<<0x01::160>>)
+      ...> |> Blockchain.Account.machine_code(<<0x01::160>>)
       {:ok, <<>>}
 
       iex> MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
       ...> |> Blockchain.Account.put_code(<<0x01::160>>, <<1, 2, 3>>)
-      ...> |> Blockchain.Account.get_machine_code(<<0x01::160>>)
+      ...> |> Blockchain.Account.machine_code(<<0x01::160>>)
       {:ok, <<1, 2, 3>>}
   """
-  @spec get_machine_code(EVM.state(), Address.t()) :: {:ok, binary()} | :not_found
-  def get_machine_code(state, contract_address) do
+  @spec machine_code(TrieStorage.t(), Address.t() | t()) :: {:ok, binary()} | :not_found
+  def machine_code(state, contract_address) when is_binary(contract_address) do
     # TODO: Do we have a standard for default account values
     account = get_account(state, contract_address) || %__MODULE__{}
 
+    machine_code(state, account)
+  end
+
+  def machine_code(state, account) do
     case account.code_hash do
       @empty_keccak ->
         {:ok, <<>>}

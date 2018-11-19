@@ -93,7 +93,7 @@ defmodule Blockchain.Account.RepoTest do
         code_hash: <<0x02>>
       }
 
-      to_account_address = <<2>>
+      to_account_address = <<2::160>>
 
       updated_account_repo =
         state
@@ -123,7 +123,7 @@ defmodule Blockchain.Account.RepoTest do
         code_hash: <<0x02>>
       }
 
-      address = <<1>>
+      address = <<1::160>>
 
       updated_repo = Repo.put_account(repo, address, account, :clean)
 
@@ -181,6 +181,32 @@ defmodule Blockchain.Account.RepoTest do
         |> Account.put_code(address, code)
         |> Repo.new()
         |> Repo.machine_code(address)
+
+      assert found_code == code
+    end
+
+    test "caches machine code and then always reads it from cache", %{state: state} do
+      address = <<1::160>>
+      code = <<5>>
+
+      {updated_repo, {:ok, found_code}} =
+        state
+        |> Account.reset_account(address)
+        |> Account.put_code(address, code)
+        |> Repo.new()
+        |> Repo.machine_code(address)
+
+      assert found_code == code
+
+      {:clean, _cached_account, found_code} = Cache.account(updated_repo.cache, address)
+
+      assert found_code == code
+
+      updated_state = Account.put_code(updated_repo.state, address, <<7>>)
+
+      repo_with_new_code = %{updated_repo | state: updated_state}
+
+      {_repo, {:ok, found_code}} = Repo.machine_code(repo_with_new_code, address)
 
       assert found_code == code
     end
@@ -334,7 +360,7 @@ defmodule Blockchain.Account.RepoTest do
     end
 
     test "fetches account from storage", %{state: state} do
-      address = <<1>>
+      address = <<1::160>>
 
       account_repo =
         state
