@@ -5,8 +5,8 @@ defmodule Blockchain.Ethash.RandMemoHash do
   use Bitwise
 
   @doc """
-  Computes the RandMemoHash algorithm for a list of binaries as is outlined in
-  Appendix J of the Yellow Paper.
+  Computes the RandMemoHash algorithm for a list of binaries (as lists) as is
+  outlined in Appendix J of the Yellow Paper.
 
   ```
   ERMH(x) =  [Ermh(x, 0), Ermh(x, 1), ..., Ermh(x, n - 1)]
@@ -20,15 +20,14 @@ defmodule Blockchain.Ethash.RandMemoHash do
   def hash(original_cache) do
     n = length(original_cache)
 
-    original_cache
-    |> Enum.with_index()
-    |> Enum.reduce(original_cache, fn element_with_index, modified_cache ->
-      rmh(element_with_index, n, modified_cache)
+    0..(n - 1)
+    |> Enum.reduce(original_cache, fn index, modified_cache ->
+      rmh(index, n, modified_cache)
     end)
   end
 
-  @spec rmh({binary(), integer()}, integer(), Ethash.cache()) :: Ethash.cache()
-  defp rmh({element, i}, n, cache) when is_binary(element) do
+  @spec rmh(non_neg_integer(), non_neg_integer(), Ethash.cache()) :: Ethash.cache()
+  defp rmh(i, n, cache) do
     first_element = Enum.at(cache, first_index(i, n))
     second_element = Enum.at(cache, second_index(i, n, cache))
 
@@ -44,7 +43,10 @@ defmodule Blockchain.Ethash.RandMemoHash do
 
   @spec second_index(integer(), integer(), Ethash.cache()) :: integer()
   defp second_index(i, n, cache) do
-    <<header, _rest::binary>> = Enum.at(cache, i)
+    cache_element = Enum.at(cache, i)
+
+    <<header::size(8), _rest::binary>> = cache_element
+
     Integer.mod(header, n)
   end
 end
