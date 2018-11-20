@@ -1,17 +1,15 @@
 defmodule JSONRPC2.SpecHandler do
   use JSONRPC2.Server.Handler
 
-  alias Blockchain.Block
-  alias Blockchain.Blocktree
   alias ExthCrypto.Hash.Keccak
   alias ExthCrypto.Math
-  alias ExWire.PeerSupervisor
-  alias ExWire.Sync
-  # TODO split methods into separate modules per topic
+  alias JSONRPC2.Bridge.Sync
+  alias JSONRPC2.Struct.EthSyncing
+  @sync Application.get_env(:jsonrpc2, :bridge_mock, Sync)
   # web3 Methods
 
   def handle_request("web3_clientVersion", _),
-    do: "#{Application.get_env(:jsonrpc2, :mana_version)}"
+    do: Application.get_env(:jsonrpc2, :mana_version)
 
   def handle_request("web3_sha3", [param = "0x" <> _]) do
     "0x" <>
@@ -25,23 +23,25 @@ defmodule JSONRPC2.SpecHandler do
   end
 
   # net Methods
-  def handle_request("net_version", _), do: Application.get_env(:ex_wire, :network_id)
+  def handle_request("net_version", _), do: "#{Application.get_env(:ex_wire, :network_id)}"
   def handle_request("net_listening", _), do: Application.get_env(:ex_wire, :discovery)
-  def handle_request("net_peerCount", _), do: PeerSupervisor.connected_peer_count()
+
+  def handle_request("net_peerCount", _) do
+    connected_peer_count = @sync.connected_peer_count()
+    to_hex(connected_peer_count)
+  end
 
   # eth Methods
   def handle_request("eth_protocolVersion", _), do: {:error, :not_supported}
 
   def handle_request("eth_syncing", _) do
-    sync_state = get_last_sync_state()
+    case @sync.get_last_sync_block_stats() do
+      {_current_block_header_number, _starting_block, _highest_block} = params ->
+        EthSyncing.output(params)
 
-    current_block = get_last_sync_block(sync_state)
-
-    %{
-      currentBlock: current_block,
-      startingBlock: sync_state.starting_block_number,
-      highestBlock: sync_state.highest_block_number
-    }
+      false ->
+        false
+    end
   end
 
   def handle_request("eth_coinbase", _), do: {:error, :not_supported}
@@ -51,8 +51,10 @@ defmodule JSONRPC2.SpecHandler do
   def handle_request("eth_accounts", _), do: {:error, :not_supported}
 
   def handle_request("eth_blockNumber", _) do
-    block = get_last_sync_block(get_last_sync_state())
-    block.header.number
+    {current_block_header_number, _starting_block, _highest_block} =
+      @sync.get_last_sync_block_stats()
+
+    current_block_header_number
   end
 
   def handle_request("eth_getBalance", _), do: {:error, :not_supported}
@@ -114,14 +116,9 @@ defmodule JSONRPC2.SpecHandler do
   def handle_request("shh_getFilterChanges", _), do: {:error, :not_supported}
   def handle_request("shh_getMessages", _), do: {:error, :not_supported}
 
-  @spec get_last_sync_state() :: Sync.state()
-  defp get_last_sync_state(), do: Sync.get_state()
+  @spec to_hex(non_neg_integer()) :: String.t()
+  defp to_hex(0), do: "0x0"
 
-  @spec get_last_sync_block(Sync.state()) :: Block.t()
-  defp get_last_sync_block(state) do
-    {:ok, {block, _caching_trie}} =
-      Blocktree.get_best_block(state.block_tree, state.chain, state.trie)
-
-    block
-  end
+  defp to_hex(n),
+    do: "0x" <> (n |> :binary.encode_unsigned() |> Base.encode16() |> String.trim_leading("0"))
 end

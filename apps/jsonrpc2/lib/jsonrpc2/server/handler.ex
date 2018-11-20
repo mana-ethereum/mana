@@ -214,6 +214,15 @@ defmodule JSONRPC2.Server.Handler do
     :noreply
   end
 
+  defp result_response(result = %{__struct__: _}, id) do
+    {:reply,
+     %{
+       "jsonrpc" => "2.0",
+       "result" => Map.from_struct(result),
+       "id" => id
+     }}
+  end
+
   defp result_response(result, id) do
     {:reply,
      %{
