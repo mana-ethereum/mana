@@ -28,7 +28,6 @@ defmodule ExWire.Sync do
   @save_block_interval 100
   @blocks_per_request 100
   @startup_delay 10_000
-  @retry_delay 5_000
 
   @type state :: %{
           chain: Chain.t(),
@@ -113,31 +112,20 @@ defmodule ExWire.Sync do
 
     :ok = Logger.debug(fn -> "[Sync] Requesting block headers to #{next_block_to_request}" end)
 
-    packet_res =
-      PeerSupervisor.send_packet(
-        %GetBlockHeaders{
-          block_identifier: next_block_to_request,
-          max_headers: @blocks_per_request,
-          skip: 0,
-          reverse: false
-        },
-        :random
-      )
+    _ =
+      spawn(fn ->
+        PeerSupervisor.send_packet(
+          %GetBlockHeaders{
+            block_identifier: next_block_to_request,
+            max_headers: @blocks_per_request,
+            skip: 0,
+            reverse: false
+          },
+          :random
+        )
+      end)
 
-    case packet_res do
-      :ok ->
-        Map.put(state, :last_requested_block, next_block_to_request + @blocks_per_request)
-
-      :unsent ->
-        :ok =
-          Logger.debug(fn ->
-            "[Sync] No connected peers to sync, trying again in #{@retry_delay / 1000} second(s)"
-          end)
-
-        request_next_block(@retry_delay)
-
-        state
-    end
+    Map.put(state, :last_requested_block, next_block_to_request + @blocks_per_request)
   end
 
   @doc """
