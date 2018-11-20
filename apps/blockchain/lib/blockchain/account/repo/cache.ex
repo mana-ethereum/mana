@@ -1,7 +1,7 @@
 defmodule Blockchain.Account.Repo.Cache do
   alias Blockchain.Account
   alias Blockchain.Account.Address
-  alias MerklePatriciaTree.Trie
+  alias MerklePatriciaTree.TrieStorage
 
   defstruct storage_cache: %{}, accounts_cache: %{}
 
@@ -78,21 +78,21 @@ defmodule Blockchain.Account.Repo.Cache do
     %{cache_struct | accounts_cache: updated_accounts_cache}
   end
 
-  @spec commit(t(), Trie.t()) :: Trie.t()
+  @spec commit(t(), TrieStorage.t()) :: TrieStorage.t()
   def commit(cache_struct, state) do
     committed_accounts = commit_accounts(cache_struct, state)
 
     commit_storage(cache_struct, committed_accounts)
   end
 
-  @spec commit_storage(t(), Trie.t()) :: Trie.t()
+  @spec commit_storage(t(), TrieStorage.t()) :: TrieStorage.t()
   def commit_storage(cache_struct, state) do
     cache_struct
     |> storage_to_list()
     |> Enum.reduce(state, &commit_account_storage_cache/2)
   end
 
-  @spec commit_accounts(t(), Trie.t()) :: Trie.t()
+  @spec commit_accounts(t(), TrieStorage.t()) :: TrieStorage.t()
   def commit_accounts(cache_struct, state) do
     cache_struct
     |> accounts_to_list()
@@ -126,17 +126,17 @@ defmodule Blockchain.Account.Repo.Cache do
     end)
   end
 
-  defp commit_account_cache({address, {:dirty, account, code}}, state) do
-    if is_nil(account) do
-      Account.del_account(state, address)
-    else
-      state_with_account = Account.put_account(state, address, account)
+  defp commit_account_cache({address, {:dirty, nil, _code}}, state) do
+    Account.del_account(state, address)
+  end
 
-      case code do
-        {:dirty, code} -> Account.put_code(state_with_account, address, code)
-        _ -> state_with_account
-      end
-    end
+  defp commit_account_cache({address, {:dirty, account, {:dirty, code}}}, state) do
+    state_with_account = Account.put_account(state, address, account)
+    Account.put_code(state_with_account, address, code)
+  end
+
+  defp commit_account_cache({address, {:dirty, account, _code}}, state) do
+    Account.put_account(state, address, account)
   end
 
   defp commit_account_cache({_address, {:clean, _account, _code}}, state), do: state
