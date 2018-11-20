@@ -163,7 +163,11 @@ defmodule Blockchain.Account.Repo do
     updated_account = %{(account || %Account{}) | code_hash: kec}
 
     updated_cache =
-      Cache.update_account(account_repo.cache, address, {:dirty, updated_account, machine_code})
+      Cache.update_account(
+        account_repo.cache,
+        address,
+        {:dirty, updated_account, {:dirty, machine_code}}
+      )
 
     %{account_repo | cache: updated_cache}
   end
@@ -188,14 +192,20 @@ defmodule Blockchain.Account.Repo do
         {status, account, _} = account_from_cache(updated_repo.cache, address)
 
         updated_cache =
-          Cache.update_account(updated_repo.cache, address, {status, account, value_to_cache})
+          Cache.update_account(
+            updated_repo.cache,
+            address,
+            {status, account, {:clean, value_to_cache}}
+          )
 
         repo_with_cached_code = %{updated_repo | cache: updated_cache}
 
         {repo_with_cached_code, found_code}
 
       true ->
-        {updated_repo, {:ok, code}}
+        {_status, code} = code
+
+        {account_repo, {:ok, code}}
     end
   end
 
