@@ -163,7 +163,11 @@ defmodule Blockchain.Account.Repo do
     updated_account = %{(account || %Account{}) | code_hash: kec}
 
     updated_cache =
-      Cache.update_account(account_repo.cache, address, {:dirty, updated_account, machine_code})
+      Cache.update_account(
+        account_repo.cache,
+        address,
+        {:dirty, updated_account, {:dirty, machine_code}}
+      )
 
     %{account_repo | cache: updated_cache}
   end
@@ -177,25 +181,12 @@ defmodule Blockchain.Account.Repo do
         {updated_repo, {:ok, <<>>}}
 
       is_nil(code) ->
-        found_code = Account.machine_code(updated_repo.state, account)
-
-        value_to_cache =
-          case found_code do
-            {:ok, found_code} -> found_code
-            _ -> :not_found
-          end
-
-        {status, account, _} = account_from_cache(updated_repo.cache, address)
-
-        updated_cache =
-          Cache.update_account(updated_repo.cache, address, {status, account, value_to_cache})
-
-        repo_with_cached_code = %{updated_repo | cache: updated_cache}
-
-        {repo_with_cached_code, found_code}
+        cache_and_get_code(updated_repo, address, account)
 
       true ->
-        {updated_repo, {:ok, code}}
+        {_status, code} = code
+
+        {account_repo, {:ok, code}}
     end
   end
 
@@ -605,5 +596,29 @@ defmodule Blockchain.Account.Repo do
     updated_account_repo = %{account_repo | cache: updated_cache}
 
     {updated_account_repo, found_value}
+  end
+
+  @spec cache_and_get_code(t(), Address.t(), Account.t()) :: {t(), {:ok, binary()} | :not_found}
+  defp cache_and_get_code(account_repo, address, account) do
+    found_code = Account.machine_code(account_repo.state, account)
+
+    value_to_cache =
+      case found_code do
+        {:ok, found_code} -> found_code
+        _ -> :not_found
+      end
+
+    {status, account, _} = account_from_cache(account_repo.cache, address)
+
+    updated_cache =
+      Cache.update_account(
+        account_repo.cache,
+        address,
+        {status, account, {:clean, value_to_cache}}
+      )
+
+    repo_with_cached_code = %{account_repo | cache: updated_cache}
+
+    {repo_with_cached_code, found_code}
   end
 end

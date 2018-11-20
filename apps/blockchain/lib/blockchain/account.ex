@@ -476,7 +476,7 @@ defmodule Blockchain.Account do
       iex> MerklePatriciaTree.DB.get(state.db, ExthCrypto.Hash.Keccak.kec(<<1, 2, 3>>))
       {:ok, <<1, 2, 3>>}
   """
-  @spec put_code(EVM.state(), Address.t(), EVM.MachineCode.t()) :: EVM.state()
+  @spec put_code(TrieStorage.t(), Address.t(), EVM.MachineCode.t()) :: TrieStorage.t()
   def put_code(state, contract_address, machine_code) do
     kec = Keccak.kec(machine_code)
 
@@ -637,7 +637,7 @@ defmodule Blockchain.Account do
       ...> |> Blockchain.Account.get_account(<<0x01::160>>)
       %Blockchain.Account{}
   """
-  @spec reset_account(EVM.state(), Address.t()) :: EVM.state()
+  @spec reset_account(TrieStorage.t(), Address.t()) :: EVM.state()
   def reset_account(state, address) do
     put_account(state, address, %__MODULE__{})
   end

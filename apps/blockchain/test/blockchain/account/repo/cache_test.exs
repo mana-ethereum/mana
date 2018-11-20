@@ -238,7 +238,7 @@ defmodule Blockchain.Account.Repo.CacheTest do
 
       code = <<2, 99>>
 
-      cache = %Cache{accounts_cache: %{address => {:dirty, new_account, code}}}
+      cache = %Cache{accounts_cache: %{address => {:dirty, new_account, {:dirty, code}}}}
 
       committed_state = Cache.commit_accounts(cache, state_with_account)
 
@@ -275,6 +275,62 @@ defmodule Blockchain.Account.Repo.CacheTest do
 
       {:ok, found_code} = Account.machine_code(committed_state, address)
       assert found_code == ""
+    end
+
+    test "updates code if it's dirty" do
+      ets_db = MerklePatriciaTree.Test.random_ets_db()
+      state = MerklePatriciaTree.Trie.new(ets_db)
+      address = <<1>>
+
+      # we need to create a blank account with storage
+      state_with_account = Account.reset_account(state, address)
+
+      {:ok, found_code} = Account.machine_code(state_with_account, address)
+      assert found_code == ""
+
+      new_account = %Account{
+        nonce: 5,
+        balance: 10,
+        storage_root: <<0x00, 0x01>>,
+        code_hash: <<0x01, 0x02>>
+      }
+
+      code = <<2, 99>>
+
+      cache = %Cache{accounts_cache: %{address => {:dirty, new_account, {:dirty, code}}}}
+
+      committed_state = Cache.commit_accounts(cache, state_with_account)
+
+      {:ok, found_code} = Account.machine_code(committed_state, address)
+      assert found_code == code
+    end
+
+    test "does not update code if it's clean" do
+      ets_db = MerklePatriciaTree.Test.random_ets_db()
+      state = MerklePatriciaTree.Trie.new(ets_db)
+      address = <<1>>
+
+      # we need to create a blank account with storage
+      state_with_account = Account.reset_account(state, address)
+
+      {:ok, found_code} = Account.machine_code(state_with_account, address)
+      assert found_code == ""
+
+      new_account = %Account{
+        nonce: 5,
+        balance: 10,
+        storage_root: <<0x00, 0x01>>,
+        code_hash: <<0x01, 0x02>>
+      }
+
+      code = <<5, 9>>
+
+      cache = %Cache{accounts_cache: %{address => {:dirty, new_account, {:clean, code}}}}
+
+      committed_state = Cache.commit_accounts(cache, state_with_account)
+
+      result = Account.machine_code(committed_state, address)
+      assert result == :not_found
     end
 
     test "creates new account from cache" do

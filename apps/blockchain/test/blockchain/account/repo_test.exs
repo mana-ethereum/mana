@@ -137,7 +137,7 @@ defmodule Blockchain.Account.RepoTest do
       code = <<1, 2, 3>>
       address = <<2::160>>
 
-      {_repo, account, ^code} =
+      {_repo, account, {:dirty, ^code}} =
         state
         |> Account.reset_account(address)
         |> Repo.new()
@@ -161,7 +161,7 @@ defmodule Blockchain.Account.RepoTest do
 
       address = <<1::160>>
       code = <<5>>
-      cache = %Cache{accounts_cache: %{address => {:dirty, account, code}}}
+      cache = %Cache{accounts_cache: %{address => {:dirty, account, {:clean, code}}}}
 
       {_repo, {:ok, found_code}} =
         state
@@ -200,7 +200,7 @@ defmodule Blockchain.Account.RepoTest do
 
       {:clean, _cached_account, found_code} = Cache.account(updated_repo.cache, address)
 
-      assert found_code == code
+      assert found_code == {:clean, code}
 
       updated_state = Account.put_code(updated_repo.state, address, <<7>>)
 
