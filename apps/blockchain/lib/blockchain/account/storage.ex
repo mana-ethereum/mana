@@ -28,7 +28,7 @@ defmodule Blockchain.Account.Storage do
     TrieStorage.remove_subtrie_key(trie_storage, root, k)
   end
 
-  @spec fetch(TrieStorage.t(), EVM.trie_root(), integer()) :: integer() | nil
+  @spec fetch(TrieStorage.t(), EVM.trie_root(), integer()) :: any() | nil
   def fetch(trie_storage, root, key) do
     k = encode_key(key)
 
