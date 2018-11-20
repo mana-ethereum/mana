@@ -12,6 +12,7 @@ defmodule GenerateBlockchainTests do
     "Frontier",
     "Homestead",
     "HomesteadToDaoAt5",
+    "ByzantiumToConstantinopleAt5",
     "TangerineWhistle",
     "SpuriousDragon"
   ]

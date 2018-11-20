@@ -13,6 +13,7 @@ defmodule BlockchainTest do
     "Frontier" => [],
     "Homestead" => [],
     "HomesteadToDaoAt5" => [],
+    "ByzantiumToConstantinopleAt5" => [],
     "TangerineWhistle" => [],
     "SpuriousDragon" => [],
     "Byzantium" => [],
@@ -60,6 +61,12 @@ defmodule BlockchainTest do
   @tag :Constantinople
   @tag :slow
   test "runs Constantinople blockchain tests", do: run_fork_tests("Constantinople")
+
+  @tag :ethereum_common_tests
+  @tag :Constantinople
+  @tag :slow
+  test "runs Byzantium To Constantinople transition blockchain tests",
+    do: run_fork_tests("ByzantiumToConstantinopleAt5")
 
   @tag :ethereum_common_tests
   @tag :EIP158ToByzantiumAt5
