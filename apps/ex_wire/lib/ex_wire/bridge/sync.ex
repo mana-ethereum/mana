@@ -3,8 +3,8 @@ defmodule ExWire.Bridge.Sync do
   Wrapper for the Sync process to gracefully handle interactions with it when it
   is not running.
   """
-  alias Blockchain.Blocktree
   alias Blockchain.Block
+  alias Blockchain.Blocktree
   alias ExWire.Sync
 
   @spec get_best_block() :: {:ok, Block.t()} | {:error, atom()}

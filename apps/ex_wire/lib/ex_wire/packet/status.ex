@@ -167,7 +167,6 @@ defmodule ExWire.Packet.Status do
                total_difficulty: 10
              }}
 
-
       # Test a peer with an incompatible version
       iex> %ExWire.Packet.Status{protocol_version: 555, network_id: 3, total_difficulty: 10, best_hash: <<5>>, genesis_hash: <<4>>}
       ...> |> ExWire.Packet.Status.handle()
@@ -184,7 +183,7 @@ defmodule ExWire.Packet.Status do
             {block.block_hash, block.header.difficulty}
 
           {:error, error} ->
-            Logger.debug(fn -> "Error calling Sync.get_best_block_hash #{error}" end)
+            _ = Logger.debug(fn -> "Error calling Sync.get_best_block_hash #{error}" end)
             {packet.best_hash, packet.total_difficulty}
         end
 
