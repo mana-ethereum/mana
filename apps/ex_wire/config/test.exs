@@ -10,5 +10,6 @@ config :ex_wire,
     supervisor_name: ExWire.NodeDiscoverySupervisor,
     port: 30_304
   ],
+  sync_mock: ExWire.BridgeSyncMock,
   discovery: false,
   sync: false
