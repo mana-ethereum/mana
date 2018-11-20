@@ -212,8 +212,7 @@ defmodule ExWire.Sync do
               header_hashes
             end
 
-          next_highest_block_number =
-            get_highest_block_number(highest_block_number, header.number)
+          next_highest_block_number = Kernel.max(highest_block_number, header.number)
 
           {next_highest_block_number, next_block_queue, next_block_tree, next_trie,
            next_header_hashes}
@@ -345,15 +344,6 @@ defmodule ExWire.Sync do
       committed_trie
     else
       trie
-    end
-  end
-
-  @spec get_highest_block_number(non_neg_integer(), non_neg_integer()) :: non_neg_integer()
-  defp get_highest_block_number(current, header_block_number) do
-    if current >= header_block_number do
-      current
-    else
-      header_block_number
     end
   end
 end
