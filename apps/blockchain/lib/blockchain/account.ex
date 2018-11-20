@@ -545,14 +545,23 @@ defmodule Blockchain.Account do
       iex> Blockchain.Account.get_storage(updated_state, <<01::160>>, 5)
       {:ok, 9}
   """
-  @spec put_storage(EVM.state(), Address.t(), integer(), integer()) :: EVM.state()
-  def put_storage(state, address, key, value) do
-    update_account(state, address, fn acct ->
-      {updated_storage_trie, updated_trie} = Storage.put(state, acct.storage_root, key, value)
-      root_hash = TrieStorage.root_hash(updated_storage_trie)
+  @spec put_storage(TrieStorage.t(), Address.t() | {Address.t(), t()}, integer(), integer()) ::
+          {t(), TrieStorage.t()}
+  def put_storage(state, address, key, value) when is_binary(address) do
+    account = get_account(state, address) || %__MODULE__{}
 
-      {%{acct | storage_root: root_hash}, updated_trie}
-    end)
+    put_storage(state, {address, account}, key, value)
+  end
+
+  def put_storage(state, {address, account}, key, value) do
+    {updated_storage_trie, updated_trie} = Storage.put(state, account.storage_root, key, value)
+
+    root_hash = TrieStorage.root_hash(updated_storage_trie)
+    updated_account = %{account | storage_root: root_hash}
+
+    updated_state = put_account(updated_trie, address, updated_account)
+
+    {updated_account, updated_state}
   end
 
   @spec remove_storage(EVM.state(), Address.t(), integer()) :: EVM.state()
