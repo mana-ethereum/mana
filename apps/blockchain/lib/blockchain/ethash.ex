@@ -4,9 +4,7 @@ defmodule Blockchain.Ethash do
   yellow paper concerning the Ethash implementation for POW.
   """
 
-  use Bitwise
-
-  alias Blockchain.Ethash.{FNV, RandMemoHash}
+  alias Blockchain.Ethash.RandMemoHash
   alias ExthCrypto.Hash.Keccak
 
   @j_epoch 30_000
@@ -17,10 +15,6 @@ defmodule Blockchain.Ethash do
   @j_cachegrowth round(:math.pow(2, 17))
   @j_hashbytes 64
   @j_cacherounds 3
-  @j_parents 256
-  @j_wordbytes 4
-  @hash_words div(@j_hashbytes, @j_wordbytes)
-  @parents_range Range.new(0, @j_parents - 1)
 
   @precomputed_data_sizes [__DIR__, "ethash", "data_sizes.txt"]
                           |> Path.join()
@@ -36,11 +30,8 @@ defmodule Blockchain.Ethash do
 
   @first_epoch_seed_hash <<0::256>>
 
-  @type dataset_item :: <<_::512>>
-  @type dataset :: list(dataset_item)
-  @type cache :: list(<<_::512>>)
+  @type cache :: list(binary())
   @type seed :: <<_::256>>
-  @type mix :: list(non_neg_integer)
 
   def epoch(block_number) do
     div(block_number, @j_epoch)
@@ -95,101 +86,25 @@ defmodule Blockchain.Ethash do
   end
 
   @doc """
-  Generates the dataset, d, outlined in Appendix J section J.3.3 of the Yellow
-  Paper. For each element d[i] we combine data from 256 pseudorandomly selected
-  cache nodes, and hash that to compute the dataset.
+  Calculates the cache, c, outlined in Appendix J section J.3.2 of the Yellow
+  Paper, by performing the RandMemoHash algorithm n times (where n is 3 if it is
+  j_cacherounds)
   """
-  @spec generate_dataset(cache, non_neg_integer) :: dataset
-  def generate_dataset(cache, full_size) do
-    limit = div(full_size, @j_hashbytes)
-    cache_size = length(cache)
+  @spec calculate_cache(cache(), integer()) :: cache()
+  def calculate_cache(initial_cache, number_of_rounds \\ @j_cacherounds)
+  def calculate_cache(initial_cache, 0), do: initial_cache
+  def calculate_cache(initial_cache, 1), do: RandMemoHash.hash(initial_cache)
 
-    for i <- 0..(limit - 1) do
-      calculate_dataset_item(cache, i, cache_size)
-    end
-  end
-
-  @spec calculate_dataset_item(cache, non_neg_integer, non_neg_integer) :: dataset_item
-  defp calculate_dataset_item(cache, i, cache_size) do
-    @parents_range
-    |> generate_mix_of_uints(cache, cache_size, i)
-    |> uint32_list_into_binary()
-    |> Keccak.kec512()
-  end
-
-  @spec generate_mix_of_uints(Range.t(), cache, non_neg_integer, non_neg_integer) :: mix
-  defp generate_mix_of_uints(range, cache, cache_size, index) do
-    init_mix =
-      cache
-      |> initialize_mix(index, cache_size)
-      |> binary_into_uint32_list()
-
-    uint32_cache = Enum.map(cache, &binary_into_uint32_list/1)
-
-    Enum.reduce(range, init_mix, fn j, mix ->
-      cache_element = fnv_cache_element(index, j, mix, uint32_cache, cache_size)
-
-      FNV.hash_lists(mix, cache_element)
-    end)
-  end
-
-  defp fnv_cache_element(index, parent, mix, modified_cache, cache_size) do
-    mix_index = Integer.mod(parent, @hash_words)
-
-    cache_index =
-      index
-      |> bxor(parent)
-      |> FNV.hash(Enum.at(mix, mix_index))
-      |> Integer.mod(cache_size)
-
-    Enum.at(modified_cache, cache_index)
-  end
-
-  @spec binary_into_uint32_list(binary) :: list(non_neg_integer)
-  defp binary_into_uint32_list(binary) do
-    for <<chunk::size(32) <- binary>> do
-      <<chunk::size(32)>> |> :binary.decode_unsigned(:little)
-    end
-  end
-
-  @spec uint32_list_into_binary(list(non_neg_integer)) :: binary()
-  defp uint32_list_into_binary(list_of_uint32) do
-    list_of_uint32
-    |> Enum.map(&:binary.encode_unsigned(&1, :little))
-    |> Enum.map(&BitHelper.pad(&1, 4, :little))
-    |> Enum.join()
-  end
-
-  @spec initialize_mix(cache, non_neg_integer, non_neg_integer) :: binary
-  defp initialize_mix(cache, i, cache_size) do
-    cache
-    |> Enum.at(Integer.mod(i, cache_size))
-    |> :binary.decode_unsigned(:little)
-    |> bxor(i)
-    |> :binary.encode_unsigned(:little)
-    |> Keccak.kec512()
-  end
-
-  @doc """
-  Generates the cache, c, outlined in Appendix J section J.3.2 of the Yellow
-  Paper, by performing the RandMemoHash algorithm 3 times on the initial cache
-  """
-  @spec generate_cache(seed(), integer()) :: cache()
-  def generate_cache(seed, cache_size) do
-    seed
-    |> initial_cache(cache_size)
-    |> calculate_cache(@j_cacherounds)
-  end
-
-  @spec calculate_cache(cache(), 0 | 1 | 2 | 3) :: cache()
-  defp calculate_cache(cache, 0), do: cache
-
-  defp calculate_cache(cache, number_of_rounds) do
+  def calculate_cache(cache, number_of_rounds) do
     calculate_cache(RandMemoHash.hash(cache), number_of_rounds - 1)
   end
 
+  @doc """
+  This is the initial cache, c', defined in the Dataset Generation section of
+  Appendix J of the Yellow Paper.
+  """
   @spec initial_cache(seed(), integer()) :: cache()
-  defp initial_cache(seed, cache_size) do
+  def initial_cache(seed, cache_size) do
     adjusted_cache_size = div(cache_size, @j_hashbytes)
 
     for i <- 0..(adjusted_cache_size - 1) do
@@ -197,9 +112,9 @@ defmodule Blockchain.Ethash do
     end
   end
 
-  defp cache_element(0, seed), do: Keccak.kec512(seed)
+  def cache_element(0, seed), do: Keccak.kec512(seed)
 
-  defp cache_element(element, seed) do
+  def cache_element(element, seed) do
     Keccak.kec512(cache_element(element - 1, seed))
   end
 end

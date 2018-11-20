@@ -90,7 +90,7 @@ defmodule BitHelper do
       ** (RuntimeError) Binary too long for padding
   """
   @spec pad(binary(), integer()) :: binary()
-  def pad(binary, desired_length, endianess \\ :big) do
+  def pad(binary, desired_length) do
     desired_bits = desired_length * 8
 
     case byte_size(binary) do
@@ -99,20 +99,11 @@ defmodule BitHelper do
 
       x when x <= desired_length ->
         padding_bits = (desired_length - x) * 8
-
-        pad_known_bits(binary, padding_bits, endianess)
+        <<0::size(padding_bits)>> <> binary
 
       _ ->
         raise "Binary too long for padding"
     end
-  end
-
-  defp pad_known_bits(binary, padding_bits, :big) do
-    <<0::size(padding_bits)>> <> binary
-  end
-
-  defp pad_known_bits(binary, padding_bits, :little) do
-    binary <> <<0::size(padding_bits)>>
   end
 
   @doc """
