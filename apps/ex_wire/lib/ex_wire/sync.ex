@@ -28,6 +28,7 @@ defmodule ExWire.Sync do
   @save_block_interval 100
   @blocks_per_request 100
   @startup_delay 10_000
+  @retry_delay 5_000
 
   @type state :: %{
           chain: Chain.t(),
@@ -99,6 +100,12 @@ defmodule ExWire.Sync do
   def handle_info({:packet, packet, peer}, state) do
     :ok = Exth.trace(fn -> "[Sync] Ignoring packet #{packet.__struct__} from #{peer}" end)
 
+    {:noreply, state}
+  end
+
+  @impl true
+  def handle_cast(:no_children, state) do
+    request_next_block(@retry_delay)
     {:noreply, state}
   end
 

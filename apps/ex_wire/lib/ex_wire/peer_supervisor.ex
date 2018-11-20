@@ -52,9 +52,40 @@ defmodule ExWire.PeerSupervisor do
   Sends a packet to all active TCP connections. This is useful when we want to, for instance,
   ask for a `GetBlockBody` from all peers for a given block hash.
   """
+  @spec send_packet(pid, Packet.packet(), node_selector()) :: :ok
+  def send_packet(parent, packet, node_selector) do
+    children = find_children(node_selector)
+    do_send_packet(parent, packet, children)
+  end
+
   @spec send_packet(Packet.packet(), node_selector()) :: :ok
   def send_packet(packet, node_selector) do
-    for child <- find_children(node_selector) do
+    children = find_children(node_selector)
+    do_send_packet(packet, children)
+  end
+
+  defp do_send_packet(_packet, []) do
+    :no_children
+  end
+
+  defp do_send_packet(packet, children) do
+    for child <- children do
+      Exth.trace(fn ->
+        "[PeerSup] Sending #{to_string(packet.__struct__)} packet to peer #{
+          inspect(Server.get_peer(child).ident)
+        }"
+      end)
+
+      Server.send_packet(child, packet)
+    end
+
+    :ok
+  end
+
+  defp do_send_packet(parent, _packet, []), do: GenServer.cast(parent, :no_children)
+
+  defp do_send_packet(_parent, packet, children) do
+    for child <- children do
       Exth.trace(fn ->
         "[PeerSup] Sending #{to_string(packet.__struct__)} packet to peer #{
           inspect(Server.get_peer(child).ident)
