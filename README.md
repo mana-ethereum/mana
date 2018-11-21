@@ -6,11 +6,12 @@ Mana-Ethereum is an open-source Ethereum blockchain client built using [Elixir].
 
 In the current Ethereum ecosystem, a majority of active nodes on the network are Geth or Parity nodes. Mana-Ethereum provides an additional open-source alternative. Our aim is to create an open, well-documented implementation that closely matches the protocols described in the [Ethereum yellow paper].
 
-Mana-Ethereum is currently in development. See the [Project Status] for more information.
+Mana-Ethereum is currently in development. See the [Project Status] and [Project FAQs] for more information.
 
 [Elixir]: https://elixir-lang.org/
 [Ethereum yellow paper]: https://ethereum.github.io/yellowpaper/paper.pdf
 [Project Status]: #project-status
+[Project FAQs]: https://github.com/mana-ethereum/mana/wiki/FAQ
 
 # Dependencies
 
@@ -69,10 +70,10 @@ Then you can run:
 which will start a DevP2P sync with a local peer.
 
 ### Known Sync Issues
-_Updated 11/15/2018_
+_Updated Nov-21-2018_
 
-- Mainnet syncing is currently paused at block 2469002 as we investigate slow `BALANCE` calls [#610].
-- Ropsten sync is in progress, current block is ~ 3148000 - May 2018.
+- We've restarted mainnet syncing, previous sync reached block 2469002 before we paused to investigate slow `BALANCE` calls [#610].
+- Ropsten sync is in progress, current block is ~ 3_670_000 - Jul-19-2018
 
 [transaction spam attack]: https://blog.ethereum.org/2016/09/22/transaction-spam-attack-next-steps/
 [2469000]: https://etherscan.io/block/2,469,000
