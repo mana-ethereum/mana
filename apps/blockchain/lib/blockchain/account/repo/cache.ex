@@ -158,16 +158,19 @@ defmodule Blockchain.Account.Repo.Cache do
     updated_state
   end
 
-  defp commit_key_cache(address, {key, key_cache}, {account, state}) do
-    case Map.get(key_cache, :current_value) do
-      :deleted ->
-        Account.remove_storage(state, {address, account}, key, true)
+  defp commit_key_cache(address, {key, _key_cache = %{current_value: :deleted}}, {account, state}) do
+    Account.remove_storage(state, {address, account}, key, true)
+  end
 
-      nil ->
-        {account, state}
+  defp commit_key_cache(
+         address,
+         {key, %{current_value: current_value}},
+         {account, state}
+       ) do
+    Account.put_storage(state, {address, account}, key, current_value, true)
+  end
 
-      value ->
-        Account.put_storage(state, {address, account}, key, value, true)
-    end
+  defp commit_key_cache(_address, {_key, _key_cache}, {account, state}) do
+    {account, state}
   end
 end
