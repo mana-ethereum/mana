@@ -89,7 +89,9 @@ defmodule Blockchain.Account.Repo.Cache do
   def commit_storage(cache_struct, state) do
     cache_struct
     |> storage_to_list()
-    |> Enum.reduce(state, &commit_account_storage_cache/2)
+    |> Enum.reduce(state, fn account_storage_cache, state_acc ->
+      commit_account_storage_cache(account_storage_cache, state_acc, cache_struct)
+    end)
   end
 
   @spec commit_accounts(t(), TrieStorage.t()) :: TrieStorage.t()
@@ -141,8 +143,8 @@ defmodule Blockchain.Account.Repo.Cache do
 
   defp commit_account_cache({_address, {:clean, _account, _code}}, state), do: state
 
-  defp commit_account_storage_cache({address, account_cache}, state) do
-    account = Account.get_account(state, address)
+  defp commit_account_storage_cache({address, account_cache}, state, cache_struct) do
+    {_status, account, _code} = account(cache_struct, address)
 
     {_updated_account, updated_state} =
       account_cache
