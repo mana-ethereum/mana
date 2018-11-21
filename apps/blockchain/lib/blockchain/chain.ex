@@ -169,6 +169,9 @@ defmodule Blockchain.Chain do
       "ByzantiumToConstantinopleAt5" ->
         load_chain(:byzantium_to_constantinople_transition_test, config)
 
+      "EIP158ToByzantiumAt5" ->
+        load_chain(:eip158_to_byzantium_transition_test, config)
+
       "HomesteadToDaoAt5" ->
         load_chain(:dao_hardfork_test, config)
 
