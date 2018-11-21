@@ -12,9 +12,10 @@ defmodule MerklePatriciaTree.Mixfile do
       description: "Ethereum's Merkle Patricia Trie data structure",
       package: [
         maintainers: ["Geoffrey Hayes", "Ayrat Badykov", "Mason Forest"],
-        licenses: ["MIT"],
+        licenses: ["MIT", "Apache 2"],
         links: %{
-          "GitHub" => "https://github.com/poanetwork/mana/tree/master/apps/merkle_patricia_tree"
+          "GitHub" =>
+            "https://github.com/mana-ethereum/mana/tree/master/apps/merkle_patricia_tree"
         }
       ],
       build_embedded: Mix.env() == :prod,

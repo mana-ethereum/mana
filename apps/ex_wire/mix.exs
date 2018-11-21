@@ -12,8 +12,8 @@ defmodule ExWire.Mixfile do
       description: "Elixir Client for Ethereum's RLPx, DevP2P and Eth Wire Protocol",
       package: [
         maintainers: ["Mason Fischer", "Geoffrey Hayes", "Ayrat Badykov"],
-        licenses: ["MIT"],
-        links: %{"GitHub" => "https://github.com/poanetwork/mana/tree/master/apps/ex_wire"}
+        licenses: ["MIT", "Apache 2"],
+        links: %{"GitHub" => "https://github.com/mana-ethereum/mana/tree/master/apps/ex_wire"}
       ],
       elixirc_paths: elixirc_paths(Mix.env()),
       build_embedded: Mix.env() == :prod,

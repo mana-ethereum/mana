@@ -12,8 +12,8 @@ defmodule Blockchain.Mixfile do
       description: "Ethereum's Blockchain Manager",
       package: [
         maintainers: ["Ayrat Badykov", "Mason Forest"],
-        licenses: ["LGPL v3"],
-        links: %{"GitHub" => "https://github.com/poanetwork/mana/apps/blockchain"}
+        licenses: ["MIT", "Apache 2"],
+        links: %{"GitHub" => "https://github.com/mana-ethereum/mana/tree/master/apps/blockchain"}
       ],
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
