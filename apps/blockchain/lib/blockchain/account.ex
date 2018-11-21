@@ -593,7 +593,7 @@ defmodule Blockchain.Account do
 
     updated_state = put_account(updated_trie, address, updated_account)
 
-    if return_account, do: {updated_account, updated_trie}, else: updated_state
+    if return_account, do: {updated_account, updated_state}, else: updated_state
   end
 
   @doc """

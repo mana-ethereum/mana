@@ -142,16 +142,26 @@ defmodule Blockchain.Account.Repo.Cache do
   defp commit_account_cache({_address, {:clean, _account, _code}}, state), do: state
 
   defp commit_account_storage_cache({address, account_cache}, state) do
-    account_cache
-    |> Map.to_list()
-    |> Enum.reduce(state, &commit_key_cache(address, &1, &2))
+    account = Account.get_account(state, address)
+
+    {_updated_account, updated_state} =
+      account_cache
+      |> Map.to_list()
+      |> Enum.reduce({account, state}, &commit_key_cache(address, &1, &2))
+
+    updated_state
   end
 
-  defp commit_key_cache(address, {key, key_cache}, state) do
+  defp commit_key_cache(address, {key, key_cache}, {account, state}) do
     case Map.get(key_cache, :current_value) do
-      :deleted -> Account.remove_storage(state, address, key)
-      nil -> state
-      value -> Account.put_storage(state, address, key, value)
+      :deleted ->
+        Account.remove_storage(state, {address, account}, key, true)
+
+      nil ->
+        {account, state}
+
+      value ->
+        Account.put_storage(state, {address, account}, key, value, true)
     end
   end
 end
