@@ -207,6 +207,12 @@ defmodule JSONRPC2.HandlerTest do
         ~s({"jsonrpc": "2.0", "method": "custom_error", "params": ["bad"], "id": "1"}),
         ~s({"jsonrpc": "2.0", "error": {"code": 404, "message": "Custom not found error", "data": ["bad"]}, "id": "1"})
       )
+
+      assert_rpc_reply(
+        ErrorHandlerTest,
+        ~s({"jsonrpc": "2.0", "method": "get_best_block_in_the_universe", "params": ["bad"], "id": "1"}),
+        ~s({"jsonrpc": "2.0", "error": {"code": -32604, "message": "Not supported"}, "id": "1"})
+      )
     end
   end
 

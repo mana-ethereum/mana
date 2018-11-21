@@ -60,7 +60,6 @@ environment :dev do
   # dev mode.
   set(dev_mode: true)
   set(include_erts: true)
-  set(cookie: :"bAFS)[qmAg0XFS5`7Ncbz,$J:K3Tv)t@{OIPWJb`;N!k%z^H,^(L}:qI_$Tp8>EX")
 end
 
 environment :prod do

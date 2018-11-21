@@ -17,13 +17,18 @@ defmodule ExWire.Sync do
 
   alias Block.Header
   alias Blockchain.Block
+  alias Blockchain.Blocktree
+  alias Blockchain.Blocktree.State
+  alias Blockchain.Chain
   alias ExWire.Config
   alias ExWire.Packet.{BlockBodies, BlockHeaders, GetBlockBodies, GetBlockHeaders}
   alias ExWire.PeerSupervisor
-  alias ExWire.Struct.{BlockQueue, Peer}
-  alias Blockchain.{Blocktree, Chain}
-  alias Blockchain.Blocktree.State
-  alias MerklePatriciaTree.{CachingTrie, DB.RocksDB, Trie, TrieStorage}
+  alias ExWire.Struct.BlockQueue
+  alias ExWire.Struct.Peer
+  alias MerklePatriciaTree.CachingTrie
+  alias MerklePatriciaTree.DB.RocksDB
+  alias MerklePatriciaTree.Trie
+  alias MerklePatriciaTree.TrieStorage
 
   @save_block_interval 100
   @blocks_per_request 100
@@ -35,8 +40,15 @@ defmodule ExWire.Sync do
           block_queue: BlockQueue.t(),
           block_tree: Blocktree.t(),
           trie: Trie.t(),
-          last_requested_block: integer() | nil
+          last_requested_block: integer() | nil,
+          starting_block_number: non_neg_integer() | nil,
+          highest_block_number: non_neg_integer() | nil
         }
+
+  @spec get_state() :: state
+  def get_state() do
+    GenServer.call(__MODULE__, :get_state)
+  end
 
   @doc """
   Starts a sync process for a given chain.
@@ -60,6 +72,7 @@ defmodule ExWire.Sync do
     block_queue = %BlockQueue{}
 
     request_next_block(@startup_delay)
+    {:ok, {block, _caching_trie}} = Blocktree.get_best_block(block_tree, chain, trie)
 
     {:ok,
      %{
@@ -67,7 +80,9 @@ defmodule ExWire.Sync do
        block_queue: block_queue,
        block_tree: block_tree,
        trie: trie,
-       last_requested_block: nil
+       last_requested_block: nil,
+       starting_block_number: block.header.number,
+       highest_block_number: block.header.number
      }}
   end
 
@@ -101,6 +116,11 @@ defmodule ExWire.Sync do
     :ok = Exth.trace(fn -> "[Sync] Ignoring packet #{packet.__struct__} from #{peer}" end)
 
     {:noreply, state}
+  end
+
+  @impl true
+  def handle_call(:get_state, _from, state) do
+    {:reply, state, state}
   end
 
   @doc """
@@ -161,39 +181,43 @@ defmodule ExWire.Sync do
           block_queue: block_queue,
           block_tree: block_tree,
           chain: chain,
-          trie: trie
+          trie: trie,
+          highest_block_number: highest_block_number
         }
       ) do
-    {next_block_queue, next_block_tree, next_trie, header_hashes} =
-      Enum.reduce(block_headers.headers, {block_queue, block_tree, trie, []}, fn header,
-                                                                                 {block_queue,
-                                                                                  block_tree,
-                                                                                  trie,
-                                                                                  header_hashes} ->
-        header_hash = header |> Header.hash()
+    {next_highest_block_number, next_block_queue, next_block_tree, next_trie, header_hashes} =
+      Enum.reduce(
+        block_headers.headers,
+        {highest_block_number, block_queue, block_tree, trie, []},
+        fn header, {highest_block_number, block_queue, block_tree, trie, header_hashes} ->
+          header_hash = header |> Header.hash()
 
-        {next_block_queue, next_block_tree, next_trie, should_request_block} =
-          BlockQueue.add_header(
-            block_queue,
-            block_tree,
-            header,
-            header_hash,
-            peer.remote_id,
-            chain,
-            trie
-          )
+          {next_block_queue, next_block_tree, next_trie, should_request_block} =
+            BlockQueue.add_header(
+              block_queue,
+              block_tree,
+              header,
+              header_hash,
+              peer.remote_id,
+              chain,
+              trie
+            )
 
-        next_header_hashes =
-          if should_request_block do
-            :ok = Logger.debug(fn -> "[Sync] Requesting block body #{header.number}" end)
+          next_header_hashes =
+            if should_request_block do
+              :ok = Logger.debug(fn -> "[Sync] Requesting block body #{header.number}" end)
 
-            [header_hash | header_hashes]
-          else
-            header_hashes
-          end
+              [header_hash | header_hashes]
+            else
+              header_hashes
+            end
 
-        {next_block_queue, next_block_tree, next_trie, next_header_hashes}
-      end)
+          next_highest_block_number = Kernel.max(highest_block_number, header.number)
+
+          {next_highest_block_number, next_block_queue, next_block_tree, next_trie,
+           next_header_hashes}
+        end
+      )
 
     :ok =
       PeerSupervisor.send_packet(
@@ -210,6 +234,7 @@ defmodule ExWire.Sync do
     |> Map.put(:block_queue, next_block_queue)
     |> Map.put(:block_tree, next_block_tree)
     |> Map.put(:trie, next_maybe_saved_trie)
+    |> Map.put(:highest_block_number, next_highest_block_number)
   end
 
   @doc """

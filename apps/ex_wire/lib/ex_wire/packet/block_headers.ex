@@ -13,11 +13,11 @@ defmodule ExWire.Packet.BlockHeaders do
   """
 
   require Logger
-
+  alias Block.Header
   @behaviour ExWire.Packet
 
   @type t :: %__MODULE__{
-          headers: [Block.Header.t()]
+          headers: [Header.t()]
         }
 
   defstruct [
@@ -39,7 +39,7 @@ defmodule ExWire.Packet.BlockHeaders do
   """
   @spec serialize(t) :: ExRLP.t()
   def serialize(packet = %__MODULE__{}) do
-    for header <- packet.headers, do: Block.Header.serialize(header)
+    for header <- packet.headers, do: Header.serialize(header)
   end
 
   @doc """
@@ -57,7 +57,7 @@ defmodule ExWire.Packet.BlockHeaders do
   """
   @spec deserialize(ExRLP.t()) :: t
   def deserialize(rlp) do
-    headers = for header <- rlp, do: Block.Header.deserialize(header)
+    headers = for header <- rlp, do: Header.deserialize(header)
 
     %__MODULE__{
       headers: headers
