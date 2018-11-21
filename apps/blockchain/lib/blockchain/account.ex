@@ -551,7 +551,7 @@ defmodule Blockchain.Account do
           integer(),
           integer(),
           boolean()
-        ) :: {t(), TrieStorage.t()}
+        ) :: {t(), TrieStorage.t()} | t()
   def put_storage(state, address, key, value, return_account \\ false)
 
   def put_storage(state, address, key, value, return_account) when is_binary(address) do
@@ -571,14 +571,29 @@ defmodule Blockchain.Account do
     if return_account, do: {updated_account, updated_state}, else: updated_state
   end
 
-  @spec remove_storage(EVM.state(), Address.t(), integer()) :: EVM.state()
-  def remove_storage(state, address, key) do
-    update_account(state, address, fn acct ->
-      {updated_storage_trie, updated_trie} = Storage.remove(state, acct.storage_root, key)
-      root_hash = TrieStorage.root_hash(updated_storage_trie)
+  @spec remove_storage(
+          TrieStorage.t(),
+          Address.t() | {Address.t(), t()},
+          integer(),
+          boolean()
+        ) :: {t(), TrieStorage.t()} | t()
+  def remove_storage(state, address, key, return_account \\ false)
 
-      {%{acct | storage_root: root_hash}, updated_trie}
-    end)
+  def remove_storage(state, address, key, return_account) when is_binary(address) do
+    account = get_account(state, address) || %__MODULE__{}
+
+    remove_storage(state, {address, account}, key, return_account)
+  end
+
+  def remove_storage(state, {address, account}, key, return_account) do
+    {updated_storage_trie, updated_trie} = Storage.remove(state, account.storage_root, key)
+
+    root_hash = TrieStorage.root_hash(updated_storage_trie)
+    updated_account = %{account | storage_root: root_hash}
+
+    updated_state = put_account(updated_trie, address, updated_account)
+
+    if return_account, do: {updated_account, updated_trie}, else: updated_state
   end
 
   @doc """
