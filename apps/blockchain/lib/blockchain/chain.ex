@@ -144,6 +144,7 @@ defmodule Blockchain.Chain do
       iex> Blockchain.Chain.test_config("Frontier").name
       "Frontier (Test)"
   """
+  # credo:disable-for-next-line
   def test_config(hardfork) when is_binary(hardfork) do
     config = EVM.Configuration.hardfork_config(hardfork)
 
@@ -183,7 +184,6 @@ defmodule Blockchain.Chain do
   @doc """
   Get the EVM configuration based on the chain and block number
   """
-  # credo:disable-for-next-line
   def evm_config(chain = %__MODULE__{}, block_number \\ nil) do
     if block_number do
       cond do
