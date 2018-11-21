@@ -27,6 +27,13 @@ defmodule ExWire.Packet.BlockBodies do
     :blocks
   ]
 
+  @spec new([Block.t()]) :: t()
+  def new(block_structs) do
+    %__MODULE__{
+      blocks: block_structs
+    }
+  end
+
   @doc """
   Given a BlockBodies packet, serializes for transport over Eth Wire Protocol.
 
@@ -94,8 +101,8 @@ defmodule ExWire.Packet.BlockBodies do
 
   ## Examples
 
-      iex> %ExWire.Packet.GetBlockBodies{hashes: [<<5>>, <<6>>]}
-      ...> |> ExWire.Packet.GetBlockBodies.handle()
+      iex> %ExWire.Packet.BlockBodies{blocks: []}
+      ...> |> ExWire.Packet.BlockBodies.handle()
       :ok
   """
   @spec handle(ExWire.Packet.packet()) :: ExWire.Packet.handle_response()

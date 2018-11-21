@@ -21,6 +21,16 @@ defmodule ExWire.Struct.Block do
           ommers: list(Header.t())
         }
 
+  @spec new(Blockchain.Block.t()) :: t()
+  def new(blockchain_block) do
+    %__MODULE__{
+      transactions_rlp: Enum.map(blockchain_block.transactions, &Transaction.serialize/1),
+      transactions: blockchain_block.transactions,
+      ommers_rlp: Enum.map(blockchain_block.ommers, &Header.serialize/1),
+      ommers: blockchain_block.ommers
+    }
+  end
+
   @doc """
   Given a Block, serializes for transport over Eth Wire Protocol.
 

@@ -230,10 +230,46 @@ defmodule Blockchain.Block do
     end
   end
 
+  @doc """
+  Returns the specified block from the database, if the block number is found in the provided map
+  and the resulting block hash is found in the provided TrieStorage.
+
+  ## Examples
+      # Empty not found example
+      iex> trie = MerklePatriciaTree.Test.random_ets_db() |> MerklePatriciaTree.Trie.new()
+      iex> Blockchain.Block.get_block_by_number(1, trie)
+      :not_found
+
+      # Populated Trie, empty map not found example
+      iex> db = MerklePatriciaTree.Test.random_ets_db()
+      iex> trie = db |> MerklePatriciaTree.Trie.new()
+      iex> block = %Blockchain.Block{
+      ...>   transactions: [%Blockchain.Transaction{nonce: 5, gas_price: 6, gas_limit: 7, to: <<1::160>>, value: 8, v: 27, r: 9, s: 10, data: "hi"}],
+      ...>   header: %Block.Header{number: 5, parent_hash: <<1, 2, 3>>, beneficiary: <<2, 3, 4>>, difficulty: 100, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>}
+      ...> }
+      iex> Blockchain.Block.put_block(block, trie)
+      iex> Blockchain.Block.get_block_by_number(5, trie)
+      :not_found
+
+      # Found example
+      iex> db = MerklePatriciaTree.Test.random_ets_db()
+      iex> trie = db |> MerklePatriciaTree.Trie.new()
+      iex> block = %Blockchain.Block{
+      ...>   transactions: [%Blockchain.Transaction{nonce: 5, gas_price: 6, gas_limit: 7, to: <<1::160>>, value: 8, v: 27, r: 9, s: 10, data: "hi"}],
+      ...>   header: %Block.Header{number: 5, parent_hash: <<1, 2, 3>>, beneficiary: <<2, 3, 4>>, difficulty: 100, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>}
+      ...> }
+      iex> Blockchain.Block.put_block(block, trie)
+      iex> block_hash = block |> Blockchain.Block.hash
+      iex> Blockchain.Block.get_block_by_number(5, trie, %{5 => block_hash})
+      {:ok, %Blockchain.Block{
+        transactions: [%Blockchain.Transaction{nonce: 5, gas_price: 6, gas_limit: 7, to: <<1::160>>, value: 8, v: 27, r: 9, s: 10, data: "hi"}],
+        header: %Block.Header{number: 5, parent_hash: <<1, 2, 3>>, beneficiary: <<2, 3, 4>>, difficulty: 100, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>}
+      }}
+  """
   # TODO: Figure out best way to store block_number => block_hash and insert it as `some_block_number_to_hash_map`
-  @spec get_block_by_number(integer(), TrieStorage.t(), %{}) :: {:ok, t} | :not_found
+  @spec get_block_by_number(integer(), TrieStorage.t(), map()) :: {:ok, t} | :not_found
   def get_block_by_number(block_number, trie, some_block_number_to_hash_map \\ %{}) do
-    case Map.get(some_block_number_to_hash_map, block_number, nil) do
+    case Map.get(some_block_number_to_hash_map, block_number) do
       nil ->
         :not_found
 
