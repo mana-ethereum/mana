@@ -552,23 +552,24 @@ defmodule Blockchain.Account do
           integer(),
           boolean()
         ) :: {t(), TrieStorage.t()} | t()
-  def put_storage(state, address, key, value, return_account \\ false)
+  def put_storage(state_trie, address, key, value, return_account \\ false)
 
-  def put_storage(state, address, key, value, return_account) when is_binary(address) do
-    account = get_account(state, address) || %__MODULE__{}
+  def put_storage(state_trie, address, key, value, return_account) when is_binary(address) do
+    account = get_account(state_trie, address) || %__MODULE__{}
 
-    put_storage(state, {address, account}, key, value, return_account)
+    put_storage(state_trie, {address, account}, key, value, return_account)
   end
 
-  def put_storage(state, {address, account}, key, value, return_account) do
-    {updated_storage_trie, updated_trie} = Storage.put(state, account.storage_root, key, value)
+  def put_storage(state_trie, {address, account}, key, value, return_account) do
+    {updated_storage_trie, updated_trie} =
+      Storage.put(state_trie, account.storage_root, key, value)
 
     root_hash = TrieStorage.root_hash(updated_storage_trie)
     updated_account = %{account | storage_root: root_hash}
 
-    updated_state = put_account(updated_trie, address, updated_account)
+    updated_state_trie = put_account(updated_trie, address, updated_account)
 
-    if return_account, do: {updated_account, updated_state}, else: updated_state
+    if return_account, do: {updated_account, updated_state_trie}, else: updated_state_trie
   end
 
   @spec remove_storage(
