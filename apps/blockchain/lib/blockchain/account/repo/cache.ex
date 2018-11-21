@@ -144,7 +144,11 @@ defmodule Blockchain.Account.Repo.Cache do
   defp commit_account_cache({_address, {:clean, _account, _code}}, state), do: state
 
   defp commit_account_storage_cache({address, account_cache}, state, cache_struct) do
-    {_status, account, _code} = account(cache_struct, address)
+    account =
+      case account(cache_struct, address) do
+        {_status, account, _code} -> account
+        nil -> Account.get_account(state, address)
+      end
 
     {_updated_account, updated_state} =
       account_cache
