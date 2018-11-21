@@ -89,7 +89,9 @@ defmodule Blockchain.Account.Repo.Cache do
   def commit_storage(cache_struct, state) do
     cache_struct
     |> storage_to_list()
-    |> Enum.reduce(state, &commit_account_storage_cache/2)
+    |> Enum.reduce(state, fn account_storage_cache, state_acc ->
+      commit_account_storage_cache(account_storage_cache, state_acc, cache_struct)
+    end)
   end
 
   @spec commit_accounts(t(), TrieStorage.t()) :: TrieStorage.t()
@@ -141,17 +143,34 @@ defmodule Blockchain.Account.Repo.Cache do
 
   defp commit_account_cache({_address, {:clean, _account, _code}}, state), do: state
 
-  defp commit_account_storage_cache({address, account_cache}, state) do
-    account_cache
-    |> Map.to_list()
-    |> Enum.reduce(state, &commit_key_cache(address, &1, &2))
+  defp commit_account_storage_cache({address, account_cache}, state_trie, cache_struct) do
+    account =
+      case account(cache_struct, address) do
+        {_status, account, _code} -> account
+        nil -> Account.get_account(state_trie, address)
+      end
+
+    {_updated_account, updated_state} =
+      account_cache
+      |> Map.to_list()
+      |> Enum.reduce({account, state_trie}, &commit_key_cache(address, &1, &2))
+
+    updated_state
   end
 
-  defp commit_key_cache(address, {key, key_cache}, state) do
-    case Map.get(key_cache, :current_value) do
-      :deleted -> Account.remove_storage(state, address, key)
-      nil -> state
-      value -> Account.put_storage(state, address, key, value)
-    end
+  defp commit_key_cache(address, {key, _key_cache = %{current_value: :deleted}}, {account, state}) do
+    Account.remove_storage(state, {address, account}, key, true)
+  end
+
+  defp commit_key_cache(
+         address,
+         {key, %{current_value: current_value}},
+         {account, state}
+       ) do
+    Account.put_storage(state, {address, account}, key, current_value, true)
+  end
+
+  defp commit_key_cache(_address, {_key, _key_cache}, {account, state}) do
+    {account, state}
   end
 end
