@@ -183,6 +183,7 @@ defmodule Blockchain.Chain do
   @doc """
   Get the EVM configuration based on the chain and block number
   """
+  # credo:disable-for-next-line
   def evm_config(chain = %__MODULE__{}, block_number \\ nil) do
     if block_number do
       cond do
