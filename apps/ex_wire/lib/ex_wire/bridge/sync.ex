@@ -6,6 +6,7 @@ defmodule ExWire.Bridge.Sync do
   alias Blockchain.Block
   alias Blockchain.Blocktree
   alias ExWire.Sync
+  alias MerklePatriciaTree.Trie
 
   @spec get_best_block() :: {:ok, Block.t()} | {:error, atom()}
   def get_best_block() do
@@ -15,6 +16,17 @@ defmodule ExWire.Bridge.Sync do
           Blocktree.get_best_block(state.block_tree, state.chain, state.trie)
 
         {:ok, block}
+
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
+
+  @spec get_current_trie() :: {:ok, Trie.t()} | {:error, atom()}
+  def get_current_trie() do
+    case get_last_sync_state() do
+      {:ok, state} ->
+        {:ok, state.trie}
 
       {:error, reason} ->
         {:error, reason}

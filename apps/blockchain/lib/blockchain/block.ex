@@ -230,6 +230,18 @@ defmodule Blockchain.Block do
     end
   end
 
+  # TODO: Figure out best way to store block_number => block_hash and insert it as `some_block_number_to_hash_map`
+  @spec get_block_by_number(integer(), TrieStorage.t(), %{}) :: {:ok, t} | :not_found
+  def get_block_by_number(block_number, trie, some_block_number_to_hash_map \\ %{}) do
+    case Map.get(some_block_number_to_hash_map, block_number, nil) do
+      nil ->
+        :not_found
+
+      hash ->
+        get_block(hash, trie)
+    end
+  end
+
   @doc """
   Returns the parent node for a given block, if it exists.
 
