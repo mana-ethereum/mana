@@ -146,36 +146,27 @@ defmodule Blockchain.Chain do
   """
   def test_config(hardfork) when is_binary(hardfork) do
     config = EVM.Configuration.hardfork_config(hardfork)
+    test = get_test(hardfork)
 
-    case hardfork do
-      "Frontier" ->
-        load_chain(:frontier_test, config)
-
-      "Homestead" ->
-        load_chain(:homestead_test, config)
-
-      "TangerineWhistle" ->
-        load_chain(:eip150_test, config)
-
-      "SpuriousDragon" ->
-        load_chain(:eip161_test, config)
-
-      "Byzantium" ->
-        load_chain(:byzantium_test, config)
-
-      "Constantinople" ->
-        load_chain(:constantinople_test, config)
-
-      "ByzantiumToConstantinopleAt5" ->
-        load_chain(:byzantium_to_constantinople_transition_test, config)
-
-      "HomesteadToDaoAt5" ->
-        load_chain(:dao_hardfork_test, config)
-
-      _ ->
-        nil
-    end
+    test && load_chain(test, config)
   end
+
+  defp get_test("Frontier"), do: :frontier_test
+  defp get_test("Homestead"), do: :homestead_test
+  defp get_test("TangerineWhistle"), do: :eip150_test
+  defp get_test("SpuriousDragon"), do: :eip161_test
+  defp get_test("Byzantium"), do: :byzantium_test
+  defp get_test("Constantinople"), do: :constantinople_test
+
+  defp get_test("ByzantiumToConstantinopleAt5"),
+    do: :byzantium_to_constantinople_transition_test
+
+  defp get_test("EIP158ToByzantiumAt5"),
+    do: :eip158_to_byzantium_transition_test
+
+  defp get_test("HomesteadToDaoAt5"), do: :dao_hardfork_test
+
+  defp get_test(_), do: nil
 
   @doc """
   Get the EVM configuration based on the chain and block number
