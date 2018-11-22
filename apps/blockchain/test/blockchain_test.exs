@@ -35,7 +35,8 @@ defmodule BlockchainTest do
   @tag :ethereum_common_tests
   @tag :Homestead
   @tag :slow
-  test "runs Homestead blockchain tests", do: run_fork_tests("Homestead")
+  test "runs FrontierToHomesteadAt5 blockchain tests",
+    do: run_fork_tests("FrontierToHomesteadAt5")
 
   @tag :ethereum_common_tests
   @tag :HomesteadToDaoAt5
@@ -72,11 +73,6 @@ defmodule BlockchainTest do
   @tag :slow
   test "runs Byzantium To Constantinople transition blockchain tests",
     do: run_fork_tests("ByzantiumToConstantinopleAt5")
-
-  @tag :ethereum_common_tests
-  @tag :FrontierToHomesteadAt5
-  test "runs FrontierToHomesteadAt5 blockchain tests",
-    do: run_fork_tests("FrontierToHomesteadAt5")
 
   @tag :ethereum_common_tests
   @tag :HomesteadToEIP150At5
