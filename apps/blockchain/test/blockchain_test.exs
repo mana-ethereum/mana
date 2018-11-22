@@ -35,6 +35,12 @@ defmodule BlockchainTest do
   @tag :ethereum_common_tests
   @tag :Homestead
   @tag :slow
+  test "runs Homestead blockchain tests",
+    do: run_fork_tests("Homestead")
+
+  @tag :ethereum_common_tests
+  @tag :Homestead
+  @tag :slow
   test "runs FrontierToHomesteadAt5 blockchain tests",
     do: run_fork_tests("FrontierToHomesteadAt5")
 
