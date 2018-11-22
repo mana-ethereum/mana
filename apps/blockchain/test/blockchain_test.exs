@@ -20,8 +20,8 @@ defmodule BlockchainTest do
     "Constantinople" => [
       "GeneralStateTests/stBugs/randomStatetestDEFAULT-Tue_07_58_41-15153-575192_d0g0v0.json"
     ],
-    # the rest are not implemented yet
     "EIP158ToByzantiumAt5" => [],
+    # the rest are not implemented yet
     "FrontierToHomesteadAt5" => [],
     "HomesteadToEIP150At5" => []
   }
@@ -60,6 +60,11 @@ defmodule BlockchainTest do
   test "runs Byzantium blockchain tests", do: run_fork_tests("Byzantium")
 
   @tag :ethereum_common_tests
+  @tag :Byzantium
+  @tag :slow
+  test "runs EIP158ToByzantiumAt5 blockchain tests", do: run_fork_tests("EIP158ToByzantiumAt5")
+
+  @tag :ethereum_common_tests
   @tag :Constantinople
   @tag :slow
   test "runs Constantinople blockchain tests", do: run_fork_tests("Constantinople")
@@ -69,10 +74,6 @@ defmodule BlockchainTest do
   @tag :slow
   test "runs Byzantium To Constantinople transition blockchain tests",
     do: run_fork_tests("ByzantiumToConstantinopleAt5")
-
-  @tag :ethereum_common_tests
-  @tag :EIP158ToByzantiumAt5
-  test "runs EIP158ToByzantiumAt5 blockchain tests", do: run_fork_tests("EIP158ToByzantiumAt5")
 
   @tag :ethereum_common_tests
   @tag :FrontierToHomesteadAt5
