@@ -164,7 +164,7 @@ defmodule Blockchain.Chain do
   defp get_test("EIP158ToByzantiumAt5"),
     do: :eip158_to_byzantium_transition_test
 
-  defp get_test("HomesteadToEIP150At5"), do: :eip158_to_byzantium_transition_test
+  defp get_test("HomesteadToEIP150At5"), do: :homestead_to_eip150_transition_test
 
   defp get_test("HomesteadToDaoAt5"), do: :dao_hardfork_test
 

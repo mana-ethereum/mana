@@ -45,6 +45,11 @@ defmodule BlockchainTest do
   @tag :ethereum_common_tests
   @tag :TangerineWhistle
   @tag :slow
+  test "runs TangerineWhistle blockchain tests", do: run_fork_tests("TangerineWhistle")
+
+  @tag :ethereum_common_tests
+  @tag :TangerineWhistle
+  @tag :slow
   test "runs HomesteadToEIP150(TangerineWhistle)At5 blockchain tests",
     do: run_fork_tests("HomesteadToEIP150At5")
 
