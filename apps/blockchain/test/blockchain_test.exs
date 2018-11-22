@@ -19,9 +19,9 @@ defmodule BlockchainTest do
     "Byzantium" => [],
     "Constantinople" => [],
     "EIP158ToByzantiumAt5" => [],
+    "HomesteadToEIP150At5" => [],
     # the rest are not implemented yet
-    "FrontierToHomesteadAt5" => [],
-    "HomesteadToEIP150At5" => []
+    "FrontierToHomesteadAt5" => []
   }
 
   @twenty_minutes 1000 * 60 * 20
@@ -45,7 +45,8 @@ defmodule BlockchainTest do
   @tag :ethereum_common_tests
   @tag :TangerineWhistle
   @tag :slow
-  test "runs TangerineWhistle blockchain tests", do: run_fork_tests("TangerineWhistle")
+  test "runs HomesteadToEIP150(TangerineWhistle)At5 blockchain tests",
+    do: run_fork_tests("HomesteadToEIP150At5")
 
   @tag :ethereum_common_tests
   @tag :SpuriousDragon
