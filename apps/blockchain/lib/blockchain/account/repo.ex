@@ -599,6 +599,22 @@ defmodule Blockchain.Account.Repo do
   end
 
   @spec cache_and_get_code(t(), Address.t(), Account.t()) :: {t(), {:ok, binary()} | :not_found}
+  defp cache_and_get_code(account_repo, address, %Account{code_hash: nil}) do
+    value_to_cache = ""
+    {status, account, _} = account_from_cache(account_repo.cache, address)
+
+    updated_cache =
+      Cache.update_account(
+        account_repo.cache,
+        address,
+        {status, account, {:clean, value_to_cache}}
+      )
+
+    repo_with_cached_code = %{account_repo | cache: updated_cache}
+
+    {repo_with_cached_code, {:ok, value_to_cache}}
+  end
+
   defp cache_and_get_code(account_repo, address, account) do
     found_code = Account.machine_code(account_repo.state, account)
 
