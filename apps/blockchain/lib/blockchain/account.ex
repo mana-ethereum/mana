@@ -26,7 +26,7 @@ defmodule Blockchain.Account do
           nonce: integer(),
           balance: EVM.Wei.t(),
           storage_root: EVM.trie_root(),
-          code_hash: MerklePatriciaTree.Trie.key()
+          code_hash: MerklePatriciaTree.Trie.key() | nil
         }
 
   @doc """
@@ -518,7 +518,7 @@ defmodule Blockchain.Account do
 
       iex> MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
       ...> |> Blockchain.Account.machine_code(<<0x01::160>>)
-      {:ok, <<>>}
+      :not_found
 
       iex> MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
       ...> |> Blockchain.Account.put_code(<<0x01::160>>, <<1, 2, 3>>)

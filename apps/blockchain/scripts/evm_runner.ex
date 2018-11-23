@@ -54,13 +54,15 @@ defmodule EVMRunner do
 
     {gas_remaining, _sub_state, _exec_env, result} = VM.run(gas_limit, exec_env)
 
-    _ = Logger.debug(fn ->
-      "Gas Remaining: #{gas_remaining}"
-    end)
+    _ =
+      Logger.debug(fn ->
+        "Gas Remaining: #{gas_remaining}"
+      end)
 
-    _ = Logger.debug(fn ->
-      "Result: #{inspect(result)}"
-    end)
+    _ =
+      Logger.debug(fn ->
+        "Result: #{inspect(result)}"
+      end)
   end
 end
 
