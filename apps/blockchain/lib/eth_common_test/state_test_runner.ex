@@ -147,9 +147,11 @@ defmodule EthCommonTest.StateTestRunner do
         storage_root: storage.root_hash
       }
 
+      address = maybe_hex(address)
+
       state
-      |> Account.put_account(maybe_hex(address), new_account)
-      |> Account.put_code(maybe_hex(address), maybe_hex(account["code"]))
+      |> Account.put_account(address, new_account)
+      |> Account.put_code(address, maybe_hex(account["code"]))
     end)
   end
 

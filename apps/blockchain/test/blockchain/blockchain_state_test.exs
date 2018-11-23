@@ -7,7 +7,7 @@ defmodule Blockchain.BlockchainStateTest do
 
   @failing_tests %{
     "Byzantium" => [],
-    "Constantinople" => ["stBugs/randomStatetestDEFAULT-Tue_07_58_41-15153-575192"],
+    "Constantinople" => [],
     "Frontier" => [],
     "Homestead" => [],
     "HomesteadToDaoAt5" => [],
