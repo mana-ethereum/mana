@@ -22,7 +22,6 @@ defmodule BlockchainTest do
     ],
     "EIP158ToByzantiumAt5" => [],
     "HomesteadToEIP150At5" => [],
-    # the rest are not implemented yet
     "FrontierToHomesteadAt5" => []
   }
 
