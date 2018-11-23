@@ -62,14 +62,13 @@ defmodule JSONRPC2.Servers.WebSocketHTTP do
 
   @spec get_http_ws_child(configuration(), configuration(), module()) ::
           list(Supervisor.child_spec())
-          | Supervisor.child_spec()
           | []
   defp get_http_ws_child(
          http_config = %__MODULE__{enabled: true, port: port, interface: :all},
          _ws_config = %__MODULE__{enabled: true, port: port, interface: :all},
          handler_module
        ) do
-    child_spec(:web_ws, handler_module, http_config)
+    [child_spec(:web_ws, handler_module, http_config)]
   end
 
   defp get_http_ws_child(
@@ -77,7 +76,7 @@ defmodule JSONRPC2.Servers.WebSocketHTTP do
          _ws_config = %__MODULE__{enabled: true, port: port, interface: :local},
          handler_module
        ) do
-    child_spec(:web_ws, handler_module, http_config)
+    [child_spec(:web_ws, handler_module, http_config)]
   end
 
   defp get_http_ws_child(
@@ -85,7 +84,7 @@ defmodule JSONRPC2.Servers.WebSocketHTTP do
          _ws_config = %__MODULE__{enabled: true, port: port, interface: ip},
          handler_module
        ) do
-    child_spec(:web_ws, handler_module, http_config)
+    [child_spec(:web_ws, handler_module, http_config)]
   end
 
   # case 2
@@ -199,7 +198,7 @@ defmodule JSONRPC2.Servers.WebSocketHTTP do
          _ws_config = %__MODULE__{enabled: false},
          handler_module
        ) do
-    child_spec(:web, handler_module, http_config)
+    [child_spec(:web, handler_module, http_config)]
   end
 
   # disabled HTTP
@@ -208,7 +207,7 @@ defmodule JSONRPC2.Servers.WebSocketHTTP do
          ws_config = %__MODULE__{enabled: true},
          handler_module
        ) do
-    child_spec(:ws, handler_module, ws_config)
+    [child_spec(:ws, handler_module, ws_config)]
   end
 
   defp get_http_ws_child(
