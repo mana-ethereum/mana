@@ -1,4 +1,5 @@
 defmodule Blockchain.Account.Repo.Cache do
+  alias ExthCrypto.Hash.Keccak
   alias Blockchain.Account
   alias Blockchain.Account.Address
   alias MerklePatriciaTree.TrieStorage
@@ -21,6 +22,7 @@ defmodule Blockchain.Account.Repo.Cache do
           storage_cache: storage_cache(),
           accounts_cache: accounts_cache()
         }
+  @type changes :: [%{Address.t() => {:update | :clean, Account.t()} | :delete}]
 
   @spec current_value(t(), Address.t(), integer()) :: integer() | :deleted | nil
   def current_value(cache_struct, address, key) do
@@ -80,13 +82,13 @@ defmodule Blockchain.Account.Repo.Cache do
 
   @spec commit(t(), TrieStorage.t()) :: TrieStorage.t()
   def commit(cache_struct, state) do
-    committed_accounts = commit_accounts(cache_struct, state)
-
-    commit_storage(cache_struct, committed_accounts)
+    cache_struct
+    |> normalize_changes_and_save_code(cache_struct, state)
+    |> commit_storage(committed_accounts, cache_struct)
   end
 
   @spec commit_storage(t(), TrieStorage.t()) :: TrieStorage.t()
-  def commit_storage(cache_struct, state) do
+  def commit_storage({state, changes}, cache_struct) do
     cache_struct
     |> storage_to_list()
     |> Enum.reduce(state, fn account_storage_cache, state_acc ->
@@ -94,11 +96,11 @@ defmodule Blockchain.Account.Repo.Cache do
     end)
   end
 
-  @spec commit_accounts(t(), TrieStorage.t()) :: TrieStorage.t()
-  def commit_accounts(cache_struct, state) do
+  @spec commit_accounts(t(), TrieStorage.t()) :: {TrieStorage.t(), changes()}
+  def normalize_changes_and_save_code(cache_struct, state) do
     cache_struct
     |> accounts_to_list()
-    |> Enum.reduce(state, &commit_account_cache/2)
+    |> Enum.reduce({state, %{}}, &normalize_changes/2)
   end
 
   @spec storage_to_list(t()) :: list()
@@ -128,20 +130,37 @@ defmodule Blockchain.Account.Repo.Cache do
     end)
   end
 
-  defp commit_account_cache({address, {:dirty, nil, _code}}, state) do
-    Account.del_account(state, address)
+  defp normalize_changes({address, {:dirty, nil, _code}}, {state, result}) do
+    change = :delete
+    updated_result = Map.put(result, address, change)
+
+    {state, updated_result}
   end
 
-  defp commit_account_cache({address, {:dirty, account, {:dirty, code}}}, state) do
-    state_with_account = Account.put_account(state, address, account)
-    Account.put_code(state_with_account, address, code)
+  defp normalize_changes({address, {:dirty, account, {:dirty, code}}}, {state, result}) do
+    code_hash = Keccak.kec(machine_code)
+    new_state = TrieStorage.put_raw_key!(state, code_hash, machine_code)
+    updated_account = %{account | code_hash: code_hash}
+
+    change = {:update, updated_account}
+    updated_result = Map.put(result, address, change)
+
+    {new_state, updated_result}
   end
 
-  defp commit_account_cache({address, {:dirty, account, _code}}, state) do
-    Account.put_account(state, address, account)
+  defp normalize_changes({address, {:dirty, account, _code}}, {state, result}) do
+    change = {:update, account}
+    updated_result = Map.put(result, address, change)
+
+    {state, updated_result}
   end
 
-  defp commit_account_cache({_address, {:clean, _account, _code}}, state), do: state
+  defp normalize_changes({_address, {:clean, account, _code}}, {state, result}) do
+    change = {:clean, account}
+    updated_result = Map.put(address, change)
+
+    {state, updated_result}
+  end
 
   defp commit_account_storage_cache({address, account_cache}, state_trie, cache_struct) do
     account =
