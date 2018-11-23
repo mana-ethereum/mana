@@ -146,7 +146,7 @@ Ethereum common tests are created for all clients to test against. See the [comm
 | TangerineWhistle  | 100% (1270/1270)          | 100% (1120/1120)            | ✓         |
 | SpuriousDragon    | 100% (1201/1201)          | 100% (1180/1180)            | ✓         |
 | Byzantium         | 100% (4954/4954)          | 100% (4800/4800)            | ✓         |
-| Constantinople    | 100% (10590/10590)        | 100% (10552/10552)          | ✓         |
+| Constantinople    | 99.9% (10590/10591)       | 99.9% (10552/10553)         | ✓         |
 
 View the community [Constantinople Project Tracker](https://github.com/ethereum/pm/issues/53).
 
