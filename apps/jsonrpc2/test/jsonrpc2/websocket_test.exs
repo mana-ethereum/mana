@@ -22,7 +22,7 @@ defmodule JSONRPC2.WebSocketTest do
 
     {:ok, pid} =
       start_supervised(
-        WebSocketHTTP.children(http_configuration, ws_configuration, SpecHandlerTest)
+        hd(WebSocketHTTP.children(http_configuration, ws_configuration, SpecHandlerTest))
       )
 
     {:ok, client_pid} =

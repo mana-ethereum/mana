@@ -20,7 +20,7 @@ defmodule JSONRPC2.HTTPTest do
 
     {:ok, _pid} =
       start_supervised(
-        WebSocketHTTP.children(http_configuration, ws_configuration, SpecHandlerTest)
+        hd(WebSocketHTTP.children(http_configuration, ws_configuration, SpecHandlerTest))
       )
 
     {:ok, %{port: port}}
