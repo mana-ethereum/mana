@@ -161,7 +161,16 @@ defmodule Blockchain.Account do
   @spec empty?(t()) :: boolean()
   def empty?(account) do
     account.nonce == 0 && account.balance == 0 &&
-      (account.code_hash == Trie.empty_trie_root_hash() || is_simple_account?(account))
+      (account.code_hash == Trie.empty_trie_root_hash() || is_nil(account.code_hash) ||
+         is_simple_account?(account))
+  end
+
+  @doc """
+  Returns account not saved to the database yet.
+  """
+  @spec not_persistent_account() :: t()
+  def not_persistent_account do
+    %__MODULE__{code_hash: nil}
   end
 
   @doc """
@@ -191,14 +200,18 @@ defmodule Blockchain.Account do
       iex> MerklePatriciaTree.Trie.get_key(state, <<0x01::160>> |> ExthCrypto.Hash.Keccak.kec()) |> ExRLP.decode
       [<<5>>, <<6>>, <<0x01>>, <<0x02>>]
   """
-  @spec put_account(EVM.state(), Address.t(), t) :: EVM.state()
-  def put_account(state, address, account) do
+  @spec put_account(EVM.state(), Address.t(), t, boolean()) :: EVM.state()
+  def put_account(state, address, account, return_account \\ false) do
+    prepared_account = %{account | code_hash: account.code_hash || @empty_keccak}
+
     encoded_account =
-      account
+      prepared_account
       |> serialize()
       |> ExRLP.encode()
 
-    TrieStorage.update_key(state, Keccak.kec(address), encoded_account)
+    updated_state = TrieStorage.update_key(state, Keccak.kec(address), encoded_account)
+
+    if return_account, do: {updated_state, prepared_account}, else: updated_state
   end
 
   @doc """
@@ -261,7 +274,7 @@ defmodule Blockchain.Account do
   @spec update_account(EVM.state(), Address.t(), (t -> t), boolean()) ::
           EVM.state() | {EVM.state(), t, t}
   def update_account(state, address, fun, return_accounts \\ false) do
-    account = get_account(state, address) || %__MODULE__{}
+    account = get_account(state, address) || not_persistent_account()
     {updated_account, updated_state} = fun.(account)
 
     updated_state = put_account(updated_state, address, updated_account)
@@ -515,7 +528,7 @@ defmodule Blockchain.Account do
   @spec machine_code(TrieStorage.t(), Address.t() | t()) :: {:ok, binary()} | :not_found
   def machine_code(state, contract_address) when is_binary(contract_address) do
     # TODO: Do we have a standard for default account values
-    account = get_account(state, contract_address) || %__MODULE__{}
+    account = get_account(state, contract_address) || not_persistent_account()
 
     machine_code(state, account)
   end
@@ -555,7 +568,7 @@ defmodule Blockchain.Account do
   def put_storage(state_trie, address, key, value, return_account \\ false)
 
   def put_storage(state_trie, address, key, value, return_account) when is_binary(address) do
-    account = get_account(state_trie, address) || %__MODULE__{}
+    account = get_account(state_trie, address) || not_persistent_account()
 
     put_storage(state_trie, {address, account}, key, value, return_account)
   end
@@ -581,7 +594,7 @@ defmodule Blockchain.Account do
   def remove_storage(state, address, key, return_account \\ false)
 
   def remove_storage(state, address, key, return_account) when is_binary(address) do
-    account = get_account(state, address) || %__MODULE__{}
+    account = get_account(state, address) || not_persistent_account()
 
     remove_storage(state, {address, account}, key, return_account)
   end
@@ -671,7 +684,7 @@ defmodule Blockchain.Account do
   """
   @spec reset_account(TrieStorage.t(), Address.t()) :: EVM.state()
   def reset_account(state, address) do
-    put_account(state, address, %__MODULE__{})
+    put_account(state, address, not_persistent_account())
   end
 
   @spec empty_keccak() :: binary()

@@ -1,8 +1,5 @@
 defmodule EVM.Operation.EnvironmentalInformation do
   alias EVM.{Address, ExecEnv, Helpers, Memory, Operation, Stack}
-  alias ExthCrypto.Hash.Keccak
-
-  @empty_keccak Keccak.kec(<<>>)
 
   @doc """
   Get address of currently executing account.
@@ -305,7 +302,7 @@ defmodule EVM.Operation.EnvironmentalInformation do
     {updated_exec_env, hash} = ExecEnv.code_hash(exec_env, wrapped_address)
 
     stack_value =
-      if is_nil(hash) || hash == @empty_keccak do
+      if is_nil(hash) do
         0
       else
         hash

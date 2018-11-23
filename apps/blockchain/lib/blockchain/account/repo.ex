@@ -107,7 +107,7 @@ defmodule Blockchain.Account.Repo do
 
       true ->
         {_repo, to_account, to_account_code} = account_with_code(account_repo, to)
-        to_account = to_account || %Account{}
+        to_account = to_account || Account.not_persistent_account()
 
         new_from_account = %{from_account | balance: from_account.balance - wei}
         new_to_account = %{to_account | balance: to_account.balance + wei}
@@ -127,7 +127,7 @@ defmodule Blockchain.Account.Repo do
 
     {_repo, account, code} = account_with_code(account_repo, address)
 
-    account = account || %Account{}
+    account = account || Account.not_persistent_account()
 
     updated_account = %{account | balance: account.balance + value}
 
@@ -160,7 +160,7 @@ defmodule Blockchain.Account.Repo do
 
     {_repo, account, _} = account_with_code(account_repo, address)
 
-    updated_account = %{(account || %Account{}) | code_hash: kec}
+    updated_account = %{(account || Account.not_persistent_account()) | code_hash: kec}
 
     updated_cache =
       Cache.update_account(
