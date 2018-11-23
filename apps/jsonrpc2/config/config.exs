@@ -22,8 +22,8 @@ mana_version =
 
 config :jsonrpc2,
   ipc: [enabled: true, path: Path.join([System.user_home!(), ".ethereum", "mana.ipc"])],
-  http: [enabled: true, port: 3999, interface: :local],
-  ws: [enabled: true, port: 4000, interface: :all],
+  http: [enabled: true, port: 3999, interface: :local, max_connections: 10],
+  ws: [enabled: true, port: 4000, interface: :all, max_connections: 10],
   mana_version: mana_version
 
 import_config "#{Mix.env()}.exs"

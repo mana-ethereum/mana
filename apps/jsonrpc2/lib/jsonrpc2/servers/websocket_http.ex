@@ -14,18 +14,23 @@ defmodule JSONRPC2.Servers.WebSocketHTTP do
           type: :ws | :web,
           enabled: boolean(),
           port: pos_integer(),
-          interface: :local | :all | :inet.ip_address()
+          interface: :local | :all | :inet.ip_address(),
+          max_connections: pos_integer()
         }
 
-  defstruct [:type, :enabled, :port, :interface]
+  defstruct [:type, :enabled, :port, :interface, :max_connections]
 
   @spec new(Keyword.t(), :ws | :web) :: configuration()
-  def new([enabled: enabled, port: port, interface: interface], type) do
+  def new(
+        [enabled: enabled, port: port, interface: interface, max_connections: max_connections],
+        type
+      ) do
     %__MODULE__{
       type: type,
       enabled: enabled,
       port: port,
-      interface: interface
+      interface: interface,
+      max_connections: max_connections
     }
   end
 
@@ -60,27 +65,27 @@ defmodule JSONRPC2.Servers.WebSocketHTTP do
           | Supervisor.child_spec()
           | []
   defp get_http_ws_child(
-         _http_config = %__MODULE__{enabled: true, port: port, interface: :all},
+         http_config = %__MODULE__{enabled: true, port: port, interface: :all},
          _ws_config = %__MODULE__{enabled: true, port: port, interface: :all},
          handler_module
        ) do
-    child_spec(:web_ws, handler_module, port: port)
+    child_spec(:web_ws, handler_module, http_config)
   end
 
   defp get_http_ws_child(
-         _http_config = %__MODULE__{enabled: true, port: port, interface: :local},
+         http_config = %__MODULE__{enabled: true, port: port, interface: :local},
          _ws_config = %__MODULE__{enabled: true, port: port, interface: :local},
          handler_module
        ) do
-    child_spec(:web_ws, handler_module, ip: {0, 0, 0, 0}, port: port)
+    child_spec(:web_ws, handler_module, http_config)
   end
 
   defp get_http_ws_child(
-         _http_config = %__MODULE__{enabled: true, port: port, interface: ip},
+         http_config = %__MODULE__{enabled: true, port: port, interface: ip},
          _ws_config = %__MODULE__{enabled: true, port: port, interface: ip},
          handler_module
        ) do
-    child_spec(:web_ws, handler_module, ip: ip, port: port)
+    child_spec(:web_ws, handler_module, http_config)
   end
 
   # case 2
@@ -108,122 +113,107 @@ defmodule JSONRPC2.Servers.WebSocketHTTP do
   end
 
   defp get_http_ws_child(
-         _http_config = %__MODULE__{enabled: true, port: port, interface: http_ip},
-         _ws_config = %__MODULE__{enabled: true, port: port, interface: ws_ip},
+         http_config = %__MODULE__{enabled: true, port: port, interface: _http_ip},
+         ws_config = %__MODULE__{enabled: true, port: port, interface: _ws_ip},
          handler_module
        ) do
     [
-      child_spec(:web, handler_module, ip: http_ip, port: port),
-      child_spec(:ws, handler_module, ip: ws_ip, port: port)
+      child_spec(:web, handler_module, http_config),
+      child_spec(:ws, handler_module, ws_config)
     ]
   end
 
   # case 3
   defp get_http_ws_child(
-         _http_config = %__MODULE__{enabled: true, port: http_port, interface: :all},
-         _ws_config = %__MODULE__{enabled: true, port: ws_port, interface: :all},
+         http_config = %__MODULE__{enabled: true, port: _http_port, interface: :all},
+         ws_config = %__MODULE__{enabled: true, port: _ws_port, interface: :all},
          handler_module
        ) do
     [
-      child_spec(:web, handler_module, port: http_port),
-      child_spec(:ws, handler_module, port: ws_port)
+      child_spec(:web, handler_module, http_config),
+      child_spec(:ws, handler_module, ws_config)
     ]
   end
 
   defp get_http_ws_child(
-         _http_config = %__MODULE__{enabled: true, port: http_port, interface: :local},
-         _ws_config = %__MODULE__{enabled: true, port: ws_port, interface: :local},
+         http_config = %__MODULE__{enabled: true, port: _http_port, interface: :local},
+         ws_config = %__MODULE__{enabled: true, port: _ws_port, interface: :local},
          handler_module
        ) do
     [
-      child_spec(:web, handler_module, ip: {0, 0, 0, 0}, port: http_port),
-      child_spec(:ws, handler_module, ip: {0, 0, 0, 0}, port: ws_port)
+      child_spec(:web, handler_module, http_config),
+      child_spec(:ws, handler_module, ws_config)
     ]
   end
 
   defp get_http_ws_child(
-         _http_config = %__MODULE__{enabled: true, port: http_port, interface: ip},
-         _ws_config = %__MODULE__{enabled: true, port: ws_port, interface: ip},
+         http_config = %__MODULE__{enabled: true, port: _http_port, interface: ip},
+         ws_config = %__MODULE__{enabled: true, port: _ws_port, interface: ip},
          handler_module
        ) do
     [
-      child_spec(:web, handler_module, ip: ip, port: http_port),
-      child_spec(:ws, handler_module, ip: ip, port: ws_port)
+      child_spec(:web, handler_module, http_config),
+      child_spec(:ws, handler_module, ws_config)
     ]
   end
 
   # case 4
   # different interface that doesn't interfere on different ports
   defp get_http_ws_child(
-         _http_config = %__MODULE__{enabled: true, port: http_port, interface: :local},
-         _ws_config = %__MODULE__{enabled: true, port: ws_port, interface: :all},
+         http_config = %__MODULE__{enabled: true, port: _http_port, interface: :local},
+         ws_config = %__MODULE__{enabled: true, port: _ws_port, interface: :all},
          handler_module
        ) do
     [
-      child_spec(:web, handler_module, ip: {0, 0, 0, 0}, port: http_port),
-      child_spec(:ws, handler_module, port: ws_port)
+      child_spec(:web, handler_module, http_config),
+      child_spec(:ws, handler_module, ws_config)
     ]
   end
 
   defp get_http_ws_child(
-         _http_config = %__MODULE__{enabled: true, port: http_port, interface: :all},
-         _ws_config = %__MODULE__{enabled: true, port: ws_port, interface: :local},
+         http_config = %__MODULE__{enabled: true, port: _http_port, interface: :all},
+         ws_config = %__MODULE__{enabled: true, port: _ws_port, interface: :local},
          handler_module
        ) do
     [
-      child_spec(:web, handler_module, port: http_port),
-      child_spec(:ws, handler_module, ip: {0, 0, 0, 0}, port: ws_port)
+      child_spec(:web, handler_module, http_config),
+      child_spec(:ws, handler_module, ws_config)
     ]
   end
 
+  # different ports, different interfaces
   defp get_http_ws_child(
-         _http_config = %__MODULE__{enabled: true, port: http_port, interface: http_ip},
-         _ws_config = %__MODULE__{enabled: true, port: ws_port, interface: ws_ip},
+         http_config = %__MODULE__{enabled: true, port: _http_port, interface: _http_ip},
+         ws_config = %__MODULE__{enabled: true, port: _ws_port, interface: _ws_ip},
          handler_module
        ) do
     [
-      child_spec(:web, handler_module, ip: http_ip, port: http_port),
-      child_spec(:ws, handler_module, ip: ws_ip, port: ws_port)
+      child_spec(:web, handler_module, http_config),
+      child_spec(:ws, handler_module, ws_config)
     ]
   end
 
+  # disabled WS
   defp get_http_ws_child(
-         _http_config = %__MODULE__{enabled: true, port: port, interface: interface},
-         _ws_config = %__MODULE__{enabled: false, port: _port, interface: _},
+         http_config = %__MODULE__{enabled: true},
+         _ws_config = %__MODULE__{enabled: false},
          handler_module
        ) do
-    case interface do
-      :local ->
-        child_spec(:web, handler_module, ip: {0, 0, 0, 0}, port: port)
+    child_spec(:web, handler_module, http_config)
+  end
 
-      :all ->
-        child_spec(:web, handler_module, port: port)
-
-      ip ->
-        child_spec(:web, handler_module, ip: ip, port: port)
-    end
+  # disabled HTTP
+  defp get_http_ws_child(
+         _http_config = %__MODULE__{enabled: false},
+         ws_config = %__MODULE__{enabled: true},
+         handler_module
+       ) do
+    child_spec(:ws, handler_module, ws_config)
   end
 
   defp get_http_ws_child(
-         _http_config = %__MODULE__{enabled: false, port: _port, interface: _},
-         _ws_config = %__MODULE__{enabled: true, port: port, interface: interface},
-         handler_module
-       ) do
-    case interface do
-      :local ->
-        child_spec(:ws, handler_module, ip: {0, 0, 0, 0}, port: port)
-
-      :all ->
-        child_spec(:ws, handler_module, port: port)
-
-      ip ->
-        child_spec(:ws, handler_module, ip: ip, port: port)
-    end
-  end
-
-  defp get_http_ws_child(
-         _http_config = %__MODULE__{enabled: false, port: _, interface: _},
-         _ws_config = %__MODULE__{enabled: false, port: _, interface: _},
+         _http_config = %__MODULE__{enabled: false},
+         _ws_config = %__MODULE__{enabled: false},
          _handler_module
        ),
        do: []
@@ -240,9 +230,26 @@ defmodule JSONRPC2.Servers.WebSocketHTTP do
   If the server `ref` is not set in `cowboy_opts`, `handler.HTTP` or `handler.HTTPS` is the default.
   '''
 
-  @spec child_spec(:web_ws | :web | :ws, module, list) :: Supervisor.child_spec()
-  defp child_spec(type, handler, cowboy_opts) do
-    cowboy_opts = Keyword.merge(cowboy_opts, ref: ref(type, JSONRPC2Plug))
+  @spec child_spec(:web_ws | :web | :ws, module, configuration) :: Supervisor.child_spec()
+  defp child_spec(type, handler, configuration) do
+    port = Map.get(configuration, :port)
+
+    ip =
+      case Map.get(configuration, :interface) do
+        :local -> {0, 0, 0, 0}
+        :all -> :any
+        ip -> ip
+      end
+
+    max_connections = Map.get(configuration, :max_connections)
+
+    cowboy_opts = [
+      ip: ip,
+      port: port,
+      transport_options: [max_connections: max_connections],
+      ref: ref(type, JSONRPC2Plug)
+    ]
+
     dispatch = compile_dispatcher(type, handler)
     do_child_spec(handler, Keyword.merge(cowboy_opts, dispatch))
   end
