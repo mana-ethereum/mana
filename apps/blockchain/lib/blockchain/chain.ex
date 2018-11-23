@@ -158,11 +158,11 @@ defmodule Blockchain.Chain do
   defp get_test("Byzantium"), do: :byzantium_test
   defp get_test("Constantinople"), do: :constantinople_test
 
-  defp get_test("ByzantiumToConstantinopleAt5"),
-    do: :byzantium_to_constantinople_transition_test
+  defp get_test("ByzantiumToConstantinopleAt5"), do: :byzantium_to_constantinople_transition_test
 
-  defp get_test("EIP158ToByzantiumAt5"),
-    do: :eip158_to_byzantium_transition_test
+  defp get_test("EIP158ToByzantiumAt5"), do: :eip158_to_byzantium_transition_test
+
+  defp get_test("HomesteadToEIP150At5"), do: :homestead_to_eip150_transition_test
 
   defp get_test("FrontierToHomesteadAt5"), do: :frontier_to_homestead_transition_test
 
