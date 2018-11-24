@@ -107,7 +107,7 @@ defmodule Blockchain.Account.Repo do
 
       true ->
         {_repo, to_account, to_account_code} = account_with_code(account_repo, to)
-        to_account = to_account || %Account{}
+        to_account = to_account || Account.not_persistent_account()
 
         new_from_account = %{from_account | balance: from_account.balance - wei}
         new_to_account = %{to_account | balance: to_account.balance + wei}
@@ -127,7 +127,7 @@ defmodule Blockchain.Account.Repo do
 
     {_repo, account, code} = account_with_code(account_repo, address)
 
-    account = account || %Account{}
+    account = account || Account.not_persistent_account()
 
     updated_account = %{account | balance: account.balance + value}
 
@@ -160,7 +160,7 @@ defmodule Blockchain.Account.Repo do
 
     {_repo, account, _} = account_with_code(account_repo, address)
 
-    updated_account = %{(account || %Account{}) | code_hash: kec}
+    updated_account = %{(account || Account.not_persistent_account()) | code_hash: kec}
 
     updated_cache =
       Cache.update_account(
@@ -599,6 +599,22 @@ defmodule Blockchain.Account.Repo do
   end
 
   @spec cache_and_get_code(t(), Address.t(), Account.t()) :: {t(), {:ok, binary()} | :not_found}
+  defp cache_and_get_code(account_repo, address, %Account{code_hash: nil}) do
+    value_to_cache = ""
+    {status, account, _} = account_from_cache(account_repo.cache, address)
+
+    updated_cache =
+      Cache.update_account(
+        account_repo.cache,
+        address,
+        {status, account, {:clean, value_to_cache}}
+      )
+
+    repo_with_cached_code = %{account_repo | cache: updated_cache}
+
+    {repo_with_cached_code, {:ok, value_to_cache}}
+  end
+
   defp cache_and_get_code(account_repo, address, account) do
     found_code = Account.machine_code(account_repo.state, account)
 
