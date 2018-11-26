@@ -102,7 +102,6 @@ defmodule Blockchain.EthashTest do
     end
   end
 
-  @tag :skip
   describe "pow_light/4" do
     test "calculates proof-of-work with light dataset" do
       cache_size = 1024
