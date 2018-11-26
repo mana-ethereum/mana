@@ -5,6 +5,7 @@ defmodule ExWire.Struct.Block do
   """
 
   alias Block.Header
+  alias Blockchain.Block, as: BlockchainBlock
   alias Blockchain.Transaction
 
   defstruct [
@@ -21,7 +22,7 @@ defmodule ExWire.Struct.Block do
           ommers: list(Header.t())
         }
 
-  @spec new(Blockchain.Block.t()) :: t()
+  @spec new(BlockchainBlock.t()) :: t()
   def new(blockchain_block) do
     %__MODULE__{
       transactions_rlp: Enum.map(blockchain_block.transactions, &Transaction.serialize/1),

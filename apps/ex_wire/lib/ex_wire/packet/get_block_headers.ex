@@ -20,7 +20,6 @@ defmodule ExWire.Packet.GetBlockHeaders do
   @behaviour ExWire.Packet
 
   @sync Application.get_env(:ex_wire, :sync_mock, Sync)
-  # TODO: What's a reasonable number for this?
   @max_headers_supported 100
 
   @type t :: %__MODULE__{
@@ -126,44 +125,49 @@ defmodule ExWire.Packet.GetBlockHeaders do
 
         {:error, error} ->
           _ =
-            Logger.debug(fn ->
+            Logger.warn(fn ->
               "Error calling Sync.get_current_trie(): #{error}. Returning empty headers."
             end)
 
           []
       end
 
-    get_headers_response(headers)
+    {:send, %BlockHeaders{headers: headers}}
   end
 
-  defp get_block_headers(_trie, _identifier, 0, _skip, _reverse) do
-    []
+  defp get_block_headers(trie, identifier, num_headers, skip, reverse) do
+    get_block_headers(trie, identifier, num_headers, skip, reverse, [])
   end
 
-  defp get_block_headers(trie, block_hash, num_headers, skip, reverse)
+  defp get_block_headers(_trie, _identifier, 0, _skip, _reverse, headers),
+    do: Enum.reverse(headers)
+
+  defp get_block_headers(trie, block_hash, num_headers, skip, reverse, headers)
        when is_binary(block_hash) do
     case Block.get_block(block_hash, trie) do
       {:ok, block} ->
         next_number = next_block_number(block.header.number, skip, reverse)
-        [block.header | get_block_headers(trie, next_number, num_headers - 1, skip, reverse)]
+
+        get_block_headers(trie, next_number, num_headers - 1, skip, reverse, [
+          block.header | headers
+        ])
 
       _ ->
         _ =
           Logger.debug(fn -> "Could not find block with hash: #{Base.encode16(block_hash)}." end)
 
-        []
+        headers
     end
   end
 
-  defp get_block_headers(trie, block_number, num_headers, skip, reverse) do
+  defp get_block_headers(trie, block_number, num_headers, skip, reverse, headers) do
     case Block.get_block_by_number(block_number, trie) do
       {:ok, block} ->
         next_block_number = next_block_number(block.header.number, skip, reverse)
 
-        [
-          block.header
-          | get_block_headers(trie, next_block_number, num_headers - 1, skip, reverse)
-        ]
+        get_block_headers(trie, next_block_number, num_headers - 1, skip, reverse, [
+          block.header | headers
+        ])
 
       _ ->
         _ = Logger.debug(fn -> "Could not find block with number: #{block_number}." end)
@@ -172,19 +176,10 @@ defmodule ExWire.Packet.GetBlockHeaders do
   end
 
   defp next_block_number(block_number, skip, reverse) do
-    case reverse do
-      true ->
-        block_number - skip
-
-      false ->
-        block_number + skip
+    if reverse == true do
+      block_number - skip
+    else
+      block_number + skip
     end
-  end
-
-  defp get_headers_response(headers) do
-    {:send,
-     %BlockHeaders{
-       headers: headers
-     }}
   end
 end
