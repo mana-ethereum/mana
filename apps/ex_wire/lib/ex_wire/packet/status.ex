@@ -175,12 +175,10 @@ defmodule ExWire.Packet.Status do
   end
 
   defp get_default_difficulty_genesis_hash_and_best_hash(packet) do
-    try do
-      chain = Chain.load_chain(@network_id_to_chain_name[packet.network_id])
-      {0, chain.genesis.parent_hash, chain.genesis.parent_hash}
-    rescue
-      _ ->
-        {packet.total_difficulty, packet.genesis_hash, packet.genesis_hash}
-    end
+    chain = Chain.load_chain(@network_id_to_chain_name[packet.network_id])
+    {0, chain.genesis.parent_hash, chain.genesis.parent_hash}
+  rescue
+    _ ->
+      {packet.total_difficulty, packet.genesis_hash, packet.genesis_hash}
   end
 end
