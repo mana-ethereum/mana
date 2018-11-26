@@ -19,7 +19,10 @@ defmodule Blockchain.Ethash do
   @j_cacherounds 3
   @j_parents 256
   @j_wordbytes 4
+  @j_accesses 64
   @hash_words div(@j_hashbytes, @j_wordbytes)
+  @mix_hash div(@j_mixbytes, @j_hashbytes)
+  @mix_length div(@j_mixbytes, @j_wordbytes)
   @parents_range Range.new(0, @j_parents - 1)
 
   @precomputed_data_sizes [__DIR__, "ethash", "data_sizes.txt"]
@@ -41,6 +44,8 @@ defmodule Blockchain.Ethash do
   @type cache :: list(<<_::512>>)
   @type seed :: <<_::256>>
   @type mix :: list(non_neg_integer)
+  @type mix_digest :: <<_::256>>
+  @type result :: <<_::256>>
 
   def epoch(block_number) do
     div(block_number, @j_epoch)
@@ -92,6 +97,90 @@ defmodule Blockchain.Ethash do
     one_less..2
     |> Enum.find(fn a -> rem(num, a) == 0 end)
     |> is_nil
+  end
+
+  @doc """
+  Implementation of the Proof-of-work algorithm that uses the full dataset.
+  """
+  @spec pow_full(dataset(), binary(), non_neg_integer()) :: {mix_digest(), result()}
+  def pow_full(dataset, block_hash, nonce) do
+    seed_hash = combine_header_and_nonce(block_hash, nonce)
+
+    seed_head =
+      seed_hash
+      |> binary_into_uint32_list()
+      |> Enum.at(0)
+
+    mix =
+      seed_hash
+      |> init_mix_with_replication()
+      |> mix_random_dataset_nodes(dataset, seed_head)
+      |> compress_mix()
+      |> uint32_list_into_binary()
+
+    result =
+      (seed_hash <> mix)
+      |> Keccak.kec()
+
+    {mix, result}
+  end
+
+  defp compress_mix(mix) do
+    mix
+    |> Enum.chunk_every(4)
+    |> Enum.map(fn [a, b, c, d] ->
+      a
+      |> FNV.hash(b)
+      |> FNV.hash(c)
+      |> FNV.hash(d)
+    end)
+  end
+
+  defp mix_random_dataset_nodes(init_mix, dataset, seed_head) do
+    dataset_length =
+      dataset
+      |> length()
+      |> div(@mix_hash)
+
+    Enum.reduce(0..(@j_accesses - 1), init_mix, fn j, mix ->
+      new_data =
+        j
+        |> bxor(seed_head)
+        |> FNV.hash(Enum.at(mix, Integer.mod(j, @mix_length)))
+        |> Integer.mod(dataset_length)
+        |> generate_new_data(dataset)
+
+      FNV.hash_lists(mix, new_data)
+    end)
+  end
+
+  defp generate_new_data(parent, dataset) do
+    0..(@mix_hash - 1)
+    |> Enum.reduce([], fn k, data ->
+      element = Enum.at(dataset, @mix_hash * parent + k)
+      [element | data]
+    end)
+    |> Enum.reverse()
+    |> Enum.map(&binary_into_uint32_list/1)
+    |> List.flatten()
+  end
+
+  defp init_mix_with_replication(seed_hash) do
+    seed_hash
+    |> List.duplicate(@mix_hash)
+    |> List.flatten()
+    |> Enum.map(&binary_into_uint32_list/1)
+    |> List.flatten()
+  end
+
+  defp combine_header_and_nonce(block_hash, nonce) do
+    Keccak.kec512(block_hash <> nonce_into_64bit(nonce))
+  end
+
+  defp nonce_into_64bit(nonce) do
+    nonce
+    |> :binary.encode_unsigned(:little)
+    |> BitHelper.pad(8, :little)
   end
 
   @doc """

@@ -6,6 +6,8 @@ defmodule Blockchain.EthashTest do
 
   use Bitwise
 
+  import EthCommonTest.Helpers, only: [load_raw_hex: 1]
+
   test "it can calculate the epoch from block number" do
     results =
       [1, 29_999, 30_000, 90_000]
@@ -70,10 +72,70 @@ defmodule Blockchain.EthashTest do
     end
   end
 
+  describe "pow_full/3" do
+    test "calculates proof-of-work with full dataset" do
+      cache_size = 1024
+      dataset_size = 32 * 1024
+      block = 1
+
+      dataset =
+        block
+        |> Ethash.seed_hash()
+        |> Ethash.generate_cache(cache_size)
+        |> Ethash.generate_dataset(dataset_size)
+
+      block_hash =
+        load_raw_hex("0xc9149cc0386e689d789a1c2f3d5d169a61a6218ed30e74414dc736e442ef3d1f")
+
+      nonce = 0
+
+      expected_digest =
+        load_raw_hex("0xe4073cffaef931d37117cefd9afd27ea0f1cad6a981dd2605c4a1ac97c519800")
+
+      expected_result =
+        load_raw_hex("0xd3539235ee2e6f8db665c0a72169f55b7f6c605712330b778ec3944f0eb5a557")
+
+      {digest, result} = Ethash.pow_full(dataset, block_hash, nonce)
+
+      assert digest == expected_digest
+      assert result == expected_result
+    end
+  end
+
+  @tag :skip
+  describe "pow_light/4" do
+    test "calculates proof-of-work with light dataset" do
+      cache_size = 1024
+      full_size = 32 * 1024
+      block = 1
+
+      cache =
+        block
+        |> Ethash.seed_hash()
+        |> Ethash.generate_cache(cache_size)
+
+      block_hash =
+        load_raw_hex("0xc9149cc0386e689d789a1c2f3d5d169a61a6218ed30e74414dc736e442ef3d1f")
+
+      nonce = 0
+
+      {digest, result} = Ethash.pow_light(full_size, cache, block_hash, nonce)
+
+      expected_digest =
+        load_raw_hex("0xe4073cffaef931d37117cefd9afd27ea0f1cad6a981dd2605c4a1ac97c519800")
+
+      expected_result =
+        load_raw_hex("0xd3539235ee2e6f8db665c0a72169f55b7f6c605712330b778ec3944f0eb5a557")
+
+      assert digest == expected_digest
+      assert result == expected_result
+    end
+  end
+
   describe "generate_dataset/1" do
     test "creates dataset for a given cache" do
       expected_hex_dataset =
-        EthCommonTest.Helpers.maybe_hex(
+        load_raw_hex(
           "0x" <>
             "4bc09fbd530a041dd2ec296110a29e8f130f179c59d223f51ecce3126e8b0c74326abc2f32ccd9d7f976bd0944e3ccf8479db39343cbbffa467046ca97e2da63" <>
             "da5f9d9688c7c33ab7b8aace570e422fa48b24659b72fc534669209d66389ca15b099c5604601e7581488e3bd6925cec0f12d465f8004d4fa84793f8e1e46a1b" <>
@@ -613,7 +675,7 @@ defmodule Blockchain.EthashTest do
   describe "generate_cache/2" do
     test "generates cache for block 1" do
       expected_cache_hex =
-        EthCommonTest.Helpers.maybe_hex(
+        load_raw_hex(
           "0x" <>
             "7ce2991c951f7bf4c4c1bb119887ee07871eb5339d7b97b8588e85c742de90e5bafd5bbe6ce93a134fb6be9ad3e30db99d9528a2ea7846833f52e9ca119b6b54" <>
             "8979480c46e19972bd0738779c932c1b43e665a2fd3122fc3ddb2691f353ceb0ed3e38b8f51fd55b6940290743563c9f8fa8822e611924657501a12aafab8a8d" <>
@@ -651,7 +713,7 @@ defmodule Blockchain.EthashTest do
 
     test "generates cache for block 30_001" do
       expected_cache_hex =
-        EthCommonTest.Helpers.maybe_hex(
+        load_raw_hex(
           "0x" <>
             "1f56855d59cc5a085720899b4377a0198f1abe948d85fe5820dc0e346b7c0931b9cde8e541d751de3b2b3275d0aabfae316209d5879297d8bd99f8a033c9d4df" <>
             "35add1029f4e6404a022d504fb8023e42989aba985a65933b0109c7218854356f9284983c9e7de97de591828ae348b63d1fc78d8db58157344d4e06530ffd422" <>
