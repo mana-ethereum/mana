@@ -56,9 +56,16 @@ defmodule ExWire.PeerSupervisor do
   def send_packet(packet, node_selector) do
     # Send to all of the Supervisor's children...
     # ... not the best.
+    children = find_children(node_selector)
+    do_send_packet(packet, children)
+  end
 
-    results =
-      for child <- find_children(node_selector) do
+  @spec do_send_packet(Packet.packet(), list(pid)) :: :ok | :unsent
+  defp do_send_packet(_packet, []), do: :unsent
+
+  defp do_send_packet(packet, children) do
+    spawn(fn ->
+      for child <- children do
         Exth.trace(fn ->
           "[PeerSup] Sending #{to_string(packet.__struct__)} packet to peer #{
             inspect(Server.get_peer(child).ident)
@@ -67,8 +74,9 @@ defmodule ExWire.PeerSupervisor do
 
         Server.send_packet(child, packet)
       end
+    end)
 
-    if Enum.member?(results, :ok), do: :ok, else: :unsent
+    :ok
   end
 
   @spec find_children(node_selector()) :: list(pid())
