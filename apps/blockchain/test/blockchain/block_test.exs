@@ -399,6 +399,130 @@ defmodule Blockchain.BlockTest do
     end
   end
 
+  describe "get_block/2" do
+    test "empty Trie, get by hash => not found" do
+      trie = MerklePatriciaTree.Test.random_ets_db() |> Trie.new()
+      result = Block.get_block(<<1, 2, 3>>, trie)
+
+      assert result == :not_found
+    end
+
+    test "populated Trie, get by hash found" do
+      db = MerklePatriciaTree.Test.random_ets_db()
+      trie = db |> Trie.new()
+
+      block = %Block{
+        transactions: [
+          %Transaction{
+            nonce: 5,
+            gas_price: 6,
+            gas_limit: 7,
+            to: <<1::160>>,
+            value: 8,
+            v: 27,
+            r: 9,
+            s: 10,
+            data: "hi"
+          }
+        ],
+        header: %Header{
+          number: 5,
+          parent_hash: <<1, 2, 3>>,
+          beneficiary: <<2, 3, 4>>,
+          difficulty: 100,
+          timestamp: 11,
+          mix_hash: <<1>>,
+          nonce: <<2>>
+        }
+      }
+
+      Block.put_block(block, trie)
+      result = Block.get_block(block |> Block.hash(), trie)
+
+      assert result == {:ok, block}
+    end
+  end
+
+  describe "get_block_by_number/3" do
+    test "empty Trie, empty map, get by number => not found" do
+      trie = MerklePatriciaTree.Test.random_ets_db() |> Trie.new()
+      result = Block.get_block_by_number(1, trie)
+
+      assert result == :not_found
+    end
+
+    test "Populated Trie, empty Map, get by number => not found" do
+      db = MerklePatriciaTree.Test.random_ets_db()
+      trie = db |> Trie.new()
+
+      block = %Block{
+        transactions: [
+          %Transaction{
+            nonce: 5,
+            gas_price: 6,
+            gas_limit: 7,
+            to: <<1::160>>,
+            value: 8,
+            v: 27,
+            r: 9,
+            s: 10,
+            data: "hi"
+          }
+        ],
+        header: %Header{
+          number: 5,
+          parent_hash: <<1, 2, 3>>,
+          beneficiary: <<2, 3, 4>>,
+          difficulty: 100,
+          timestamp: 11,
+          mix_hash: <<1>>,
+          nonce: <<2>>
+        }
+      }
+
+      Block.put_block(block, trie)
+      result = Block.get_block_by_number(5, trie)
+
+      assert result == :not_found
+    end
+
+    test "Populated Trie, populated map, result found" do
+      db = MerklePatriciaTree.Test.random_ets_db()
+      trie = db |> Trie.new()
+
+      block = %Block{
+        transactions: [
+          %Transaction{
+            nonce: 5,
+            gas_price: 6,
+            gas_limit: 7,
+            to: <<1::160>>,
+            value: 8,
+            v: 27,
+            r: 9,
+            s: 10,
+            data: "hi"
+          }
+        ],
+        header: %Header{
+          number: 5,
+          parent_hash: <<1, 2, 3>>,
+          beneficiary: <<2, 3, 4>>,
+          difficulty: 100,
+          timestamp: 11,
+          mix_hash: <<1>>,
+          nonce: <<2>>
+        }
+      }
+
+      Block.put_block(block, trie)
+      block_hash = block |> Block.hash()
+      result = Block.get_block_by_number(5, trie, %{5 => block_hash})
+
+      assert result == {:ok, block}
+    end
+  end
+
   defp put_header(block, key, value) do
     new_header = Map.put(block.header, key, value)
     %{block | header: new_header}
