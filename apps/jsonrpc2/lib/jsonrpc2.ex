@@ -38,60 +38,27 @@ defmodule JSONRPC2 do
     ws = Application.get_env(:jsonrpc2, :ws)
 
     ipc_child = get_ipc_child(ipc)
-    http_ws_child = get_http_ws_child(http, ws)
+    http_configuration = WebSocketHTTP.new(http, :web)
+    ws_configuration = WebSocketHTTP.new(ws, :ws)
 
     children =
-      Enum.filter([ipc_child, http_ws_child], fn
-        nil -> false
-        _ -> true
-      end)
+      Enum.concat(
+        ipc_child,
+        WebSocketHTTP.children(http_configuration, ws_configuration, SpecHandler)
+      )
 
     Supervisor.start_link(children,
       strategy: :one_for_one
     )
   end
 
-  @spec get_ipc_child(Keyword.t()) :: Supervisor.child_spec() | nil
+  @spec get_ipc_child(Keyword.t()) :: list(Supervisor.child_spec()) | []
   defp get_ipc_child(enabled: true, path: path) do
     dirname = Path.dirname(path)
     :ok = File.mkdir_p(dirname)
     _ = File.rm(path)
-    TCP.child_spec(SpecHandler, 0, transport_opts: [{:ifaddr, {:local, path}}])
+    [TCP.child_spec(SpecHandler, 0, transport_opts: [{:ifaddr, {:local, path}}])]
   end
 
-  defp get_ipc_child(enabled: false, path: _path), do: nil
-
-  @spec get_http_ws_child(Keyword.t(), Keyword.t()) :: Supervisor.child_spec() | nil
-  defp get_http_ws_child(
-         _http_config = [enabled: true, port: http_port],
-         _ws_config = [enabled: true, port: ws_port]
-       ) do
-    case http_port do
-      ^ws_port ->
-        WebSocketHTTP.child_spec(:http, :web_ws, SpecHandler, port: http_port)
-
-      _ ->
-        raise(ArgumentError, "HTTP port #{http_port} and WS port #{ws_port} don't match")
-    end
-  end
-
-  defp get_http_ws_child(
-         _http_config = [enabled: true, port: port],
-         _ws_config = [enabled: false, port: _port]
-       ) do
-    WebSocketHTTP.child_spec(:http, :web, SpecHandler, port: port)
-  end
-
-  defp get_http_ws_child(
-         _http_config = [enabled: false, port: _port],
-         _ws_config = [enabled: true, port: port]
-       ) do
-    WebSocketHTTP.child_spec(:http, :ws, SpecHandler, port: port)
-  end
-
-  defp get_http_ws_child(
-         _http_config = [enabled: false, port: _],
-         _ws_config = [enabled: false, port: _]
-       ),
-       do: nil
+  defp get_ipc_child(enabled: false, path: _path), do: []
 end

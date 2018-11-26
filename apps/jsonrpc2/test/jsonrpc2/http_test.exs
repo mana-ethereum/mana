@@ -6,9 +6,22 @@ defmodule JSONRPC2.HTTPTest do
 
   setup_all do
     port = 56_752
+    http = Application.get_env(:jsonrpc2, :http)
+
+    http_configuration = WebSocketHTTP.new(http, :web)
+
+    http_configuration =
+      http_configuration
+      |> Map.put(:enabled, true)
+      |> Map.put(:port, port)
+
+    ws = Application.get_env(:jsonrpc2, :ws)
+    ws_configuration = WebSocketHTTP.new(ws, :ws)
 
     {:ok, _pid} =
-      start_supervised(WebSocketHTTP.child_spec(:http, :web, SpecHandlerTest, port: port))
+      start_supervised(
+        hd(WebSocketHTTP.children(http_configuration, ws_configuration, SpecHandlerTest))
+      )
 
     {:ok, %{port: port}}
   end
