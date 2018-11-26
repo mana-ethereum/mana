@@ -1,0 +1,3 @@
+Build with `mix escript.build`.
+Run: ./itest
+Make sure you've built a release first with `mix release` in root project path.
