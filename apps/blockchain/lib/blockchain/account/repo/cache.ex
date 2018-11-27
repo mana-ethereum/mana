@@ -1,8 +1,8 @@
 defmodule Blockchain.Account.Repo.Cache do
-  alias ExthCrypto.Hash.Keccak
   alias Blockchain.Account
   alias Blockchain.Account.Address
   alias Blockchain.Account.Storage
+  alias ExthCrypto.Hash.Keccak
   alias MerklePatriciaTree.TrieStorage
 
   defstruct storage_cache: %{}, accounts_cache: %{}
