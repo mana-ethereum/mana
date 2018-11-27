@@ -51,9 +51,7 @@ defmodule ExWire.BridgeSyncMock do
   end
 
   def start_link(state) do
-    if Process.whereis(get_process_name()) == nil do
-      GenServer.start_link(__MODULE__, state, name: get_process_name())
-    end
+    GenServer.start_link(__MODULE__, state, name: get_process_name())
   end
 
   @impl true
