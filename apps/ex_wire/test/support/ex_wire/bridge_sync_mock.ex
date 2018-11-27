@@ -18,7 +18,7 @@ defmodule ExWire.BridgeSyncMock do
   end
 
   def set_best_block(block) do
-    GenServer.call(__MODULE__, {:set_best_block, block})
+    GenServer.call(get_process_name(), {:set_best_block, block})
   end
 
   def get_best_block() do
@@ -26,7 +26,7 @@ defmodule ExWire.BridgeSyncMock do
   end
 
   def set_chain(chain) do
-    GenServer.call(__MODULE__, {:set_chain, chain})
+    GenServer.call(get_process_name(), {:set_chain, chain})
   end
 
   def get_chain() do
@@ -34,7 +34,7 @@ defmodule ExWire.BridgeSyncMock do
   end
 
   def set_current_trie(trie) do
-    GenServer.call(__MODULE__, {:set_current_trie, trie})
+    GenServer.call(get_process_name(), {:set_current_trie, trie})
   end
 
   def get_current_trie() do
@@ -42,17 +42,19 @@ defmodule ExWire.BridgeSyncMock do
   end
 
   def get_with_running_check(key) do
-    case Process.whereis(__MODULE__) do
+    case Process.whereis(get_process_name()) do
       nil ->
         {:error, :sync_not_running}
 
       _ ->
-        GenServer.call(__MODULE__, key)
+        GenServer.call(get_process_name(), key)
     end
   end
 
   def start_link(state) do
-    GenServer.start_link(__MODULE__, state, name: __MODULE__)
+    if Process.whereis(get_process_name()) == nil do
+      GenServer.start_link(__MODULE__, state, name: get_process_name())
+    end
   end
 
   @impl true
@@ -88,5 +90,9 @@ defmodule ExWire.BridgeSyncMock do
   @impl true
   def handle_call(:get_current_trie, _, state) do
     {:reply, {:ok, state.current_trie}, state}
+  end
+
+  defp get_process_name() do
+    String.to_atom(":#{Kernel.inspect(self())}_sync_mock")
   end
 end

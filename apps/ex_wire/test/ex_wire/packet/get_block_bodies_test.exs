@@ -1,5 +1,5 @@
 defmodule ExWire.Packet.GetBlockBodiesTest do
-  use ExUnit.Case, async: false
+  use ExUnit.Case, async: true
   doctest ExWire.Packet.GetBlockBodies
 
   alias Block.Header
