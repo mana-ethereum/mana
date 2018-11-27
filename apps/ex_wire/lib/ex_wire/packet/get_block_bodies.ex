@@ -12,6 +12,14 @@ defmodule ExWire.Packet.GetBlockBodies do
 
   @behaviour ExWire.Packet
 
+  alias Blockchain.Block, as: BlockchainBlock
+  alias ExWire.Bridge.Sync
+  alias ExWire.Packet.BlockBodies
+  alias ExWire.Struct.Block
+  require Logger
+
+  @sync Application.get_env(:ex_wire, :sync_mock, Sync)
+
   @type t :: %__MODULE__{
           hashes: [binary()]
         }
@@ -52,17 +60,40 @@ defmodule ExWire.Packet.GetBlockBodies do
   end
 
   @doc """
-  Handles a GetBlockBodies message. We shoud send the block bodies
+  Handles a GetBlockBodies message. We should send the block bodies
   to the peer if we have them. For now, we'll do nothing.
-
-  ## Examples
-
-      iex> %ExWire.Packet.GetBlockBodies{hashes: [<<5>>, <<6>>]}
-      ...> |> ExWire.Packet.GetBlockBodies.handle()
-      :ok
   """
   @spec handle(ExWire.Packet.packet()) :: ExWire.Packet.handle_response()
-  def handle(_packet = %__MODULE__{}) do
-    :ok
+  def handle(packet = %__MODULE__{}) do
+    bodies =
+      case @sync.get_current_trie() do
+        {:ok, trie} ->
+          get_block_bodies(trie, packet.hashes)
+
+        {:error, error} ->
+          _ =
+            Logger.debug(fn ->
+              "Error calling Sync.get_current_trie(): #{error}. Returning empty headers."
+            end)
+
+          []
+      end
+
+    {:send, BlockBodies.new(bodies)}
+  end
+
+  defp get_block_bodies(trie, hashes) do
+    hashes
+    |> Stream.map(fn hash ->
+      case BlockchainBlock.get_block(hash, trie) do
+        {:ok, block} ->
+          Block.new(block)
+
+        :not_found ->
+          nil
+      end
+    end)
+    |> Stream.reject(&is_nil/1)
+    |> Enum.to_list()
   end
 end

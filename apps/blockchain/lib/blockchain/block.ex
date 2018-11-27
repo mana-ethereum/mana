@@ -192,7 +192,11 @@ defmodule Blockchain.Block do
   def put_block(block, trie, predefined_key \\ nil) do
     hash = if predefined_key, do: predefined_key, else: hash(block)
     block_rlp = block |> serialize |> ExRLP.encode()
-    updated_trie = TrieStorage.put_raw_key!(trie, hash, block_rlp)
+
+    updated_trie =
+      trie
+      |> TrieStorage.put_raw_key!(hash, block_rlp)
+      |> TrieStorage.put_raw_key!(get_block_hash_key(block.header.number), hash)
 
     {:ok, {hash, updated_trie}}
   end
@@ -202,25 +206,6 @@ defmodule Blockchain.Block do
   exists in the database.
 
   See `Blockchain.Block.put_block/2` for details.
-
-  ## Examples
-
-      iex> trie = MerklePatriciaTree.Test.random_ets_db() |> MerklePatriciaTree.Trie.new()
-      iex> Blockchain.Block.get_block(<<1, 2, 3>>, trie)
-      :not_found
-
-      iex> db = MerklePatriciaTree.Test.random_ets_db()
-      iex> trie = db |> MerklePatriciaTree.Trie.new()
-      iex> block = %Blockchain.Block{
-      ...>   transactions: [%Blockchain.Transaction{nonce: 5, gas_price: 6, gas_limit: 7, to: <<1::160>>, value: 8, v: 27, r: 9, s: 10, data: "hi"}],
-      ...>   header: %Block.Header{number: 5, parent_hash: <<1, 2, 3>>, beneficiary: <<2, 3, 4>>, difficulty: 100, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>}
-      ...> }
-      iex> Blockchain.Block.put_block(block, trie)
-      iex> Blockchain.Block.get_block(block |> Blockchain.Block.hash, trie)
-      {:ok, %Blockchain.Block{
-        transactions: [%Blockchain.Transaction{nonce: 5, gas_price: 6, gas_limit: 7, to: <<1::160>>, value: 8, v: 27, r: 9, s: 10, data: "hi"}],
-        header: %Block.Header{number: 5, parent_hash: <<1, 2, 3>>, beneficiary: <<2, 3, 4>>, difficulty: 100, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>}
-      }}
   """
   @spec get_block(EVM.hash(), TrieStorage.t()) :: {:ok, t} | :not_found
   def get_block(block_hash, trie) do
@@ -231,8 +216,26 @@ defmodule Blockchain.Block do
   end
 
   @doc """
-  Returns the parent node for a given block, if it exists.
+  Returns the specified block from the database if it's hash is found by the provided block_number, otherwise :not_found.
+  """
+  @spec get_block_by_number(integer(), TrieStorage.t()) :: {:ok, t} | :not_found
+  def get_block_by_number(block_number, trie) do
+    case TrieStorage.get_raw_key(trie, get_block_hash_key(block_number)) do
+      :not_found ->
+        :not_found
 
+      {:ok, hash} ->
+        get_block(hash, trie)
+    end
+  end
+
+  defp get_block_hash_key(block_number) do
+    "hash_for_#{block_number}}"
+  end
+
+  @doc """
+
+  Returns the parent node for a given block, if it exists.
   We assume a block is a genesis block if it does not have
   a valid `parent_hash` set.
 

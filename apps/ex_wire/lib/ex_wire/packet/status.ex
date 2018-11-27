@@ -1,6 +1,6 @@
 defmodule ExWire.Packet.Status do
   @moduledoc """
-  Status messages establish a proper Eth Wire connection, and verify the two clients are compatable.
+  Status messages establish a proper Eth Wire connection, and verify the two clients are compatible.
 
   ```
   **Status** [`+0x00`: `P`, `protocolVersion`: `P`, `networkId`: `P`, `td`: `P`, `bestHash`: `B_32`, `genesisHash`: `B_32`]
@@ -24,10 +24,20 @@ defmodule ExWire.Packet.Status do
   * `genesisHash`: The hash of the Genesis block.
   ```
   """
-
+  alias Blockchain.Chain
+  alias ExWire.Bridge.Sync
   require Logger
 
   @behaviour ExWire.Packet
+
+  @sync Application.get_env(:ex_wire, :sync_mock, Sync)
+  @network_id_to_chain_name %{
+    0 => :olympic,
+    1 => :foundation,
+    2 => :morden,
+    3 => :ropsten,
+    4 => :rinkeby
+  }
 
   @type t :: %__MODULE__{
           protocol_version: integer(),
@@ -57,14 +67,14 @@ defmodule ExWire.Packet.Status do
   best chain found in the block header, the best hash, and the genesis hash of
   our blockchain.
   """
-  @spec new(t) :: t()
-  def new(packet) do
+  @spec new(integer, binary, binary) :: t()
+  def new(total_difficulty, genesis_hash, best_hash) do
     %__MODULE__{
       protocol_version: ExWire.Config.protocol_version(),
       network_id: ExWire.Config.network_id(),
-      total_difficulty: packet.total_difficulty,
-      best_hash: packet.genesis_hash,
-      genesis_hash: packet.genesis_hash
+      total_difficulty: total_difficulty,
+      best_hash: best_hash,
+      genesis_hash: genesis_hash
     }
   end
 
@@ -134,33 +144,23 @@ defmodule ExWire.Packet.Status do
 
   We should decide whether or not we want to continue communicating with
   this peer. E.g. do our network and protocol versions match?
-
-  ## Examples
-
-      iex> %ExWire.Packet.Status{protocol_version: 63, network_id: 3, total_difficulty: 10, best_hash: <<5>>, genesis_hash: <<4>>}
-      ...> |> ExWire.Packet.Status.handle()
-      {:send,
-             %ExWire.Packet.Status{
-               best_hash: <<4>>,
-               block_number: nil,
-               genesis_hash: <<4>>,
-               manifest_hash: nil,
-               network_id: 3,
-               protocol_version: 63,
-               total_difficulty: 10
-             }}
-
-      # Test a peer with an incompatible version
-      iex> %ExWire.Packet.Status{protocol_version: 555, network_id: 3, total_difficulty: 10, best_hash: <<5>>, genesis_hash: <<4>>}
-      ...> |> ExWire.Packet.Status.handle()
-      {:disconnect, :useless_peer}
   """
   @spec handle(ExWire.Packet.packet()) :: ExWire.Packet.handle_response()
   def handle(packet = %__MODULE__{}) do
-    Exth.trace(fn -> "[Packet] Got Status: #{inspect(packet)}" end)
-
     if packet.protocol_version == ExWire.Config.protocol_version() do
-      {:send, new(packet)}
+      Exth.trace(fn -> "[Packet] Got Status: #{inspect(packet)}" end)
+
+      {total_difficulty, genesis_hash, block_hash} =
+        case @sync.get_best_block_and_chain() do
+          {:ok, block, chain} ->
+            {block.header.difficulty, chain.genesis.parent_hash, block.block_hash}
+
+          {:error, error} ->
+            _ = Logger.debug(fn -> "Error calling Sync.get_best_block_hash #{error}" end)
+            get_default_difficulty_genesis_hash_and_best_hash(packet)
+        end
+
+      {:send, new(total_difficulty, genesis_hash, block_hash)}
     else
       # TODO: We need to follow up on disconnection packets with disconnection ourselves
       _ =
@@ -172,5 +172,13 @@ defmodule ExWire.Packet.Status do
 
       {:disconnect, :useless_peer}
     end
+  end
+
+  defp get_default_difficulty_genesis_hash_and_best_hash(packet) do
+    chain = Chain.load_chain(@network_id_to_chain_name[packet.network_id])
+    {0, chain.genesis.parent_hash, chain.genesis.parent_hash}
+  rescue
+    _ ->
+      {packet.total_difficulty, packet.genesis_hash, packet.genesis_hash}
   end
 end

@@ -11,15 +11,21 @@ defmodule ExWire.Packet.GetBlockHeaders do
   ```
   """
 
+  alias Blockchain.Block
+  alias ExWire.Bridge.Sync
   alias ExWire.Packet
   alias ExWire.Packet.BlockHeaders
+  require Logger
 
   @behaviour ExWire.Packet
 
+  @sync Application.get_env(:ex_wire, :sync_mock, Sync)
+  @max_headers_supported 100
+
   @type t :: %__MODULE__{
           block_identifier: Packet.block_identifier(),
-          max_headers: integer(),
-          skip: integer(),
+          max_headers: pos_integer(),
+          skip: pos_integer(),
           reverse: boolean()
         }
 
@@ -83,7 +89,7 @@ defmodule ExWire.Packet.GetBlockHeaders do
   end
 
   @doc """
-  Handles a GetBlockHeaders message. We shoud send the block headers
+  Handles a GetBlockHeaders message. We should send the block headers
   to the peer if we have them.
 
   For now, we do nothing. This upsets Geth as it thinks we're a bad
@@ -98,11 +104,82 @@ defmodule ExWire.Packet.GetBlockHeaders do
            headers: []
          }}
   """
+
   @spec handle(ExWire.Packet.packet()) :: ExWire.Packet.handle_response()
-  def handle(_packet = %__MODULE__{}) do
-    {:send,
-     %BlockHeaders{
-       headers: []
-     }}
+  def handle(packet = %__MODULE__{max_headers: max_headers})
+      when max_headers > @max_headers_supported do
+    handle(%__MODULE__{packet | max_headers: @max_headers_supported})
+  end
+
+  def handle(packet = %__MODULE__{}) do
+    headers =
+      case @sync.get_current_trie() do
+        {:ok, trie} ->
+          get_block_headers(
+            trie,
+            packet.block_identifier,
+            packet.max_headers,
+            packet.skip,
+            packet.reverse
+          )
+
+        {:error, error} ->
+          _ =
+            Logger.warn(fn ->
+              "Error calling Sync.get_current_trie(): #{error}. Returning empty headers."
+            end)
+
+          []
+      end
+
+    {:send, %BlockHeaders{headers: headers}}
+  end
+
+  defp get_block_headers(trie, identifier, num_headers, skip, reverse) do
+    get_block_headers(trie, identifier, num_headers, skip, reverse, [])
+  end
+
+  defp get_block_headers(_trie, _identifier, 0, _skip, _reverse, headers),
+    do: Enum.reverse(headers)
+
+  defp get_block_headers(trie, block_hash, num_headers, skip, reverse, headers)
+       when is_binary(block_hash) do
+    case Block.get_block(block_hash, trie) do
+      {:ok, block} ->
+        next_number = next_block_number(block.header.number, skip, reverse)
+
+        get_block_headers(trie, next_number, num_headers - 1, skip, reverse, [
+          block.header | headers
+        ])
+
+      _ ->
+        _ =
+          Logger.debug(fn -> "Could not find block with hash: #{Base.encode16(block_hash)}." end)
+
+        headers
+    end
+  end
+
+  defp get_block_headers(trie, block_number, num_headers, skip, reverse, headers) do
+    case Block.get_block_by_number(block_number, trie) do
+      {:ok, block} ->
+        next_block_number = next_block_number(block.header.number, skip, reverse)
+
+        get_block_headers(trie, next_block_number, num_headers - 1, skip, reverse, [
+          block.header | headers
+        ])
+
+      _ ->
+        _ = Logger.debug(fn -> "Could not find block with number: #{block_number}." end)
+        []
+    end
+  end
+
+  defp next_block_number(block_number, skip, reverse) do
+    if reverse == true do
+      block_number - skip
+    else
+      block_number + skip
+    end
   end
 end
