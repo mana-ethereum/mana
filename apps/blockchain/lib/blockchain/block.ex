@@ -192,7 +192,11 @@ defmodule Blockchain.Block do
   def put_block(block, trie, predefined_key \\ nil) do
     hash = if predefined_key, do: predefined_key, else: hash(block)
     block_rlp = block |> serialize |> ExRLP.encode()
-    updated_trie = TrieStorage.put_raw_key!(trie, hash, block_rlp)
+
+    updated_trie =
+      trie
+      |> TrieStorage.put_raw_key!(hash, block_rlp)
+      |> TrieStorage.put_raw_key!(get_block_hash_key(block.header.number), hash)
 
     {:ok, {hash, updated_trie}}
   end
@@ -212,24 +216,26 @@ defmodule Blockchain.Block do
   end
 
   @doc """
-  Returns the specified block from the database, if the block number is found in the provided map
-  and the resulting block hash is found in the provided TrieStorage.
+  Returns the specified block from the database if it's hash is found by the provided block_number, otherwise :not_found.
   """
-  # TODO: Figure out best way to store block_number => block_hash and insert it as `some_block_number_to_hash_map`
-  @spec get_block_by_number(integer(), TrieStorage.t(), map()) :: {:ok, t} | :not_found
-  def get_block_by_number(block_number, trie, some_block_number_to_hash_map \\ %{}) do
-    case Map.get(some_block_number_to_hash_map, block_number) do
-      nil ->
+  @spec get_block_by_number(integer(), TrieStorage.t()) :: {:ok, t} | :not_found
+  def get_block_by_number(block_number, trie) do
+    case TrieStorage.get_raw_key(trie, get_block_hash_key(block_number)) do
+      :not_found ->
         :not_found
 
-      hash ->
+      {:ok, hash} ->
         get_block(hash, trie)
     end
   end
 
-  @doc """
-  Returns the parent node for a given block, if it exists.
+  defp get_block_hash_key(block_number) do
+    "hash_for_#{block_number}}"
+  end
 
+  @doc """
+
+  Returns the parent node for a given block, if it exists.
   We assume a block is a genesis block if it does not have
   a valid `parent_hash` set.
 
