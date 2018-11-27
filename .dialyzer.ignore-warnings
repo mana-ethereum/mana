@@ -6,8 +6,8 @@ apps/evm/lib/evm/operation/system.ex:29: Function create2/2 has no local return
 -------------------------------
  # blockchain/block.ex warnings
  -------------------------------
-apps/blockchain/lib/blockchain/block.ex:449: Function gen_child_block/2 has no local return
-apps/blockchain/lib/blockchain/block.ex:449: Function gen_child_block/3 has no local return
+apps/blockchain/lib/blockchain/block.ex:446: Function gen_child_block/2 has no local return
+apps/blockchain/lib/blockchain/block.ex:446: Function gen_child_block/3 has no local return
 --------------------------------
 -# AccountRepo
 --------------------------------
