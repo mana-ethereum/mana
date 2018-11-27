@@ -23,7 +23,7 @@ defmodule Blockchain.Account.Repo.Cache do
           storage_cache: storage_cache(),
           accounts_cache: accounts_cache()
         }
-  @type changes :: [%{Address.t() => {:update | :clean, Account.t()} | :delete}]
+  @type changes :: %{Address.t() => {:update | :clean, Account.t()} | :delete}
 
   @spec current_value(t(), Address.t(), integer()) :: integer() | :deleted | nil
   def current_value(cache_struct, address, key) do
@@ -89,7 +89,7 @@ defmodule Blockchain.Account.Repo.Cache do
     |> commit_accounts()
   end
 
-  @spec commit_storage(t(), TrieStorage.t()) :: {TrieStorage.t(), changes()}
+  @spec commit_storage({TrieStorage.t(), changes()}, t()) :: {TrieStorage.t(), changes()}
   def commit_storage({state, changes}, cache_struct) do
     cache_struct
     |> storage_to_list()
