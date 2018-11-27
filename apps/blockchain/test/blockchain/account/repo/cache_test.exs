@@ -188,7 +188,7 @@ defmodule Blockchain.Account.Repo.CacheTest do
 
       cache = %Cache{storage_cache: %{address => %{key => %{current_value: value}}}}
 
-      updated_state = Cache.commit_storage(cache, state_with_account)
+      updated_state = Cache.commit(cache, state_with_account)
 
       {:ok, found_value} = Account.get_storage(updated_state, address, key)
 
@@ -212,7 +212,7 @@ defmodule Blockchain.Account.Repo.CacheTest do
 
       cache = %Cache{storage_cache: %{address => %{key => %{current_value: :deleted}}}}
 
-      updated_state = Cache.commit_storage(cache, state_with_account)
+      updated_state = Cache.commit(cache, state_with_account)
 
       result = Account.get_storage(updated_state, address, key)
 
@@ -220,7 +220,7 @@ defmodule Blockchain.Account.Repo.CacheTest do
     end
   end
 
-  describe "commit_accounts/2" do
+  describe "commit accounts" do
     test "updates account with code" do
       ets_db = MerklePatriciaTree.Test.random_ets_db()
       state = MerklePatriciaTree.Trie.new(ets_db)
@@ -240,7 +240,7 @@ defmodule Blockchain.Account.Repo.CacheTest do
 
       cache = %Cache{accounts_cache: %{address => {:dirty, new_account, {:dirty, code}}}}
 
-      committed_state = Cache.commit_accounts(cache, state_with_account)
+      committed_state = Cache.commit(cache, state_with_account)
 
       found_account = Account.get_account(committed_state, address)
       assert %{found_account | code_hash: new_account.code_hash} == new_account
@@ -268,7 +268,7 @@ defmodule Blockchain.Account.Repo.CacheTest do
 
       cache = %Cache{accounts_cache: %{address => {:clean, new_account, code}}}
 
-      committed_state = Cache.commit_accounts(cache, state_with_account)
+      committed_state = Cache.commit(cache, state_with_account)
 
       found_account = Account.get_account(committed_state, address)
       assert found_account == %Account{}
@@ -299,7 +299,7 @@ defmodule Blockchain.Account.Repo.CacheTest do
 
       cache = %Cache{accounts_cache: %{address => {:dirty, new_account, {:dirty, code}}}}
 
-      committed_state = Cache.commit_accounts(cache, state_with_account)
+      committed_state = Cache.commit(cache, state_with_account)
 
       {:ok, found_code} = Account.machine_code(committed_state, address)
       assert found_code == code
@@ -327,7 +327,7 @@ defmodule Blockchain.Account.Repo.CacheTest do
 
       cache = %Cache{accounts_cache: %{address => {:dirty, new_account, {:clean, code}}}}
 
-      committed_state = Cache.commit_accounts(cache, state_with_account)
+      committed_state = Cache.commit(cache, state_with_account)
 
       result = Account.machine_code(committed_state, address)
       assert result == :not_found
@@ -347,7 +347,7 @@ defmodule Blockchain.Account.Repo.CacheTest do
 
       cache = %Cache{accounts_cache: %{address => {:dirty, new_account, nil}}}
 
-      committed_state = Cache.commit_accounts(cache, state)
+      committed_state = Cache.commit(cache, state)
 
       found_account = Account.get_account(committed_state, address)
       assert %{found_account | code_hash: new_account.code_hash} == new_account
