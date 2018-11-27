@@ -33,7 +33,7 @@ defmodule ExWire.Mixfile do
   defp deps do
     [
       {:ex_doc, "~> 0.16", only: :dev, runtime: false},
-      {:ex_rlp, git: "https://github.com/mana-ethereum/ex_rlp", branch: "ab-fix-decoding"},
+      {:ex_rlp, "~> 0.4.1"},
       {:blockchain, in_umbrella: true},
       {:exth_crypto, in_umbrella: true},
       {:evm, in_umbrella: true}

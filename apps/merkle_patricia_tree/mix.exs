@@ -48,7 +48,7 @@ defmodule MerklePatriciaTree.Mixfile do
   #
   defp deps do
     [
-      {:ex_rlp, git: "https://github.com/mana-ethereum/ex_rlp", branch: "ab-fix-decoding"},
+      {:ex_rlp, "~> 0.4.1"},
       {:exth_crypto, in_umbrella: true},
       {:rocksdb, "~> 0.23.2"}
     ]

@@ -52,7 +52,7 @@ defmodule Blockchain.Mixfile do
     [
       {:ethereumex, "~> 0.5.0"},
       {:evm, in_umbrella: true},
-      {:ex_rlp, git: "https://github.com/mana-ethereum/ex_rlp", branch: "ab-fix-decoding"},
+      {:ex_rlp, "~> 0.4.1"},
       {:exth_crypto, in_umbrella: true},
       {:merkle_patricia_tree, in_umbrella: true}
     ]
