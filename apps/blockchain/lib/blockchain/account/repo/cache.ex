@@ -1,6 +1,8 @@
 defmodule Blockchain.Account.Repo.Cache do
   alias Blockchain.Account
   alias Blockchain.Account.Address
+  alias Blockchain.Account.Storage
+  alias ExthCrypto.Hash.Keccak
   alias MerklePatriciaTree.TrieStorage
 
   defstruct storage_cache: %{}, accounts_cache: %{}
@@ -21,6 +23,7 @@ defmodule Blockchain.Account.Repo.Cache do
           storage_cache: storage_cache(),
           accounts_cache: accounts_cache()
         }
+  @type changes :: %{Address.t() => {:update | :clean, Account.t()} | :delete}
 
   @spec current_value(t(), Address.t(), integer()) :: integer() | :deleted | nil
   def current_value(cache_struct, address, key) do
@@ -80,25 +83,26 @@ defmodule Blockchain.Account.Repo.Cache do
 
   @spec commit(t(), TrieStorage.t()) :: TrieStorage.t()
   def commit(cache_struct, state) do
-    committed_accounts = commit_accounts(cache_struct, state)
-
-    commit_storage(cache_struct, committed_accounts)
+    cache_struct
+    |> normalize_changes_and_save_code(state)
+    |> commit_storage(cache_struct)
+    |> commit_accounts()
   end
 
-  @spec commit_storage(t(), TrieStorage.t()) :: TrieStorage.t()
-  def commit_storage(cache_struct, state) do
+  @spec commit_storage({TrieStorage.t(), changes()}, t()) :: {TrieStorage.t(), changes()}
+  def commit_storage({state, changes}, cache_struct) do
     cache_struct
     |> storage_to_list()
-    |> Enum.reduce(state, fn account_storage_cache, state_acc ->
-      commit_account_storage_cache(account_storage_cache, state_acc, cache_struct)
+    |> Enum.reduce({state, changes}, fn account_storage_cache, {state_acc, changes} ->
+      commit_account_storage_cache(account_storage_cache, state_acc, changes)
     end)
   end
 
-  @spec commit_accounts(t(), TrieStorage.t()) :: TrieStorage.t()
-  def commit_accounts(cache_struct, state) do
+  @spec normalize_changes_and_save_code(t(), TrieStorage.t()) :: {TrieStorage.t(), changes()}
+  def normalize_changes_and_save_code(cache_struct, state) do
     cache_struct
     |> accounts_to_list()
-    |> Enum.reduce(state, &commit_account_cache/2)
+    |> Enum.reduce({state, %{}}, &normalize_changes/2)
   end
 
   @spec storage_to_list(t()) :: list()
@@ -128,49 +132,95 @@ defmodule Blockchain.Account.Repo.Cache do
     end)
   end
 
-  defp commit_account_cache({address, {:dirty, nil, _code}}, state) do
-    Account.del_account(state, address)
+  defp normalize_changes({address, {:dirty, nil, _code}}, {state, result}) do
+    change = :delete
+    updated_result = Map.put(result, address, change)
+
+    {state, updated_result}
   end
 
-  defp commit_account_cache({address, {:dirty, account, {:dirty, code}}}, state) do
-    state_with_account = Account.put_account(state, address, account)
-    Account.put_code(state_with_account, address, code)
+  defp normalize_changes({address, {:dirty, account, {:dirty, machine_code}}}, {state, result}) do
+    code_hash = Keccak.kec(machine_code)
+    new_state = TrieStorage.put_raw_key!(state, code_hash, machine_code)
+    updated_account = %{account | code_hash: code_hash}
+
+    change = {:update, updated_account}
+    updated_result = Map.put(result, address, change)
+
+    {new_state, updated_result}
   end
 
-  defp commit_account_cache({address, {:dirty, account, _code}}, state) do
-    Account.put_account(state, address, account)
+  defp normalize_changes({address, {:dirty, account, _code}}, {state, result}) do
+    change = {:update, account}
+    updated_result = Map.put(result, address, change)
+
+    {state, updated_result}
   end
 
-  defp commit_account_cache({_address, {:clean, _account, _code}}, state), do: state
+  defp normalize_changes({address, {:clean, account, _code}}, {state, result}) do
+    change = {:clean, account}
+    updated_result = Map.put(result, address, change)
 
-  defp commit_account_storage_cache({address, account_cache}, state_trie, cache_struct) do
-    account =
-      case account(cache_struct, address) do
-        {_status, account, _code} -> account
-        nil -> Account.get_account(state_trie, address)
+    {state, updated_result}
+  end
+
+  defp commit_account_storage_cache({address, account_cache}, state_trie, changes) do
+    account_with_status =
+      case Map.get(changes, address) do
+        {status, account} -> {status, account}
+        _ -> {:clean, Account.get_account(state_trie, address)}
       end
 
-    {_updated_account, updated_state} =
+    {updated_account, updated_state} =
       account_cache
       |> Map.to_list()
-      |> Enum.reduce({account, state_trie}, &commit_key_cache(address, &1, &2))
+      |> Enum.reduce({account_with_status, state_trie}, &commit_key_cache(address, &1, &2))
 
-    updated_state
-  end
+    updated_changes = Map.put(changes, address, updated_account)
 
-  defp commit_key_cache(address, {key, _key_cache = %{current_value: :deleted}}, {account, state}) do
-    Account.remove_storage(state, {address, account}, key, true)
+    {updated_state, updated_changes}
   end
 
   defp commit_key_cache(
-         address,
-         {key, %{current_value: current_value}},
-         {account, state}
+         _address,
+         {key, _key_cache = %{current_value: :deleted}},
+         {{_status, account}, state}
        ) do
-    Account.put_storage(state, {address, account}, key, current_value, true)
+    {updated_storage_state, updated_state} = Storage.remove(state, account.storage_root, key)
+
+    root_hash = TrieStorage.root_hash(updated_storage_state)
+    updated_account = %{account | storage_root: root_hash}
+
+    {{:update, updated_account}, updated_state}
   end
 
-  defp commit_key_cache(_address, {_key, _key_cache}, {account, state}) do
-    {account, state}
+  defp commit_key_cache(
+         _address,
+         {key, %{current_value: current_value}},
+         {{_status, account}, state}
+       ) do
+    {updated_storage_state, updated_state} =
+      Storage.put(state, account.storage_root, key, current_value)
+
+    root_hash = TrieStorage.root_hash(updated_storage_state)
+    updated_account = %{account | storage_root: root_hash}
+
+    {{:update, updated_account}, updated_state}
+  end
+
+  defp commit_key_cache(_address, {_key, _key_cache}, {account_with_status, state}) do
+    {account_with_status, state}
+  end
+
+  defp commit_accounts({state, changes}) do
+    changes
+    |> Map.to_list()
+    |> Enum.reduce(state, fn {address, change}, state_acc ->
+      case change do
+        :delete -> Account.del_account(state_acc, address)
+        {:update, account} -> Account.put_account(state_acc, address, account)
+        _ -> state_acc
+      end
+    end)
   end
 end
