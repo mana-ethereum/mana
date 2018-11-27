@@ -22,7 +22,7 @@ defmodule ExWire.Bridge.Sync do
     end
   end
 
-  @spec get_best_block(Sync.state()) :: {:ok, Block.t()} | {:error, atom()}
+  @spec get_best_block(Sync.state() | any()) :: {:ok, Block.t()} | {:error, atom()}
   def get_best_block(sync_state \\ nil) do
     case sync_state || get_last_sync_state() do
       {:ok, state} ->
@@ -36,7 +36,7 @@ defmodule ExWire.Bridge.Sync do
     end
   end
 
-  @spec get_chain(Sync.state()) :: {:ok, Chain.t()} | {:error, atom()}
+  @spec get_chain(Sync.state() | any()) :: {:ok, Chain.t()} | {:error, atom()}
   def get_chain(sync_state \\ nil) do
     case sync_state || get_last_sync_state() do
       {:ok, state} ->
@@ -47,7 +47,7 @@ defmodule ExWire.Bridge.Sync do
     end
   end
 
-  @spec get_current_trie(Sync.state()) :: {:ok, Trie.t()} | {:error, atom()}
+  @spec get_current_trie(Sync.state() | any()) :: {:ok, Trie.t()} | {:error, atom()}
   def get_current_trie(sync_state \\ nil) do
     case sync_state || get_last_sync_state() do
       {:ok, state} ->
