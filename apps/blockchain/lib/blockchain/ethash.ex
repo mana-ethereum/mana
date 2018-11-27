@@ -46,6 +46,7 @@ defmodule Blockchain.Ethash do
   @type mix :: list(non_neg_integer)
   @type mix_digest :: <<_::256>>
   @type result :: <<_::256>>
+  @type nonce :: non_neg_integer()
 
   def epoch(block_number) do
     div(block_number, @j_epoch)
@@ -101,9 +102,31 @@ defmodule Blockchain.Ethash do
 
   @doc """
   Implementation of the Proof-of-work algorithm that uses the full dataset.
+
+  For more information, see Appendix J, section J.4 of the Yellow Paper.
   """
-  @spec pow_full(dataset(), binary(), non_neg_integer()) :: {mix_digest(), result()}
+  @spec pow_full(dataset(), binary(), nonce()) :: {mix_digest(), result()}
   def pow_full(dataset, block_hash, nonce) do
+    size = length(dataset)
+
+    pow(block_hash, nonce, size, &Enum.at(dataset, &1))
+  end
+
+  @doc """
+  Implementation of the Proof-of-work algorithm that uses a cache instead of the
+  full dataset.
+
+  For more information, see Appendix J, section J.4 of the Yellow Paper.
+  """
+  @spec pow_light(non_neg_integer, cache(), binary(), nonce()) :: {mix_digest(), result()}
+  def pow_light(full_size, cache, block_hash, nonce) do
+    adjusted_size = div(full_size, @j_hashbytes)
+    dataset_lookup = &calculate_dataset_item(cache, &1, length(cache))
+
+    pow(block_hash, nonce, adjusted_size, dataset_lookup)
+  end
+
+  defp pow(block_hash, nonce, dataset_size, dataset_lookup) do
     seed_hash = combine_header_and_nonce(block_hash, nonce)
 
     seed_head =
@@ -114,7 +137,7 @@ defmodule Blockchain.Ethash do
     mix =
       seed_hash
       |> init_mix_with_replication()
-      |> mix_random_dataset_nodes(dataset, seed_head)
+      |> mix_random_dataset_nodes(seed_head, dataset_size, dataset_lookup)
       |> compress_mix()
       |> uint32_list_into_binary()
 
@@ -136,11 +159,8 @@ defmodule Blockchain.Ethash do
     end)
   end
 
-  defp mix_random_dataset_nodes(init_mix, dataset, seed_head) do
-    dataset_length =
-      dataset
-      |> length()
-      |> div(@mix_hash)
+  defp mix_random_dataset_nodes(init_mix, seed_head, dataset_size, dataset_lookup) do
+    dataset_length = div(dataset_size, @mix_hash)
 
     Enum.reduce(0..(@j_accesses - 1), init_mix, fn j, mix ->
       new_data =
@@ -148,16 +168,16 @@ defmodule Blockchain.Ethash do
         |> bxor(seed_head)
         |> FNV.hash(Enum.at(mix, Integer.mod(j, @mix_length)))
         |> Integer.mod(dataset_length)
-        |> generate_new_data(dataset)
+        |> generate_new_data(dataset_lookup)
 
       FNV.hash_lists(mix, new_data)
     end)
   end
 
-  defp generate_new_data(parent, dataset) do
+  defp generate_new_data(parent, dataset_lookup) do
     0..(@mix_hash - 1)
     |> Enum.reduce([], fn k, data ->
-      element = Enum.at(dataset, @mix_hash * parent + k)
+      element = dataset_lookup.(@mix_hash * parent + k)
       [element | data]
     end)
     |> Enum.reverse()
