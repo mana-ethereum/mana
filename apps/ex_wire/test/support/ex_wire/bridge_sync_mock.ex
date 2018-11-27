@@ -9,11 +9,10 @@ defmodule ExWire.BridgeSyncMock do
     {block_status, block} = get_best_block()
     {chain_status, chain} = get_chain()
 
-    if block_status == :error || chain_status == :error do
-      error = if block_status == :error, do: block, else: chain
-      {:error, error}
-    else
-      {:ok, block, chain}
+    case {block_status, chain_status} do
+      {:error, _} -> {:error, block}
+      {_, :error} -> {:error, chain}
+      _ -> {:ok, block, chain}
     end
   end
 
