@@ -16,12 +16,6 @@ jobs:
           keys:
             - v13-mix-cache-{{ checksum "mix.lock" }}
 
-      - restore_cache:
-          keys:
-            - v13-build-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
-            - v13-build-cache-{{ .Branch }}
-            - v13-build-cache
-
       - run: echo 'export PATH=~/.cargo/bin:$PATH' >> $BASH_ENV
 
       - run:
@@ -31,16 +25,6 @@ jobs:
       - save_cache:
           key: v13-mix-cache-{{ checksum "mix.lock" }}
           paths: "deps"
-
-      - save_cache:
-          key: v13-build-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
-          paths: "_build"
-      - save_cache:
-          key: v13-build-cache-{{ .Branch }}
-          paths: "_build"
-      - save_cache:
-          key: v13-build-cache
-          paths: "_build"
 
       - run:
           name: Compile
@@ -85,11 +69,6 @@ jobs:
 
       - restore_cache:
           keys:
-            - v13-build-cache-{{ .Branch }}
-            - v13-build-cache
-
-      - restore_cache:
-          keys:
             - v13-mix-cache-{{ checksum "mix.lock" }}
 
       - run: mix test --exclude pending
@@ -108,11 +87,6 @@ jobs:
 
       - run: mix local.hex --force
       - run: mix local.rebar --force
-
-      - restore_cache:
-          keys:
-            - v13-build-cache-{{ .Branch }}
-            - v13-build-cache
 
       - restore_cache:
           keys:
@@ -137,11 +111,6 @@ jobs:
 
       - restore_cache:
           keys:
-            - v13-build-cache-{{ .Branch }}
-            - v13-build-cache
-
-      - restore_cache:
-          keys:
             - v13-mix-cache-{{ checksum "mix.lock" }}
 
       - run: mix cmd --app blockchain mix test --exclude test --include Frontier
@@ -160,11 +129,6 @@ jobs:
 
       - run: mix local.hex --force
       - run: mix local.rebar --force
-
-      - restore_cache:
-          keys:
-            - v13-build-cache-{{ .Branch }}
-            - v13-build-cache
 
       - restore_cache:
           keys:
@@ -189,11 +153,6 @@ jobs:
 
       - restore_cache:
           keys:
-            - v13-build-cache-{{ .Branch }}
-            - v13-build-cache
-
-      - restore_cache:
-          keys:
             - v13-mix-cache-{{ checksum "mix.lock" }}
 
       - run: mix cmd --app blockchain mix test --exclude test --include HomesteadToDaoAt5
@@ -212,11 +171,6 @@ jobs:
 
       - run: mix local.hex --force
       - run: mix local.rebar --force
-
-      - restore_cache:
-          keys:
-            - v13-build-cache-{{ .Branch }}
-            - v13-build-cache
 
       - restore_cache:
           keys:
@@ -241,11 +195,6 @@ jobs:
 
       - restore_cache:
           keys:
-            - v13-build-cache-{{ .Branch }}
-            - v13-build-cache
-
-      - restore_cache:
-          keys:
             - v13-mix-cache-{{ checksum "mix.lock" }}
 
       - run: mix cmd --app blockchain mix test --exclude test --include SpuriousDragon
@@ -264,11 +213,6 @@ jobs:
 
       - run: mix local.hex --force
       - run: mix local.rebar --force
-
-      - restore_cache:
-          keys:
-            - v13-build-cache-{{ .Branch }}
-            - v13-build-cache
 
       - restore_cache:
           keys:
@@ -295,11 +239,6 @@ jobs:
 
       - restore_cache:
           keys:
-            - v13-build-cache-{{ .Branch }}
-            - v13-build-cache
-
-      - restore_cache:
-          keys:
             - v13-mix-cache-{ checksum "mix.lock" }}
 
       - run:
@@ -321,11 +260,6 @@ jobs:
 
       - run: mix local.hex --force
       - run: mix local.rebar --force
-
-      - restore_cache:
-          keys:
-            - v13-build-cache-{{ .Branch }}
-            - v13-build-cache
 
       - restore_cache:
           keys:
