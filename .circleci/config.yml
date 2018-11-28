@@ -14,21 +14,7 @@ jobs:
 
       - restore_cache:
           keys:
-            - v13-env-cache-{{ arch }}-{{ .Branch }}
-            - v13-env-cache-{{ .Branch }}
-            - v13-env-cache
-
-      - restore_cache:
-          keys:
-            - v13-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
-            - v13-mix-cache-{{ .Branch }}
-            - v13-mix-cache
-
-      - restore_cache:
-          keys:
-            - v13-build-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
-            - v13-build-cache-{{ .Branch }}
-            - v13-build-cache
+            - v13-mix-cache-{{ checksum "mix.lock" }}
 
       - run: echo 'export PATH=~/.cargo/bin:$PATH' >> $BASH_ENV
 
@@ -37,24 +23,8 @@ jobs:
           no_output_timeout: 2400
 
       - save_cache:
-          key: v13-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
+          key: v13-mix-cache-{{ checksum "mix.lock" }}
           paths: "deps"
-      - save_cache:
-          key: v13-mix-cache-{{ .Branch }}
-          paths: "deps"
-      - save_cache:
-          key: v13-mix-cache
-          paths: "deps"
-
-      - save_cache:
-          key: v13-build-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
-          paths: "_build"
-      - save_cache:
-          key: v13-build-cache-{{ .Branch }}
-          paths: "_build"
-      - save_cache:
-          key: v13-build-cache
-          paths: "_build"
 
       - run:
           name: Compile
@@ -99,20 +69,7 @@ jobs:
 
       - restore_cache:
           keys:
-            - v13-build-cache-{{ .Branch }}
-            - v13-build-cache
-
-      - restore_cache:
-          keys:
-            - v13-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
-            - v13-mix-cache-{{ .Branch }}
-            - v13-mix-cache
-
-      - restore_cache:
-          keys:
-            - v13-env-cache-{{ arch }}-{{ .Branch }}
-            - v13-env-cache-{{ .Branch }}
-            - v13-env-cache
+            - v13-mix-cache-{{ checksum "mix.lock" }}
 
       - run: mix test --exclude pending
 
@@ -133,20 +90,7 @@ jobs:
 
       - restore_cache:
           keys:
-            - v13-build-cache-{{ .Branch }}
-            - v13-build-cache
-
-      - restore_cache:
-          keys:
-            - v13-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
-            - v13-mix-cache-{{ .Branch }}
-            - v13-mix-cache
-
-      - restore_cache:
-          keys:
-            - v13-env-cache-{{ arch }}-{{ .Branch }}
-            - v13-env-cache-{{ .Branch }}
-            - v13-env-cache
+            - v13-mix-cache-{{ checksum "mix.lock" }}
 
       - run: EXT_IP_ADDRESS=$(curl ifconfig.co) mix test --only network
 
@@ -167,20 +111,7 @@ jobs:
 
       - restore_cache:
           keys:
-            - v13-build-cache-{{ .Branch }}
-            - v13-build-cache
-
-      - restore_cache:
-          keys:
-            - v13-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
-            - v13-mix-cache-{{ .Branch }}
-            - v13-mix-cache
-
-      - restore_cache:
-          keys:
-            - v13-env-cache-{{ arch }}-{{ .Branch }}
-            - v13-env-cache-{{ .Branch }}
-            - v13-env-cache
+            - v13-mix-cache-{{ checksum "mix.lock" }}
 
       - run: mix cmd --app blockchain mix test --exclude test --include Frontier
 
@@ -201,20 +132,7 @@ jobs:
 
       - restore_cache:
           keys:
-            - v13-build-cache-{{ .Branch }}
-            - v13-build-cache
-
-      - restore_cache:
-          keys:
-            - v13-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
-            - v13-mix-cache-{{ .Branch }}
-            - v13-mix-cache
-
-      - restore_cache:
-          keys:
-            - v13-env-cache-{{ arch }}-{{ .Branch }}
-            - v13-env-cache-{{ .Branch }}
-            - v13-env-cache
+            - v13-mix-cache-{{ checksum "mix.lock" }}
 
       - run: mix cmd --app blockchain mix test --exclude test --include Homestead
 
@@ -235,20 +153,7 @@ jobs:
 
       - restore_cache:
           keys:
-            - v13-build-cache-{{ .Branch }}
-            - v13-build-cache
-
-      - restore_cache:
-          keys:
-            - v13-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
-            - v13-mix-cache-{{ .Branch }}
-            - v13-mix-cache
-
-      - restore_cache:
-          keys:
-            - v13-env-cache-{{ arch }}-{{ .Branch }}
-            - v13-env-cache-{{ .Branch }}
-            - v13-env-cache
+            - v13-mix-cache-{{ checksum "mix.lock" }}
 
       - run: mix cmd --app blockchain mix test --exclude test --include HomesteadToDaoAt5
 
@@ -269,20 +174,7 @@ jobs:
 
       - restore_cache:
           keys:
-            - v13-build-cache-{{ .Branch }}
-            - v13-build-cache
-
-      - restore_cache:
-          keys:
-            - v13-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
-            - v13-mix-cache-{{ .Branch }}
-            - v13-mix-cache
-
-      - restore_cache:
-          keys:
-            - v13-env-cache-{{ arch }}-{{ .Branch }}
-            - v13-env-cache-{{ .Branch }}
-            - v13-env-cache
+            - v13-mix-cache-{{ checksum "mix.lock" }}
 
       - run: mix cmd --app blockchain mix test --exclude test --include TangerineWhistle
 
@@ -303,20 +195,7 @@ jobs:
 
       - restore_cache:
           keys:
-            - v13-build-cache-{{ .Branch }}
-            - v13-build-cache
-
-      - restore_cache:
-          keys:
-            - v13-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
-            - v13-mix-cache-{{ .Branch }}
-            - v13-mix-cache
-
-      - restore_cache:
-          keys:
-            - v13-env-cache-{{ arch }}-{{ .Branch }}
-            - v13-env-cache-{{ .Branch }}
-            - v13-env-cache
+            - v13-mix-cache-{{ checksum "mix.lock" }}
 
       - run: mix cmd --app blockchain mix test --exclude test --include SpuriousDragon
 
@@ -337,20 +216,7 @@ jobs:
 
       - restore_cache:
           keys:
-            - v13-build-cache-{{ .Branch }}
-            - v13-build-cache
-
-      - restore_cache:
-          keys:
-            - v13-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
-            - v13-mix-cache-{{ .Branch }}
-            - v13-mix-cache
-
-      - restore_cache:
-          keys:
-            - v13-env-cache-{{ arch }}-{{ .Branch }}
-            - v13-env-cache-{{ .Branch }}
-            - v13-env-cache
+            - v13-mix-cache-{{ checksum "mix.lock" }}
 
       - run:
           command: mix cmd --app blockchain mix test --exclude test --include Byzantium
@@ -373,20 +239,7 @@ jobs:
 
       - restore_cache:
           keys:
-            - v13-build-cache-{{ .Branch }}
-            - v13-build-cache
-
-      - restore_cache:
-          keys:
-            - v13-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
-            - v13-mix-cache-{{ .Branch }}
-            - v13-mix-cache
-
-      - restore_cache:
-          keys:
-            - v13-env-cache-{{ arch }}-{{ .Branch }}
-            - v13-env-cache-{{ .Branch }}
-            - v13-env-cache
+            - v13-mix-cache-{ checksum "mix.lock" }}
 
       - run:
           command: mix cmd --app blockchain mix test --exclude test --include Constantinople
@@ -410,20 +263,7 @@ jobs:
 
       - restore_cache:
           keys:
-            - v13-build-cache-{{ .Branch }}
-            - v13-build-cache
-
-      - restore_cache:
-          keys:
-            - v13-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
-            - v13-mix-cache-{{ .Branch }}
-            - v13-mix-cache
-
-      - restore_cache:
-          keys:
-            - v13-env-cache-{{ arch }}-{{ .Branch }}
-            - v13-env-cache-{{ .Branch }}
-            - v13-env-cache
+            - v13-mix-cache-{{ checksum "mix.lock" }}
 
       - restore_cache:
           keys:
