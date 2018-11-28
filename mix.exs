@@ -32,7 +32,7 @@ defmodule Mana.MixProject do
   # Run "mix help deps" for examples and options.
   defp deps do
     [
-      {:ex_rlp, "~> 0.4.1"},
+      {:ex_rlp, "~> 0.5.0"},
       {:ex_doc, "~> 0.19", only: :dev, runtime: false},
       {:dialyxir, "~> 1.0.0-rc.4", only: [:dev, :test], runtime: false},
       {:ethereumex, "~> 0.5.1"},
