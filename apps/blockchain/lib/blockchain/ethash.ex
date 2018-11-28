@@ -301,14 +301,22 @@ defmodule Blockchain.Ethash do
   defp initial_cache(seed, cache_size) do
     adjusted_cache_size = div(cache_size, @j_hashbytes)
 
-    for i <- 0..(adjusted_cache_size - 1) do
-      cache_element(i, seed)
-    end
+    do_initial_cache(0, adjusted_cache_size - 1, seed, [])
   end
 
-  defp cache_element(0, seed), do: Keccak.kec512(seed)
+  defp do_initial_cache(limit, limit, _seed, acc = [previous | _rest]) do
+    result = Keccak.kec512(previous)
 
-  defp cache_element(element, seed) do
-    Keccak.kec512(cache_element(element - 1, seed))
+    [result | acc] |> Enum.reverse()
+  end
+
+  defp do_initial_cache(0, limit, seed, []) do
+    result = Keccak.kec512(seed)
+    do_initial_cache(1, limit, seed, [result])
+  end
+
+  defp do_initial_cache(element, limit, seed, acc = [previous | _rest]) do
+    result = Keccak.kec512(previous)
+    do_initial_cache(element + 1, limit, seed, [result | acc])
   end
 end
