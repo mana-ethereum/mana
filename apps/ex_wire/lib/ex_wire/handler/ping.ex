@@ -36,11 +36,11 @@ defmodule ExWire.Handler.Ping do
         }
       }
   """
-  @spec handle(Handler.Params.t()) :: Handler.handler_response()
-  def handle(params) do
+  @spec handle(GenServer.server(), Handler.Params.t()) :: Handler.handler_response()
+  def handle(server \\ Kademlia.server(), params) do
     ping = Ping.decode(params.data)
 
-    Kademlia.handle_ping(params)
+    Kademlia.handle_ping(server, params)
 
     %Pong{
       to: ping.from,

@@ -19,13 +19,13 @@ defmodule ExWire.Kademlia.Server do
   # 10s
   @pong_cleanup_period 10_000
 
-  @default_process_name __MODULE__
-  @spec default_process_name() :: unquote(@default_process_name)
-  def default_process_name, do: @default_process_name
+  @name __MODULE__
+  @spec name() :: unquote(@name)
+  def name, do: @name
 
   @spec start_link(Keyword.t()) :: GenServer.on_start()
   def start_link(params) do
-    name = Keyword.get(params, :name, @default_process_name)
+    name = Keyword.get(params, :name, @name)
     network_client_name = Keyword.fetch!(params, :network_client_name)
     current_node = Keyword.fetch!(params, :current_node)
     nodes = Keyword.get(params, :nodes, [])

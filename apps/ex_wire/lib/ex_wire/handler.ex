@@ -28,7 +28,8 @@ defmodule ExWire.Handler do
               hash: nil,
               data: nil,
               timestamp: nil,
-              type: nil
+              type: nil,
+              handler_pid: nil
 
     @type t :: %__MODULE__{
             remote_host: Endpoint.t(),
@@ -37,7 +38,8 @@ defmodule ExWire.Handler do
             hash: Crypto.hash(),
             data: binary(),
             timestamp: integer(),
-            type: integer()
+            type: integer(),
+            handler_pid: GenServer.server()
           }
   end
 
@@ -86,9 +88,18 @@ defmodule ExWire.Handler do
         :ok = Logger.warn("Message code `#{inspect(params.type, base: :hex)}` not implemented")
         :not_implemented
 
-      mod when is_atom(mod) ->
-        Exth.trace(fn -> "Handling #{mod} message from #{inspect(params.remote_host.ip)}" end)
-        apply(mod, :handle, [params])
+      mod ->
+        do_dispatch(mod, params)
     end
+  end
+
+  defp do_dispatch(mod, params = %{handler_pid: nil}) do
+    Exth.trace(fn -> "Handling #{mod} message from #{inspect(params.remote_host.ip)}" end)
+    apply(mod, :handle, [params])
+  end
+
+  defp do_dispatch(mod, params) do
+    Exth.trace(fn -> "Handling #{mod} message from #{inspect(params.remote_host.ip)}" end)
+    apply(mod, :handle, [params.handler_pid, params])
   end
 end
