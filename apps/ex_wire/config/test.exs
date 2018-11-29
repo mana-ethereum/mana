@@ -6,7 +6,6 @@ config :ex_wire,
       68, 76, 86, 168, 24, 200, 155, 0, 99, 58, 226, 211, 30>>,
   node_discovery: [
     network_adapter: {ExWire.Adapter.UDP, :test_network_adapter},
-    kademlia_process_name: KademliaState,
     supervisor_name: ExWire.NodeDiscoverySupervisor,
     port: 30_304
   ],

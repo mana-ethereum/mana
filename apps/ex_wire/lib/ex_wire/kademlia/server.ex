@@ -11,7 +11,7 @@ defmodule ExWire.Kademlia.Server do
           ignore_pongs: boolean()
         }
 
-  @default_process_name KademliaState
+  @default_process_name __MODULE__
 
   @max_discovery_rounds 7
 

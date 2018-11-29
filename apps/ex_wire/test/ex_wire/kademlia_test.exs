@@ -34,9 +34,9 @@ defmodule ExWire.KademliaTest do
     test "adds node to routing table", %{kademlia_process_name: process_name} do
       node = TestHelper.random_node()
 
-      Kademlia.refresh_node(node, process_name: process_name)
+      Kademlia.refresh_node(process_name, node)
 
-      table = Kademlia.routing_table(process_name: process_name)
+      table = Kademlia.routing_table(process_name)
 
       assert table |> RoutingTable.member?(node)
     end
@@ -45,8 +45,8 @@ defmodule ExWire.KademliaTest do
   describe "handle_pong/3" do
     test "adds a node from pong to routing table", %{kademlia_process_name: kademlia_process_name} do
       node = TestHelper.random_node()
-      Kademlia.ping(node, process_name: kademlia_process_name)
-      table = Kademlia.routing_table(process_name: kademlia_process_name)
+      Kademlia.ping(kademlia_process_name, node)
+      table = Kademlia.routing_table(kademlia_process_name)
 
       mdc =
         table.expected_pongs
@@ -55,9 +55,9 @@ defmodule ExWire.KademliaTest do
         |> List.first()
 
       pong = %Pong{to: TestHelper.random_endpoint(), timestamp: Timestamp.now() + 5, hash: mdc}
-      Kademlia.handle_pong(pong, process_name: kademlia_process_name)
+      Kademlia.handle_pong(kademlia_process_name, pong)
 
-      table = Kademlia.routing_table(process_name: kademlia_process_name)
+      table = Kademlia.routing_table(kademlia_process_name)
       assert table |> RoutingTable.member?(node)
     end
   end
@@ -79,10 +79,10 @@ defmodule ExWire.KademliaTest do
         type: 1
       }
 
-      Kademlia.handle_ping(params, process_name: process_name)
+      Kademlia.handle_ping(process_name, params)
 
       node = Node.from_handler_params(params)
-      table = Kademlia.routing_table(process_name: process_name)
+      table = Kademlia.routing_table(process_name)
       assert table |> RoutingTable.member?(node)
     end
   end
@@ -92,11 +92,9 @@ defmodule ExWire.KademliaTest do
       node = TestHelper.random_node()
       find_neighbours = %FindNeighbours{target: node.public_key, timestamp: Timestamp.now() + 5}
 
-      Kademlia.refresh_node(node, process_name: process_name)
+      Kademlia.refresh_node(process_name, node)
 
-      assert find_neighbours
-             |> Kademlia.neighbours(node.endpoint, process_name: process_name)
-             |> Enum.member?(node)
+      assert Enum.member?(Kademlia.neighbours(process_name, find_neighbours, node.endpoint), node)
     end
   end
 
@@ -106,9 +104,9 @@ defmodule ExWire.KademliaTest do
       neighbour = %Neighbour{node: node.public_key, endpoint: node.endpoint}
       neighbours_message = %Neighbours{nodes: [neighbour], timestamp: Timestamp.now() + 5}
 
-      Kademlia.handle_neighbours(neighbours_message, process_name: kademlia_process_name)
+      Kademlia.handle_neighbours(kademlia_process_name, neighbours_message)
 
-      table = Kademlia.routing_table(process_name: kademlia_process_name)
+      table = Kademlia.routing_table(kademlia_process_name)
 
       expected_pong_nodes =
         table.expected_pongs
