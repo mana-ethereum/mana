@@ -203,6 +203,42 @@ defmodule EVM.MessageCallTest do
     assert machine_state.active_words == 1
   end
 
+  test "truncates message call's output for revert op code if output's byte size is bigger than output_params" do
+    code =
+      build(:machine_code,
+        operations: [:push1, 1, :push1, 3, :add, :push1, 0x00, :revert, :revert]
+      )
+
+    recipient = %{address: <<0x9::160>>, code: code}
+
+    account_repo =
+      build(:mock_account_repo)
+      |> MockAccountRepo.add_account(recipient.address, %{balance: 10, code: recipient.code})
+
+    pre_exec_env =
+      build(:exec_env,
+        account_repo: account_repo,
+        config: EVM.Configuration.Byzantium.new()
+      )
+
+    pre_machine_state = build(:machine_state)
+
+    message_call =
+      build(:message_call,
+        current_exec_env: pre_exec_env,
+        current_machine_state: pre_machine_state,
+        recipient: recipient.address,
+        code_owner: recipient.address,
+        execution_value: 20_000,
+        output_params: {0, 2}
+      )
+
+    %{machine_state: machine_state} = MessageCall.call(message_call)
+
+    assert machine_state.memory == <<0, 0>>
+    assert machine_state.active_words == 1
+  end
+
   describe "when recipient address is precompiled contract 3" do
     test "fails if it runs out of gas" do
       pre_machine_state = build(:machine_state)

@@ -194,7 +194,7 @@ defmodule EVM.MessageCall do
       if out_size == 0 do
         %{machine_state | last_return_data: output}
       else
-        machine_state = Memory.write(machine_state, out_offset, output)
+        machine_state = Memory.write(machine_state, out_offset, output, out_size)
 
         %{machine_state | last_return_data: output}
       end
