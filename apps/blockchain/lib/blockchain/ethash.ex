@@ -129,9 +129,7 @@ defmodule Blockchain.Ethash do
   defp pow(block_hash, nonce, dataset_size, dataset_lookup) do
     seed_hash = combine_header_and_nonce(block_hash, nonce)
 
-    [seed_head | _rest] =
-      seed_hash
-      |> binary_into_uint32_list()
+    [seed_head | _rest] = binary_into_uint32_list(seed_hash)
 
     mix =
       seed_hash
@@ -140,9 +138,7 @@ defmodule Blockchain.Ethash do
       |> compress_mix()
       |> uint32_list_into_binary()
 
-    result =
-      (seed_hash <> mix)
-      |> Keccak.kec()
+    result = Keccak.kec(seed_hash <> mix)
 
     {mix, result}
   end
@@ -233,8 +229,8 @@ defmodule Blockchain.Ethash do
       |> binary_into_uint32_list()
 
     uint32_cache =
-      Enum.reduce(cache, %{}, fn {i, element}, acc ->
-        Map.put(acc, i, binary_into_uint32_list(element))
+      Enum.into(cache, %{}, fn {i, element} ->
+        {i, binary_into_uint32_list(element)}
       end)
 
     Enum.reduce(range, init_mix, fn j, mix ->
@@ -253,16 +249,13 @@ defmodule Blockchain.Ethash do
       |> FNV.hash(Enum.at(mix, mix_index))
       |> Integer.mod(cache_size)
 
-    %{^cache_index => element} = uint32_cache
-    element
+    Map.fetch!(uint32_cache, cache_index)
   end
 
   defp cache_into_indexed_map(original_cache) do
     original_cache
     |> Enum.with_index()
-    |> Enum.reduce(%{}, fn {v, k}, acc ->
-      Map.put(acc, k, v)
-    end)
+    |> Enum.into(%{}, fn {v, k} -> {k, v} end)
   end
 
   @spec binary_into_uint32_list(binary) :: list(non_neg_integer)
@@ -284,9 +277,8 @@ defmodule Blockchain.Ethash do
   defp initialize_mix(cache, i, cache_size) do
     index = Integer.mod(i, cache_size)
 
-    %{^index => element} = cache
-
-    element
+    cache
+    |> Map.fetch!(index)
     |> :binary.decode_unsigned(:little)
     |> bxor(i)
     |> :binary.encode_unsigned(:little)
@@ -319,7 +311,6 @@ defmodule Blockchain.Ethash do
 
   defp do_initial_cache(limit, limit, _seed, acc = [previous | _rest]) do
     result = Keccak.kec512(previous)
-
     [result | acc] |> Enum.reverse()
   end
 

@@ -47,7 +47,7 @@ defmodule Blockchain.Ethash.RandMemoHash do
 
   @spec second_index(integer(), non_neg_integer(), optimized_cache()) :: integer()
   defp second_index(i, n, cache) do
-    %{^i => cache_element} = cache
+    cache_element = Map.fetch!(cache, i)
 
     <<header::size(8), _rest::binary>> = cache_element
 
