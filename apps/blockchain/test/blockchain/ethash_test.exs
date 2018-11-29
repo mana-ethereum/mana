@@ -706,6 +706,7 @@ defmodule Blockchain.EthashTest do
         block_number
         |> Ethash.seed_hash()
         |> Ethash.generate_cache(cache_size)
+        |> Map.values()
 
       assert cache == expected_cache
     end
@@ -744,6 +745,7 @@ defmodule Blockchain.EthashTest do
         block
         |> Ethash.seed_hash()
         |> Ethash.generate_cache(cache_size)
+        |> Map.values()
 
       assert cache == expected_cache
     end

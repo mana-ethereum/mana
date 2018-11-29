@@ -41,7 +41,7 @@ defmodule Blockchain.Ethash do
 
   @type dataset_item :: <<_::512>>
   @type dataset :: list(dataset_item)
-  @type cache :: list(<<_::512>>)
+  @type cache :: %{non_neg_integer => <<_::512>>}
   @type seed :: <<_::256>>
   @type mix :: list(non_neg_integer)
   @type mix_digest :: <<_::256>>
@@ -121,7 +121,7 @@ defmodule Blockchain.Ethash do
   @spec pow_light(non_neg_integer, cache(), binary(), nonce()) :: {mix_digest(), result()}
   def pow_light(full_size, cache, block_hash, nonce) do
     adjusted_size = div(full_size, @j_hashbytes)
-    dataset_lookup = &calculate_dataset_item(cache, &1, length(cache))
+    dataset_lookup = &calculate_dataset_item(cache, &1, map_size(cache))
 
     pow(block_hash, nonce, adjusted_size, dataset_lookup)
   end
@@ -129,10 +129,7 @@ defmodule Blockchain.Ethash do
   defp pow(block_hash, nonce, dataset_size, dataset_lookup) do
     seed_hash = combine_header_and_nonce(block_hash, nonce)
 
-    seed_head =
-      seed_hash
-      |> binary_into_uint32_list()
-      |> Enum.at(0)
+    [seed_head | _rest] = binary_into_uint32_list(seed_hash)
 
     mix =
       seed_hash
@@ -141,9 +138,7 @@ defmodule Blockchain.Ethash do
       |> compress_mix()
       |> uint32_list_into_binary()
 
-    result =
-      (seed_hash <> mix)
-      |> Keccak.kec()
+    result = Keccak.kec(seed_hash <> mix)
 
     {mix, result}
   end
@@ -211,7 +206,7 @@ defmodule Blockchain.Ethash do
   @spec generate_dataset(cache, non_neg_integer) :: dataset
   def generate_dataset(cache, full_size) do
     limit = div(full_size, @j_hashbytes)
-    cache_size = length(cache)
+    cache_size = map_size(cache)
 
     for i <- 0..(limit - 1) do
       calculate_dataset_item(cache, i, cache_size)
@@ -233,7 +228,10 @@ defmodule Blockchain.Ethash do
       |> initialize_mix(index, cache_size)
       |> binary_into_uint32_list()
 
-    uint32_cache = Enum.map(cache, &binary_into_uint32_list/1)
+    uint32_cache =
+      Enum.into(cache, %{}, fn {i, element} ->
+        {i, binary_into_uint32_list(element)}
+      end)
 
     Enum.reduce(range, init_mix, fn j, mix ->
       cache_element = fnv_cache_element(index, j, mix, uint32_cache, cache_size)
@@ -242,7 +240,7 @@ defmodule Blockchain.Ethash do
     end)
   end
 
-  defp fnv_cache_element(index, parent, mix, modified_cache, cache_size) do
+  defp fnv_cache_element(index, parent, mix, uint32_cache, cache_size) do
     mix_index = Integer.mod(parent, @hash_words)
 
     cache_index =
@@ -251,7 +249,13 @@ defmodule Blockchain.Ethash do
       |> FNV.hash(Enum.at(mix, mix_index))
       |> Integer.mod(cache_size)
 
-    Enum.at(modified_cache, cache_index)
+    Map.fetch!(uint32_cache, cache_index)
+  end
+
+  defp cache_into_indexed_map(original_cache) do
+    original_cache
+    |> Enum.with_index()
+    |> Enum.into(%{}, fn {v, k} -> {k, v} end)
   end
 
   @spec binary_into_uint32_list(binary) :: list(non_neg_integer)
@@ -271,8 +275,10 @@ defmodule Blockchain.Ethash do
 
   @spec initialize_mix(cache, non_neg_integer, non_neg_integer) :: binary
   defp initialize_mix(cache, i, cache_size) do
+    index = Integer.mod(i, cache_size)
+
     cache
-    |> Enum.at(Integer.mod(i, cache_size))
+    |> Map.fetch!(index)
     |> :binary.decode_unsigned(:little)
     |> bxor(i)
     |> :binary.encode_unsigned(:little)
@@ -287,17 +293,16 @@ defmodule Blockchain.Ethash do
   def generate_cache(seed, cache_size) do
     seed
     |> initial_cache(cache_size)
+    |> cache_into_indexed_map()
     |> calculate_cache(@j_cacherounds)
   end
 
-  @spec calculate_cache(cache(), 0 | 1 | 2 | 3) :: cache()
   defp calculate_cache(cache, 0), do: cache
 
   defp calculate_cache(cache, number_of_rounds) do
     calculate_cache(RandMemoHash.hash(cache), number_of_rounds - 1)
   end
 
-  @spec initial_cache(seed(), integer()) :: cache()
   defp initial_cache(seed, cache_size) do
     adjusted_cache_size = div(cache_size, @j_hashbytes)
 
@@ -306,7 +311,6 @@ defmodule Blockchain.Ethash do
 
   defp do_initial_cache(limit, limit, _seed, acc = [previous | _rest]) do
     result = Keccak.kec512(previous)
-
     [result | acc] |> Enum.reverse()
   end
 
