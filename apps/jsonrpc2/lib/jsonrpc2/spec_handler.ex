@@ -5,7 +5,7 @@ defmodule JSONRPC2.SpecHandler do
   alias ExthCrypto.Math
   alias JSONRPC2.Bridge.Sync
   alias JSONRPC2.Struct.EthSyncing
-  @sync Application.get_env(:jsonrpc2, :bridge_mock, Sync)
+  @sync Application.get_env(:jsonrpc2, :bridge, Sync)
   # web3 Methods
 
   def handle_request("web3_clientVersion", _),
@@ -61,7 +61,11 @@ defmodule JSONRPC2.SpecHandler do
   def handle_request("eth_getStorageAt", _), do: {:error, :not_supported}
   def handle_request("eth_getTransactionCount", _), do: {:error, :not_supported}
   def handle_request("eth_getBlockTransactionCountByHash", _), do: {:error, :not_supported}
-  def handle_request("eth_getBlockTransactionCountByNumber", _), do: {:error, :not_supported}
+
+  # def handle_request("eth_getBlockTransactionCountByNumber", number) do
+  #   get_block_by_number
+  # end
+
   def handle_request("eth_getUncleCountByBlockHash", _), do: {:error, :not_supported}
   def handle_request("eth_getUncleCountByBlockNumber", _), do: {:error, :not_supported}
   def handle_request("eth_getCode", _), do: {:error, :not_supported}
@@ -71,7 +75,11 @@ defmodule JSONRPC2.SpecHandler do
   def handle_request("eth_call", _), do: {:error, :not_supported}
   def handle_request("eth_estimateGas", _), do: {:error, :not_supported}
   def handle_request("eth_getBlockByHash", _), do: {:error, :not_supported}
-  def handle_request("eth_getBlockByNumber", _), do: {:error, :not_supported}
+
+  def handle_request("eth_getBlockByNumber", [number, _full_transactions]) do
+    @sync.get_block_by_number(number)
+  end
+
   def handle_request("eth_getTransactionByHash", _), do: {:error, :not_supported}
   def handle_request("eth_getTransactionByBlockHashAndIndex", _), do: {:error, :not_supported}
   def handle_request("eth_getTransactionByBlockNumberAndIndex", _), do: {:error, :not_supported}

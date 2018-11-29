@@ -489,6 +489,72 @@ defmodule Blockchain.BlockTest do
     end
   end
 
+  describe "get_transaction/3" do
+    test "returns not existing transation" do
+      trie = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
+
+      {updated_block, _new_trie} =
+        Blockchain.Block.put_transaction(
+          %Blockchain.Block{},
+          6,
+          %Blockchain.Transaction{nonce: 1, v: 1, r: 2, s: 3},
+          trie
+        )
+
+      result = Blockchain.Block.get_transaction(updated_block, 7, trie.db)
+
+      assert is_nil(result)
+    end
+
+    test "returns the last transaction in a block" do
+      trie = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
+
+      transaction = %Blockchain.Transaction{
+        data: "",
+        gas_limit: 100_000,
+        gas_price: 3,
+        init: <<96, 3, 96, 5, 1, 96, 0, 82, 96, 0, 96, 32, 243>>,
+        nonce: 5,
+        r:
+          110_274_197_540_583_527_170_567_040_609_004_947_678_532_096_020_311_055_824_363_076_718_114_581_104_395,
+        s:
+          15_165_203_061_950_746_568_488_278_734_700_551_064_641_299_899_120_962_819_352_765_267_479_743_108_366,
+        to: "",
+        v: 27,
+        value: 5
+      }
+
+      {block, _updated_trie} =
+        Blockchain.Block.put_transaction(%Blockchain.Block{}, 6, transaction, trie)
+
+      result = Blockchain.Block.get_transaction(block, 6, trie.db)
+
+      assert result == transaction
+    end
+
+    test "returns the first transaction in a block" do
+      trie = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
+
+      transaction1 = %Blockchain.Transaction{nonce: 1, v: 1, r: 2, s: 3}
+      transaction2 = %Blockchain.Transaction{nonce: 2, v: 1, r: 2, s: 3}
+
+      {updated_block, new_trie} =
+        Blockchain.Block.put_transaction(%Blockchain.Block{}, 0, transaction1, trie)
+
+      {updated_block, new_trie} =
+        Blockchain.Block.put_transaction(
+          updated_block,
+          1,
+          transaction2,
+          new_trie
+        )
+
+      result = Blockchain.Block.get_transaction(updated_block, 0, new_trie.db)
+
+      assert result == transaction1
+    end
+  end
+
   defp put_header(block, key, value) do
     new_header = Map.put(block.header, key, value)
     %{block | header: new_header}

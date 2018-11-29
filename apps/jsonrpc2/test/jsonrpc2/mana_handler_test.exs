@@ -4,6 +4,15 @@ defmodule JSONRPC2.ManaHandlerTest do
   alias JSONRPC2.BridgeSyncMock
   alias JSONRPC2.SpecHandler
 
+  setup_all do
+    db = MerklePatriciaTree.Test.random_ets_db()
+    trie = MerklePatriciaTree.Trie.new(db)
+    state = %{trie: trie}
+
+    {:ok, pid} = BridgeSyncMock.start_link(state)
+    {:ok, %{pid: pid}}
+  end
+
   describe "is web3_clientVersion method behaving correctly when" do
     test "called without params" do
       version = Application.get_env(:jsonrpc2, :mana_version)
@@ -67,11 +76,6 @@ defmodule JSONRPC2.ManaHandlerTest do
   end
 
   describe "is net_peerCount method behaving correctly when" do
-    setup do
-      {:ok, pid} = BridgeSyncMock.start_link(%{})
-      {:ok, %{pid: pid}}
-    end
-
     test "called without params for 0 peers", %{pid: _pid} do
       connected_peer_count = 0
       :ok = BridgeSyncMock.set_connected_peer_count(connected_peer_count)

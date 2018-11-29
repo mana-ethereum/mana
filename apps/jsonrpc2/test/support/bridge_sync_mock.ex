@@ -1,5 +1,6 @@
 defmodule JSONRPC2.BridgeSyncMock do
   alias JSONRPC2.Struct.EthSyncing
+  alias Blockchain.Block
   use GenServer
 
   def connected_peer_count() do
@@ -18,6 +19,14 @@ defmodule JSONRPC2.BridgeSyncMock do
     GenServer.call(__MODULE__, {:set_last_sync_block_stats, block_stats})
   end
 
+  def put_block(block) do
+    GenServer.call(__MODULE__, {:put_block, block})
+  end
+
+  def get_block_by_number(number) do
+    GenServer.call(__MODULE__, {:get_block_by_number, number})
+  end
+
   def start_link(state) do
     GenServer.start_link(__MODULE__, state, name: __MODULE__)
   end
@@ -32,6 +41,23 @@ defmodule JSONRPC2.BridgeSyncMock do
 
   def handle_call({:set_connected_peer_count, connected_peer_count}, _, state) do
     {:reply, :ok, Map.put(state, :connected_peer_count, connected_peer_count)}
+  end
+
+  def handle_call({:put_block, block}, _, state = %{trie: trie}) do
+    updated_trie = Block.put_block(block, trie)
+    updated_state = %{state | trie: updated_trie}
+
+    {:reply, :ok, updated_state}
+  end
+
+  def handle_call({:get_block_by_number, number}, _, state = %{trie: trie}) do
+    block =
+      case Block.get_block_by_number(number, trie) do
+        {:ok, block} -> block
+        _ -> nil
+      end
+
+    {:reply, block, state}
   end
 
   @spec handle_call(:get_last_sync_block_stats, {pid, any}, map()) ::

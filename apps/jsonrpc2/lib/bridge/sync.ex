@@ -1,5 +1,6 @@
 defmodule JSONRPC2.Bridge.Sync do
   alias Blockchain.Blocktree
+  alias Blockchain.Block
   alias ExWire.PeerSupervisor
   alias ExWire.Sync
 
@@ -25,4 +26,14 @@ defmodule JSONRPC2.Bridge.Sync do
 
   @spec get_last_sync_state() :: Sync.state()
   defp get_last_sync_state(), do: Sync.get_state()
+
+  @spec get_block_by_number(integer()) :: nil | Block.t()
+  def get_block_by_number(number) do
+    state_trie = get_last_sync_state().trie
+
+    case Block.get_block_by_number(number, state_trie) do
+      {:ok, block} -> block
+      _ -> nil
+    end
+  end
 end
