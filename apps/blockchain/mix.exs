@@ -53,6 +53,7 @@ defmodule Blockchain.Mixfile do
       {:ethereumex, "~> 0.5.0"},
       {:evm, in_umbrella: true},
       {:ex_rlp, "~> 0.5.0"},
+      {:exth, in_umbrella: true},
       {:exth_crypto, in_umbrella: true},
       {:merkle_patricia_tree, in_umbrella: true}
     ]
