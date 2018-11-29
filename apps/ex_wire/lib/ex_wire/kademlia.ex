@@ -9,7 +9,7 @@ defmodule ExWire.Kademlia do
   alias ExWire.Struct.Endpoint
 
   @server Server.name()
-  @spec server() :: Server.name()
+  @spec server() :: unquote(Server.name())
   def server, do: @server
 
   @doc """
@@ -23,7 +23,7 @@ defmodule ExWire.Kademlia do
   @doc """
   Handles pong message (adds a node to routing table etc).
   """
-  @spec handle_pong(Pong.t(), Keyword.t()) :: :ok
+  @spec handle_pong(GenServer.server(), Pong.t()) :: :ok
   def handle_pong(server \\ Server.name(), pong = %Pong{}) do
     GenServer.cast(server, {:handle_pong, pong})
   end
@@ -31,7 +31,7 @@ defmodule ExWire.Kademlia do
   @doc """
   Handles ping message (by adding a node to routing table etc).
   """
-  @spec handle_ping(Params.t(), Keyword.t()) :: :ok
+  @spec handle_ping(GenServer.server(), Params.t()) :: :ok
   def handle_ping(server \\ Server.name(), params = %Params{}) do
     GenServer.cast(server, {:handle_ping, params})
   end
@@ -39,7 +39,7 @@ defmodule ExWire.Kademlia do
   @doc """
   Sends ping to a node saving it to expected pongs.
   """
-  @spec ping(Node.t(), Keyword.t()) :: :ok
+  @spec ping(GenServer.server(), Node.t()) :: :ok
   def ping(server \\ Server.name(), node = %Node{}) do
     GenServer.cast(server, {:ping, node})
   end
@@ -55,7 +55,7 @@ defmodule ExWire.Kademlia do
   @doc """
   Returns neighbours of specified node.
   """
-  @spec neighbours(FindNeighbours.t(), Endpoint.t(), Keyword.t()) :: [Node.t()]
+  @spec neighbours(GenServer.server(), FindNeighbours.t(), Endpoint.t()) :: [Node.t()]
   def neighbours(server \\ Server.name(), find_neighbours, endpoint) do
     GenServer.call(server, {:neighbours, find_neighbours, endpoint})
   end
@@ -63,7 +63,7 @@ defmodule ExWire.Kademlia do
   @doc """
   Receives neighbours request and ping each of them if request is not expired.
   """
-  @spec handle_neighbours(Neighbours.t(), Keyword.t()) :: :ok
+  @spec handle_neighbours(GenServer.server(), Neighbours.t()) :: :ok
   def handle_neighbours(server \\ Server.name(), neighbours) do
     GenServer.cast(server, {:handle_neighbours, neighbours})
   end
