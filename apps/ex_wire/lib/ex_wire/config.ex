@@ -143,6 +143,7 @@ defmodule ExWire.Config do
   @spec caps(Keyword.t()) :: [Capability.t()]
   def caps(given_params \\ []) do
     caps = get_env(given_params, :caps)
+
     if caps == nil do
       nil
     else

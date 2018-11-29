@@ -17,5 +17,4 @@ defmodule ExWire.Packet do
   @type handle_response ::
           :ok | :activate | :peer_disconnect | {:disconnect, atom()} | {:send, struct()}
   @callback handle(packet) :: handle_response
-
 end

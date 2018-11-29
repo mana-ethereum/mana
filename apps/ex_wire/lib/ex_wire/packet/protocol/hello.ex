@@ -40,7 +40,8 @@ defmodule ExWire.Packet.Protocol.Hello do
     :node_id
   ]
 
-  @spec message_id_offset() :: integer()
+  @impl true
+  @spec message_id_offset() :: 0
   def message_id_offset() do
     0x00
   end
@@ -54,6 +55,7 @@ defmodule ExWire.Packet.Protocol.Hello do
       ...> |> ExWire.Packet.Protocol.Hello.serialize
       [10, "Mana/Test", [["eth", 1], ["par", 2]], 5555, <<5>>]
   """
+  @impl true
   @spec serialize(t) :: ExRLP.t()
   def serialize(packet = %__MODULE__{}) do
     [
@@ -74,6 +76,7 @@ defmodule ExWire.Packet.Protocol.Hello do
       iex> ExWire.Packet.Protocol.Hello.deserialize([<<10>>, "Mana/Test", [["eth", <<1>>], ["par", <<2>>]], <<55>>, <<5>>])
       %ExWire.Packet.Protocol.Hello{p2p_version: 10, client_id: "Mana/Test", caps: [ExWire.Packet.Capability.new({"eth", 1}), ExWire.Packet.Capability.new({"par", 2})], listen_port: 55, node_id: <<5>>}
   """
+  @impl true
   @spec deserialize(ExRLP.t()) :: t
   def deserialize(rlp) do
     [
@@ -108,6 +111,7 @@ defmodule ExWire.Packet.Protocol.Hello do
       ...> |> ExWire.Packet.Protocol.Hello.handle()
       {:disconnect, :useless_peer}
   """
+  @impl true
   @spec handle(ExWire.Packet.packet()) :: ExWire.Packet.handle_response()
   def handle(packet = %__MODULE__{}) do
     Exth.trace(fn -> "[Packet] Got Hello: #{inspect(packet)}" end)

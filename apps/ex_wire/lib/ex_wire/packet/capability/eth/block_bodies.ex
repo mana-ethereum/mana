@@ -38,7 +38,8 @@ defmodule ExWire.Packet.Capability.Eth.BlockBodies do
   Returns the relative message id offset for this message.
   This will help determine what its message ID is relative to other Packets in the same Capability.
   """
-  @spec message_id_offset() :: integer()
+  @impl true
+  @spec message_id_offset() :: 6
   def message_id_offset do
     0x06
   end
@@ -66,6 +67,7 @@ defmodule ExWire.Packet.Capability.Eth.BlockBodies do
         ]
       ]
   """
+  @impl true
   @spec serialize(t) :: ExRLP.t()
   def serialize(packet = %__MODULE__{}) do
     for block <- packet.blocks, do: Block.serialize(block)
@@ -95,6 +97,7 @@ defmodule ExWire.Packet.Capability.Eth.BlockBodies do
         ]
       }
   """
+  @impl true
   @spec deserialize(ExRLP.t()) :: t
   def deserialize(rlp) do
     blocks = for block <- rlp, do: Block.deserialize(block)
@@ -114,6 +117,7 @@ defmodule ExWire.Packet.Capability.Eth.BlockBodies do
       ...> |> ExWire.Packet.Capability.Eth.BlockBodies.handle()
       :ok
   """
+  @impl true
   @spec handle(ExWire.Packet.packet()) :: ExWire.Packet.handle_response()
   def handle(packet = %__MODULE__{}) do
     :ok = Logger.info("[Packet] Peer sent #{Enum.count(packet.blocks)} block(s).")

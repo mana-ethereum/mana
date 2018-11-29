@@ -7,8 +7,8 @@ defmodule ExWire.DEVp2p do
   """
 
   alias ExWire.Config
-  alias ExWire.Packet.Protocol.Hello
   alias ExWire.DEVp2p.Session
+  alias ExWire.Packet.Protocol.Hello
 
   @doc """
   Convenience function to create an `ExWire.DEVp2p.Session` struct

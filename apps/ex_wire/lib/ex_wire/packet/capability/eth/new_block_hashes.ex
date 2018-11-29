@@ -31,7 +31,8 @@ defmodule ExWire.Packet.Capability.Eth.NewBlockHashes do
   Returns the relative message id offset for this message.
   This will help determine what its message ID is relative to other Packets in the same Capability.
   """
-  @spec message_id_offset() :: integer()
+  @impl true
+  @spec message_id_offset() :: 1
   def message_id_offset do
     0x01
   end
@@ -49,6 +50,7 @@ defmodule ExWire.Packet.Capability.Eth.NewBlockHashes do
       ...> |> ExWire.Packet.Capability.Eth.NewBlockHashes.serialize()
       []
   """
+  @impl true
   @spec serialize(t) :: ExRLP.t()
   def serialize(packet = %__MODULE__{}) do
     for {hash, number} <- packet.hashes, do: [hash, number]
@@ -66,6 +68,7 @@ defmodule ExWire.Packet.Capability.Eth.NewBlockHashes do
       iex> ExWire.Packet.Capability.Eth.NewBlockHashes.deserialize([])
       ** (MatchError) no match of right hand side value: []
   """
+  @impl true
   @spec deserialize(ExRLP.t()) :: t
   def deserialize(rlp) do
     # must be an array with at least one element
@@ -89,6 +92,7 @@ defmodule ExWire.Packet.Capability.Eth.NewBlockHashes do
       ...> |> ExWire.Packet.Capability.Eth.NewBlockHashes.handle()
       :ok
   """
+  @impl true
   @spec handle(ExWire.Packet.packet()) :: ExWire.Packet.handle_response()
   def handle(_packet = %__MODULE__{}) do
     # TODO: Do something

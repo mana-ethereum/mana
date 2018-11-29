@@ -73,7 +73,8 @@ defmodule ExWire.Packet.Protocol.Disconnect do
 
   @reasons_inverted for({k, v} <- @reasons, do: {v, k}) |> Enum.into(%{})
 
-  @spec message_id_offset() :: integer()
+  @impl true
+  @spec message_id_offset() :: 1
   def message_id_offset() do
     0x01
   end
@@ -87,6 +88,7 @@ defmodule ExWire.Packet.Protocol.Disconnect do
       ...> |> ExWire.Packet.Protocol.Disconnect.serialize
       [0x0b]
   """
+  @impl true
   @spec serialize(t) :: ExRLP.t()
   def serialize(packet = %__MODULE__{}) do
     [
@@ -103,6 +105,7 @@ defmodule ExWire.Packet.Protocol.Disconnect do
       iex> ExWire.Packet.Protocol.Disconnect.deserialize([<<0x0b>>])
       %ExWire.Packet.Protocol.Disconnect{reason: :timeout_on_receiving_message}
   """
+  @impl true
   @spec deserialize(ExRLP.t()) :: t
   def deserialize(rlp) do
     [
@@ -157,6 +160,7 @@ defmodule ExWire.Packet.Protocol.Disconnect do
       ...> |> ExWire.Packet.Protocol.Disconnect.handle()
       :peer_disconnect
   """
+  @impl true
   @spec handle(ExWire.Packet.packet()) :: ExWire.Packet.handle_response()
   def handle(packet = %__MODULE__{}) do
     :ok =

@@ -15,17 +15,17 @@ defmodule ExWire.Packet.Capability.Eth.NewBlock do
 
   alias Block.Header
   alias Blockchain.Block
-  alias Blockchain.Transaction
   alias ExWire.Packet.Capability.Eth.Transactions
 
   @behaviour ExWire.Packet
 
+  # TODO: fill in Transactions typespec when that packet is figured out
   @type t :: %__MODULE__{
-               header: Header.t(),
-               transactions: [Transaction.t()],
-               uncles: [Block.t()],
-               total_difficulty: integer() | nil
-             }
+          header: Header.t(),
+          transactions: [any()],
+          uncles: [Block.t()],
+          total_difficulty: integer() | nil
+        }
 
   defstruct [
     :header,
@@ -38,7 +38,8 @@ defmodule ExWire.Packet.Capability.Eth.NewBlock do
   Returns the relative message id offset for this message.
   This will help determine what its message ID is relative to other Packets in the same Capability.
   """
-  @spec message_id_offset() :: integer()
+  @impl true
+  @spec message_id_offset() :: 7
   def message_id_offset do
     0x07
   end
@@ -46,6 +47,7 @@ defmodule ExWire.Packet.Capability.Eth.NewBlock do
   @doc """
   Given a NewBlock packet, serializes for transport over Eth Wire Protocol.
   """
+  @impl true
   @spec serialize(t) :: ExRLP.t()
   def serialize(packet = %__MODULE__{}) do
     [
@@ -62,7 +64,8 @@ defmodule ExWire.Packet.Capability.Eth.NewBlock do
   Given an RLP-encoded NewBlockHashes packet from Eth Wire Protocol,
   decodes into a NewBlockHashes struct.
   """
-  @spec deserialize(ExRLP.t()) :: t
+  @impl true
+  @spec deserialize(any()) :: t
   def deserialize(rlp) do
     [
       [
@@ -75,7 +78,7 @@ defmodule ExWire.Packet.Capability.Eth.NewBlock do
 
     %__MODULE__{
       header: Header.deserialize(header),
-      transactions: Transactions.deserialize(transactions),
+      transactions: Transactions.deserialize(transactions).transactions,
       uncles: uncles |> Block.deserialize() |> Enum.to_list(),
       total_difficulty: total_difficulty |> :binary.decode_unsigned()
     }
@@ -91,6 +94,7 @@ defmodule ExWire.Packet.Capability.Eth.NewBlock do
       ...> |> ExWire.Packet.Capability.Eth.NewBlock.handle()
       :ok
   """
+  @impl true
   @spec handle(ExWire.Packet.packet()) :: ExWire.Packet.handle_response()
   def handle(_packet = %__MODULE__{}) do
     # TODO: Do something

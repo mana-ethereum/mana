@@ -29,7 +29,8 @@ defmodule ExWire.Packet.Capability.Eth.Transactions do
   Returns the relative message id offset for this message.
   This will help determine what its message ID is relative to other Packets in the same Capability.
   """
-  @spec message_id_offset() :: integer()
+  @impl true
+  @spec message_id_offset() :: 2
   def message_id_offset do
     0x02
   end
@@ -48,6 +49,7 @@ defmodule ExWire.Packet.Capability.Eth.Transactions do
       ...> |> ExWire.Packet.Capability.Eth.Transactions.serialize
       [ [1, 2, 3], [4, 5, 6] ]
   """
+  @impl true
   @spec serialize(t) :: ExRLP.t()
   def serialize(packet = %__MODULE__{}) do
     # TODO: Serialize accurately
@@ -68,6 +70,7 @@ defmodule ExWire.Packet.Capability.Eth.Transactions do
         ]
       }
   """
+  @impl true
   @spec deserialize(ExRLP.t()) :: t
   def deserialize(rlp) do
     # TODO: Deserialize from proper struct
@@ -87,6 +90,7 @@ defmodule ExWire.Packet.Capability.Eth.Transactions do
       ...> |> ExWire.Packet.Capability.Eth.Transactions.handle()
       :ok
   """
+  @impl true
   @spec handle(ExWire.Packet.packet()) :: :ok
   def handle(packet = %__MODULE__{}) do
     _ =

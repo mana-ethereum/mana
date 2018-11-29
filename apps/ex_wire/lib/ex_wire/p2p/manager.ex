@@ -191,10 +191,15 @@ defmodule ExWire.P2P.Manager do
     end
   end
 
-  @spec get_packet(Session.t(), integer(), binary()) :: {:ok, module(), Packet.packet()} | :unknown_packet_type
+  @spec get_packet(Session.t(), integer(), binary()) ::
+          {:ok, module(), Packet.packet()} | :unknown_packet_type
   defp get_packet(session, message_id, packet_data) do
-    with {:ok, packet_mod} <- PacketIdMap.get_packet_module(session.packet_id_map, message_id) do
-      {:ok, packet_mod, apply(packet_mod, :deserialize, [packet_data])}
+    case PacketIdMap.get_packet_module(session.packet_id_map, message_id) do
+      {:ok, packet_mod} ->
+        {:ok, packet_mod, apply(packet_mod, :deserialize, [packet_data])}
+
+      :unsupported_packet ->
+        :unknown_packet_type
     end
   end
 

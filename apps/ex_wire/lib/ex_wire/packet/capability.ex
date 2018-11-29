@@ -5,10 +5,10 @@ defmodule ExWire.Packet.Capability do
   See: https://github.com/ethereum/devp2p/blob/master/devp2p.md#message-contents
   """
 
-  @type t :: %__MODULE__ {
-    name: atom(),
-    version: integer()
-  }
+  @type t :: %__MODULE__{
+          name: atom(),
+          version: integer()
+        }
 
   defstruct [
     :name,
@@ -43,11 +43,13 @@ defmodule ExWire.Packet.Capability do
     |> Enum.dedup_by(fn %__MODULE__{name: name} -> name end)
   end
 
-  @spec get_packets_for_capability(t, %{atom() => module()}) :: [module()] | :unsupported_capability | :unsupported_version
+  @spec get_packets_for_capability(t, %{atom() => module()}) ::
+          [module()] | :unsupported_capability | :unsupported_version
   def get_packets_for_capability(%__MODULE__{name: name, version: version}, mana_capabilities_map) do
     case Map.get(mana_capabilities_map, name) do
       nil ->
         :unsupported_capability
+
       capability ->
         apply(capability, :get_packet_types, [version])
     end
@@ -55,13 +57,15 @@ defmodule ExWire.Packet.Capability do
 
   @spec are_we_capable?(t, %{atom() => module()}) :: boolean()
   def are_we_capable?(%__MODULE__{name: name, version: version}, mana_capabilities_map) do
-    Map.has_key?(mana_capabilities_map, name)
-      && apply(Map.get(mana_capabilities_map, name), :get_packet_types, [version]) != :unsupported_version
+    Map.has_key?(mana_capabilities_map, name) &&
+      apply(Map.get(mana_capabilities_map, name), :get_packet_types, [version]) !=
+        :unsupported_version
   end
 
-  defp sort_asc_name_desc_version(%__MODULE__{name: name1, version: version1}, %__MODULE__{name: name2, version: version2}) do
+  defp sort_asc_name_desc_version(%__MODULE__{name: name1, version: version1}, %__MODULE__{
+         name: name2,
+         version: version2
+       }) do
     name1 < name2 || (name1 == name2 && version1 > version2)
   end
-
-
 end

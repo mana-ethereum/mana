@@ -5,7 +5,6 @@ defmodule ExWire.Packet.Capability.Mana do
     Eth.get_name() => Eth
   }
 
-  @spec get_our_capabilities_map() :: %{atom() => module()}
   def get_our_capabilities_map() do
     @our_capabilities
   end

@@ -82,7 +82,8 @@ defmodule ExWire.Packet.Capability.Eth.Status do
   Returns the relative message id offset for this message.
   This will help determine what its message ID is relative to other Packets in the same Capability.
   """
-  @spec message_id_offset() :: integer()
+  @impl true
+  @spec message_id_offset() :: 0
   def message_id_offset do
     0x00
   end
@@ -96,6 +97,7 @@ defmodule ExWire.Packet.Capability.Eth.Status do
       ...> |> ExWire.Packet.Capability.Eth.Status.serialize
       [0x63, 3, 10, <<5>>, <<4>>]
   """
+  @impl true
   @spec serialize(t) :: ExRLP.t()
   def serialize(packet = %__MODULE__{}) do
     [
@@ -120,6 +122,7 @@ defmodule ExWire.Packet.Capability.Eth.Status do
       iex> ExWire.Packet.Capability.Eth.Status.deserialize([<<0x63>>, <<3>>, <<10>>, <<5>>, <<4>>, <<11>>, <<11>>])
       %ExWire.Packet.Capability.Eth.Status{protocol_version: 0x63, network_id: 3, total_difficulty: 10, best_hash: <<5>>, genesis_hash: <<4>>, manifest_hash: <<11>>, block_number: 11}
   """
+  @impl true
   @spec deserialize(ExRLP.t()) :: t
   def deserialize(rlp) do
     [protocol_version | rlp_tail] = rlp
@@ -154,6 +157,7 @@ defmodule ExWire.Packet.Capability.Eth.Status do
   We should decide whether or not we want to continue communicating with
   this peer. E.g. do our network and protocol versions match?
   """
+  @impl true
   @spec handle(ExWire.Packet.packet()) :: ExWire.Packet.handle_response()
   def handle(packet = %__MODULE__{}) do
     if packet.protocol_version == ExWire.Config.protocol_version() do

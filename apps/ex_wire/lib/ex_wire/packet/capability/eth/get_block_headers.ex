@@ -40,7 +40,8 @@ defmodule ExWire.Packet.Capability.Eth.GetBlockHeaders do
   Returns the relative message id offset for this message.
   This will help determine what its message ID is relative to other Packets in the same Capability.
   """
-  @spec message_id_offset() :: integer()
+  @impl true
+  @spec message_id_offset() :: 3
   def message_id_offset do
     0x03
   end
@@ -58,6 +59,7 @@ defmodule ExWire.Packet.Capability.Eth.GetBlockHeaders do
       ...> |> ExWire.Packet.Capability.Eth.GetBlockHeaders.serialize
       [<<5>>, 10, 2, 0]
   """
+  @impl true
   @spec serialize(t) :: ExRLP.t()
   def serialize(packet = %__MODULE__{}) do
     [
@@ -80,6 +82,7 @@ defmodule ExWire.Packet.Capability.Eth.GetBlockHeaders do
       iex> ExWire.Packet.Capability.Eth.GetBlockHeaders.deserialize([<<5>>, <<10>>, <<2>>, <<0>>])
       %ExWire.Packet.Capability.Eth.GetBlockHeaders{block_identifier: <<5>>, max_headers: 10, skip: 2, reverse: false}
   """
+  @impl true
   @spec deserialize(ExRLP.t()) :: t
   def deserialize(rlp) do
     [
@@ -113,7 +116,7 @@ defmodule ExWire.Packet.Capability.Eth.GetBlockHeaders do
            headers: []
          }}
   """
-
+  @impl true
   @spec handle(ExWire.Packet.packet()) :: ExWire.Packet.handle_response()
   def handle(packet = %__MODULE__{max_headers: max_headers})
       when max_headers > @max_headers_supported do

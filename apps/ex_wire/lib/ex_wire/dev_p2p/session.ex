@@ -17,11 +17,9 @@ defmodule ExWire.DEVp2p.Session do
           packet_id_map: PacketIdMap.t()
         }
 
-  defstruct [
-    hello_sent: nil,
-    hello_received: nil,
-    packet_id_map: PacketIdMap.default_map()
-  ]
+  defstruct hello_sent: nil,
+            hello_received: nil,
+            packet_id_map: PacketIdMap.default_map()
 
   @doc """
   Checks whether or not the session is active.
@@ -80,7 +78,8 @@ defmodule ExWire.DEVp2p.Session do
       hello.caps
       |> Capability.get_matching_capabilities(Mana.get_our_capabilities_map())
       |> PacketIdMap.new()
-    %{session| hello_received: hello, packet_id_map: packet_id_map}
+
+    %{session | hello_received: hello, packet_id_map: packet_id_map}
   end
 
   @doc """
