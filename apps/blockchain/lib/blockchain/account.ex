@@ -687,12 +687,12 @@ defmodule Blockchain.Account do
     put_account(state, address, not_persistent_account())
   end
 
-  @spec empty_keccak() :: binary()
+  @spec empty_keccak() :: <<_::256>>
   def empty_keccak do
     @empty_keccak
   end
 
-  @spec empty_trie() :: binary()
+  @spec empty_trie() :: <<_::256>>
   def empty_trie do
     @empty_trie
   end
