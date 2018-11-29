@@ -268,7 +268,7 @@ defmodule ExWire.P2P.Manager do
     :ok =
       Logger.debug(fn ->
         "[Network] [#{peer}] Sending packet #{inspect(packet_mod)} (#{
-          inspect(packet_type, base: :hex)
+          inspect(message_id, base: :hex)
         }) to #{peer.host_name} (##{conn.sent_message_count + 1})"
       end)
 
