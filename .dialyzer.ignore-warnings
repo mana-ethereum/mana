@@ -52,11 +52,6 @@ ain.Block':put_state/2. The success typing is (#{'__struct__':='Elixir.Blockchai
 tate_root':=_, _=>_}, _=>_}
 
 -------------------------------
-# blockchain/account.ex
--------------------------------
-apps/blockchain/lib/blockchain/account.ex
-
--------------------------------
 apps/blockchain/lib/mix/tasks/sync/from_file.ex
 
 -------------------------------
