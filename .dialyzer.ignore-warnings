@@ -3,11 +3,6 @@
 ------------------------------
 apps/evm/lib/evm/operation/system.ex:29: Function create2/2 has no local return
 
--------------------------------
- # blockchain/block.ex warnings
- -------------------------------
-apps/blockchain/lib/blockchain/block.ex:452: Function gen_child_block/2 has no local return
-apps/blockchain/lib/blockchain/block.ex:452: Function gen_child_block/3 has no local return
 --------------------------------
 -# AccountRepo
 --------------------------------
@@ -55,11 +50,6 @@ ain.Block':put_state/2. The success typing is (#{'__struct__':='Elixir.Blockchai
 #{'__struct__':='Elixir.Block.Header', 'state_root':=_, _=>_}, _=>_},atom() | #{'root_hash':=_, _=>_
 }) -> #{'__struct__':='Elixir.Blockchain.Block', 'header':=#{'__struct__':='Elixir.Block.Header', 's
 tate_root':=_, _=>_}, _=>_}
-
--------------------------------
-# blockchain/account.ex
--------------------------------
-apps/blockchain/lib/blockchain/account.ex
 
 -------------------------------
 apps/blockchain/lib/mix/tasks/sync/from_file.ex

@@ -47,7 +47,7 @@ defmodule Block.Header do
   * H_n = nonce
   """
   @type t :: %__MODULE__{
-          parent_hash: EVM.hash(),
+          parent_hash: EVM.hash() | nil,
           ommers_hash: EVM.trie_root(),
           beneficiary: EVM.address() | nil,
           state_root: EVM.trie_root(),
