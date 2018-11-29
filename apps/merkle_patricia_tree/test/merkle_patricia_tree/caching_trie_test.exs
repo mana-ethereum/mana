@@ -246,7 +246,8 @@ defmodule MerklePatriciaTree.CachingTrieTest do
       assert Trie.get_subtrie_key(disk_trie, caching_trie.in_memory_trie.root_hash, "elixir") ==
                nil
 
-      CachingTrie.commit!(caching_trie)
+      in_memory_trie_root_hash = caching_trie.in_memory_trie.root_hash
+      committed_trie = CachingTrie.commit!(caching_trie)
 
       assert Trie.get_subtrie_key(disk_trie, caching_trie.in_memory_trie.root_hash, "key1") ==
                "value1"
@@ -256,6 +257,9 @@ defmodule MerklePatriciaTree.CachingTrieTest do
 
       assert Trie.get_subtrie_key(disk_trie, caching_trie.in_memory_trie.root_hash, "elixir") ==
                "erlang"
+
+      assert committed_trie.trie.root_hash == in_memory_trie_root_hash
+      refute committed_trie.trie.root_hash == disk_trie.root_hash
     end
 
     test "commits raw cache" do
@@ -275,11 +279,15 @@ defmodule MerklePatriciaTree.CachingTrieTest do
       assert Trie.get_raw_key(disk_trie, "key2") == :not_found
       assert Trie.get_raw_key(disk_trie, "elixir") == :not_found
 
-      CachingTrie.commit!(caching_trie)
+      in_memory_trie_root_hash = caching_trie.in_memory_trie.root_hash
+      committed_trie = CachingTrie.commit!(caching_trie)
 
       assert Trie.get_raw_key(disk_trie, "key1") == {:ok, "value1"}
       assert Trie.get_raw_key(disk_trie, "key2") == {:ok, "value2"}
       assert Trie.get_raw_key(disk_trie, "elixir") == {:ok, "erlang"}
+
+      assert committed_trie.trie.root_hash == in_memory_trie_root_hash
+      assert committed_trie.trie.root_hash == disk_trie.root_hash
     end
   end
 
