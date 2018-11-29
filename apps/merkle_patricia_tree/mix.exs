@@ -50,7 +50,8 @@ defmodule MerklePatriciaTree.Mixfile do
     [
       {:ex_rlp, "~> 0.5.0"},
       {:exth_crypto, in_umbrella: true},
-      {:rocksdb, "~> 0.23.2"}
+      {:rocksdb, "~> 0.23.2"},
+      {:jason, "~> 1.1"}
     ]
   end
 end

@@ -62,7 +62,7 @@ defmodule MerklePatriciaTree.DB.RocksDBTest do
     end
   end
 
-  describe "batch_put!/2" do
+  describe "batch_put!/3" do
     test "puts key-value pairs to db" do
       db_name = String.to_charlist("/tmp/db#{MerklePatriciaTree.Test.random_string(20)}")
       {_db, db_ref} = RocksDB.init(db_name)
@@ -77,7 +77,7 @@ defmodule MerklePatriciaTree.DB.RocksDBTest do
         assert RocksDB.get(db_ref, key) == :not_found
       end)
 
-      assert RocksDB.batch_put!(db_ref, pairs) == :ok
+      assert RocksDB.batch_put!(db_ref, pairs, 2) == :ok
 
       Enum.each(pairs, fn {key, value} ->
         assert RocksDB.get(db_ref, key) == {:ok, value}

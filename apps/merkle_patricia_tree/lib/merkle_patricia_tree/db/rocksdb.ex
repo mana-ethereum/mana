@@ -28,7 +28,9 @@ defmodule MerklePatriciaTree.DB.RocksDB do
   Stores a key in the database.
   """
   @impl true
-  def put!(db_ref, key, value), do: :rocksdb.put(db_ref, key, value, [])
+  def put!(db_ref, key, value) do
+    :rocksdb.put(db_ref, key, value, [])
+  end
 
   @doc """
   Removes all objects with key from the database.
@@ -44,14 +46,19 @@ defmodule MerklePatriciaTree.DB.RocksDB do
   Stores key-value pairs in the database.
   """
   @impl true
-  def batch_put!(db_ref, key_value_pairs) do
-    {:ok, batch} = :rocksdb.batch()
+  def batch_put!(db_ref, key_value_pairs, batch_size) do
+    key_value_pairs
+    |> Stream.chunk_every(batch_size)
+    |> Stream.each(fn pairs ->
+      {:ok, batch} = :rocksdb.batch()
 
-    Enum.each(key_value_pairs, fn {key, value} ->
-      :ok = :rocksdb.batch_put(batch, key, value)
+      Enum.each(pairs, fn {key, value} ->
+        :ok = :rocksdb.batch_put(batch, key, value)
+      end)
+
+      :ok = :rocksdb.write_batch(db_ref, batch, [])
     end)
-
-    :ok = :rocksdb.write_batch(db_ref, batch, [])
+    |> Stream.run()
 
     :ok
   end

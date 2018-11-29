@@ -51,9 +51,14 @@ defmodule MerklePatriciaTree.DB.ETS do
   Stores key-value pairs in the database.
   """
   @impl true
-  def batch_put!(db_ref, key_value_pairs) do
-    case :ets.insert(db_ref, key_value_pairs) do
-      true -> :ok
-    end
+  def batch_put!(db_ref, key_value_pairs, batch_size) do
+    key_value_pairs
+    |> Stream.chunk_every(batch_size)
+    |> Stream.each(fn pairs ->
+      true = :ets.insert(db_ref, pairs)
+    end)
+    |> Stream.run()
+
+    :ok
   end
 end

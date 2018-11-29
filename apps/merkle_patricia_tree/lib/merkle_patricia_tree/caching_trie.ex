@@ -23,6 +23,8 @@ defmodule MerklePatriciaTree.CachingTrie do
           db_changes: db_changes
         }
 
+  @batch_size 1000
+
   def new(trie) do
     ets_db = MerklePatriciaTree.Test.random_ets_db()
     root_hash = TrieStorage.root_hash(trie)
@@ -158,17 +160,17 @@ defmodule MerklePatriciaTree.CachingTrie do
   def commit!(caching_trie) do
     trie = caching_trie.trie
 
-    trie_updates = get_all_key_value_pairs(caching_trie.in_memory_trie)
-    db_updates = Map.to_list(caching_trie.db_changes)
-    all_updates = trie_updates ++ db_updates
+    trie_updates = get_all_key_value_pairs_as_stream(caching_trie.in_memory_trie)
+    db_updates = Stream.into(caching_trie.db_changes, [])
+    all_updates = Stream.concat(trie_updates, db_updates)
 
-    TrieStorage.put_batch_raw_keys!(trie, all_updates)
+    TrieStorage.put_batch_raw_keys!(trie, all_updates, @batch_size)
 
     new(trie)
   end
 
   @impl true
-  def put_batch_raw_keys!(caching_trie, key_value_pairs) do
+  def put_batch_raw_keys!(caching_trie, key_value_pairs, _batch_size) do
     updates = Map.new(key_value_pairs)
 
     updated_db_changes = Map.merge(caching_trie.db_changes, updates)
@@ -197,11 +199,28 @@ defmodule MerklePatriciaTree.CachingTrie do
     TrieStorage.permanent_db(caching_trie.trie)
   end
 
-  defp get_all_key_value_pairs(in_memory_trie) do
+  @spec get_all_key_value_pairs_as_stream(TrieStorage.t()) :: Enumerable.t()
+  defp get_all_key_value_pairs_as_stream(in_memory_trie) do
     {_db_module, db_ref} = in_memory_trie.db
 
-    db_ref
-    |> :ets.match({:"$1", :"$2"})
-    |> Enum.map(fn [key, value] -> {key, value} end)
+    Stream.resource(
+      fn ->
+        :ets.match(db_ref, {:"$1", :"$2"}, @batch_size)
+      end,
+      fn
+        {els, continuation} ->
+          {els, continuation}
+
+        continuation ->
+          case :ets.match(continuation) do
+            {els, continuation} -> {els, continuation}
+            :"$end_of_table" -> {:halt, nil}
+          end
+      end,
+      fn nil ->
+        true = :ets.match_delete(db_ref, {:"$1", :"$2"})
+      end
+    )
+    |> Stream.map(fn [key, value] -> {key, value} end)
   end
 end
