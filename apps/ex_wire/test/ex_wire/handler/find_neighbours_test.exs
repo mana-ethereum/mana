@@ -11,7 +11,7 @@ defmodule ExWire.Handler.FindNeighboursTest do
           endpoint: %ExWire.Struct.Endpoint{
             ip: [52, 169, 14, 227],
             tcp_port: nil,
-            udp_port: 30303
+            udp_port: 30_303
           }
         }
       ])
@@ -34,7 +34,7 @@ defmodule ExWire.Handler.FindNeighboursTest do
           endpoint: %ExWire.Struct.Endpoint{
             ip: [52, 169, 14, 227],
             tcp_port: nil,
-            udp_port: 30303
+            udp_port: 30_303
           },
           node: <<1::256>>
         }

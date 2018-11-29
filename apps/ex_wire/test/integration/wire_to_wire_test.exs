@@ -5,7 +5,7 @@ defmodule WireToWireTest do
   """
   use ExUnit.Case, async: true
 
-  alias ExWire.Kademlia.Server
+  alias ExWire.Kademlia
   alias ExWire.TestHelper
 
   @moduletag integration: true
@@ -22,7 +22,7 @@ defmodule WireToWireTest do
       )
 
     {:ok, _} =
-      Server.start_link(
+      Kademlia.start_link(
         current_node: TestHelper.random_node(),
         network_client_name: server,
         name: :kademlia_wire_to_wire
