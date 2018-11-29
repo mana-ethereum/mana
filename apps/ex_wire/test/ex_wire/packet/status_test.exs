@@ -1,18 +1,18 @@
-defmodule ExWire.Packet.StatusTest do
+defmodule ExWire.Packet.Capability.Eth.StatusTest do
   use ExUnit.Case, async: true
-  doctest ExWire.Packet.Status
+  doctest ExWire.Packet.Capability.Eth.Status
 
   describe "handle/0" do
     test "peer with incompatible version" do
       result =
-        %ExWire.Packet.Status{
+        %ExWire.Packet.Capability.Eth.Status{
           protocol_version: 555,
           network_id: 3,
           total_difficulty: 10,
           best_hash: <<5>>,
           genesis_hash: <<4>>
         }
-        |> ExWire.Packet.Status.handle()
+        |> ExWire.Packet.Capability.Eth.Status.handle()
 
       assert result == {:disconnect, :useless_peer}
     end
@@ -20,18 +20,18 @@ defmodule ExWire.Packet.StatusTest do
     test "sync not running, can't load chain, return default" do
       # Test when Sync is not running -- should just parrot the packet
       result =
-        %ExWire.Packet.Status{
+        %ExWire.Packet.Capability.Eth.Status{
           protocol_version: 63,
           network_id: 30,
           total_difficulty: 10,
           best_hash: <<5>>,
           genesis_hash: <<4>>
         }
-        |> ExWire.Packet.Status.handle()
+        |> ExWire.Packet.Capability.Eth.Status.handle()
 
       assert result ==
                {:send,
-                %ExWire.Packet.Status{
+                %ExWire.Packet.Capability.Eth.Status{
                   best_hash: <<4>>,
                   block_number: nil,
                   genesis_hash: <<4>>,
@@ -50,18 +50,18 @@ defmodule ExWire.Packet.StatusTest do
       ExWire.BridgeSyncMock.set_chain(%Blockchain.Chain{genesis: %{parent_hash: genesis_hash}})
 
       result =
-        %ExWire.Packet.Status{
+        %ExWire.Packet.Capability.Eth.Status{
           protocol_version: 63,
           network_id: 3,
           total_difficulty: 10,
           best_hash: <<5>>,
           genesis_hash: <<4>>
         }
-        |> ExWire.Packet.Status.handle()
+        |> ExWire.Packet.Capability.Eth.Status.handle()
 
       assert result ==
                {:send,
-                %ExWire.Packet.Status{
+                %ExWire.Packet.Capability.Eth.Status{
                   genesis_hash: genesis_hash,
                   best_hash: best_block.block_hash,
                   network_id: 3,

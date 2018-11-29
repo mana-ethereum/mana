@@ -1,7 +1,7 @@
-defmodule ExWire.Packet.Hello do
+defmodule ExWire.Packet.Protocol.Hello do
   @moduledoc """
   This packet establishes capabilities and etc between two peer to peer
-  clents. This is generally required to be the first signed packet communicated
+  clients. This is generally required to be the first signed packet communicated
   after the handshake is complete.
 
   ```
@@ -13,22 +13,21 @@ defmodule ExWire.Packet.Hello do
   * `p2pVersion` Specifies the implemented version of the P2P protocol. Now must be 1.
   * `clientId` Specifies the client software identity, as a human-readable string (e.g. "Ethereum(++)/1.0.0").
   * `cap` Specifies a peer capability name as a length-3 ASCII string. Current supported capabilities are eth, shh.
-  * `capVersion` Specifies a peer capability version as a positive integer. Current supported versions are 34 for eth, and 1 for shh.
+  * `capVersion` Specifies a peer capability version as a positive integer.
   * `listenPort` specifies the port that the client is listening on (on the interface that the present connection traverses). If 0 it indicates the client is not listening.
   * `nodeId` is the Unique Identity of the node and specifies a 512-bit hash that identifies this node.
   ```
   """
 
   require Logger
+  alias ExWire.Packet.Capability
 
   @behaviour ExWire.Packet
-
-  @type cap :: {String.t(), integer()}
 
   @type t :: %__MODULE__{
           p2p_version: integer(),
           client_id: String.t(),
-          caps: [cap],
+          caps: [Capability.t()],
           listen_port: integer(),
           node_id: ExWire.node_id()
         }
@@ -41,13 +40,18 @@ defmodule ExWire.Packet.Hello do
     :node_id
   ]
 
+  @spec message_id_offset() :: integer()
+  def message_id_offset() do
+    0x00
+  end
+
   @doc """
   Given a Hello packet, serializes for transport over Eth Wire Protocol.
 
   ## Examples
 
-      iex> %ExWire.Packet.Hello{p2p_version: 10, client_id: "Mana/Test", caps: [{"eth", 1}, {"par", 2}], listen_port: 5555, node_id: <<5>>}
-      ...> |> ExWire.Packet.Hello.serialize
+      iex> %ExWire.Packet.Protocol.Hello{p2p_version: 10, client_id: "Mana/Test", caps: [ExWire.Packet.Capability.new({"eth", 1}), ExWire.Packet.Capability.new({"par", 2})], listen_port: 5555, node_id: <<5>>}
+      ...> |> ExWire.Packet.Protocol.Hello.serialize
       [10, "Mana/Test", [["eth", 1], ["par", 2]], 5555, <<5>>]
   """
   @spec serialize(t) :: ExRLP.t()
@@ -55,7 +59,7 @@ defmodule ExWire.Packet.Hello do
     [
       packet.p2p_version,
       packet.client_id,
-      for({cap, ver} <- packet.caps, do: [cap, ver]),
+      for(%Capability{name: cap, version: ver} <- packet.caps, do: [Atom.to_string(cap), ver]),
       packet.listen_port,
       packet.node_id
     ]
@@ -67,8 +71,8 @@ defmodule ExWire.Packet.Hello do
 
   ## Examples
 
-      iex> ExWire.Packet.Hello.deserialize([<<10>>, "Mana/Test", [["eth", <<1>>], ["par", <<2>>]], <<55>>, <<5>>])
-      %ExWire.Packet.Hello{p2p_version: 10, client_id: "Mana/Test", caps: [{"eth", 1}, {"par", 2}], listen_port: 55, node_id: <<5>>}
+      iex> ExWire.Packet.Protocol.Hello.deserialize([<<10>>, "Mana/Test", [["eth", <<1>>], ["par", <<2>>]], <<55>>, <<5>>])
+      %ExWire.Packet.Protocol.Hello{p2p_version: 10, client_id: "Mana/Test", caps: [ExWire.Packet.Capability.new({"eth", 1}), ExWire.Packet.Capability.new({"par", 2})], listen_port: 55, node_id: <<5>>}
   """
   @spec deserialize(ExRLP.t()) :: t
   def deserialize(rlp) do
@@ -83,7 +87,7 @@ defmodule ExWire.Packet.Hello do
     %__MODULE__{
       p2p_version: p2p_version |> :binary.decode_unsigned(),
       client_id: client_id,
-      caps: for([cap, ver] <- caps, do: {cap, ver |> :binary.decode_unsigned()}),
+      caps: for([cap, ver] <- caps, do: Capability.new({cap, ver |> :binary.decode_unsigned()})),
       listen_port: listen_port |> :binary.decode_unsigned(),
       node_id: node_id
     }
@@ -95,13 +99,13 @@ defmodule ExWire.Packet.Hello do
 
   ## Examples
 
-      iex> %ExWire.Packet.Hello{p2p_version: 10, client_id: "Mana/Test", caps: [["eth", 1], ["par", 2]], listen_port: 5555, node_id: <<5>>}
-      ...> |> ExWire.Packet.Hello.handle()
+      iex> %ExWire.Packet.Protocol.Hello{p2p_version: 10, client_id: "Mana/Test", caps: [["eth", 1], ["par", 2]], listen_port: 5555, node_id: <<5>>}
+      ...> |> ExWire.Packet.Protocol.Hello.handle()
       :activate
 
       # When no caps
-      iex> %ExWire.Packet.Hello{p2p_version: 10, client_id: "Mana/Test", caps: [], listen_port: 5555, node_id: <<5>>}
-      ...> |> ExWire.Packet.Hello.handle()
+      iex> %ExWire.Packet.Protocol.Hello{p2p_version: 10, client_id: "Mana/Test", caps: [], listen_port: 5555, node_id: <<5>>}
+      ...> |> ExWire.Packet.Protocol.Hello.handle()
       {:disconnect, :useless_peer}
   """
   @spec handle(ExWire.Packet.packet()) :: ExWire.Packet.handle_response()
@@ -117,6 +121,7 @@ defmodule ExWire.Packet.Hello do
       {:disconnect, :useless_peer}
     else
       # TODO: Add a bunch more checks
+      # Start a new peer connection process to manage Peer ID, Capabilities, Message IDs, etc.
       :activate
     end
   end

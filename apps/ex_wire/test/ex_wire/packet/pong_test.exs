@@ -1,4 +1,4 @@
-defmodule ExWire.Packet.PongTest do
+defmodule ExWire.Packet.Protocol.PongTest do
   use ExUnit.Case, async: true
-  doctest ExWire.Packet.Pong
+  doctest ExWire.Packet.Protocol.Pong
 end

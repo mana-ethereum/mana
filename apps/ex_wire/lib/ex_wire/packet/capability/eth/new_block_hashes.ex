@@ -1,4 +1,4 @@
-defmodule ExWire.Packet.NewBlockHashes do
+defmodule ExWire.Packet.Capability.Eth.NewBlockHashes do
   @moduledoc """
   Advertises new blocks to the network.
 
@@ -28,16 +28,25 @@ defmodule ExWire.Packet.NewBlockHashes do
   ]
 
   @doc """
+  Returns the relative message id offset for this message.
+  This will help determine what its message ID is relative to other Packets in the same Capability.
+  """
+  @spec message_id_offset() :: integer()
+  def message_id_offset do
+    0x01
+  end
+
+  @doc """
   Given a NewBlockHashes packet, serializes for transport over Eth Wire Protocol.
 
   ## Examples
 
-      iex> %ExWire.Packet.NewBlockHashes{hashes: [{<<5>>, 1}, {<<6>>, 2}]}
-      ...> |> ExWire.Packet.NewBlockHashes.serialize()
+      iex> %ExWire.Packet.Capability.Eth.NewBlockHashes{hashes: [{<<5>>, 1}, {<<6>>, 2}]}
+      ...> |> ExWire.Packet.Capability.Eth.NewBlockHashes.serialize()
       [[<<5>>, 1], [<<6>>, 2]]
 
-      iex> %ExWire.Packet.NewBlockHashes{hashes: []}
-      ...> |> ExWire.Packet.NewBlockHashes.serialize()
+      iex> %ExWire.Packet.Capability.Eth.NewBlockHashes{hashes: []}
+      ...> |> ExWire.Packet.Capability.Eth.NewBlockHashes.serialize()
       []
   """
   @spec serialize(t) :: ExRLP.t()
@@ -51,10 +60,10 @@ defmodule ExWire.Packet.NewBlockHashes do
 
   ## Examples
 
-      iex> ExWire.Packet.NewBlockHashes.deserialize([[<<5>>, 1], [<<6>>, 2]])
-      %ExWire.Packet.NewBlockHashes{hashes: [{<<5>>, 1}, {<<6>>, 2}]}
+      iex> ExWire.Packet.Capability.Eth.NewBlockHashes.deserialize([[<<5>>, 1], [<<6>>, 2]])
+      %ExWire.Packet.Capability.Eth.NewBlockHashes{hashes: [{<<5>>, 1}, {<<6>>, 2}]}
 
-      iex> ExWire.Packet.NewBlockHashes.deserialize([])
+      iex> ExWire.Packet.Capability.Eth.NewBlockHashes.deserialize([])
       ** (MatchError) no match of right hand side value: []
   """
   @spec deserialize(ExRLP.t()) :: t
@@ -76,8 +85,8 @@ defmodule ExWire.Packet.NewBlockHashes do
 
   ## Examples
 
-      iex> %ExWire.Packet.NewBlockHashes{hashes: [{<<5>>, 1}, {<<6>>, 2}]}
-      ...> |> ExWire.Packet.NewBlockHashes.handle()
+      iex> %ExWire.Packet.Capability.Eth.NewBlockHashes{hashes: [{<<5>>, 1}, {<<6>>, 2}]}
+      ...> |> ExWire.Packet.Capability.Eth.NewBlockHashes.handle()
       :ok
   """
   @spec handle(ExWire.Packet.packet()) :: ExWire.Packet.handle_response()

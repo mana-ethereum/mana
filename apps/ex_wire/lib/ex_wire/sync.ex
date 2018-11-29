@@ -21,7 +21,7 @@ defmodule ExWire.Sync do
   alias Blockchain.Blocktree.State
   alias Blockchain.Chain
   alias ExWire.Config
-  alias ExWire.Packet.{BlockBodies, BlockHeaders, GetBlockBodies, GetBlockHeaders}
+  alias ExWire.Packet.Capability.Eth.{BlockBodies, BlockHeaders, GetBlockBodies, GetBlockHeaders}
   alias ExWire.PeerSupervisor
   alias ExWire.Struct.BlockQueue
   alias ExWire.Struct.Peer

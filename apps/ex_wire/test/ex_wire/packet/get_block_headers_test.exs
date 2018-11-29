@@ -1,4 +1,4 @@
-defmodule ExWire.Packet.GetBlockHeadersTest do
+defmodule ExWire.Packet.Capability.Eth.GetBlockHeadersTest do
   use ExUnit.Case, async: true
-  doctest ExWire.Packet.GetBlockHeaders
+  doctest ExWire.Packet.Capability.Eth.GetBlockHeaders
 end

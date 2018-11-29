@@ -1,4 +1,4 @@
-defmodule ExWire.Packet.NewBlockHashesTest do
+defmodule ExWire.Packet.Capability.Eth.NewBlockHashesTest do
   use ExUnit.Case, async: true
-  doctest ExWire.Packet.NewBlockHashes
+  doctest ExWire.Packet.Capability.Eth.NewBlockHashes
 end

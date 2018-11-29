@@ -1,4 +1,4 @@
-defmodule ExWire.Packet.HelloTest do
+defmodule ExWire.Packet.Protocol.HelloTest do
   use ExUnit.Case, async: true
-  doctest ExWire.Packet.Hello
+  doctest ExWire.Packet.Protocol.Hello
 end

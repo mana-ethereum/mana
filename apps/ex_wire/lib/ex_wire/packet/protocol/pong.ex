@@ -1,4 +1,4 @@
-defmodule ExWire.Packet.Pong do
+defmodule ExWire.Packet.Protocol.Pong do
   @moduledoc """
   Pong is the response to a Ping message.
 
@@ -15,13 +15,18 @@ defmodule ExWire.Packet.Pong do
 
   defstruct []
 
+  @spec message_id_offset() :: integer()
+  def message_id_offset() do
+    0x03
+  end
+
   @doc """
   Given a Pong packet, serializes for transport over Eth Wire Protocol.
 
   ## Examples
 
-      iex> %ExWire.Packet.Pong{}
-      ...> |> ExWire.Packet.Pong.serialize
+      iex> %ExWire.Packet.Protocol.Pong{}
+      ...> |> ExWire.Packet.Protocol.Pong.serialize
       []
   """
   @spec serialize(t) :: ExRLP.t()
@@ -35,8 +40,8 @@ defmodule ExWire.Packet.Pong do
 
   ## Examples
 
-      iex> ExWire.Packet.Pong.deserialize([])
-      %ExWire.Packet.Pong{}
+      iex> ExWire.Packet.Protocol.Pong.deserialize([])
+      %ExWire.Packet.Protocol.Pong{}
   """
   @spec deserialize(ExRLP.t()) :: t
   def deserialize(rlp) do
@@ -51,7 +56,7 @@ defmodule ExWire.Packet.Pong do
 
   ## Examples
 
-      iex> ExWire.Packet.Pong.handle(%ExWire.Packet.Pong{})
+      iex> ExWire.Packet.Protocol.Pong.handle(%ExWire.Packet.Protocol.Pong{})
       :ok
   """
   @spec handle(ExWire.Packet.packet()) :: ExWire.Packet.handle_response()
