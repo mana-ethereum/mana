@@ -2,16 +2,17 @@ defmodule ExWire.TCP.InboundConnectionsSupervisor do
   @moduledoc """
   Dynamic supervisor in charge of handling inbound tcp connections.
 
-  TODO: Why doesn't this just use peer supervisor?
   """
 
   use DynamicSupervisor
+  alias ExWire.P2P.Server
 
   @doc """
   Starts a new supervised process to handle an inbound tcp connection.
   """
-  def new_connection_handler(socket) do
-    DynamicSupervisor.start_child(__MODULE__, {ExWire.P2P.Server, {:inbound, socket}})
+  @spec new_connection_handler(:gen_tcp.socket(), module()) :: DynamicSupervisor.on_start_child()
+  def new_connection_handler(socket, connection_observer) do
+    DynamicSupervisor.start_child(__MODULE__, {Server, {:inbound, socket, connection_observer}})
   end
 
   def start_link(args) do

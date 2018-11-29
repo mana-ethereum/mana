@@ -7,22 +7,24 @@ defmodule ExWire.TCPListeningSupervisor do
   use Supervisor
 
   require Logger
-
   alias ExWire.Config
+  alias ExWire.TCP.InboundConnectionsSupervisor
+  alias ExWire.TCP.Listener
 
-  def start_link(_) do
-    Supervisor.start_link(__MODULE__, [], name: __MODULE__)
+  @spec start_link(connection_observer: module()) :: Supervisor.on_start()
+  def start_link(param = [connection_observer: _connection_observer]) do
+    Supervisor.start_link(__MODULE__, param, name: __MODULE__)
   end
 
   @impl true
-  def init(_) do
+  def init(connection_observer: connection_observer) do
     :ok = Logger.info(fn -> "Public node URL: #{Config.public_node_url()}" end)
 
     port = ExWire.Config.listen_port()
 
     children = [
-      {ExWire.TCP.InboundConnectionsSupervisor, []},
-      {ExWire.TCP.Listener, [port: port, name: ExWire.TCP.Listener]}
+      {InboundConnectionsSupervisor, []},
+      {Listener, [port: port, name: Listener, connection_observer: connection_observer]}
     ]
 
     Supervisor.init(children, strategy: :one_for_one)

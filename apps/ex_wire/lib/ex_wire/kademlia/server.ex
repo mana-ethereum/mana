@@ -7,10 +7,11 @@ defmodule ExWire.Kademlia.Server do
   alias ExWire.Kademlia.{Discovery, Node, RoutingTable}
 
   @type state :: %{
-          routing_table: RoutingTable.t(),
-          ignore_pongs: boolean()
+          routing_table: RoutingTable.t() | nil,
+          ignore_pongs: boolean() | nil,
+          connection_observer: module() | nil
         }
-
+  defstruct [:routing_table, :ignore_pongs, :connection_observer]
   @max_discovery_rounds 7
 
   # 5s
@@ -29,18 +30,23 @@ defmodule ExWire.Kademlia.Server do
     network_client_name = Keyword.fetch!(params, :network_client_name)
     current_node = Keyword.fetch!(params, :current_node)
     nodes = Keyword.get(params, :nodes, [])
+    connection_observer = Keyword.get(params, :connection_observer)
 
-    GenServer.start_link(__MODULE__, {current_node, network_client_name, nodes}, name: name)
+    GenServer.start_link(
+      __MODULE__,
+      {current_node, network_client_name, nodes, connection_observer},
+      name: name
+    )
   end
 
   @impl true
-  def init({current_node = %Node{}, network_client_name, nodes}) do
+  def init({current_node = %Node{}, network_client_name, nodes, connection_observer}) do
     routing_table = RoutingTable.new(current_node, network_client_name)
 
     _ = schedule_discovery_round(0, nodes)
     schedule_pongs_cleanup()
 
-    {:ok, %{routing_table: routing_table}}
+    {:ok, %__MODULE__{routing_table: routing_table, connection_observer: connection_observer}}
   end
 
   @impl true
@@ -101,12 +107,29 @@ defmodule ExWire.Kademlia.Server do
     {:reply, neighbours, state}
   end
 
+  def handle_call(
+        :get_peers,
+        _from,
+        state
+      ) do
+    round = state.routing_table.discovery_round
+
+    if round > 0 do
+      {:reply, RoutingTable.discovery_nodes(state.routing_table), state}
+    else
+      {:reply, [], state}
+    end
+  end
+
   @impl true
-  def handle_info({:discovery_round, nodes}, state = %{routing_table: routing_table}) do
+  def handle_info(
+        {:discovery_round, nodes},
+        state = %{routing_table: routing_table, connection_observer: connection_observer}
+      ) do
     updated_table = Discovery.start(routing_table, nodes)
 
     _ = schedule_discovery_round(updated_table.discovery_round)
-
+    :ok = connection_observer.notify(:discovery_round)
     {:noreply, %{state | routing_table: updated_table}}
   end
 

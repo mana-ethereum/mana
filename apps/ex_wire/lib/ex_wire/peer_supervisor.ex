@@ -11,6 +11,7 @@ defmodule ExWire.PeerSupervisor do
   alias ExWire.P2P.Server
   alias ExWire.Packet
   alias ExWire.Struct.Peer
+  alias ExWire.Sync
 
   @type node_selector :: :all | :random | :last
 
@@ -18,9 +19,10 @@ defmodule ExWire.PeerSupervisor do
 
   @max_peers 10
 
-  @spec start_link(list(String.t())) :: Supervisor.on_start()
-  def start_link(nodes) do
-    DynamicSupervisor.start_link(__MODULE__, nodes, name: @name)
+  @spec start_link(start_nodes: list(String.t()), connection_observer: module()) ::
+          Supervisor.on_start()
+  def start_link([nodes, connection_observer]) do
+    DynamicSupervisor.start_link(__MODULE__, [nodes, connection_observer], name: @name)
   end
 
   @doc """
@@ -29,8 +31,8 @@ defmodule ExWire.PeerSupervisor do
   This function should be called when we want connect to a new peer, this may
   come from start-up or via discovery (e.g. a find neighbors response).
   """
-  @spec new_peer(Peer.t()) :: any()
-  def new_peer(peer) do
+  @spec new_peer(Peer.t(), module()) :: any()
+  def new_peer(peer, connection_observer) do
     peer_count = connected_peer_count()
 
     if peer_count < @max_peers do
@@ -39,7 +41,7 @@ defmodule ExWire.PeerSupervisor do
           "[PeerSup] Connecting to peer #{peer} (#{peer_count} of #{@max_peers} peers)"
         end)
 
-      spec = {Server, {:outbound, peer, [{:server, ExWire.Sync}]}}
+      spec = {Server, {:outbound, peer, [server: Sync], connection_observer}}
 
       {:ok, _pid} = DynamicSupervisor.start_child(@name, spec)
     else
@@ -98,16 +100,13 @@ defmodule ExWire.PeerSupervisor do
   defp do_find_children(:last) do
     @name
     |> DynamicSupervisor.which_children()
-    |> List.last()
-    |> List.wrap()
+    |> generate(:last)
   end
 
   defp do_find_children(:random) do
     @name
     |> DynamicSupervisor.which_children()
-    |> Enum.shuffle()
-    |> Enum.take(1)
-    |> List.wrap()
+    |> generate(:random)
   end
 
   @spec connected_peer_count() :: non_neg_integer()
@@ -118,16 +117,20 @@ defmodule ExWire.PeerSupervisor do
   end
 
   @impl true
-  def init(peer_enode_urls) do
+  def init(start_nodes: peer_enode_urls, connection_observer: connection_observer) do
     _ =
       Task.start_link(fn ->
         for peer_enode_url <- peer_enode_urls do
-          {:ok, peer} = ExWire.Struct.Peer.from_uri(peer_enode_url)
+          {:ok, peer} = Peer.from_uri(peer_enode_url)
 
-          new_peer(peer)
+          new_peer(peer, connection_observer)
         end
       end)
 
     {:ok, _} = DynamicSupervisor.init(strategy: :one_for_one)
   end
+
+  defp generate([], _), do: []
+  defp generate(children, :random), do: [Enum.random(children)]
+  defp generate(children, :last), do: [List.last(children)]
 end
