@@ -156,7 +156,7 @@ defmodule MerklePatriciaTree.CachingTrie do
 
   @impl true
   def commit!(caching_trie) do
-    trie = caching_trie.trie
+    trie = %{caching_trie.trie | root_hash: caching_trie.in_memory_trie.root_hash}
 
     trie_updates = get_all_key_value_pairs(caching_trie.in_memory_trie)
     db_updates = Map.to_list(caching_trie.db_changes)
