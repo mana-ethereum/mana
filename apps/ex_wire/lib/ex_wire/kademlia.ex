@@ -63,9 +63,4 @@ defmodule ExWire.Kademlia do
   def handle_neighbours(server \\ Server.default_process_name(), neighbours) do
     GenServer.cast(server, {:handle_neighbours, neighbours})
   end
-
-  # @spec process_name(Keyword.t()) :: atom()
-  # defp process_name(opts) do
-  #   opts[:process_name]
-  # end
 end

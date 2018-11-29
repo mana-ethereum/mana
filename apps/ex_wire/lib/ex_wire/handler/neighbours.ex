@@ -32,11 +32,11 @@ defmodule ExWire.Handler.Neighbours do
       ...> })
       :no_response
   """
-  @spec handle(Handler.Params.t(), Keyword.t()) :: Handler.handler_response()
-  def handle(params, options \\ []) do
+  @spec handle(Handler.Params.t()) :: Handler.handler_response()
+  def handle(params) do
     neighbours = Neighbours.decode(params.data)
 
-    Kademlia.handle_neighbours(neighbours, process_name: options[:kademlia_process_name])
+    Kademlia.handle_neighbours(neighbours)
 
     :no_response
   end

@@ -11,12 +11,13 @@ defmodule ExWire.Handler.FindNeighboursTest do
           endpoint: %ExWire.Struct.Endpoint{
             ip: [52, 169, 14, 227],
             tcp_port: nil,
-            udp_port: 30303
+            udp_port: 30_303
           }
         }
       ])
 
     ExWire.Handler.FindNeighbours.handle(
+      kademlia_process,
       %ExWire.Handler.Params{
         remote_host: %ExWire.Struct.Endpoint{ip: [1, 2, 3, 4], udp_port: 55},
         signature: 2,
@@ -24,8 +25,7 @@ defmodule ExWire.Handler.FindNeighboursTest do
         hash: <<5>>,
         data: [<<1>>, 2] |> ExRLP.encode(),
         timestamp: 7
-      },
-      kademlia_process_name: kademlia_process
+      }
     )
 
     %ExWire.Message.Neighbours{
@@ -34,7 +34,7 @@ defmodule ExWire.Handler.FindNeighboursTest do
           endpoint: %ExWire.Struct.Endpoint{
             ip: [52, 169, 14, 227],
             tcp_port: nil,
-            udp_port: 30303
+            udp_port: 30_303
           },
           node: <<1::256>>
         }

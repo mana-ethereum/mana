@@ -7,12 +7,13 @@ defmodule ExWire.Handler.FindNeighbours do
   alias ExWire.{Handler, Kademlia}
   alias ExWire.Handler.Params
   alias ExWire.Kademlia.Node
+  alias ExWire.Kademlia.Server
   alias ExWire.Message.{FindNeighbours, Neighbours}
   alias ExWire.Struct.Neighbour
 
-  @spec handle(Params.t(), Keyword.t()) :: Handler.handler_response()
+  @spec handle(GenServer.server(), Params.t()) :: Handler.handler_response()
   def handle(server \\ Server.default_process_name(), params) do
-    neighbours = fetch_neighbours(params, options)
+    neighbours = fetch_neighbours(server, params)
 
     %Neighbours{
       nodes: neighbours,
@@ -23,12 +24,11 @@ defmodule ExWire.Handler.FindNeighbours do
   @doc """
   Gets the list of neighbors from the Kademlina running gen server.
   """
-  @spec fetch_neighbours(Params.t(), Keyword.t()) :: [Neighbour.t()]
-  def fetch_neighbours(params, options) do
-    params.data
-    |> FindNeighbours.decode()
-    |> Kademlia.neighbours(params.remote_host, process_name: options[:kademlia_process_name])
-    |> nodes_to_neighbours
+  @spec fetch_neighbours(GenServer.server(), Params.t()) :: [Neighbour.t()]
+  def fetch_neighbours(server \\ Server.default_process_name(), params) do
+    neighbours = FindNeighbours.decode(params.data)
+
+    nodes_to_neighbours(Kademlia.neighbours(server, neighbours, params.remote_host))
   end
 
   @spec nodes_to_neighbours([Node.t()]) :: [Neighbour.t()]

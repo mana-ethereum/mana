@@ -104,7 +104,7 @@ defmodule ExWire.Network do
       timestamp: timestamp
     }
 
-    case Handler.dispatch(params, options) do
+    case Handler.dispatch(params) do
       :not_implemented ->
         :no_action
 

@@ -11,8 +11,6 @@ defmodule ExWire.Kademlia.Server do
           ignore_pongs: boolean()
         }
 
-  @default_process_name __MODULE__
-
   @max_discovery_rounds 7
 
   # 5s
@@ -21,7 +19,8 @@ defmodule ExWire.Kademlia.Server do
   # 10s
   @pong_cleanup_period 10_000
 
-  @spec default_process_name() :: KademliaState
+  @default_process_name __MODULE__
+  @spec default_process_name() :: unquote(@default_process_name)
   def default_process_name, do: @default_process_name
 
   @spec start_link(Keyword.t()) :: GenServer.on_start()

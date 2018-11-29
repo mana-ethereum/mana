@@ -79,8 +79,8 @@ defmodule ExWire.Handler do
 
       # TODO: Add a `no_response` test case
   """
-  @spec dispatch(Params.t(), Keyword.t()) :: handler_response()
-  def dispatch(params, options \\ []) do
+  @spec dispatch(Params.t()) :: handler_response()
+  def dispatch(params) do
     case @handlers[params.type] do
       nil ->
         :ok = Logger.warn("Message code `#{inspect(params.type, base: :hex)}` not implemented")
@@ -88,7 +88,7 @@ defmodule ExWire.Handler do
 
       mod when is_atom(mod) ->
         Exth.trace(fn -> "Handling #{mod} message from #{inspect(params.remote_host.ip)}" end)
-        apply(mod, :handle, [params, options])
+        apply(mod, :handle, [params])
     end
   end
 end
