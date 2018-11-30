@@ -1,4 +1,4 @@
-defmodule ExWire.Packet.GetBlockHeaders do
+defmodule ExWire.Packet.Capability.Eth.GetBlockHeaders do
   @moduledoc """
   Requests block headers starting from a given hash.
 
@@ -14,7 +14,7 @@ defmodule ExWire.Packet.GetBlockHeaders do
   alias Blockchain.Block
   alias ExWire.Bridge.Sync
   alias ExWire.Packet
-  alias ExWire.Packet.BlockHeaders
+  alias ExWire.Packet.Capability.Eth.BlockHeaders
   require Logger
 
   @behaviour ExWire.Packet
@@ -37,18 +37,29 @@ defmodule ExWire.Packet.GetBlockHeaders do
   ]
 
   @doc """
+  Returns the relative message id offset for this message.
+  This will help determine what its message ID is relative to other Packets in the same Capability.
+  """
+  @impl true
+  @spec message_id_offset() :: 3
+  def message_id_offset do
+    0x03
+  end
+
+  @doc """
   Given a GetBlockHeaders packet, serializes for transport over Eth Wire Protocol.
 
   ## Examples
 
-      iex> %ExWire.Packet.GetBlockHeaders{block_identifier: 5, max_headers: 10, skip: 2, reverse: true}
-      ...> |> ExWire.Packet.GetBlockHeaders.serialize
+      iex> %ExWire.Packet.Capability.Eth.GetBlockHeaders{block_identifier: 5, max_headers: 10, skip: 2, reverse: true}
+      ...> |> ExWire.Packet.Capability.Eth.GetBlockHeaders.serialize
       [5, 10, 2, 1]
 
-      iex> %ExWire.Packet.GetBlockHeaders{block_identifier: <<5>>, max_headers: 10, skip: 2, reverse: false}
-      ...> |> ExWire.Packet.GetBlockHeaders.serialize
+      iex> %ExWire.Packet.Capability.Eth.GetBlockHeaders{block_identifier: <<5>>, max_headers: 10, skip: 2, reverse: false}
+      ...> |> ExWire.Packet.Capability.Eth.GetBlockHeaders.serialize
       [<<5>>, 10, 2, 0]
   """
+  @impl true
   @spec serialize(t) :: ExRLP.t()
   def serialize(packet = %__MODULE__{}) do
     [
@@ -65,12 +76,13 @@ defmodule ExWire.Packet.GetBlockHeaders do
 
   ## Examples
 
-      iex> ExWire.Packet.GetBlockHeaders.deserialize([5, <<10>>, <<2>>, <<1>>])
-      %ExWire.Packet.GetBlockHeaders{block_identifier: 5, max_headers: 10, skip: 2, reverse: true}
+      iex> ExWire.Packet.Capability.Eth.GetBlockHeaders.deserialize([5, <<10>>, <<2>>, <<1>>])
+      %ExWire.Packet.Capability.Eth.GetBlockHeaders{block_identifier: 5, max_headers: 10, skip: 2, reverse: true}
 
-      iex> ExWire.Packet.GetBlockHeaders.deserialize([<<5>>, <<10>>, <<2>>, <<0>>])
-      %ExWire.Packet.GetBlockHeaders{block_identifier: <<5>>, max_headers: 10, skip: 2, reverse: false}
+      iex> ExWire.Packet.Capability.Eth.GetBlockHeaders.deserialize([<<5>>, <<10>>, <<2>>, <<0>>])
+      %ExWire.Packet.Capability.Eth.GetBlockHeaders{block_identifier: <<5>>, max_headers: 10, skip: 2, reverse: false}
   """
+  @impl true
   @spec deserialize(ExRLP.t()) :: t
   def deserialize(rlp) do
     [
@@ -97,14 +109,14 @@ defmodule ExWire.Packet.GetBlockHeaders do
 
   ## Examples
 
-      iex> %ExWire.Packet.GetBlockHeaders{block_identifier: 5, max_headers: 10, skip: 2, reverse: true}
-      ...> |> ExWire.Packet.GetBlockHeaders.handle()
+      iex> %ExWire.Packet.Capability.Eth.GetBlockHeaders{block_identifier: 5, max_headers: 10, skip: 2, reverse: true}
+      ...> |> ExWire.Packet.Capability.Eth.GetBlockHeaders.handle()
       {:send,
-         %ExWire.Packet.BlockHeaders{
+         %ExWire.Packet.Capability.Eth.BlockHeaders{
            headers: []
          }}
   """
-
+  @impl true
   @spec handle(ExWire.Packet.packet()) :: ExWire.Packet.handle_response()
   def handle(packet = %__MODULE__{max_headers: max_headers})
       when max_headers > @max_headers_supported do

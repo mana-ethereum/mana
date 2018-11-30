@@ -1,4 +1,4 @@
-defmodule ExWire.Packet.BlockBodies do
+defmodule ExWire.Packet.Capability.Eth.BlockBodies do
   @moduledoc """
   Eth Wire Packet for getting block bodies from a peer.
 
@@ -35,17 +35,27 @@ defmodule ExWire.Packet.BlockBodies do
   end
 
   @doc """
+  Returns the relative message id offset for this message.
+  This will help determine what its message ID is relative to other Packets in the same Capability.
+  """
+  @impl true
+  @spec message_id_offset() :: 6
+  def message_id_offset do
+    0x06
+  end
+
+  @doc """
   Given a BlockBodies packet, serializes for transport over Eth Wire Protocol.
 
   ## Examples
 
-      iex> %ExWire.Packet.BlockBodies{
+      iex> %ExWire.Packet.Capability.Eth.BlockBodies{
       ...>   blocks: [
       ...>     %ExWire.Struct.Block{transactions_rlp: [[<<5>>, <<6>>, <<7>>, <<1::160>>, <<8>>, "hi", <<27>>, <<9>>, <<10>>]], ommers_rlp: [[<<1::256>>, <<2::256>>, <<3::160>>, <<4::256>>, <<5::256>>, <<6::256>>, <<>>, <<5>>, <<1>>, <<5>>, <<3>>, <<6>>, "Hi mom", <<7::256>>, <<8::64>>]]},
       ...>     %ExWire.Struct.Block{transactions_rlp: [[<<6>>, <<6>>, <<7>>, <<1::160>>, <<8>>, "hi", <<27>>, <<9>>, <<10>>]], ommers_rlp: [[<<1::256>>, <<2::256>>, <<3::160>>, <<4::256>>, <<5::256>>, <<6::256>>, <<>>, <<5>>, <<1>>, <<5>>, <<3>>, <<6>>, "Hi mom", <<7::256>>, <<8::64>>]]}
       ...>   ]
       ...> }
-      ...> |> ExWire.Packet.BlockBodies.serialize()
+      ...> |> ExWire.Packet.Capability.Eth.BlockBodies.serialize()
       [
         [
           [[<<5>>, <<6>>, <<7>>, <<1::160>>, <<8>>, "hi", <<27>>, <<9>>, <<10>>]],
@@ -57,6 +67,7 @@ defmodule ExWire.Packet.BlockBodies do
         ]
       ]
   """
+  @impl true
   @spec serialize(t) :: ExRLP.t()
   def serialize(packet = %__MODULE__{}) do
     for block <- packet.blocks, do: Block.serialize(block)
@@ -68,8 +79,8 @@ defmodule ExWire.Packet.BlockBodies do
 
   ## Examples
 
-      iex> ExWire.Packet.BlockBodies.deserialize([ [[[<<5>>, <<6>>, <<7>>, <<1::160>>, <<8>>, "hi", <<27>>, <<9>>, <<10>>]], [[<<1::256>>, <<2::256>>, <<3::160>>, <<4::256>>, <<5::256>>, <<6::256>>, <<>>, <<5>>, <<1>>, <<5>>, <<3>>, <<6>>, "Hi mom", <<7::256>>, <<8::64>>]]], [[[<<6>>, <<6>>, <<7>>, <<1::160>>, <<8>>, "hi", <<27>>, <<9>>, <<10>>]], [[<<1::256>>, <<2::256>>, <<3::160>>, <<4::256>>, <<5::256>>, <<6::256>>, <<>>, <<5>>, <<1>>, <<5>>, <<3>>, <<6>>, "Hi mom", <<7::256>>, <<8::64>>]]] ])
-      %ExWire.Packet.BlockBodies{
+      iex> ExWire.Packet.Capability.Eth.BlockBodies.deserialize([ [[[<<5>>, <<6>>, <<7>>, <<1::160>>, <<8>>, "hi", <<27>>, <<9>>, <<10>>]], [[<<1::256>>, <<2::256>>, <<3::160>>, <<4::256>>, <<5::256>>, <<6::256>>, <<>>, <<5>>, <<1>>, <<5>>, <<3>>, <<6>>, "Hi mom", <<7::256>>, <<8::64>>]]], [[[<<6>>, <<6>>, <<7>>, <<1::160>>, <<8>>, "hi", <<27>>, <<9>>, <<10>>]], [[<<1::256>>, <<2::256>>, <<3::160>>, <<4::256>>, <<5::256>>, <<6::256>>, <<>>, <<5>>, <<1>>, <<5>>, <<3>>, <<6>>, "Hi mom", <<7::256>>, <<8::64>>]]] ])
+      %ExWire.Packet.Capability.Eth.BlockBodies{
         blocks: [
           %ExWire.Struct.Block{
             transactions_rlp: [[<<5>>, <<6>>, <<7>>, <<1::160>>, <<8>>, "hi", <<27>>, <<9>>, <<10>>]],
@@ -86,6 +97,7 @@ defmodule ExWire.Packet.BlockBodies do
         ]
       }
   """
+  @impl true
   @spec deserialize(ExRLP.t()) :: t
   def deserialize(rlp) do
     blocks = for block <- rlp, do: Block.deserialize(block)
@@ -101,10 +113,11 @@ defmodule ExWire.Packet.BlockBodies do
 
   ## Examples
 
-      iex> %ExWire.Packet.BlockBodies{blocks: []}
-      ...> |> ExWire.Packet.BlockBodies.handle()
+      iex> %ExWire.Packet.Capability.Eth.BlockBodies{blocks: []}
+      ...> |> ExWire.Packet.Capability.Eth.BlockBodies.handle()
       :ok
   """
+  @impl true
   @spec handle(ExWire.Packet.packet()) :: ExWire.Packet.handle_response()
   def handle(packet = %__MODULE__{}) do
     :ok = Logger.info("[Packet] Peer sent #{Enum.count(packet.blocks)} block(s).")

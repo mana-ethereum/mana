@@ -1,4 +1,4 @@
-defmodule ExWire.Packet.GetBlockBodies do
+defmodule ExWire.Packet.Capability.Eth.GetBlockBodies do
   @moduledoc """
   Request the bodies for a set of blocks by hash.
 
@@ -14,7 +14,7 @@ defmodule ExWire.Packet.GetBlockBodies do
 
   alias Blockchain.Block, as: BlockchainBlock
   alias ExWire.Bridge.Sync
-  alias ExWire.Packet.BlockBodies
+  alias ExWire.Packet.Capability.Eth.BlockBodies
   alias ExWire.Struct.Block
   require Logger
 
@@ -27,14 +27,25 @@ defmodule ExWire.Packet.GetBlockBodies do
   defstruct hashes: []
 
   @doc """
+  Returns the relative message id offset for this message.
+  This will help determine what its message ID is relative to other Packets in the same Capability.
+  """
+  @impl true
+  @spec message_id_offset() :: 5
+  def message_id_offset do
+    0x05
+  end
+
+  @doc """
   Given a GetBlockBodies packet, serializes for transport over Eth Wire Protocol.
 
   ## Examples
 
-      iex> %ExWire.Packet.GetBlockBodies{hashes: [<<5>>, <<6>>]}
-      ...> |> ExWire.Packet.GetBlockBodies.serialize
+      iex> %ExWire.Packet.Capability.Eth.GetBlockBodies{hashes: [<<5>>, <<6>>]}
+      ...> |> ExWire.Packet.Capability.Eth.GetBlockBodies.serialize
       [<<5>>, <<6>>]
   """
+  @impl true
   @spec serialize(t) :: ExRLP.t()
   def serialize(packet = %__MODULE__{}) do
     packet.hashes
@@ -46,9 +57,10 @@ defmodule ExWire.Packet.GetBlockBodies do
 
   ## Examples
 
-      iex> ExWire.Packet.GetBlockBodies.deserialize([<<5>>, <<6>>])
-      %ExWire.Packet.GetBlockBodies{hashes: [<<5>>, <<6>>]}
+      iex> ExWire.Packet.Capability.Eth.GetBlockBodies.deserialize([<<5>>, <<6>>])
+      %ExWire.Packet.Capability.Eth.GetBlockBodies{hashes: [<<5>>, <<6>>]}
   """
+  @impl true
   @spec deserialize(ExRLP.t()) :: t
   def deserialize(rlp) do
     # verify it's a list
@@ -63,6 +75,7 @@ defmodule ExWire.Packet.GetBlockBodies do
   Handles a GetBlockBodies message. We should send the block bodies
   to the peer if we have them. For now, we'll do nothing.
   """
+  @impl true
   @spec handle(ExWire.Packet.packet()) :: ExWire.Packet.handle_response()
   def handle(packet = %__MODULE__{}) do
     bodies =

@@ -147,13 +147,13 @@ defmodule ExWire.RemoteConnectionTest do
   def receive_status(client_pid) do
     receive do
       {:incoming_packet,
-       _packet = %Packet.Status{
+       _packet = %Packet.Capability.Eth.Status{
          best_hash: _best_hash,
          total_difficulty: _total_difficulty,
          genesis_hash: genesis_hash
        }} ->
         # Request block headers
-        P2P.send_packet(client_pid, %ExWire.Packet.GetBlockHeaders{
+        P2P.send_packet(client_pid, %ExWire.Packet.Capability.Eth.GetBlockHeaders{
           block_identifier: genesis_hash,
           max_headers: 1,
           skip: 0,
@@ -174,8 +174,8 @@ defmodule ExWire.RemoteConnectionTest do
 
   def receive_block_headers(client_pid) do
     receive do
-      {:incoming_packet, _packet = %Packet.BlockHeaders{headers: [header]}} ->
-        P2P.send_packet(client_pid, %ExWire.Packet.GetBlockBodies{
+      {:incoming_packet, _packet = %Packet.Capability.Eth.BlockHeaders{headers: [header]}} ->
+        P2P.send_packet(client_pid, %ExWire.Packet.Capability.Eth.GetBlockBodies{
           hashes: [header |> Block.Header.hash()]
         })
 
@@ -193,7 +193,7 @@ defmodule ExWire.RemoteConnectionTest do
 
   def receive_block_bodies(client_pid) do
     receive do
-      {:incoming_packet, _packet = %Packet.BlockBodies{blocks: [block]}} ->
+      {:incoming_packet, _packet = %Packet.Capability.Eth.BlockBodies{blocks: [block]}} ->
         # This is a genesis block
         assert block.transactions == []
         assert block.ommers == []

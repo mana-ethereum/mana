@@ -6,6 +6,7 @@ defmodule ExWire.DEVp2pTest do
   import ExWire.DEVp2p
 
   alias ExWire.Packet
+  alias ExWire.Packet.Capability
 
   describe "handles protocol handshake" do
     test "activates session if Hello is sent and received" do
@@ -81,7 +82,7 @@ defmodule ExWire.DEVp2pTest do
 
   describe "handle_message/2" do
     test "returns error if message is not Hello" do
-      ping = %Packet.Ping{}
+      ping = %Packet.Protocol.Ping{}
       session = init_session()
 
       assert {:error, :handshake_incomplete} = handle_message(session, ping)
@@ -100,7 +101,7 @@ defmodule ExWire.DEVp2pTest do
   end
 
   def set_older_capability(packet) do
-    %Packet.Hello{packet | caps: [{"eth", 61}]}
+    %Packet.Protocol.Hello{packet | caps: [Capability.new({"eth", 61})]}
   end
 
   def active_session do

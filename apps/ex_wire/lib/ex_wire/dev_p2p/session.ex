@@ -6,16 +6,20 @@ defmodule ExWire.DEVp2p.Session do
   See https://github.com/ethereum/wiki/wiki/%C3%90%CE%9EVp2p-Wire-Protocol#session-management
   """
 
-  alias ExWire.DEVp2p.Session
-  alias ExWire.Packet.Hello
+  alias ExWire.Packet.Capability
+  alias ExWire.Packet.Capability.Mana
+  alias ExWire.Packet.PacketIdMap
+  alias ExWire.Packet.Protocol.Hello
 
   @type t :: %__MODULE__{
           hello_sent: Hello.t() | nil,
-          hello_received: Hello.t() | nil
+          hello_received: Hello.t() | nil,
+          packet_id_map: PacketIdMap.t()
         }
 
   defstruct hello_sent: nil,
-            hello_received: nil
+            hello_received: nil,
+            packet_id_map: PacketIdMap.default_map()
 
   @doc """
   Checks whether or not the session is active.
@@ -25,21 +29,26 @@ defmodule ExWire.DEVp2p.Session do
 
   ## Examples
 
-      iex> hello_received = %ExWire.Packet.Hello{caps: [{"eth", 62}]}
-      iex> hello_sent = %ExWire.Packet.Hello{caps: [{"eth", 62}]}
-      iex> ExWire.DEVp2p.Session.active?(%ExWire.DEVp2p.Session{hello_received: nil, hello_sent: hello_sent})
-      false
-      iex> ExWire.DEVp2p.Session.active?(%ExWire.DEVp2p.Session{hello_received: hello_received, hello_sent: nil})
-      false
-      iex> ExWire.DEVp2p.Session.active?(%ExWire.DEVp2p.Session{hello_received: hello_received, hello_sent: hello_sent})
+      iex> received = %ExWire.Packet.Protocol.Hello{caps: [ExWire.Packet.Capability.new({"eth", 62})]}
+      iex> sent = %ExWire.Packet.Protocol.Hello{}
+      iex> session = ExWire.DEVp2p.Session.hello_received(%ExWire.DEVp2p.Session{hello_sent: sent}, received)
+      iex> ExWire.DEVp2p.Session.active?(session)
       true
+
+      iex> received = %ExWire.Packet.Protocol.Hello{caps: [ExWire.Packet.Capability.new({"eth", 62})]}
+      iex> session = ExWire.DEVp2p.Session.hello_received(%ExWire.DEVp2p.Session{}, received)
+      iex> ExWire.DEVp2p.Session.active?(session)
+      false
+
+      iex> received = %ExWire.Packet.Protocol.Hello{caps: [ExWire.Packet.Capability.new({"eth", 61})]}
+      iex> sent = %ExWire.Packet.Protocol.Hello{}
+      iex> session = ExWire.DEVp2p.Session.hello_received(%ExWire.DEVp2p.Session{hello_sent: sent}, received)
+      iex> ExWire.DEVp2p.Session.active?(session)
+      false
   """
   @spec active?(t) :: boolean()
-  def active?(%__MODULE__{hello_received: nil}), do: false
-  def active?(%__MODULE__{hello_sent: nil}), do: false
-
-  def active?(session = %__MODULE__{hello_sent: %Hello{}, hello_received: %Hello{}}) do
-    compatible_capabilities?(session)
+  def active?(session = %__MODULE__{hello_sent: sent, hello_received: received}) do
+    sent != nil && received != nil && compatible_capabilities?(session)
   end
 
   @doc """
@@ -47,14 +56,30 @@ defmodule ExWire.DEVp2p.Session do
 
   ## Examples
 
-      iex> hello_received = %ExWire.Packet.Hello{caps: [{"eth", 62}]}
-      iex> hello_sent = %ExWire.Packet.Hello{caps: [{"eth", 62}]}
-      iex> ExWire.DEVp2p.Session.disconnect(%ExWire.DEVp2p.Session{hello_received: hello_received, hello_sent: hello_sent})
-      %ExWire.DEVp2p.Session{hello_sent: nil, hello_received: nil}
+      iex> received = %ExWire.Packet.Protocol.Hello{caps: [ExWire.Packet.Capability.new({"eth", 62})]}
+      iex> sent = %ExWire.Packet.Protocol.Hello{caps: [ExWire.Packet.Capability.new({"eth", 62})]}
+      iex> session = ExWire.DEVp2p.Session.hello_received(%ExWire.DEVp2p.Session{hello_sent: sent}, received)
+      iex> updated_session = ExWire.DEVp2p.Session.disconnect(session)
+      iex> updated_session == %ExWire.DEVp2p.Session{}
+      true
   """
-  @spec disconnect(t) :: Session.t()
+  @spec disconnect(t) :: t
   def disconnect(session = %__MODULE__{}) do
-    %{session | hello_sent: nil, hello_received: nil}
+    %{session | hello_sent: nil, hello_received: nil, packet_id_map: PacketIdMap.default_map()}
+  end
+
+  @doc """
+  Updates the provided Session with the received Hello message, including setting the PacketIdMap
+  based on the capabilities specified in the provided Hello message.
+  """
+  @spec hello_received(t, Hello.t()) :: t
+  def hello_received(session, hello) do
+    packet_id_map =
+      hello.caps
+      |> Capability.get_matching_capabilities(Mana.get_our_capabilities_map())
+      |> PacketIdMap.new()
+
+    %{session | hello_received: hello, packet_id_map: packet_id_map}
   end
 
   @doc """
@@ -63,29 +88,18 @@ defmodule ExWire.DEVp2p.Session do
 
   ## Examples
 
-      iex> hello_received = %ExWire.Packet.Hello{caps: [{"eth", 62}, {"mana", 14}]}
-      iex> hello_sent = %ExWire.Packet.Hello{caps: [{"eth", 62}]}
-      iex> ExWire.DEVp2p.Session.compatible_capabilities?(%ExWire.DEVp2p.Session{hello_received: hello_received, hello_sent: hello_sent})
+      iex> hello = %ExWire.Packet.Protocol.Hello{caps: [ExWire.Packet.Capability.new({"eth", 62}), ExWire.Packet.Capability.new({"mana", 14})]}
+      iex> session = ExWire.DEVp2p.Session.hello_received(%ExWire.DEVp2p.Session{}, hello)
+      iex> ExWire.DEVp2p.Session.compatible_capabilities?(session)
       true
 
-      iex> hello_received = %ExWire.Packet.Hello{caps: [{"eth", 63}]}
-      iex> hello_sent = %ExWire.Packet.Hello{caps: [{"eth", 62}]}
-      iex> ExWire.DEVp2p.Session.compatible_capabilities?(%ExWire.DEVp2p.Session{hello_received: hello_received, hello_sent: hello_sent})
+      iex> hello = %ExWire.Packet.Protocol.Hello{caps: [ExWire.Packet.Capability.new({"eth", 63})]}
+      iex> session = ExWire.DEVp2p.Session.hello_received(%ExWire.DEVp2p.Session{}, hello)
+      iex> ExWire.DEVp2p.Session.compatible_capabilities?(session)
       false
   """
   @spec compatible_capabilities?(t) :: boolean()
-  def compatible_capabilities?(%__MODULE__{hello_received: hello_received, hello_sent: hello_sent}) do
-    intersection =
-      MapSet.intersection(
-        to_mapset(hello_received.caps),
-        to_mapset(hello_sent.caps)
-      )
-
-    Enum.any?(intersection)
-  end
-
-  @spec to_mapset(list()) :: MapSet.t()
-  defp to_mapset(list) do
-    Enum.into(list, MapSet.new())
+  def compatible_capabilities?(%__MODULE__{packet_id_map: packet_id_map}) do
+    packet_id_map != PacketIdMap.default_map()
   end
 end

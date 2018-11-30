@@ -1,4 +1,4 @@
-defmodule ExWire.Packet.Pong do
+defmodule ExWire.Packet.Protocol.Pong do
   @moduledoc """
   Pong is the response to a Ping message.
 
@@ -15,15 +15,22 @@ defmodule ExWire.Packet.Pong do
 
   defstruct []
 
+  @impl true
+  @spec message_id_offset() :: 3
+  def message_id_offset() do
+    0x03
+  end
+
   @doc """
   Given a Pong packet, serializes for transport over Eth Wire Protocol.
 
   ## Examples
 
-      iex> %ExWire.Packet.Pong{}
-      ...> |> ExWire.Packet.Pong.serialize
+      iex> %ExWire.Packet.Protocol.Pong{}
+      ...> |> ExWire.Packet.Protocol.Pong.serialize
       []
   """
+  @impl true
   @spec serialize(t) :: ExRLP.t()
   def serialize(_packet = %__MODULE__{}) do
     []
@@ -35,9 +42,10 @@ defmodule ExWire.Packet.Pong do
 
   ## Examples
 
-      iex> ExWire.Packet.Pong.deserialize([])
-      %ExWire.Packet.Pong{}
+      iex> ExWire.Packet.Protocol.Pong.deserialize([])
+      %ExWire.Packet.Protocol.Pong{}
   """
+  @impl true
   @spec deserialize(ExRLP.t()) :: t
   def deserialize(rlp) do
     [] = rlp
@@ -51,9 +59,10 @@ defmodule ExWire.Packet.Pong do
 
   ## Examples
 
-      iex> ExWire.Packet.Pong.handle(%ExWire.Packet.Pong{})
+      iex> ExWire.Packet.Protocol.Pong.handle(%ExWire.Packet.Protocol.Pong{})
       :ok
   """
+  @impl true
   @spec handle(ExWire.Packet.packet()) :: ExWire.Packet.handle_response()
   def handle(_packet = %__MODULE__{}) do
     # TODO: Track RTT time

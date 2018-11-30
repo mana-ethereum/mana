@@ -12,6 +12,7 @@ defmodule ExWire.P2P.Manager do
   alias ExWire.DEVp2p.Session
   alias ExWire.Handshake.Struct.AuthMsgV4
   alias ExWire.P2P.Connection
+  alias ExWire.Packet.PacketIdMap
   alias ExWire.Struct.Peer
 
   @doc """
@@ -95,12 +96,12 @@ defmodule ExWire.P2P.Manager do
   defp handle_packet_data(data, conn) when byte_size(data) == 0, do: conn
 
   defp handle_packet_data(data, conn) do
-    %Connection{peer: peer, secrets: secrets} = conn
+    %Connection{peer: peer, secrets: secrets, session: session} = conn
 
     total_data = conn.queued_data <> data
 
     case Frame.unframe(total_data, secrets) do
-      {:ok, packet_type, packet_data, frame_rest, updated_secrets} ->
+      {:ok, message_id, packet_data, frame_rest, updated_secrets} ->
         conn_after_unframe = %{
           conn
           | secrets: updated_secrets,
@@ -108,7 +109,7 @@ defmodule ExWire.P2P.Manager do
         }
 
         conn_after_handle =
-          case get_packet(packet_type, packet_data) do
+          case get_packet(session, message_id, packet_data) do
             {:ok, packet_mod, packet} ->
               :ok =
                 Logger.debug(fn ->
@@ -123,7 +124,7 @@ defmodule ExWire.P2P.Manager do
             :unknown_packet_type ->
               :ok =
                 Logger.error(fn ->
-                  "[Network] [#{peer}] Got unknown packet `#{packet_type}` from #{peer.host_name}"
+                  "[Network] [#{peer}] Got unknown packet `#{message_id}` from #{peer.host_name}"
                 end)
 
               conn_after_unframe
@@ -165,7 +166,7 @@ defmodule ExWire.P2P.Manager do
         conn
 
       {_, {:disconnect, reason}} ->
-        disconnect_packet = Packet.Disconnect.new(reason)
+        disconnect_packet = Packet.Protocol.Disconnect.new(reason)
 
         send_packet(conn, disconnect_packet)
 
@@ -190,10 +191,15 @@ defmodule ExWire.P2P.Manager do
     end
   end
 
-  @spec get_packet(integer(), binary()) :: {:ok, module(), Packet.packet()} | :unknown_packet_type
-  defp get_packet(packet_type, packet_data) do
-    with {:ok, packet_mod} <- Packet.get_packet_mod(packet_type) do
-      {:ok, packet_mod, apply(packet_mod, :deserialize, [packet_data])}
+  @spec get_packet(Session.t(), integer(), binary()) ::
+          {:ok, module(), Packet.packet()} | :unknown_packet_type
+  defp get_packet(session, message_id, packet_data) do
+    case PacketIdMap.get_packet_module(session.packet_id_map, message_id) do
+      {:ok, packet_mod} ->
+        {:ok, packet_mod, apply(packet_mod, :deserialize, [packet_data])}
+
+      :unsupported_packet ->
+        :unknown_packet_type
     end
   end
 
@@ -254,21 +260,21 @@ defmodule ExWire.P2P.Manager do
   """
   @spec send_packet(Connection.t(), Packet.packet()) :: Connection.t()
   def send_packet(conn, packet) do
-    %{socket: socket, secrets: secrets, peer: peer} = conn
+    %{socket: socket, secrets: secrets, peer: peer, session: session} = conn
 
-    {:ok, packet_type} = Packet.get_packet_type(packet)
-    {:ok, packet_mod} = Packet.get_packet_mod(packet_type)
+    {:ok, message_id} = PacketIdMap.get_packet_id(session.packet_id_map, packet)
+    {:ok, packet_mod} = PacketIdMap.get_packet_module(session.packet_id_map, message_id)
 
     :ok =
       Logger.debug(fn ->
         "[Network] [#{peer}] Sending packet #{inspect(packet_mod)} (#{
-          inspect(packet_type, base: :hex)
+          inspect(message_id, base: :hex)
         }) to #{peer.host_name} (##{conn.sent_message_count + 1})"
       end)
 
     packet_data = apply(packet_mod, :serialize, [packet])
 
-    {frame, updated_secrets} = Frame.frame(packet_type, packet_data, secrets)
+    {frame, updated_secrets} = Frame.frame(message_id, packet_data, secrets)
 
     :ok = TCP.send_data(socket, frame)
 

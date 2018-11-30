@@ -1,12 +1,12 @@
-defmodule ExWire.Packet.GetBlockBodiesTest do
+defmodule ExWire.Packet.Capability.Eth.GetBlockBodiesTest do
   use ExUnit.Case, async: true
-  doctest ExWire.Packet.GetBlockBodies
+  doctest ExWire.Packet.Capability.Eth.GetBlockBodies
 
   alias Block.Header
   alias Blockchain.Transaction
   alias ExWire.BridgeSyncMock
-  alias ExWire.Packet.BlockBodies
-  alias ExWire.Packet.GetBlockBodies
+  alias ExWire.Packet.Capability.Eth.BlockBodies
+  alias ExWire.Packet.Capability.Eth.GetBlockBodies
   alias ExWire.Struct.Block
   alias MerklePatriciaTree.Trie
 

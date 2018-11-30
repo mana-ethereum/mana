@@ -1,4 +1,4 @@
-defmodule ExWire.Packet.Transactions do
+defmodule ExWire.Packet.Capability.Eth.Transactions do
   @moduledoc """
   Eth Wire Packet for communicating new transactions.
 
@@ -26,19 +26,30 @@ defmodule ExWire.Packet.Transactions do
   ]
 
   @doc """
+  Returns the relative message id offset for this message.
+  This will help determine what its message ID is relative to other Packets in the same Capability.
+  """
+  @impl true
+  @spec message_id_offset() :: 2
+  def message_id_offset do
+    0x02
+  end
+
+  @doc """
   Given a Transactions packet, serializes for transport over Eth Wire Protocol.
 
   ## Examples
 
-      iex> %ExWire.Packet.Transactions{
+      iex> %ExWire.Packet.Capability.Eth.Transactions{
       ...>   transactions: [
       ...>     [1, 2, 3],
       ...>     [4, 5, 6]
       ...>   ]
       ...> }
-      ...> |> ExWire.Packet.Transactions.serialize
+      ...> |> ExWire.Packet.Capability.Eth.Transactions.serialize
       [ [1, 2, 3], [4, 5, 6] ]
   """
+  @impl true
   @spec serialize(t) :: ExRLP.t()
   def serialize(packet = %__MODULE__{}) do
     # TODO: Serialize accurately
@@ -51,14 +62,15 @@ defmodule ExWire.Packet.Transactions do
 
   ## Examples
 
-      iex> ExWire.Packet.Transactions.deserialize([ [1, 2, 3], [4, 5, 6] ])
-      %ExWire.Packet.Transactions{
+      iex> ExWire.Packet.Capability.Eth.Transactions.deserialize([ [1, 2, 3], [4, 5, 6] ])
+      %ExWire.Packet.Capability.Eth.Transactions{
         transactions: [
           [1, 2, 3],
           [4, 5, 6],
         ]
       }
   """
+  @impl true
   @spec deserialize(ExRLP.t()) :: t
   def deserialize(rlp) do
     # TODO: Deserialize from proper struct
@@ -74,10 +86,11 @@ defmodule ExWire.Packet.Transactions do
 
   ## Examples
 
-      iex> %ExWire.Packet.Transactions{transactions: []}
-      ...> |> ExWire.Packet.Transactions.handle()
+      iex> %ExWire.Packet.Capability.Eth.Transactions{transactions: []}
+      ...> |> ExWire.Packet.Capability.Eth.Transactions.handle()
       :ok
   """
+  @impl true
   @spec handle(ExWire.Packet.packet()) :: :ok
   def handle(packet = %__MODULE__{}) do
     _ =

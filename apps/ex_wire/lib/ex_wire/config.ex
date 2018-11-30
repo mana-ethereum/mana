@@ -9,6 +9,7 @@ defmodule ExWire.Config do
   alias Blockchain.Chain
   alias ExthCrypto.ECIES.ECDH
   alias ExthCrypto.{Key, Signature}
+  alias ExWire.Packet.Capability
 
   @default_port 30_303
   @default_public_ip [127, 0, 0, 1]
@@ -139,9 +140,10 @@ defmodule ExWire.Config do
     get_env(given_params, :p2p_version)
   end
 
-  @spec caps(Keyword.t()) :: [{String.t(), integer()}]
+  @spec caps(Keyword.t()) :: [Capability.t()]
   def caps(given_params \\ []) do
-    get_env(given_params, :caps)
+    caps = get_env(given_params, :caps, [])
+    Enum.map(caps, &Capability.new/1)
   end
 
   @spec client_id() :: String.t()

@@ -1,4 +1,4 @@
-defmodule ExWire.Packet.Disconnect do
+defmodule ExWire.Packet.Protocol.Disconnect do
   @moduledoc """
   Disconnect is when a peer wants to end a connection for a reason.
 
@@ -73,15 +73,22 @@ defmodule ExWire.Packet.Disconnect do
 
   @reasons_inverted for({k, v} <- @reasons, do: {v, k}) |> Enum.into(%{})
 
+  @impl true
+  @spec message_id_offset() :: 1
+  def message_id_offset() do
+    0x01
+  end
+
   @doc """
   Given a Disconnect packet, serializes for transport over Eth Wire Protocol.
 
   ## Examples
 
-      iex> %ExWire.Packet.Disconnect{reason: :timeout_on_receiving_message}
-      ...> |> ExWire.Packet.Disconnect.serialize
+      iex> %ExWire.Packet.Protocol.Disconnect{reason: :timeout_on_receiving_message}
+      ...> |> ExWire.Packet.Protocol.Disconnect.serialize
       [0x0b]
   """
+  @impl true
   @spec serialize(t) :: ExRLP.t()
   def serialize(packet = %__MODULE__{}) do
     [
@@ -95,9 +102,10 @@ defmodule ExWire.Packet.Disconnect do
 
   ## Examples
 
-      iex> ExWire.Packet.Disconnect.deserialize([<<0x0b>>])
-      %ExWire.Packet.Disconnect{reason: :timeout_on_receiving_message}
+      iex> ExWire.Packet.Protocol.Disconnect.deserialize([<<0x0b>>])
+      %ExWire.Packet.Protocol.Disconnect{reason: :timeout_on_receiving_message}
   """
+  @impl true
   @spec deserialize(ExRLP.t()) :: t
   def deserialize(rlp) do
     [
@@ -115,10 +123,10 @@ defmodule ExWire.Packet.Disconnect do
 
   ## Examples
 
-      iex> ExWire.Packet.Disconnect.new(:too_many_peers)
-      %ExWire.Packet.Disconnect{reason: :too_many_peers}
+      iex> ExWire.Packet.Protocol.Disconnect.new(:too_many_peers)
+      %ExWire.Packet.Protocol.Disconnect{reason: :too_many_peers}
 
-      iex> ExWire.Packet.Disconnect.new(:something_else)
+      iex> ExWire.Packet.Protocol.Disconnect.new(:something_else)
       ** (RuntimeError) Invalid reason
   """
   def new(reason) do
@@ -134,7 +142,7 @@ defmodule ExWire.Packet.Disconnect do
 
   ## Examples
 
-      iex> ExWire.Packet.Disconnect.get_reason_msg(:timeout_on_receiving_message)
+      iex> ExWire.Packet.Protocol.Disconnect.get_reason_msg(:timeout_on_receiving_message)
       "timeout on receiving a message"
   """
   @spec get_reason_msg(integer()) :: String.t() | nil
@@ -148,10 +156,11 @@ defmodule ExWire.Packet.Disconnect do
 
   ## Examples
 
-      iex> %ExWire.Packet.Disconnect{reason: 0x00}
-      ...> |> ExWire.Packet.Disconnect.handle()
+      iex> %ExWire.Packet.Protocol.Disconnect{reason: 0x00}
+      ...> |> ExWire.Packet.Protocol.Disconnect.handle()
       :peer_disconnect
   """
+  @impl true
   @spec handle(ExWire.Packet.packet()) :: ExWire.Packet.handle_response()
   def handle(packet = %__MODULE__{}) do
     :ok =
