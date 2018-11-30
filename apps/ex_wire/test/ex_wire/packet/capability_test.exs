@@ -7,7 +7,7 @@ defmodule ExWire.Packet.CapabilityTest do
       capability = ExWire.Packet.Capability.new({:test, 123})
 
       assert capability == %ExWire.Packet.Capability{
-               name: :test,
+               name: "test",
                version: 123
              }
     end
@@ -16,7 +16,7 @@ defmodule ExWire.Packet.CapabilityTest do
       capability = ExWire.Packet.Capability.new({"test", 123})
 
       assert capability == %ExWire.Packet.Capability{
-               name: :test,
+               name: "test",
                version: 123
              }
     end

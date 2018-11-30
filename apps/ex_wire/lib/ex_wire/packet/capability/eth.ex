@@ -21,7 +21,7 @@ defmodule ExWire.Packet.Capability.Eth do
 
   @impl true
   def get_name() do
-    :eth
+    "eth"
   end
 
   @impl true

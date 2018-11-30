@@ -6,7 +6,7 @@ defmodule ExWire.Packet.Capability do
   """
 
   @type t :: %__MODULE__{
-          name: atom(),
+          name: String.t(),
           version: integer()
         }
 
@@ -15,14 +15,14 @@ defmodule ExWire.Packet.Capability do
     :version
   ]
 
-  @callback get_name() :: atom()
+  @callback get_name() :: String.t()
   @callback get_supported_versions() :: [integer()]
   @callback get_packet_types(integer()) :: [module()] | :unsupported_version
 
   @spec new({atom(), integer()}) :: t
   def new({name, version}) when is_atom(name) do
     %__MODULE__{
-      name: name,
+      name: String.downcase(Atom.to_string(name)),
       version: version
     }
   end
@@ -30,12 +30,12 @@ defmodule ExWire.Packet.Capability do
   @spec new({String.t(), integer()}) :: t
   def new({name, version}) do
     %__MODULE__{
-      name: String.to_atom(name),
+      name: String.downcase(name),
       version: version
     }
   end
 
-  @spec get_matching_capabilities([t], %{atom() => module()}) :: [t]
+  @spec get_matching_capabilities([t], %{String.t() => module()}) :: [t]
   def get_matching_capabilities(peer_capabilities, mana_capabilities_map) do
     peer_capabilities
     |> Enum.filter(fn cap -> are_we_capable?(cap, mana_capabilities_map) end)
@@ -43,7 +43,7 @@ defmodule ExWire.Packet.Capability do
     |> Enum.dedup_by(fn %__MODULE__{name: name} -> name end)
   end
 
-  @spec get_packets_for_capability(t, %{atom() => module()}) ::
+  @spec get_packets_for_capability(t, %{String.t() => module()}) ::
           [module()] | :unsupported_capability | :unsupported_version
   def get_packets_for_capability(%__MODULE__{name: name, version: version}, mana_capabilities_map) do
     case Map.get(mana_capabilities_map, name) do
@@ -55,7 +55,7 @@ defmodule ExWire.Packet.Capability do
     end
   end
 
-  @spec are_we_capable?(t, %{atom() => module()}) :: boolean()
+  @spec are_we_capable?(t, %{String.t() => module()}) :: boolean()
   def are_we_capable?(%__MODULE__{name: name, version: version}, mana_capabilities_map) do
     Map.has_key?(mana_capabilities_map, name) &&
       apply(Map.get(mana_capabilities_map, name), :get_packet_types, [version]) !=

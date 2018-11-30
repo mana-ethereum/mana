@@ -61,7 +61,7 @@ defmodule ExWire.Packet.Protocol.Hello do
     [
       packet.p2p_version,
       packet.client_id,
-      for(%Capability{name: cap, version: ver} <- packet.caps, do: [Atom.to_string(cap), ver]),
+      for(%Capability{name: cap, version: ver} <- packet.caps, do: [cap, ver]),
       packet.listen_port,
       packet.node_id
     ]
