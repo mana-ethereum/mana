@@ -208,9 +208,9 @@ defmodule Blockchain.Ethash do
     limit = div(full_size, @j_hashbytes)
     cache_size = map_size(cache)
 
-    for i <- 0..(limit - 1) do
-      calculate_dataset_item(cache, i, cache_size)
-    end
+    0..(limit - 1)
+    |> Task.async_stream(&calculate_dataset_item(cache, &1, cache_size))
+    |> Enum.into([], fn {:ok, value} -> value end)
   end
 
   @spec calculate_dataset_item(cache, non_neg_integer, non_neg_integer) :: dataset_item
@@ -276,13 +276,10 @@ defmodule Blockchain.Ethash do
   @spec initialize_mix(cache, non_neg_integer, non_neg_integer) :: binary
   defp initialize_mix(cache, i, cache_size) do
     index = Integer.mod(i, cache_size)
+    <<head::little-integer-size(32), rest::binary>> = Map.fetch!(cache, index)
 
-    cache
-    |> Map.fetch!(index)
-    |> :binary.decode_unsigned(:little)
-    |> bxor(i)
-    |> :binary.encode_unsigned(:little)
-    |> Keccak.kec512()
+    new_head = bxor(head, i)
+    Keccak.kec512(<<new_head::little-integer-size(32)>> <> rest)
   end
 
   @doc """

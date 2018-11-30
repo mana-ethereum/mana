@@ -6,7 +6,48 @@ defmodule Blockchain.EthashTest do
 
   use Bitwise
 
-  import EthCommonTest.Helpers, only: [load_raw_hex: 1]
+  import EthCommonTest.Helpers,
+    only: [load_raw_hex: 1, ethereum_common_tests_path: 0]
+
+  @tag :ethereum_common_tests
+  @tag :Ethash
+  test "ethereum common PoW tests (light version)" do
+    tests =
+      ethereum_common_tests_path()
+      |> Path.join("PoWTests")
+      |> Path.join("ethash_tests.json")
+      |> File.read!()
+      |> Jason.decode!()
+      |> prepare_data()
+
+    Enum.each(tests, fn test_data ->
+      cache =
+        test_data.seed_hash
+        |> Ethash.generate_cache(test_data.cache_size)
+
+      {digest, result} =
+        Ethash.pow_light(test_data.full_size, cache, test_data.header_hash, test_data.nonce)
+
+      assert digest == test_data.mix_hash
+      assert result == test_data.result
+    end)
+  end
+
+  defp prepare_data(test_data) do
+    test_data
+    |> Enum.map(fn {_key, test_data} -> test_data end)
+    |> Enum.map(fn test_data ->
+      %{
+        nonce: test_data["nonce"] |> Integer.parse(16) |> elem(0),
+        mix_hash: test_data["mixHash"] |> load_raw_hex(),
+        header_hash: test_data["header_hash"] |> load_raw_hex(),
+        result: test_data["result"] |> load_raw_hex(),
+        seed_hash: test_data["seed"] |> load_raw_hex(),
+        cache_size: test_data["cache_size"],
+        full_size: test_data["full_size"]
+      }
+    end)
+  end
 
   test "it can calculate the epoch from block number" do
     results =

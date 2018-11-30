@@ -245,6 +245,27 @@ jobs:
           command: mix cmd --app blockchain mix test --exclude test --include Constantinople
           no_output_timeout: 2400
 
+  Ethash:
+    docker:
+      - image: circleci/elixir:1.7.4
+        environment:
+          MIX_ENV: test
+
+    working_directory: ~/app
+
+    steps:
+      - attach_workspace:
+           at: .
+
+      - run: mix local.hex --force
+      - run: mix local.rebar --force
+
+      - restore_cache:
+          keys:
+            - v13-mix-cache-{{ checksum "mix.lock" }}
+
+      - run: mix cmd --app blockchain mix test --exclude test --include Ethash
+
   dialyzer:
     docker:
       # Ensure .tool-versions matches
@@ -391,6 +412,8 @@ workflows:
       - Byzantium:
           requires: [build]
       - Constantinople:
+          requires: [build]
+      - Ethash:
           requires: [build]
       - network:
           requires: [build]

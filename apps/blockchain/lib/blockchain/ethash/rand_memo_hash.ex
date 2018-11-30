@@ -49,7 +49,7 @@ defmodule Blockchain.Ethash.RandMemoHash do
   defp second_index(i, n, cache) do
     cache_element = Map.fetch!(cache, i)
 
-    <<header::size(8), _rest::binary>> = cache_element
+    <<header::little-integer-size(32), _rest::binary>> = cache_element
 
     Integer.mod(header, n)
   end
