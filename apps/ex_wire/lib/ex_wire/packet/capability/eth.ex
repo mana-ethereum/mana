@@ -20,16 +20,14 @@ defmodule ExWire.Packet.Capability.Eth do
     ]
   }
 
-  @supported_versions MapSet.to_list(
-                        MapSet.intersection(
-                          MapSet.new(Map.keys(@version_to_packet_types)),
-                          MapSet.new(
-                            Config.caps()
-                            |> Enum.filter(fn cap -> cap.name == @name end)
-                            |> Enum.map(fn cap -> cap.version end)
-                          )
-                        )
-                      )
+  @available_versions Map.keys(@version_to_packet_types)
+  @configured_versions Config.caps()
+                       |> Enum.filter(fn cap -> cap.name == @name end)
+                       |> Enum.map(fn cap -> cap.version end)
+
+  @supported_versions Enum.filter(@available_versions, fn el ->
+                        Enum.member?(@configured_versions, el)
+                      end)
 
   @impl true
   def get_name() do
