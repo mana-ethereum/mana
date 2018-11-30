@@ -48,8 +48,8 @@ defmodule ExWire.Packet.PacketIdMapTest do
     test "Invalid Capabilities" do
       map =
         ExWire.Packet.PacketIdMap.new([
-          ExWire.Packet.Capability.new({:derp, 1}),
-          ExWire.Packet.Capability.new({:eth, 60})
+          ExWire.Packet.Capability.new({"derp", 1}),
+          ExWire.Packet.Capability.new({"eth", 60})
         ])
 
       assert map == %ExWire.Packet.PacketIdMap{
@@ -69,7 +69,7 @@ defmodule ExWire.Packet.PacketIdMapTest do
     end
 
     test "Valid Capability" do
-      map = ExWire.Packet.PacketIdMap.new([ExWire.Packet.Capability.new({:eth, 62})])
+      map = ExWire.Packet.PacketIdMap.new([ExWire.Packet.Capability.new({"eth", 62})])
 
       assert map == %ExWire.Packet.PacketIdMap{
                ids_to_modules: %{

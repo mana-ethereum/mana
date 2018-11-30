@@ -88,7 +88,7 @@ defmodule ExWire.DEVp2p.Session do
 
   ## Examples
 
-      iex> hello = %ExWire.Packet.Protocol.Hello{caps: [ExWire.Packet.Capability.new({:eth, 62}), ExWire.Packet.Capability.new({:mana, 14})]}
+      iex> hello = %ExWire.Packet.Protocol.Hello{caps: [ExWire.Packet.Capability.new({"eth", 62}), ExWire.Packet.Capability.new({"mana", 14})]}
       iex> session = ExWire.DEVp2p.Session.hello_received(%ExWire.DEVp2p.Session{}, hello)
       iex> ExWire.DEVp2p.Session.compatible_capabilities?(session)
       true

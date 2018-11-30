@@ -3,15 +3,6 @@ defmodule ExWire.Packet.CapabilityTest do
   doctest ExWire.Packet.Capability
 
   describe "new/1" do
-    test "Atom name" do
-      capability = ExWire.Packet.Capability.new({:test, 123})
-
-      assert capability == %ExWire.Packet.Capability{
-               name: "test",
-               version: 123
-             }
-    end
-
     test "String name" do
       capability = ExWire.Packet.Capability.new({"test", 123})
 
@@ -95,14 +86,14 @@ defmodule ExWire.Packet.CapabilityTest do
 
   describe "are_we_capable/2" do
     test "Empty map, not capable" do
-      capability = ExWire.Packet.Capability.new({:test, 123})
+      capability = ExWire.Packet.Capability.new({"test", 123})
       result = ExWire.Packet.Capability.are_we_capable?(capability, %{})
 
       assert result == false
     end
 
     test "No match, not capable" do
-      capability = ExWire.Packet.Capability.new({:test, 123})
+      capability = ExWire.Packet.Capability.new({"test", 123})
       name = ExWire.Packet.Capability.Eth.get_name()
       map = %{name => ExWire.Packet.Capability.Eth}
 

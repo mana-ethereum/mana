@@ -19,14 +19,6 @@ defmodule ExWire.Packet.Capability do
   @callback get_supported_versions() :: [integer()]
   @callback get_packet_types(integer()) :: [module()] | :unsupported_version
 
-  @spec new({atom(), integer()}) :: t
-  def new({name, version}) when is_atom(name) do
-    %__MODULE__{
-      name: String.downcase(Atom.to_string(name)),
-      version: version
-    }
-  end
-
   @spec new({String.t(), integer()}) :: t
   def new({name, version}) do
     %__MODULE__{
