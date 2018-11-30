@@ -5,7 +5,6 @@ defmodule Blockchain.BlockGetter do
   alias Block.Header
   alias Blockchain.Block
   alias Blockchain.Chain
-  alias MerklePatriciaTree.DB
   alias MerklePatriciaTree.Trie
   alias MerklePatriciaTree.TrieStorage
 
@@ -18,7 +17,7 @@ defmodule Blockchain.BlockGetter do
       iex> Blockchain.BlockGetter.get_state(%Blockchain.Block{header: %Block.Header{state_root: <<5::256>>}}, MerklePatriciaTree.Trie.new(db))
       %MerklePatriciaTree.Trie{root_hash: <<5::256>>, db: {MerklePatriciaTree.DB.ETS, :get_state}}
   """
-  @spec get_state(Block.t(), DB.db()) :: Trie.t()
+  @spec get_state(Block.t(), TrieStorage.t()) :: Trie.t()
   def get_state(block, trie) do
     TrieStorage.set_root_hash(trie, block.header.state_root)
   end

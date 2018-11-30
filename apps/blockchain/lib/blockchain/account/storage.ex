@@ -21,14 +21,15 @@ defmodule Blockchain.Account.Storage do
     TrieStorage.update_subtrie_key(trie_storage, root, k, v)
   end
 
-  @spec remove(TrieStorage.t(), EVM.trie_root(), integer()) :: {TrieStorage.t(), TrieStorage.t()}
+  @spec remove(TrieStorage.t(), EVM.trie_root(), non_neg_integer()) ::
+          {TrieStorage.t(), TrieStorage.t()}
   def remove(trie_storage, root, key) do
     k = encode_key(key)
 
     TrieStorage.remove_subtrie_key(trie_storage, root, k)
   end
 
-  @spec fetch(TrieStorage.t(), EVM.trie_root(), integer()) :: any() | nil
+  @spec fetch(TrieStorage.t(), EVM.trie_root(), non_neg_integer()) :: any() | nil
   def fetch(trie_storage, root, key) do
     k = encode_key(key)
 
