@@ -8,6 +8,7 @@ defmodule ExWire.DEVp2p do
 
   alias ExWire.Config
   alias ExWire.DEVp2p.Session
+  alias ExWire.Packet.Capability.Mana
   alias ExWire.Packet.Protocol.Hello
 
   @doc """
@@ -32,7 +33,7 @@ defmodule ExWire.DEVp2p do
     %Hello{
       p2p_version: Config.p2p_version(),
       client_id: Config.client_id(),
-      caps: Config.caps(),
+      caps: Mana.get_our_capabilities(),
       listen_port: Config.listen_port(),
       node_id: Config.node_id()
     }
