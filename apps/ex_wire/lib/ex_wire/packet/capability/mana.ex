@@ -9,6 +9,7 @@ defmodule ExWire.Packet.Capability.Mana do
   @our_capabilities @our_capabilities_map
                     |> Enum.map(fn {name, mod} ->
                       versions = apply(mod, :get_supported_versions, [])
+
                       versions
                       |> Enum.map(fn version -> Capability.new({name, version}) end)
                     end)
