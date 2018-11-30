@@ -36,15 +36,13 @@ defmodule ExWire.Adapter.Test do
          }, options},
         state = %{network: network}
       ) do
-    network.receive(
-      %ExWire.Network.InboundMessage{
-        data: data,
-        server_pid: self(),
-        remote_host: remote_host,
-        timestamp: timestamp
-      },
-      options
-    )
+    network.receive(%ExWire.Network.InboundMessage{
+      data: data,
+      server_pid: self(),
+      remote_host: remote_host,
+      timestamp: timestamp,
+      handler_pid: Keyword.get(options, :kademlia_process_name)
+    })
 
     {:noreply, state}
   end

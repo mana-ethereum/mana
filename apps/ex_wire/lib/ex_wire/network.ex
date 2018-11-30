@@ -19,13 +19,17 @@ defmodule ExWire.Network do
     defstruct data: nil,
               server_pid: nil,
               remote_host: nil,
-              timestamp: nil
+              timestamp: nil,
+              # Like kademlia
+              handler_pid: nil
 
     @type t :: %__MODULE__{
             data: binary(),
             server_pid: pid(),
             remote_host: Endpoint.t(),
-            timestamp: integer()
+            timestamp: integer(),
+            # kademlia pid server
+            handler_pid: GenServer.server() | nil
           }
   end
 
@@ -42,7 +46,7 @@ defmodule ExWire.Network do
   We'll first validate the message, and then pass it to
   the appropriate handler.
   """
-  @spec receive(InboundMessage.t(), Keyword.t()) :: handler_action()
+  @spec receive(InboundMessage.t()) :: handler_action()
   def receive(
         inbound_message = %InboundMessage{
           data: data,
@@ -90,7 +94,8 @@ defmodule ExWire.Network do
           >>,
           server_pid: server_pid,
           remote_host: remote_host,
-          timestamp: timestamp
+          timestamp: timestamp,
+          handler_pid: handler_pid
         },
         options \\ []
       ) do
@@ -101,10 +106,11 @@ defmodule ExWire.Network do
       hash: hash,
       data: data,
       type: type,
-      timestamp: timestamp
+      timestamp: timestamp,
+      handler_pid: handler_pid
     }
 
-    case Handler.dispatch(params, options) do
+    case Handler.dispatch(params) do
       :not_implemented ->
         :no_action
 

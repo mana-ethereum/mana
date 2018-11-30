@@ -78,8 +78,7 @@ defmodule ExWireTest do
 
     params = %{data: FindNeighbours.encode(find_neighbours), remote_host: %Endpoint{}}
 
-    neighbours =
-      FindNeighboursHandler.fetch_neighbours(params, kademlia_process_name: kademlia_process)
+    neighbours = FindNeighboursHandler.fetch_neighbours(kademlia_process, params)
 
     response = %Neighbours{
       nodes: neighbours,
