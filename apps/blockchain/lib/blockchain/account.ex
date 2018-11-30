@@ -232,7 +232,7 @@ defmodule Blockchain.Account do
       ...>   |> Blockchain.Account.get_account(<<0x01::160>>)
       nil
   """
-  @spec del_account(TrieStorage.t(), Address.t()) :: any()
+  @spec del_account(TrieStorage.t(), Address.t()) :: TrieStorage.t()
   def del_account(state, address) do
     account = get_account(state, address)
 

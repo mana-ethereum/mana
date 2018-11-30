@@ -16,7 +16,7 @@ defmodule MerklePatriciaTree.TrieStorage do
   @callback update_key(t(), Trie.key(), ExRLP.t() | nil) :: t
   @callback update_subtrie_key(t(), Trie.root_hash(), Trie.key(), ExRLP.t() | nil) :: {t, t}
   @callback put_raw_key!(t(), binary(), binary()) :: t()
-  @callback put_batch_raw_keys!(t(), Enumerate.t(), integer()) :: t()
+  @callback put_batch_raw_keys!(t(), Enumerable.t(), integer()) :: t()
   @callback get_raw_key(t(), binary()) :: {:ok, binary()} | :not_found
   @callback get_key(t(), Trie.key()) :: nil | binary()
   @callback get_subtrie_key(t(), Trie.root_hash(), Trie.key()) :: nil | binary()
@@ -34,7 +34,7 @@ defmodule MerklePatriciaTree.TrieStorage do
     storage(implementation).fetch_node(implementation)
   end
 
-  @spec put_node(node(), t()) :: nil | binary()
+  @spec put_node(Node.trie_node(), t()) :: nil | binary()
   def put_node(node, implementation) do
     storage(implementation).put_node(node, implementation)
   end
@@ -64,7 +64,7 @@ defmodule MerklePatriciaTree.TrieStorage do
     storage(implementation).put_raw_key!(implementation, key, value)
   end
 
-  @spec put_batch_raw_keys!(t(), Enumerate.t(), integer()) :: t()
+  @spec put_batch_raw_keys!(t(), Enumerable.t(), integer()) :: t()
   def put_batch_raw_keys!(implementation, pairs, batch_size \\ @default_batch_size) do
     storage(implementation).put_batch_raw_keys!(implementation, pairs, batch_size)
   end

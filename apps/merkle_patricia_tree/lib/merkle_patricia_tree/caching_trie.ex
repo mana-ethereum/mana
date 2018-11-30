@@ -163,8 +163,7 @@ defmodule MerklePatriciaTree.CachingTrie do
     trie_updates = get_all_key_value_pairs_as_stream(caching_trie.in_memory_trie)
     db_updates = Stream.into(caching_trie.db_changes, [])
     all_updates = Stream.concat(trie_updates, db_updates)
-
-    TrieStorage.put_batch_raw_keys!(trie, all_updates, @batch_size)
+    _ = TrieStorage.put_batch_raw_keys!(trie, all_updates, @batch_size)
 
     new(trie)
   end
