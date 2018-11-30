@@ -104,7 +104,7 @@ defmodule Blockchain.Transaction.Receipt do
 
     %__MODULE__{
       state: state,
-      cumulative_gas: :binary.decode_unsigned(cumulative_gas),
+      cumulative_gas: Exth.maybe_decode_unsigned(cumulative_gas),
       bloom_filter: bloom_filter,
       logs: logs
     }

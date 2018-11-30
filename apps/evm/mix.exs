@@ -50,6 +50,7 @@ defmodule EVM.Mixfile do
       {:merkle_patricia_tree, in_umbrella: true},
       {:exth_crypto, in_umbrella: true},
       {:ex_rlp, "~> 0.5.0"},
+      {:exth, in_umbrella: true},
       {:jason, "~> 1.1", test: true},
       {:bn, "~> 0.2.1"}
     ]
