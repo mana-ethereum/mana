@@ -121,7 +121,7 @@ defmodule Blockchain.Chain do
     engine = Enum.into(chain_data["engine"], %{}, &get_engine/1)
 
     accounts =
-      chain_data["accounts"]
+      (chain_data["accounts"] || [])
       |> get_accounts()
 
     %__MODULE__{
@@ -288,7 +288,7 @@ defmodule Blockchain.Chain do
       minimum_difficulty: params["minimumDifficulty"] |> load_hex(),
       difficulty_bound_divisor: params["difficultyBoundDivisor"] |> load_hex(),
       duration_limit: params["durationLimit"] |> load_hex(),
-      block_rewards: params["blockReward"] |> parse_reward(),
+      block_rewards: (params["blockReward"] || "0x0") |> parse_reward(),
       homestead_transition: params["homesteadTransition"] |> load_hex(),
       eip649_reward: params["eip649Reward"] |> load_hex(),
       eip100b_transition: params["eip100bTransition"] |> load_hex(),
@@ -407,7 +407,7 @@ defmodule Blockchain.Chain do
     address = load_raw_hex(raw_address)
 
     account = %{
-      balance: info["balance"] |> load_decimal(),
+      balance: (info["balance"] || "0x0") |> load_decimal(),
       nonce: nonce
     }
 
@@ -463,19 +463,17 @@ defmodule Blockchain.Chain do
     iex> Blockchain.Chain.id_from_string("jungle")
     :not_found
   """
-  @spec id_from_string(String.t()) :: {:ok, atom()} | :not_found
-  def id_from_string(chain_name) do
-    case chain_name do
-      "ropsten" ->
-        {:ok, :ropsten}
-
-      "foundation" ->
-        {:ok, :foundation}
-
-      _ ->
-        :not_found
-    end
-  end
+  @spec id_from_string(String.t()) ::
+          {:ok, :kovan | :tobalaba | :ropsten | :foundation | :expanse | :ellaism | :musicoin}
+          | :not_found
+  def id_from_string("ellaism"), do: {:ok, :ellaism}
+  def id_from_string("expanse"), do: {:ok, :expanse}
+  def id_from_string("foundation"), do: {:ok, :foundation}
+  def id_from_string("kovan"), do: {:ok, :kovan}
+  def id_from_string("musicoin"), do: {:ok, :musicoin}
+  def id_from_string("ropsten"), do: {:ok, :ropsten}
+  def id_from_string("tobalaba"), do: {:ok, :tobalaba}
+  def id_from_string(_), do: :not_found
 
   @spec load_raw_hex(String.t() | nil) :: binary()
   defp load_raw_hex(nil), do: nil
@@ -489,6 +487,10 @@ defmodule Blockchain.Chain do
   end
 
   @spec load_decimal(String.t()) :: integer()
+  defp load_decimal("0x" <> hex_data) do
+    Base.decode16!(hex_data)
+  end
+
   defp load_decimal(dec_data) do
     {res, ""} = Integer.parse(dec_data)
 
