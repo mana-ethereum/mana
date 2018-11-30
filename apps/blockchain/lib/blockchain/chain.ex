@@ -466,33 +466,14 @@ defmodule Blockchain.Chain do
   @spec id_from_string(String.t()) ::
           {:ok, :kovan | :tobalaba | :ropsten | :foundation | :expanse | :ellaism | :musicoin}
           | :not_found
-  def id_from_string(chain_name) do
-    case chain_name do
-      "kovan" ->
-        {:ok, :kovan}
-
-      "tobalaba" ->
-        {:ok, :tobalaba}
-
-      "expanse" ->
-        {:ok, :expanse}
-
-      "ellaism" ->
-        {:ok, :ellaism}
-
-      "musicoin" ->
-        {:ok, :musicoin}
-
-      "ropsten" ->
-        {:ok, :ropsten}
-
-      "foundation" ->
-        {:ok, :foundation}
-
-      _ ->
-        :not_found
-    end
-  end
+  def id_from_string("ellaism"), do: {:ok, :ellaism}
+  def id_from_string("expanse"), do: {:ok, :expanse}
+  def id_from_string("foundation"), do: {:ok, :foundation}
+  def id_from_string("kovan"), do: {:ok, :kovan}
+  def id_from_string("musicoin"), do: {:ok, :musicoin}
+  def id_from_string("ropsten"), do: {:ok, :ropsten}
+  def id_from_string("tobalaba"), do: {:ok, :tobalaba}
+  def id_from_string(_), do: :not_found
 
   @spec load_raw_hex(String.t() | nil) :: binary()
   defp load_raw_hex(nil), do: nil
