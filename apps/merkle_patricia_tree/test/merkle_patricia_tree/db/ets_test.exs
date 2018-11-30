@@ -60,7 +60,7 @@ defmodule MerklePatriciaTree.DB.ETSTest do
         assert ETS.get(db_ref, key) == :not_found
       end)
 
-      assert ETS.batch_put!(db_ref, pairs) == :ok
+      assert ETS.batch_put!(db_ref, pairs, 2) == :ok
 
       Enum.each(pairs, fn {key, value} ->
         assert ETS.get(db_ref, key) == {:ok, value}

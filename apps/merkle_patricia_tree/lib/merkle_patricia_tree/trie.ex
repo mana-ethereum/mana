@@ -164,8 +164,8 @@ defmodule MerklePatriciaTree.Trie do
   end
 
   @impl true
-  def put_batch_raw_keys!(trie, key_value_pairs) do
-    DB.batch_put!(trie.db, key_value_pairs)
+  def put_batch_raw_keys!(trie, key_value_pairs, batch_size) do
+    DB.batch_put!(trie.db, key_value_pairs, batch_size)
 
     trie
   end

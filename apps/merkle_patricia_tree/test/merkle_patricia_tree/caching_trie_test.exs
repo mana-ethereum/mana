@@ -291,7 +291,7 @@ defmodule MerklePatriciaTree.CachingTrieTest do
     end
   end
 
-  describe "put_batch_raw_keys!/2" do
+  describe "put_batch_raw_keys!/3" do
     test "puts a batch of keys to db_changes", %{disk_trie: disk_trie} do
       caching_trie = CachingTrie.new(disk_trie)
 
@@ -301,7 +301,7 @@ defmodule MerklePatriciaTree.CachingTrieTest do
         {"ruby", "crystal"}
       ]
 
-      updated_caching_trie = CachingTrie.put_batch_raw_keys!(caching_trie, pairs)
+      updated_caching_trie = CachingTrie.put_batch_raw_keys!(caching_trie, pairs, 2)
 
       assert updated_caching_trie.db_changes == %{
                "elixir" => "erlang",
