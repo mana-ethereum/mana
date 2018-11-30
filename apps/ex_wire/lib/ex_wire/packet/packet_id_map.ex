@@ -31,24 +31,6 @@ defmodule ExWire.Packet.PacketIdMap do
 
   @doc """
   Returns the default protocol message id to packet module map that applies to all DEVp2p participants.
-
-  ## Examples
-
-    iex> ExWire.Packet.PacketIdMap.default_map()
-    %ExWire.Packet.PacketIdMap{
-      ids_to_modules: %{
-        0x00 => ExWire.Packet.Protocol.Hello,
-        0x01 => ExWire.Packet.Protocol.Disconnect,
-        0x02 => ExWire.Packet.Protocol.Ping,
-        0x03 => ExWire.Packet.Protocol.Pong
-      },
-      modules_to_ids: %{
-        ExWire.Packet.Protocol.Hello => 0x00,
-        ExWire.Packet.Protocol.Disconnect => 0x01,
-        ExWire.Packet.Protocol.Ping => 0x02,
-        ExWire.Packet.Protocol.Pong => 0x03
-      }
-    }
   """
   @spec default_map() :: t
   def default_map() do
@@ -58,77 +40,6 @@ defmodule ExWire.Packet.PacketIdMap do
   @doc """
   Returns the PacketIdMap that results from the provided Capabilities
   in addition to the default protocol-level ones.
-
-  ## Examples
-    # No Capabilities
-    iex> ExWire.Packet.PacketIdMap.new([])
-    %ExWire.Packet.PacketIdMap{
-      ids_to_modules: %{
-        0x00 => ExWire.Packet.Protocol.Hello,
-        0x01 => ExWire.Packet.Protocol.Disconnect,
-        0x02 => ExWire.Packet.Protocol.Ping,
-        0x03 => ExWire.Packet.Protocol.Pong
-      },
-      modules_to_ids: %{
-        ExWire.Packet.Protocol.Hello => 0x00,
-        ExWire.Packet.Protocol.Disconnect => 0x01,
-        ExWire.Packet.Protocol.Ping => 0x02,
-        ExWire.Packet.Protocol.Pong => 0x03
-      }
-    }
-
-    # Invalid Capabilities
-    iex> ExWire.Packet.PacketIdMap.new([
-    ...> %ExWire.Packet.Capability{name: :derp, version: 1},
-    ...> %ExWire.Packet.Capability{name: :eth, version: 60},
-    ...> ])
-    %ExWire.Packet.PacketIdMap{
-      ids_to_modules: %{
-        0x00 => ExWire.Packet.Protocol.Hello,
-        0x01 => ExWire.Packet.Protocol.Disconnect,
-        0x02 => ExWire.Packet.Protocol.Ping,
-        0x03 => ExWire.Packet.Protocol.Pong
-      },
-      modules_to_ids: %{
-        ExWire.Packet.Protocol.Hello => 0x00,
-        ExWire.Packet.Protocol.Disconnect => 0x01,
-        ExWire.Packet.Protocol.Ping => 0x02,
-        ExWire.Packet.Protocol.Pong => 0x03
-      }
-    }
-
-    # Valid Capability
-    iex> ExWire.Packet.PacketIdMap.new([%ExWire.Packet.Capability{name: :eth, version: 62}])
-    %ExWire.Packet.PacketIdMap{
-      ids_to_modules: %{
-        0x00 => ExWire.Packet.Protocol.Hello,
-        0x01 => ExWire.Packet.Protocol.Disconnect,
-        0x02 => ExWire.Packet.Protocol.Ping,
-        0x03 => ExWire.Packet.Protocol.Pong,
-        0x10 => ExWire.Packet.Capability.Eth.Status,
-        0x11 => ExWire.Packet.Capability.Eth.NewBlockHashes,
-        0x12 => ExWire.Packet.Capability.Eth.Transactions,
-        0x13 => ExWire.Packet.Capability.Eth.GetBlockHeaders,
-        0x14 => ExWire.Packet.Capability.Eth.BlockHeaders,
-        0x15 => ExWire.Packet.Capability.Eth.GetBlockBodies,
-        0x16 => ExWire.Packet.Capability.Eth.BlockBodies,
-        0x17 => ExWire.Packet.Capability.Eth.NewBlock,
-      },
-      modules_to_ids: %{
-        ExWire.Packet.Protocol.Hello => 0x00,
-        ExWire.Packet.Protocol.Disconnect => 0x01,
-        ExWire.Packet.Protocol.Ping => 0x02,
-        ExWire.Packet.Protocol.Pong => 0x03,
-        ExWire.Packet.Capability.Eth.Status => 0x10,
-        ExWire.Packet.Capability.Eth.NewBlockHashes => 0x11,
-        ExWire.Packet.Capability.Eth.Transactions => 0x12,
-        ExWire.Packet.Capability.Eth.GetBlockHeaders => 0x13,
-        ExWire.Packet.Capability.Eth.BlockHeaders => 0x14,
-        ExWire.Packet.Capability.Eth.GetBlockBodies => 0x15,
-        ExWire.Packet.Capability.Eth.BlockBodies => 0x16,
-        ExWire.Packet.Capability.Eth.NewBlock => 0x17,
-      }
-    }
   """
   @spec new([Capability.t()]) :: t
   def new(capabilities \\ []) do
@@ -159,7 +70,7 @@ defmodule ExWire.Packet.PacketIdMap do
     # Hello example
     iex> default_map = ExWire.Packet.PacketIdMap.default_map()
     iex> ExWire.Packet.PacketIdMap.get_packet_id(default_map, %ExWire.Packet.Protocol.Hello{})
-    0x00
+    {:ok, 0x00}
 
     # Unsupported Example
     iex> default_map = ExWire.Packet.PacketIdMap.default_map()
@@ -184,7 +95,7 @@ defmodule ExWire.Packet.PacketIdMap do
     # Hello example
     iex> default_map = ExWire.Packet.PacketIdMap.default_map()
     iex> ExWire.Packet.PacketIdMap.get_packet_module(default_map, 0x00)
-    ExWire.Packet.Protocol.Hello
+    {:ok, ExWire.Packet.Protocol.Hello}
 
     # Unsupported Example
     iex> default_map = ExWire.Packet.PacketIdMap.default_map()

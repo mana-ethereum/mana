@@ -62,10 +62,7 @@ defmodule ExWire.Packet.Capability do
         :unsupported_version
   end
 
-  defp sort_asc_name_desc_version(%__MODULE__{name: name1, version: version1}, %__MODULE__{
-         name: name2,
-         version: version2
-       }) do
-    name1 < name2 || (name1 == name2 && version1 > version2)
+  defp sort_asc_name_desc_version(first = %__MODULE__{}, second = %__MODULE__{}) do
+    {first.name, first.version} < {second.name, second.version}
   end
 end
