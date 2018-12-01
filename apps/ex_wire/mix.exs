@@ -33,6 +33,7 @@ defmodule ExWire.Mixfile do
   defp deps do
     [
       # External deps
+      {:binary, "~> 0.0.5"},
       {:ex_doc, "~> 0.16", only: :dev, runtime: false},
       {:ex_rlp, "~> 0.5.0"},
       {:snappyer, "~> 1.2"},
