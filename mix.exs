@@ -9,6 +9,7 @@ defmodule Mana.MixProject do
         :cli,
         :evm,
         :ex_wire,
+        :exth,
         :exth_crypto,
         :merkle_patricia_tree,
         :jsonrpc2

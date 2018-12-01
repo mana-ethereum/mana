@@ -24,15 +24,18 @@ defmodule ExWire.Handshake.Struct.AckRespV4 do
     [
       ack_resp.recipient_ephemeral_public_key,
       ack_resp.recipient_nonce,
-      ack_resp.recipient_version |> :binary.encode_unsigned()
+      :binary.encode_unsigned(ack_resp.recipient_version)
     ]
   end
 
   @spec deserialize(ExRLP.t()) :: t
   def deserialize(rlp) do
-    [recipient_ephemeral_public_key | rlp_tail] = rlp
-    [recipient_nonce | rlp_tail] = rlp_tail
-    [recipient_version | _tl] = rlp_tail
+    [
+      recipient_ephemeral_public_key,
+      recipient_nonce,
+      recipient_version
+      | _tl
+    ] = rlp
 
     %__MODULE__{
       recipient_ephemeral_public_key: recipient_ephemeral_public_key,

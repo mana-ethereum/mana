@@ -344,11 +344,16 @@ defmodule Blockchain.Block do
     serialized_transaction =
       db
       |> Trie.new(block.header.transactions_root)
-      |> Trie.get_key(i |> ExRLP.encode())
+      |> Trie.get_key(ExRLP.encode(i))
 
     case serialized_transaction do
-      nil -> nil
-      _ -> Transaction.deserialize(serialized_transaction |> ExRLP.decode())
+      nil ->
+        nil
+
+      _ ->
+        serialized_transaction
+        |> ExRLP.decode()
+        |> Transaction.deserialize()
     end
   end
 

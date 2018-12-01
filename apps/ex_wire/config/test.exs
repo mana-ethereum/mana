@@ -7,8 +7,9 @@ config :ex_wire,
   node_discovery: [
     network_adapter: {ExWire.Adapter.UDP, :test_network_adapter},
     supervisor_name: ExWire.NodeDiscoverySupervisor,
-    port: 30_304
+    port: 30_399
   ],
   sync_mock: ExWire.BridgeSyncMock,
   discovery: false,
-  sync: false
+  sync: false,
+  chain: :ropsten

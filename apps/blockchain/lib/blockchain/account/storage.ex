@@ -38,10 +38,15 @@ defmodule Blockchain.Account.Storage do
     if is_nil(result), do: nil, else: ExRLP.decode(result)
   end
 
-  @spec encode_key(integer()) :: Trie.key()
-  def encode_key(key) do
+  @spec encode_key(integer() | binary()) :: Trie.key()
+  def encode_key(key) when is_integer(key) do
     key
     |> BitHelper.encode_unsigned()
+    |> encode_key()
+  end
+
+  def encode_key(key) when is_binary(key) do
+    key
     |> BitHelper.pad(32)
     |> Keccak.kec()
   end

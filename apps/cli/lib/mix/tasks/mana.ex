@@ -15,6 +15,10 @@ defmodule Mix.Tasks.Mana do
 
       mix mana --chain ropsten --discovery false --bootnodes enode://...
 
+      # Sync from a local node with warp (alpha)
+
+      mix mana --chain ropsten --discovery false --bootnodes enode://... --warp
+
       # Start main-net node
 
       mix mana --chain foundation
@@ -31,6 +35,7 @@ defmodule Mix.Tasks.Mana do
          discovery: discovery,
          sync: sync,
          bootnodes: bootnodes,
+         warp: warp,
          debug: debug
        }} ->
         :ok = Logger.warn("Starting mana chain #{Atom.to_string(chain_name)}...")
@@ -42,7 +47,8 @@ defmodule Mix.Tasks.Mana do
             chain: chain_name,
             sync: sync,
             discovery: discovery,
-            bootnodes: bootnodes
+            bootnodes: bootnodes,
+            warp: warp
           )
 
         {:ok, _} = Application.ensure_all_started(:ex_wire)

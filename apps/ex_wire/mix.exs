@@ -34,7 +34,9 @@ defmodule ExWire.Mixfile do
     [
       {:ex_doc, "~> 0.16", only: :dev, runtime: false},
       {:ex_rlp, "~> 0.5.0"},
+      {:snappyer, "~> 1.2"},
       {:blockchain, in_umbrella: true},
+      {:exth, in_umbrella: true},
       {:exth_crypto, in_umbrella: true},
       {:evm, in_umbrella: true}
     ]

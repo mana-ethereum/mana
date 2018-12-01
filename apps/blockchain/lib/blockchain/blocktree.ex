@@ -67,7 +67,7 @@ defmodule Blockchain.Blocktree do
   end
 
   @spec update_best_block(t, Block.t()) :: t
-  defp update_best_block(blocktree, block) do
+  def update_best_block(blocktree, block) do
     best_block = blocktree.best_block
 
     new_best_block =
@@ -77,7 +77,15 @@ defmodule Blockchain.Blocktree do
          do: block,
          else: best_block
 
-    %{blocktree | best_block: new_best_block}
+    # Make sure block is stored with a block hash
+    new_best_block_with_hash =
+      if new_best_block.block_hash == nil do
+        %{new_best_block | block_hash: Block.hash(new_best_block)}
+      else
+        new_best_block
+      end
+
+    %{blocktree | best_block: new_best_block_with_hash}
   end
 
   @doc """

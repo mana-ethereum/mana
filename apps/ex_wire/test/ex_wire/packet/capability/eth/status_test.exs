@@ -33,9 +33,7 @@ defmodule ExWire.Packet.Capability.Eth.StatusTest do
                {:send,
                 %ExWire.Packet.Capability.Eth.Status{
                   best_hash: <<4>>,
-                  block_number: nil,
                   genesis_hash: <<4>>,
-                  manifest_hash: nil,
                   network_id: 3,
                   protocol_version: 63,
                   total_difficulty: 10
@@ -66,9 +64,7 @@ defmodule ExWire.Packet.Capability.Eth.StatusTest do
                   best_hash: best_block.block_hash,
                   network_id: 3,
                   protocol_version: 63,
-                  total_difficulty: best_block.header.difficulty,
-                  block_number: nil,
-                  manifest_hash: nil
+                  total_difficulty: best_block.header.difficulty
                 }}
     end
   end
