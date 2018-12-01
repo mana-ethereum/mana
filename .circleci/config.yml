@@ -43,6 +43,7 @@ jobs:
             - apps
             - bin
             - config
+            - db/.gitkeep
             - deps
             - doc
             - mix.exs

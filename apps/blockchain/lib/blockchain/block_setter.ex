@@ -18,12 +18,18 @@ defmodule Blockchain.BlockSetter do
 
       iex> Blockchain.Block.set_block_number(%Blockchain.Block{header: %Block.Header{extra_data: "hello"}}, %Blockchain.Block{header: %Block.Header{number: 32}})
       %Blockchain.Block{header: %Block.Header{number: 33, extra_data: "hello"}}
+
+      iex> Blockchain.Block.set_block_number(%Blockchain.Block{header: %Block.Header{extra_data: "hello"}}, %Blockchain.Block{header: %Block.Header{number: nil}})
+      %Blockchain.Block{header: %Block.Header{number: nil, extra_data: "hello"}}
   """
   @spec set_block_number(Block.t(), Block.t()) :: Block.t()
-  def set_block_number(block, parent_block) do
-    number = parent_block.header.number + 1
-    header = %{block.header | number: number}
-    %{block | header: header}
+  def set_block_number(block, %Block{header: %Header{number: nil}}) do
+    %{block | header: %{block.header | number: nil}}
+  end
+
+  def set_block_number(block, %Block{header: %Header{number: parent_block_number}})
+      when is_integer(parent_block_number) do
+    %{block | header: %{block.header | number: parent_block_number + 1}}
   end
 
   @doc """

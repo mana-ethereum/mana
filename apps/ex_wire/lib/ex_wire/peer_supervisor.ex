@@ -105,7 +105,8 @@ defmodule ExWire.PeerSupervisor do
   defp do_find_children(:random) do
     @name
     |> DynamicSupervisor.which_children()
-    |> Enum.random()
+    |> Enum.shuffle()
+    |> Enum.take(1)
     |> List.wrap()
   end
 

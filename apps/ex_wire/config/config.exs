@@ -27,10 +27,7 @@ mana_version =
 config :ex_wire,
   p2p_version: 0x04,
   protocol_version: 63,
-  # ropsten
-  network_id: 3,
-  caps: [{"eth", 62}, {"eth", 63}],
-  chain: :ropsten,
+  caps: [{"eth", 62}, {"eth", 63}, {"par", 1}],
   # TODO: This should be set and stored in a file
   private_key: :random,
   bootnodes: :from_chain,
@@ -43,7 +40,8 @@ config :ex_wire,
     port: 30_304
   ],
   db_root: db_root,
-  mana_version: mana_version
+  mana_version: mana_version,
+  warp: false
 
 config :ex_wire, :environment, Mix.env()
 import_config "#{Mix.env()}.exs"

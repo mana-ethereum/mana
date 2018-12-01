@@ -21,13 +21,13 @@ defmodule ExWire.Config do
           | :db_root
           | :discovery
           | :mana_version
-          | :network_id
           | :node_discovery
           | :p2p_version
           | :private_key
           | :protocol_version
           | :public_ip
           | :sync
+          | :warp
 
   @doc """
   Allows application to configure ExWire before it starts.
@@ -130,11 +130,6 @@ defmodule ExWire.Config do
     get_env(given_params, :protocol_version)
   end
 
-  @spec network_id(Keyword.t()) :: integer()
-  def network_id(given_params \\ []) do
-    get_env(given_params, :network_id)
-  end
-
   @spec p2p_version(Keyword.t()) :: integer()
   def p2p_version(given_params \\ []) do
     get_env(given_params, :p2p_version)
@@ -154,6 +149,11 @@ defmodule ExWire.Config do
   @spec perform_sync?(Keyword.t()) :: boolean()
   def perform_sync?(given_params \\ []) do
     get_env(given_params, :sync)
+  end
+
+  @spec warp?(Keyword.t()) :: boolean()
+  def warp?(given_params \\ []) do
+    get_env(given_params, :warp)
   end
 
   @spec bootnodes(Keyword.t()) :: [String.t()]
@@ -180,7 +180,7 @@ defmodule ExWire.Config do
     end
   end
 
-  @spec db_name(Chain.t()) :: nonempty_charlist()
+  @spec db_name(Chain.t()) :: charlist()
   def db_name(chain) do
     db_root = get_env!([], :db_root)
     chain_db_path = Path.join(db_root, "mana-#{String.downcase(chain.name)}")

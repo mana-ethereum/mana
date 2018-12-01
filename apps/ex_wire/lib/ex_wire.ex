@@ -13,7 +13,10 @@ defmodule ExWire do
   alias ExWire.NodeDiscoverySupervisor
   alias ExWire.PeerSupervisor
   alias ExWire.Sync
+  alias ExWire.Sync.WarpProcessor.PowProcessor
+  alias ExWire.Sync.WarpState
   alias ExWire.TCPListeningSupervisor
+  alias MerklePatriciaTree.{CachingTrie, DB.RocksDB, Trie}
 
   def start(_type, _args) do
     Supervisor.start_link(
@@ -27,6 +30,21 @@ defmodule ExWire do
     chain = ExWire.Config.chain()
 
     perform_discovery = Config.perform_discovery?()
+    warp = Config.warp?()
+
+    db = RocksDB.init(Config.db_name(chain))
+
+    trie =
+      db
+      |> Trie.new()
+      |> CachingTrie.new()
+
+    warp_queue =
+      if warp do
+        WarpState.load_warp_queue(db)
+      else
+        nil
+      end
 
     sync_children =
       if Config.perform_sync?() do
@@ -34,13 +52,21 @@ defmodule ExWire do
         # to the bootnodes given. Otherwise, we'll connect to discovered nodes.
         start_nodes = if perform_discovery, do: [], else: Config.bootnodes()
 
-        [
-          # Peer supervisor maintains a pool of outbound peers
-          child_spec({PeerSupervisor, start_nodes}, []),
+        warp_processors =
+          if warp do
+            [{ExWire.Sync.WarpProcessor, {5, trie, warp_queue.state_root, PowProcessor}}]
+          else
+            []
+          end
 
-          # Sync coordinates asking peers for new blocks
-          child_spec({Sync, chain}, [])
-        ]
+        warp_processors ++
+          [
+            # Peer supervisor maintains a pool of outbound peers
+            child_spec({PeerSupervisor, start_nodes}, []),
+
+            # Sync coordinates asking peers for new blocks
+            child_spec({Sync, {trie, chain, warp, warp_queue}}, [])
+          ]
       else
         []
       end

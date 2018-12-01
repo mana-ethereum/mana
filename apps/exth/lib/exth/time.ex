@@ -1,4 +1,6 @@
 defmodule Exth.Time do
+  @type time :: Time.t()
+
   @unit_abbreviations %{
     second: "s",
     millisecond: "ms",
@@ -10,12 +12,12 @@ defmodule Exth.Time do
     nanoseconds: "ns"
   }
 
-  @spec time_start() :: Time.t()
+  @spec time_start() :: time()
   def time_start() do
     Time.utc_now()
   end
 
-  @spec elapsed(fun() | Time.t(), System.time_unit()) :: String.t()
+  @spec elapsed(fun() | time(), System.time_unit()) :: String.t()
   def elapsed(start_or_fun, unit \\ :millisecond)
 
   def elapsed(fun, unit) when is_function(fun) do
@@ -30,7 +32,7 @@ defmodule Exth.Time do
     "#{total_time}#{get_unit_abbreviation(unit)}"
   end
 
-  @spec rate(non_neg_integer(), Time.t(), String.t(), System.time_unit()) :: String.t()
+  @spec rate(non_neg_integer(), time(), String.t(), System.time_unit()) :: String.t()
   def rate(count, start, desc, unit) do
     total_time = Time.diff(Time.utc_now(), start, unit)
 

@@ -1,12 +1,14 @@
 defmodule ExWire.Packet.Capability.Eth.Status do
   @moduledoc """
-  Status messages establish a proper Eth Wire connection, and verify the two clients are compatible.
+  Status messages establish a proper Eth Wire connection, and verify the two
+  clients are compatable.
 
   ```
-  **Status** [`+0x00`: `P`, `protocolVersion`: `P`, `networkId`: `P`, `td`: `P`, `bestHash`: `B_32`, `genesisHash`: `B_32`]
+  **Status** [`+0x00`: `P`, `protocolVersion`: `P`, `networkId`: `P`,
+              `td`: `P`, `bestHash`: `B_32`, `genesisHash`: `B_32`]
 
-  Inform a peer of its current ethereum state. This message should be sent after the initial
-  handshake and prior to any ethereum related messages.
+  Inform a peer of its current ethereum state. This message should be sent
+  after the initial handshake and prior to any ethereum related messages.
 
   * `protocolVersion` is one of:
     * `0x00` for PoC-1;
@@ -18,7 +20,8 @@ defmodule ExWire.Packet.Capability.Eth.Status do
     * `61` for PV61
     * `62` for PV62
     * `63` for PV63
-  * `networkId`: 0=Olympic (disused), 1=Frontier (mainnet), 2=Morden (disused), 3=Ropsten (testnet), 4=Rinkeby
+  * `networkId`: 0=Olympic (disused), 1=Frontier (mainnet), 2=Morden (disused),
+                 3=Ropsten (testnet), 4=Rinkeby
   * `td`: Total Difficulty of the best chain. Integer, as found in block header.
   * `bestHash`: The hash of the best (i.e. highest TD) known block.
   * `genesisHash`: The hash of the Genesis block.
@@ -44,9 +47,7 @@ defmodule ExWire.Packet.Capability.Eth.Status do
           network_id: integer(),
           total_difficulty: integer(),
           best_hash: binary(),
-          genesis_hash: binary(),
-          manifest_hash: binary() | nil,
-          block_number: integer() | nil
+          genesis_hash: binary()
         }
 
   defstruct [
@@ -54,9 +55,7 @@ defmodule ExWire.Packet.Capability.Eth.Status do
     :network_id,
     :total_difficulty,
     :best_hash,
-    :genesis_hash,
-    :manifest_hash,
-    :block_number
+    :genesis_hash
   ]
 
   @doc """
@@ -71,7 +70,7 @@ defmodule ExWire.Packet.Capability.Eth.Status do
   def new(total_difficulty, genesis_hash, best_hash) do
     %__MODULE__{
       protocol_version: ExWire.Config.protocol_version(),
-      network_id: ExWire.Config.network_id(),
+      network_id: ExWire.Config.chain().params.network_id,
       total_difficulty: total_difficulty,
       best_hash: best_hash,
       genesis_hash: genesis_hash
@@ -110,44 +109,31 @@ defmodule ExWire.Packet.Capability.Eth.Status do
   end
 
   @doc """
-  Given an RLP-encoded Status packet from Eth Wire Protocol, decodes into a Status packet.
-
-  Note: we will decode warp's `manifest_hash` and `block_number`, if given.
+  Given an RLP-encoded Status packet from Eth Wire Protocol, decodes into a
+  Status packet.
 
   ## Examples
 
       iex> ExWire.Packet.Capability.Eth.Status.deserialize([<<0x63>>, <<3>>, <<10>>, <<5>>, <<4>>])
       %ExWire.Packet.Capability.Eth.Status{protocol_version: 0x63, network_id: 3, total_difficulty: 10, best_hash: <<5>>, genesis_hash: <<4>>}
-
-      iex> ExWire.Packet.Capability.Eth.Status.deserialize([<<0x63>>, <<3>>, <<10>>, <<5>>, <<4>>, <<11>>, <<11>>])
-      %ExWire.Packet.Capability.Eth.Status{protocol_version: 0x63, network_id: 3, total_difficulty: 10, best_hash: <<5>>, genesis_hash: <<4>>, manifest_hash: <<11>>, block_number: 11}
   """
   @impl true
   @spec deserialize(ExRLP.t()) :: t
   def deserialize(rlp) do
-    [protocol_version | rlp_tail] = rlp
-    [network_id | rlp_tail] = rlp_tail
-    [total_difficulty | rlp_tail] = rlp_tail
-    [best_hash | rlp_tail] = rlp_tail
-    [genesis_hash | rest] = rlp_tail
-
-    {manifest_hash, block_number} =
-      case rest do
-        [] ->
-          {nil, nil}
-
-        [manifest_hash, block_number] ->
-          {manifest_hash, block_number |> :binary.decode_unsigned()}
-      end
+    [
+      protocol_version,
+      network_id,
+      total_difficulty,
+      best_hash,
+      genesis_hash
+    ] = rlp
 
     %__MODULE__{
-      protocol_version: protocol_version |> :binary.decode_unsigned(),
-      network_id: network_id |> :binary.decode_unsigned(),
-      total_difficulty: total_difficulty |> :binary.decode_unsigned(),
+      protocol_version: :binary.decode_unsigned(protocol_version),
+      network_id: :binary.decode_unsigned(network_id),
+      total_difficulty: :binary.decode_unsigned(total_difficulty),
       best_hash: best_hash,
-      genesis_hash: genesis_hash,
-      manifest_hash: manifest_hash,
-      block_number: block_number
+      genesis_hash: genesis_hash
     }
   end
 
@@ -175,7 +161,8 @@ defmodule ExWire.Packet.Capability.Eth.Status do
 
       {:send, new(total_difficulty, genesis_hash, block_hash)}
     else
-      # TODO: We need to follow up on disconnection packets with disconnection ourselves
+      # TODO: We need to follow up on disconnection packets with disconnection
+      #       ourselves
       _ =
         Logger.debug(fn ->
           "[Packet] Disconnecting to due incompatible protocol version (them #{

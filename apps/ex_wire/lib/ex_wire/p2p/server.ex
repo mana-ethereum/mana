@@ -110,7 +110,7 @@ defmodule ExWire.P2P.Server do
   """
   @spec get_peer(pid()) :: Peer.t()
   def get_peer(pid) do
-    GenServer.call(pid, :get_peer)
+    GenServer.call(pid, :get_peer, :infinity)
   end
 
   @doc """
