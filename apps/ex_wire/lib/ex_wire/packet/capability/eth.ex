@@ -1,8 +1,11 @@
 defmodule ExWire.Packet.Capability.Eth do
+  alias ExWire.Config
   alias ExWire.Packet.Capability
   alias ExWire.Packet.Capability.Eth
 
   @behaviour Capability
+
+  @name "eth"
 
   @version_to_packet_types %{
     62 => [
@@ -17,11 +20,18 @@ defmodule ExWire.Packet.Capability.Eth do
     ]
   }
 
-  @supported_versions Map.keys(@version_to_packet_types)
+  @available_versions Map.keys(@version_to_packet_types)
+  @configured_versions Config.caps()
+                       |> Enum.filter(fn cap -> cap.name == @name end)
+                       |> Enum.map(fn cap -> cap.version end)
+
+  @supported_versions Enum.filter(@available_versions, fn el ->
+                        Enum.member?(@configured_versions, el)
+                      end)
 
   @impl true
   def get_name() do
-    "eth"
+    @name
   end
 
   @impl true

@@ -21,6 +21,7 @@ defmodule ExWire.Packet.Protocol.Hello do
 
   require Logger
   alias ExWire.Packet.Capability
+  alias ExWire.Packet.Capability.Mana
 
   @behaviour ExWire.Packet
 
@@ -102,9 +103,15 @@ defmodule ExWire.Packet.Protocol.Hello do
 
   ## Examples
 
-      iex> %ExWire.Packet.Protocol.Hello{p2p_version: 10, client_id: "Mana/Test", caps: [["eth", 1], ["par", 2]], listen_port: 5555, node_id: <<5>>}
+      # Matching caps
+      iex> %ExWire.Packet.Protocol.Hello{p2p_version: 10, client_id: "Mana/Test", caps: [ExWire.Packet.Capability.new({"eth", 62}), ExWire.Packet.Capability.new({"par", 2})], listen_port: 5555, node_id: <<5>>}
       ...> |> ExWire.Packet.Protocol.Hello.handle()
       :activate
+
+      # No matching caps
+      iex> %ExWire.Packet.Protocol.Hello{p2p_version: 10, client_id: "Mana/Test", caps: [ExWire.Packet.Capability.new({"eth", 1}), ExWire.Packet.Capability.new({"par", 2})], listen_port: 5555, node_id: <<5>>}
+      ...> |> ExWire.Packet.Protocol.Hello.handle()
+      {:disconnect, :useless_peer}
 
       # When no caps
       iex> %ExWire.Packet.Protocol.Hello{p2p_version: 10, client_id: "Mana/Test", caps: [], listen_port: 5555, node_id: <<5>>}
@@ -116,7 +123,7 @@ defmodule ExWire.Packet.Protocol.Hello do
   def handle(packet = %__MODULE__{}) do
     Exth.trace(fn -> "[Packet] Got Hello: #{inspect(packet)}" end)
 
-    if packet.caps == [] do
+    if Capability.get_matching_capabilities(packet.caps, Mana.get_our_capabilities_map()) == [] do
       _ =
         Logger.debug(fn ->
           "[Packet] Disconnecting due to no matching peer caps (#{inspect(packet.caps)})"
@@ -125,7 +132,6 @@ defmodule ExWire.Packet.Protocol.Hello do
       {:disconnect, :useless_peer}
     else
       # TODO: Add a bunch more checks
-      # Start a new peer connection process to manage Peer ID, Capabilities, Message IDs, etc.
       :activate
     end
   end
