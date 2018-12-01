@@ -26,8 +26,8 @@ mana_version =
 
 config :ex_wire,
   p2p_version: 0x04,
-  protocol_version: 63,
-  caps: [{"eth", 62}, {"eth", 63}, {"par", 1}],
+  protocol_version: 62,
+  caps: [{"eth", 62}, {"par", 1}],
   # TODO: This should be set and stored in a file
   private_key: :random,
   bootnodes: :from_chain,

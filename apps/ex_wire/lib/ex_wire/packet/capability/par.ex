@@ -1,6 +1,7 @@
 defmodule ExWire.Packet.Capability.Par do
   alias ExWire.Config
   alias ExWire.Packet.Capability
+  alias ExWire.Packet.Capability.Eth
   alias ExWire.Packet.Capability.Par
 
   @behaviour Capability
@@ -10,10 +11,26 @@ defmodule ExWire.Packet.Capability.Par do
   @version_to_packet_types %{
     1 => [
       Par.WarpStatus,
+      Eth.NewBlockHashes,
+      Eth.Transactions,
+      Eth.GetBlockHeaders,
+      Eth.BlockHeaders,
+      Eth.GetBlockBodies,
+      Eth.BlockBodies,
+      Eth.NewBlock,
       Par.GetSnapshotManifest,
       Par.SnapshotManifest,
       Par.GetSnapshotData,
-      Par.SnapshotData
+      Par.SnapshotData,
+      :reserved,
+      :reserved,
+      :reserved,
+      :reserved,
+      :reserved,
+      :reserved,
+      :reserved,
+      :reserved,
+      :reserved
     ]
   }
 
