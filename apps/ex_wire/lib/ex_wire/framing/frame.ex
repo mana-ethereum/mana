@@ -16,6 +16,7 @@ defmodule ExWire.Framing.Frame do
   @type frame :: binary()
 
   @padding_size 16
+  @min_frame_size 16 + 16
 
   @spec frame(integer(), ExRLP.t(), Secrets.t()) :: {frame, Secrets.t()}
   def frame(
@@ -97,7 +98,11 @@ defmodule ExWire.Framing.Frame do
   end
 
   @spec unframe(binary(), Secrets.t()) ::
-          {:ok, integer(), binary(), binary(), Secrets.t()} | {:error, String.t()}
+          {:ok, integer(), binary(), binary(), Secrets.t()}
+          | {:error,
+             :insufficient_data
+             | :failed_to_match_header_ingress_mac
+             | :failed_to_match_frame_ingress_mac}
   def unframe(
         frame,
         frame_secrets = %Secrets{
@@ -107,80 +112,84 @@ defmodule ExWire.Framing.Frame do
           mac_secret: mac_secret
         }
       ) do
-    <<
-      # is header always 128 bits?
-      header_enc::binary-size(16),
-      header_mac::binary-size(16),
-      frame_rest::binary()
-    >> = frame
-
-    # verify header mac
-    ingress_mac = update_mac(ingress_mac, mac_encoder, mac_secret, header_enc)
-    expected_header_mac = ingress_mac |> MAC.final() |> Binary.take(16)
-
-    if expected_header_mac != header_mac do
-      :ok =
-        Logger.error(
-          "Failed to match ingress header mac, expected: #{inspect(expected_header_mac)}, got #{
-            inspect(header_mac)
-          }"
-        )
-
-      {:error, "Failed to match header ingress mac"}
+    if byte_size(frame) < @min_frame_size do
+      {:error, :insufficient_data}
     else
-      {decoder_stream, header} = AES.stream_decrypt(header_enc, decoder_stream)
-
       <<
-        frame_size::integer-size(24),
-        _header_data_and_padding::binary()
-      >> = header
+        # is header always 128 bits?
+        header_enc::binary-size(16),
+        header_mac::binary-size(16),
+        frame_rest::binary()
+      >> = frame
 
-      # TODO: We should read the header? But, it's unused by all clients.
-      # header_rlp = header_data_and_padding |> ExRLP.decode
-      # protocol_id = Enum.at(header_rlp, 0) |> ExRLP.decode
+      # verify header mac
+      ingress_mac = update_mac(ingress_mac, mac_encoder, mac_secret, header_enc)
+      expected_header_mac = ingress_mac |> MAC.final() |> Binary.take(16)
 
-      frame_padding_bytes = padding_size(frame_size, @padding_size)
+      if expected_header_mac != header_mac do
+        :ok =
+          Logger.error(
+            "Failed to match ingress header mac, expected: #{inspect(expected_header_mac)}, got #{
+              inspect(header_mac)
+            }"
+          )
 
-      if byte_size(frame_rest) < frame_size + frame_padding_bytes + 16 do
-        {:error, "Insufficent data"}
+        {:error, :failed_to_match_header_ingress_mac}
       else
-        # let's go and ignore the entire header data....
+        {decoder_stream, header} = AES.stream_decrypt(header_enc, decoder_stream)
+
         <<
-          frame_enc::binary-size(frame_size),
-          frame_padding::binary-size(frame_padding_bytes),
-          frame_mac::binary-size(16),
-          frame_rest::binary()
-        >> = frame_rest
+          frame_size::integer-size(24),
+          _header_data_and_padding::binary()
+        >> = header
 
-        frame_enc_with_padding = frame_enc <> frame_padding
+        # TODO: We should read the header? But, it's unused by all clients.
+        # header_rlp = header_data_and_padding |> ExRLP.decode
+        # protocol_id = Enum.at(header_rlp, 0) |> ExRLP.decode
 
-        ingress_mac = MAC.update(ingress_mac, frame_enc_with_padding)
-        ingress_mac = update_mac(ingress_mac, mac_encoder, mac_secret, nil)
-        expected_frame_mac = ingress_mac |> MAC.final() |> Binary.take(16)
+        frame_padding_bytes = padding_size(frame_size, @padding_size)
 
-        if expected_frame_mac != frame_mac do
-          {:error, "Failed to match frame ingress mac"}
+        if byte_size(frame_rest) < frame_size + frame_padding_bytes + 16 do
+          {:error, :insufficient_data}
         else
-          {decoder_stream, frame_with_padding} =
-            AES.stream_decrypt(frame_enc_with_padding, decoder_stream)
-
+          # let's go and ignore the entire header data....
           <<
-            frame::binary-size(frame_size),
-            _frame_padding::binary()
-          >> = frame_with_padding
+            frame_enc::binary-size(frame_size),
+            frame_padding::binary-size(frame_padding_bytes),
+            frame_mac::binary-size(16),
+            frame_rest::binary()
+          >> = frame_rest
 
-          <<
-            packet_type_rlp::binary-size(1),
-            packet_data_rlp::binary()
-          >> = frame
+          frame_enc_with_padding = frame_enc <> frame_padding
 
-          {
-            :ok,
-            packet_type_rlp |> ExRLP.decode() |> :binary.decode_unsigned(),
-            packet_data_rlp |> ExRLP.decode(),
-            frame_rest,
-            %{frame_secrets | ingress_mac: ingress_mac, decoder_stream: decoder_stream}
-          }
+          ingress_mac = MAC.update(ingress_mac, frame_enc_with_padding)
+          ingress_mac = update_mac(ingress_mac, mac_encoder, mac_secret, nil)
+          expected_frame_mac = ingress_mac |> MAC.final() |> Binary.take(16)
+
+          if expected_frame_mac != frame_mac do
+            {:error, :failed_to_match_frame_ingress_mac}
+          else
+            {decoder_stream, frame_with_padding} =
+              AES.stream_decrypt(frame_enc_with_padding, decoder_stream)
+
+            <<
+              frame::binary-size(frame_size),
+              _frame_padding::binary()
+            >> = frame_with_padding
+
+            <<
+              packet_type_rlp::binary-size(1),
+              packet_data_rlp::binary()
+            >> = frame
+
+            {
+              :ok,
+              packet_type_rlp |> ExRLP.decode() |> :binary.decode_unsigned(),
+              packet_data_rlp |> ExRLP.decode(),
+              frame_rest,
+              %{frame_secrets | ingress_mac: ingress_mac, decoder_stream: decoder_stream}
+            }
+          end
         end
       end
     end
