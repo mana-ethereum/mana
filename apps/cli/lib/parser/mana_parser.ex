@@ -8,6 +8,7 @@ defmodule CLI.Parser.ManaParser do
   @default_no_sync false
   @default_bootnodes "from_chain"
   @default_warp false
+  @default_fast false
   @default_debug false
 
   @doc """
@@ -19,6 +20,7 @@ defmodule CLI.Parser.ManaParser do
     * `--no-sync` - Perform syncing (default: false)
     * `--bootnodes` - Comma separated list of bootnodes (default: from_chain)
     * `--warp` - Perform warp sync (default: false)
+    * `--fast` - Perform fast sync (default: false)
     * `--debug` - Add remote debugging (default: false)
 
   ## Examples
@@ -30,16 +32,18 @@ defmodule CLI.Parser.ManaParser do
         sync: false,
         bootnodes: :from_chain,
         warp: false,
+        fast: false,
         debug: false
       }}
 
-      iex> CLI.Parser.ManaParser.mana_args(["--chain", "foundation", "--bootnodes", "enode://google.com,enode://apple.com", "--warp", "--debug"])
+      iex> CLI.Parser.ManaParser.mana_args(["--chain", "foundation", "--bootnodes", "enode://google.com,enode://apple.com", "--warp", "--fast", "--debug"])
       {:ok, %{
         chain_name: :foundation,
         discovery: true,
         sync: true,
         bootnodes: ["enode://google.com", "enode://apple.com"],
         warp: true,
+        fast: true,
         debug: true
       }}
 
@@ -50,6 +54,7 @@ defmodule CLI.Parser.ManaParser do
         sync: true,
         bootnodes: :from_chain,
         warp: false,
+        fast: false,
         debug: false
       }}
 
@@ -64,6 +69,7 @@ defmodule CLI.Parser.ManaParser do
              sync: boolean(),
              bootnodes: :from_chain | list(String.t()),
              warp: boolean(),
+             fast: boolean(),
              debug: boolean()
            }}
           | {:error, String.t()}
@@ -76,6 +82,7 @@ defmodule CLI.Parser.ManaParser do
           no_sync: :boolean,
           bootnodes: :string,
           warp: :boolean,
+          fast: :boolean,
           debug: :boolean
         ]
       )
@@ -85,6 +92,7 @@ defmodule CLI.Parser.ManaParser do
          {:ok, sync} <- get_sync(kw_args),
          {:ok, bootnodes} <- get_bootnodes(kw_args),
          {:ok, warp} <- get_warp(kw_args),
+         {:ok, fast} <- get_fast(kw_args),
          {:ok, debug} <- get_debug(kw_args) do
       {:ok,
        %{
@@ -93,6 +101,7 @@ defmodule CLI.Parser.ManaParser do
          sync: sync,
          bootnodes: bootnodes,
          warp: warp,
+         fast: fast,
          debug: debug
        }}
     end
@@ -156,6 +165,15 @@ defmodule CLI.Parser.ManaParser do
       |> Keyword.get(:warp, @default_warp)
 
     {:ok, given_warp}
+  end
+
+  @spec get_fast(fast: boolean()) :: {:ok, boolean()} | {:error, String.t()}
+  defp get_fast(kw_args) do
+    given_fast =
+      kw_args
+      |> Keyword.get(:fast, @default_fast)
+
+    {:ok, given_fast}
   end
 
   @spec get_debug(debug: boolean()) :: {:ok, boolean()} | {:error, String.t()}

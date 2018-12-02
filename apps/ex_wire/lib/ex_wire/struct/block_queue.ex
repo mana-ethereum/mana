@@ -15,12 +15,12 @@ defmodule ExWire.Struct.BlockQueue do
   3. We may be waiting on a parent block as we received the child first.
      We add these blocks to a backlog map keyed by the parent hash.
   """
+  require Logger
+
   alias Block.Header
   alias ExWire.Struct.Block, as: BlockStruct
   alias Blockchain.{Block, Blocktree, Chain}
   alias MerklePatriciaTree.Trie
-
-  require Logger
 
   # These will be used to help us determine if a block is empty
   @empty_trie MerklePatriciaTree.Trie.empty_trie_root_hash()

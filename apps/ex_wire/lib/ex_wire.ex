@@ -31,6 +31,7 @@ defmodule ExWire do
 
     perform_discovery = Config.perform_discovery?()
     warp = Config.warp?()
+    fast = Config.fast?()
 
     db = RocksDB.init(Config.db_name(chain))
 
@@ -65,7 +66,7 @@ defmodule ExWire do
             child_spec({PeerSupervisor, start_nodes}, []),
 
             # Sync coordinates asking peers for new blocks
-            child_spec({Sync, {trie, chain, warp, warp_queue}}, [])
+            child_spec({Sync, {trie, chain, warp, warp_queue, fast}}, [])
           ]
       else
         []

@@ -36,6 +36,7 @@ defmodule Mix.Tasks.Mana do
          sync: sync,
          bootnodes: bootnodes,
          warp: warp,
+         fast: fast,
          debug: debug
        }} ->
         :ok = Logger.warn("Starting mana chain #{Atom.to_string(chain_name)}...")
@@ -48,13 +49,14 @@ defmodule Mix.Tasks.Mana do
             sync: sync,
             discovery: discovery,
             bootnodes: bootnodes,
-            warp: warp
+            warp: warp,
+            fast: fast
           )
 
         {:ok, _} = Application.ensure_all_started(:ex_wire)
 
-        # No Halt
-        Process.sleep(:infinity)
+      # No Halt
+      # Process.sleep(:infinity)
 
       {:error, error} ->
         _ = Logger.error("Error: #{error}")

@@ -57,7 +57,8 @@ defmodule ExWire.Sync do
           starting_block_number: non_neg_integer() | nil,
           highest_block_number: non_neg_integer() | nil,
           warp: boolean(),
-          warp_processor: GenServer.server()
+          warp_processor: GenServer.server(),
+          fast: boolean()
         }
 
   @spec get_state(GenServer.server()) :: state
@@ -68,12 +69,12 @@ defmodule ExWire.Sync do
   @doc """
   Starts a sync process for a given chain.
   """
-  @spec start_link({Trie.t(), Chain.t(), boolean(), WarpQueue.t() | nil}, Keyword.t()) ::
+  @spec start_link({Trie.t(), Chain.t(), boolean(), WarpQueue.t() | nil, boolean()}, Keyword.t()) ::
           GenServer.on_start()
-  def start_link({trie, chain, warp, warp_queue}, opts \\ []) do
+  def start_link({trie, chain, warp, warp_queue, fast}, opts \\ []) do
     warp_processor = Keyword.get(opts, :warp_processor, WarpProcessor)
 
-    GenServer.start_link(__MODULE__, {trie, chain, warp, warp_queue, warp_processor},
+    GenServer.start_link(__MODULE__, {trie, chain, warp, warp_queue, warp_processor, fast},
       name: Keyword.get(opts, :name, __MODULE__)
     )
   end
@@ -87,7 +88,7 @@ defmodule ExWire.Sync do
         We should handle this case more gracefully.
   """
   @impl true
-  def init({trie, chain, warp, warp_queue, warp_processor}) do
+  def init({trie, chain, warp, warp_queue, warp_processor, fast}) do
     block_tree = load_sync_state(TrieStorage.permanent_db(trie))
     block_queue = %BlockQueue{}
 
@@ -103,7 +104,8 @@ defmodule ExWire.Sync do
       starting_block_number: block.header.number,
       highest_block_number: block.header.number,
       warp: warp,
-      warp_processor: warp_processor
+      warp_processor: warp_processor,
+      fast: fast
     }
 
     next_state =
