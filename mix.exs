@@ -44,7 +44,7 @@ defmodule Mana.MixProject do
       {:distillery, "~> 2.0", runtime: false},
       {:artificery,
        github: "mana-ethereum/artificery", branch: "hayesgm/allow-extra-args", override: true},
-       {:logger_file_backend, "~> 0.0.10"}
+      {:logger_file_backend, "~> 0.0.10"}
     ]
   end
 end

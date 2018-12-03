@@ -24,7 +24,7 @@ defmodule ExWire.Mixfile do
   end
 
   def application do
-    [mod: {ExWire, []}, extra_applications: [:logger]]
+    [mod: {ExWire, []}, extra_applications: [:logger, :logger_file_backend]]
   end
 
   defp elixirc_paths(:test), do: ["lib", "test/support"]
@@ -32,9 +32,12 @@ defmodule ExWire.Mixfile do
 
   defp deps do
     [
+      # External deps
       {:ex_doc, "~> 0.16", only: :dev, runtime: false},
       {:ex_rlp, "~> 0.5.0"},
       {:snappyer, "~> 1.2"},
+      {:logger_file_backend, "~> 0.0.10"},
+      # Umbrella deps
       {:blockchain, in_umbrella: true},
       {:exth, in_umbrella: true},
       {:exth_crypto, in_umbrella: true},

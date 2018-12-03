@@ -30,29 +30,19 @@ defmodule Blockchain.Mixfile do
     # Specify extra applications you'll use from Erlang/Elixir
     [
       applications: [:ethereumex],
-      extra_applications: [:logger],
+      extra_applications: [:logger, :logger_file_backend],
       mod: {Blockchain.Application, []}
     ]
   end
 
-  # Dependencies can be Hex packages:
-  #
-  #   {:my_dep, "~> 0.3.0"}
-  #
-  # Or git/path repositories:
-  #
-  #   {:my_dep, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"}
-  #
-  # To depend on another app inside the umbrella:
-  #
-  #   {:my_app, in_umbrella: true}
-  #
-  # Type "mix help deps" for more examples and options
   defp deps do
     [
+      # External deps
       {:ethereumex, "~> 0.5.0"},
-      {:evm, in_umbrella: true},
       {:ex_rlp, "~> 0.5.0"},
+      {:logger_file_backend, "~> 0.0.10"},
+      # Umbrella deps
+      {:evm, in_umbrella: true},
       {:exth, in_umbrella: true},
       {:exth_crypto, in_umbrella: true},
       {:merkle_patricia_tree, in_umbrella: true}
