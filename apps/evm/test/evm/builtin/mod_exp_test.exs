@@ -22,4 +22,24 @@ defmodule EVM.Builtin.ModExpTest do
              <<166, 77, 176, 208, 195, 39, 151, 52, 51, 231, 30, 237, 237, 72, 125, 118, 61, 235,
                159, 94, 12, 89, 197, 0, 244, 4, 188, 219, 122, 138, 212, 245>>
   end
+
+  # https://github.com/mana-ethereum/mana/issues/687
+  test "calculates mod_exp (block #4_177_929, transaction #73 on ropsten)" do
+    data =
+      "0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000007000000000000000000000000000000000000000000000000000000000000000f000000000000000000000000000000000000000000000000000000000000000b"
+      |> Base.decode16!(case: :lower)
+
+    available_gas = 1_000_000
+
+    exec_env = %EVM.ExecEnv{data: data, config: EVM.Configuration.Byzantium.new()}
+    {result_gas, _, _, output} = ModExp.exec(available_gas, exec_env)
+
+    cost = available_gas - result_gas
+
+    assert cost == 153
+
+    assert output ==
+             <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+               0, 0, 0, 10>>
+  end
 end

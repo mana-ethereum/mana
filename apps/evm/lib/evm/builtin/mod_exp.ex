@@ -114,11 +114,20 @@ defmodule EVM.Builtin.ModExp do
   defp highest_bit(_, 0), do: 0
 
   defp highest_bit(binary_number, _) do
-    bit_list = for <<b::1 <- binary_number>>, do: b
-    index = Enum.find_index(bit_list, fn x -> x != 0 end)
+    number = :binary.decode_unsigned(binary_number)
 
-    index = index || 0
+    if number < 256 do
+      number
+      |> :math.log2()
+      |> Float.floor()
+      |> round()
+    else
+      bit_list = for <<b::1 <- binary_number>>, do: b
+      index = Enum.find_index(bit_list, fn x -> x != 0 end)
 
-    255 - index
+      index = index || 0
+
+      255 - index
+    end
   end
 end
