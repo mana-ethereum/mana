@@ -9,9 +9,14 @@ use Mix.Config
 # back to each application for organization purposes.
 import_config "../apps/*/config/config.exs"
 
-# Sample configuration (overrides the imported configuration above):
-#
-#     config :logger, :console,
-#       level: :info,
-#       format: "$date $time [$level] $metadata$message\n",
-#       metadata: [:user_id]
+config :logger,
+  backends: [
+    :console,
+    {LoggerFileBackend, :debug_log}
+  ],
+  format: "[$level] $message\n",
+  level: :debug
+
+config :logger, :debug_log,
+  path: "./log/debug.log",
+  level: :debug

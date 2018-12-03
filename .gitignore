@@ -22,3 +22,4 @@ apps/blockchain/config/dev.secret.exs
 .erlang_cookie
 
 !/**/.gitkeep
+/log/*
