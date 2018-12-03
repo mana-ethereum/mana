@@ -74,6 +74,11 @@ defmodule ExWire.P2P.Server do
     })
   end
 
+  @spec get_state(pid()) :: Connection.t()
+  def get_state(pid) do
+    GenServer.call(pid, :get_state, :infinity)
+  end
+
   @doc """
   Client function for sending a packet over to a peer.
   """
@@ -130,6 +135,10 @@ defmodule ExWire.P2P.Server do
       |> Map.put(:subscribers, Map.get(opts, :subscribers, []))
 
     {:ok, state}
+  end
+
+  def handle_call(:get_state, _from, state) do
+    {:reply, state, state}
   end
 
   def handle_call(:get_peer, _from, state = %{peer: peer}) do

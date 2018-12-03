@@ -15,20 +15,21 @@ defmodule ExWire.Sync do
 
   require Logger
 
-  alias Block.Header
-  alias Blockchain.{Block, Blocktree, Blocktree.State, Chain}
+  alias Blockchain.{Blocktree, Chain}
   alias Exth.Time
   alias ExWire.Packet
   alias ExWire.PeerSupervisor
   alias ExWire.Struct.{BlockQueue, Peer, WarpQueue}
-  alias ExWire.Sync.{WarpProcessor, WarpState}
-  alias MerklePatriciaTree.{DB, Trie, TrieStorage}
+  alias ExWire.Sync.{BlockProcessor, BlockState, WarpProcessor, WarpState}
+  alias MerklePatriciaTree.{Trie, TrieStorage}
 
   alias ExWire.Packet.Capability.Eth.{
     BlockBodies,
     BlockHeaders,
     GetBlockBodies,
-    GetBlockHeaders
+    GetBlockHeaders,
+    NodeData,
+    Receipts
   }
 
   alias ExWire.Packet.Capability.Par.{
@@ -40,8 +41,6 @@ defmodule ExWire.Sync do
 
   alias ExWire.Packet.Capability.Par.SnapshotData.{BlockChunk, StateChunk}
 
-  @save_block_interval 100
-  @blocks_per_request 100
   @startup_delay 10_000
   @retry_delay 5_000
   @request_limit 5
@@ -57,8 +56,8 @@ defmodule ExWire.Sync do
           starting_block_number: non_neg_integer() | nil,
           highest_block_number: non_neg_integer() | nil,
           warp: boolean(),
-          warp_processor: GenServer.server(),
-          fast: boolean()
+          block_processor: GenServer.server(),
+          warp_processor: GenServer.server()
         }
 
   @spec get_state(GenServer.server()) :: state
@@ -69,12 +68,17 @@ defmodule ExWire.Sync do
   @doc """
   Starts a sync process for a given chain.
   """
-  @spec start_link({Trie.t(), Chain.t(), boolean(), WarpQueue.t() | nil, boolean()}, Keyword.t()) ::
-          GenServer.on_start()
-  def start_link({trie, chain, warp, warp_queue, fast}, opts \\ []) do
+  @spec start_link(
+          {Trie.t(), Chain.t(), BlockQueue.t(), boolean(), WarpQueue.t() | nil, boolean()},
+          Keyword.t()
+        ) :: GenServer.on_start()
+  def start_link({trie, chain, block_queue, warp, warp_queue}, opts \\ []) do
+    block_processor = Keyword.get(opts, :block_processor, BlockProcessor)
     warp_processor = Keyword.get(opts, :warp_processor, WarpProcessor)
 
-    GenServer.start_link(__MODULE__, {trie, chain, warp, warp_queue, warp_processor, fast},
+    GenServer.start_link(
+      __MODULE__,
+      {trie, chain, block_queue, block_processor, warp, warp_queue, warp_processor},
       name: Keyword.get(opts, :name, __MODULE__)
     )
   end
@@ -88,24 +92,20 @@ defmodule ExWire.Sync do
         We should handle this case more gracefully.
   """
   @impl true
-  def init({trie, chain, warp, warp_queue, warp_processor, fast}) do
-    block_tree = load_sync_state(TrieStorage.permanent_db(trie))
-    block_queue = %BlockQueue{}
-
-    {:ok, {block, _caching_trie}} = Blocktree.get_best_block(block_tree, chain, trie)
+  def init({trie, chain, block_queue, block_processor, warp, warp_queue, warp_processor}) do
+    {:ok, {block, _caching_trie}} = Blocktree.get_best_block(block_queue.block_tree, chain, trie)
 
     state = %{
       chain: chain,
       block_queue: block_queue,
       warp_queue: warp_queue,
-      block_tree: block_tree,
       trie: trie,
       last_requested_block: nil,
       starting_block_number: block.header.number,
       highest_block_number: block.header.number,
       warp: warp,
-      warp_processor: warp_processor,
-      fast: fast
+      block_processor: block_processor,
+      warp_processor: warp_processor
     }
 
     next_state =
@@ -120,9 +120,10 @@ defmodule ExWire.Sync do
           state
         end
       else
-        request_next_block(@startup_delay)
-
-        state
+        %{
+          state
+          | block_queue: dispatch_new_block_queue_requests(block_queue)
+        }
       end
 
     {:ok, next_state}
@@ -133,6 +134,19 @@ defmodule ExWire.Sync do
   end
 
   @impl true
+  def handle_cast(
+        {:processed_blocks, processed_blocks, best_block},
+        state = %{block_queue: block_queue}
+      ) do
+    next_state =
+      block_queue
+      |> BlockQueue.processed_blocks(processed_blocks, best_block)
+      |> dispatch_new_block_queue_requests()
+      |> save_and_check_block_state(state)
+
+    {:noreply, next_state}
+  end
+
   def handle_cast(
         {:processed_block_chunk, chunk_hash, processed_blocks, block},
         state = %{warp_queue: warp_queue}
@@ -166,11 +180,52 @@ defmodule ExWire.Sync do
   @impl true
   def handle_info(
         :request_next_block,
-        state = %{block_queue: block_queue, block_tree: block_tree}
+        state = %{block_queue: block_queue}
       ) do
-    new_state = handle_request_next_block(block_queue, block_tree, state)
+    next_block_queue = dispatch_new_block_queue_requests(block_queue)
 
-    {:noreply, new_state}
+    {:noreply,
+     %{
+       state
+       | block_queue: next_block_queue
+     }}
+  end
+
+  def handle_info({:get_header_hashes, header_hashes}, state) do
+    if send_with_retry(
+         %GetBlockBodies{
+           hashes: header_hashes
+         },
+         :random,
+         {:get_header_hashes, header_hashes}
+       ) do
+      :ok =
+        Logger.debug(fn ->
+          "[Sync] Requested #{Enum.count(header_hashes)} block bodies on retry"
+        end)
+    end
+
+    {:noreply, state}
+  end
+
+  def handle_info({:get_block_headers, block_number, count}, state) do
+    if send_with_retry(
+         %GetBlockHeaders{
+           block_identifier: block_number,
+           max_headers: count,
+           skip: 0,
+           reverse: false
+         },
+         :random,
+         {:get_block_headers, block_number, count}
+       ) do
+      :ok =
+        Logger.debug(fn ->
+          "[Sync] Requested block headers #{block_number}..#{block_number + count} on retry"
+        end)
+    end
+
+    {:noreply, state}
   end
 
   def handle_info(:request_manifest, state) do
@@ -193,14 +248,19 @@ defmodule ExWire.Sync do
     {:noreply, handle_block_bodies(block_bodies, state)}
   end
 
+  def handle_info({:packet, %NodeData{} = node_data, _peer}, state) do
+    {:noreply, handle_node_data(node_data, state)}
+  end
+
+  def handle_info({:packet, %Receipts{} = receipts, _peer}, state) do
+    {:noreply, handle_receipts(receipts, state)}
+  end
+
   def handle_info({:packet, %SnapshotManifest{} = snapshot_manifest, peer}, state) do
     {:noreply, handle_snapshot_manifest(snapshot_manifest, peer, state)}
   end
 
-  def handle_info(
-        {:packet, %SnapshotData{} = snapshot_data, peer},
-        state
-      ) do
+  def handle_info({:packet, %SnapshotData{} = snapshot_data, peer}, state) do
     {:noreply, handle_snapshot_data(snapshot_data, peer, state)}
   end
 
@@ -248,32 +308,6 @@ defmodule ExWire.Sync do
   end
 
   @doc """
-  Dispatches a packet of `GetBlockHeaders` to a peer for the next block
-  number that we don't have in our block queue or state tree.
-  """
-  @spec handle_request_next_block(BlockQueue.t(), Blocktree.t(), state()) :: state()
-  def handle_request_next_block(block_queue, block_tree, state) do
-    next_block_to_request = get_next_block_to_request(block_queue, block_tree)
-
-    if send_with_retry(
-         %GetBlockHeaders{
-           block_identifier: next_block_to_request,
-           max_headers: @blocks_per_request,
-           skip: 0,
-           reverse: false
-         },
-         :random,
-         :request_next_block
-       ) do
-      :ok = Logger.debug(fn -> "[Sync] Requested block #{next_block_to_request}" end)
-
-      Map.put(state, :last_requested_block, next_block_to_request + @blocks_per_request)
-    else
-      state
-    end
-  end
-
-  @doc """
   When we receive a new snapshot manifest, we add it to our warp queue. We may
   have new blocks to fetch, so we ask the warp queue for more blocks to
   request. We may already, however, be waiting on blocks, in which case we
@@ -298,22 +332,6 @@ defmodule ExWire.Sync do
       |> save_and_check_warp_complete(state)
 
     next_state
-  end
-
-  @spec dispatch_new_warp_queue_requests(WarpQueue.t(), integer(), integer()) :: WarpQueue.t()
-  defp dispatch_new_warp_queue_requests(
-         warp_queue,
-         request_limit \\ @request_limit,
-         queue_limit \\ @queue_limit
-       ) do
-    {new_warp_queue, hashes_to_request} =
-      WarpQueue.get_hashes_to_request(warp_queue, request_limit, queue_limit)
-
-    for hash <- hashes_to_request do
-      request_chunk(hash)
-    end
-
-    new_warp_queue
   end
 
   @doc """
@@ -376,62 +394,14 @@ defmodule ExWire.Sync do
         peer,
         state = %{
           block_queue: block_queue,
-          block_tree: block_tree,
-          chain: chain,
-          trie: trie,
-          highest_block_number: highest_block_number
+          block_processor: block_processor,
+          chain: chain
         }
       ) do
-    {next_highest_block_number, next_block_queue, next_block_tree, next_trie, header_hashes} =
-      Enum.reduce(
-        block_headers.headers,
-        {highest_block_number, block_queue, block_tree, trie, []},
-        fn header, {highest_block_number, block_queue, block_tree, trie, header_hashes} ->
-          header_hash = header |> Header.hash()
-
-          {next_block_queue, next_block_tree, next_trie, should_request_block} =
-            BlockQueue.add_header(
-              block_queue,
-              block_tree,
-              header,
-              header_hash,
-              peer.remote_id,
-              chain,
-              trie
-            )
-
-          next_header_hashes =
-            if should_request_block do
-              :ok = Logger.debug(fn -> "[Sync] Requesting block body #{header.number}" end)
-
-              [header_hash | header_hashes]
-            else
-              header_hashes
-            end
-
-          next_highest_block_number = Kernel.max(highest_block_number, header.number)
-
-          {next_highest_block_number, next_block_queue, next_block_tree, next_trie,
-           next_header_hashes}
-        end
-      )
-
-    :ok =
-      PeerSupervisor.send_packet(
-        %GetBlockBodies{
-          hashes: header_hashes
-        },
-        :random
-      )
-
-    next_maybe_saved_trie = maybe_save(block_tree, next_block_tree, next_trie)
-    :ok = maybe_request_next_block(next_block_queue)
-
-    state
-    |> Map.put(:block_queue, next_block_queue)
-    |> Map.put(:block_tree, next_block_tree)
-    |> Map.put(:trie, next_maybe_saved_trie)
-    |> Map.put(:highest_block_number, next_highest_block_number)
+    BlockQueue.new_block_headers(block_queue, block_headers, peer)
+    |> process_completed_blocks(block_processor, chain)
+    |> dispatch_new_block_queue_requests()
+    |> save_and_check_block_state(state)
   end
 
   @doc """
@@ -447,78 +417,133 @@ defmodule ExWire.Sync do
         block_bodies,
         state = %{
           block_queue: block_queue,
-          block_tree: block_tree,
-          chain: chain,
-          trie: trie
+          block_processor: block_processor,
+          chain: chain
         }
       ) do
-    {next_block_queue, next_block_tree, next_trie} =
-      Enum.reduce(block_bodies.blocks, {block_queue, block_tree, trie}, fn block_body,
-                                                                           {block_queue,
-                                                                            block_tree, trie} ->
-        BlockQueue.add_block_struct(block_queue, block_tree, block_body, chain, trie)
-      end)
-
-    next_maybe_saved_trie = maybe_save(block_tree, next_block_tree, next_trie)
-    :ok = maybe_request_next_block(next_block_queue)
-
-    state
-    |> Map.put(:block_queue, next_block_queue)
-    |> Map.put(:block_tree, next_block_tree)
-    |> Map.put(:trie, next_maybe_saved_trie)
+    BlockQueue.new_block_bodies(block_queue, block_bodies)
+    |> process_completed_blocks(block_processor, chain)
+    |> dispatch_new_block_queue_requests()
+    |> save_and_check_block_state(state)
   end
 
-  # Determines the next block we don't yet have in our blocktree and
-  # dispatches a request to all connected peers for that block and the
-  # next `n` blocks after it.
-  @spec get_next_block_to_request(BlockQueue.t(), Blocktree.t()) :: integer()
-  defp get_next_block_to_request(block_queue, block_tree) do
-    # This is the best we know about
-    next_number =
-      case block_tree.best_block do
-        nil -> 0
-        %Block{header: %Header{number: number}} -> number + 1
-      end
-
-    # But we may have it queued up already in the block queue, let's
-    # start from the first we *don't* know about. It's possible there's
-    # holes in block queue, so it's not `max(best_block.number, max(keys(queue)))`,
-    # though it could be...
-    next_number
-    |> Stream.iterate(fn n -> n + 1 end)
-    |> Stream.reject(fn n -> MapSet.member?(block_queue.block_numbers, n) end)
-    |> Enum.at(0)
+  @doc """
+  We are not currently doing anything with PV63 node data
+  """
+  @spec handle_node_data(NodeData.t(), state()) :: state()
+  def handle_node_data(
+        node_data,
+        state = %{
+          block_queue: block_queue,
+          block_processor: block_processor,
+          chain: chain
+        }
+      ) do
+    BlockQueue.new_node_data(block_queue, node_data)
+    |> process_completed_blocks(block_processor, chain)
+    |> dispatch_new_block_queue_requests()
+    |> save_and_check_block_state(state)
   end
 
-  @spec maybe_save(Blocktree.t(), Blocktree.t(), Trie.t()) :: Trie.t()
-  defp maybe_save(block_tree, next_block_tree, trie) do
-    if block_tree != next_block_tree do
-      block_number = next_block_tree.best_block.header.number
+  @doc """
+  We are not currently doing anything with PV63 receipts
+  """
+  @spec handle_receipts(Receipts.t(), state()) :: state()
+  def handle_receipts(
+        receipts,
+        state = %{
+          block_queue: block_queue,
+          block_processor: block_processor,
+          chain: chain
+        }
+      ) do
+    BlockQueue.new_receipts(block_queue, receipts)
+    |> process_completed_blocks(block_processor, chain)
+    |> dispatch_new_block_queue_requests()
+    |> save_and_check_block_state(state)
+  end
 
-      if rem(block_number, @save_block_interval) == 0 do
-        save_sync_state(next_block_tree, trie)
-      else
-        trie
-      end
-    else
-      trie
+  @spec dispatch_new_warp_queue_requests(WarpQueue.t(), integer(), integer()) :: WarpQueue.t()
+  defp dispatch_new_warp_queue_requests(
+         warp_queue,
+         request_limit \\ @request_limit,
+         queue_limit \\ @queue_limit
+       ) do
+    {new_warp_queue, hashes_to_request} =
+      WarpQueue.get_hashes_to_request(warp_queue, request_limit, queue_limit)
+
+    for hash <- hashes_to_request do
+      Process.send_after(self(), {:request_chunk, hash}, 0)
     end
+
+    new_warp_queue
   end
 
-  @spec request_chunk(EVM.hash()) :: reference()
-  defp request_chunk(chunk_hash) do
-    Process.send_after(self(), {:request_chunk, chunk_hash}, 0)
+  @spec process_completed_blocks(BlockQueue.t(), GenServer.server(), Chain.t()) :: BlockQueue.t()
+  defp process_completed_blocks(block_queue, block_processor, chain) do
+    {next_block_queue, blocks} = BlockQueue.get_complete_blocks(block_queue)
+
+    BlockProcessor.process_completed_blocks(block_processor, blocks, chain)
+
+    next_block_queue
   end
 
-  @spec maybe_request_next_block(BlockQueue.t()) :: :ok
-  defp maybe_request_next_block(block_queue) do
-    # Let's pull a new block if we have none left
-    _ =
-      if block_queue.queue == %{} do
-        request_next_block()
+  # Dispatches new requests for headers or block data based on what is
+  # required in the block queue.
+  @spec dispatch_new_block_queue_requests(BlockQueue.t()) :: BlockQueue.t()
+  defp dispatch_new_block_queue_requests(block_queue) do
+    {next_block_queue, requests} = BlockQueue.get_requests(block_queue)
+
+    for request <- requests do
+      case request do
+        {:headers, block_number, count} ->
+          :ok =
+            Logger.debug(fn ->
+              "[Sync] Requesting new block headers from #{block_number}..#{block_number + count}."
+            end)
+
+          unless send_with_retry(
+                   %GetBlockHeaders{
+                     block_identifier: block_number,
+                     max_headers: count,
+                     skip: 0,
+                     reverse: false
+                   },
+                   :random,
+                   {:get_block_headers, block_number, count}
+                 ) do
+            :ok = Logger.debug(fn -> "[Sync] Failed to request block headers" end)
+          end
+
+        {:bodies, header_hashes} ->
+          :ok =
+            Logger.debug(fn ->
+              "[Sync] Requesting new block bodies for #{Enum.count(header_hashes)} header hash(es)."
+            end)
+
+          unless send_with_retry(
+                   %GetBlockBodies{
+                     hashes: header_hashes
+                   },
+                   :random,
+                   {:get_header_hashes, header_hashes}
+                 ) do
+            :ok = Logger.debug(fn -> "[Sync] Failed to request header hashes" end)
+          end
       end
+    end
 
-    :ok
+    next_block_queue
+  end
+
+  @spec save_and_check_block_state(BlockQueue.t(), state(), boolean()) :: state()
+  def save_and_check_block_state(block_queue, state = %{trie: trie}, save \\ true) do
+    if save do
+      :ok = BlockState.save_block_queue(TrieStorage.permanent_db(trie), block_queue)
+    end
+
+    # TODO: What is check block state for here?
+    state
   end
 
   @spec save_and_check_warp_complete(WarpQueue.t(), state(), boolean()) :: state()
@@ -543,7 +568,8 @@ defmodule ExWire.Sync do
           Logger.info("[Warp] Warp Completed in #{Time.elapsed(warp_queue.warp_start, :second)}")
 
         # Save our process
-        saved_tried = save_sync_state(warp_queue.block_tree, trie)
+        # TODO...
+        # saved_trie = save_sync_state(warp_queue.block_tree, trie)
 
         # Request a normal sync to start
         request_next_block()
@@ -554,28 +580,10 @@ defmodule ExWire.Sync do
         %{
           state
           | warp_queue: warp_queue,
-            trie: saved_tried,
+            trie: trie,
             warp: false
         }
     end
-  end
-
-  # Loads sync state from our backing database
-  @spec load_sync_state(DB.db()) :: Blocktree.t()
-  defp load_sync_state(db) do
-    State.load_tree(db)
-  end
-
-  # Save sync state from our backing database.
-  @spec save_sync_state(Blocktree.t(), Trie.t()) :: Trie.t()
-  defp save_sync_state(blocktree, trie) do
-    committed_trie = TrieStorage.commit!(trie)
-
-    committed_trie
-    |> TrieStorage.permanent_db()
-    |> State.save_tree(blocktree)
-
-    committed_trie
   end
 
   @spec send_with_retry(

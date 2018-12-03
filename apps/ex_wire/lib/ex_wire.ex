@@ -13,8 +13,8 @@ defmodule ExWire do
   alias ExWire.NodeDiscoverySupervisor
   alias ExWire.PeerSupervisor
   alias ExWire.Sync
+  alias ExWire.Sync.{BlockState, WarpState}
   alias ExWire.Sync.WarpProcessor.PowProcessor
-  alias ExWire.Sync.WarpState
   alias ExWire.TCPListeningSupervisor
   alias MerklePatriciaTree.{CachingTrie, DB.RocksDB, Trie}
 
@@ -31,7 +31,6 @@ defmodule ExWire do
 
     perform_discovery = Config.perform_discovery?()
     warp = Config.warp?()
-    fast = Config.fast?()
 
     db = RocksDB.init(Config.db_name(chain))
 
@@ -39,6 +38,8 @@ defmodule ExWire do
       db
       |> Trie.new()
       |> CachingTrie.new()
+
+    block_queue = BlockState.load_block_queue(db)
 
     warp_queue =
       if warp do
@@ -65,8 +66,11 @@ defmodule ExWire do
             # Peer supervisor maintains a pool of outbound peers
             child_spec({PeerSupervisor, start_nodes}, []),
 
+            # Processes blocks
+            {ExWire.Sync.BlockProcessor, {trie}},
+
             # Sync coordinates asking peers for new blocks
-            child_spec({Sync, {trie, chain, warp, warp_queue, fast}}, [])
+            child_spec({Sync, {trie, chain, block_queue, warp, warp_queue}}, [])
           ]
       else
         []
