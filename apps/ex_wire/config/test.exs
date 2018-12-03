@@ -10,6 +10,7 @@ config :ex_wire,
     port: 30_399
   ],
   sync_mock: ExWire.BridgeSyncMock,
+  kademlia_mock: ExWire.FakeKademlia,
   discovery: false,
   sync: false,
   chain: :ropsten

@@ -17,6 +17,8 @@ defmodule ExWire.ConnectionObserver do
         }
   defstruct outbound_peers: MapSet.new(), inbound_peers: MapSet.new()
 
+  @kademlia Application.get_env(:ex_wire, :kademlia_mock, Kademlia)
+
   def notify(:discovery_round) do
     GenServer.cast(__MODULE__, :kademlia_discovery_round)
   end
@@ -51,7 +53,7 @@ defmodule ExWire.ConnectionObserver do
     {:noreply, %{state | inbound_peers: MapSet.put(state.inbound_peers, peer)}}
   end
 
-  # Kademlia server process notifies us of their discovery rounds.
+  # Kademlia server process notifies us of their discovery round.
   # We start new connections to peers from the discovery results.
   def handle_cast(:kademlia_discovery_round, state) do
     :ok = start_new_outbound_connections()
@@ -61,7 +63,7 @@ defmodule ExWire.ConnectionObserver do
 
   @spec start_new_outbound_connections() :: :ok
   defp start_new_outbound_connections() do
-    this_round_nodes = Kademlia.get_peers()
+    this_round_nodes = @kademlia.get_peers()
 
     _ =
       if Config.perform_sync?() do
