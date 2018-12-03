@@ -252,5 +252,9 @@ defmodule ExWire.P2P.Server do
   end
 
   @spec link(module()) :: true
-  defp link(connection_observer), do: Process.link(Process.whereis(connection_observer))
+  defp link(connection_observer),
+    do:
+      connection_observer
+      |> Process.whereis()
+      |> Process.link()
 end
