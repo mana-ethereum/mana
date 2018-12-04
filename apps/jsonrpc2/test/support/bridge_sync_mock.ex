@@ -45,7 +45,7 @@ defmodule JSONRPC2.BridgeSyncMock do
   end
 
   def handle_call({:put_block, block}, _, state = %{trie: trie}) do
-    updated_trie = Block.put_block(block, trie)
+    {:ok, {_, updated_trie}} = Block.put_block(block, trie, block.block_hash)
     updated_state = %{state | trie: updated_trie}
 
     {:reply, :ok, updated_state}

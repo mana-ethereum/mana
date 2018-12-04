@@ -3,6 +3,7 @@ defmodule JSONRPC2.ManaHandlerTest do
 
   alias JSONRPC2.BridgeSyncMock
   alias JSONRPC2.SpecHandler
+  alias JSONRPC2.TestFactory
 
   setup_all do
     db = MerklePatriciaTree.Test.random_ets_db()
@@ -122,6 +123,19 @@ defmodule JSONRPC2.ManaHandlerTest do
         ~s({"jsonrpc": "2.0", "method": "eth_syncing", "params": [], "id": 71}),
         ~s({"jsonrpc": "2.0", "result": {"currentBlock":"0x384","startingBlock":"0x386", "highestBlock":"0x454"}, "id": 71})
       )
+    end
+  end
+
+  describe "eth_getTransactionByNumber" do
+    test "fetches transaction by number" do
+      block = TestFactory.build(:block)
+      :ok = BridgeSyncMock.put_block(block)
+
+      # assert_rpc_reply(
+      #   SpecHandler,
+      #   ~s({"jsonrpc": "2.0", "method": "eth_getBlockByNumber", "params": [1, true], "id": 71}),
+      #   ~s({"jsonrpc": "2.0", "result":  "id": 71})
+      # )
     end
   end
 
