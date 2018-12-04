@@ -10,6 +10,7 @@ defmodule ExWire do
   @type node_id :: binary()
 
   alias ExWire.Config
+  alias ExWire.ConnectionObserver
   alias ExWire.NodeDiscoverySupervisor
   alias ExWire.PeerSupervisor
   alias ExWire.Sync
@@ -27,7 +28,7 @@ defmodule ExWire do
 
   @spec get_children(Keyword.t()) :: list(Supervisor.child_spec())
   defp get_children(_params) do
-    chain = ExWire.Config.chain()
+    chain = Config.chain()
 
     perform_discovery = Config.perform_discovery?()
     warp = Config.warp?()
@@ -62,7 +63,7 @@ defmodule ExWire do
         warp_processors ++
           [
             # Peer supervisor maintains a pool of outbound peers
-            child_spec({PeerSupervisor, start_nodes}, []),
+            {PeerSupervisor, [start_nodes: start_nodes, connection_observer: ConnectionObserver]},
 
             # Sync coordinates asking peers for new blocks
             child_spec({Sync, {trie, chain, warp, warp_queue}}, [])
@@ -74,14 +75,23 @@ defmodule ExWire do
     node_discovery =
       if perform_discovery do
         # Discovery tries to find new peers
-        [child_spec({NodeDiscoverySupervisor, []}, [])]
+        [
+          child_spec(
+            {NodeDiscoverySupervisor, [connection_observer: ConnectionObserver]},
+            []
+          )
+        ]
       else
         []
       end
 
     # Listener accepts and hands off new inbound TCP connections
-    tcp_listening = [child_spec({TCPListeningSupervisor, :ok}, [])]
+    tcp_listening = [
+      child_spec({TCPListeningSupervisor, [connection_observer: ConnectionObserver]}, [])
+    ]
 
-    sync_children ++ node_discovery ++ tcp_listening
+    observerer = [child_spec({ConnectionObserver, :ok}, [])]
+
+    List.flatten([observerer, sync_children, node_discovery, tcp_listening])
   end
 end

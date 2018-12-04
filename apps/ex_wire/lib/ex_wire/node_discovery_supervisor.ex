@@ -7,9 +7,10 @@ defmodule ExWire.NodeDiscoverySupervisor do
   """
   use Supervisor
 
-  alias ExWire.{Config, Network}
+  alias ExWire.Config
   alias ExWire.Kademlia.Node
   alias ExWire.Kademlia.Server, as: KademliaServer
+  alias ExWire.Network
   alias ExWire.Struct.Endpoint
 
   def start_link(params \\ []) do
@@ -19,8 +20,8 @@ defmodule ExWire.NodeDiscoverySupervisor do
   end
 
   def init(params) do
-    {udp_module, udp_process_name} = ExWire.Config.udp_network_adapter(params)
-    port = ExWire.Config.listen_port(params)
+    {udp_module, udp_process_name} = Config.udp_network_adapter(params)
+    port = Config.listen_port(params)
 
     bootnodes =
       params
@@ -37,7 +38,8 @@ defmodule ExWire.NodeDiscoverySupervisor do
             [
               current_node: current_node(params),
               network_client_name: udp_process_name,
-              nodes: bootnodes
+              nodes: bootnodes,
+              connection_observer: Keyword.get(params, :connection_observer)
             ]
           ]
         }

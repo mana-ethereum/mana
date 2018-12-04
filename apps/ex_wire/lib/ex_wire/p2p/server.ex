@@ -16,13 +16,15 @@ defmodule ExWire.P2P.Server do
 
   require Logger
 
-  alias ExWire.{Packet, TCP}
-  alias ExWire.P2P.{Connection, Manager}
+  alias ExWire.P2P.Connection
+  alias ExWire.P2P.Manager
+  alias ExWire.Packet
   alias ExWire.Struct.Peer
+  alias ExWire.TCP
 
   @type state :: Connection.t()
 
-  @type subscription() :: {module(), atom(), list()} | {:server, pid()}
+  @type subscription() :: {module(), atom(), list()} | {:server, Process.dest()}
 
   @doc """
   Child spec definition to be used by a supervisor when wanting to supervise an
@@ -46,10 +48,10 @@ defmodule ExWire.P2P.Server do
 
   We spawn a temporary child process for each outbound connection.
   """
-  def child_spec({:outbound, peer, subscribers}) do
+  def child_spec({:outbound, peer, subscribers, connection_observer}) do
     %{
       id: ExWire.P2P.Outbound,
-      start: {__MODULE__, :start_link, [:outbound, peer, subscribers]},
+      start: {__MODULE__, :start_link, [:outbound, peer, subscribers, connection_observer]},
       restart: :temporary
     }
   end
@@ -57,20 +59,22 @@ defmodule ExWire.P2P.Server do
   @doc """
   Starts an outbound or inbound peer to peer connection.
   """
-  @spec start_link(:outbound, Peer.t(), list(subscription())) :: GenServer.on_start()
-  def start_link(:outbound, peer, subscribers) do
+  @spec start_link(:outbound, Peer.t(), list(subscription()), module()) :: GenServer.on_start()
+  def start_link(:outbound, peer, subscribers, connection_observer) do
     GenServer.start_link(__MODULE__, %{
       is_outbound: true,
       peer: peer,
-      subscribers: subscribers
+      subscribers: subscribers,
+      connection_observer: connection_observer
     })
   end
 
-  @spec start_link(:inbound, TCP.socket()) :: GenServer.on_start()
-  def start_link(:inbound, socket) do
+  @spec start_link(:inbound, TCP.socket(), module()) :: GenServer.on_start()
+  def start_link(:inbound, socket, connection_observer) do
     GenServer.start_link(__MODULE__, %{
       is_outbound: false,
-      socket: socket
+      socket: socket,
+      connection_observer: connection_observer
     })
   end
 
@@ -117,18 +121,19 @@ defmodule ExWire.P2P.Server do
   Initialize by opening up a `gen_tcp` connection to given host and port.
   """
   @spec init(map()) :: {:ok, state()}
-  def init(opts = %{is_outbound: true, peer: peer}) do
+  def init(opts = %{is_outbound: true, peer: peer, connection_observer: connection_observer}) do
     Process.send_after(self(), {:connect, opts}, 0)
-
-    {:ok, %Connection{peer: peer}}
+    true = link(connection_observer)
+    {:ok, %Connection{peer: peer, is_outbound: true}}
   end
 
-  def init(opts = %{is_outbound: false, socket: socket}) do
+  def init(opts = %{is_outbound: false, socket: socket, connection_observer: connection_observer}) do
     state =
       socket
       |> Manager.new_inbound_connection()
       |> Map.put(:subscribers, Map.get(opts, :subscribers, []))
 
+    true = link(connection_observer)
     {:ok, state}
   end
 
@@ -171,9 +176,9 @@ defmodule ExWire.P2P.Server do
   Function triggered when tcp closes the connection
   """
   def handle_info({:tcp_closed, _socket}, state) do
-    {:ok, new_state} = handle_socket_close(state)
+    :ok = handle_socket_close(state)
 
-    {:noreply, new_state}
+    {:stop, :normal, state}
   end
 
   @doc """
@@ -192,6 +197,11 @@ defmodule ExWire.P2P.Server do
     {:ok, new_state} = handle_disconnection(socket, state)
 
     {:noreply, new_state}
+  end
+
+  # links should get reason and state
+  def terminate(reason, state) do
+    exit({reason, state})
   end
 
   # Allows a client to subscribe to incoming packets. Subscribers must be in the form
@@ -219,15 +229,12 @@ defmodule ExWire.P2P.Server do
     {:ok, new_state}
   end
 
-  @spec handle_socket_close(state()) :: {:ok, state()}
+  @spec handle_socket_close(state()) :: :ok
   defp handle_socket_close(state) do
     peer = Map.get(state, :peer, :unknown)
+    is_outbound = Map.get(state, :is_outbound)
 
-    :ok = Logger.warn(fn -> "[Network] [#{peer}] Peer closed connection" end)
-
-    Process.exit(self(), :normal)
-
-    {:ok, state}
+    Logger.warn(fn -> "[Network] [#{peer} is_outbound: #{is_outbound}] Peer closed connection" end)
   end
 
   @spec handle_send(Packet.packet(), state()) :: {:ok, state()}
@@ -244,4 +251,11 @@ defmodule ExWire.P2P.Server do
 
     {:ok, new_state}
   end
+
+  @spec link(module()) :: true
+  defp link(connection_observer),
+    do:
+      connection_observer
+      |> Process.whereis()
+      |> Process.link()
 end

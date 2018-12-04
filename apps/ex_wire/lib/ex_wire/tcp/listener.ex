@@ -10,22 +10,24 @@ defmodule ExWire.TCP.Listener do
   alias ExWire.TCP
 
   @type state :: %{
-          listen_socket: TCP.socket()
+          listen_socket: TCP.socket(),
+          connection_observer: module()
         }
 
   def start_link(args) do
     port = Keyword.fetch!(args, :port)
     name = Keyword.fetch!(args, :name)
+    connection_observer = Keyword.fetch!(args, :connection_observer)
 
-    GenServer.start_link(__MODULE__, port, name: name)
+    GenServer.start_link(__MODULE__, [port, connection_observer], name: name)
   end
 
-  def init(port) do
+  def init([port, connection_observer]) do
     {:ok, listen_socket} = TCP.listen(port)
 
     :ok = accept_tcp_connection()
 
-    {:ok, %{listen_socket: listen_socket}}
+    {:ok, %{listen_socket: listen_socket, connection_observer: connection_observer}}
   end
 
   @doc """
@@ -33,9 +35,14 @@ defmodule ExWire.TCP.Listener do
   that will henceforth handle that tcp connection.
   """
   @spec handle_cast(atom(), state()) :: {:noreply, state()}
-  def handle_cast(:accept_tcp_connection, state = %{listen_socket: listen_socket}) do
+  def handle_cast(
+        :accept_tcp_connection,
+        state = %{listen_socket: listen_socket, connection_observer: connection_observer}
+      ) do
     {:ok, socket} = TCP.accept_connection(listen_socket)
-    {:ok, pid} = TCP.InboundConnectionsSupervisor.new_connection_handler(socket)
+
+    {:ok, pid} =
+      TCP.InboundConnectionsSupervisor.new_connection_handler(socket, connection_observer)
 
     :ok = hand_over_control_of_socket(socket, pid)
     :ok = accept_tcp_connection()

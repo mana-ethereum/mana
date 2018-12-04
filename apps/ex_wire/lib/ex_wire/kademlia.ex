@@ -67,4 +67,12 @@ defmodule ExWire.Kademlia do
   def handle_neighbours(server \\ Server.name(), neighbours) do
     GenServer.cast(server, {:handle_neighbours, neighbours})
   end
+
+  @doc """
+  Gets new peers from Kademlia that we can connect to
+  """
+  @spec get_peers(GenServer.server()) :: :ok
+  def get_peers(server \\ Server.name()) do
+    GenServer.call(server, :get_peers)
+  end
 end

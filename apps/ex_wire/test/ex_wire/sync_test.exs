@@ -60,7 +60,8 @@ defmodule ExWire.SyncTest do
       WarpQueue.new()
       |> WarpQueue.new_manifest(manifest)
 
-    {:ok, _peer_supervisor} = ExWire.PeerSupervisor.start_link([])
+    {:ok, _peer_supervisor} =
+      ExWire.PeerSupervisor.start_link(start_nodes: [], connection_observer: nil)
 
     {:ok, _warp_processor} =
       WarpProcessor.start_link({1, trie, @empty_trie, PowProcessor}, name: :test_warp_processor)

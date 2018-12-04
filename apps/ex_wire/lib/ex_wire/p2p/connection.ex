@@ -21,7 +21,8 @@ defmodule ExWire.P2P.Connection do
           subscribers: [any()],
           sent_message_count: integer(),
           datas: [binary()],
-          last_error: any() | nil
+          last_error: any() | nil,
+          is_outbound: boolean()
         }
 
   defstruct peer: nil,
@@ -33,5 +34,6 @@ defmodule ExWire.P2P.Connection do
             subscribers: [],
             sent_message_count: 0,
             datas: [],
-            last_error: nil
+            last_error: nil,
+            is_outbound: false
 end
