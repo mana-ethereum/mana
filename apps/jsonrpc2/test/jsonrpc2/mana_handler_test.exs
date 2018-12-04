@@ -104,11 +104,6 @@ defmodule JSONRPC2.ManaHandlerTest do
   end
 
   describe "is eth_syncing method behaving correctly when" do
-    setup do
-      {:ok, pid} = BridgeSyncMock.start_link(%{})
-      {:ok, %{pid: pid}}
-    end
-
     test "all parameters are 0", %{pid: _pid} do
       :ok = BridgeSyncMock.set_last_sync_block_stats({0, 0, 0})
 
