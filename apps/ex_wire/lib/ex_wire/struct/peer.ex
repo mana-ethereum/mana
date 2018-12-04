@@ -1,6 +1,8 @@
 defmodule ExWire.Struct.Peer do
   @moduledoc """
   Represents a Peer for an RLPx / Eth Wire connection.
+  Caps and p2p_version are set after we exchange the Hello message. It helps us
+  establish a quality of a particular peer.
   """
 
   defstruct [
@@ -8,19 +10,24 @@ defmodule ExWire.Struct.Peer do
     :host_name,
     :port,
     :remote_id,
-    :ident
+    :ident,
+    :caps,
+    :p2p_version
   ]
 
   alias ExthCrypto.Key
   alias ExWire.Crypto
   alias ExWire.Kademlia.Node
+  alias ExWire.Packet.Capability
 
   @type t :: %__MODULE__{
           host: :inet.socket_address() | :inet.hostname(),
           host_name: String.t(),
           port: :inet.port_number(),
           remote_id: Key.public_key(),
-          ident: String.t()
+          ident: String.t(),
+          caps: [Capability.t()],
+          p2p_version: non_neg_integer() | nil
         }
 
   @doc """
@@ -50,7 +57,8 @@ defmodule ExWire.Struct.Peer do
       host_name: inet_host_to_uri_host(host),
       port: port,
       remote_id: remote_id,
-      ident: ident
+      ident: ident,
+      caps: []
     }
   end
 

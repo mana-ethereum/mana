@@ -13,6 +13,11 @@ defmodule ExWire.P2P.Manager do
   alias ExWire.Handshake.Struct.AuthMsgV4
   alias ExWire.P2P.Connection
   alias ExWire.Packet.PacketIdMap
+  alias ExWire.Packet.Protocol.Hello
+  alias ExWire.Packet.Protocol.Disconnect
+  alias ExWire.Packet.Protocol.Ping
+  alias ExWire.Packet.Protocol.Pong
+  alias ExWire.Packet.Capability
   alias ExWire.Struct.Peer
 
   @doc """
@@ -60,10 +65,12 @@ defmodule ExWire.P2P.Manager do
   TODO: clients may send an auth before (or as) we do, and we should handle this
         case without error.
   """
+  # handle inbound message
   def handle_message(conn = %{secrets: %ExWire.Framing.Secrets{}}, data) do
     handle_packet_data(data, %{conn | last_error: nil})
   end
 
+  # handle outbound message
   def handle_message(conn = %{handshake: %Handshake{}}, data) do
     conn
     |> handle_encrypted_handshake(data)
@@ -150,29 +157,45 @@ defmodule ExWire.P2P.Manager do
   defp handle_packet(packet_mod, packet, conn) do
     packet_handle_response = packet_mod.handle(packet)
     session_status = if DEVp2p.session_active?(conn.session), do: :active, else: :inactive
+    do_handle_packet(packet_mod, packet, session_status, packet_handle_response, conn)
+  end
 
-    case {session_status, packet_handle_response} do
-      {:active, :ok} ->
-        conn
+  @spec do_handle_packet(
+          Hello | Ping | Pong | Disconnect,
+          Packet.packet(),
+          :active | :inactive,
+          {:disconnect, :useless_peer, [Capability.t()], non_neg_integer()}
+          | {:activate, [Capability.t()], non_neg_integer()}
+          | :peer_disconnect
+          | :ok,
+          Connection.t()
+        ) :: Connection.t()
+  defp do_handle_packet(Hello, _, _, {:disconnect, :useless_peer, caps, p2p_version}, conn) do
+    disconnect_packet = Disconnect.new(:useless_peer)
 
-      {:inactive, :activate} ->
-        new_session = attempt_session_activation(conn.session, packet)
+    send_packet(
+      %{conn | peer: %{conn.peer | p2p_version: p2p_version, caps: caps}},
+      disconnect_packet
+    )
+  end
 
-        %{conn | session: new_session}
+  defp do_handle_packet(Hello, packet, :inactive, {:activate, caps, p2p_version}, conn) do
+    new_session = attempt_session_activation(conn.session, packet)
+    %{conn | peer: %{conn.peer | p2p_version: p2p_version, caps: caps}, session: new_session}
+  end
 
-      {_, :peer_disconnect} ->
-        _ = TCP.shutdown(conn.socket)
+  defp do_handle_packet(Ping, _, :active, {:send, return_packet}, conn) do
+    send_packet(conn, return_packet)
+  end
 
-        conn
+  defp do_handle_packet(Pong, _, :active, :ok, conn) do
+    conn
+  end
 
-      {_, {:disconnect, reason}} ->
-        disconnect_packet = Packet.Protocol.Disconnect.new(reason)
+  defp do_handle_packet(Disconnect, _, _, :peer_disconnect, conn) do
+    _ = TCP.shutdown(conn.socket)
 
-        send_packet(conn, disconnect_packet)
-
-      {:active, {:send, return_packet}} ->
-        send_packet(conn, return_packet)
-    end
+    conn
   end
 
   @spec attempt_session_activation(Session.t(), Packet.packet()) :: Session.t()

@@ -42,6 +42,7 @@ defmodule ExWire.ConnectionObserver do
         state
       ) do
     :ok = start_new_outbound_connections()
+
     {:noreply, %{state | outbound_peers: MapSet.put(state.outbound_peers, peer)}}
   end
 
@@ -50,6 +51,7 @@ defmodule ExWire.ConnectionObserver do
         {:EXIT, _pid, {_, %Connection{is_outbound: false, peer: peer}}},
         state
       ) do
+    IO.inspect(state.inbound_peers)
     {:noreply, %{state | inbound_peers: MapSet.put(state.inbound_peers, peer)}}
   end
 

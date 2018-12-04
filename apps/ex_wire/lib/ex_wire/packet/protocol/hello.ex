@@ -26,7 +26,7 @@ defmodule ExWire.Packet.Protocol.Hello do
   @behaviour ExWire.Packet
 
   @type t :: %__MODULE__{
-          p2p_version: integer(),
+          p2p_version: non_neg_integer(),
           client_id: String.t(),
           caps: [Capability.t()],
           listen_port: integer(),
@@ -129,10 +129,10 @@ defmodule ExWire.Packet.Protocol.Hello do
           "[Packet] Disconnecting due to no matching peer caps (#{inspect(packet.caps)})"
         end)
 
-      {:disconnect, :useless_peer}
+      {:disconnect, :useless_peer, packet.caps, packet.p2p_version}
     else
       # TODO: Add a bunch more checks
-      :activate
+      {:activate, packet.caps, packet.p2p_version}
     end
   end
 end

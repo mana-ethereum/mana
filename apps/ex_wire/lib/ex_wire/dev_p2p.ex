@@ -48,10 +48,11 @@ defmodule ExWire.DEVp2p do
     %{session | hello_sent: hello}
   end
 
-  @doc """
+  '''
   Function to update `ExWire.DEVp2p.Session` when a handshake is received. The
   handshake should be an `ExWire.Packet.Protocol.Hello` that we have received from a peer.
-  """
+  '''
+
   @spec hello_received(Session.t(), Hello.t()) :: Session.t()
   def hello_received(session, hello = %Hello{}) do
     Session.hello_received(session, hello)
