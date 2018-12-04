@@ -92,10 +92,18 @@ defmodule EVM.Builtin.ModExp do
           integer()
   defp e_length_prime(e_length, e, _) when e == 0 and e_length <= 32, do: 0
 
-  defp e_length_prime(e_length, e, _) when e_length <= 32 do
-    bin_e = :binary.encode_unsigned(e)
+  defp e_length_prime(e_length, e, _) when e_length < 32 do
+    e_bin = :binary.encode_unsigned(e)
+    8 * (e_length - 32) + highest_bit(e_bin, e_length)
+  end
 
-    8 * (e_length - 32) + highest_bit(bin_e, e_length)
+  defp e_length_prime(e_length, e, _) when e_length == 32 do
+    e_bin =
+      e
+      |> :binary.encode_unsigned()
+      |> EVM.Helpers.left_pad_bytes()
+
+    8 * (e_length - 32) + highest_bit(e_bin, e_length)
   end
 
   defp e_length_prime(e_length, _e, {b_length, data}) do
@@ -114,15 +122,11 @@ defmodule EVM.Builtin.ModExp do
   defp highest_bit(_, 0), do: 0
 
   defp highest_bit(binary_number, _) do
-    number = :binary.decode_unsigned(binary_number)
+    bit_list = for <<b::1 <- binary_number>>, do: b
 
-    if number < 256 do
-      number
-      |> :math.log2()
-      |> Float.floor()
-      |> round()
+    if List.first(bit_list) == 1 do
+      255
     else
-      bit_list = for <<b::1 <- binary_number>>, do: b
       index = Enum.find_index(bit_list, fn x -> x != 0 end)
 
       index = index || 0
