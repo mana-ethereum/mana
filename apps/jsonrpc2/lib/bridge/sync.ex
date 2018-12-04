@@ -1,6 +1,6 @@
 defmodule JSONRPC2.Bridge.Sync do
-  alias Blockchain.Blocktree
   alias Blockchain.Block
+  alias Blockchain.Blocktree
   alias ExWire.PeerSupervisor
   alias ExWire.Sync
 

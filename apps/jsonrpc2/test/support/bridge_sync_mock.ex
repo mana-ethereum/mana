@@ -1,6 +1,7 @@
 defmodule JSONRPC2.BridgeSyncMock do
-  alias JSONRPC2.Struct.EthSyncing
   alias Blockchain.Block
+  alias JSONRPC2.Struct.EthSyncing
+
   use GenServer
 
   def connected_peer_count() do
