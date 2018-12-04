@@ -294,7 +294,7 @@ defmodule Blockchain.Block do
   end
 
   defp get_block_hash_key(block_number) do
-    "hash_for_#{block_number}}"
+    "hash_for_#{block_number}"
   end
 
   @doc """
