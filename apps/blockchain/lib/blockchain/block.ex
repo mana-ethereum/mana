@@ -168,6 +168,70 @@ defmodule Blockchain.Block do
   def hash(block), do: Header.hash(block.header)
 
   @doc """
+  Fetches the block hash for a block, either by calculating the block hash
+  based on the block data, or returning the block hash from the block's struct.
+
+  ## Examples
+
+      iex> %Blockchain.Block{header: %Block.Header{number: 5, parent_hash: <<1, 2, 3>>, beneficiary: <<2, 3, 4>>, difficulty: 100, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>}}
+      ...> |> Blockchain.Block.fetch_block_hash()
+      <<78, 28, 127, 10, 192, 253, 127, 239, 254, 179, 39, 34, 245, 44, 152, 98, 128, 71, 238, 155, 100, 161, 199, 71, 243, 223, 172, 191, 74, 99, 128, 63>>
+
+      iex> %Blockchain.Block{block_hash: <<5::256>>, header: %Block.Header{number: 5, parent_hash: <<1, 2, 3>>, beneficiary: <<2, 3, 4>>, difficulty: 100, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>}}
+      ...> |> Blockchain.Block.fetch_block_hash()
+      <<5::256>>
+  """
+  @spec fetch_block_hash(t()) :: EVM.hash()
+  def fetch_block_hash(block) do
+    case block.block_hash do
+      nil -> hash(block)
+      block_hash -> block_hash
+    end
+  end
+
+  @doc """
+  If a block already has a hash, returns the same unchanged, but if the block
+  hash has not yet been calculated, returns the block with the block hash
+  stored in the struct.
+
+  ## Examples
+
+      iex> %Blockchain.Block{header: %Block.Header{number: 5, parent_hash: <<1, 2, 3>>, beneficiary: <<2, 3, 4>>, difficulty: 100, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>}}
+      ...> |> Blockchain.Block.with_hash()
+      %Blockchain.Block{
+        block_hash: <<78, 28, 127, 10, 192, 253, 127, 239, 254, 179, 39, 34, 245, 44, 152, 98, 128, 71, 238, 155, 100, 161, 199, 71, 243, 223, 172, 191, 74, 99, 128, 63>>,
+        header: %Block.Header{
+          number: 5,
+          parent_hash: <<1, 2, 3>>,
+          beneficiary: <<2, 3, 4>>,
+          difficulty: 100,
+          timestamp: 11,
+          mix_hash: <<1>>,
+          nonce: <<2>>
+        }
+      }
+
+      iex> %Blockchain.Block{block_hash: <<5::256>>, header: %Block.Header{number: 5, parent_hash: <<1, 2, 3>>, beneficiary: <<2, 3, 4>>, difficulty: 100, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>}}
+      ...> |> Blockchain.Block.with_hash()
+      %Blockchain.Block{
+        block_hash: <<5::256>>,
+        header: %Block.Header{
+          number: 5,
+          parent_hash: <<1, 2, 3>>,
+          beneficiary: <<2, 3, 4>>,
+          difficulty: 100,
+          timestamp: 11,
+          mix_hash: <<1>>,
+          nonce: <<2>>
+        }
+      }
+  """
+  @spec with_hash(t()) :: t()
+  def with_hash(block) do
+    %{block | block_hash: fetch_block_hash(block)}
+  end
+
+  @doc """
   Stores a given block in the database and returns the block hash.
 
   This should be used if we ever want to retrieve that block in
