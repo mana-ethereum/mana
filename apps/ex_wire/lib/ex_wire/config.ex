@@ -28,6 +28,7 @@ defmodule ExWire.Config do
           | :public_ip
           | :sync
           | :warp
+          | :fast
 
   @doc """
   Allows application to configure ExWire before it starts.
@@ -154,6 +155,11 @@ defmodule ExWire.Config do
   @spec warp?(Keyword.t()) :: boolean()
   def warp?(given_params \\ []) do
     get_env(given_params, :warp)
+  end
+
+  @spec fast?(Keyword.t()) :: boolean()
+  def fast?(given_params \\ []) do
+    get_env(given_params, :fast)
   end
 
   @spec bootnodes(Keyword.t()) :: [String.t()]

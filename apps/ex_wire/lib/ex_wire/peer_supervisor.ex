@@ -92,28 +92,36 @@ defmodule ExWire.PeerSupervisor do
 
   @spec do_find_children(node_selector()) :: list(any())
   defp do_find_children(:all) do
-    DynamicSupervisor.which_children(@name)
+    compatible_children(@name)
   end
 
   defp do_find_children(:last) do
     @name
-    |> DynamicSupervisor.which_children()
+    |> compatible_children()
     |> List.last()
     |> List.wrap()
   end
 
   defp do_find_children(:random) do
     @name
-    |> DynamicSupervisor.which_children()
+    |> compatible_children()
     |> Enum.shuffle()
     |> Enum.take(1)
     |> List.wrap()
   end
 
+  defp compatible_children(name) do
+    name
+    |> DynamicSupervisor.which_children()
+    |> Enum.filter(fn {_id, child, _type, _modules} ->
+      Server.get_state(child).session != nil
+    end)
+  end
+
   @spec connected_peer_count() :: non_neg_integer()
   def connected_peer_count() do
     @name
-    |> DynamicSupervisor.which_children()
+    |> compatible_children()
     |> Enum.count()
   end
 

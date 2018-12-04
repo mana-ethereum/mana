@@ -133,13 +133,15 @@ defmodule ExWire.P2P.Manager do
         # TOOD: How does this work exactly? Is this for multiple frames?
         handle_packet_data(frame_rest, conn_after_handle)
 
-      {:error, "Insufficent data"} ->
+      {:error, :insufficient_data} ->
         %{conn | queued_data: total_data}
 
       {:error, reason} ->
         _ =
           Logger.error(
-            "[Network] [#{peer}] Failed to read incoming packet from #{peer.host_name} `#{reason}`)"
+            "[Network] [#{peer}] Failed to read incoming packet from #{peer.host_name} `#{
+              to_string(reason)
+            }`)"
           )
 
         %{conn | last_error: reason}

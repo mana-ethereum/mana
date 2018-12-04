@@ -15,14 +15,13 @@ defmodule ExWire.Packet.Capability.Eth.NewBlock do
 
   alias Block.Header
   alias Blockchain.Block
-  alias ExWire.Packet.Capability.Eth.Transactions
+  alias Blockchain.Transaction
 
   @behaviour ExWire.Packet
 
-  # TODO: fill in Transactions typespec when that packet is figured out
   @type t :: %__MODULE__{
           header: Header.t(),
-          transactions: [any()],
+          transactions: [Transaction.t()],
           uncles: [Block.t()],
           total_difficulty: integer() | nil
         }
@@ -53,8 +52,8 @@ defmodule ExWire.Packet.Capability.Eth.NewBlock do
     [
       [
         Header.serialize(packet.header),
-        Transactions.serialize(%Transactions{transactions: packet.transactions}),
-        packet.uncles |> Block.serialize() |> Enum.to_list()
+        Enum.map(packet.transactions, &Transaction.serialize/1),
+        Enum.map(packet.uncles, &Header.serialize/1)
       ],
       packet.total_difficulty
     ]
@@ -70,16 +69,16 @@ defmodule ExWire.Packet.Capability.Eth.NewBlock do
     [
       [
         header,
-        transactions,
-        uncles
+        transaction_rlp,
+        uncles_rlp
       ],
       total_difficulty
     ] = rlp
 
     %__MODULE__{
       header: Header.deserialize(header),
-      transactions: Transactions.deserialize(transactions).transactions,
-      uncles: uncles |> Block.deserialize() |> Enum.to_list(),
+      transactions: Enum.map(transaction_rlp, &Transaction.deserialize/1),
+      uncles: Enum.map(uncles_rlp, &Header.deserialize/1),
       total_difficulty: total_difficulty |> :binary.decode_unsigned()
     }
   end

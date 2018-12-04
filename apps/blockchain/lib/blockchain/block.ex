@@ -350,7 +350,7 @@ defmodule Blockchain.Block do
       iex> trie = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
       iex> {updated_block, _new_trie} = Blockchain.Block.put_receipt(%Blockchain.Block{}, 6, %Blockchain.Transaction.Receipt{state: <<1, 2, 3>>, cumulative_gas: 10, bloom_filter: <<2, 3, 4>>, logs: []}, trie)
       iex> {updated_block, _new_trie} = Blockchain.Block.put_receipt(updated_block, 7, %Blockchain.Transaction.Receipt{state: <<4, 5, 6>>, cumulative_gas: 11, bloom_filter: <<5, 6, 7>>, logs: []}, trie)
-      iex> Blockchain.Block.get_receipt(updated_block, 6, trie.db)
+      iex> Blockchain.Block.x(updated_block, 6, trie.db)
       %Blockchain.Transaction.Receipt{state: <<1, 2, 3>>, cumulative_gas: 10, bloom_filter: <<2, 3, 4>>, logs: []}
 
       iex> trie = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())

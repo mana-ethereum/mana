@@ -48,7 +48,7 @@ defmodule ExWire.Packet.PacketIdMap do
       |> Enum.filter(fn cap ->
         Capability.are_we_capable?(cap, Mana.get_our_capabilities_map())
       end)
-      |> Enum.sort(fn {name1, _v1}, {name2, _v2} -> name1 < name2 end)
+      |> Enum.sort(fn %Capability{name: name1}, %Capability{name: name2} -> name1 < name2 end)
       |> Enum.map(fn cap ->
         Capability.get_packets_for_capability(cap, Mana.get_our_capabilities_map())
       end)
@@ -116,8 +116,13 @@ defmodule ExWire.Packet.PacketIdMap do
   defp build_capability_ids_to_modules_map(capability_packet_types, {base_id, starting_map}) do
     capability_packet_types
     |> Enum.reduce({base_id, starting_map}, fn packet_type, {next_base_id, updated_map} ->
-      packet_id = base_id + apply(packet_type, :message_id_offset, [])
-      {Kernel.max(next_base_id, packet_id + 1), Map.put(updated_map, packet_id, packet_type)}
+      if packet_type == :reserved do
+        {next_base_id + 1, updated_map}
+      else
+        packet_id = base_id + apply(packet_type, :message_id_offset, [])
+
+        {Kernel.max(next_base_id, packet_id + 1), Map.put(updated_map, packet_id, packet_type)}
+      end
     end)
   end
 end
