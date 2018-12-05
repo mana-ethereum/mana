@@ -68,7 +68,12 @@ defmodule JSONRPC2.ManaHandlerTest do
 
   describe "is net_peerCount method behaving correctly when" do
     setup do
-      {:ok, pid} = BridgeSyncMock.start_link(%{})
+      pid =
+        case BridgeSyncMock.start_link(%{}) do
+          {:error, {:already_started, pid}} -> pid
+          {:ok, pid} -> pid
+        end
+
       {:ok, %{pid: pid}}
     end
 
@@ -101,7 +106,12 @@ defmodule JSONRPC2.ManaHandlerTest do
 
   describe "is eth_syncing method behaving correctly when" do
     setup do
-      {:ok, pid} = BridgeSyncMock.start_link(%{})
+      pid =
+        case BridgeSyncMock.start_link(%{}) do
+          {:error, {:already_started, pid}} -> pid
+          {:ok, pid} -> pid
+        end
+
       {:ok, %{pid: pid}}
     end
 
