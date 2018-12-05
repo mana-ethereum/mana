@@ -19,7 +19,10 @@ defmodule ExWire.Packet do
           :ok
           | {:activate, [Capability.t()], p2p_version()}
           | :peer_disconnect
+          # hello
           | {:disconnect, atom(), [Capability.t()], p2p_version()}
+          # status
+          | {:disconnect, atom()}
           | {:send, struct()}
   @callback handle(packet) :: handle_response
 end

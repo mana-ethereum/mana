@@ -12,7 +12,6 @@ defmodule ExWire.P2P.Manager do
   alias ExWire.DEVp2p.Session
   alias ExWire.Handshake.Struct.AuthMsgV4
   alias ExWire.P2P.Connection
-  alias ExWire.Packet.Capability
   alias ExWire.Packet.PacketIdMap
   alias ExWire.Packet.Protocol.Disconnect
   alias ExWire.Struct.Peer
@@ -158,16 +157,6 @@ defmodule ExWire.P2P.Manager do
     do_handle_packet(packet, session_status, packet_handle_response, conn)
   end
 
-  @spec do_handle_packet(
-          Packet.packet(),
-          :active | :inactive,
-          {:disconnect, :useless_peer, [Capability.t()], non_neg_integer()}
-          | {:disconnect, :useless_peer}
-          | {:activate, [Capability.t()], non_neg_integer()}
-          | :peer_disconnect
-          | :ok,
-          Connection.t()
-        ) :: Connection.t()
   defp do_handle_packet(_, _, {:disconnect, :useless_peer}, conn) do
     disconnect_packet = Disconnect.new(:useless_peer)
 
