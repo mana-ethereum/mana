@@ -15,9 +15,6 @@ defmodule ExWire.P2P.Manager do
   alias ExWire.Packet.Capability
   alias ExWire.Packet.PacketIdMap
   alias ExWire.Packet.Protocol.Disconnect
-  alias ExWire.Packet.Protocol.Hello
-  alias ExWire.Packet.Protocol.Ping
-  alias ExWire.Packet.Protocol.Pong
   alias ExWire.Struct.Peer
 
   @doc """
@@ -157,20 +154,27 @@ defmodule ExWire.P2P.Manager do
   defp handle_packet(packet_mod, packet, conn) do
     packet_handle_response = packet_mod.handle(packet)
     session_status = if DEVp2p.session_active?(conn.session), do: :active, else: :inactive
-    do_handle_packet(packet_mod, packet, session_status, packet_handle_response, conn)
+
+    do_handle_packet(packet, session_status, packet_handle_response, conn)
   end
 
   @spec do_handle_packet(
-          Hello | Ping | Pong | Disconnect,
           Packet.packet(),
           :active | :inactive,
           {:disconnect, :useless_peer, [Capability.t()], non_neg_integer()}
+          | {:disconnect, :useless_peer}
           | {:activate, [Capability.t()], non_neg_integer()}
           | :peer_disconnect
           | :ok,
           Connection.t()
         ) :: Connection.t()
-  defp do_handle_packet(Hello, _, _, {:disconnect, :useless_peer, caps, p2p_version}, conn) do
+  defp do_handle_packet(_, _, {:disconnect, :useless_peer}, conn) do
+    disconnect_packet = Disconnect.new(:useless_peer)
+
+    send_packet(conn, disconnect_packet)
+  end
+
+  defp do_handle_packet(_, _, {:disconnect, :useless_peer, caps, p2p_version}, conn) do
     disconnect_packet = Disconnect.new(:useless_peer)
 
     send_packet(
@@ -179,20 +183,20 @@ defmodule ExWire.P2P.Manager do
     )
   end
 
-  defp do_handle_packet(Hello, packet, :inactive, {:activate, caps, p2p_version}, conn) do
+  defp do_handle_packet(packet, :inactive, {:activate, caps, p2p_version}, conn) do
     new_session = attempt_session_activation(conn.session, packet)
     %{conn | peer: %{conn.peer | p2p_version: p2p_version, caps: caps}, session: new_session}
   end
 
-  defp do_handle_packet(Ping, _, :active, {:send, return_packet}, conn) do
+  defp do_handle_packet(_, :active, {:send, return_packet}, conn) do
     send_packet(conn, return_packet)
   end
 
-  defp do_handle_packet(Pong, _, :active, :ok, conn) do
+  defp do_handle_packet(_, :active, :ok, conn) do
     conn
   end
 
-  defp do_handle_packet(Disconnect, _, _, :peer_disconnect, conn) do
+  defp do_handle_packet(_, _, :peer_disconnect, conn) do
     _ = TCP.shutdown(conn.socket)
 
     conn
