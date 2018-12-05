@@ -23,7 +23,7 @@ defmodule ExWire.P2P.Connection do
           datas: [binary()],
           last_error: any() | nil,
           is_outbound: boolean(),
-          timer: Time.t() | nil
+          connection_timer_start: Time.t() | nil
         }
 
   defstruct peer: nil,
@@ -37,5 +37,5 @@ defmodule ExWire.P2P.Connection do
             datas: [],
             last_error: nil,
             is_outbound: false,
-            timer: nil
+            connection_timer_start: nil
 end

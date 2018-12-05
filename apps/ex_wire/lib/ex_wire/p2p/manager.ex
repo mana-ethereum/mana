@@ -22,15 +22,15 @@ defmodule ExWire.P2P.Manager do
   the `peer`.
   """
   @spec new_outbound_connection(Connection.t()) :: Connection.t()
-  def new_outbound_connection(state) do
+  def new_outbound_connection(connection_state) do
     handshake =
-      state.peer.remote_id
+      connection_state.peer.remote_id
       |> Handshake.new()
       |> Handshake.generate_auth()
 
-    :ok = send_unframed_data(handshake.encoded_auth_msg, state.socket, state.peer)
+    :ok = send_unframed_data(handshake.encoded_auth_msg, connection_state.socket, connection_state.peer)
 
-    %{state | handshake: handshake}
+    %{connection_state | handshake: handshake}
   end
 
   @doc """
@@ -39,10 +39,10 @@ defmodule ExWire.P2P.Manager do
   the socket and the auth message when it arrives.
   """
   @spec new_inbound_connection(Connection.t()) :: Connection.t()
-  def new_inbound_connection(state) do
+  def new_inbound_connection(connection_state) do
     handshake = Handshake.new_response()
 
-    %{state | handshake: handshake}
+    %{connection_state | handshake: handshake}
   end
 
   @doc """
