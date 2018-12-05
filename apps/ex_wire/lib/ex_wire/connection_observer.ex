@@ -51,7 +51,6 @@ defmodule ExWire.ConnectionObserver do
         {:EXIT, _pid, {_, %Connection{is_outbound: false, peer: peer}}},
         state
       ) do
-    IO.inspect(state.inbound_peers)
     {:noreply, %{state | inbound_peers: MapSet.put(state.inbound_peers, peer)}}
   end
 

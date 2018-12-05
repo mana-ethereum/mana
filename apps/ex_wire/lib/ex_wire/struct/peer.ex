@@ -5,15 +5,13 @@ defmodule ExWire.Struct.Peer do
   establish a quality of a particular peer.
   """
 
-  defstruct [
-    :host,
-    :host_name,
-    :port,
-    :remote_id,
-    :ident,
-    :caps,
-    :p2p_version
-  ]
+  defstruct host: nil,
+            host_name: nil,
+            port: nil,
+            remote_id: nil,
+            ident: nil,
+            caps: [],
+            p2p_version: nil
 
   alias ExthCrypto.Key
   alias ExWire.Crypto

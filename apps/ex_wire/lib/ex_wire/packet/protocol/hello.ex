@@ -104,19 +104,23 @@ defmodule ExWire.Packet.Protocol.Hello do
   ## Examples
 
       # Matching caps
-      iex> %ExWire.Packet.Protocol.Hello{p2p_version: 10, client_id: "Mana/Test", caps: [ExWire.Packet.Capability.new({"eth", 62}), ExWire.Packet.Capability.new({"par", 2})], listen_port: 5555, node_id: <<5>>}
+
+      iex> caps = [ExWire.Packet.Capability.new({"eth", 62}), ExWire.Packet.Capability.new({"par", 2})]
+      iex> %ExWire.Packet.Protocol.Hello{p2p_version: 10, client_id: "Mana/Test", caps: caps, listen_port: 5555, node_id: <<5>>}
       ...> |> ExWire.Packet.Protocol.Hello.handle()
-      :activate
+      {:activate, [ExWire.Packet.Capability.new({"eth", 62}), ExWire.Packet.Capability.new({"par", 2})], 10}
 
       # No matching caps
-      iex> %ExWire.Packet.Protocol.Hello{p2p_version: 10, client_id: "Mana/Test", caps: [ExWire.Packet.Capability.new({"eth", 1}), ExWire.Packet.Capability.new({"par", 2})], listen_port: 5555, node_id: <<5>>}
+
+      iex> caps = [ExWire.Packet.Capability.new({"eth", 1}), ExWire.Packet.Capability.new({"par", 2})]
+      iex> %ExWire.Packet.Protocol.Hello{p2p_version: 10, client_id: "Mana/Test", caps: caps, listen_port: 5555, node_id: <<5>>}
       ...> |> ExWire.Packet.Protocol.Hello.handle()
-      {:disconnect, :useless_peer}
+      {:disconnect, :useless_peer, [ExWire.Packet.Capability.new({"eth", 1}), ExWire.Packet.Capability.new({"par", 2})], 10}
 
       # When no caps
       iex> %ExWire.Packet.Protocol.Hello{p2p_version: 10, client_id: "Mana/Test", caps: [], listen_port: 5555, node_id: <<5>>}
       ...> |> ExWire.Packet.Protocol.Hello.handle()
-      {:disconnect, :useless_peer}
+      {:disconnect, :useless_peer, [], 10}
   """
   @impl true
   @spec handle(ExWire.Packet.packet()) :: ExWire.Packet.handle_response()

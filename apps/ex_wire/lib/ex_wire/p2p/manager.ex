@@ -12,12 +12,12 @@ defmodule ExWire.P2P.Manager do
   alias ExWire.DEVp2p.Session
   alias ExWire.Handshake.Struct.AuthMsgV4
   alias ExWire.P2P.Connection
+  alias ExWire.Packet.Capability
   alias ExWire.Packet.PacketIdMap
-  alias ExWire.Packet.Protocol.Hello
   alias ExWire.Packet.Protocol.Disconnect
+  alias ExWire.Packet.Protocol.Hello
   alias ExWire.Packet.Protocol.Ping
   alias ExWire.Packet.Protocol.Pong
-  alias ExWire.Packet.Capability
   alias ExWire.Struct.Peer
 
   @doc """
