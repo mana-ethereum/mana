@@ -121,8 +121,8 @@ defmodule ExWire.P2P.Server do
   Initialize by opening up a `gen_tcp` connection to given host and port.
   """
   @spec init(map()) :: {:ok, state()}
-  def init(opts = %{is_outbound: true, peer: peer, connection_observer: connection_observer}) do
-    Process.send_after(self(), {:connect, opts}, 0)
+  def init(%{is_outbound: true, peer: peer, connection_observer: connection_observer}) do
+    Process.send_after(self(), :connect, 0)
     true = link(connection_observer)
     {:ok, %Connection{peer: peer, is_outbound: true}}
   end
@@ -147,7 +147,7 @@ defmodule ExWire.P2P.Server do
     {:reply, :ok, new_state}
   end
 
-  def handle_info({:connect, opts}, opts = %{peer: peer}) do
+  def handle_info(:connect, opts = %{peer: peer}) do
     {:ok, socket0} = TCP.connect(peer.host, peer.port)
 
     :ok =
