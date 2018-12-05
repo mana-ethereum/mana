@@ -5,7 +5,7 @@ defmodule JSONRPC2.SpecHandler do
   alias ExthCrypto.Math
   alias JSONRPC2.Bridge.Sync
   alias JSONRPC2.Struct.EthSyncing
-  @sync Application.get_env(:jsonrpc2, :bridge, Sync)
+  @sync Application.get_env(:jsonrpc2, :bridge_mock, Sync)
   # web3 Methods
 
   def handle_request("web3_clientVersion", _),

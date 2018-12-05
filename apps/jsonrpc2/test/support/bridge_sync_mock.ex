@@ -1,7 +1,7 @@
 defmodule JSONRPC2.BridgeSyncMock do
   alias Blockchain.Block
-  alias JSONRPC2.Struct.EthSyncing
   alias JSONRPC2.Response.Block, as: ResponseBlock
+  alias JSONRPC2.Struct.EthSyncing
 
   use GenServer
 

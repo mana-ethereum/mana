@@ -1,7 +1,7 @@
 defmodule JSONRPC2.Response.Helpers do
   @spec encode_hex(binary() | nil) :: binary()
   def encode_hex(binary) when is_binary(binary) do
-    "0x" <> Base.encode16(binary, case: :lower)
+    Exth.encode_hex(binary)
   end
 
   def encode_hex(nil), do: nil
