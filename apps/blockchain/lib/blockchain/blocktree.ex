@@ -98,7 +98,8 @@ defmodule Blockchain.Blocktree do
   @spec get_best_block(t(), Chain.t(), TrieStorage.t()) :: {:ok, {Block.t(), TrieStorage.t()}}
   def get_best_block(blocktree, chain, trie) do
     if block = blocktree.best_block do
-      {:ok, {block, trie}}
+      block_hash = Block.fetch_block_hash(block)
+      {:ok, {%{block | block_hash: block_hash}, trie}}
     else
       {block, new_trie} = Genesis.create_block(chain, trie)
 

@@ -28,7 +28,12 @@ defmodule ExWire.P2P.Manager do
       |> Handshake.new()
       |> Handshake.generate_auth()
 
-    :ok = send_unframed_data(handshake.encoded_auth_msg, connection_state.socket, connection_state.peer)
+    :ok =
+      send_unframed_data(
+        handshake.encoded_auth_msg,
+        connection_state.socket,
+        connection_state.peer
+      )
 
     %{connection_state | handshake: handshake}
   end
