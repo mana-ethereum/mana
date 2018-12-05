@@ -166,7 +166,7 @@ defmodule Blockchain.BlocktreeTest do
 
       {:ok, {found_block, _trie}} = Blockchain.Blocktree.get_best_block(tree, chain, trie)
 
-      assert found_block == block
+      assert found_block == %{block | block_hash: Blockchain.Block.hash(block)}
     end
   end
 end

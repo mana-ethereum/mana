@@ -21,16 +21,21 @@ defmodule ExWire.P2P.Manager do
   and a `peer` to be provided. This function starts the encrypted handshake with
   the `peer`.
   """
-  @spec new_outbound_connection(ExWire.TCP.socket(), Peer.t()) :: Connection.t()
-  def new_outbound_connection(socket, peer) do
+  @spec new_outbound_connection(Connection.t()) :: Connection.t()
+  def new_outbound_connection(connection_state) do
     handshake =
-      peer.remote_id
+      connection_state.peer.remote_id
       |> Handshake.new()
       |> Handshake.generate_auth()
 
-    :ok = send_unframed_data(handshake.encoded_auth_msg, socket, peer)
+    :ok =
+      send_unframed_data(
+        handshake.encoded_auth_msg,
+        connection_state.socket,
+        connection_state.peer
+      )
 
-    %Connection{socket: socket, peer: peer, handshake: handshake}
+    %{connection_state | handshake: handshake}
   end
 
   @doc """
@@ -38,11 +43,11 @@ defmodule ExWire.P2P.Manager do
   but not a `peer` at this moment. The full peer information will be obtained from
   the socket and the auth message when it arrives.
   """
-  @spec new_inbound_connection(ExWire.TCP.socket()) :: Connection.t()
-  def new_inbound_connection(socket) do
+  @spec new_inbound_connection(Connection.t()) :: Connection.t()
+  def new_inbound_connection(connection_state) do
     handshake = Handshake.new_response()
 
-    %Connection{socket: socket, handshake: handshake}
+    %{connection_state | handshake: handshake}
   end
 
   @doc """
