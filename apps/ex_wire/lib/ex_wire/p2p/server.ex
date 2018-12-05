@@ -121,17 +121,28 @@ defmodule ExWire.P2P.Server do
   Initialize by opening up a `gen_tcp` connection to given host and port.
   """
   @spec init(map()) :: {:ok, state()}
-  def init(%{is_outbound: true, peer: peer, connection_observer: connection_observer}) do
+  def init(opts = %{is_outbound: true, peer: peer, connection_observer: connection_observer}) do
     Process.send_after(self(), :connect, 0)
     true = link(connection_observer)
-    {:ok, %Connection{peer: peer, is_outbound: true}}
+
+    state = %Connection{
+      peer: peer,
+      is_outbound: true,
+      subscribers: Map.get(opts, :subscribers, []),
+      timer: Time.utc_now()
+    }
+
+    {:ok, state}
   end
 
   def init(opts = %{is_outbound: false, connection_observer: connection_observer}) do
+    state0 = struct(Connection, opts)
+
     state =
-      struct(Connection, opts)
+      state0
       |> Manager.new_inbound_connection()
       |> Map.put(:subscribers, Map.get(opts, :subscribers, []))
+      |> Map.put(:timer, Time.utc_now())
 
     true = link(connection_observer)
     {:ok, state}
@@ -147,7 +158,7 @@ defmodule ExWire.P2P.Server do
     {:reply, :ok, new_state}
   end
 
-  def handle_info(:connect, opts = %{peer: peer}) do
+  def handle_info(:connect, state = %{peer: peer}) do
     {:ok, socket0} = TCP.connect(peer.host, peer.port)
 
     :ok =
@@ -155,19 +166,16 @@ defmodule ExWire.P2P.Server do
         "[Network] [#{peer}] Established outbound connection with #{peer.host_name}."
       end)
 
-    state =
-      %{opts | socket: socket0}
-      |> Manager.new_outbound_connection()
-      |> Map.put(:subscribers, Map.get(opts, :subscribers, []))
+    state0 = Manager.new_outbound_connection(%{state | socket: socket0})
 
-    {:noreply, state}
+    {:noreply, state0}
   end
 
   @doc """
   Handle inbound communication from a peer node via tcp.
   """
-  def handle_info({:tcp, _socket, data}, conn) do
-    {:ok, new_conn} = handle_socket_message(data, conn)
+  def handle_info({:tcp, _socket, data}, state) do
+    {:ok, new_conn} = handle_socket_message(data, state)
 
     {:noreply, new_conn}
   end
