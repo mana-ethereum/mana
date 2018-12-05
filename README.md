@@ -19,11 +19,11 @@ Mana-Ethereum is currently in development. See the [Project Status] and [Project
 
 # Installation
 
-- Clone repo with submodules (to access the Ethereum common tests)
+- Clone repo with submodules (to access the [Ethereum common tests])
 
-```
-git clone --recurse-submodules https://github.com/mana-ethereum/mana.git
-```
+   ```
+   git clone --recurse-submodules https://github.com/mana-ethereum/mana.git
+   ```
 
 - Go to the mana subdirectory `cd mana`
 
@@ -70,15 +70,16 @@ Then you can run:
 which will start a DevP2P sync with a local peer.
 
 ### Known Sync Issues
-_Updated Nov-21-2018_
+_Updated Dec-5-2018_
 
-- We've restarted mainnet syncing, previous sync reached block 2469002 before we paused to investigate slow `BALANCE` calls [#610].
-- Ropsten sync is in progress, current block is ~ 3_670_000 - Jul-19-2018
+- We've restarted mainnet syncing and are at block ~ [2,470,630]. We are currently investigating performance and storage issues [#622], [#623], and [#624].
+- Ropsten sync is in progress as we've reached the Constantinople fork. Current block is ~ [4,253,000] - Oct-18-2018
 
-[transaction spam attack]: https://blog.ethereum.org/2016/09/22/transaction-spam-attack-next-steps/
-[2469000]: https://etherscan.io/block/2,469,000
-[2444903]: https://ropsten.etherscan.io/txs?block=2444903
-[#610]: https://github.com/mana-ethereum/mana/issues/610
+[2,470,630]: https://etherscan.io/block/2470630
+[4,253,000]: https://ropsten.etherscan.io/block/4253000
+[#622]: https://github.com/mana-ethereum/mana/issues/622
+[#623]: https://github.com/mana-ethereum/mana/issues/623
+[#624]: https://github.com/mana-ethereum/mana/issues/624
 
 ### Helpful debugging tools
 
