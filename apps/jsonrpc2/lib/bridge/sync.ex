@@ -1,7 +1,9 @@
 defmodule JSONRPC2.Bridge.Sync do
+  alias Blockchain.Block
   alias Blockchain.Blocktree
   alias ExWire.PeerSupervisor
   alias ExWire.Sync
+  alias JSONRPC2.Response.Block, as: ResponseBlock
 
   @spec connected_peer_count :: 0 | non_neg_integer()
   def connected_peer_count, do: PeerSupervisor.connected_peer_count()
@@ -25,4 +27,22 @@ defmodule JSONRPC2.Bridge.Sync do
 
   @spec get_last_sync_state() :: Sync.state()
   defp get_last_sync_state(), do: Sync.get_state()
+
+  def get_block_by_number(number) do
+    state_trie = get_last_sync_state().trie
+
+    case Block.get_block_by_number(number, state_trie) do
+      {:ok, block} -> ResponseBlock.new(block)
+      _ -> nil
+    end
+  end
+
+  def get_block_by_hash(hash) do
+    state_trie = get_last_sync_state().trie
+
+    case Block.get_block(hash, state_trie) do
+      {:ok, block} -> ResponseBlock.new(block)
+      _ -> nil
+    end
+  end
 end

@@ -61,7 +61,11 @@ defmodule JSONRPC2.SpecHandler do
   def handle_request("eth_getStorageAt", _), do: {:error, :not_supported}
   def handle_request("eth_getTransactionCount", _), do: {:error, :not_supported}
   def handle_request("eth_getBlockTransactionCountByHash", _), do: {:error, :not_supported}
-  def handle_request("eth_getBlockTransactionCountByNumber", _), do: {:error, :not_supported}
+
+  # def handle_request("eth_getBlockTransactionCountByNumber", number) do
+  #   get_block_by_number
+  # end
+
   def handle_request("eth_getUncleCountByBlockHash", _), do: {:error, :not_supported}
   def handle_request("eth_getUncleCountByBlockNumber", _), do: {:error, :not_supported}
   def handle_request("eth_getCode", _), do: {:error, :not_supported}
@@ -70,8 +74,17 @@ defmodule JSONRPC2.SpecHandler do
   def handle_request("eth_sendRawTransaction", _), do: {:error, :not_supported}
   def handle_request("eth_call", _), do: {:error, :not_supported}
   def handle_request("eth_estimateGas", _), do: {:error, :not_supported}
-  def handle_request("eth_getBlockByHash", _), do: {:error, :not_supported}
-  def handle_request("eth_getBlockByNumber", _), do: {:error, :not_supported}
+
+  def handle_request("eth_getBlockByHash", [hash, _full_transactions]) do
+    hash
+    |> Math.hex_to_bin()
+    |> @sync.get_block_by_hash()
+  end
+
+  def handle_request("eth_getBlockByNumber", [number, _full_transactions]) do
+    @sync.get_block_by_number(number)
+  end
+
   def handle_request("eth_getTransactionByHash", _), do: {:error, :not_supported}
   def handle_request("eth_getTransactionByBlockHashAndIndex", _), do: {:error, :not_supported}
   def handle_request("eth_getTransactionByBlockNumberAndIndex", _), do: {:error, :not_supported}

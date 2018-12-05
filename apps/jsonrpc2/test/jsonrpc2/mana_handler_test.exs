@@ -3,6 +3,16 @@ defmodule JSONRPC2.ManaHandlerTest do
 
   alias JSONRPC2.BridgeSyncMock
   alias JSONRPC2.SpecHandler
+  alias JSONRPC2.TestFactory
+
+  setup_all do
+    db = MerklePatriciaTree.Test.random_ets_db()
+    trie = MerklePatriciaTree.Trie.new(db)
+    state = %{trie: trie}
+
+    {:ok, pid} = BridgeSyncMock.start_link(state)
+    {:ok, %{pid: pid}}
+  end
 
   describe "is web3_clientVersion method behaving correctly when" do
     test "called without params" do
@@ -67,16 +77,6 @@ defmodule JSONRPC2.ManaHandlerTest do
   end
 
   describe "is net_peerCount method behaving correctly when" do
-    setup do
-      pid =
-        case BridgeSyncMock.start_link(%{}) do
-          {:error, {:already_started, pid}} -> pid
-          {:ok, pid} -> pid
-        end
-
-      {:ok, %{pid: pid}}
-    end
-
     test "called without params for 0 peers", %{pid: _pid} do
       connected_peer_count = 0
       :ok = BridgeSyncMock.set_connected_peer_count(connected_peer_count)
@@ -105,16 +105,6 @@ defmodule JSONRPC2.ManaHandlerTest do
   end
 
   describe "is eth_syncing method behaving correctly when" do
-    setup do
-      pid =
-        case BridgeSyncMock.start_link(%{}) do
-          {:error, {:already_started, pid}} -> pid
-          {:ok, pid} -> pid
-        end
-
-      {:ok, %{pid: pid}}
-    end
-
     test "all parameters are 0", %{pid: _pid} do
       :ok = BridgeSyncMock.set_last_sync_block_stats({0, 0, 0})
 
@@ -136,8 +126,36 @@ defmodule JSONRPC2.ManaHandlerTest do
     end
   end
 
+  describe "eth_getTransactionByNumber" do
+    test "fetches transaction by number" do
+      block = TestFactory.build(:block)
+      :ok = BridgeSyncMock.put_block(block)
+
+      assert_rpc_reply(
+        SpecHandler,
+        ~s({"jsonrpc": "2.0", "method": "eth_getBlockByNumber", "params": [1, false], "id": 71}),
+        ~s({"id":71,"jsonrpc":"2.0","result":{"difficulty":1,"extraData":"","gasLimit":0,"gasUsed":0,"hash":null,"logsBloom":"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000","miner":"0x0000000000000000000000000000000000000010","nonce":"0x0000000000000000","number":1,"parentHash":"0x0000000000000000000000000000000000000000000000000000000000000010","receiptsRoot":"0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421","sha3Uncles":"0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347","size":0,"stateRoot":"0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421","timestamp":1,"totalDifficulty":null,"transactions":[],"transactionsRoot":"0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421","uncles":[]}})
+      )
+    end
+  end
+
+  describe "eth_getTransactionByHash" do
+    test "fetches transaction by hash" do
+      block = TestFactory.build(:block)
+
+      :ok = BridgeSyncMock.put_block(block)
+
+      assert_rpc_reply(
+        SpecHandler,
+        ~s({"jsonrpc": "2.0", "method": "eth_getBlockByHash", "params": ["0x0000000000000000000000000000000000000000000000000000000000000010", false], "id": 71}),
+        ~s({"id":71,"jsonrpc":"2.0","result":{"difficulty":1,"extraData":"","gasLimit":0,"gasUsed":0,"hash":null,"logsBloom":"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000","miner":"0x0000000000000000000000000000000000000010","nonce":"0x0000000000000000","number":1,"parentHash":"0x0000000000000000000000000000000000000000000000000000000000000010","receiptsRoot":"0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421","sha3Uncles":"0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347","size":0,"stateRoot":"0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421","timestamp":1,"totalDifficulty":null,"transactions":[],"transactionsRoot":"0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421","uncles":[]}})
+      )
+    end
+  end
+
   defp assert_rpc_reply(handler, call, expected_reply) do
     assert {:reply, reply} = handler.handle(call)
+
     assert Jason.decode(reply) == Jason.decode(expected_reply)
   end
 end

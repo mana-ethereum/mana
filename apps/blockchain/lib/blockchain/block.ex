@@ -380,35 +380,15 @@ defmodule Blockchain.Block do
   Returns a given transaction from a block. This is
   based on the transactions root where all transactions
   are stored for the given block.
-
-  ## Examples
-
-      iex> trie = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
-      iex> {updated_block, new_trie} =  Blockchain.Block.put_transaction(%Blockchain.Block{}, 6, %Blockchain.Transaction{nonce: 1, v: 1, r: 2, s: 3}, trie)
-      iex> {updated_block, new_trie} = Blockchain.Block.put_transaction(updated_block, 7, %Blockchain.Transaction{nonce: 2, v: 1, r: 2, s: 3}, new_trie)
-      iex> Blockchain.Block.get_transaction(updated_block, 6, new_trie.db)
-      %Blockchain.Transaction{nonce: 1, v: 1, r: 2, s: 3}
-
-      iex> trie = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
-      iex> {block, _updated_trie} =
-      ...>  %Blockchain.Block{}
-      ...>  |> Blockchain.Block.put_transaction(6, %Blockchain.Transaction{data: "", gas_limit: 100000, gas_price: 3, init: <<96, 3, 96, 5, 1, 96, 0, 82, 96, 0, 96, 32, 243>>, nonce: 5, r: 110274197540583527170567040609004947678532096020311055824363076718114581104395, s: 15165203061950746568488278734700551064641299899120962819352765267479743108366, to: "", v: 27, value: 5}, trie)
-      iex> block |> Blockchain.Block.get_transaction(6, trie.db)
-      %Blockchain.Transaction{data: "", gas_limit: 100000, gas_price: 3, init: <<96, 3, 96, 5, 1, 96, 0, 82, 96, 0, 96, 32, 243>>, nonce: 5, r: 110274197540583527170567040609004947678532096020311055824363076718114581104395, s: 15165203061950746568488278734700551064641299899120962819352765267479743108366, to: "", v: 27, value: 5}
-
-      iex> trie = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
-      iex> {updated_block, _new_trie} =
-      ...> %Blockchain.Block{}
-      ...> |> Blockchain.Block.put_transaction(6, %Blockchain.Transaction{nonce: 1, v: 1, r: 2, s: 3}, trie)
-      iex> Blockchain.Block.get_transaction(updated_block, 7, trie.db)
-      nil
   """
   @spec get_transaction(t, integer(), DB.db()) :: Transaction.t() | nil
   def get_transaction(block, i, db) do
+    encoded_transaction_number = ExRLP.encode(i)
+
     serialized_transaction =
       db
       |> Trie.new(block.header.transactions_root)
-      |> Trie.get_key(ExRLP.encode(i))
+      |> Trie.get_key(encoded_transaction_number)
 
     case serialized_transaction do
       nil ->

@@ -3,6 +3,7 @@ defmodule ExWire.Bridge.Sync do
   Wrapper for the Sync process to gracefully handle interactions with it when it
   is not running.
   """
+
   alias Blockchain.Block
   alias Blockchain.Blocktree
   alias Blockchain.Chain
