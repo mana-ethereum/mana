@@ -227,7 +227,7 @@ defmodule Blockchain.Chain do
       bomb_delays
       |> Enum.sort(fn {k1, _}, {k2, _} -> k1 < k2 end)
       |> Enum.take_while(fn {k, _} -> k <= block_number end)
-      |> List.last()
+      |> Enum.sum()
 
     delay
   end
