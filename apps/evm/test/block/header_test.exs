@@ -34,6 +34,25 @@ defmodule Block.HeaderTest do
       |> Enum.filter(&failed_tests/1)
       |> make_assertion()
     end
+
+    test "calculates Constantinople difficulty" do
+      "difficultyConstantinople.json"
+      |> difficulty_tests()
+      |> read_test()
+      |> Enum.map(&run_constantinople_test/1)
+      |> Enum.filter(&failed_tests/1)
+      |> make_assertion()
+    end
+  end
+
+  defp run_constantinople_test({name, test_data}) do
+    expected_difficulty = hex_to_int(test_data["currentDifficulty"])
+
+    {header, parent_header} = build_headers(test_data)
+
+    difficulty = Header.get_byzantium_difficulty(header, parent_header, 5_000_000)
+
+    {name, expected_difficulty, difficulty}
   end
 
   defp run_byzantium_test({name, test_data}) do
