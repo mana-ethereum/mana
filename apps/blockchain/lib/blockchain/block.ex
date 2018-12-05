@@ -846,7 +846,7 @@ defmodule Blockchain.Block do
       iex> updated_block
       ...> |> Blockchain.BlockGetter.get_state(updated_trie)
       ...> |> Blockchain.Account.get_accounts([miner])
-      [%Blockchain.Account{balance: 3000000000000400000}]
+      [%Blockchain.Account{balance: 2000000000000400000}]
   """
   @spec add_rewards(t, TrieStorage.t(), Chain.t()) :: {t, TrieStorage.t()}
   def add_rewards(block, trie, chain)

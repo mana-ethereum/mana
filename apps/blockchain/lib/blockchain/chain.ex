@@ -223,13 +223,10 @@ defmodule Blockchain.Chain do
   def bomb_delay_factor_for_block(chain = %__MODULE__{}, block_number) do
     bomb_delays = chain.engine["Ethash"][:difficulty_bomb_delays]
 
-    {_, delay} =
-      bomb_delays
-      |> Enum.sort(fn {k1, _}, {k2, _} -> k1 < k2 end)
-      |> Enum.take_while(fn {k, _} -> k <= block_number end)
-      |> Enum.sum()
-
-    delay
+    bomb_delays
+    |> Enum.sort(fn {k1, _}, {k2, _} -> k1 < k2 end)
+    |> Enum.take_while(fn {k, _} -> k <= block_number end)
+    |> Enum.reduce(0, fn {_k, v}, acc -> acc + v end)
   end
 
   @doc """
