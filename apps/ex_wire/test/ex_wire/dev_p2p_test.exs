@@ -4,7 +4,6 @@ defmodule ExWire.DEVp2pTest do
   doctest ExWire.DEVp2p.Session
 
   alias ExWire.DEVp2p
-
   alias ExWire.Packet
   alias ExWire.Packet.Capability
 
@@ -13,10 +12,10 @@ defmodule ExWire.DEVp2pTest do
       our_hello = DEVp2p.build_hello()
       peer_hello = DEVp2p.build_hello()
 
-      session =
+      {:ok, session} =
         DEVp2p.init_session()
         |> DEVp2p.hello_sent(our_hello)
-        |> DEVp2p.hello_received(peer_hello)
+        |> DEVp2p.handle_message(peer_hello)
 
       assert DEVp2p.session_active?(session)
     end
@@ -34,9 +33,9 @@ defmodule ExWire.DEVp2pTest do
     test "does not activate the session if hello is only received" do
       peer_hello = DEVp2p.build_hello()
 
-      session =
+      {:ok, session} =
         DEVp2p.init_session()
-        |> DEVp2p.hello_received(peer_hello)
+        |> DEVp2p.handle_message(peer_hello)
 
       refute DEVp2p.session_active?(session)
     end
@@ -45,10 +44,10 @@ defmodule ExWire.DEVp2pTest do
       our_hello = DEVp2p.build_hello()
       peer_hello = DEVp2p.build_hello() |> set_older_capability()
 
-      session =
+      {:ok, session} =
         DEVp2p.init_session()
         |> DEVp2p.hello_sent(our_hello)
-        |> DEVp2p.hello_received(peer_hello)
+        |> DEVp2p.handle_message(peer_hello)
 
       refute DEVp2p.session_active?(session)
     end
@@ -59,10 +58,10 @@ defmodule ExWire.DEVp2pTest do
       our_hello = DEVp2p.build_hello()
       peer_hello = DEVp2p.build_hello()
 
-      session =
+      {:ok, session} =
         DEVp2p.init_session()
         |> DEVp2p.hello_sent(our_hello)
-        |> DEVp2p.hello_received(peer_hello)
+        |> DEVp2p.handle_message(peer_hello)
 
       assert DEVp2p.session_compatible?(session)
     end
@@ -71,10 +70,10 @@ defmodule ExWire.DEVp2pTest do
       our_hello = DEVp2p.build_hello()
       peer_hello = DEVp2p.build_hello() |> set_older_capability()
 
-      session =
+      {:ok, session} =
         DEVp2p.init_session()
         |> DEVp2p.hello_sent(our_hello)
-        |> DEVp2p.hello_received(peer_hello)
+        |> DEVp2p.handle_message(peer_hello)
 
       refute DEVp2p.session_compatible?(session)
     end

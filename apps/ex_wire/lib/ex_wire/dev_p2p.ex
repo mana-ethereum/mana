@@ -48,16 +48,6 @@ defmodule ExWire.DEVp2p do
     %{session | hello_sent: hello}
   end
 
-  '''
-  Function to update `ExWire.DEVp2p.Session` when a handshake is received. The
-  handshake should be an `ExWire.Packet.Protocol.Hello` that we have received from a peer.
-  '''
-
-  @spec hello_received(Session.t(), Hello.t()) :: Session.t()
-  def hello_received(session, hello = %Hello{}) do
-    Session.hello_received(session, hello)
-  end
-
   @doc """
   Function to check whether or not a `ExWire.DEVp2p.Session` is active. See
   `ExWire.DEVp2p.Session.active?/1` for more information.
@@ -83,7 +73,7 @@ defmodule ExWire.DEVp2p do
   @spec handle_message(Session.t(), struct()) ::
           {:error, :handshake_incomplete} | {:ok, Session.t()}
   def handle_message(session, packet = %Hello{}) do
-    {:ok, hello_received(session, packet)}
+    {:ok, Session.hello_received(session, packet)}
   end
 
   def handle_message(_session, _message) do
