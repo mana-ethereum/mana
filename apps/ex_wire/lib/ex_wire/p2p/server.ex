@@ -127,9 +127,9 @@ defmodule ExWire.P2P.Server do
     {:ok, %Connection{peer: peer, is_outbound: true}}
   end
 
-  def init(opts = %{is_outbound: false, socket: socket, connection_observer: connection_observer}) do
+  def init(opts = %{is_outbound: false, connection_observer: connection_observer}) do
     state =
-      socket
+      opts
       |> Manager.new_inbound_connection()
       |> Map.put(:subscribers, Map.get(opts, :subscribers, []))
 
@@ -147,20 +147,20 @@ defmodule ExWire.P2P.Server do
     {:reply, :ok, new_state}
   end
 
-  def handle_info({:connect, opts}, %{peer: peer}) do
-    {:ok, socket} = TCP.connect(peer.host, peer.port)
+  def handle_info({:connect, opts}, opts = %{peer: peer}) do
+    {:ok, socket0} = TCP.connect(peer.host, peer.port)
 
     :ok =
       Logger.debug(fn ->
         "[Network] [#{peer}] Established outbound connection with #{peer.host_name}."
       end)
 
-    new_conn =
-      socket
-      |> Manager.new_outbound_connection(peer)
+    state =
+      %{opts | socket: socket0}
+      |> Manager.new_outbound_connection()
       |> Map.put(:subscribers, Map.get(opts, :subscribers, []))
 
-    {:noreply, new_conn}
+    {:noreply, state}
   end
 
   @doc """
