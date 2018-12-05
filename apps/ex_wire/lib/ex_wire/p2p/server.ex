@@ -129,7 +129,7 @@ defmodule ExWire.P2P.Server do
 
   def init(opts = %{is_outbound: false, connection_observer: connection_observer}) do
     state =
-      opts
+      struct(Connection, opts)
       |> Manager.new_inbound_connection()
       |> Map.put(:subscribers, Map.get(opts, :subscribers, []))
 
