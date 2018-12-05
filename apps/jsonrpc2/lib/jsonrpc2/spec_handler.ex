@@ -74,7 +74,12 @@ defmodule JSONRPC2.SpecHandler do
   def handle_request("eth_sendRawTransaction", _), do: {:error, :not_supported}
   def handle_request("eth_call", _), do: {:error, :not_supported}
   def handle_request("eth_estimateGas", _), do: {:error, :not_supported}
-  def handle_request("eth_getBlockByHash", _), do: {:error, :not_supported}
+
+  def handle_request("eth_getBlockByHash", [hash, _full_transactions]) do
+    hash
+    |> Math.hex_to_bin()
+    |> @sync.get_block_by_hash()
+  end
 
   def handle_request("eth_getBlockByNumber", [number, _full_transactions]) do
     @sync.get_block_by_number(number)
