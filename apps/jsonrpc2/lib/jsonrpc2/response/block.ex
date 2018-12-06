@@ -1,5 +1,5 @@
 defmodule JSONRPC2.Response.Block do
-  alias Block.Header
+  alias Blockchain.Block
   alias Blockchain.Transaction
   alias ExthCrypto.Hash.Keccak
 
@@ -41,7 +41,7 @@ defmodule JSONRPC2.Response.Block do
       receiptsRoot: encode_hex(internal_block.header.receipts_root),
       miner: encode_hex(internal_block.header.beneficiary),
       difficulty: internal_block.header.difficulty,
-      totalDifficulty: internal_block.header.total_difficulty,
+      totalDifficulty: nil,
       extraData: internal_block.header.extra_data,
       size: block_size(internal_block),
       gasLimit: internal_block.header.gas_limit,

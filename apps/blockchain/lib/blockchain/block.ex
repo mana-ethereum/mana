@@ -37,7 +37,7 @@ defmodule Blockchain.Block do
           transactions: [Transaction.t()] | [],
           receipts: [Receipt.t()] | [],
           ommers: [Header.t()] | [],
-          additonal_info: Map.t()
+          additional_info: Map.t()
         }
 
   @block_reward_ommer_divisor 32
@@ -268,7 +268,7 @@ defmodule Blockchain.Block do
       trie
       |> TrieStorage.put_raw_key!(hash, block_rlp)
       |> TrieStorage.put_raw_key!(block_hash_key(block.header.number), hash)
-      |> TrieStorage.put_raw_key!(additional_info_key(hash), hash)
+      |> TrieStorage.put_raw_key!(additional_info_key(hash), additional_info)
 
     {:ok, {hash, updated_trie}}
   end
@@ -291,20 +291,20 @@ defmodule Blockchain.Block do
   def get_block_with_additional_info(block_hash, trie) do
     with {:ok, block} <- get_block(block_hash, trie) do
       additional_info =
-        case get_additonal_info(trie, additional_info_key(block_hash)) do
+        case get_additional_info(trie, additional_info_key(block_hash)) do
           {:ok, info} -> info
           :not_found -> %{}
         end
 
-      %{block | additional_info: additonal_info}
+      %{block | additional_info: additional_info}
     end
   end
 
-  @spec get_additonal_info(EVM.hash(), TrieStorage.t()) :: {:ok, t()} | :not_found
+  @spec get_additional_info(EVM.hash(), TrieStorage.t()) :: {:ok, t()} | :not_found
   def get_additional_info(block_hash, trie) do
     with {:ok, additional_info_bin} <-
            TrieStorage.get_raw_key(trie, additional_info_key(block_hash)) do
-      {:ok, :erlang.binary_to_term(addition_info_bin)}
+      {:ok, :erlang.binary_to_term(additional_info_bin)}
     end
   end
 
@@ -313,7 +313,7 @@ defmodule Blockchain.Block do
   """
   @spec get_block_by_number(integer(), TrieStorage.t()) :: {:ok, t} | :not_found
   def get_block_by_number(block_number, trie) do
-    case TrieStorage.get_raw_key(trie, get_block_hash_key(block_number)) do
+    case TrieStorage.get_raw_key(trie, block_hash_key(block_number)) do
       :not_found ->
         :not_found
 
