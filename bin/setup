@@ -8,7 +8,7 @@ fancy_echo() {
 }
 
 install_linux_deps() {
-  local LINUX_DEPS="automake autoconf autogen libtool gcc curl"
+  local LINUX_DEPS="automake autoconf autogen libtool gcc curl cmake"
   local flavor=`grep "^ID=" /etc/os-release | cut -d"=" -f 2`
   echo $flavor
   case $flavor in
@@ -32,6 +32,7 @@ brew "automake"
 brew "autoconf"
 brew "gmp"
 brew "libtool"
+brew "cmake"
 EOF
 }
 
