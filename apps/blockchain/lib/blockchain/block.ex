@@ -37,7 +37,7 @@ defmodule Blockchain.Block do
           transactions: [Transaction.t()] | [],
           receipts: [Receipt.t()] | [],
           ommers: [Header.t()] | [],
-          additional_info: Map.t()
+          additional_info: %{} | nil
         }
 
   @block_reward_ommer_divisor 32
