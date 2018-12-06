@@ -128,7 +128,7 @@ defmodule JSONRPC2.ManaHandlerTest do
 
   describe "eth_getTransactionByNumber" do
     test "fetches transaction by number" do
-      block = build(:block, header: build(:header, number: 10))
+      block = build(:block, block_hash: <<0x2::256>>, header: build(:header, number: 10))
       :ok = BridgeSyncMock.put_block(block)
 
       assert_rpc_reply(
