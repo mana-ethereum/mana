@@ -29,7 +29,7 @@ defmodule Blockchain.Block do
             transactions: [],
             receipts: [],
             ommers: [],
-            additional_info: %{}
+            additional_info: nil
 
   @type t :: %__MODULE__{
           block_hash: EVM.hash() | nil,
@@ -258,17 +258,14 @@ defmodule Blockchain.Block do
   @spec put_block(t, TrieStorage.t(), binary() | nil) :: {:ok, {EVM.hash(), TrieStorage.t()}}
   def put_block(block, trie, predefined_key \\ nil) do
     hash = if predefined_key, do: predefined_key, else: hash(block)
+
     block_rlp = block |> serialize |> ExRLP.encode()
-
-    rlp_size = byte_size(block_rlp)
-
-    additional_info = :erlang.term_to_binary(%{rlp_size: rlp_size})
 
     updated_trie =
       trie
       |> TrieStorage.put_raw_key!(hash, block_rlp)
       |> TrieStorage.put_raw_key!(block_hash_key(block.header.number), hash)
-      |> TrieStorage.put_raw_key!(additional_info_key(hash), additional_info)
+      |> put_additional_info(hash, block, block_rlp)
 
     {:ok, {hash, updated_trie}}
   end
@@ -287,16 +284,23 @@ defmodule Blockchain.Block do
     end
   end
 
-  @spec get_block_with_additional_info(EVM.hash(), TrieStorage.t()) :: {:ok, t} | :not_found
-  def get_block_with_additional_info(block_hash, trie) do
+  @spec get_block_with_additional_info(EVM.hash() | integer(), TrieStorage.t()) ::
+          {:ok, t} | :not_found
+  def get_block_with_additional_info(block_hash, trie) when is_binary(block_hash) do
     with {:ok, block} <- get_block(block_hash, trie) do
       additional_info =
-        case get_additional_info(trie, additional_info_key(block_hash)) do
+        case get_additional_info(block_hash, trie) do
           {:ok, info} -> info
           :not_found -> %{}
         end
 
-      %{block | additional_info: additional_info}
+      {:ok, %{block | additional_info: additional_info}}
+    end
+  end
+
+  def get_block_with_additional_info(number, trie) when is_integer(number) do
+    with {:ok, hash} <- get_block_hash_by_number(trie, number) do
+      get_block_with_additional_info(hash, trie)
     end
   end
 
@@ -313,7 +317,7 @@ defmodule Blockchain.Block do
   """
   @spec get_block_by_number(integer(), TrieStorage.t()) :: {:ok, t} | :not_found
   def get_block_by_number(block_number, trie) do
-    case TrieStorage.get_raw_key(trie, block_hash_key(block_number)) do
+    case get_block_hash_by_number(trie, block_number) do
       :not_found ->
         :not_found
 
@@ -888,6 +892,24 @@ defmodule Blockchain.Block do
     {updated_block, state}
   end
 
+  defp put_additional_info(trie, hash, block, rlp) do
+    rlp_size = byte_size(rlp)
+
+    total_difficulty =
+      case get_additional_info(block.header.parent_hash, trie) do
+        {:ok, %{total_difficulty: parent_total_difficulty}} ->
+          parent_total_difficulty + block.header.difficulty
+
+        _ ->
+          block.header.difficulty
+      end
+
+    additional_info =
+      :erlang.term_to_binary(%{rlp_size: rlp_size, total_difficulty: total_difficulty})
+
+    TrieStorage.put_raw_key!(trie, additional_info_key(hash), additional_info)
+  end
+
   defp add_miner_reward(state, block, base_reward) do
     ommer_reward = round(base_reward * length(block.ommers) / @block_reward_ommer_divisor)
     reward = ommer_reward + base_reward
@@ -907,6 +929,10 @@ defmodule Blockchain.Block do
 
       Account.add_wei(state, ommer.beneficiary, reward)
     end)
+  end
+
+  defp get_block_hash_by_number(trie, block_number) do
+    TrieStorage.get_raw_key(trie, block_hash_key(block_number))
   end
 
   defp get_opts_property(opts, property, default) do
