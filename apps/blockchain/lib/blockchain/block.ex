@@ -23,18 +23,21 @@ defmodule Blockchain.Block do
   # header: B_H,
   # transactions: B_T,
   # ommers: B_U
+  # additonal_info: precomputated data required by JSON RPC spec
   defstruct block_hash: nil,
             header: %Header{},
             transactions: [],
             receipts: [],
-            ommers: []
+            ommers: [],
+            additional_info: %{}
 
   @type t :: %__MODULE__{
           block_hash: EVM.hash() | nil,
           header: Header.t(),
           transactions: [Transaction.t()] | [],
           receipts: [Receipt.t()] | [],
-          ommers: [Header.t()] | []
+          ommers: [Header.t()] | [],
+          additonal_info: Map.t()
         }
 
   @block_reward_ommer_divisor 32
@@ -257,10 +260,15 @@ defmodule Blockchain.Block do
     hash = if predefined_key, do: predefined_key, else: hash(block)
     block_rlp = block |> serialize |> ExRLP.encode()
 
+    rlp_size = byte_size(block_rlp)
+
+    additional_info = :erlang.term_to_binary(%{rlp_size: rlp_size})
+
     updated_trie =
       trie
       |> TrieStorage.put_raw_key!(hash, block_rlp)
-      |> TrieStorage.put_raw_key!(get_block_hash_key(block.header.number), hash)
+      |> TrieStorage.put_raw_key!(block_hash_key(block.header.number), hash)
+      |> TrieStorage.put_raw_key!(additional_info_key(hash), hash)
 
     {:ok, {hash, updated_trie}}
   end
@@ -279,6 +287,27 @@ defmodule Blockchain.Block do
     end
   end
 
+  @spec get_block_with_additional_info(EVM.hash(), TrieStorage.t()) :: {:ok, t} | :not_found
+  def get_block_with_additional_info(block_hash, trie) do
+    with {:ok, block} <- get_block(block_hash, trie) do
+      additional_info =
+        case get_additonal_info(trie, additional_info_key(block_hash)) do
+          {:ok, info} -> info
+          :not_found -> %{}
+        end
+
+      %{block | additional_info: additonal_info}
+    end
+  end
+
+  @spec get_additonal_info(EVM.hash(), TrieStorage.t()) :: {:ok, t()} | :not_found
+  def get_additional_info(block_hash, trie) do
+    with {:ok, additional_info_bin} <-
+           TrieStorage.get_raw_key(trie, additional_info_key(block_hash)) do
+      {:ok, :erlang.binary_to_term(addition_info_bin)}
+    end
+  end
+
   @doc """
   Returns the specified block from the database if it's hash is found by the provided block_number, otherwise :not_found.
   """
@@ -293,8 +322,14 @@ defmodule Blockchain.Block do
     end
   end
 
-  defp get_block_hash_key(block_number) do
-    "hash_for_#{block_number}"
+  @spec block_hash_key(integer()) :: String.t()
+  defp block_hash_key(number) do
+    "hash_for_#{number}"
+  end
+
+  @spec additional_info_key(binary()) :: String.t()
+  defp additional_info_key(hash) do
+    "info_#{Base.encode16(hash, case: :lower)}"
   end
 
   @doc """

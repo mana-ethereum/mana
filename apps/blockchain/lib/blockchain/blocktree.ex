@@ -57,7 +57,7 @@ defmodule Blockchain.Blocktree do
     with {:valid, trie} <- validation do
       {:ok, {block_hash, updated_trie}} = Block.put_block(block, trie, specified_block_hash)
 
-      # Cache computed block hash
+      # Cache computed block hash, total difficulty
       block = %{block | block_hash: block_hash}
 
       updated_blocktree = update_best_block(blocktree, block)
