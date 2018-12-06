@@ -25,9 +25,6 @@ defmodule MerklePatriciaTree.Mixfile do
     ]
   end
 
-  # Configuration for the OTP application
-  #
-  # Type `mix help compile.app` for more information
   def application do
     [extra_applications: [:logger, :logger_file_backend]]
   end
@@ -37,7 +34,7 @@ defmodule MerklePatriciaTree.Mixfile do
       # External deps
       {:logger_file_backend, "~> 0.0.10"},
       {:ex_rlp, "~> 0.5.0"},
-      {:rocksdb, "~> 0.23.2"},
+      {:rocksdb, "~> 0.26.0"},
       {:jason, "~> 1.1"},
       # Umbrella deps
       {:exth_crypto, in_umbrella: true}
