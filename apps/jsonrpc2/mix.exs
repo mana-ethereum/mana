@@ -29,14 +29,19 @@ defmodule JSONRPC2.Mixfile do
   end
 
   def application do
-    [applications: [:logger, :cowboy, :ranch, :plug, :plug_cowboy], mod: {JSONRPC2, []}]
+    [
+      applications: [:logger, :logger_file_backend, :cowboy, :ranch, :plug, :plug_cowboy],
+      mod: {JSONRPC2, []}
+    ]
   end
 
   defp deps do
     [
-      # in app
+      # Umbrella deps
       {:ex_wire, in_umbrella: true},
       {:exth_crypto, in_umbrella: true},
+      # External deps
+      {:logger_file_backend, "~> 0.0.10"},
       {:cowboy, "~> 2.5"},
       {:jason, "~> 1.1"},
       {:ranch, "~> 1.6"},

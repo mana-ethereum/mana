@@ -5,6 +5,8 @@ defmodule Mana.MixProject do
     [
       apps_path: "apps",
       apps: [
+        :logger,
+        :logger_file_backend,
         :blockchain,
         :cli,
         :evm,
@@ -41,7 +43,8 @@ defmodule Mana.MixProject do
       {:credo, "~> 1.0.0-rc1", only: [:dev, :test], runtime: false},
       {:distillery, "~> 2.0", runtime: false},
       {:artificery,
-       github: "mana-ethereum/artificery", branch: "hayesgm/allow-extra-args", override: true}
+       github: "mana-ethereum/artificery", branch: "hayesgm/allow-extra-args", override: true},
+      {:logger_file_backend, "~> 0.0.10"}
     ]
   end
 end

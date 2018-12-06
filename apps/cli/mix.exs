@@ -20,7 +20,7 @@ defmodule Cli.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      extra_applications: [:logger, :ethereumex]
+      extra_applications: [:logger, :logger_file_backend, :ethereumex]
     ]
   end
 
@@ -37,7 +37,8 @@ defmodule Cli.MixProject do
 
       # External deps
       {:ethereumex, "~> 0.5.1"},
-      {:progress_bar, "~> 1.7.0"}
+      {:progress_bar, "~> 1.7.0"},
+      {:logger_file_backend, "~> 0.0.10"}
     ]
   end
 end

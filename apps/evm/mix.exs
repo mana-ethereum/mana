@@ -31,28 +31,18 @@ defmodule EVM.Mixfile do
     [extra_applications: [:logger], mod: {EVM.Application, []}]
   end
 
-  # Dependencies can be Hex packages:
-  #
-  #   {:my_dep, "~> 0.3.0"}
-  #
-  # Or git/path repositories:
-  #
-  #   {:my_dep, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"}
-  #
-  # To depend on another app inside the umbrella:
-  #
-  #   {:my_app, in_umbrella: true}
-  #
-  # Type "mix help deps" for more examples and options
   defp deps do
     [
+      # External deps
+      {:logger_file_backend, "~> 0.0.10"},
       {:decimal, "~>1.5.0"},
+      {:ex_rlp, "~> 0.5.0"},
+      {:bn, "~> 0.2.1"},
+      # Umbrella deps
       {:merkle_patricia_tree, in_umbrella: true},
       {:exth_crypto, in_umbrella: true},
-      {:ex_rlp, "~> 0.5.0"},
       {:exth, in_umbrella: true},
-      {:jason, "~> 1.1", test: true},
-      {:bn, "~> 0.2.1"}
+      {:jason, "~> 1.1", test: true}
     ]
   end
 
