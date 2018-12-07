@@ -555,6 +555,118 @@ defmodule Blockchain.BlockTest do
     end
   end
 
+  describe "put_block/3" do
+    test "puts block with additional info" do
+      trie = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
+
+      block = %Block{
+        header: %Header{
+          parent_hash: <<1::256>>,
+          ommers_hash: <<2::256>>,
+          beneficiary: <<3::160>>,
+          state_root: <<4::256>>,
+          transactions_root: <<5::256>>,
+          receipts_root: <<6::256>>,
+          logs_bloom: <<>>,
+          difficulty: 5,
+          number: 1,
+          gas_limit: 5,
+          gas_used: 3,
+          timestamp: 6,
+          extra_data: "",
+          mix_hash: <<7::256>>,
+          nonce: <<8::64>>
+        },
+        transactions: [],
+        ommers: []
+      }
+
+      {:ok, {hash, updated_trie}} = Block.put_block(block, trie)
+      {:ok, info} = Block.get_metadata(hash, updated_trie)
+
+      assert info[:rlp_size] == block |> Block.serialize() |> ExRLP.encode() |> byte_size()
+      assert info[:total_difficulty] == block.header.difficulty
+    end
+  end
+
+  describe "get_block_with_metadata/2" do
+    test "gets block with additional info by its hash" do
+      trie = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
+
+      block = %Block{
+        header: %Header{
+          parent_hash: <<1::256>>,
+          ommers_hash: <<2::256>>,
+          beneficiary: <<3::160>>,
+          state_root: <<4::256>>,
+          transactions_root: <<5::256>>,
+          receipts_root: <<6::256>>,
+          logs_bloom: <<>>,
+          difficulty: 5,
+          number: 1,
+          gas_limit: 5,
+          gas_used: 3,
+          timestamp: 6,
+          extra_data: "",
+          mix_hash: <<7::256>>,
+          nonce: <<8::64>>
+        },
+        transactions: [],
+        ommers: []
+      }
+
+      {:ok, {hash, updated_trie}} = Block.put_block(block, trie)
+      Block.get_metadata(hash, updated_trie)
+
+      {:ok, db_block} = Block.get_block_with_metadata(hash, updated_trie)
+
+      refute is_nil(db_block.metadata)
+
+      assert db_block.metadata[:rlp_size] ==
+               block |> Block.serialize() |> ExRLP.encode() |> byte_size()
+
+      assert db_block.metadata[:total_difficulty] == block.header.difficulty
+    end
+
+    test "gets block with additional info by its number" do
+      trie = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
+
+      block = %Block{
+        header: %Header{
+          parent_hash: <<1::256>>,
+          ommers_hash: <<2::256>>,
+          beneficiary: <<3::160>>,
+          state_root: <<4::256>>,
+          transactions_root: <<5::256>>,
+          receipts_root: <<6::256>>,
+          logs_bloom: <<>>,
+          difficulty: 5,
+          number: 1,
+          gas_limit: 5,
+          gas_used: 3,
+          timestamp: 6,
+          extra_data: "",
+          mix_hash: <<7::256>>,
+          nonce: <<8::64>>
+        },
+        transactions: [],
+        ommers: []
+      }
+
+      {:ok, {hash, updated_trie}} = Block.put_block(block, trie)
+      Block.get_metadata(hash, updated_trie)
+
+      {:ok, db_block} = Block.get_block_with_metadata(block.header.number, updated_trie)
+
+      refute is_nil(db_block.metadata)
+
+      assert db_block.metadata[:rlp_size] ==
+               block |> Block.serialize() |> ExRLP.encode() |> byte_size()
+
+      assert db_block.metadata[:total_difficulty] == block.header.difficulty
+    end
+  end
+
   defp put_header(block, key, value) do
     new_header = Map.put(block.header, key, value)
     %{block | header: new_header}

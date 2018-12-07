@@ -1,4 +1,5 @@
 defmodule JSONRPC2.Response.Block do
+  alias Blockchain.Block
   alias Blockchain.Transaction
   alias ExthCrypto.Hash.Keccak
 
@@ -33,16 +34,16 @@ defmodule JSONRPC2.Response.Block do
       hash: encode_hex(internal_block.block_hash),
       parentHash: encode_hex(internal_block.header.parent_hash),
       nonce: encode_hex(internal_block.header.nonce),
-      sha3Uncles: encode_hex(internal_block.header.sha3_uncles),
+      sha3Uncles: encode_hex(internal_block.header.ommers_hash),
       logsBloom: encode_hex(internal_block.header.logs_bloom),
       transactionsRoot: encode_hex(internal_block.header.transactions_root),
       stateRoot: encode_hex(internal_block.header.state_root),
       receiptsRoot: encode_hex(internal_block.header.receipts_root),
       miner: encode_hex(internal_block.header.beneficiary),
       difficulty: internal_block.header.difficulty,
-      totalDifficulty: internal_block.header.total_difficulty,
+      totalDifficulty: internal_block.metadata[:total_difficulty] || 0,
       extraData: internal_block.header.extra_data,
-      size: internal_block.header.size,
+      size: internal_block.metadata[:rlp_size] || block_size(internal_block),
       gasLimit: internal_block.header.gas_limit,
       gasUsed: internal_block.header.gas_used,
       timestamp: internal_block.header.timestamp,
@@ -60,5 +61,13 @@ defmodule JSONRPC2.Response.Block do
       |> Keccak.kec()
       |> encode_hex()
     end)
+  end
+
+  @spec block_size(Block.t()) :: integer()
+  defp block_size(block) do
+    block
+    |> Block.serialize()
+    |> ExRLP.encode()
+    |> byte_size()
   end
 end
