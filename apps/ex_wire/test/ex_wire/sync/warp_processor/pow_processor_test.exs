@@ -226,7 +226,16 @@ defmodule ExWire.Sync.WarpProcessor.PowProcessorTest do
 
       # Next, let's check that our trie has all the right data
       assert Block.get_block(block.block_hash, next_trie) ==
-               {:ok, %{block | receipts: [], block_hash: nil}}
+               {:ok,
+                %{
+                  block
+                  | receipts: receipts,
+                    block_hash:
+                      <<231, 180, 221, 248, 0, 10, 93, 194, 91, 102, 211, 37, 84, 232, 227, 204,
+                        125, 141, 30, 203, 183, 32, 105, 25, 15, 139, 192, 116, 160, 126, 146,
+                        153>>,
+                    header: %{block.header | size: 1119, total_difficulty: 1_000_000}
+                }}
 
       assert Block.get_transaction(block, 0, next_trie.db) == transaction
       assert Block.get_transaction(block, 1, next_trie.db) == nil
