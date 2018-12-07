@@ -31,13 +31,15 @@ defmodule Blockchain.Block do
             ommers: [],
             metadata: nil
 
+  @type metadata :: %{total_difficulty: integer(), size: integer()} | nil
+
   @type t :: %__MODULE__{
           block_hash: EVM.hash() | nil,
           header: Header.t(),
           transactions: [Transaction.t()] | [],
           receipts: [Receipt.t()] | [],
           ommers: [Header.t()] | [],
-          metadata: %{} | nil
+          metadata: metadata() | nil
         }
 
   @block_reward_ommer_divisor 32
@@ -303,7 +305,7 @@ defmodule Blockchain.Block do
     end
   end
 
-  @spec get_metadata(EVM.hash(), TrieStorage.t()) :: {:ok, %{}} | :not_found
+  @spec get_metadata(EVM.hash(), TrieStorage.t()) :: {:ok, metadata()} | :not_found
   def get_metadata(block_hash, trie) do
     with {:ok, metadata_bin} <- TrieStorage.get_raw_key(trie, metadata_key(block_hash)) do
       {:ok, :erlang.binary_to_term(metadata_bin)}
