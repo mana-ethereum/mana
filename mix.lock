@@ -36,7 +36,7 @@
   "poolboy": {:hex, :poolboy, "1.5.1", "6b46163901cfd0a1b43d692657ed9d7e599853b3b21b95ae5ae0a777cf9b6ca8", [:rebar], [], "hexpm"},
   "progress_bar": {:hex, :progress_bar, "1.7.0", "51f45955245a257b49ef8d85528bbfe2c307c58891aefe8dd8bcf6015e6c4482", [:mix], [{:decimal, "~> 1.0", [hex: :decimal, repo: "hexpm", optional: false]}], "hexpm"},
   "ranch": {:hex, :ranch, "1.6.2", "6db93c78f411ee033dbb18ba8234c5574883acb9a75af0fb90a9b82ea46afa00", [:rebar3], [], "hexpm"},
-  "rocksdb": {:hex, :rocksdb, "0.23.3", "1e088c3870265d4c037c4ca274c4153dae739ce48d3c6536230c6b22226ff44e", [:rebar3], [], "hexpm"},
+  "rocksdb": {:hex, :rocksdb, "0.26.0", "ff3439489a5b1d9ce2fd6fb6a1256126ee8af0f6dfbc78616ed3dc44c86f6aae", [:rebar3], [], "hexpm"},
   "snappyer": {:hex, :snappyer, "1.2.4", "6d739c534cd2339633127a2b40279be71f149e5842c5363a4d88e66efb7c1fec", [:make, :rebar, :rebar3], [], "hexpm"},
   "ssl_verify_fun": {:hex, :ssl_verify_fun, "1.1.4", "f0eafff810d2041e93f915ef59899c923f4568f4585904d010387ed74988e77b", [:make, :mix, :rebar3], [], "hexpm"},
   "unicode_util_compat": {:hex, :unicode_util_compat, "0.4.1", "d869e4c68901dd9531385bb0c8c40444ebf624e60b6962d95952775cac5e90cd", [:rebar3], [], "hexpm"},

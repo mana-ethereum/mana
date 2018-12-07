@@ -370,6 +370,9 @@ jobs:
     steps:
       - attach_workspace:
            at: .
+      - run:
+          command: ./bin/setup
+          no_output_timeout: 2400
       - run: mix local.hex --force
       - run: mix local.rebar --force
       - run: mix compile
