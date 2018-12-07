@@ -65,7 +65,7 @@ defmodule ExWire.Packet.Capability.Eth.Receipts do
 
   ## Examples
 
-      iex> %ExWire.Packet.Capability.Eth.Receipts.new([])
+      iex> ExWire.Packet.Capability.Eth.Receipts.new([])
       ...> |> ExWire.Packet.Capability.Eth.Receipts.handle()
       :ok
   """

@@ -45,7 +45,7 @@ defmodule ExWire.Packet.Capability.Par.GetNodeData do
   @impl true
   @spec serialize(t) :: ExRLP.t()
   def serialize(packet = %__MODULE__{}) do
-    for hash <- packet.blocks, do: hash
+    for hash <- packet.hashes, do: hash
   end
 
   @doc """
@@ -65,7 +65,7 @@ defmodule ExWire.Packet.Capability.Par.GetNodeData do
 
   ## Examples
 
-      iex> %ExWire.Packet.Capability.Par.GetNodeData.new([])
+      iex> ExWire.Packet.Capability.Par.GetNodeData.new([])
       ...> |> ExWire.Packet.Capability.Par.GetNodeData.handle()
       :ok
   """

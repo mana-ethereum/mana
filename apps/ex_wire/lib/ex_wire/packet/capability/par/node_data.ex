@@ -15,14 +15,14 @@ defmodule ExWire.Packet.Capability.Par.NodeData do
   @behaviour ExWire.Packet
 
   @type t :: %__MODULE__{
-          hashes_to_nodes: %{}
+          hashes_to_nodes: map()
         }
 
   defstruct [
     :hashes_to_nodes
   ]
 
-  @spec new(%{}) :: t()
+  @spec new(map()) :: t()
   def new(hashes_to_nodes) do
     %__MODULE__{
       hashes_to_nodes: hashes_to_nodes
@@ -55,13 +55,12 @@ defmodule ExWire.Packet.Capability.Par.NodeData do
   @impl true
   @spec deserialize(ExRLP.t()) :: t
   def deserialize(rlp) do
-    hashes_to_nodes =
-      for [hash, node_data] <- rlp,
-          do:
-            {hash, node_data}
-            |> Map.new(%{})
+    data = [_h | _t] = rlp
+    hashes = for [hash, node_data] <- data, do: {hash, node_data}
 
-    new(hashes_to_nodes)
+    hashes
+    |> Map.new()
+    |> new()
   end
 
   @doc """
@@ -69,7 +68,7 @@ defmodule ExWire.Packet.Capability.Par.NodeData do
 
   ## Examples
 
-      iex> %ExWire.Packet.Capability.Par.NodeData.new([])
+      iex> ExWire.Packet.Capability.Par.NodeData.new(%{})
       ...> |> ExWire.Packet.Capability.Par.NodeData.handle()
       :ok
   """
