@@ -23,13 +23,13 @@ defmodule Blockchain.Block do
   # header: B_H,
   # transactions: B_T,
   # ommers: B_U
-  # additonal_info: precomputated data required by JSON RPC spec
+  # metadata: precomputated data required by JSON RPC spec
   defstruct block_hash: nil,
             header: %Header{},
             transactions: [],
             receipts: [],
             ommers: [],
-            additional_info: nil
+            metadata: nil
 
   @type t :: %__MODULE__{
           block_hash: EVM.hash() | nil,
@@ -37,7 +37,7 @@ defmodule Blockchain.Block do
           transactions: [Transaction.t()] | [],
           receipts: [Receipt.t()] | [],
           ommers: [Header.t()] | [],
-          additional_info: %{} | nil
+          metadata: %{} | nil
         }
 
   @block_reward_ommer_divisor 32
@@ -265,7 +265,7 @@ defmodule Blockchain.Block do
       trie
       |> TrieStorage.put_raw_key!(hash, block_rlp)
       |> TrieStorage.put_raw_key!(block_hash_key(block.header.number), hash)
-      |> put_additional_info(hash, block, block_rlp)
+      |> put_metadata(hash, block, block_rlp)
 
     {:ok, {hash, updated_trie}}
   end
@@ -284,31 +284,29 @@ defmodule Blockchain.Block do
     end
   end
 
-  @spec get_block_with_additional_info(EVM.hash() | integer(), TrieStorage.t()) ::
-          {:ok, t} | :not_found
-  def get_block_with_additional_info(block_hash, trie) when is_binary(block_hash) do
+  @spec get_block_with_metadata(EVM.hash() | integer(), TrieStorage.t()) :: {:ok, t} | :not_found
+  def get_block_with_metadata(block_hash, trie) when is_binary(block_hash) do
     with {:ok, block} <- get_block(block_hash, trie) do
-      additional_info =
-        case get_additional_info(block_hash, trie) do
+      metadata =
+        case get_metadata(block_hash, trie) do
           {:ok, info} -> info
           :not_found -> %{}
         end
 
-      {:ok, %{block | additional_info: additional_info}}
+      {:ok, %{block | metadata: metadata}}
     end
   end
 
-  def get_block_with_additional_info(number, trie) when is_integer(number) do
+  def get_block_with_metadata(number, trie) when is_integer(number) do
     with {:ok, hash} <- get_block_hash_by_number(trie, number) do
-      get_block_with_additional_info(hash, trie)
+      get_block_with_metadata(hash, trie)
     end
   end
 
-  @spec get_additional_info(EVM.hash(), TrieStorage.t()) :: {:ok, t()} | :not_found
-  def get_additional_info(block_hash, trie) do
-    with {:ok, additional_info_bin} <-
-           TrieStorage.get_raw_key(trie, additional_info_key(block_hash)) do
-      {:ok, :erlang.binary_to_term(additional_info_bin)}
+  @spec get_metadata(EVM.hash(), TrieStorage.t()) :: {:ok, %{}} | :not_found
+  def get_metadata(block_hash, trie) do
+    with {:ok, metadata_bin} <- TrieStorage.get_raw_key(trie, metadata_key(block_hash)) do
+      {:ok, :erlang.binary_to_term(metadata_bin)}
     end
   end
 
@@ -331,8 +329,8 @@ defmodule Blockchain.Block do
     "hash_for_#{number}"
   end
 
-  @spec additional_info_key(binary()) :: String.t()
-  defp additional_info_key(hash) do
+  @spec metadata_key(binary()) :: String.t()
+  defp metadata_key(hash) do
     "info_#{Base.encode16(hash, case: :lower)}"
   end
 
@@ -892,11 +890,11 @@ defmodule Blockchain.Block do
     {updated_block, state}
   end
 
-  defp put_additional_info(trie, hash, block, rlp) do
+  defp put_metadata(trie, hash, block, rlp) do
     rlp_size = byte_size(rlp)
 
     total_difficulty =
-      case get_additional_info(block.header.parent_hash, trie) do
+      case get_metadata(block.header.parent_hash, trie) do
         {:ok, %{total_difficulty: parent_total_difficulty}} ->
           parent_total_difficulty + block.header.difficulty
 
@@ -904,10 +902,9 @@ defmodule Blockchain.Block do
           block.header.difficulty
       end
 
-    additional_info =
-      :erlang.term_to_binary(%{rlp_size: rlp_size, total_difficulty: total_difficulty})
+    metadata = :erlang.term_to_binary(%{rlp_size: rlp_size, total_difficulty: total_difficulty})
 
-    TrieStorage.put_raw_key!(trie, additional_info_key(hash), additional_info)
+    TrieStorage.put_raw_key!(trie, metadata_key(hash), metadata)
   end
 
   defp add_miner_reward(state, block, base_reward) do

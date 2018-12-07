@@ -582,14 +582,14 @@ defmodule Blockchain.BlockTest do
       }
 
       {:ok, {hash, updated_trie}} = Block.put_block(block, trie)
-      {:ok, info} = Block.get_additional_info(hash, updated_trie)
+      {:ok, info} = Block.get_metadata(hash, updated_trie)
 
       assert info[:rlp_size] == block |> Block.serialize() |> ExRLP.encode() |> byte_size()
       assert info[:total_difficulty] == block.header.difficulty
     end
   end
 
-  describe "get_block_with_additional_info/2" do
+  describe "get_block_with_metadata/2" do
     test "gets block with additional info by its hash" do
       trie = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
 
@@ -616,16 +616,16 @@ defmodule Blockchain.BlockTest do
       }
 
       {:ok, {hash, updated_trie}} = Block.put_block(block, trie)
-      Block.get_additional_info(hash, updated_trie)
+      Block.get_metadata(hash, updated_trie)
 
-      {:ok, db_block} = Block.get_block_with_additional_info(hash, updated_trie)
+      {:ok, db_block} = Block.get_block_with_metadata(hash, updated_trie)
 
-      refute is_nil(db_block.additional_info)
+      refute is_nil(db_block.metadata)
 
-      assert db_block.additional_info[:rlp_size] ==
+      assert db_block.metadata[:rlp_size] ==
                block |> Block.serialize() |> ExRLP.encode() |> byte_size()
 
-      assert db_block.additional_info[:total_difficulty] == block.header.difficulty
+      assert db_block.metadata[:total_difficulty] == block.header.difficulty
     end
 
     test "gets block with additional info by its number" do
@@ -654,16 +654,16 @@ defmodule Blockchain.BlockTest do
       }
 
       {:ok, {hash, updated_trie}} = Block.put_block(block, trie)
-      Block.get_additional_info(hash, updated_trie)
+      Block.get_metadata(hash, updated_trie)
 
-      {:ok, db_block} = Block.get_block_with_additional_info(block.header.number, updated_trie)
+      {:ok, db_block} = Block.get_block_with_metadata(block.header.number, updated_trie)
 
-      refute is_nil(db_block.additional_info)
+      refute is_nil(db_block.metadata)
 
-      assert db_block.additional_info[:rlp_size] ==
+      assert db_block.metadata[:rlp_size] ==
                block |> Block.serialize() |> ExRLP.encode() |> byte_size()
 
-      assert db_block.additional_info[:total_difficulty] == block.header.difficulty
+      assert db_block.metadata[:total_difficulty] == block.header.difficulty
     end
   end
 

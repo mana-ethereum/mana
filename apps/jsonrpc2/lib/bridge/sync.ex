@@ -31,7 +31,7 @@ defmodule JSONRPC2.Bridge.Sync do
   def get_block_by_number(number) do
     state_trie = get_last_sync_state().trie
 
-    case Block.get_block_with_additional_info(number, state_trie) do
+    case Block.get_block_with_metadata(number, state_trie) do
       {:ok, block} -> ResponseBlock.new(block)
       _ -> nil
     end
@@ -40,7 +40,7 @@ defmodule JSONRPC2.Bridge.Sync do
   def get_block_by_hash(hash) do
     state_trie = get_last_sync_state().trie
 
-    case Block.get_block_with_additional_info(hash, state_trie) do
+    case Block.get_block_with_metadata(hash, state_trie) do
       {:ok, block} -> ResponseBlock.new(block)
       _ -> nil
     end
