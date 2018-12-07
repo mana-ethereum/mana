@@ -48,7 +48,7 @@ defmodule ExWire.Packet.PacketIdMap do
       |> Enum.filter(fn cap ->
         Capability.are_we_capable?(cap, Mana.get_our_capabilities_map())
       end)
-      |> Enum.sort(fn {name1, _v1}, {name2, _v2} -> name1 < name2 end)
+      |> Enum.sort(fn %Capability{name: name1}, %Capability{name: name2} -> name1 < name2 end)
       |> Enum.map(fn cap ->
         Capability.get_packets_for_capability(cap, Mana.get_our_capabilities_map())
       end)

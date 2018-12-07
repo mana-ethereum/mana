@@ -61,6 +61,63 @@ defmodule ExWire.Packet.CapabilityTest do
 
       assert matching_capabilities == [matched_capability]
     end
+
+    test "Multiple Eth Versions" do
+      name = ExWire.Packet.Capability.Eth.get_name()
+      map = %{name => ExWire.Packet.Capability.Eth}
+      supported_versions = ExWire.Packet.Capability.Eth.get_supported_versions()
+      expected_version = Enum.max(supported_versions)
+
+      capabilities =
+        for version <- supported_versions, do: ExWire.Packet.Capability.new({name, version})
+
+      matching_capabilities =
+        ExWire.Packet.Capability.get_matching_capabilities(capabilities, map)
+
+      expected_match = ExWire.Packet.Capability.new({name, expected_version})
+
+      assert matching_capabilities == [expected_match]
+    end
+
+    test "Eth and Par" do
+      map = %{
+        ExWire.Packet.Capability.Eth.get_name() => ExWire.Packet.Capability.Eth,
+        ExWire.Packet.Capability.Par.get_name() => ExWire.Packet.Capability.Par
+      }
+
+      supported_eth_versions = ExWire.Packet.Capability.Eth.get_supported_versions()
+      expected_eth_version = Enum.max(supported_eth_versions)
+
+      supported_par_versions = ExWire.Packet.Capability.Par.get_supported_versions()
+      expected_par_version = Enum.max(supported_par_versions)
+
+      eth_capabilities =
+        for version <- supported_eth_versions,
+            do: ExWire.Packet.Capability.new({ExWire.Packet.Capability.Eth.get_name(), version})
+
+      par_capabilities =
+        for version <- supported_par_versions,
+            do: ExWire.Packet.Capability.new({ExWire.Packet.Capability.Par.get_name(), version})
+
+      matching_capabilities =
+        ExWire.Packet.Capability.get_matching_capabilities(
+          eth_capabilities ++ par_capabilities,
+          map
+        )
+
+      expected_eth_match =
+        ExWire.Packet.Capability.new(
+          {ExWire.Packet.Capability.Eth.get_name(), expected_eth_version}
+        )
+
+      expected_par_match =
+        ExWire.Packet.Capability.new(
+          {ExWire.Packet.Capability.Par.get_name(), expected_par_version}
+        )
+
+      assert MapSet.new(matching_capabilities) ==
+               MapSet.new([expected_eth_match, expected_par_match])
+    end
   end
 
   describe "get_packets_for_capability/2" do
