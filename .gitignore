@@ -26,3 +26,4 @@ apps/blockchain/config/dev.secret.exs
 #release testing tool
 /priv/itest/_build
 /priv/itest/_build/itest
+/priv/itest/itest
