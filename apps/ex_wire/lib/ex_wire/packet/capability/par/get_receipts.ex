@@ -44,7 +44,7 @@ defmodule ExWire.Packet.Capability.Par.GetReceipts do
   @impl true
   @spec serialize(t) :: ExRLP.t()
   def serialize(packet = %__MODULE__{}) do
-    for hash <- packet.blocks, do: hash
+    for hash <- packet.hashes, do: hash
   end
 
   @doc """
@@ -64,7 +64,7 @@ defmodule ExWire.Packet.Capability.Par.GetReceipts do
 
   ## Examples
 
-      iex> %ExWire.Packet.Capability.Par.Receipts.new([])
+      iex> ExWire.Packet.Capability.Par.Receipts.new([])
       ...> |> ExWire.Packet.Capability.Par.Receipts.handle()
       :ok
   """
