@@ -249,9 +249,6 @@ defmodule Blockchain.Block do
       iex> {:ok, {hash, _}} = Blockchain.Block.put_block(block, trie)
       iex> hash
       <<78, 28, 127, 10, 192, 253, 127, 239, 254, 179, 39, 34, 245, 44, 152, 98, 128, 71, 238, 155, 100, 161, 199, 71, 243, 223, 172, 191, 74, 99, 128, 63>>
-      iex> {:ok, serialized_block} = MerklePatriciaTree.DB.get(trie.db, block |> Blockchain.Block.hash)
-      iex> serialized_block |> ExRLP.decode |> Blockchain.Block.deserialize()
-      %Blockchain.Block{header: %Block.Header{number: 5, parent_hash: <<1, 2, 3>>, beneficiary: <<2, 3, 4>>, difficulty: 100, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>}}
   """
   @spec put_block(t, TrieStorage.t(), binary() | nil) :: {:ok, {EVM.hash(), TrieStorage.t()}}
   def put_block(block, trie, precomputated_hash \\ nil) do
