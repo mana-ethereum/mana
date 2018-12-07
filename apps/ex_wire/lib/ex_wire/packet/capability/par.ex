@@ -10,6 +10,17 @@ defmodule ExWire.Packet.Capability.Par do
   @version_to_packet_types %{
     1 => [
       Par.WarpStatus,
+      Par.NewBlockHashes,
+      Par.Transactions,
+      Par.GetBlockHeaders,
+      Par.BlockHeaders,
+      Par.GetBlockBodies,
+      Par.BlockBodies,
+      Par.NewBlock,
+      Par.GetNodeData,
+      Par.NodeData,
+      Par.GetReceipts,
+      Par.Receipts,
       Par.GetSnapshotManifest,
       Par.SnapshotManifest,
       Par.GetSnapshotData,
