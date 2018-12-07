@@ -28,18 +28,14 @@ defmodule Blockchain.Block do
             header: %Header{},
             transactions: [],
             receipts: [],
-            ommers: [],
-            metadata: nil
-
-  @type metadata :: %{total_difficulty: integer(), size: integer()} | nil
+            ommers: []
 
   @type t :: %__MODULE__{
           block_hash: EVM.hash() | nil,
           header: Header.t(),
           transactions: [Transaction.t()] | [],
           receipts: [Receipt.t()] | [],
-          ommers: [Header.t()] | [],
-          metadata: metadata() | nil
+          ommers: [Header.t()] | []
         }
 
   @block_reward_ommer_divisor 32
@@ -258,18 +254,21 @@ defmodule Blockchain.Block do
       %Blockchain.Block{header: %Block.Header{number: 5, parent_hash: <<1, 2, 3>>, beneficiary: <<2, 3, 4>>, difficulty: 100, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>}}
   """
   @spec put_block(t, TrieStorage.t(), binary() | nil) :: {:ok, {EVM.hash(), TrieStorage.t()}}
-  def put_block(block, trie, predefined_key \\ nil) do
-    hash = if predefined_key, do: predefined_key, else: hash(block)
+  def put_block(block, trie, precomputated_hash \\ nil) do
+    block_with_metadata = add_metadata(block, trie, precomputated_hash)
+    block_hash = block_with_metadata.block_hash
 
-    block_rlp = block |> serialize |> ExRLP.encode()
+    block_bin = :erlang.term_to_binary(block_with_metadata)
 
     updated_trie =
       trie
-      |> TrieStorage.put_raw_key!(hash, block_rlp)
-      |> TrieStorage.put_raw_key!(block_hash_key(block.header.number), hash)
-      |> put_metadata(hash, block, block_rlp)
+      |> TrieStorage.put_raw_key!(block_hash, block_bin)
+      |> TrieStorage.put_raw_key!(
+        block_hash_key(block.header.number),
+        block_hash
+      )
 
-    {:ok, {hash, updated_trie}}
+    {:ok, {block_hash, updated_trie}}
   end
 
   @doc """
@@ -280,35 +279,10 @@ defmodule Blockchain.Block do
   """
   @spec get_block(EVM.hash(), TrieStorage.t()) :: {:ok, t} | :not_found
   def get_block(block_hash, trie) do
-    with {:ok, rlp} <- TrieStorage.get_raw_key(trie, block_hash) do
-      block = rlp |> ExRLP.decode() |> deserialize()
+    with {:ok, block_bin} <- TrieStorage.get_raw_key(trie, block_hash) do
+      block = :erlang.binary_to_term(block_bin)
+
       {:ok, block}
-    end
-  end
-
-  @spec get_block_with_metadata(EVM.hash() | integer(), TrieStorage.t()) :: {:ok, t} | :not_found
-  def get_block_with_metadata(block_hash, trie) when is_binary(block_hash) do
-    with {:ok, block} <- get_block(block_hash, trie) do
-      metadata =
-        case get_metadata(block_hash, trie) do
-          {:ok, info} -> info
-          :not_found -> %{}
-        end
-
-      {:ok, %{block | metadata: metadata}}
-    end
-  end
-
-  def get_block_with_metadata(number, trie) when is_integer(number) do
-    with {:ok, hash} <- get_block_hash_by_number(trie, number) do
-      get_block_with_metadata(hash, trie)
-    end
-  end
-
-  @spec get_metadata(EVM.hash(), TrieStorage.t()) :: {:ok, metadata()} | :not_found
-  def get_metadata(block_hash, trie) do
-    with {:ok, metadata_bin} <- TrieStorage.get_raw_key(trie, metadata_key(block_hash)) do
-      {:ok, :erlang.binary_to_term(metadata_bin)}
     end
   end
 
@@ -317,23 +291,14 @@ defmodule Blockchain.Block do
   """
   @spec get_block_by_number(integer(), TrieStorage.t()) :: {:ok, t} | :not_found
   def get_block_by_number(block_number, trie) do
-    case get_block_hash_by_number(trie, block_number) do
-      :not_found ->
-        :not_found
-
-      {:ok, hash} ->
-        get_block(hash, trie)
+    with {:ok, hash} <- get_block_hash_by_number(trie, block_number) do
+      get_block(hash, trie)
     end
   end
 
   @spec block_hash_key(integer()) :: String.t()
   defp block_hash_key(number) do
     "hash_for_#{number}"
-  end
-
-  @spec metadata_key(binary()) :: String.t()
-  defp metadata_key(hash) do
-    "info_#{Base.encode16(hash, case: :lower)}"
   end
 
   @doc """
@@ -351,7 +316,7 @@ defmodule Blockchain.Block do
       iex> block = %Blockchain.Block{header: %Block.Header{number: 5, parent_hash: <<1, 2, 3>>, beneficiary: <<2, 3, 4>>, difficulty: 100, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>}}
       iex> Blockchain.Block.put_block(block, trie)
       iex> Blockchain.Block.get_parent_block(%Blockchain.Block{header: %Block.Header{parent_hash: block |> Blockchain.Block.hash}}, trie)
-      {:ok, %Blockchain.Block{header: %Block.Header{number: 5, parent_hash: <<1, 2, 3>>, beneficiary: <<2, 3, 4>>, difficulty: 100, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>}}}
+      {:ok, %Blockchain.Block{block_hash: <<78, 28, 127, 10, 192, 253, 127, 239, 254, 179, 39, 34, 245, 44, 152, 98, 128, 71, 238, 155, 100, 161, 199, 71, 243, 223, 172, 191, 74, 99, 128, 63>>, header: %Block.Header{number: 5, parent_hash: <<1, 2, 3>>, beneficiary: <<2, 3, 4>>, difficulty: 100, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>, size: 415, total_difficulty: 100}}}
 
       iex> db = MerklePatriciaTree.Test.random_ets_db()
       iex> block = %Blockchain.Block{header: %Block.Header{number: 5, parent_hash: <<1, 2, 3>>, beneficiary: <<2, 3, 4>>, difficulty: 100, timestamp: 11, mix_hash: <<1>>, nonce: <<2>>}}
@@ -892,23 +857,6 @@ defmodule Blockchain.Block do
     {updated_block, state}
   end
 
-  defp put_metadata(trie, hash, block, rlp) do
-    rlp_size = byte_size(rlp)
-
-    total_difficulty =
-      case get_metadata(block.header.parent_hash, trie) do
-        {:ok, %{total_difficulty: parent_total_difficulty}} ->
-          parent_total_difficulty + block.header.difficulty
-
-        _ ->
-          block.header.difficulty
-      end
-
-    metadata = :erlang.term_to_binary(%{rlp_size: rlp_size, total_difficulty: total_difficulty})
-
-    TrieStorage.put_raw_key!(trie, metadata_key(hash), metadata)
-  end
-
   defp add_miner_reward(state, block, base_reward) do
     ommer_reward = round(base_reward * length(block.ommers) / @block_reward_ommer_divisor)
     reward = ommer_reward + base_reward
@@ -939,5 +887,28 @@ defmodule Blockchain.Block do
       nil -> default
       property_value -> property_value
     end
+  end
+
+  defp add_metadata(block, trie, predefined_hash) do
+    block_rlp_size =
+      block
+      |> serialize
+      |> ExRLP.encode()
+      |> byte_size()
+
+    total_difficulty =
+      case get_block(block.header.parent_hash, trie) do
+        {:ok, block} ->
+          block.header.total_difficulty + block.header.difficulty
+
+        _ ->
+          block.header.difficulty
+      end
+
+    hash = if predefined_hash, do: predefined_hash, else: hash(block)
+
+    updated_block = %{block.header | size: block_rlp_size, total_difficulty: total_difficulty}
+
+    %{block | block_hash: hash, header: updated_block}
   end
 end

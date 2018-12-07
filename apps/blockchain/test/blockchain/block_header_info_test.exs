@@ -23,7 +23,9 @@ defmodule Blockchain.BlockHeaderInfoTest do
         difficulty: 100,
         timestamp: 11,
         mix_hash: <<1>>,
-        nonce: <<2>>
+        nonce: <<2>>,
+        size: 415,
+        total_difficulty: 100
       }
 
       parent_block = %Blockchain.Block{
@@ -75,7 +77,9 @@ defmodule Blockchain.BlockHeaderInfoTest do
         difficulty: 100,
         timestamp: 11,
         mix_hash: <<1>>,
-        nonce: <<2>>
+        nonce: <<2>>,
+        size: 415,
+        total_difficulty: 100
       }
 
       grand_parent_block = %Blockchain.Block{
