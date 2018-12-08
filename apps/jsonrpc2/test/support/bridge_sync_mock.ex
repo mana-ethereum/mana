@@ -58,7 +58,7 @@ defmodule JSONRPC2.BridgeSyncMock do
 
   def handle_call({:get_block_by_number, number}, _, state = %{trie: trie}) do
     block =
-      case Block.get_block_with_metadata(number, trie) do
+      case Block.get_block_by_number(number, trie) do
         {:ok, block} -> ResponseBlock.new(block)
         _ -> nil
       end
@@ -68,7 +68,7 @@ defmodule JSONRPC2.BridgeSyncMock do
 
   def handle_call({:get_block_by_hash, hash}, _, state = %{trie: trie}) do
     block =
-      case Block.get_block_with_metadata(hash, trie) do
+      case Block.get_block(hash, trie) do
         {:ok, block} -> ResponseBlock.new(block)
         _ -> nil
       end

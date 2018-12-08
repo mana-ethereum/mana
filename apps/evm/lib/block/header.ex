@@ -25,7 +25,9 @@ defmodule Block.Header do
             timestamp: nil,
             extra_data: <<>>,
             mix_hash: <<0::256>>,
-            nonce: <<0::64>>
+            nonce: <<0::64>>,
+            total_difficulty: 0,
+            size: 0
 
   @typedoc """
   As defined in section 4.3 of Yellow Paper:

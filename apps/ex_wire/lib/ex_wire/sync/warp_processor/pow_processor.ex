@@ -163,16 +163,10 @@ defmodule ExWire.Sync.WarpProcessor.PowProcessor do
 
     # Store the block to our db, trying not to repeat encodings of our
     # transactions and ommers. But.. we do.
-    block_encoded_rlp =
-      [
-        Header.serialize(block.header),
-        block_data.header.transactions_rlp,
-        block_data.header.ommers_rlp
-      ]
-      |> ExRLP.encode()
+    {:ok, {_, final_trie}} = Block.put_block(block, trie_with_trx_and_receipts)
 
     {
-      TrieStorage.put_raw_key!(trie_with_trx_and_receipts, block.block_hash, block_encoded_rlp),
+      final_trie,
       block
     }
   end

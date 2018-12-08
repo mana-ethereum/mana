@@ -412,6 +412,9 @@ defmodule Blockchain.BlockTest do
       trie = db |> Trie.new()
 
       block = %Block{
+        block_hash:
+          <<78, 28, 127, 10, 192, 253, 127, 239, 254, 179, 39, 34, 245, 44, 152, 98, 128, 71, 238,
+            155, 100, 161, 199, 71, 243, 223, 172, 191, 74, 99, 128, 63>>,
         transactions: [
           %Transaction{
             nonce: 5,
@@ -432,7 +435,9 @@ defmodule Blockchain.BlockTest do
           difficulty: 100,
           timestamp: 11,
           mix_hash: <<1>>,
-          nonce: <<2>>
+          nonce: <<2>>,
+          size: 447,
+          total_difficulty: 100
         }
       }
 
@@ -456,6 +461,9 @@ defmodule Blockchain.BlockTest do
       trie = db |> Trie.new()
 
       block = %Block{
+        block_hash:
+          <<78, 28, 127, 10, 192, 253, 127, 239, 254, 179, 39, 34, 245, 44, 152, 98, 128, 71, 238,
+            155, 100, 161, 199, 71, 243, 223, 172, 191, 74, 99, 128, 63>>,
         transactions: [
           %Transaction{
             nonce: 5,
@@ -476,7 +484,9 @@ defmodule Blockchain.BlockTest do
           difficulty: 100,
           timestamp: 11,
           mix_hash: <<1>>,
-          nonce: <<2>>
+          nonce: <<2>>,
+          size: 447,
+          total_difficulty: 100
         }
       }
 
@@ -582,88 +592,12 @@ defmodule Blockchain.BlockTest do
       }
 
       {:ok, {hash, updated_trie}} = Block.put_block(block, trie)
-      {:ok, info} = Block.get_metadata(hash, updated_trie)
+      {:ok, found_block} = Block.get_block(hash, updated_trie)
 
-      assert info[:rlp_size] == block |> Block.serialize() |> ExRLP.encode() |> byte_size()
-      assert info[:total_difficulty] == block.header.difficulty
-    end
-  end
-
-  describe "get_block_with_metadata/2" do
-    test "gets block with additional info by its hash" do
-      trie = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
-
-      block = %Block{
-        header: %Header{
-          parent_hash: <<1::256>>,
-          ommers_hash: <<2::256>>,
-          beneficiary: <<3::160>>,
-          state_root: <<4::256>>,
-          transactions_root: <<5::256>>,
-          receipts_root: <<6::256>>,
-          logs_bloom: <<>>,
-          difficulty: 5,
-          number: 1,
-          gas_limit: 5,
-          gas_used: 3,
-          timestamp: 6,
-          extra_data: "",
-          mix_hash: <<7::256>>,
-          nonce: <<8::64>>
-        },
-        transactions: [],
-        ommers: []
-      }
-
-      {:ok, {hash, updated_trie}} = Block.put_block(block, trie)
-      Block.get_metadata(hash, updated_trie)
-
-      {:ok, db_block} = Block.get_block_with_metadata(hash, updated_trie)
-
-      refute is_nil(db_block.metadata)
-
-      assert db_block.metadata[:rlp_size] ==
+      assert found_block.header.size ==
                block |> Block.serialize() |> ExRLP.encode() |> byte_size()
 
-      assert db_block.metadata[:total_difficulty] == block.header.difficulty
-    end
-
-    test "gets block with additional info by its number" do
-      trie = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
-
-      block = %Block{
-        header: %Header{
-          parent_hash: <<1::256>>,
-          ommers_hash: <<2::256>>,
-          beneficiary: <<3::160>>,
-          state_root: <<4::256>>,
-          transactions_root: <<5::256>>,
-          receipts_root: <<6::256>>,
-          logs_bloom: <<>>,
-          difficulty: 5,
-          number: 1,
-          gas_limit: 5,
-          gas_used: 3,
-          timestamp: 6,
-          extra_data: "",
-          mix_hash: <<7::256>>,
-          nonce: <<8::64>>
-        },
-        transactions: [],
-        ommers: []
-      }
-
-      {:ok, {hash, updated_trie}} = Block.put_block(block, trie)
-      Block.get_metadata(hash, updated_trie)
-
-      {:ok, db_block} = Block.get_block_with_metadata(block.header.number, updated_trie)
-
-      refute is_nil(db_block.metadata)
-
-      assert db_block.metadata[:rlp_size] ==
-               block |> Block.serialize() |> ExRLP.encode() |> byte_size()
-
-      assert db_block.metadata[:total_difficulty] == block.header.difficulty
+      assert found_block.header.total_difficulty == block.header.difficulty
     end
   end
 
