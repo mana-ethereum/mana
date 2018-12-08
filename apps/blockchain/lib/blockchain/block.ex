@@ -895,8 +895,8 @@ defmodule Blockchain.Block do
 
     total_difficulty =
       case get_block(block.header.parent_hash, trie) do
-        {:ok, block} ->
-          block.header.total_difficulty + block.header.difficulty
+        {:ok, parent_block} ->
+          parent_block.header.total_difficulty + block.header.difficulty
 
         _ ->
           block.header.difficulty
