@@ -23,6 +23,24 @@ defmodule JSONRPC2.Response.Transaction do
     :s
   ]
 
+  @type t :: %__MODULE__{
+          blockHash: binary(),
+          blockNumber: binary(),
+          from: binary(),
+          gas: binary(),
+          gasPrice: binary(),
+          hash: binary(),
+          input: binary(),
+          nonce: binary(),
+          to: binary(),
+          transactionIndex: binary(),
+          value: binary(),
+          v: binary(),
+          r: binary(),
+          s: binary()
+        }
+
+  @spec new(Blockchain.Transaction.t(), Blockchain.Block.t(), integer() | nil) :: t()
   def new(internal_transaction, internal_block, network_id \\ nil) do
     %__MODULE__{
       blockHash: encode_hex(internal_block.block_hash),
@@ -56,7 +74,7 @@ defmodule JSONRPC2.Response.Transaction do
     |> Transaction.serialize()
     |> ExRLP.encode()
     |> Keccak.kec()
-    |> encode_hex
+    |> encode_hex()
   end
 
   defp from_address(internal_transaction, network_id) do
