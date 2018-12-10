@@ -23,3 +23,7 @@ apps/blockchain/config/dev.secret.exs
 
 !/**/.gitkeep
 /log/*
+#release testing tool
+/priv/itest/_build
+/priv/itest/_build/itest
+/priv/itest/itest

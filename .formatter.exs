@@ -4,6 +4,7 @@
     "apps/*/mix.exs",
     "rel/config.exs",
     "config/*",
-    "mix.exs"
+    "mix.exs",
+    "priv/itest/*.{ex,exs}"
   ]
 ]
