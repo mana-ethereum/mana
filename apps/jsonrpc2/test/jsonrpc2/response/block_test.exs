@@ -2,11 +2,12 @@ defmodule JSONRPC2.Response.BlockTest do
   use ExUnit.Case, async: true
 
   alias JSONRPC2.Response.Block
-  alias JSONRPC2.TestFactory
+
+  import JSONRPC2.TestFactory
 
   describe "new/1" do
     test "creates response block from internal block" do
-      internal_block = TestFactory.build(:block)
+      internal_block = build(:block)
 
       response_block = Block.new(internal_block)
 
@@ -36,7 +37,7 @@ defmodule JSONRPC2.Response.BlockTest do
     end
 
     test "correctly encodes to json" do
-      internal_block = TestFactory.build(:block)
+      internal_block = build(:block)
 
       json_block =
         internal_block
