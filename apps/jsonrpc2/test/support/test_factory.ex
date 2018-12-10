@@ -1,6 +1,7 @@
 defmodule JSONRPC2.TestFactory do
   alias Block.Header
   alias Blockchain.Block
+  alias Blockchain.Transaction
 
   @empty_trie MerklePatriciaTree.Trie.empty_trie_root_hash()
 
@@ -46,5 +47,26 @@ defmodule JSONRPC2.TestFactory do
     args = Map.merge(defaults, opts)
 
     struct!(Header, args)
+  end
+
+  def factory(:transaction, opts) do
+    defaults = %{
+      data: nil,
+      gas_limit: 7,
+      gas_price: 6,
+      init: <<1>>,
+      nonce: 5,
+      r:
+        38_889_131_630_470_350_300_468_726_261_158_724_183_878_062_819_625_353_581_392_042_110_782_473_464_074,
+      s:
+        56_013_001_490_976_921_811_414_879_795_854_011_730_332_692_343_890_561_111_314_022_658_085_426_919_315,
+      to: "",
+      v: 27,
+      value: 5
+    }
+
+    args = Map.merge(defaults, opts)
+
+    struct(Transaction, args)
   end
 end
