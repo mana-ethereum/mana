@@ -65,7 +65,7 @@ defmodule ExWire.DEVp2p.Session do
   """
   @spec disconnect(t) :: t
   def disconnect(session = %__MODULE__{}) do
-    %{session | hello_sent: nil, hello_received: nil, packet_id_map: PacketIdMap.default_map()}
+    %{session | hello_sent: nil, hello_received: nil, packet_id_map: nil}
   end
 
   @doc """
@@ -100,6 +100,6 @@ defmodule ExWire.DEVp2p.Session do
   """
   @spec compatible_capabilities?(t) :: boolean()
   def compatible_capabilities?(%__MODULE__{packet_id_map: packet_id_map}) do
-    packet_id_map != PacketIdMap.default_map()
+    Map.has_key?(packet_id_map.ids_to_modules, 0x10)
   end
 end
