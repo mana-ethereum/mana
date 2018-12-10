@@ -7,7 +7,7 @@ defmodule ExWire.Packet.Capability do
 
   @type t :: %__MODULE__{
           name: String.t(),
-          version: integer()
+          version: non_neg_integer()
         }
 
   defstruct [
@@ -18,6 +18,7 @@ defmodule ExWire.Packet.Capability do
   @callback get_name() :: String.t()
   @callback get_supported_versions() :: [integer()]
   @callback get_packet_types(integer()) :: [module()] | :unsupported_version
+  @callback get_packet_count(integer()) :: [module()] | :unsupported_version
 
   @spec new({String.t(), integer()}) :: t
   def new({name, version}) do
@@ -44,6 +45,21 @@ defmodule ExWire.Packet.Capability do
 
       capability ->
         apply(capability, :get_packet_types, [version])
+    end
+  end
+
+  @spec get_capability_packet_count(t, %{String.t() => module()}) ::
+          non_neg_integer() | :unsupported_capability | :unsupported_version
+  def get_capability_packet_count(
+        %__MODULE__{name: name, version: version},
+        mana_capabilities_map
+      ) do
+    case Map.get(mana_capabilities_map, name) do
+      nil ->
+        :unsupported_capability
+
+      capability ->
+        apply(capability, :get_packet_count, [version])
     end
   end
 

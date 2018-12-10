@@ -28,6 +28,10 @@ defmodule ExWire.Packet.Capability.Par do
     ]
   }
 
+  @version_to_packet_count %{
+    1 => 21
+  }
+
   @available_versions Map.keys(@version_to_packet_types)
   @configured_versions Config.caps()
                        |> Enum.filter(fn cap -> cap.name == @name end)
@@ -48,13 +52,10 @@ defmodule ExWire.Packet.Capability.Par do
   end
 
   @impl true
-  def get_packet_types(version) do
-    case Map.get(@version_to_packet_types, version) do
-      nil ->
-        :unsupported_version
+  def get_packet_types(version),
+    do: Map.get(@version_to_packet_types, version, :unsupported_version)
 
-      packet_types ->
-        packet_types
-    end
-  end
+  @impl true
+  def get_packet_count(version),
+    do: Map.get(@version_to_packet_count, version, :unsupported_version)
 end
