@@ -1,5 +1,6 @@
 defmodule JSONRPC2.Response.Transaction do
   alias Blockchain.Transaction
+  alias Blockchain.Transaction.Signature
   alias ExthCrypto.Hash.Keccak
 
   import JSONRPC2.Response.Helpers
@@ -22,11 +23,11 @@ defmodule JSONRPC2.Response.Transaction do
     :s
   ]
 
-  def new(internal_transaction, internal_block) do
+  def new(internal_transaction, internal_block, network_id \\ nil) do
     %__MODULE__{
       blockHash: encode_hex(internal_block.block_hash),
       blockNumber: encode_hex(internal_block.header.number),
-      from: <<>>,
+      from: from_address(internal_transaction, network_id),
       gas: encode_hex(internal_transaction.gas_limit),
       gasPrice: encode_hex(internal_transaction.gas_price),
       hash: hash(internal_transaction),
@@ -56,5 +57,11 @@ defmodule JSONRPC2.Response.Transaction do
     |> ExRLP.encode()
     |> Keccak.kec()
     |> encode_hex
+  end
+
+  defp from_address(internal_transaction, network_id) do
+    {:ok, sender} = Signature.sender(internal_transaction, network_id)
+
+    encode_hex(sender)
   end
 end
