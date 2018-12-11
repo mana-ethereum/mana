@@ -163,7 +163,6 @@ defmodule ExWire.Packet.PacketIdMapTest do
                  0x15 => ExWire.Packet.Capability.Eth.GetBlockBodies,
                  0x16 => ExWire.Packet.Capability.Eth.BlockBodies,
                  0x17 => ExWire.Packet.Capability.Eth.NewBlock,
-
                  0x21 => ExWire.Packet.Capability.Par.WarpStatus,
                  0x22 => ExWire.Packet.Capability.Par.NewBlockHashes,
                  0x23 => ExWire.Packet.Capability.Par.Transactions,
@@ -194,7 +193,6 @@ defmodule ExWire.Packet.PacketIdMapTest do
                  ExWire.Packet.Capability.Eth.GetBlockBodies => 0x15,
                  ExWire.Packet.Capability.Eth.BlockBodies => 0x16,
                  ExWire.Packet.Capability.Eth.NewBlock => 0x17,
-
                  ExWire.Packet.Capability.Par.WarpStatus => 0x21,
                  ExWire.Packet.Capability.Par.NewBlockHashes => 0x22,
                  ExWire.Packet.Capability.Par.Transactions => 0x23,
