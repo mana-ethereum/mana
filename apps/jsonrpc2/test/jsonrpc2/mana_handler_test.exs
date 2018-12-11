@@ -144,13 +144,13 @@ defmodule JSONRPC2.ManaHandlerTest do
     end
 
     test "fetches block by number with full transactions" do
-      transactions = [build(:transaction), build(:transaction)]
+      transactions = [TestFactory.build(:transaction), TestFactory.build(:transaction)]
 
       block =
-        build(:block,
+        TestFactory.build(:block,
           block_hash: <<7::256>>,
           transactions: transactions,
-          header: build(:header, number: 11)
+          header: TestFactory.build(:header, number: 11)
         )
 
       :ok = BridgeSyncMock.put_block(block)
@@ -163,13 +163,13 @@ defmodule JSONRPC2.ManaHandlerTest do
     end
 
     test "fetches block by number with transaction hashes" do
-      transactions = [build(:transaction), build(:transaction)]
+      transactions = [TestFactory.build(:transaction), TestFactory.build(:transaction)]
 
       block =
-        build(:block,
+        TestFactory.build(:block,
           block_hash: <<8::256>>,
           transactions: transactions,
-          header: build(:header, number: 12)
+          header: TestFactory.build(:header, number: 12)
         )
 
       :ok = BridgeSyncMock.put_block(block)
@@ -196,8 +196,8 @@ defmodule JSONRPC2.ManaHandlerTest do
     end
 
     test "fetches block by hash with full transactions" do
-      transactions = [build(:transaction), build(:transaction)]
-      block = build(:block, block_hash: <<5::256>>, transactions: transactions)
+      transactions = [TestFactory.build(:transaction), TestFactory.build(:transaction)]
+      block = TestFactory.build(:block, block_hash: <<5::256>>, transactions: transactions)
 
       :ok = BridgeSyncMock.put_block(block)
 
@@ -209,8 +209,8 @@ defmodule JSONRPC2.ManaHandlerTest do
     end
 
     test "fetches block by hash with transaction hashes" do
-      transactions = [build(:transaction), build(:transaction)]
-      block = build(:block, block_hash: <<6::256>>, transactions: transactions)
+      transactions = [TestFactory.build(:transaction), TestFactory.build(:transaction)]
+      block = TestFactory.build(:block, block_hash: <<6::256>>, transactions: transactions)
 
       :ok = BridgeSyncMock.put_block(block)
 
