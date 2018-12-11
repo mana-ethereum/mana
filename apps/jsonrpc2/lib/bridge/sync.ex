@@ -4,6 +4,7 @@ defmodule JSONRPC2.Bridge.Sync do
   alias ExWire.PeerSupervisor
   alias ExWire.Sync
   alias JSONRPC2.Response.Block, as: ResponseBlock
+  alias JSONRPC2.Response.Transaction, as: ResponseTransaction
 
   @spec connected_peer_count :: 0 | non_neg_integer()
   def connected_peer_count, do: PeerSupervisor.connected_peer_count()
