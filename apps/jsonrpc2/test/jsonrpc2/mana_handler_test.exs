@@ -133,7 +133,7 @@ defmodule JSONRPC2.ManaHandlerTest do
           block_hash: <<0x2::256>>,
           header: TestFactory.build(:header, number: 10)
         )
-        
+
       :ok = BridgeSyncMock.put_block(block)
 
       assert_rpc_reply(
