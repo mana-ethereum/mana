@@ -1,6 +1,7 @@
 defmodule JSONRPC2.BridgeSyncMock do
   alias Blockchain.Block
   alias JSONRPC2.Response.Block, as: ResponseBlock
+  alias JSONRPC2.Response.Transaction, as: ResponseTransaction
   alias JSONRPC2.Struct.EthSyncing
 
   use GenServer
@@ -25,12 +26,16 @@ defmodule JSONRPC2.BridgeSyncMock do
     GenServer.call(__MODULE__, {:put_block, block})
   end
 
-  def get_block_by_number(number) do
-    GenServer.call(__MODULE__, {:get_block_by_number, number})
+  def get_block_by_number(number, full_transactions) do
+    GenServer.call(__MODULE__, {:get_block_by_number, number, full_transactions})
   end
 
-  def get_block_by_hash(hash) do
-    GenServer.call(__MODULE__, {:get_block_by_hash, hash})
+  def get_block_by_hash(hash, full_transactions) do
+    GenServer.call(__MODULE__, {:get_block_by_hash, hash, full_transactions})
+  end
+
+  def get_transaction_by_block_hash_and_index(block_hash, index) do
+    GenServer.call(__MODULE__, {:get_transaction_by_block_hash_and_index, block_hash, index})
   end
 
   def start_link(state) do
@@ -56,24 +61,42 @@ defmodule JSONRPC2.BridgeSyncMock do
     {:reply, :ok, updated_state}
   end
 
-  def handle_call({:get_block_by_number, number}, _, state = %{trie: trie}) do
+  def handle_call({:get_block_by_number, number, full_transactions}, _, state = %{trie: trie}) do
     block =
       case Block.get_block_by_number(number, trie) do
-        {:ok, block} -> ResponseBlock.new(block)
+        {:ok, block} -> ResponseBlock.new(block, full_transactions)
         _ -> nil
       end
 
     {:reply, block, state}
   end
 
-  def handle_call({:get_block_by_hash, hash}, _, state = %{trie: trie}) do
+  def handle_call({:get_block_by_hash, hash, full_transactions}, _, state = %{trie: trie}) do
     block =
       case Block.get_block(hash, trie) do
-        {:ok, block} -> ResponseBlock.new(block)
+        {:ok, block} -> ResponseBlock.new(block, full_transactions)
         _ -> nil
       end
 
     {:reply, block, state}
+  end
+
+  def handle_call(
+        {:get_transaction_by_block_hash_and_index, block_hash, trx_index},
+        _,
+        state = %{trie: trie}
+      ) do
+    result =
+      with {:ok, block} <- Block.get_block(block_hash, trie) do
+        case Enum.at(block.transactions, trx_index) do
+          nil -> nil
+          transaction -> ResponseTransaction.new(transaction, block)
+        end
+      else
+        _ -> nil
+      end
+
+    {:reply, result, state}
   end
 
   @spec handle_call(:get_last_sync_block_stats, {pid, any}, map()) ::
