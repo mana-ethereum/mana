@@ -3,7 +3,7 @@ defmodule JSONRPC2.ManaHandlerTest do
 
   alias JSONRPC2.BridgeSyncMock
   alias JSONRPC2.SpecHandler
-  import JSONRPC2.TestFactory
+  alias JSONRPC2.TestFactory
 
   setup_all do
     db = MerklePatriciaTree.Test.random_ets_db()
@@ -128,7 +128,12 @@ defmodule JSONRPC2.ManaHandlerTest do
 
   describe "eth_getBlockByNumber" do
     test "fetches block by number" do
-      block = build(:block, block_hash: <<0x2::256>>, header: build(:header, number: 10))
+      block =
+        TestFactory.build(:block,
+          block_hash: <<0x2::256>>,
+          header: TestFactory.build(:header, number: 10)
+        )
+        
       :ok = BridgeSyncMock.put_block(block)
 
       assert_rpc_reply(
@@ -179,7 +184,7 @@ defmodule JSONRPC2.ManaHandlerTest do
 
   describe "eth_getBlockByHash" do
     test "fetches block by hash" do
-      block = build(:block, block_hash: <<100::256>>)
+      block = TestFactory.build(:block, block_hash: <<100::256>>)
 
       :ok = BridgeSyncMock.put_block(block)
 
@@ -213,6 +218,41 @@ defmodule JSONRPC2.ManaHandlerTest do
         SpecHandler,
         ~s({"jsonrpc": "2.0", "method": "eth_getBlockByHash", "params": ["0x0000000000000000000000000000000000000000000000000000000000000006", false], "id": 71}),
         ~s({"id":71, "jsonrpc":"2.0", "result":{"difficulty":"0x01", "extraData":"", "gasLimit":"0x00", "gasUsed":"0x00", "logsBloom":"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000", "miner":"0x0000000000000000000000000000000000000010", "nonce":"0x0000000000000000", "number":"0x01", "parentHash":"0x0000000000000000000000000000000000000000000000000000000000000010", "receiptsRoot":"0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421", "sha3Uncles":"0x0000000000000000000000000000000000000000000000000000000000000010", "stateRoot":"0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421", "timestamp":"0x01", "totalDifficulty":"0x01", "transactionsRoot":"0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421", "uncles":[], "hash":"0x0000000000000000000000000000000000000000000000000000000000000006", "size":"0x028c", "transactions":["0x71024c28d1404f5d5fe3458b71b02d799f6d6aba29e285857732c0d06ebf3b08", "0x71024c28d1404f5d5fe3458b71b02d799f6d6aba29e285857732c0d06ebf3b08"]}})
+      )
+    end
+  end
+
+  describe "eth_getTransactionByBlockHashAndIndex" do
+    test "fetches transaction by block hash and index" do
+      transaction = TestFactory.build(:transaction)
+      block = TestFactory.build(:block, block_hash: <<0x3::256>>, transactions: [transaction])
+      :ok = BridgeSyncMock.put_block(block)
+
+      assert_rpc_reply(
+        SpecHandler,
+        ~s({"jsonrpc": "2.0", "method": "eth_getTransactionByBlockHashAndIndex", "params": ["0x0000000000000000000000000000000000000000000000000000000000000003", "0x00"], "id": 71}),
+        ~s({"id":71, "jsonrpc":"2.0", "result":{"hash":"0x71024c28d1404f5d5fe3458b71b02d799f6d6aba29e285857732c0d06ebf3b08", "nonce":"0x05", "blockHash":"0x0000000000000000000000000000000000000000000000000000000000000003", "blockNumber":"0x01", "from":"0x619f56e8bed07fe196c0dbc41b52e2bc64817b3a", "gas":"0x07", "gasPrice":"0x06", "input":"0x01", "r":"0x55fa77ee62e6c42e83b4f868c1e41643e45fd6f02a381a663318884751cb690a", "s":"0x7bd63c407cea7d619d598fb5766980ab8497b1b11c26d8bc59a132af96317793", "to":"0x", "transactionIndex":"0x00", "v":"0x1b", "value":"0x05"}})
+      )
+    end
+  end
+
+  describe "eth_getTransactionByBlockNumberAndIndex" do
+    test "fetches transaction by block number and index" do
+      transaction = TestFactory.build(:transaction)
+
+      block =
+        TestFactory.build(:block,
+          block_hash: <<0x3::256>>,
+          transactions: [transaction],
+          header: TestFactory.build(:header, number: 99)
+        )
+
+      :ok = BridgeSyncMock.put_block(block)
+
+      assert_rpc_reply(
+        SpecHandler,
+        ~s({"jsonrpc": "2.0", "method": "eth_getTransactionByBlockNumberAndIndex", "params": [99, "0x00"], "id": 71}),
+        ~s({"id":71, "jsonrpc":"2.0", "result":{"hash":"0x71024c28d1404f5d5fe3458b71b02d799f6d6aba29e285857732c0d06ebf3b08", "nonce":"0x05", "blockHash":"0x0000000000000000000000000000000000000000000000000000000000000003", "blockNumber":"0x63", "from":"0x619f56e8bed07fe196c0dbc41b52e2bc64817b3a", "gas":"0x07", "gasPrice":"0x06", "input":"0x01", "r":"0x55fa77ee62e6c42e83b4f868c1e41643e45fd6f02a381a663318884751cb690a", "s":"0x7bd63c407cea7d619d598fb5766980ab8497b1b11c26d8bc59a132af96317793", "to":"0x", "transactionIndex":"0x00", "v":"0x1b", "value":"0x05"}})
       )
     end
   end

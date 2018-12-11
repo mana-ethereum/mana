@@ -4,6 +4,7 @@ defmodule JSONRPC2.Bridge.Sync do
   alias ExWire.PeerSupervisor
   alias ExWire.Sync
   alias JSONRPC2.Response.Block, as: ResponseBlock
+  alias JSONRPC2.Response.Transaction, as: ResponseTransaction
 
   @spec connected_peer_count :: 0 | non_neg_integer()
   def connected_peer_count, do: PeerSupervisor.connected_peer_count()
@@ -42,6 +43,32 @@ defmodule JSONRPC2.Bridge.Sync do
 
     case Block.get_block(hash, state_trie) do
       {:ok, block} -> ResponseBlock.new(block, full_transactions)
+      _ -> nil
+    end
+  end
+
+  def get_transaction_by_block_hash_and_index(block_hash, trx_index) do
+    trie = get_last_sync_state().trie
+
+    with {:ok, block} <- Block.get_block(block_hash, trie) do
+      case Enum.at(block.transactions, trx_index) do
+        nil -> nil
+        transaction -> ResponseTransaction.new(transaction, block)
+      end
+    else
+      _ -> nil
+    end
+  end
+
+  def get_transaction_by_block_number_and_index(block_number, trx_index) do
+    trie = get_last_sync_state().trie
+
+    with {:ok, block} <- Block.get_block_by_number(block_number, trie) do
+      case Enum.at(block.transactions, trx_index) do
+        nil -> nil
+        transaction -> ResponseTransaction.new(transaction, block)
+      end
+    else
       _ -> nil
     end
   end
