@@ -93,7 +93,7 @@ defmodule JSONRPC2.Response.Block do
 
   @spec format_transactions([Transaction.t()], Block.t(), boolean()) ::
           [ResponseTransaction.t()] | [binary()]
-  def transactions(transactions, block, true) do
+  def format_transactions(transactions, block, true) do
     Enum.map(transactions, fn transaction ->
       ResponseTransaction.new(transaction, block)
     end)
