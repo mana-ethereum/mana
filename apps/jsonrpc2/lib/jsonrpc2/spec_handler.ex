@@ -101,7 +101,18 @@ defmodule JSONRPC2.SpecHandler do
     @sync.get_transaction_by_block_hash_and_index(block_hash, transaction_index)
   end
 
-  def handle_request("eth_getTransactionByBlockNumberAndIndex", _), do: {:error, :not_supported}
+  def handle_request("eth_getTransactionByBlockNumberAndIndex", [
+        block_number,
+        transaction_index_hex
+      ]) do
+    transaction_index =
+      transaction_index_hex
+      |> Math.hex_to_bin()
+      |> :binary.decode_unsigned()
+
+    @sync.get_transaction_by_block_number_and_index(block_number, transaction_index)
+  end
+
   def handle_request("eth_getTransactionReceipt", _), do: {:error, :not_supported}
   def handle_request("eth_getUncleByBlockHashAndIndex", _), do: {:error, :not_supported}
   def handle_request("eth_getUncleByBlockNumberAndIndex", _), do: {:error, :not_supported}

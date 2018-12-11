@@ -172,6 +172,27 @@ defmodule JSONRPC2.ManaHandlerTest do
     end
   end
 
+  describe "eth_getTransactionByBlockNumberAndIndex" do
+    test "fetches transaction by block number and index" do
+      transaction = TestFactory.build(:transaction)
+
+      block =
+        TestFactory.build(:block,
+          block_hash: <<0x3::256>>,
+          transactions: [transaction],
+          header: TestFactory.build(:header, number: 99)
+        )
+
+      :ok = BridgeSyncMock.put_block(block)
+
+      assert_rpc_reply(
+        SpecHandler,
+        ~s({"jsonrpc": "2.0", "method": "eth_getTransactionByBlockNumberAndIndex", "params": [99, "0x00"], "id": 71}),
+        ~s({"id":71, "jsonrpc":"2.0", "result":{"hash":"0x71024c28d1404f5d5fe3458b71b02d799f6d6aba29e285857732c0d06ebf3b08", "nonce":"0x05", "blockHash":"0x0000000000000000000000000000000000000000000000000000000000000003", "blockNumber":"0x63", "from":"0x619f56e8bed07fe196c0dbc41b52e2bc64817b3a", "gas":"0x07", "gasPrice":"0x06", "input":"0x01", "r":"0x55fa77ee62e6c42e83b4f868c1e41643e45fd6f02a381a663318884751cb690a", "s":"0x7bd63c407cea7d619d598fb5766980ab8497b1b11c26d8bc59a132af96317793", "to":"0x", "transactionIndex":"0x00", "v":"0x1b", "value":"0x05"}})
+      )
+    end
+  end
+
   defp assert_rpc_reply(handler, call, expected_reply) do
     assert {:reply, reply} = handler.handle(call)
 
