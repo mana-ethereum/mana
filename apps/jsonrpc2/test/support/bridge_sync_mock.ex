@@ -26,12 +26,12 @@ defmodule JSONRPC2.BridgeSyncMock do
     GenServer.call(__MODULE__, {:put_block, block})
   end
 
-  def get_block_by_number(number) do
-    GenServer.call(__MODULE__, {:get_block_by_number, number})
+  def get_block_by_number(number, include_full_transactions) do
+    GenServer.call(__MODULE__, {:get_block_by_number, number, include_full_transactions})
   end
 
-  def get_block_by_hash(hash) do
-    GenServer.call(__MODULE__, {:get_block_by_hash, hash})
+  def get_block_by_hash(hash, include_full_transactions) do
+    GenServer.call(__MODULE__, {:get_block_by_hash, hash, include_full_transactions})
   end
 
   def get_transaction_by_block_hash_and_index(block_hash, index) do
@@ -65,20 +65,24 @@ defmodule JSONRPC2.BridgeSyncMock do
     {:reply, :ok, updated_state}
   end
 
-  def handle_call({:get_block_by_number, number}, _, state = %{trie: trie}) do
+  def handle_call(
+        {:get_block_by_number, number, include_full_transactions},
+        _,
+        state = %{trie: trie}
+      ) do
     block =
       case Block.get_block_by_number(number, trie) do
-        {:ok, block} -> ResponseBlock.new(block)
+        {:ok, block} -> ResponseBlock.new(block, include_full_transactions)
         _ -> nil
       end
 
     {:reply, block, state}
   end
 
-  def handle_call({:get_block_by_hash, hash}, _, state = %{trie: trie}) do
+  def handle_call({:get_block_by_hash, hash, include_full_transactions}, _, state = %{trie: trie}) do
     block =
       case Block.get_block(hash, trie) do
-        {:ok, block} -> ResponseBlock.new(block)
+        {:ok, block} -> ResponseBlock.new(block, include_full_transactions)
         _ -> nil
       end
 

@@ -2,6 +2,7 @@ defmodule JSONRPC2.Response.Block do
   alias Blockchain.Block
   alias Blockchain.Transaction
   alias ExthCrypto.Hash.Keccak
+  alias JSONRPC2.Response.Transaction, as: ResponseTransaction
 
   import JSONRPC2.Response.Helpers
 
@@ -28,7 +29,32 @@ defmodule JSONRPC2.Response.Block do
     :uncles
   ]
 
-  def new(internal_block) do
+  @type transactions :: [binary()] | [ResponseTransaction.t()]
+
+  @type t :: %__MODULE__{
+          number: binary(),
+          hash: binary(),
+          parentHash: binary(),
+          nonce: binary(),
+          sha3Uncles: binary(),
+          logsBloom: binary(),
+          transactionsRoot: binary(),
+          stateRoot: binary(),
+          receiptsRoot: binary(),
+          miner: binary(),
+          difficulty: binary(),
+          totalDifficulty: binary(),
+          extraData: binary(),
+          size: binary(),
+          gasLimit: binary(),
+          gasUsed: binary(),
+          timestamp: binary(),
+          transactions: transactions(),
+          uncles: []
+        }
+
+  @spec new(Block.t(), boolean()) :: t()
+  def new(internal_block, include_full_transactions \\ false) do
     %__MODULE__{
       number: encode_hex(internal_block.header.number),
       hash: encode_hex(internal_block.block_hash),
@@ -47,20 +73,14 @@ defmodule JSONRPC2.Response.Block do
       gasLimit: encode_hex(internal_block.header.gas_limit),
       gasUsed: encode_hex(internal_block.header.gas_used),
       timestamp: encode_hex(internal_block.header.timestamp),
-      transactions: transaction_hashes(internal_block.transactions),
+      transactions:
+        format_transactions(
+          internal_block.transactions,
+          internal_block,
+          include_full_transactions
+        ),
       uncles: []
     }
-  end
-
-  @spec transaction_hashes([Transaction.t()]) :: [binary()]
-  defp transaction_hashes(transactions) do
-    Enum.map(transactions, fn transaction ->
-      transaction
-      |> Transaction.serialize()
-      |> ExRLP.encode()
-      |> Keccak.kec()
-      |> encode_hex()
-    end)
   end
 
   @spec block_size(Block.t()) :: integer()
@@ -69,5 +89,23 @@ defmodule JSONRPC2.Response.Block do
     |> Block.serialize()
     |> ExRLP.encode()
     |> byte_size()
+  end
+
+  @spec format_transactions([Transaction.t()], Block.t(), boolean()) ::
+          [ResponseTransaction.t()] | [binary()]
+  def format_transactions(transactions, block, true) do
+    Enum.map(transactions, fn transaction ->
+      ResponseTransaction.new(transaction, block)
+    end)
+  end
+
+  def format_transactions(transactions, _, _) do
+    Enum.map(transactions, fn transaction ->
+      transaction
+      |> Transaction.serialize()
+      |> ExRLP.encode()
+      |> Keccak.kec()
+      |> encode_hex()
+    end)
   end
 end
