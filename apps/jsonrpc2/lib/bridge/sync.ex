@@ -29,20 +29,20 @@ defmodule JSONRPC2.Bridge.Sync do
   @spec get_last_sync_state() :: Sync.state()
   defp get_last_sync_state(), do: Sync.get_state()
 
-  def get_block_by_number(number, full_transactions) do
+  def get_block_by_number(number, include_full_transactions) do
     state_trie = get_last_sync_state().trie
 
     case Block.get_block_by_number(number, state_trie) do
-      {:ok, block} -> ResponseBlock.new(block, full_transactions)
+      {:ok, block} -> ResponseBlock.new(block, include_full_transactions)
       _ -> nil
     end
   end
 
-  def get_block_by_hash(hash, full_transactions) do
+  def get_block_by_hash(hash, include_full_transactions) do
     state_trie = get_last_sync_state().trie
 
     case Block.get_block(hash, state_trie) do
-      {:ok, block} -> ResponseBlock.new(block, full_transactions)
+      {:ok, block} -> ResponseBlock.new(block, include_full_transactions)
       _ -> nil
     end
   end
