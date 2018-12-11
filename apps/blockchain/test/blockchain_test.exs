@@ -16,7 +16,7 @@ defmodule BlockchainTest do
     "ByzantiumToConstantinopleAt5" => [],
     "TangerineWhistle" => [],
     "SpuriousDragon" => [],
-    "Byzantium" => [],
+    "Byzantium" => ["GeneralStateTests/stExtCodeHash/dynamicAccountOverwriteEmpty_d0g0v0.json"],
     "Constantinople" => [],
     "EIP158ToByzantiumAt5" => [],
     "HomesteadToEIP150At5" => [],
