@@ -1,6 +1,7 @@
 defmodule JSONRPC2.BridgeSyncMock do
   alias Blockchain.Block
   alias JSONRPC2.Response.Block, as: ResponseBlock
+  alias JSONRPC2.Response.Transaction, as: ResponseTransaction
   alias JSONRPC2.Struct.EthSyncing
 
   use GenServer
@@ -31,6 +32,10 @@ defmodule JSONRPC2.BridgeSyncMock do
 
   def get_block_by_hash(hash) do
     GenServer.call(__MODULE__, {:get_block_by_hash, hash})
+  end
+
+  def get_transaction_by_block_hash_and_index(block_hash, index) do
+    GenServer.call(__MODULE__, {:get_transaction_by_block_hash_and_index, block_hash, index})
   end
 
   def start_link(state) do
@@ -74,6 +79,24 @@ defmodule JSONRPC2.BridgeSyncMock do
       end
 
     {:reply, block, state}
+  end
+
+  def handle_call(
+        {:get_transaction_by_block_hash_and_index, block_hash, trx_index},
+        _,
+        state = %{trie: trie}
+      ) do
+    result =
+      with {:ok, block} <- Block.get_block(block_hash, trie) do
+        case Enum.at(block.transactions, trx_index) do
+          nil -> nil
+          transaction -> ResponseTransaction.new(transaction, block)
+        end
+      else
+        _ -> nil
+      end
+
+    {:reply, result, state}
   end
 
   @spec handle_call(:get_last_sync_block_stats, {pid, any}, map()) ::
