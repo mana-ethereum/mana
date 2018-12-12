@@ -88,7 +88,7 @@ defmodule JSONRPC2.Bridge.Sync do
     end
   end
 
-  def get_block_transaction_count_by_number(hash) do
+  def get_block_transaction_count_by_hash(hash) do
     state_trie = get_last_sync_state().trie
 
     case Block.get_block(hash, state_trie) do
