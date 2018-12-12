@@ -91,4 +91,25 @@ defmodule Exth do
   @spec decode_hex(String.t()) :: binary()
   def decode_hex("0x" <> bin), do: decode_hex(bin)
   def decode_hex(bin), do: Base.decode16!(bin, case: :mixed)
+
+  @doc """
+  Decodes an integer from a hex string.
+
+  ## Examples
+
+      iex> Exth.decode_unsigned_from_hex("0x01")
+      1
+
+      iex> Exth.decode_unsigned_from_hex("9c")
+      156
+
+      iex> Exth.decode_unsigned_from_hex("0x0f4240")
+      1_000_000
+  """
+  @spec decode_unsigned_from_hex(String.t()) :: integer()
+  def decode_unsigned_from_hex(hex_integer) do
+    hex_integer
+    |> decode_hex()
+    |> maybe_decode_unsigned()
+  end
 end

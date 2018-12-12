@@ -62,9 +62,7 @@ defmodule JSONRPC2.SpecHandler do
   def handle_request("eth_getTransactionCount", _), do: {:error, :not_supported}
   def handle_request("eth_getBlockTransactionCountByHash", _), do: {:error, :not_supported}
 
-  # def handle_request("eth_getBlockTransactionCountByNumber", number) do
-  #   get_block_by_number
-  # end
+  def handle_request("eth_getBlockTransactionCountByNumber", _), do: {:error, :not_supported}
 
   def handle_request("eth_getUncleCountByBlockHash", _), do: {:error, :not_supported}
   def handle_request("eth_getUncleCountByBlockNumber", _), do: {:error, :not_supported}
@@ -81,7 +79,9 @@ defmodule JSONRPC2.SpecHandler do
     |> @sync.get_block_by_hash(include_full_transactions)
   end
 
-  def handle_request("eth_getBlockByNumber", [number, include_full_transactions]) do
+  def handle_request("eth_getBlockByNumber", [number_hex, include_full_transactions]) do
+    number = Exth.decode_unsigned_from_hex(number_hex)
+
     @sync.get_block_by_number(number, include_full_transactions)
   end
 
@@ -92,23 +92,17 @@ defmodule JSONRPC2.SpecHandler do
         transaction_index_hex
       ]) do
     block_hash = Math.hex_to_bin(block_hash_hex)
-
-    transaction_index =
-      transaction_index_hex
-      |> Math.hex_to_bin()
-      |> :binary.decode_unsigned()
+    transaction_index = Exth.decode_unsigned_from_hex(transaction_index_hex)
 
     @sync.get_transaction_by_block_hash_and_index(block_hash, transaction_index)
   end
 
   def handle_request("eth_getTransactionByBlockNumberAndIndex", [
-        block_number,
+        block_number_hex,
         transaction_index_hex
       ]) do
-    transaction_index =
-      transaction_index_hex
-      |> Math.hex_to_bin()
-      |> :binary.decode_unsigned()
+    block_number = Exth.decode_unsigned_from_hex(block_number_hex)
+    transaction_index = Exth.decode_unsigned_from_hex(transaction_index_hex)
 
     @sync.get_transaction_by_block_number_and_index(block_number, transaction_index)
   end
