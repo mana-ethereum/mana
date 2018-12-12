@@ -281,6 +281,31 @@ defmodule JSONRPC2.ManaHandlerTest do
     end
   end
 
+  describe "eth_getBlockTransactionCountByNumber" do
+    test "fetches transaction count by block number" do
+      transactions = [
+        TestFactory.build(:transaction),
+        TestFactory.build(:transaction),
+        TestFactory.build(:transaction)
+      ]
+
+      block =
+        TestFactory.build(:block,
+          block_hash: <<0x102::256>>,
+          transactions: transactions,
+          header: TestFactory.build(:header, number: 1000)
+        )
+
+      :ok = BridgeSyncMock.put_block(block)
+
+      assert_rpc_reply(
+        SpecHandler,
+        ~s({"jsonrpc": "2.0", "method": "eth_getBlockTransactionCountByNumber", "params": ["0x03e8"], "id": 71}),
+        ~s({"id":71, "jsonrpc":"2.0", "result":"0x03"})
+      )
+    end
+  end
+
   defp assert_rpc_reply(handler, call, expected_reply) do
     assert {:reply, reply} = handler.handle(call)
 

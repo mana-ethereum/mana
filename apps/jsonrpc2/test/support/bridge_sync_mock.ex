@@ -46,6 +46,10 @@ defmodule JSONRPC2.BridgeSyncMock do
     GenServer.call(__MODULE__, {:get_block_transaction_count_by_hash, block_hash})
   end
 
+  def get_block_transaction_count_by_number(block_number) do
+    GenServer.call(__MODULE__, {:get_block_transaction_count_by_number, block_number})
+  end
+
   def start_link(state) do
     GenServer.start_link(__MODULE__, state, name: __MODULE__)
   end
@@ -136,6 +140,24 @@ defmodule JSONRPC2.BridgeSyncMock do
       ) do
     result =
       with {:ok, block} <- Block.get_block(block_hash, trie) do
+        block.transactions
+        |> Enum.count()
+        |> :binary.encode_unsigned()
+        |> Exth.encode_hex()
+      else
+        _ -> nil
+      end
+
+    {:reply, result, state}
+  end
+
+  def handle_call(
+        {:get_block_transaction_count_by_number, block_number},
+        _,
+        state = %{trie: trie}
+      ) do
+    result =
+      with {:ok, block} <- Block.get_block_by_number(block_number, trie) do
         block.transactions
         |> Enum.count()
         |> :binary.encode_unsigned()
