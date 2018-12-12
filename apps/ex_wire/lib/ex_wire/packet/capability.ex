@@ -55,6 +55,6 @@ defmodule ExWire.Packet.Capability do
   end
 
   defp sort_asc_name_desc_version(first = %__MODULE__{}, second = %__MODULE__{}) do
-    {first.name, first.version} < {second.name, second.version}
+    {first.name, second.version} < {second.name, first.version}
   end
 end

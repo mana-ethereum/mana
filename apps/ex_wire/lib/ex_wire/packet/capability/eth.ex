@@ -17,6 +17,20 @@ defmodule ExWire.Packet.Capability.Eth do
       Eth.GetBlockBodies,
       Eth.BlockBodies,
       Eth.NewBlock
+    ],
+    63 => [
+      Eth.Status,
+      Eth.NewBlockHashes,
+      Eth.Transactions,
+      Eth.GetBlockHeaders,
+      Eth.BlockHeaders,
+      Eth.GetBlockBodies,
+      Eth.BlockBodies,
+      Eth.NewBlock,
+      Eth.GetNodeData,
+      Eth.NodeData,
+      Eth.GetReceipts,
+      Eth.Receipts
     ]
   }
 
