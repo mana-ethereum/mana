@@ -328,9 +328,14 @@ defmodule Blockchain.Account.Repo do
 
   @impl true
   def account_code_hash(account_repo, address) do
-    {repo, account} = account(account_repo, address)
+    {repo, account, _code} = account_with_code(account_repo, address)
 
-    code_hash = unless is_nil(account), do: account.code_hash
+    code_hash =
+      cond do
+        is_nil(account) -> nil
+        Account.empty?(account) -> nil
+        true -> account.code_hash
+      end
 
     {repo, code_hash}
   end

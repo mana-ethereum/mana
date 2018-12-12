@@ -7,7 +7,7 @@ defmodule Blockchain.BlockchainStateTest do
 
   @failing_tests %{
     "Byzantium" => [],
-    "Constantinople" => ["stExtCodeHash/dynamicAccountOverwriteEmpty"],
+    "Constantinople" => [],
     "Frontier" => [],
     "Homestead" => [],
     "HomesteadToDaoAt5" => [],
