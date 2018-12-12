@@ -59,9 +59,11 @@ defmodule JSONRPC2.SpecHandler do
   def handle_request("eth_getStorageAt", _), do: {:error, :not_supported}
   def handle_request("eth_getTransactionCount", _), do: {:error, :not_supported}
 
-  # def handle_request("eth_getBlockTransactionCountByHash", [block_hash_hex]) do
-  #   @sync.get_block_transactoin_count_by_hash(block_hash_hex)
-  # end
+  def handle_request("eth_getBlockTransactionCountByHash", [block_hash_hex]) do
+    block_hash_hex
+    |> Exth.decode_hex()
+    |> @sync.get_block_transaction_count_by_hash()
+  end
 
   def handle_request("eth_getBlockTransactionCountByNumber", [_block_number_hex]) do
   end
