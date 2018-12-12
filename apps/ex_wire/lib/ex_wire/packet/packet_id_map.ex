@@ -50,7 +50,8 @@ defmodule ExWire.Packet.PacketIdMap do
       end)
       |> Enum.sort(fn %Capability{name: name1}, %Capability{name: name2} -> name1 < name2 end)
       |> Enum.map(fn cap ->
-        Capability.get_packets_for_capability(cap, Mana.get_our_capabilities_map())
+        {Capability.get_capability_packet_count(cap, Mana.get_our_capabilities_map()),
+         Capability.get_packets_for_capability(cap, Mana.get_our_capabilities_map())}
       end)
       |> Enum.reduce(
         {@starting_id, @protocol_ids_to_modules},
@@ -113,11 +114,17 @@ defmodule ExWire.Packet.PacketIdMap do
     end
   end
 
-  defp build_capability_ids_to_modules_map(capability_packet_types, {base_id, starting_map}) do
-    capability_packet_types
-    |> Enum.reduce({base_id, starting_map}, fn packet_type, {next_base_id, updated_map} ->
-      packet_id = base_id + apply(packet_type, :message_id_offset, [])
-      {Kernel.max(next_base_id, packet_id + 1), Map.put(updated_map, packet_id, packet_type)}
-    end)
+  defp build_capability_ids_to_modules_map(
+         {capability_packet_count, capability_packet_types},
+         {base_id, starting_map}
+       ) do
+    final_map =
+      capability_packet_types
+      |> Enum.reduce(starting_map, fn packet_type, updated_map ->
+        packet_id = base_id + apply(packet_type, :message_id_offset, [])
+        Map.put(updated_map, packet_id, packet_type)
+      end)
+
+    {base_id + capability_packet_count, final_map}
   end
 end
