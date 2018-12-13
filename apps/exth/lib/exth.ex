@@ -56,6 +56,24 @@ defmodule Exth do
   end
 
   @doc """
+  Encodes an usigned integer as a binary.
+
+  ## Examples
+
+      iex> Exth.maybe_encode_unsigned(<<5>>)
+      <<5>>
+
+      iex> Exth.maybe_encode_unsigned(5)
+      <<5>>
+  """
+  @spec maybe_encode_unsigned(integer() | binary()) :: binary()
+  def maybe_encode_unsigned(val) when is_binary(val), do: val
+
+  def maybe_encode_unsigned(val) when is_integer(val) do
+    :binary.encode_unsigned(val)
+  end
+
+  @doc """
   Encodes a binary to hex, representing the number as a string
   starting with "0x".
 
@@ -111,5 +129,26 @@ defmodule Exth do
     hex_integer
     |> decode_hex()
     |> maybe_decode_unsigned()
+  end
+
+  @doc """
+  Encodes an integer to a hex string.
+
+  ## Examples
+
+      iex> Exth.encode_unsigned_hex(1)
+      "0x01"
+
+      iex> Exth.encode_unsigned_hex(156)
+      "0x9c"
+
+      iex> Exth.encode_unsigned_hex(1_000_000)
+      "0x0f4240"
+  """
+  @spec encode_unsigned_hex(integer()) :: String.y()
+  def encode_unsigned_hex(integer) do
+    integer
+    |> maybe_encode_unsigned()
+    |> encode_hex()
   end
 end

@@ -142,8 +142,7 @@ defmodule JSONRPC2.BridgeSyncMock do
       with {:ok, block} <- Block.get_block(block_hash, trie) do
         block.transactions
         |> Enum.count()
-        |> :binary.encode_unsigned()
-        |> Exth.encode_hex()
+        |> Exth.encode_unsigned_hex()
       else
         _ -> nil
       end
@@ -160,8 +159,7 @@ defmodule JSONRPC2.BridgeSyncMock do
       with {:ok, block} <- Block.get_block_by_number(block_number, trie) do
         block.transactions
         |> Enum.count()
-        |> :binary.encode_unsigned()
-        |> Exth.encode_hex()
+        |> Exth.encode_unsigned_hex()
       else
         _ -> nil
       end

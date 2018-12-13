@@ -80,8 +80,7 @@ defmodule JSONRPC2.Bridge.Sync do
       {:ok, block} ->
         block.transactions
         |> Enum.count()
-        |> :binary.encode_unsigned()
-        |> Exth.encode_hex()
+        |> Exth.encode_unsigned_hex()
 
       _ ->
         nil
@@ -95,8 +94,7 @@ defmodule JSONRPC2.Bridge.Sync do
       {:ok, block} ->
         block.transactions
         |> Enum.count()
-        |> :binary.encode_unsigned()
-        |> Exth.encode_hex()
+        |> Exth.encode_unsigned_hex()
 
       _ ->
         nil
