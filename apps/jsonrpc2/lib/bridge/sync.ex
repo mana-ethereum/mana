@@ -72,4 +72,32 @@ defmodule JSONRPC2.Bridge.Sync do
       _ -> nil
     end
   end
+
+  def get_block_transaction_count_by_number(number) do
+    state_trie = get_last_sync_state().trie
+
+    case Block.get_block_by_number(number, state_trie) do
+      {:ok, block} ->
+        block.transactions
+        |> Enum.count()
+        |> Exth.encode_unsigned_hex()
+
+      _ ->
+        nil
+    end
+  end
+
+  def get_block_transaction_count_by_hash(hash) do
+    state_trie = get_last_sync_state().trie
+
+    case Block.get_block(hash, state_trie) do
+      {:ok, block} ->
+        block.transactions
+        |> Enum.count()
+        |> Exth.encode_unsigned_hex()
+
+      _ ->
+        nil
+    end
+  end
 end
