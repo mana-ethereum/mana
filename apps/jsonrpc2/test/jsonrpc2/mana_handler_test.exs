@@ -332,6 +332,32 @@ defmodule JSONRPC2.ManaHandlerTest do
     end
   end
 
+  describe "eth_getUncleCountByBlockNumber" do
+    test "fetches uncle count by block number" do
+      uncles = [
+        TestFactory.build(:header),
+        TestFactory.build(:header),
+        TestFactory.build(:header),
+        TestFactory.build(:header)
+      ]
+
+      block =
+        TestFactory.build(:block,
+          block_hash: <<0x111::256>>,
+          header: TestFactory.build(:header, number: 5000),
+          ommers: uncles
+        )
+
+      :ok = BridgeSyncMock.put_block(block)
+
+      assert_rpc_reply(
+        SpecHandler,
+        ~s({"jsonrpc": "2.0", "method": "eth_getUncleCountByBlockNumber", "params": ["0x1388"], "id": 71}),
+        ~s({"id":71, "jsonrpc":"2.0", "result":"0x04"})
+      )
+    end
+  end
+
   defp assert_rpc_reply(handler, call, expected_reply) do
     assert {:reply, reply} = handler.handle(call)
 
