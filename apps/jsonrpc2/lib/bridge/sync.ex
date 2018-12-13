@@ -100,4 +100,18 @@ defmodule JSONRPC2.Bridge.Sync do
         nil
     end
   end
+
+  def get_uncle_count_by_block_hash(hash) do
+    state_trie = get_last_sync_state().trie
+
+    case Block.get_block(hash, state_trie) do
+      {:ok, block} ->
+        block.ommers
+        |> Enum.count()
+        |> Exth.encode_unsigned_hex()
+
+      _ ->
+        nil
+    end
+  end
 end
