@@ -66,7 +66,7 @@ defmodule Exth do
       iex> Exth.maybe_encode_unsigned(5)
       <<5>>
   """
-  @spec maybe_encode_unsigned(integer() | binary()) :: binary()
+  @spec maybe_encode_unsigned(non_neg_integer() | binary()) :: binary()
   def maybe_encode_unsigned(val) when is_binary(val), do: val
 
   def maybe_encode_unsigned(val) when is_integer(val) do
@@ -145,7 +145,7 @@ defmodule Exth do
       iex> Exth.encode_unsigned_hex(1_000_000)
       "0x0f4240"
   """
-  @spec encode_unsigned_hex(integer()) :: String.y()
+  @spec encode_unsigned_hex(integer()) :: String.t()
   def encode_unsigned_hex(integer) do
     integer
     |> maybe_encode_unsigned()
