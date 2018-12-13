@@ -44,32 +44,39 @@ defmodule EvmTest do
   }
 
   test "Ethereum Common Tests" do
-    for {test_group_name, _test_group} <- @passing_tests_by_group do
-      for {test_name, test} <- passing_tests(test_group_name) do
-        {gas, sub_state, exec_env, _} = TestRunner.run(test)
+    @passing_tests_by_group
+    |> Enum.map(fn {test_group_name, _tests} -> test_group_name end)
+    |> Task.async_stream(fn test_group_name -> run_test_group_name_tests(test_group_name) end)
+    |> Enum.each(fn result -> {:ok, _result} = result end)
+  end
 
-        context = %{
-          test_name: test_name,
-          account_repo: exec_env.account_repo,
-          sub_state: sub_state,
-          addresses: %{
-            pre: get_addresses(test, "pre"),
-            post: get_addresses(test, "post")
-          }
+  def run_test_group_name_tests(test_group_name) do
+    test_group_name
+    |> passing_tests()
+    |> Enum.map(fn {test_name, test} ->
+      {gas, sub_state, exec_env, _} = TestRunner.run(test)
+
+      context = %{
+        test_name: test_name,
+        account_repo: exec_env.account_repo,
+        sub_state: sub_state,
+        addresses: %{
+          pre: get_addresses(test, "pre"),
+          post: get_addresses(test, "post")
         }
+      }
 
-        assert_state(test, context)
+      assert_state(test, context)
 
-        if test["gas"] do
-          assert hex_to_int(test["gas"]) == gas
-        end
-
-        if test["logs"] do
-          logs_hash = sub_state.logs |> logs_hash()
-          assert hex_to_bin(test["logs"]) == logs_hash
-        end
+      if test["gas"] do
+        assert hex_to_int(test["gas"]) == gas
       end
-    end
+
+      if test["logs"] do
+        logs_hash = sub_state.logs |> logs_hash()
+        assert hex_to_bin(test["logs"]) == logs_hash
+      end
+    end)
   end
 
   def passing_tests(test_group_name) do
