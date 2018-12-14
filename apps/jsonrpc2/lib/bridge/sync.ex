@@ -1,10 +1,12 @@
 defmodule JSONRPC2.Bridge.Sync do
+  alias Blockchain.Account
   alias Blockchain.Block
   alias Blockchain.Blocktree
   alias ExWire.PeerSupervisor
   alias ExWire.Sync
   alias JSONRPC2.Response.Block, as: ResponseBlock
   alias JSONRPC2.Response.Transaction, as: ResponseTransaction
+  alias MerklePatriciaTree.TrieStorage
 
   @spec connected_peer_count :: 0 | non_neg_integer()
   def connected_peer_count, do: PeerSupervisor.connected_peer_count()
@@ -139,5 +141,22 @@ defmodule JSONRPC2.Bridge.Sync do
     state = get_last_sync_state()
 
     Map.get(state, :highest_block_number, 0)
+  end
+
+  def get_code(address, block_number) do
+    state_trie = get_last_sync_state().trie
+
+    case Block.get_block(block_number, state_trie) do
+      {:ok, block} ->
+        block_state = TrieStorage.set_root_hash(state_trie, block.header.state_root)
+
+        case Account.machine_code(block_state, address) do
+          {:ok, code} -> Exth.encode_hex(code)
+          _ -> nil
+        end
+
+      _ ->
+        nil
+    end
   end
 end
