@@ -1,8 +1,10 @@
 defmodule JSONRPC2.BridgeSyncMock do
+  alias Blockchain.Account
   alias Blockchain.Block
   alias JSONRPC2.Response.Block, as: ResponseBlock
   alias JSONRPC2.Response.Transaction, as: ResponseTransaction
   alias JSONRPC2.Struct.EthSyncing
+  alias MerklePatriciaTree.TrieStorage
 
   use GenServer
 
@@ -10,8 +12,36 @@ defmodule JSONRPC2.BridgeSyncMock do
     GenServer.call(__MODULE__, :connected_peer_count)
   end
 
+  def set_trie(trie) do
+    GenServer.call(__MODULE__, {:set_trie, trie})
+  end
+
+  def get_trie do
+    GenServer.call(__MODULE__, :get_trie)
+  end
+
   def set_connected_peer_count(connected_peer_count) do
     GenServer.call(__MODULE__, {:set_connected_peer_count, connected_peer_count})
+  end
+
+  def set_starting_block_number(block_number) do
+    GenServer.call(__MODULE__, {:set_starting_block_number, block_number})
+  end
+
+  def set_highest_block_number(block_number) do
+    GenServer.call(__MODULE__, {:set_highest_block_number, block_number})
+  end
+
+  def get_code(address, block_number) do
+    GenServer.call(__MODULE__, {:get_code, address, block_number})
+  end
+
+  def get_starting_block_number do
+    GenServer.call(__MODULE__, :get_starting_block_number)
+  end
+
+  def get_highest_block_number do
+    GenServer.call(__MODULE__, :get_highest_block_number)
   end
 
   def get_last_sync_block_stats() do
@@ -70,8 +100,32 @@ defmodule JSONRPC2.BridgeSyncMock do
     {:reply, state.connected_peer_count, state}
   end
 
+  def handle_call(:get_highest_block_number, _, state) do
+    {:reply, Map.get(state, :highest_block_number, 0), state}
+  end
+
+  def handle_call(:get_starting_block_number, _, state) do
+    {:reply, Map.get(state, :starting_block_number, 0), state}
+  end
+
+  def handle_call({:set_trie, trie}, _, state) do
+    {:reply, :ok, Map.put(state, :trie, trie)}
+  end
+
+  def handle_call(:get_trie, _, state) do
+    {:reply, state.trie, state}
+  end
+
   def handle_call({:set_connected_peer_count, connected_peer_count}, _, state) do
     {:reply, :ok, Map.put(state, :connected_peer_count, connected_peer_count)}
+  end
+
+  def handle_call({:set_highest_block_number, block_number}, _, state) do
+    {:reply, :ok, Map.put(state, :highest_block_number, block_number)}
+  end
+
+  def handle_call({:set_starting_block_number, block_number}, _, state) do
+    {:reply, :ok, Map.put(state, :set_starting_block_number, block_number)}
   end
 
   def handle_call({:put_block, block}, _, state = %{trie: trie}) do
@@ -209,6 +263,24 @@ defmodule JSONRPC2.BridgeSyncMock do
           block.ommers
           |> Enum.count()
           |> Exth.encode_unsigned_hex()
+
+        _ ->
+          nil
+      end
+
+    {:reply, result, state}
+  end
+
+  def handle_call({:get_code, address, block_number}, _, state = %{trie: trie}) do
+    result =
+      case Block.get_block(block_number, trie) do
+        {:ok, block} ->
+          block_state = TrieStorage.set_root_hash(trie, block.header.state_root)
+
+          case Account.machine_code(block_state, address) do
+            {:ok, code} -> Exth.encode_hex(code)
+            _ -> nil
+          end
 
         _ ->
           nil
