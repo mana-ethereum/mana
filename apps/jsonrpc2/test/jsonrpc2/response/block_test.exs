@@ -93,6 +93,20 @@ defmodule JSONRPC2.Response.BlockTest do
              ]
     end
 
+    test "returns uncle hashes" do
+      internal_block =
+        TestFactory.build(:block, ommers: [TestFactory.build(:header), TestFactory.build(:header)])
+
+      response_block = Block.new(internal_block)
+
+      assert response_block.uncles == [
+               <<163, 57, 18, 135, 102, 105, 189, 239, 95, 142, 155, 205, 84, 179, 40, 100, 194,
+                 205, 106, 245, 115, 112, 240, 109, 209, 116, 114, 148, 44, 87, 40, 165>>,
+               <<163, 57, 18, 135, 102, 105, 189, 239, 95, 142, 155, 205, 84, 179, 40, 100, 194,
+                 205, 106, 245, 115, 112, 240, 109, 209, 116, 114, 148, 44, 87, 40, 165>>
+             ]
+    end
+
     test "correctly encodes to json" do
       internal_block = TestFactory.build(:block)
 

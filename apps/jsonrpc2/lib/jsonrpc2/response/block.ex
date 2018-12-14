@@ -1,4 +1,5 @@
 defmodule JSONRPC2.Response.Block do
+  alias Block.Header
   alias Blockchain.Block
   alias Blockchain.Transaction
   alias ExthCrypto.Hash.Keccak
@@ -50,7 +51,7 @@ defmodule JSONRPC2.Response.Block do
           gasUsed: binary(),
           timestamp: binary(),
           transactions: transactions(),
-          uncles: []
+          uncles: [binary()]
         }
 
   @spec new(Block.t(), boolean()) :: t()
@@ -79,7 +80,7 @@ defmodule JSONRPC2.Response.Block do
           internal_block,
           include_full_transactions
         ),
-      uncles: []
+      uncles: format_uncles(internal_block.ommers)
     }
   end
 
@@ -107,5 +108,10 @@ defmodule JSONRPC2.Response.Block do
       |> Keccak.kec()
       |> encode_hex()
     end)
+  end
+
+  @spec format_uncles([Header.t()]) :: [binary()]
+  def format_uncles(uncles) do
+    Enum.map(uncles, &Header.hash/1)
   end
 end

@@ -71,8 +71,18 @@ defmodule JSONRPC2.SpecHandler do
     |> @sync.get_block_transaction_count_by_number()
   end
 
-  def handle_request("eth_getUncleCountByBlockHash", _), do: {:error, :not_supported}
-  def handle_request("eth_getUncleCountByBlockNumber", _), do: {:error, :not_supported}
+  def handle_request("eth_getUncleCountByBlockHash", [block_hash_hex]) do
+    block_hash_hex
+    |> Exth.decode_hex()
+    |> @sync.get_uncle_count_by_block_hash()
+  end
+
+  def handle_request("eth_getUncleCountByBlockNumber", [block_number_hex]) do
+    block_number_hex
+    |> Exth.decode_unsigned_from_hex()
+    |> @sync.get_uncle_count_by_block_number()
+  end
+
   def handle_request("eth_getCode", _), do: {:error, :not_supported}
   def handle_request("eth_sign", _), do: {:error, :not_supported}
   def handle_request("eth_sendTransaction", _), do: {:error, :not_supported}

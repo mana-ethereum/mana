@@ -173,7 +173,7 @@ defmodule ExWire.Packet.Capability.Eth.GetBlockHeaders do
   end
 
   defp get_block_headers(trie, block_number, num_headers, skip, reverse, headers) do
-    case Block.get_block_by_number(block_number, trie) do
+    case Block.get_block(block_number, trie) do
       {:ok, block} ->
         next_block_number = next_block_number(block.header.number, skip, reverse)
 
