@@ -128,4 +128,16 @@ defmodule JSONRPC2.Bridge.Sync do
         nil
     end
   end
+
+  def get_starting_block_number do
+    state = get_last_sync_state()
+
+    Map.get(state, :starting_block_number, 0)
+  end
+
+  def get_highest_block_number do
+    state = get_last_sync_state()
+
+    Map.get(state, :highest_block_number, 0)
+  end
 end

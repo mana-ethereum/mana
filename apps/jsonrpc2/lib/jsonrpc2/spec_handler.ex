@@ -26,7 +26,8 @@ defmodule JSONRPC2.SpecHandler do
 
   def handle_request("net_peerCount", _) do
     connected_peer_count = @sync.connected_peer_count()
-    to_hex(connected_peer_count)
+
+    Exth.encode_unsigned_hex(connected_peer_count)
   end
 
   # eth Methods
@@ -83,7 +84,13 @@ defmodule JSONRPC2.SpecHandler do
     |> @sync.get_uncle_count_by_block_number()
   end
 
-  def handle_request("eth_getCode", _), do: {:error, :not_supported}
+  def handle_request("eth_getCode", [hex_address, hex_number_or_tag]) do
+    block_number = decode_block_number(hex_number_or_tag)
+    address = Exth.decode_hex(hex_address)
+
+    @sync.get_code(address, block_number)
+  end
+
   def handle_request("eth_sign", _), do: {:error, :not_supported}
   def handle_request("eth_sendTransaction", _), do: {:error, :not_supported}
   def handle_request("eth_sendRawTransaction", _), do: {:error, :not_supported}
@@ -165,9 +172,12 @@ defmodule JSONRPC2.SpecHandler do
   def handle_request("shh_getFilterChanges", _), do: {:error, :not_supported}
   def handle_request("shh_getMessages", _), do: {:error, :not_supported}
 
-  @spec to_hex(non_neg_integer()) :: String.t()
-  defp to_hex(0), do: "0x0"
-
-  defp to_hex(n),
-    do: "0x" <> (n |> :binary.encode_unsigned() |> Base.encode16() |> String.trim_leading("0"))
+  defp decode_block_number(hex_block_number_or_tag) do
+    case hex_block_number_or_tag do
+      "pending" -> @sync.get_highest_block_number()
+      "latest" -> @sync.get_highest_block_number()
+      "earliest" -> @sync.get_starting_block_number()
+      hex_number -> Exth.decode_unsigned_from_hex(hex_number)
+    end
+  end
 end
