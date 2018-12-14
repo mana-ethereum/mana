@@ -274,8 +274,8 @@ defmodule Blockchain.Block do
 
   See `Blockchain.Block.put_block/2` for details.
   """
-  @spec get_block(EVM.hash(), TrieStorage.t()) :: {:ok, t} | :not_found
-  def get_block(block_hash, trie) do
+  @spec get_block(EVM.hash() | integer(), TrieStorage.t()) :: {:ok, t} | :not_found
+  def get_block(block_hash, trie) when is_binary(block_hash) do
     with {:ok, block_bin} <- TrieStorage.get_raw_key(trie, block_hash) do
       block = :erlang.binary_to_term(block_bin)
 
@@ -283,11 +283,7 @@ defmodule Blockchain.Block do
     end
   end
 
-  @doc """
-  Returns the specified block from the database if it's hash is found by the provided block_number, otherwise :not_found.
-  """
-  @spec get_block_by_number(integer(), TrieStorage.t()) :: {:ok, t} | :not_found
-  def get_block_by_number(block_number, trie) do
+  def get_block(block_number, trie) when is_integer(block_number) do
     with {:ok, hash} <- get_block_hash_by_number(trie, block_number) do
       get_block(hash, trie)
     end

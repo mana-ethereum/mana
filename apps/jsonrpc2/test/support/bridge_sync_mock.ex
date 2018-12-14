@@ -87,7 +87,7 @@ defmodule JSONRPC2.BridgeSyncMock do
         state = %{trie: trie}
       ) do
     block =
-      case Block.get_block_by_number(number, trie) do
+      case Block.get_block(number, trie) do
         {:ok, block} -> ResponseBlock.new(block, include_full_transactions)
         _ -> nil
       end
@@ -129,7 +129,7 @@ defmodule JSONRPC2.BridgeSyncMock do
         state = %{trie: trie}
       ) do
     result =
-      with {:ok, block} <- Block.get_block_by_number(block_number, trie) do
+      with {:ok, block} <- Block.get_block(block_number, trie) do
         case Enum.at(block.transactions, trx_index) do
           nil -> nil
           transaction -> ResponseTransaction.new(transaction, block)
@@ -166,7 +166,7 @@ defmodule JSONRPC2.BridgeSyncMock do
         state = %{trie: trie}
       ) do
     result =
-      case Block.get_block_by_number(block_number, trie) do
+      case Block.get_block(block_number, trie) do
         {:ok, block} ->
           block.transactions
           |> Enum.count()
@@ -204,7 +204,7 @@ defmodule JSONRPC2.BridgeSyncMock do
         state = %{trie: trie}
       ) do
     result =
-      case Block.get_block_by_number(block_number, trie) do
+      case Block.get_block(block_number, trie) do
         {:ok, block} ->
           block.ommers
           |> Enum.count()

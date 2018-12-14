@@ -446,12 +446,10 @@ defmodule Blockchain.BlockTest do
 
       assert result == {:ok, block}
     end
-  end
 
-  describe "get_block_by_number/2" do
     test "empty Trie, get by number => not found" do
       trie = MerklePatriciaTree.Test.random_ets_db() |> Trie.new()
-      result = Block.get_block_by_number(1, trie)
+      result = Block.get_block(1, trie)
 
       assert result == :not_found
     end
@@ -491,8 +489,8 @@ defmodule Blockchain.BlockTest do
       }
 
       Block.put_block(block, trie)
-      found_result = Block.get_block_by_number(5, trie)
-      not_found_result = Block.get_block_by_number(6, trie)
+      found_result = Block.get_block(5, trie)
+      not_found_result = Block.get_block(6, trie)
 
       assert found_result == {:ok, block}
       assert not_found_result == :not_found

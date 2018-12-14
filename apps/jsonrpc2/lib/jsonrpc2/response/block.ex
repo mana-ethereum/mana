@@ -112,6 +112,6 @@ defmodule JSONRPC2.Response.Block do
 
   @spec format_uncles([Header.t()]) :: [binary()]
   def format_uncles(uncles) do
-    Enum.map(uncles, fn uncle -> Header.hash(uncle) end)
+    Enum.map(uncles, &Header.hash/1)
   end
 end

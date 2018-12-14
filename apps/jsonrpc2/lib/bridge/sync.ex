@@ -32,7 +32,7 @@ defmodule JSONRPC2.Bridge.Sync do
   def get_block_by_number(number, include_full_transactions) do
     state_trie = get_last_sync_state().trie
 
-    case Block.get_block_by_number(number, state_trie) do
+    case Block.get_block(number, state_trie) do
       {:ok, block} -> ResponseBlock.new(block, include_full_transactions)
       _ -> nil
     end
@@ -63,7 +63,7 @@ defmodule JSONRPC2.Bridge.Sync do
   def get_transaction_by_block_number_and_index(block_number, trx_index) do
     trie = get_last_sync_state().trie
 
-    with {:ok, block} <- Block.get_block_by_number(block_number, trie) do
+    with {:ok, block} <- Block.get_block(block_number, trie) do
       case Enum.at(block.transactions, trx_index) do
         nil -> nil
         transaction -> ResponseTransaction.new(transaction, block)
@@ -76,7 +76,7 @@ defmodule JSONRPC2.Bridge.Sync do
   def get_block_transaction_count_by_number(number) do
     state_trie = get_last_sync_state().trie
 
-    case Block.get_block_by_number(number, state_trie) do
+    case Block.get_block(number, state_trie) do
       {:ok, block} ->
         block.transactions
         |> Enum.count()
@@ -118,7 +118,7 @@ defmodule JSONRPC2.Bridge.Sync do
   def get_uncle_count_by_block_number(number) do
     state_trie = get_last_sync_state().trie
 
-    case Block.get_block_by_number(number, state_trie) do
+    case Block.get_block(number, state_trie) do
       {:ok, block} ->
         block.ommers
         |> Enum.count()
