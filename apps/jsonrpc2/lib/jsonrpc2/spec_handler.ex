@@ -86,6 +86,7 @@ defmodule JSONRPC2.SpecHandler do
 
   def handle_request("eth_getCode", [hex_address, hex_number_or_tag]) do
     block_number = decode_block_number(hex_number_or_tag)
+
     address = Exth.decode_hex(hex_address)
 
     @sync.get_code(address, block_number)

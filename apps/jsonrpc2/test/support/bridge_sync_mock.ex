@@ -16,6 +16,10 @@ defmodule JSONRPC2.BridgeSyncMock do
     GenServer.call(__MODULE__, {:set_trie, trie})
   end
 
+  def get_trie do
+    GenServer.call(__MODULE__, :get_trie)
+  end
+
   def set_connected_peer_count(connected_peer_count) do
     GenServer.call(__MODULE__, {:set_connected_peer_count, connected_peer_count})
   end
@@ -106,6 +110,10 @@ defmodule JSONRPC2.BridgeSyncMock do
 
   def handle_call({:set_trie, trie}, _, state) do
     {:reply, :ok, Map.put(state, :trie, trie)}
+  end
+
+  def handle_call(:get_trie, _, state) do
+    {:reply, state.trie, state}
   end
 
   def handle_call({:set_connected_peer_count, connected_peer_count}, _, state) do

@@ -1,9 +1,12 @@
 defmodule JSONRPC2.ManaHandlerTest do
   use ExUnit.Case, async: true
 
+  alias Blockchain.Account
+  alias ExthCrypto.Hash.Keccak
   alias JSONRPC2.BridgeSyncMock
   alias JSONRPC2.SpecHandler
   alias JSONRPC2.TestFactory
+  alias MerklePatriciaTree.TrieStorage
 
   setup_all do
     db = MerklePatriciaTree.Test.random_ets_db()
@@ -81,7 +84,7 @@ defmodule JSONRPC2.ManaHandlerTest do
       connected_peer_count = 0
       :ok = BridgeSyncMock.set_connected_peer_count(connected_peer_count)
 
-      expected_result_count = "0x0"
+      expected_result_count = "0x00"
 
       assert_rpc_reply(
         SpecHandler,
@@ -94,7 +97,7 @@ defmodule JSONRPC2.ManaHandlerTest do
       connected_peer_count = 2
       :ok = BridgeSyncMock.set_connected_peer_count(connected_peer_count)
 
-      expected_result_count = "0x2"
+      expected_result_count = "0x02"
 
       assert_rpc_reply(
         SpecHandler,
@@ -354,6 +357,92 @@ defmodule JSONRPC2.ManaHandlerTest do
         SpecHandler,
         ~s({"jsonrpc": "2.0", "method": "eth_getUncleCountByBlockNumber", "params": ["0x1388"], "id": 71}),
         ~s({"id":71, "jsonrpc":"2.0", "result":"0x04"})
+      )
+    end
+  end
+
+  describe "eth_getCode" do
+    test "fetches account with empty code" do
+      trie = BridgeSyncMock.get_trie()
+
+      block =
+        TestFactory.build(:block,
+          block_hash: <<0x113::256>>,
+          header: TestFactory.build(:header, number: 7000)
+        )
+
+      address = <<5::160>>
+
+      account = %Account{
+        nonce: 5,
+        balance: 10,
+        storage_root: Account.empty_trie(),
+        code_hash: Account.empty_keccak()
+      }
+
+      trie_with_account =
+        trie
+        |> TrieStorage.set_root_hash(block.header.state_root)
+        |> Account.put_account(address, account)
+
+      updated_block = %{
+        block
+        | header: %{block.header | state_root: TrieStorage.root_hash(trie_with_account)}
+      }
+
+      :ok = BridgeSyncMock.put_block(updated_block)
+      :ok = BridgeSyncMock.set_highest_block_number(updated_block.header.number)
+      :ok = BridgeSyncMock.set_trie(trie_with_account)
+
+      assert_rpc_reply(
+        SpecHandler,
+        ~s({"jsonrpc": "2.0", "method": "eth_getCode", "params": ["0x0000000000000000000000000000000000000005", "latest"], "id": 71}),
+        ~s({"id":71, "jsonrpc":"2.0", "result":"0x"})
+      )
+    end
+
+    test "fetches account with not empty code" do
+      trie = BridgeSyncMock.get_trie()
+
+      block =
+        TestFactory.build(:block,
+          block_hash: <<0x114::256>>,
+          header: TestFactory.build(:header, number: 7001)
+        )
+
+      address = <<6::160>>
+
+      machine_code = <<1>>
+
+      kec = Keccak.kec(machine_code)
+
+      _ = TrieStorage.put_raw_key!(trie, kec, machine_code)
+
+      account = %Account{
+        nonce: 5,
+        balance: 10,
+        storage_root: Account.empty_trie(),
+        code_hash: kec
+      }
+
+      trie_with_account =
+        trie
+        |> TrieStorage.set_root_hash(block.header.state_root)
+        |> Account.put_account(address, account)
+
+      updated_block = %{
+        block
+        | header: %{block.header | state_root: TrieStorage.root_hash(trie_with_account)}
+      }
+
+      :ok = BridgeSyncMock.put_block(updated_block)
+      :ok = BridgeSyncMock.set_highest_block_number(updated_block.header.number)
+      :ok = BridgeSyncMock.set_trie(trie_with_account)
+
+      assert_rpc_reply(
+        SpecHandler,
+        ~s({"jsonrpc": "2.0", "method": "eth_getCode", "params": ["0x0000000000000000000000000000000000000006", "latest"], "id": 71}),
+        ~s({"id":71, "jsonrpc":"2.0", "result":"0x01"})
       )
     end
   end
