@@ -289,6 +289,8 @@ defmodule Blockchain.Block do
     end
   end
 
+  def get_block(nil, _), do: :not_found
+
   @spec block_hash_key(integer()) :: String.t()
   defp block_hash_key(number) do
     "hash_for_#{number}"
