@@ -264,6 +264,7 @@ defmodule Blockchain.Block do
         block_hash_key(block.header.number),
         block_hash
       )
+      |> store_transaction_locations_by_hash(block_with_metadata)
 
     {:ok, {block_hash, updated_trie}}
   end
@@ -397,6 +398,31 @@ defmodule Blockchain.Block do
         serialized_transaction
         |> ExRLP.decode()
         |> Transaction.deserialize()
+    end
+  end
+
+  @spec get_transaction_by_hash(binary(), TrieStorage.t(), boolean()) :: Transaction.t() | nil
+  def get_transaction_by_hash(transaction_hash, trie, with_block \\ false) do
+    location_key = transaction_key(transaction_hash)
+
+    case TrieStorage.get_raw_key(trie, location_key) do
+      {:ok, location_bin} ->
+        {block_hash, transaction_index} = :erlang.binary_to_term(location_bin)
+
+        case get_block(block_hash, trie) do
+          {:ok, block} ->
+            if with_block do
+              {Enum.at(block.transactions, transaction_index), block}
+            else
+              Enum.at(block.transactions, transaction_index)
+            end
+
+          :not_found ->
+            nil
+        end
+
+      _ ->
+        nil
     end
   end
 
@@ -905,5 +931,26 @@ defmodule Blockchain.Block do
     updated_block = %{block.header | size: block_rlp_size, total_difficulty: total_difficulty}
 
     %{block | block_hash: hash, header: updated_block}
+  end
+
+  defp store_transaction_locations_by_hash(trie, block) do
+    block.transactions
+    |> Enum.with_index()
+    |> Enum.reduce(trie, fn {transaction, idx}, trie_acc ->
+      transaction_key =
+        transaction
+        |> Transaction.hash()
+        |> transaction_key()
+
+      location = :erlang.term_to_binary({block.block_hash, idx})
+
+      TrieStorage.put_raw_key!(trie_acc, transaction_key, location)
+    end)
+  end
+
+  defp transaction_key(hash) do
+    hash_hex = Base.encode16(hash, case: :lower)
+
+    "transaction_#{hash_hex}"
   end
 end

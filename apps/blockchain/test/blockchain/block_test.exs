@@ -597,6 +597,48 @@ defmodule Blockchain.BlockTest do
 
       assert found_block.header.total_difficulty == block.header.difficulty
     end
+
+    test "stores block with transaction locations" do
+      trie = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
+      transaction1 = %Blockchain.Transaction{nonce: 1, v: 1, r: 2, s: 3}
+      transaction2 = %Blockchain.Transaction{nonce: 2, v: 1, r: 2, s: 3}
+
+      transactions = [transaction1, transaction2]
+
+      block = %Block{
+        header: %Header{
+          parent_hash: <<1::256>>,
+          ommers_hash: <<2::256>>,
+          beneficiary: <<3::160>>,
+          state_root: <<4::256>>,
+          transactions_root: <<5::256>>,
+          receipts_root: <<6::256>>,
+          logs_bloom: <<>>,
+          difficulty: 5,
+          number: 1,
+          gas_limit: 5,
+          gas_used: 3,
+          timestamp: 6,
+          extra_data: "",
+          mix_hash: <<7::256>>,
+          nonce: <<8::64>>
+        },
+        transactions: transactions,
+        ommers: []
+      }
+
+      {:ok, {_hash, updated_trie}} = Block.put_block(block, trie)
+
+      transaction_hash1 = Transaction.hash(transaction1)
+      found_transaction1 = Block.get_transaction_by_hash(transaction_hash1, updated_trie)
+
+      assert found_transaction1 == transaction1
+
+      transaction_hash2 = Transaction.hash(transaction2)
+      found_transaction2 = Block.get_transaction_by_hash(transaction_hash2, updated_trie)
+
+      assert found_transaction2 == transaction2
+    end
   end
 
   defp put_header(block, key, value) do
