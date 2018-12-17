@@ -11,6 +11,7 @@ defmodule Blockchain.Transaction do
   alias Blockchain.Transaction.{AccountCleaner, Receipt, Validity}
   alias Contract.MessageCall
   alias EVM.{Configuration, Gas, SubState}
+  alias ExthCrypto.Hash.Keccak
   alias MerklePatriciaTree.Trie
   alias MerklePatriciaTree.TrieStorage
 
@@ -107,6 +108,17 @@ defmodule Blockchain.Transaction do
     else
       tx.data
     end
+  end
+
+  @doc """
+  Calculates hash of a transaction.
+  """
+  @spec hash(t()) :: binary()
+  def hash(transaction) do
+    transaction
+    |> serialize()
+    |> ExRLP.encode()
+    |> Keccak.kec()
   end
 
   @doc """
