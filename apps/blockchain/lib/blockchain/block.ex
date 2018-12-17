@@ -401,8 +401,8 @@ defmodule Blockchain.Block do
     end
   end
 
-  @spec get_transaction_by_hash(binary(), TrieStorage.t()) :: Transaction.t() | nil
-  def get_transaction_by_hash(transaction_hash, trie) do
+  @spec get_transaction_by_hash(binary(), TrieStorage.t(), boolean()) :: Transaction.t() | nil
+  def get_transaction_by_hash(transaction_hash, trie, with_block \\ false) do
     location_key = transaction_key(transaction_hash)
 
     case TrieStorage.get_raw_key(trie, location_key) do
@@ -410,8 +410,15 @@ defmodule Blockchain.Block do
         {block_hash, transaction_index} = :erlang.binary_to_term(location_bin)
 
         case get_block(block_hash, trie) do
-          {:ok, block} -> Enum.at(block.transactions, transaction_index)
-          :not_found -> nil
+          {:ok, block} ->
+            if with_block do
+              {Enum.at(block.transactions, transaction_index), block}
+            else
+              Enum.at(block.transactions, transaction_index)
+            end
+
+          :not_found ->
+            nil
         end
 
       _ ->

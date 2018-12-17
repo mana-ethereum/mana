@@ -117,7 +117,11 @@ defmodule JSONRPC2.SpecHandler do
     @sync.get_block_by_number(number, include_full_transactions)
   end
 
-  def handle_request("eth_getTransactionByHash", _), do: {:error, :not_supported}
+  def handle_request("eth_getTransactionByHash", [hex_transaction_hash]) do
+    transaction_hash = Exth.decode_hex(hex_transaction_hash)
+
+    @sync.get_transaction_by_hash(transaction_hash)
+  end
 
   def handle_request("eth_getTransactionByBlockHashAndIndex", [
         block_hash_hex,

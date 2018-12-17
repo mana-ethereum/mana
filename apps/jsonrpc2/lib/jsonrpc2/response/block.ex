@@ -2,7 +2,6 @@ defmodule JSONRPC2.Response.Block do
   alias Block.Header
   alias Blockchain.Block
   alias Blockchain.Transaction
-  alias ExthCrypto.Hash.Keccak
   alias JSONRPC2.Response.Transaction, as: ResponseTransaction
 
   import JSONRPC2.Response.Helpers
