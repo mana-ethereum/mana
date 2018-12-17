@@ -179,4 +179,13 @@ defmodule JSONRPC2.Bridge.Sync do
         nil
     end
   end
+
+  def get_transaction_by_hash(transaction_hash) do
+    state_trie = get_last_sync_state().trie
+
+    case Block.get_transaction_by_hash(transaction_hash, state_trie, true) do
+      {transaction, block} -> ResponseTransaction.new(transaction, block)
+      nil -> nil
+    end
+  end
 end
