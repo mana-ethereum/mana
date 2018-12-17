@@ -159,4 +159,24 @@ defmodule JSONRPC2.Bridge.Sync do
         nil
     end
   end
+
+  def get_balance(address, block_number) do
+    state_trie = get_last_sync_state().trie
+
+    case Block.get_block(block_number, state_trie) do
+      {:ok, block} ->
+        block_state = TrieStorage.set_root_hash(state_trie, block.header.state_root)
+
+        case Account.get_account(block_state, address) do
+          nil ->
+            nil
+
+          account ->
+            Exth.encode_unsigned_hex(account.balance)
+        end
+
+      _ ->
+        nil
+    end
+  end
 end
