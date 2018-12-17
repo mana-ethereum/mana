@@ -56,7 +56,14 @@ defmodule JSONRPC2.SpecHandler do
     current_block_header_number
   end
 
-  def handle_request("eth_getBalance", _), do: {:error, :not_supported}
+  def handle_request("eth_getBalance", [hex_address, hex_number_or_tag]) do
+    block_number = decode_block_number(hex_number_or_tag)
+
+    address = Exth.decode_hex(hex_address)
+
+    @sync.get_balance(address, block_number)
+  end
+
   def handle_request("eth_getStorageAt", _), do: {:error, :not_supported}
   def handle_request("eth_getTransactionCount", _), do: {:error, :not_supported}
 
