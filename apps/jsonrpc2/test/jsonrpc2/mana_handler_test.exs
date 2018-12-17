@@ -447,6 +447,55 @@ defmodule JSONRPC2.ManaHandlerTest do
     end
   end
 
+  describe "eth_getBalance" do
+    test "fetches balance of an existing account" do
+      trie = BridgeSyncMock.get_trie()
+
+      address = <<6::160>>
+
+      block =
+        TestFactory.build(:block,
+          block_hash: <<0x119::256>>,
+          header: TestFactory.build(:header, number: 7007)
+        )
+
+      account = %Account{
+        nonce: 5,
+        balance: 10,
+        storage_root: Account.empty_trie(),
+        code_hash: Account.empty_keccak()
+      }
+
+      trie_with_account =
+        trie
+        |> TrieStorage.set_root_hash(block.header.state_root)
+        |> Account.put_account(address, account)
+
+      updated_block = %{
+        block
+        | header: %{block.header | state_root: TrieStorage.root_hash(trie_with_account)}
+      }
+
+      :ok = BridgeSyncMock.put_block(updated_block)
+      :ok = BridgeSyncMock.set_highest_block_number(updated_block.header.number)
+      :ok = BridgeSyncMock.set_trie(trie_with_account)
+
+      assert_rpc_reply(
+        SpecHandler,
+        ~s({"jsonrpc": "2.0", "method": "eth_getBalance", "params": ["0x0000000000000000000000000000000000000006", "latest"], "id": 71}),
+        ~s({"id":71, "jsonrpc":"2.0", "result":"0x0a"})
+      )
+    end
+
+    test "fetches balance of a nonexisting account" do
+      assert_rpc_reply(
+        SpecHandler,
+        ~s({"jsonrpc": "2.0", "method": "eth_getBalance", "params": ["0x0000000000000000000000000000000000000011", "latest"], "id": 71}),
+        ~s({"id":71, "jsonrpc":"2.0", "result":null})
+      )
+    end
+  end
+
   defp assert_rpc_reply(handler, call, expected_reply) do
     assert {:reply, reply} = handler.handle(call)
 

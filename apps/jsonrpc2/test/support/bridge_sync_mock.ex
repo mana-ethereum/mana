@@ -36,6 +36,10 @@ defmodule JSONRPC2.BridgeSyncMock do
     GenServer.call(__MODULE__, {:get_code, address, block_number})
   end
 
+  def get_balance(address, block_number) do
+    GenServer.call(__MODULE__, {:get_balance, address, block_number})
+  end
+
   def get_starting_block_number do
     GenServer.call(__MODULE__, :get_starting_block_number)
   end
@@ -280,6 +284,27 @@ defmodule JSONRPC2.BridgeSyncMock do
           case Account.machine_code(block_state, address) do
             {:ok, code} -> Exth.encode_hex(code)
             _ -> nil
+          end
+
+        _ ->
+          nil
+      end
+
+    {:reply, result, state}
+  end
+
+  def handle_call({:get_balance, address, block_number}, _, state = %{trie: trie}) do
+    result =
+      case Block.get_block(block_number, trie) do
+        {:ok, block} ->
+          block_state = TrieStorage.set_root_hash(trie, block.header.state_root)
+
+          case Account.get_account(block_state, address) do
+            nil ->
+              nil
+
+            account ->
+              Exth.encode_unsigned_hex(account.balance)
           end
 
         _ ->
