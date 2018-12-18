@@ -42,7 +42,7 @@ defmodule JSONRPC2.Response.Receipt do
 
     %__MODULE__{
       transactionHash: transaction_hash(transaction),
-      transactionIndex: index,
+      transactionIndex: encode_hex(index),
       blockHash: encode_hex(block.block_hash),
       blockNumber: encode_hex(block.header.number),
       from: from_address(transaction, network_id),
@@ -65,7 +65,6 @@ defmodule JSONRPC2.Response.Receipt do
   defp transaction_index(transaction, block) do
     block.transactions
     |> Enum.find_index(fn trx -> trx == transaction end)
-    |> encode_hex()
   end
 
   defp from_address(internal_transaction, network_id) do
