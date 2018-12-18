@@ -5,6 +5,7 @@ defmodule JSONRPC2.Bridge.Sync do
   alias ExWire.PeerSupervisor
   alias ExWire.Sync
   alias JSONRPC2.Response.Block, as: ResponseBlock
+  alias JSONRPC2.Response.Receipt, as: ResponseReceipt
   alias JSONRPC2.Response.Transaction, as: ResponseTransaction
   alias MerklePatriciaTree.TrieStorage
 
@@ -185,6 +186,15 @@ defmodule JSONRPC2.Bridge.Sync do
 
     case Block.get_transaction_by_hash(transaction_hash, state_trie, true) do
       {transaction, block} -> ResponseTransaction.new(transaction, block)
+      nil -> nil
+    end
+  end
+
+  def get_transaction_receipt(transaction_hash) do
+    state_trie = get_last_sync_state().trie
+
+    case Block.get_receipt_by_transaction_hash(transaction_hash, state_trie) do
+      {receipt, transaction, block} -> ResponseReceipt.new(receipt, transaction, block)
       nil -> nil
     end
   end

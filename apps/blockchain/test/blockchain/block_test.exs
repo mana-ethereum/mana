@@ -7,6 +7,7 @@ defmodule Blockchain.BlockTest do
   alias Block.Header
   alias Blockchain.BlockGetter
   alias Blockchain.{Account, Block, Chain, Genesis, Transaction}
+  alias Blockchain.Transaction.Receipt
   alias EVM.MachineCode
   alias MerklePatriciaTree.Trie
 
@@ -637,6 +638,95 @@ defmodule Blockchain.BlockTest do
       transaction_hash2 = Transaction.hash(transaction2)
       found_transaction2 = Block.get_transaction_by_hash(transaction_hash2, updated_trie)
 
+      assert found_transaction2 == transaction2
+    end
+  end
+
+  describe "get_receipt_by_transaction_hash/2" do
+    test "gets receipt" do
+      trie = MerklePatriciaTree.Trie.new(MerklePatriciaTree.Test.random_ets_db())
+
+      receipt1 =
+        Receipt.new(
+          <<47, 105, 125, 103, 30, 154, 228, 238, 36, 164, 60, 75, 13, 126, 21, 241, 203, 75, 166,
+            222, 21, 97, 18, 13, 67, 185, 164, 232, 196, 168, 166, 238>>,
+          265_390,
+          [
+            %EVM.LogEntry{
+              address:
+                <<220, 244, 33, 208, 147, 66, 139, 9, 108, 165, 1, 167, 205, 26, 116, 8, 85, 167,
+                  151, 111>>,
+              data:
+                <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                  0, 0, 0, 0, 0>>,
+              topics: []
+            }
+          ]
+        )
+
+      receipt2 =
+        Receipt.new(
+          <<74, 105, 125, 103, 30, 154, 228, 238, 36, 164, 60, 75, 13, 126, 21, 241, 203, 75, 166,
+            222, 21, 97, 18, 13, 67, 185, 164, 232, 196, 168, 166, 238>>,
+          2_653_911,
+          [
+            %EVM.LogEntry{
+              address:
+                <<220, 244, 33, 208, 147, 66, 139, 9, 108, 165, 1, 167, 205, 26, 116, 8, 85, 167,
+                  151, 111>>,
+              data:
+                <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                  0, 0, 0, 0, 0>>,
+              topics: []
+            }
+          ]
+        )
+
+      receipts = [receipt1, receipt2]
+
+      transaction1 = %Blockchain.Transaction{nonce: 1, v: 1, r: 2, s: 3}
+      transaction2 = %Blockchain.Transaction{nonce: 2, v: 1, r: 2, s: 3}
+      transactions = [transaction1, transaction2]
+
+      block = %Block{
+        header: %Header{
+          parent_hash: <<1::256>>,
+          ommers_hash: <<2::256>>,
+          beneficiary: <<3::160>>,
+          state_root: <<4::256>>,
+          transactions_root: <<5::256>>,
+          receipts_root: <<6::256>>,
+          logs_bloom: <<>>,
+          difficulty: 5,
+          number: 1,
+          gas_limit: 5,
+          gas_used: 3,
+          timestamp: 6,
+          extra_data: "",
+          mix_hash: <<7::256>>,
+          nonce: <<8::64>>
+        },
+        transactions: transactions,
+        ommers: [],
+        receipts: receipts
+      }
+
+      {:ok, {_hash, updated_trie}} = Block.put_block(block, trie)
+
+      {found_receipt1, found_transaction1, _block} =
+        transaction1
+        |> Transaction.hash()
+        |> Block.get_receipt_by_transaction_hash(updated_trie)
+
+      assert found_receipt1 == receipt1
+      assert found_transaction1 == transaction1
+
+      {found_receipt2, found_transaction2, _block} =
+        transaction2
+        |> Transaction.hash()
+        |> Block.get_receipt_by_transaction_hash(updated_trie)
+
+      assert found_receipt2 == receipt2
       assert found_transaction2 == transaction2
     end
   end

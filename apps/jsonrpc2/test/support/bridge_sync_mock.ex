@@ -2,6 +2,7 @@ defmodule JSONRPC2.BridgeSyncMock do
   alias Blockchain.Account
   alias Blockchain.Block
   alias JSONRPC2.Response.Block, as: ResponseBlock
+  alias JSONRPC2.Response.Receipt, as: ResponseReceipt
   alias JSONRPC2.Response.Transaction, as: ResponseTransaction
   alias JSONRPC2.Struct.EthSyncing
   alias MerklePatriciaTree.TrieStorage
@@ -34,6 +35,10 @@ defmodule JSONRPC2.BridgeSyncMock do
 
   def get_code(address, block_number) do
     GenServer.call(__MODULE__, {:get_code, address, block_number})
+  end
+
+  def get_transaction_receipt(transaction_hash) do
+    GenServer.call(__MODULE__, {:get_transaction_receipt, transaction_hash})
   end
 
   def get_balance(address, block_number) do
@@ -323,6 +328,16 @@ defmodule JSONRPC2.BridgeSyncMock do
       case Block.get_transaction_by_hash(transaction_hash, trie, true) do
         {transaction, block} -> ResponseTransaction.new(transaction, block)
         nil -> nil
+      end
+
+    {:reply, result, state}
+  end
+
+  def handle_call({:get_transaction_receipt, transaction_hash}, _, state = %{trie: trie}) do
+    result =
+      case Block.get_receipt_by_transaction_hash(transaction_hash, trie) do
+        {receipt, transaction, block} -> ResponseReceipt.new(receipt, transaction, block)
+        _ -> nil
       end
 
     {:reply, result, state}
