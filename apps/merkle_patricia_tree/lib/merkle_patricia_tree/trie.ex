@@ -207,4 +207,7 @@ defmodule MerklePatriciaTree.Trie do
 
   @impl true
   def permanent_db(trie), do: trie.db
+
+  @impl true
+  def with_clean_cache(trie), do: trie
 end

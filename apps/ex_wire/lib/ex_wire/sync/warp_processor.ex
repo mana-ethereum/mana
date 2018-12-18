@@ -222,7 +222,7 @@ defmodule ExWire.Sync.WarpProcessor do
        )
        when ref == task_ref do
     case status do
-      {:ok, {:next_state_root, next_state_root}} ->
+      {:ok, {:next_state_root, next_state_root, _chunk_hash}} ->
         %{state | state_root: next_state_root}
 
       :down ->
@@ -367,6 +367,8 @@ defmodule ExWire.Sync.WarpProcessor do
   @spec new_block_chunk_task(pid(), EVM.hash(), BlockChunk.t(), Trie.t(), processor_mod(), pid()) ::
           Task.t()
   defp new_block_chunk_task(sup, chunk_hash, block_chunk, trie, processor_mod, pid) do
+    task_trie = TrieStorage.with_clean_cache(trie)
+
     Task.Supervisor.async(sup, fn ->
       start = Time.time_start()
 
@@ -375,7 +377,8 @@ defmodule ExWire.Sync.WarpProcessor do
           "[Warp] Starting to process #{Enum.count(block_chunk.block_data_list)} block(s)."
         end)
 
-      {processed_blocks, block, next_trie} = processor_mod.process_block_chunk(block_chunk, trie)
+      {processed_blocks, block, next_trie} =
+        processor_mod.process_block_chunk(block_chunk, task_trie)
 
       trie_elapsed =
         Time.elapsed(fn ->
@@ -439,6 +442,8 @@ defmodule ExWire.Sync.WarpProcessor do
           pid()
         ) :: Task.t()
   defp new_state_chunk_task(processor_pid, sup, chunk_hash, state_chunk, trie, processor_mod, pid) do
+    task_trie = TrieStorage.with_clean_cache(trie)
+
     Task.Supervisor.async(sup, fn ->
       start = Time.time_start()
 
@@ -447,7 +452,7 @@ defmodule ExWire.Sync.WarpProcessor do
           "[Warp] Starting to process #{Enum.count(state_chunk.account_entries)} account(s)."
         end)
 
-      {account_states, next_trie} = processor_mod.process_state_chunk(state_chunk, trie)
+      {account_states, next_trie} = processor_mod.process_state_chunk(state_chunk, task_trie)
 
       trie_elapsed =
         Time.elapsed(fn ->
@@ -488,6 +493,8 @@ defmodule ExWire.Sync.WarpProcessor do
          processor_mod,
          pid
        ) do
+    task_trie = TrieStorage.with_clean_cache(trie)
+
     Task.Supervisor.async(sup, fn ->
       start = Time.time_start()
 
@@ -500,7 +507,7 @@ defmodule ExWire.Sync.WarpProcessor do
           }."
         end)
 
-      state_trie = TrieStorage.set_root_hash(trie, state_root)
+      state_trie = TrieStorage.set_root_hash(task_trie, state_root)
       next_state_trie = processor_mod.process_account_states(account_states, state_trie)
       next_state_root = TrieStorage.root_hash(next_state_trie)
 
@@ -529,7 +536,7 @@ defmodule ExWire.Sync.WarpProcessor do
           {:processed_state_chunk, chunk_hash, processed_accounts, next_state_root}
         )
 
-      {:next_state_root, next_state_root}
+      {:next_state_root, next_state_root, chunk_hash}
     end)
   end
 
