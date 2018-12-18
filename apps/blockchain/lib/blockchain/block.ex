@@ -376,6 +376,30 @@ defmodule Blockchain.Block do
     end
   end
 
+  @spec get_receipt_by_transaction_hash(binary(), TrieStorage.t()) ::
+          {Receipt.t(), Transaction.t(), Block.t()}
+  def get_receipt_by_transaction_hash(transaction_hash, trie) do
+    case get_transaction_by_hash(transaction_hash, trie, true) do
+      {transaction, block} ->
+        location_key = transaction_key(transaction_hash)
+
+        case TrieStorage.get_raw_key(trie, location_key) do
+          {:ok, location_bin} ->
+            {_block_hash, transaction_index} = :erlang.binary_to_term(location_bin)
+
+            receipt = Enum.at(block.receipts, transaction_index)
+
+            {receipt, transaction, block}
+
+          _ ->
+            nil
+        end
+
+      _ ->
+        nil
+    end
+  end
+
   @doc """
   Returns a given transaction from a block. This is
   based on the transactions root where all transactions

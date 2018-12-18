@@ -36,6 +36,10 @@ defmodule JSONRPC2.BridgeSyncMock do
     GenServer.call(__MODULE__, {:get_code, address, block_number})
   end
 
+  def get_transaction_receipt(transaction_hash) do
+    GenServer.call(__MODULE__, {:get_transaction_receipt, transaction_hash})
+  end
+
   def get_balance(address, block_number) do
     GenServer.call(__MODULE__, {:get_balance, address, block_number})
   end
@@ -326,6 +330,9 @@ defmodule JSONRPC2.BridgeSyncMock do
       end
 
     {:reply, result, state}
+  end
+
+  def handle_call({:get_transaction_receipt, transacton_hash}, _, state = %{trie: trie}) do
   end
 
   @spec handle_call(:get_last_sync_block_stats, {pid, any}, map()) ::
