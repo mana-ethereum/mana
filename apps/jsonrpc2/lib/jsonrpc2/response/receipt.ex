@@ -62,7 +62,7 @@ defmodule JSONRPC2.Response.Receipt do
 
   defp transaction_index(transaction, block) do
     block.transactions
-    |> Enum.find_index(transaction)
+    |> Enum.find_index(fn trx -> trx == transaction end)
     |> encode_hex()
   end
 
