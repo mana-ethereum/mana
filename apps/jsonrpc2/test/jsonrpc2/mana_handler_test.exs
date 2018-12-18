@@ -511,6 +511,28 @@ defmodule JSONRPC2.ManaHandlerTest do
     end
   end
 
+  describe "eth_getTransactionReceipt" do
+    test "fetch receipt by transaction hash" do
+      transaction = TestFactory.build(:transaction)
+      receipt = TestFactory.build(:receipt)
+
+      block =
+        TestFactory.build(:block,
+          block_hash: <<0x1AAA::256>>,
+          transactions: [transaction],
+          receipts: [receipt]
+        )
+
+      :ok = BridgeSyncMock.put_block(block)
+
+      assert_rpc_reply(
+        SpecHandler,
+        ~s({"jsonrpc": "2.0", "method": "eth_getTransactionReceipt", "params": ["0x71024c28d1404f5d5fe3458b71b02d799f6d6aba29e285857732c0d06ebf3b08"], "id": 71}),
+        ~s({"id":71, "jsonrpc":"2.0", "result":{"blockNumber":"0x01", "from":"0x619f56e8bed07fe196c0dbc41b52e2bc64817b3a", "to":"0x", "transactionIndex":"0x00", "blockHash":"0x0000000000000000000000000000000000000000000000000000000000001aaa", "contractAddress":"", "cumulativeGasUsed":"0x03e8", "gasUsed":"0x03e8", "logs":[], "logsBloom":"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000", "root":null, "status":"0x01", "transactionHash":"0x71024c28d1404f5d5fe3458b71b02d799f6d6aba29e285857732c0d06ebf3b08"}})
+      )
+    end
+  end
+
   defp assert_rpc_reply(handler, call, expected_reply) do
     assert {:reply, reply} = handler.handle(call)
 

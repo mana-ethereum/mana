@@ -1,5 +1,6 @@
 defmodule JSONRPC2.Response.Receipt do
   alias Blockchain.Transaction
+
   alias Blockchain.Transaction.Signature
 
   import JSONRPC2.Response.Helpers
