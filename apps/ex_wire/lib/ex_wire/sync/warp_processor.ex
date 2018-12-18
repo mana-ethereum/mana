@@ -222,7 +222,7 @@ defmodule ExWire.Sync.WarpProcessor do
        )
        when ref == task_ref do
     case status do
-      {:ok, {:next_state_root, next_state_root, _chunk_hash}} ->
+      {:ok, {:next_state_root, next_state_root}} ->
         %{state | state_root: next_state_root}
 
       :down ->
@@ -536,7 +536,7 @@ defmodule ExWire.Sync.WarpProcessor do
           {:processed_state_chunk, chunk_hash, processed_accounts, next_state_root}
         )
 
-      {:next_state_root, next_state_root, chunk_hash}
+      {:next_state_root, next_state_root}
     end)
   end
 
