@@ -1,7 +1,6 @@
 defmodule JSONRPC2.Response.Transaction do
   alias Blockchain.Transaction
   alias Blockchain.Transaction.Signature
-  alias ExthCrypto.Hash.Keccak
 
   import JSONRPC2.Response.Helpers
 
@@ -71,9 +70,7 @@ defmodule JSONRPC2.Response.Transaction do
 
   defp hash(internal_transaction) do
     internal_transaction
-    |> Transaction.serialize()
-    |> ExRLP.encode()
-    |> Keccak.kec()
+    |> Transaction.hash()
     |> encode_hex()
   end
 

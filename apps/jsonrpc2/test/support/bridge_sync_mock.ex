@@ -2,6 +2,7 @@ defmodule JSONRPC2.BridgeSyncMock do
   alias Blockchain.Account
   alias Blockchain.Block
   alias JSONRPC2.Response.Block, as: ResponseBlock
+  alias JSONRPC2.Response.Receipt, as: ResponseReceipt
   alias JSONRPC2.Response.Transaction, as: ResponseTransaction
   alias JSONRPC2.Struct.EthSyncing
   alias MerklePatriciaTree.TrieStorage
@@ -332,7 +333,14 @@ defmodule JSONRPC2.BridgeSyncMock do
     {:reply, result, state}
   end
 
-  def handle_call({:get_transaction_receipt, transacton_hash}, _, state = %{trie: trie}) do
+  def handle_call({:get_transaction_receipt, transaction_hash}, _, state = %{trie: trie}) do
+    result =
+      case Block.get_receipt_by_transaction_hash(transaction_hash, trie) do
+        {receipt, transaction, block} -> ResponseReceipt.new(receipt, transaction, block)
+        _ -> nil
+      end
+
+    {:reply, result, state}
   end
 
   @spec handle_call(:get_last_sync_block_stats, {pid, any}, map()) ::
