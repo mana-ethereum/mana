@@ -195,7 +195,7 @@ defmodule JSONRPC2.Bridge.Sync do
 
     case Block.get_receipt_by_transaction_hash(transaction_hash, state_trie) do
       {receipt, transaction, block} -> ResponseReceipt.new(receipt, transaction, block)
-      _ -> nil
+      nil -> nil
     end
   end
 end

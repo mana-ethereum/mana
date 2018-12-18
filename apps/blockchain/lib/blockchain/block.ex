@@ -377,7 +377,7 @@ defmodule Blockchain.Block do
   end
 
   @spec get_receipt_by_transaction_hash(binary(), TrieStorage.t()) ::
-          {Receipt.t(), Transaction.t(), Block.t()}
+          {Receipt.t() | nil, Transaction.t() | nil, t()} | nil
   def get_receipt_by_transaction_hash(transaction_hash, trie) do
     case get_transaction_by_hash(transaction_hash, trie, true) do
       {transaction, block} ->
@@ -425,7 +425,8 @@ defmodule Blockchain.Block do
     end
   end
 
-  @spec get_transaction_by_hash(binary(), TrieStorage.t(), boolean()) :: Transaction.t() | nil
+  @spec get_transaction_by_hash(binary(), TrieStorage.t(), boolean()) ::
+          Transaction.t() | {Transaction.t(), t()} | nil
   def get_transaction_by_hash(transaction_hash, trie, with_block \\ false) do
     location_key = transaction_key(transaction_hash)
 
