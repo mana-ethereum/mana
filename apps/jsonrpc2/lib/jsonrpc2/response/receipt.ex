@@ -38,15 +38,17 @@ defmodule JSONRPC2.Response.Receipt do
         }
 
   def new(receipt, transaction, block, network_id \\ nil) do
+    index = transaction_index(transaction, block)
+
     %__MODULE__{
       transactionHash: transaction_hash(transaction),
-      transactionIndex: transaction_index(transaction, block),
+      transactionIndex: index,
       blockHash: encode_hex(block.block_hash),
       blockNumber: encode_hex(block.header.number),
       from: from_address(transaction, network_id),
       to: encode_hex(transaction.to),
       cumulativeGasUsed: encode_hex(receipt.cumulative_gas),
-      gasUsed: "",
+      gasUsed: calculate_gas_used(block, index, receipt),
       contractAddress: "",
       logs: [],
       logsBloom: encode_hex(receipt.bloom_filter),
@@ -70,5 +72,23 @@ defmodule JSONRPC2.Response.Receipt do
     {:ok, sender} = Signature.sender(internal_transaction, network_id)
 
     encode_hex(sender)
+  end
+
+  defp calculate_gas_used(block, index, receipt) do
+    result =
+      cond do
+        Enum.count(block.receipts) <= 1 ->
+          receipt.cumulative_gas
+
+        index == 0 ->
+          receipt.cumulative_gas
+
+        true ->
+          previous_cumulative_gas = Enum.at(block.receipts, index - 1)
+
+          receipt.cumulative_gas - previous_cumulative_gas
+      end
+
+    encode_hex(result)
   end
 end
