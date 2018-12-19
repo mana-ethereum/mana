@@ -13,6 +13,7 @@ defmodule Blockchain.Block do
   alias Blockchain.Account.Repo
   alias Blockchain.Block.HolisticValidity
   alias Blockchain.Transaction.Receipt
+  alias Blockchain.Transaction.Signature
   alias Blockchain.Transaction.Receipt.Bloom
   alias ExthCrypto.Hash.Keccak
   alias MerklePatriciaTree.{DB, Trie}
@@ -964,7 +965,7 @@ defmodule Blockchain.Block do
     |> Enum.reduce(trie, fn {transaction, idx}, trie_acc ->
       transaction_key =
         transaction
-        |> Transaction.hash()
+        |> Signature.transaction_hash()
         |> transaction_key()
 
       location = :erlang.term_to_binary({block.block_hash, idx})

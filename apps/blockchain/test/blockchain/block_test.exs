@@ -8,6 +8,7 @@ defmodule Blockchain.BlockTest do
   alias Blockchain.BlockGetter
   alias Blockchain.{Account, Block, Chain, Genesis, Transaction}
   alias Blockchain.Transaction.Receipt
+  alias Blockchain.Transaction.Signature
   alias EVM.MachineCode
   alias MerklePatriciaTree.Trie
 
@@ -630,12 +631,12 @@ defmodule Blockchain.BlockTest do
 
       {:ok, {_hash, updated_trie}} = Block.put_block(block, trie)
 
-      transaction_hash1 = Transaction.hash(transaction1)
+      transaction_hash1 = Signature.transaction_hash(transaction1)
       found_transaction1 = Block.get_transaction_by_hash(transaction_hash1, updated_trie)
 
       assert found_transaction1 == transaction1
 
-      transaction_hash2 = Transaction.hash(transaction2)
+      transaction_hash2 = Signature.transaction_hash(transaction2)
       found_transaction2 = Block.get_transaction_by_hash(transaction_hash2, updated_trie)
 
       assert found_transaction2 == transaction2
@@ -715,7 +716,7 @@ defmodule Blockchain.BlockTest do
 
       {found_receipt1, found_transaction1, _block} =
         transaction1
-        |> Transaction.hash()
+        |> Signature.transaction_hash()
         |> Block.get_receipt_by_transaction_hash(updated_trie)
 
       assert found_receipt1 == receipt1
@@ -723,7 +724,7 @@ defmodule Blockchain.BlockTest do
 
       {found_receipt2, found_transaction2, _block} =
         transaction2
-        |> Transaction.hash()
+        |> Signature.transaction_hash()
         |> Block.get_receipt_by_transaction_hash(updated_trie)
 
       assert found_receipt2 == receipt2

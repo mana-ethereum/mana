@@ -1,6 +1,7 @@
 defmodule JSONRPC2.Response.Receipt do
   alias Blockchain.Transaction
 
+  alias Blockchain.Account.Address
   alias Blockchain.Transaction.Signature
 
   import JSONRPC2.Response.Helpers
@@ -40,17 +41,18 @@ defmodule JSONRPC2.Response.Receipt do
 
   def new(receipt, transaction, block, network_id \\ nil) do
     index = transaction_index(transaction, block)
+    sender = from_address(transaction, network_id)
 
     %__MODULE__{
       transactionHash: transaction_hash(transaction),
       transactionIndex: encode_hex(index),
       blockHash: encode_hex(block.block_hash),
       blockNumber: encode_hex(block.header.number),
-      from: from_address(transaction, network_id),
+      from: encode_hex(sender),
       to: encode_hex(transaction.to),
       cumulativeGasUsed: encode_hex(receipt.cumulative_gas),
       gasUsed: calculate_gas_used(block, index, receipt),
-      contractAddress: "",
+      contractAddress: new_contract_address(transaction, sender),
       logs: [],
       logsBloom: encode_hex(receipt.bloom_filter),
       status: encode_hex(receipt.state)
@@ -59,7 +61,7 @@ defmodule JSONRPC2.Response.Receipt do
 
   defp transaction_hash(transaction) do
     transaction
-    |> Transaction.hash()
+    |> Signature.transaction_hash()
     |> encode_hex()
   end
 
@@ -71,7 +73,7 @@ defmodule JSONRPC2.Response.Receipt do
   defp from_address(internal_transaction, network_id) do
     {:ok, sender} = Signature.sender(internal_transaction, network_id)
 
-    encode_hex(sender)
+    sender
   end
 
   defp calculate_gas_used(block, index, receipt) do
@@ -87,6 +89,15 @@ defmodule JSONRPC2.Response.Receipt do
           previous_cumulative_gas = Enum.at(block.receipts, index - 1)
 
           receipt.cumulative_gas - previous_cumulative_gas
+      end
+
+    encode_hex(result)
+  end
+
+  defp new_contract_address(transaction, sender) do
+    result =
+      if Transaction.contract_creation?(transaction) do
+        Address.new(sender, transaction.nonce)
       end
 
     encode_hex(result)
