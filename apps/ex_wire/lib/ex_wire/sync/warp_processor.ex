@@ -123,7 +123,7 @@ defmodule ExWire.Sync.WarpProcessor do
           queued_state_chunks: queued_state_chunks
         }
       ) do
-    {:done, next_queued_block_chunks, next_queued_state_chunks} =
+    {:done, next_queued_block_chunks, next_queued_state_chunks, updated_trie} =
       spawn_new_tasks(
         sup,
         trie,
@@ -137,7 +137,8 @@ defmodule ExWire.Sync.WarpProcessor do
      %{
        state
        | queued_block_chunks: next_queued_block_chunks,
-         queued_state_chunks: next_queued_state_chunks
+         queued_state_chunks: next_queued_state_chunks,
+         trie: updated_trie
      }}
   end
 
@@ -177,7 +178,7 @@ defmodule ExWire.Sync.WarpProcessor do
           state_processing_task: nil
         }
       ) do
-    task =
+    {task, updated_trie} =
       new_account_states_task(
         sup,
         chunk_hash,
@@ -188,7 +189,7 @@ defmodule ExWire.Sync.WarpProcessor do
         pid
       )
 
-    {:noreply, %{state | state_processing_task: task}}
+    {:noreply, %{state | state_processing_task: task, trie: updated_trie}}
   end
 
   def handle_cast(
@@ -226,10 +227,10 @@ defmodule ExWire.Sync.WarpProcessor do
         %{state | state_root: next_state_root}
 
       :down ->
-        {next_task, next_queue} =
+        {next_task, next_queue, updated_trie} =
           case queue_state_processing_tasks do
             [{:new_account_states, chunk_hash, account_states, pid} | next_queue] ->
-              task =
+              {task, updated_trie} =
                 new_account_states_task(
                   sup,
                   chunk_hash,
@@ -240,13 +241,18 @@ defmodule ExWire.Sync.WarpProcessor do
                   pid
                 )
 
-              {task, next_queue}
+              {task, next_queue, updated_trie}
 
             _ ->
-              {nil, []}
+              {nil, [], trie}
           end
 
-        %{state | state_processing_task: next_task, queue_state_processing_tasks: next_queue}
+        %{
+          state
+          | state_processing_task: next_task,
+            queue_state_processing_tasks: next_queue,
+            trie: updated_trie
+        }
     end
   end
 
@@ -283,18 +289,19 @@ defmodule ExWire.Sync.WarpProcessor do
     # we just query the supervisor. This actually restricts parallelism since
     # our account state processor counts here.
     if current_child_count(sup) <= parallelism do
-      _task = new_block_chunk_task(sup, chunk_hash, block_chunk, trie, processor_mod, pid)
+      {_task, updated_trie} =
+        new_block_chunk_task(sup, chunk_hash, block_chunk, trie, processor_mod, pid)
 
       spawn_new_tasks(
         sup,
-        trie,
+        updated_trie,
         processor_mod,
         parallelism,
         rest_queued_block_chunks,
         queued_state_chunks
       )
     else
-      {:done, queued_block_chunks, queued_state_chunks}
+      {:done, queued_block_chunks, queued_state_chunks, trie}
     end
   end
 
@@ -310,24 +317,25 @@ defmodule ExWire.Sync.WarpProcessor do
          ]
        ) do
     if current_child_count(sup) <= parallelism do
-      _task = new_state_chunk_task(self(), sup, chunk_hash, state_chunk, trie, processor_mod, pid)
+      {_task, updated_trie} =
+        new_state_chunk_task(self(), sup, chunk_hash, state_chunk, trie, processor_mod, pid)
 
       spawn_new_tasks(
         sup,
-        trie,
+        updated_trie,
         processor_mod,
         parallelism,
         queued_block_chunks,
         rest_queued_state_chunks
       )
     else
-      {:done, queued_block_chunks, queued_state_chunks}
+      {:done, queued_block_chunks, queued_state_chunks, trie}
     end
   end
 
   # When we have no queued up chunks...
-  defp spawn_new_tasks(_sup, _trie, _processor_mod, _parallelism, [], []) do
-    {:done, [], []}
+  defp spawn_new_tasks(_sup, trie, _processor_mod, _parallelism, [], []) do
+    {:done, [], [], trie}
   end
 
   # If we are below max parallelism, spawn a new block chunk processing task, or queue
@@ -343,9 +351,10 @@ defmodule ExWire.Sync.WarpProcessor do
         pid
       ) do
     if current_child_count(sup) <= parallelism do
-      _task = new_block_chunk_task(sup, chunk_hash, block_chunk, trie, processor_mod, pid)
+      {_task, updated_trie} =
+        new_block_chunk_task(sup, chunk_hash, block_chunk, trie, processor_mod, pid)
 
-      state
+      %{state | trie: updated_trie}
     else
       :ok =
         Logger.debug(fn ->
@@ -365,37 +374,41 @@ defmodule ExWire.Sync.WarpProcessor do
   # about that block, store it's transactions, receipts and block data to the database,
   # and return the processed data back to the sync process.
   @spec new_block_chunk_task(pid(), EVM.hash(), BlockChunk.t(), Trie.t(), processor_mod(), pid()) ::
-          Task.t()
+          {Task.t(), Trie.t()}
   defp new_block_chunk_task(sup, chunk_hash, block_chunk, trie, processor_mod, pid) do
-    task_trie = TrieStorage.with_clean_cache(trie)
+    committed_trie = TrieStorage.commit!(trie)
+    task_trie = TrieStorage.with_new_cache(committed_trie)
 
-    Task.Supervisor.async(sup, fn ->
-      start = Time.time_start()
+    task =
+      Task.Supervisor.async(sup, fn ->
+        start = Time.time_start()
 
-      :ok =
-        Logger.debug(fn ->
-          "[Warp] Starting to process #{Enum.count(block_chunk.block_data_list)} block(s)."
-        end)
+        :ok =
+          Logger.debug(fn ->
+            "[Warp] Starting to process #{Enum.count(block_chunk.block_data_list)} block(s)."
+          end)
 
-      {processed_blocks, block, next_trie} =
-        processor_mod.process_block_chunk(block_chunk, task_trie)
+        {processed_blocks, block, next_trie} =
+          processor_mod.process_block_chunk(block_chunk, task_trie)
 
-      trie_elapsed =
-        Time.elapsed(fn ->
-          TrieStorage.commit!(next_trie)
-        end)
+        trie_elapsed =
+          Time.elapsed(fn ->
+            TrieStorage.commit!(next_trie)
+          end)
 
-      :ok =
-        Logger.debug(fn ->
-          "[Warp] Processed #{Enum.count(processed_blocks)} block(s) in #{Time.elapsed(start)} (trie commit time: #{
-            trie_elapsed
-          })."
-        end)
+        :ok =
+          Logger.debug(fn ->
+            "[Warp] Processed #{Enum.count(processed_blocks)} block(s) in #{Time.elapsed(start)} (trie commit time: #{
+              trie_elapsed
+            })."
+          end)
 
-      :ok = GenServer.cast(pid, {:processed_block_chunk, chunk_hash, processed_blocks, block})
+        :ok = GenServer.cast(pid, {:processed_block_chunk, chunk_hash, processed_blocks, block})
 
-      :ok
-    end)
+        :ok
+      end)
+
+    {task, committed_trie}
   end
 
   # If we are below max parallelism, spawn a new state chunk processing task, or queue
@@ -411,9 +424,10 @@ defmodule ExWire.Sync.WarpProcessor do
          pid
        ) do
     if current_child_count(sup) <= parallelism do
-      _task = new_state_chunk_task(self(), sup, chunk_hash, state_chunk, trie, processor_mod, pid)
+      {_task, updated_trie} =
+        new_state_chunk_task(self(), sup, chunk_hash, state_chunk, trie, processor_mod, pid)
 
-      state
+      %{state | trie: updated_trie}
     else
       :ok =
         Logger.debug(fn ->
@@ -440,36 +454,40 @@ defmodule ExWire.Sync.WarpProcessor do
           Trie.t(),
           processor_mod(),
           pid()
-        ) :: Task.t()
+        ) :: {Task.t(), Trie.t()}
   defp new_state_chunk_task(processor_pid, sup, chunk_hash, state_chunk, trie, processor_mod, pid) do
-    task_trie = TrieStorage.with_clean_cache(trie)
+    committed_trie = TrieStorage.commit!(trie)
+    task_trie = TrieStorage.with_new_cache(committed_trie)
 
-    Task.Supervisor.async(sup, fn ->
-      start = Time.time_start()
+    task =
+      Task.Supervisor.async(sup, fn ->
+        start = Time.time_start()
 
-      :ok =
-        Logger.debug(fn ->
-          "[Warp] Starting to process #{Enum.count(state_chunk.account_entries)} account(s)."
-        end)
+        :ok =
+          Logger.debug(fn ->
+            "[Warp] Starting to process #{Enum.count(state_chunk.account_entries)} account(s)."
+          end)
 
-      {account_states, next_trie} = processor_mod.process_state_chunk(state_chunk, task_trie)
+        {account_states, next_trie} = processor_mod.process_state_chunk(state_chunk, task_trie)
 
-      trie_elapsed =
-        Time.elapsed(fn ->
-          TrieStorage.commit!(next_trie)
-        end)
+        trie_elapsed =
+          Time.elapsed(fn ->
+            TrieStorage.commit!(next_trie)
+          end)
 
-      :ok =
-        Logger.debug(fn ->
-          "[Warp] Processed #{Enum.count(state_chunk.account_entries)} account(s) #{
-            Time.elapsed(start)
-          } (trie commit time: #{trie_elapsed})."
-        end)
+        :ok =
+          Logger.debug(fn ->
+            "[Warp] Processed #{Enum.count(state_chunk.account_entries)} account(s) #{
+              Time.elapsed(start)
+            } (trie commit time: #{trie_elapsed})."
+          end)
 
-      GenServer.cast(processor_pid, {:new_account_states, chunk_hash, account_states, pid})
+        GenServer.cast(processor_pid, {:new_account_states, chunk_hash, account_states, pid})
 
-      :ok
-    end)
+        :ok
+      end)
+
+    {task, committed_trie}
   end
 
   # The task to process new account states. We iterate over the account states
@@ -483,7 +501,7 @@ defmodule ExWire.Sync.WarpProcessor do
           EVM.hash(),
           processor_mod(),
           pid()
-        ) :: Task.t()
+        ) :: {Task.t(), Trie.t()}
   defp new_account_states_task(
          sup,
          chunk_hash,
@@ -493,51 +511,55 @@ defmodule ExWire.Sync.WarpProcessor do
          processor_mod,
          pid
        ) do
-    task_trie = TrieStorage.with_clean_cache(trie)
+    committed_trie = TrieStorage.commit!(trie)
+    task_trie = TrieStorage.with_new_cache(committed_trie)
 
-    Task.Supervisor.async(sup, fn ->
-      start = Time.time_start()
+    task =
+      Task.Supervisor.async(sup, fn ->
+        start = Time.time_start()
 
-      processed_accounts = Enum.count(account_states)
+        processed_accounts = Enum.count(account_states)
 
-      :ok =
-        Logger.debug(fn ->
-          "[Warp] Starting to process #{processed_accounts} account state(s) from state root #{
-            Exth.encode_hex(state_root)
-          }."
-        end)
+        :ok =
+          Logger.debug(fn ->
+            "[Warp] Starting to process #{processed_accounts} account state(s) from state root #{
+              Exth.encode_hex(state_root)
+            }."
+          end)
 
-      state_trie = TrieStorage.set_root_hash(task_trie, state_root)
-      next_state_trie = processor_mod.process_account_states(account_states, state_trie)
-      next_state_root = TrieStorage.root_hash(next_state_trie)
+        state_trie = TrieStorage.set_root_hash(task_trie, state_root)
+        next_state_trie = processor_mod.process_account_states(account_states, state_trie)
+        next_state_root = TrieStorage.root_hash(next_state_trie)
 
-      trie_elapsed =
-        Time.elapsed(fn ->
-          TrieStorage.commit!(next_state_trie)
-        end)
+        trie_elapsed =
+          Time.elapsed(fn ->
+            TrieStorage.commit!(next_state_trie)
+          end)
 
-      :ok =
-        Logger.debug(fn ->
-          "[Warp] Processed #{processed_accounts} account state(s) #{Time.elapsed(start)} (trie commit time: #{
-            trie_elapsed
-          }). New state root: #{Exth.encode_hex(next_state_root)}"
-        end)
+        :ok =
+          Logger.debug(fn ->
+            "[Warp] Processed #{processed_accounts} account state(s) #{Time.elapsed(start)} (trie commit time: #{
+              trie_elapsed
+            }). New state root: #{Exth.encode_hex(next_state_root)}"
+          end)
 
-      :ok =
-        Logger.debug(fn ->
-          "[Warp] #{processed_accounts}: #{Exth.encode_hex(state_root)}->#{
-            Exth.encode_hex(next_state_root)
-          }"
-        end)
+        :ok =
+          Logger.debug(fn ->
+            "[Warp] #{processed_accounts}: #{Exth.encode_hex(state_root)}->#{
+              Exth.encode_hex(next_state_root)
+            }"
+          end)
 
-      :ok =
-        GenServer.cast(
-          pid,
-          {:processed_state_chunk, chunk_hash, processed_accounts, next_state_root}
-        )
+        :ok =
+          GenServer.cast(
+            pid,
+            {:processed_state_chunk, chunk_hash, processed_accounts, next_state_root}
+          )
 
-      {:next_state_root, next_state_root}
-    end)
+        {:next_state_root, next_state_root}
+      end)
+
+    {task, committed_trie}
   end
 
   @doc """
