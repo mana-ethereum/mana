@@ -87,9 +87,9 @@ defmodule JSONRPC2.Response.Receipt do
           receipt.cumulative_gas
 
         true ->
-          previous_cumulative_gas = Enum.at(block.receipts, index - 1)
+          previous_receipt = Enum.at(block.receipts, index - 1)
 
-          receipt.cumulative_gas - previous_cumulative_gas
+          receipt.cumulative_gas - previous_receipt.cumulative_gas
       end
 
     encode_hex(result)

@@ -76,6 +76,35 @@ defmodule JSONRPC2.Response.ReceiptTest do
              }
     end
 
+    test "correctly sets log numbers to receipt logs" do
+      transaction1 = TestFactory.build(:transaction, gas_limit: 99)
+      transaction2 = TestFactory.build(:transaction, gas_limit: 100)
+
+      transactions = [transaction1, transaction2]
+
+      receipt1 =
+        TestFactory.build(:receipt,
+          logs: [TestFactory.build(:log_entry), TestFactory.build(:log_entry)]
+        )
+
+      receipt2 =
+        TestFactory.build(:receipt,
+          logs: [TestFactory.build(:log_entry), TestFactory.build(:log_entry)]
+        )
+
+      receipts = [receipt1, receipt2]
+
+      block = TestFactory.build(:block, receipts: receipts, transactions: transactions)
+
+      response_receipt = Receipt.new(receipt2, transaction2, block)
+
+      logs = response_receipt.logs
+
+      assert Enum.count(logs) == 2
+      assert Enum.at(logs, 0).logIndex == "0x02"
+      assert Enum.at(logs, 1).logIndex == "0x03"
+    end
+
     test "correctly encodes to json" do
       transaction = TestFactory.build(:transaction, to: <<0x100::160>>, data: "contract creation")
       block = TestFactory.build(:block, transactions: [transaction])
