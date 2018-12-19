@@ -42,9 +42,10 @@ defmodule JSONRPC2.Response.Receipt do
   def new(receipt, transaction, block, network_id \\ nil) do
     index = transaction_index(transaction, block)
     sender = from_address(transaction, network_id)
+    transaction_hash = transaction_hash(transaction)
 
     %__MODULE__{
-      transactionHash: transaction_hash(transaction),
+      transactionHash: transaction_hash,
       transactionIndex: encode_hex(index),
       blockHash: encode_hex(block.block_hash),
       blockNumber: encode_hex(block.header.number),
@@ -53,7 +54,7 @@ defmodule JSONRPC2.Response.Receipt do
       cumulativeGasUsed: encode_hex(receipt.cumulative_gas),
       gasUsed: calculate_gas_used(block, index, receipt),
       contractAddress: new_contract_address(transaction, sender),
-      logs: [],
+      logs: format_logs(receipt, index, transaction_hash, block),
       logsBloom: encode_hex(receipt.bloom_filter),
       status: encode_hex(receipt.state)
     }
@@ -101,5 +102,33 @@ defmodule JSONRPC2.Response.Receipt do
       end
 
     encode_hex(result)
+  end
+
+  defp format_logs(receipt, transaction_index, transaction_hash, block) do
+    prev_logs_count =
+      block.receipts
+      |> Enum.take(transaction_index)
+      |> Enum.flat_map(fn receipt -> receipt.logs end)
+      |> Enum.count()
+
+    {_, result} =
+      receipt.logs
+      |> Enum.reduce({prev_logs_count, []}, fn log, {current_log_index, acc} ->
+        current_log = %{
+          removed: false,
+          logIndex: encode_hex(current_log_index),
+          transactionIndex: encode_hex(transaction_index),
+          transactionHash: encode_hex(transaction_hash),
+          blockHash: encode_hex(block.block_hash),
+          blockNumber: encode_hex(block.header.number),
+          address: encode_hex(log.address),
+          data: encode_hex(log.data),
+          topics: Enum.map(log.topics, fn topic -> encode_hex(topic) end)
+        }
+
+        {current_log_index + 1, acc ++ [current_log]}
+      end)
+
+    result
   end
 end
