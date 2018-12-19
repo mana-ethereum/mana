@@ -2,28 +2,32 @@ defmodule JSONRPC2.Response.Receipt do
   alias Blockchain.Transaction
 
   alias Blockchain.Account.Address
+  alias Blockchain.Block
+  alias Blockchain.Transaction
+  alias Blockchain.Transaction.Receipt
   alias Blockchain.Transaction.Signature
+  alias JSONRPC2.Response.Receipt.ByzantiumReceipt
+  alias JSONRPC2.Response.Receipt.PreByzantiumReceipt
 
   import JSONRPC2.Response.Helpers
 
-  @derive Jason.Encoder
-  defstruct [
-    :transactionHash,
-    :transactionIndex,
-    :blockHash,
-    :blockNumber,
-    :from,
-    :to,
-    :cumulativeGasUsed,
-    :gasUsed,
-    :contractAddress,
-    :logs,
-    :logsBloom,
-    :root,
-    :status
-  ]
+  @type logs :: [
+          %{
+            removed: boolean(),
+            logIndex: binary(),
+            transactionIndex: binary(),
+            transactionHash: binary(),
+            blockHash: binary(),
+            blockNumber: binary(),
+            address: binary(),
+            data: binary(),
+            topics: [binary()]
+          }
+        ]
 
   defmodule PreByzantiumReceipt do
+    alias JSONRPC2.Response.Receipt
+
     @derive Jason.Encoder
     defstruct [
       :transactionHash,
@@ -49,18 +53,16 @@ defmodule JSONRPC2.Response.Receipt do
             to: binary(),
             cumulativeGasUsed: binary(),
             gasUsed: binary(),
-            contractAddress: binary(),
-            logs: [],
+            contractAddress: binary() | nil,
+            logs: Receipt.logs(),
             logsBloom: binary(),
             root: binary()
           }
-
-    def new do
-      %__MODULE__{}
-    end
   end
 
   defmodule ByzantiumReceipt do
+    alias JSONRPC2.Response.Receipt
+
     @derive Jason.Encoder
     defstruct [
       :transactionHash,
@@ -86,17 +88,16 @@ defmodule JSONRPC2.Response.Receipt do
             to: binary(),
             cumulativeGasUsed: binary(),
             gasUsed: binary(),
-            contractAddress: binary(),
-            logs: [],
+            contractAddress: binary() | nil,
+            logs: Receipt.logs(),
             logsBloom: binary(),
             status: binary()
           }
-
-    def new do
-      %__MODULE__{}
-    end
   end
 
+  @type t :: ByzantiumReceipt.t() | PreByzantiumReceipt.t()
+
+  @spec new(Receipt.t(), Transaction.t(), Block.t(), integer() | nil) :: t()
   def new(receipt, transaction, block, network_id \\ nil) do
     index = transaction_index(transaction, block)
     sender = from_address(transaction, network_id)
