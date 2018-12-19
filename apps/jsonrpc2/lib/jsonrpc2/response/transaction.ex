@@ -70,7 +70,7 @@ defmodule JSONRPC2.Response.Transaction do
 
   defp hash(internal_transaction) do
     internal_transaction
-    |> Transaction.hash()
+    |> Signature.transaction_hash()
     |> encode_hex()
   end
 

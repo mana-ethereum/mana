@@ -2,6 +2,7 @@ defmodule JSONRPC2.Response.Block do
   alias Block.Header
   alias Blockchain.Block
   alias Blockchain.Transaction
+  alias Blockchain.Transaction.Signature
   alias JSONRPC2.Response.Transaction, as: ResponseTransaction
 
   import JSONRPC2.Response.Helpers
@@ -102,7 +103,7 @@ defmodule JSONRPC2.Response.Block do
   def format_transactions(transactions, _, _) do
     Enum.map(transactions, fn transaction ->
       transaction
-      |> Transaction.hash()
+      |> Signature.transaction_hash()
       |> encode_hex()
     end)
   end
