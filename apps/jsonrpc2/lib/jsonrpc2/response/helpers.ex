@@ -1,7 +1,19 @@
 defmodule JSONRPC2.Response.Helpers do
   @spec encode_hex(binary() | integer() | nil) :: binary()
   def encode_hex(binary) when is_binary(binary) do
-    Exth.encode_hex(binary)
+    hex_binary = Base.encode16(binary, case: :lower)
+
+    case hex_binary do
+      "" ->
+        ""
+
+      els ->
+        result = String.replace_leading(els, "0", "")
+
+        result = if result == "", do: "0", else: result
+
+        "0x#{result}"
+    end
   end
 
   def encode_hex(value) when is_integer(value) do

@@ -142,7 +142,7 @@ defmodule JSONRPC2.ManaHandlerTest do
       assert_rpc_reply(
         SpecHandler,
         ~s({"jsonrpc": "2.0", "method": "eth_getBlockByNumber", "params": ["0x0a", false], "id": 71}),
-        ~s({"id":71,"jsonrpc":"2.0","result":{"difficulty":"0x01","extraData":"","gasLimit":"0x00","gasUsed":"0x00","hash":"0x0000000000000000000000000000000000000000000000000000000000000002","logsBloom":"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000","miner":"0x0000000000000000000000000000000000000010","nonce":"0x0000000000000000","number":"0x0a","parentHash":"0x0000000000000000000000000000000000000000000000000000000000000010","receiptsRoot":"0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421","sha3Uncles":"0x0000000000000000000000000000000000000000000000000000000000000010","size":"0x01f5","stateRoot":"0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421","timestamp":"0x01","totalDifficulty":"0x01","transactions":[],"transactionsRoot":"0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421","uncles":[]}})
+        ~s({"id":71, "jsonrpc":"2.0", "result":{"extraData":"", "receiptsRoot":"0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421", "stateRoot":"0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421", "transactions":[], "transactionsRoot":"0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421", "uncles":[], "difficulty":"0x1", "gasLimit":"0x0", "gasUsed":"0x0", "hash":"0x2", "logsBloom":"0x0", "miner":"0x10", "nonce":"0x0", "number":"0xa", "parentHash":"0x10", "sha3Uncles":"0x10", "size":"0x1f5", "timestamp":"0x1", "totalDifficulty":"0x1"}})
       )
     end
 
@@ -161,7 +161,7 @@ defmodule JSONRPC2.ManaHandlerTest do
       assert_rpc_reply(
         SpecHandler,
         ~s({"jsonrpc": "2.0", "method": "eth_getBlockByNumber", "params": ["0x0b", true], "id": 71}),
-        ~s({"id":71, "jsonrpc":"2.0", "result":{"difficulty":"0x01", "extraData":"", "gasLimit":"0x00", "gasUsed":"0x00", "logsBloom":"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000", "miner":"0x0000000000000000000000000000000000000010", "nonce":"0x0000000000000000", "number":"0x0b", "parentHash":"0x0000000000000000000000000000000000000000000000000000000000000010", "receiptsRoot":"0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421", "sha3Uncles":"0x0000000000000000000000000000000000000000000000000000000000000010", "size":"0x028c", "stateRoot":"0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421", "timestamp":"0x01", "totalDifficulty":"0x01", "transactionsRoot":"0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421", "uncles":[], "hash":"0x0000000000000000000000000000000000000000000000000000000000000007", "transactions":[{"from":"0x619f56e8bed07fe196c0dbc41b52e2bc64817b3a", "gas":"0x07", "gasPrice":"0x06", "hash":"0x7f71d14c13c402ce13c6f063b83e085f097a878e33163d6146cece277936531b", "input":"0x01", "nonce":"0x05", "r":"0x55fa77ee62e6c42e83b4f868c1e41643e45fd6f02a381a663318884751cb690a", "s":"0x7bd63c407cea7d619d598fb5766980ab8497b1b11c26d8bc59a132af96317793", "to":"0x", "transactionIndex":"0x00", "v":"0x1b", "value":"0x05", "blockHash":"0x0000000000000000000000000000000000000000000000000000000000000007", "blockNumber":"0x0b"}, {"from":"0x619f56e8bed07fe196c0dbc41b52e2bc64817b3a", "gas":"0x07", "gasPrice":"0x06", "hash":"0x7f71d14c13c402ce13c6f063b83e085f097a878e33163d6146cece277936531b", "input":"0x01", "nonce":"0x05", "r":"0x55fa77ee62e6c42e83b4f868c1e41643e45fd6f02a381a663318884751cb690a", "s":"0x7bd63c407cea7d619d598fb5766980ab8497b1b11c26d8bc59a132af96317793", "to":"0x", "transactionIndex":"0x00", "v":"0x1b", "value":"0x05", "blockHash":"0x0000000000000000000000000000000000000000000000000000000000000007", "blockNumber":"0x0b"}]}})
+        ~s({"id":71, "jsonrpc":"2.0", "result":{"extraData":"", "receiptsRoot":"0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421", "stateRoot":"0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421", "transactionsRoot":"0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421", "uncles":[], "difficulty":"0x1", "gasLimit":"0x0", "gasUsed":"0x0", "hash":"0x7", "logsBloom":"0x0", "miner":"0x10", "nonce":"0x0", "number":"0xb", "parentHash":"0x10", "sha3Uncles":"0x10", "size":"0x28c", "timestamp":"0x1", "totalDifficulty":"0x1", "transactions":[{"from":"0x619f56e8bed07fe196c0dbc41b52e2bc64817b3a", "hash":"0x71024c28d1404f5d5fe3458b71b02d799f6d6aba29e285857732c0d06ebf3b08", "r":"0x55fa77ee62e6c42e83b4f868c1e41643e45fd6f02a381a663318884751cb690a", "s":"0x7bd63c407cea7d619d598fb5766980ab8497b1b11c26d8bc59a132af96317793", "v":"0x1b", "blockHash":"0x7", "blockNumber":"0xb", "gas":"0x7", "gasPrice":"0x6", "input":"0x1", "nonce":"0x5", "to":"", "transactionIndex":"0x0", "value":"0x5"}, {"from":"0x619f56e8bed07fe196c0dbc41b52e2bc64817b3a", "hash":"0x71024c28d1404f5d5fe3458b71b02d799f6d6aba29e285857732c0d06ebf3b08", "r":"0x55fa77ee62e6c42e83b4f868c1e41643e45fd6f02a381a663318884751cb690a", "s":"0x7bd63c407cea7d619d598fb5766980ab8497b1b11c26d8bc59a132af96317793", "v":"0x1b", "blockHash":"0x7", "blockNumber":"0xb", "gas":"0x7", "gasPrice":"0x6", "input":"0x1", "nonce":"0x5", "to":"", "transactionIndex":"0x0", "value":"0x5"}]}})
       )
     end
 
@@ -180,7 +180,7 @@ defmodule JSONRPC2.ManaHandlerTest do
       assert_rpc_reply(
         SpecHandler,
         ~s({"jsonrpc": "2.0", "method": "eth_getBlockByNumber", "params": ["0x0c", false], "id": 71}),
-        ~s({"id":71, "jsonrpc":"2.0", "result":{"difficulty":"0x01", "extraData":"", "gasLimit":"0x00", "gasUsed":"0x00", "logsBloom":"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000", "miner":"0x0000000000000000000000000000000000000010", "nonce":"0x0000000000000000", "parentHash":"0x0000000000000000000000000000000000000000000000000000000000000010", "receiptsRoot":"0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421", "sha3Uncles":"0x0000000000000000000000000000000000000000000000000000000000000010", "size":"0x028c", "stateRoot":"0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421", "timestamp":"0x01", "totalDifficulty":"0x01", "transactions":["0x7f71d14c13c402ce13c6f063b83e085f097a878e33163d6146cece277936531b", "0x7f71d14c13c402ce13c6f063b83e085f097a878e33163d6146cece277936531b"], "transactionsRoot":"0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421", "uncles":[], "hash":"0x0000000000000000000000000000000000000000000000000000000000000008", "number":"0x0c"}})
+        ~s({"id":71, "jsonrpc":"2.0", "result":{"extraData":"", "receiptsRoot":"0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421", "stateRoot":"0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421", "transactions":["0x71024c28d1404f5d5fe3458b71b02d799f6d6aba29e285857732c0d06ebf3b08", "0x71024c28d1404f5d5fe3458b71b02d799f6d6aba29e285857732c0d06ebf3b08"], "transactionsRoot":"0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421", "uncles":[], "difficulty":"0x1", "gasLimit":"0x0", "gasUsed":"0x0", "hash":"0x8", "logsBloom":"0x0", "miner":"0x10", "nonce":"0x0", "number":"0xc", "parentHash":"0x10", "sha3Uncles":"0x10", "size":"0x28c", "timestamp":"0x1", "totalDifficulty":"0x1"}})
       )
     end
   end
@@ -194,7 +194,7 @@ defmodule JSONRPC2.ManaHandlerTest do
       assert_rpc_reply(
         SpecHandler,
         ~s({"jsonrpc": "2.0", "method": "eth_getBlockByHash", "params": ["0x0000000000000000000000000000000000000000000000000000000000000064", false], "id": 71}),
-        ~s({"id":71,"jsonrpc":"2.0","result":{"difficulty":"0x01","extraData":"","gasLimit":"0x00","gasUsed":"0x00","hash":"0x0000000000000000000000000000000000000000000000000000000000000064","logsBloom":"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000","miner":"0x0000000000000000000000000000000000000010","nonce":"0x0000000000000000","number":"0x01","parentHash":"0x0000000000000000000000000000000000000000000000000000000000000010","receiptsRoot":"0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421","sha3Uncles":"0x0000000000000000000000000000000000000000000000000000000000000010","size":"0x01f5","stateRoot":"0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421","timestamp":"0x01","totalDifficulty":"0x01","transactions":[],"transactionsRoot":"0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421","uncles":[]}})
+        ~s({"id":71, "jsonrpc":"2.0", "result":{"extraData":"", "receiptsRoot":"0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421", "stateRoot":"0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421", "transactions":[], "transactionsRoot":"0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421", "uncles":[], "difficulty":"0x1", "gasLimit":"0x0", "gasUsed":"0x0", "hash":"0x64", "logsBloom":"0x0", "miner":"0x10", "nonce":"0x0", "number":"0x1", "parentHash":"0x10", "sha3Uncles":"0x10", "size":"0x1f5", "timestamp":"0x1", "totalDifficulty":"0x1"}})
       )
     end
 
@@ -207,7 +207,7 @@ defmodule JSONRPC2.ManaHandlerTest do
       assert_rpc_reply(
         SpecHandler,
         ~s({"jsonrpc": "2.0", "method": "eth_getBlockByHash", "params": ["0x0000000000000000000000000000000000000000000000000000000000000005", true], "id": 71}),
-        ~s({"id":71, "jsonrpc":"2.0", "result":{"difficulty":"0x01", "extraData":"", "gasLimit":"0x00", "gasUsed":"0x00", "logsBloom":"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000", "miner":"0x0000000000000000000000000000000000000010", "nonce":"0x0000000000000000", "number":"0x01", "parentHash":"0x0000000000000000000000000000000000000000000000000000000000000010", "receiptsRoot":"0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421", "sha3Uncles":"0x0000000000000000000000000000000000000000000000000000000000000010", "stateRoot":"0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421", "timestamp":"0x01", "totalDifficulty":"0x01", "transactionsRoot":"0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421", "uncles":[], "hash":"0x0000000000000000000000000000000000000000000000000000000000000005", "size":"0x028c", "transactions":[{"blockHash":"0x0000000000000000000000000000000000000000000000000000000000000005", "blockNumber":"0x01", "from":"0x619f56e8bed07fe196c0dbc41b52e2bc64817b3a", "gas":"0x07", "gasPrice":"0x06", "hash":"0x7f71d14c13c402ce13c6f063b83e085f097a878e33163d6146cece277936531b", "input":"0x01", "nonce":"0x05", "r":"0x55fa77ee62e6c42e83b4f868c1e41643e45fd6f02a381a663318884751cb690a", "s":"0x7bd63c407cea7d619d598fb5766980ab8497b1b11c26d8bc59a132af96317793", "to":"0x", "transactionIndex":"0x00", "v":"0x1b", "value":"0x05"}, {"blockHash":"0x0000000000000000000000000000000000000000000000000000000000000005", "blockNumber":"0x01", "from":"0x619f56e8bed07fe196c0dbc41b52e2bc64817b3a", "gas":"0x07", "gasPrice":"0x06", "hash":"0x7f71d14c13c402ce13c6f063b83e085f097a878e33163d6146cece277936531b", "input":"0x01", "nonce":"0x05", "r":"0x55fa77ee62e6c42e83b4f868c1e41643e45fd6f02a381a663318884751cb690a", "s":"0x7bd63c407cea7d619d598fb5766980ab8497b1b11c26d8bc59a132af96317793", "to":"0x", "transactionIndex":"0x00", "v":"0x1b", "value":"0x05"}]}})
+        ~s( {"id":71, "jsonrpc":"2.0", "result":{"extraData":"", "receiptsRoot":"0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421", "stateRoot":"0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421", "transactionsRoot":"0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421", "uncles":[], "difficulty":"0x1", "gasLimit":"0x0", "gasUsed":"0x0", "hash":"0x5", "logsBloom":"0x0", "miner":"0x10", "nonce":"0x0", "number":"0x1", "parentHash":"0x10", "sha3Uncles":"0x10", "size":"0x28c", "timestamp":"0x1", "totalDifficulty":"0x1", "transactions":[{"from":"0x619f56e8bed07fe196c0dbc41b52e2bc64817b3a", "hash":"0x71024c28d1404f5d5fe3458b71b02d799f6d6aba29e285857732c0d06ebf3b08", "r":"0x55fa77ee62e6c42e83b4f868c1e41643e45fd6f02a381a663318884751cb690a", "s":"0x7bd63c407cea7d619d598fb5766980ab8497b1b11c26d8bc59a132af96317793", "v":"0x1b", "blockHash":"0x5", "blockNumber":"0x1", "gas":"0x7", "gasPrice":"0x6", "input":"0x1", "nonce":"0x5", "to":"", "transactionIndex":"0x0", "value":"0x5"}, {"from":"0x619f56e8bed07fe196c0dbc41b52e2bc64817b3a", "hash":"0x71024c28d1404f5d5fe3458b71b02d799f6d6aba29e285857732c0d06ebf3b08", "r":"0x55fa77ee62e6c42e83b4f868c1e41643e45fd6f02a381a663318884751cb690a", "s":"0x7bd63c407cea7d619d598fb5766980ab8497b1b11c26d8bc59a132af96317793", "v":"0x1b", "blockHash":"0x5", "blockNumber":"0x1", "gas":"0x7", "gasPrice":"0x6", "input":"0x1", "nonce":"0x5", "to":"", "transactionIndex":"0x0", "value":"0x5"}]}})
       )
     end
 
@@ -220,7 +220,7 @@ defmodule JSONRPC2.ManaHandlerTest do
       assert_rpc_reply(
         SpecHandler,
         ~s({"jsonrpc": "2.0", "method": "eth_getBlockByHash", "params": ["0x0000000000000000000000000000000000000000000000000000000000000006", false], "id": 71}),
-        ~s({"id":71, "jsonrpc":"2.0", "result":{"difficulty":"0x01", "extraData":"", "gasLimit":"0x00", "gasUsed":"0x00", "logsBloom":"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000", "miner":"0x0000000000000000000000000000000000000010", "nonce":"0x0000000000000000", "number":"0x01", "parentHash":"0x0000000000000000000000000000000000000000000000000000000000000010", "receiptsRoot":"0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421", "sha3Uncles":"0x0000000000000000000000000000000000000000000000000000000000000010", "stateRoot":"0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421", "timestamp":"0x01", "totalDifficulty":"0x01", "transactionsRoot":"0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421", "uncles":[], "hash":"0x0000000000000000000000000000000000000000000000000000000000000006", "size":"0x028c", "transactions":["0x7f71d14c13c402ce13c6f063b83e085f097a878e33163d6146cece277936531b", "0x7f71d14c13c402ce13c6f063b83e085f097a878e33163d6146cece277936531b"]}})
+        ~s({"id":71, "jsonrpc":"2.0", "result":{"extraData":"", "receiptsRoot":"0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421", "stateRoot":"0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421", "transactions":["0x71024c28d1404f5d5fe3458b71b02d799f6d6aba29e285857732c0d06ebf3b08", "0x71024c28d1404f5d5fe3458b71b02d799f6d6aba29e285857732c0d06ebf3b08"], "transactionsRoot":"0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421", "uncles":[], "difficulty":"0x1", "gasLimit":"0x0", "gasUsed":"0x0", "hash":"0x6", "logsBloom":"0x0", "miner":"0x10", "nonce":"0x0", "number":"0x1", "parentHash":"0x10", "sha3Uncles":"0x10", "size":"0x28c", "timestamp":"0x1", "totalDifficulty":"0x1"}})
       )
     end
   end
@@ -234,7 +234,7 @@ defmodule JSONRPC2.ManaHandlerTest do
       assert_rpc_reply(
         SpecHandler,
         ~s({"jsonrpc": "2.0", "method": "eth_getTransactionByBlockHashAndIndex", "params": ["0x0000000000000000000000000000000000000000000000000000000000000003", "0x00"], "id": 71}),
-        ~s({"id":71, "jsonrpc":"2.0", "result":{"hash":"0x7f71d14c13c402ce13c6f063b83e085f097a878e33163d6146cece277936531b", "nonce":"0x05", "blockHash":"0x0000000000000000000000000000000000000000000000000000000000000003", "blockNumber":"0x01", "from":"0x619f56e8bed07fe196c0dbc41b52e2bc64817b3a", "gas":"0x07", "gasPrice":"0x06", "input":"0x01", "r":"0x55fa77ee62e6c42e83b4f868c1e41643e45fd6f02a381a663318884751cb690a", "s":"0x7bd63c407cea7d619d598fb5766980ab8497b1b11c26d8bc59a132af96317793", "to":"0x", "transactionIndex":"0x00", "v":"0x1b", "value":"0x05"}})
+        ~s({"id":71, "jsonrpc":"2.0", "result":{"from":"0x619f56e8bed07fe196c0dbc41b52e2bc64817b3a", "hash":"0x71024c28d1404f5d5fe3458b71b02d799f6d6aba29e285857732c0d06ebf3b08", "r":"0x55fa77ee62e6c42e83b4f868c1e41643e45fd6f02a381a663318884751cb690a", "s":"0x7bd63c407cea7d619d598fb5766980ab8497b1b11c26d8bc59a132af96317793", "v":"0x1b", "blockHash":"0x3", "blockNumber":"0x1", "gas":"0x7", "gasPrice":"0x6", "input":"0x1", "nonce":"0x5", "to":"", "transactionIndex":"0x0", "value":"0x5"}})
       )
     end
   end
@@ -255,7 +255,7 @@ defmodule JSONRPC2.ManaHandlerTest do
       assert_rpc_reply(
         SpecHandler,
         ~s({"jsonrpc": "2.0", "method": "eth_getTransactionByBlockNumberAndIndex", "params": ["0x63", "0x00"], "id": 71}),
-        ~s({"id":71, "jsonrpc":"2.0", "result":{"hash":"0x7f71d14c13c402ce13c6f063b83e085f097a878e33163d6146cece277936531b", "nonce":"0x05", "blockHash":"0x0000000000000000000000000000000000000000000000000000000000000003", "blockNumber":"0x63", "from":"0x619f56e8bed07fe196c0dbc41b52e2bc64817b3a", "gas":"0x07", "gasPrice":"0x06", "input":"0x01", "r":"0x55fa77ee62e6c42e83b4f868c1e41643e45fd6f02a381a663318884751cb690a", "s":"0x7bd63c407cea7d619d598fb5766980ab8497b1b11c26d8bc59a132af96317793", "to":"0x", "transactionIndex":"0x00", "v":"0x1b", "value":"0x05"}})
+        ~s({"id":71, "jsonrpc":"2.0", "result":{"hash":"0x71024c28d1404f5d5fe3458b71b02d799f6d6aba29e285857732c0d06ebf3b08", "nonce":"0x5", "blockHash":"0x3", "blockNumber":"0x63", "from":"0x619f56e8bed07fe196c0dbc41b52e2bc64817b3a", "gas":"0x7", "gasPrice":"0x6", "input":"0x1", "r":"0x55fa77ee62e6c42e83b4f868c1e41643e45fd6f02a381a663318884751cb690a", "s":"0x7bd63c407cea7d619d598fb5766980ab8497b1b11c26d8bc59a132af96317793", "to":"", "transactionIndex":"0x0", "v":"0x1b", "value":"0x5"}})
       )
     end
   end
@@ -443,94 +443,6 @@ defmodule JSONRPC2.ManaHandlerTest do
         SpecHandler,
         ~s({"jsonrpc": "2.0", "method": "eth_getCode", "params": ["0x0000000000000000000000000000000000000006", "latest"], "id": 71}),
         ~s({"id":71, "jsonrpc":"2.0", "result":"0x01"})
-      )
-    end
-  end
-
-  describe "eth_getBalance" do
-    test "fetches balance of an existing account" do
-      trie = BridgeSyncMock.get_trie()
-
-      address = <<6::160>>
-
-      block =
-        TestFactory.build(:block,
-          block_hash: <<0x119::256>>,
-          header: TestFactory.build(:header, number: 7007)
-        )
-
-      account = %Account{
-        nonce: 5,
-        balance: 10,
-        storage_root: Account.empty_trie(),
-        code_hash: Account.empty_keccak()
-      }
-
-      trie_with_account =
-        trie
-        |> TrieStorage.set_root_hash(block.header.state_root)
-        |> Account.put_account(address, account)
-
-      updated_block = %{
-        block
-        | header: %{block.header | state_root: TrieStorage.root_hash(trie_with_account)}
-      }
-
-      :ok = BridgeSyncMock.put_block(updated_block)
-      :ok = BridgeSyncMock.set_highest_block_number(updated_block.header.number)
-      :ok = BridgeSyncMock.set_trie(trie_with_account)
-
-      assert_rpc_reply(
-        SpecHandler,
-        ~s({"jsonrpc": "2.0", "method": "eth_getBalance", "params": ["0x0000000000000000000000000000000000000006", "latest"], "id": 71}),
-        ~s({"id":71, "jsonrpc":"2.0", "result":"0x0a"})
-      )
-    end
-
-    test "fetches balance of a nonexisting account" do
-      assert_rpc_reply(
-        SpecHandler,
-        ~s({"jsonrpc": "2.0", "method": "eth_getBalance", "params": ["0x0000000000000000000000000000000000000011", "latest"], "id": 71}),
-        ~s({"id":71, "jsonrpc":"2.0", "result":null})
-      )
-    end
-  end
-
-  describe "eth_getTransactionByHash" do
-    test "fetches transaction by hash" do
-      transaction = TestFactory.build(:transaction)
-
-      block = TestFactory.build(:block, block_hash: <<0x1AA1::256>>, transactions: [transaction])
-
-      :ok = BridgeSyncMock.put_block(block)
-
-      assert_rpc_reply(
-        SpecHandler,
-        ~s({"jsonrpc": "2.0", "method": "eth_getTransactionByHash", "params": ["0x7f71d14c13c402ce13c6f063b83e085f097a878e33163d6146cece277936531b"], "id": 71}),
-        ~s({"id":71, "jsonrpc":"2.0", "result":{"hash":"0x7f71d14c13c402ce13c6f063b83e085f097a878e33163d6146cece277936531b", "nonce":"0x05", "blockHash":"0x0000000000000000000000000000000000000000000000000000000000001aa1", "blockNumber":"0x01", "from":"0x619f56e8bed07fe196c0dbc41b52e2bc64817b3a", "gas":"0x07", "gasPrice":"0x06", "input":"0x01", "r":"0x55fa77ee62e6c42e83b4f868c1e41643e45fd6f02a381a663318884751cb690a", "s":"0x7bd63c407cea7d619d598fb5766980ab8497b1b11c26d8bc59a132af96317793", "to":"0x", "transactionIndex":"0x00", "v":"0x1b", "value":"0x05"}})
-      )
-    end
-  end
-
-  describe "eth_getTransactionReceipt" do
-    test "fetch receipt by transaction hash" do
-      transaction = TestFactory.build(:transaction)
-
-      receipt = TestFactory.build(:receipt)
-
-      block =
-        TestFactory.build(:block,
-          block_hash: <<0x1AAA::256>>,
-          transactions: [transaction],
-          receipts: [receipt]
-        )
-
-      :ok = BridgeSyncMock.put_block(block)
-
-      assert_rpc_reply(
-        SpecHandler,
-        ~s({"jsonrpc": "2.0", "method": "eth_getTransactionReceipt", "params": ["0x7f71d14c13c402ce13c6f063b83e085f097a878e33163d6146cece277936531b"], "id": 71}),
-        ~s({"id":71, "jsonrpc":"2.0", "result":{"blockNumber":"0x01", "from":"0x619f56e8bed07fe196c0dbc41b52e2bc64817b3a", "to":"0x", "transactionIndex":"0x00", "blockHash":"0x0000000000000000000000000000000000000000000000000000000000001aaa", "contractAddress":"0x2e07fda729826779d050aa629355211735ce350d", "cumulativeGasUsed":"0x03e8", "gasUsed":"0x03e8", "logs":[], "logsBloom":"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000", "status":"0x01", "transactionHash":"0x7f71d14c13c402ce13c6f063b83e085f097a878e33163d6146cece277936531b"}})
       )
     end
   end
