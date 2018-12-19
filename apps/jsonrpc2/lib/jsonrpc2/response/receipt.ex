@@ -23,28 +23,86 @@ defmodule JSONRPC2.Response.Receipt do
     :status
   ]
 
-  @type t :: %__MODULE__{
-          transactionHash: binary(),
-          transactionIndex: binary(),
-          blockHash: binary(),
-          blockNumber: binary(),
-          from: binary(),
-          to: binary(),
-          cumulativeGasUsed: binary(),
-          gasUsed: binary(),
-          contractAddress: binary(),
-          logs: [],
-          logsBloom: binary(),
-          root: binary(),
-          status: binary()
-        }
+  defmodule PreByzantiumReceipt do
+    @derive Jason.Encoder
+    defstruct [
+      :transactionHash,
+      :transactionIndex,
+      :blockHash,
+      :blockNumber,
+      :from,
+      :to,
+      :cumulativeGasUsed,
+      :gasUsed,
+      :contractAddress,
+      :logs,
+      :logsBloom,
+      :root
+    ]
+
+    @type t :: %__MODULE__{
+            transactionHash: binary(),
+            transactionIndex: binary(),
+            blockHash: binary(),
+            blockNumber: binary(),
+            from: binary(),
+            to: binary(),
+            cumulativeGasUsed: binary(),
+            gasUsed: binary(),
+            contractAddress: binary(),
+            logs: [],
+            logsBloom: binary(),
+            root: binary()
+          }
+
+    def new do
+      %__MODULE__{}
+    end
+  end
+
+  defmodule ByzantiumReceipt do
+    @derive Jason.Encoder
+    defstruct [
+      :transactionHash,
+      :transactionIndex,
+      :blockHash,
+      :blockNumber,
+      :from,
+      :to,
+      :cumulativeGasUsed,
+      :gasUsed,
+      :contractAddress,
+      :logs,
+      :logsBloom,
+      :status
+    ]
+
+    @type t :: %__MODULE__{
+            transactionHash: binary(),
+            transactionIndex: binary(),
+            blockHash: binary(),
+            blockNumber: binary(),
+            from: binary(),
+            to: binary(),
+            cumulativeGasUsed: binary(),
+            gasUsed: binary(),
+            contractAddress: binary(),
+            logs: [],
+            logsBloom: binary(),
+            status: binary()
+          }
+
+    def new do
+      %__MODULE__{}
+    end
+  end
 
   def new(receipt, transaction, block, network_id \\ nil) do
     index = transaction_index(transaction, block)
     sender = from_address(transaction, network_id)
     transaction_hash = transaction_hash(transaction)
 
-    %__MODULE__{
+    params = %{
       transactionHash: transaction_hash,
       transactionIndex: encode_hex(index),
       blockHash: encode_hex(block.block_hash),
@@ -55,9 +113,18 @@ defmodule JSONRPC2.Response.Receipt do
       gasUsed: calculate_gas_used(block, index, receipt),
       contractAddress: new_contract_address(transaction, sender),
       logs: format_logs(receipt, index, transaction_hash, block),
-      logsBloom: encode_hex(receipt.bloom_filter),
-      status: encode_hex(receipt.state)
+      logsBloom: encode_hex(receipt.bloom_filter)
     }
+
+    if is_integer(receipt.state) do
+      params = Map.put(params, :status, encode_hex(receipt.state))
+
+      struct(JSONRPC2.Response.Receipt.ByzantiumReceipt, params)
+    else
+      params = Map.put(params, :root, encode_hex(receipt.state))
+
+      struct(JSONRPC2.Response.Receipt.PreByzantiumReceipt, params)
+    end
   end
 
   defp transaction_hash(transaction) do
