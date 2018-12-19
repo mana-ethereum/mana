@@ -13,8 +13,8 @@ defmodule Blockchain.Block do
   alias Blockchain.Account.Repo
   alias Blockchain.Block.HolisticValidity
   alias Blockchain.Transaction.Receipt
-  alias Blockchain.Transaction.Signature
   alias Blockchain.Transaction.Receipt.Bloom
+  alias Blockchain.Transaction.Signature
   alias ExthCrypto.Hash.Keccak
   alias MerklePatriciaTree.{DB, Trie}
   alias MerklePatriciaTree.TrieStorage

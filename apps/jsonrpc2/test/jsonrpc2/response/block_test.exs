@@ -50,7 +50,6 @@ defmodule JSONRPC2.Response.BlockTest do
                  from: "0x619f56e8bed07fe196c0dbc41b52e2bc64817b3a",
                  gas: "0x07",
                  gasPrice: "0x06",
-                 hash: "0x71024c28d1404f5d5fe3458b71b02d799f6d6aba29e285857732c0d06ebf3b08",
                  input: "0x01",
                  nonce: "0x05",
                  r: "0x55fa77ee62e6c42e83b4f868c1e41643e45fd6f02a381a663318884751cb690a",
@@ -58,7 +57,8 @@ defmodule JSONRPC2.Response.BlockTest do
                  to: "0x",
                  transactionIndex: "0x00",
                  v: "0x1b",
-                 value: "0x05"
+                 value: "0x05",
+                 hash: "0x7f71d14c13c402ce13c6f063b83e085f097a878e33163d6146cece277936531b"
                },
                %JSONRPC2.Response.Transaction{
                  blockHash: "0x0000000000000000000000000000000000000000000000000000000000000010",
@@ -66,7 +66,6 @@ defmodule JSONRPC2.Response.BlockTest do
                  from: "0x619f56e8bed07fe196c0dbc41b52e2bc64817b3a",
                  gas: "0x07",
                  gasPrice: "0x06",
-                 hash: "0x71024c28d1404f5d5fe3458b71b02d799f6d6aba29e285857732c0d06ebf3b08",
                  input: "0x01",
                  nonce: "0x05",
                  r: "0x55fa77ee62e6c42e83b4f868c1e41643e45fd6f02a381a663318884751cb690a",
@@ -74,7 +73,8 @@ defmodule JSONRPC2.Response.BlockTest do
                  to: "0x",
                  transactionIndex: "0x00",
                  v: "0x1b",
-                 value: "0x05"
+                 value: "0x05",
+                 hash: "0x7f71d14c13c402ce13c6f063b83e085f097a878e33163d6146cece277936531b"
                }
              ]
     end
@@ -88,8 +88,8 @@ defmodule JSONRPC2.Response.BlockTest do
       response_block = Block.new(internal_block, false)
 
       assert response_block.transactions == [
-               "0x71024c28d1404f5d5fe3458b71b02d799f6d6aba29e285857732c0d06ebf3b08",
-               "0x71024c28d1404f5d5fe3458b71b02d799f6d6aba29e285857732c0d06ebf3b08"
+               "0x7f71d14c13c402ce13c6f063b83e085f097a878e33163d6146cece277936531b",
+               "0x7f71d14c13c402ce13c6f063b83e085f097a878e33163d6146cece277936531b"
              ]
     end
 
