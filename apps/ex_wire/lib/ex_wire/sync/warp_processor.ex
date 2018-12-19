@@ -275,7 +275,7 @@ defmodule ExWire.Sync.WarpProcessor do
           non_neg_integer(),
           list(block_chunk_request()),
           list(state_chunk_request())
-        ) :: {:done, list(block_chunk_request()), list(state_chunk_request())}
+        ) :: {:done, list(block_chunk_request()), list(state_chunk_request()), Trie.t()}
   # When we have a queued up block chunk...
   defp spawn_new_tasks(
          sup,
