@@ -221,7 +221,7 @@ defmodule JSONRPC2.Bridge.Sync do
     end
   end
 
-  def get_uncle_by_block_index_and_index(block_index, index) do
+  def get_uncle_by_block_number_and_index(block_number, index) do
     trie = get_last_sync_state().trie
 
     case Block.get_block(block_index, trie) do
