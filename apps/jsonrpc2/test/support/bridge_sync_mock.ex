@@ -98,7 +98,11 @@ defmodule JSONRPC2.BridgeSyncMock do
   end
 
   def get_uncle_by_block_hash_and_index(block_hash, index) do
-    GenServer.call(__MODULE__, {:get_uncle_by_block_hash_and_index, {block_hash, index}})
+    GenServer.call(__MODULE__, {:get_uncle_by_block_and_index, {block_hash, index}})
+  end
+
+  def get_uncle_by_block_number_and_index(block_number, index) do
+    GenServer.call(__MODULE__, {:get_uncle_by_block_and_index, {block_number, index}})
   end
 
   def get_transaction_by_hash(transaction_hash) do
@@ -289,12 +293,12 @@ defmodule JSONRPC2.BridgeSyncMock do
   end
 
   def handle_call(
-        {:get_uncle_by_block_hash_and_index, {block_hash, index}},
+        {:get_uncle_by_block_and_index, {block_hash_or_index, index}},
         _,
         state = %{trie: trie}
       ) do
     result =
-      case Block.get_block(block_hash, trie) do
+      case Block.get_block(block_hash_or_index, trie) do
         {:ok, block} ->
           case Enum.at(block.ommers, index) do
             nil ->

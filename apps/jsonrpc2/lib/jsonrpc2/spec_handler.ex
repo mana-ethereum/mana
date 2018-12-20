@@ -156,7 +156,13 @@ defmodule JSONRPC2.SpecHandler do
     @sync.get_uncle_by_block_hash_and_index(block_hash, index)
   end
 
-  def handle_request("eth_getUncleByBlockNumberAndIndex", _), do: {:error, :not_supported}
+  def handle_request("eth_getUncleByBlockNumberAndIndex", [hex_block_number, hex_index]) do
+    block_number = Exth.decode_unsigned_from_hex(hex_block_number)
+    index = Exth.decode_unsigned_from_hex(hex_index)
+
+    @sync.get_uncle_by_block_number_and_index(block_number, index)
+  end
+
   # eth_getCompilers is deprecated
   def handle_request("eth_getCompilers", _), do: {:error, :not_supported}
   # eth_compileLLL is deprecated
