@@ -535,6 +535,32 @@ defmodule JSONRPC2.ManaHandlerTest do
     end
   end
 
+  describe "eth_getUncleByBlockHashAndIndex" do
+    test "fetches uncle by block hash and index" do
+      uncles = [
+        TestFactory.build(:header),
+        TestFactory.build(:header),
+        TestFactory.build(:header),
+        TestFactory.build(:header)
+      ]
+
+      block =
+        TestFactory.build(:block,
+          block_hash: <<0x113::256>>,
+          header: TestFactory.build(:header, number: 1110),
+          ommers: uncles
+        )
+
+      :ok = BridgeSyncMock.put_block(block)
+
+      assert_rpc_reply(
+        SpecHandler,
+        ~s({"jsonrpc": "2.0", "method": "eth_getUncleByBlockHashAndIndex", "params": ["0x0000000000000000000000000000000000000000000000000000000000000113", "0x03"], "id": 71}),
+        ~s({"id":71, "jsonrpc":"2.0", "result":{"difficulty":"0x01", "extraData":"", "gasLimit":"0x00", "gasUsed":"0x00", "hash":"0xa33912876669bdef5f8e9bcd54b32864c2cd6af57370f06dd17472942c5728a5", "logsBloom":"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000", "miner":"0x0000000000000000000000000000000000000010", "nonce":"0x0000000000000000", "number":"0x01", "parentHash":"0x0000000000000000000000000000000000000000000000000000000000000010", "receiptsRoot":"0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421", "sha3Uncles":"0x0000000000000000000000000000000000000000000000000000000000000010", "size":"0x01f5", "stateRoot":"0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421", "timestamp":"0x01", "totalDifficulty":"0x01", "transactions":[], "transactionsRoot":"0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421", "uncles":[]}})
+      )
+    end
+  end
+
   defp assert_rpc_reply(handler, call, expected_reply) do
     assert {:reply, reply} = handler.handle(call)
 

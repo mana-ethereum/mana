@@ -97,6 +97,10 @@ defmodule JSONRPC2.BridgeSyncMock do
     GenServer.call(__MODULE__, {:get_uncle_count_by_block_number, block_number})
   end
 
+  def get_uncle_by_block_hash_and_index(block_hash, index) do
+    GenServer.call(__MODULE__, {:get_uncle_by_block_hash_and_index, {block_hash, index}})
+  end
+
   def get_transaction_by_hash(transaction_hash) do
     GenServer.call(__MODULE__, {:get_transaction_by_hash, transaction_hash})
   end
@@ -276,6 +280,33 @@ defmodule JSONRPC2.BridgeSyncMock do
           block.ommers
           |> Enum.count()
           |> Exth.encode_unsigned_hex()
+
+        _ ->
+          nil
+      end
+
+    {:reply, result, state}
+  end
+
+  def handle_call(
+        {:get_uncle_by_block_hash_and_index, {block_hash, index}},
+        _,
+        state = %{trie: trie}
+      ) do
+    result =
+      case Block.get_block(block_hash, trie) do
+        {:ok, block} ->
+          case Enum.at(block.ommers, index) do
+            nil ->
+              nil
+
+            ommer_header ->
+              uncle_block = %Block{header: ommer_header, transactions: [], ommers: []}
+
+              uncle_block
+              |> Block.add_metadata(trie)
+              |> ResponseBlock.new()
+          end
 
         _ ->
           nil

@@ -149,7 +149,13 @@ defmodule JSONRPC2.SpecHandler do
     @sync.get_transaction_receipt(transaction_hash)
   end
 
-  def handle_request("eth_getUncleByBlockHashAndIndex", _), do: {:error, :not_supported}
+  def handle_request("eth_getUncleByBlockHashAndIndex", [hex_block_hash, hex_index]) do
+    block_hash = Exth.decode_hex(hex_block_hash)
+    index = Exth.decode_unsigned_from_hex(hex_index)
+
+    @sync.get_uncle_by_block_hash_and_index(block_hash, index)
+  end
+
   def handle_request("eth_getUncleByBlockNumberAndIndex", _), do: {:error, :not_supported}
   # eth_getCompilers is deprecated
   def handle_request("eth_getCompilers", _), do: {:error, :not_supported}
