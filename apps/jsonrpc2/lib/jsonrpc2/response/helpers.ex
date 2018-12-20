@@ -6,17 +6,11 @@ defmodule JSONRPC2.Response.Helpers do
   def encode_quantity(binary) when is_binary(binary) do
     hex_binary = Base.encode16(binary, case: :lower)
 
-    case hex_binary do
-      "" ->
-        ""
+    result = String.replace_leading(els, "0", "")
 
-      els ->
-        result = String.replace_leading(els, "0", "")
+    result = if result == "", do: "0", else: result
 
-        result = if result == "", do: "0", else: result
-
-        "0x#{result}"
-    end
+    "0x#{result}"
   end
 
   def encode_quantity(value) when is_integer(value) do
