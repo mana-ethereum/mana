@@ -198,4 +198,50 @@ defmodule JSONRPC2.Bridge.Sync do
       nil -> nil
     end
   end
+
+  def get_uncle_by_block_hash_and_index(block_hash, index) do
+    trie = get_last_sync_state().trie
+
+    result =
+      case Block.get_block(block_hash, trie) do
+        {:ok, block} ->
+          case Enum.at(block.ommers, index) do
+            nil ->
+              nil
+
+            ommer_header ->
+              uncle_block = %Block{header: ommer_header, transactions: [], ommers: []}
+
+              uncle_block
+              |> Block.add_metadata(trie)
+              |> ResponseBlock.new()
+          end
+
+        _ ->
+          nil
+      end
+  end
+
+  def get_uncle_by_block_index_and_index(block_index, index) do
+    trie = get_last_sync_state().trie
+
+    result =
+      case Block.get_block(block_index, trie) do
+        {:ok, block} ->
+          case Enum.at(block.ommers, index) do
+            nil ->
+              nil
+
+            ommer_header ->
+              uncle_block = %Block{header: ommer_header, transactions: [], ommers: []}
+
+              uncle_block
+              |> Block.add_metadata(trie)
+              |> ResponseBlock.new()
+          end
+
+        _ ->
+          nil
+      end
+  end
 end
