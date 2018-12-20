@@ -57,23 +57,23 @@ defmodule JSONRPC2.Response.Block do
   @spec new(Block.t(), boolean()) :: t()
   def new(internal_block, include_full_transactions \\ false) do
     %__MODULE__{
-      number: encode_hex(internal_block.header.number),
-      hash: encode_hex(internal_block.block_hash),
-      parentHash: encode_hex(internal_block.header.parent_hash),
-      nonce: encode_hex(internal_block.header.nonce),
-      sha3Uncles: encode_hex(internal_block.header.ommers_hash),
-      logsBloom: encode_hex(internal_block.header.logs_bloom),
-      transactionsRoot: encode_hex(internal_block.header.transactions_root),
-      stateRoot: encode_hex(internal_block.header.state_root),
-      receiptsRoot: encode_hex(internal_block.header.receipts_root),
-      miner: encode_hex(internal_block.header.beneficiary),
-      difficulty: encode_hex(internal_block.header.difficulty),
-      totalDifficulty: encode_hex(internal_block.header.total_difficulty || 0),
-      extraData: internal_block.header.extra_data,
-      size: encode_hex(internal_block.header.size || block_size(internal_block)),
-      gasLimit: encode_hex(internal_block.header.gas_limit),
-      gasUsed: encode_hex(internal_block.header.gas_used),
-      timestamp: encode_hex(internal_block.header.timestamp),
+      number: encode_quantity(internal_block.header.number),
+      hash: encode_unformatted_data(internal_block.block_hash),
+      parentHash: encode_unformatted_data(internal_block.header.parent_hash),
+      nonce: encode_unformatted_data(internal_block.header.nonce),
+      sha3Uncles: encode_unformatted_data(internal_block.header.ommers_hash),
+      logsBloom: encode_unformatted_data(internal_block.header.logs_bloom),
+      transactionsRoot: encode_unformatted_data(internal_block.header.transactions_root),
+      stateRoot: encode_unformatted_data(internal_block.header.state_root),
+      receiptsRoot: encode_unformatted_data(internal_block.header.receipts_root),
+      miner: encode_unformatted_data(internal_block.header.beneficiary),
+      difficulty: encode_quantity(internal_block.header.difficulty),
+      totalDifficulty: encode_quantity(internal_block.header.total_difficulty || 0),
+      extraData: encode_unformatted_data(internal_block.header.extra_data),
+      size: encode_quantity(internal_block.header.size || block_size(internal_block)),
+      gasLimit: encode_quantity(internal_block.header.gas_limit),
+      gasUsed: encode_quantity(internal_block.header.gas_used),
+      timestamp: encode_quantity(internal_block.header.timestamp),
       transactions:
         format_transactions(
           internal_block.transactions,
@@ -104,12 +104,16 @@ defmodule JSONRPC2.Response.Block do
     Enum.map(transactions, fn transaction ->
       transaction
       |> Signature.transaction_hash()
-      |> encode_hex()
+      |> encode_unformatted_data()
     end)
   end
 
   @spec format_uncles([Header.t()]) :: [binary()]
   def format_uncles(uncles) do
-    Enum.map(uncles, &Header.hash/1)
+    Enum.map(uncles, fn uncle ->
+      uncle
+      |> Header.hash()
+      |> encode_unformatted_data()
+    end)
   end
 end

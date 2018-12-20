@@ -1,6 +1,9 @@
 defmodule JSONRPC2.Response.Helpers do
-  @spec encode_hex(binary() | integer() | nil) :: binary()
-  def encode_hex(binary) when is_binary(binary) do
+  @moduledoc """
+  Encodes an usigned integer as a binary as described in Ethereum JSON RPC spec.
+  """
+  @spec encode_quantity(binary() | integer() | nil) :: binary() | nil
+  def encode_quantity(binary) when is_binary(binary) do
     hex_binary = Base.encode16(binary, case: :lower)
 
     case hex_binary do
@@ -16,16 +19,22 @@ defmodule JSONRPC2.Response.Helpers do
     end
   end
 
-  def encode_hex(value) when is_integer(value) do
+  def encode_quantity(value) when is_integer(value) do
     value
     |> :binary.encode_unsigned()
-    |> encode_hex()
+    |> encode_quantity()
   end
 
-  def encode_hex(nil), do: nil
+  def encode_quantity(value) when is_nil(value) do
+    nil
+  end
 
-  def encode_hex(_value) do
-    raise ArgumentError,
-      message: "JSONRPC2.Response.Helpers.encode_hex/1 can only encode binary and integer values"
+  @spec encode_unformatted_data(binary()) :: binary() | nil
+  def encode_unformatted_data(binary) when is_binary(binary) do
+    Exth.encode_hex(binary)
+  end
+
+  def encode_unformatted_data(binary) when is_nil(binary) do
+    nil
   end
 end

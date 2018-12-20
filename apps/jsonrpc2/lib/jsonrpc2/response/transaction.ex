@@ -42,20 +42,20 @@ defmodule JSONRPC2.Response.Transaction do
   @spec new(Blockchain.Transaction.t(), Blockchain.Block.t(), integer() | nil) :: t()
   def new(internal_transaction, internal_block, network_id \\ nil) do
     %__MODULE__{
-      blockHash: encode_hex(internal_block.block_hash),
-      blockNumber: encode_hex(internal_block.header.number),
+      blockHash: encode_unformatted_data(internal_block.block_hash),
+      blockNumber: encode_quantity(internal_block.header.number),
       from: from_address(internal_transaction, network_id),
-      gas: encode_hex(internal_transaction.gas_limit),
-      gasPrice: encode_hex(internal_transaction.gas_price),
+      gas: encode_quantity(internal_transaction.gas_limit),
+      gasPrice: encode_quantity(internal_transaction.gas_price),
       hash: hash(internal_transaction),
-      input: internal_transaction |> Transaction.input_data() |> encode_hex,
-      nonce: encode_hex(internal_transaction.nonce),
-      to: encode_hex(internal_transaction.to),
+      input: internal_transaction |> Transaction.input_data() |> encode_unformatted_data,
+      nonce: encode_quantity(internal_transaction.nonce),
+      to: encode_unformatted_data(internal_transaction.to),
       transactionIndex: transaction_index(internal_transaction, internal_block),
-      value: encode_hex(internal_transaction.value),
-      v: encode_hex(internal_transaction.v),
-      r: encode_hex(internal_transaction.r),
-      s: encode_hex(internal_transaction.s)
+      value: encode_quantity(internal_transaction.value),
+      v: encode_quantity(internal_transaction.v),
+      r: encode_quantity(internal_transaction.r),
+      s: encode_quantity(internal_transaction.s)
     }
   end
 
@@ -65,18 +65,18 @@ defmodule JSONRPC2.Response.Transaction do
         block_transaction == internal_transaction
       end)
 
-    encode_hex(index)
+    encode_quantity(index)
   end
 
   defp hash(internal_transaction) do
     internal_transaction
     |> Signature.transaction_hash()
-    |> encode_hex()
+    |> encode_unformatted_data()
   end
 
   defp from_address(internal_transaction, network_id) do
     {:ok, sender} = Signature.sender(internal_transaction, network_id)
 
-    encode_hex(sender)
+    encode_unformatted_data(sender)
   end
 end

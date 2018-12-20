@@ -105,24 +105,24 @@ defmodule JSONRPC2.Response.Receipt do
 
     params = %{
       transactionHash: transaction_hash,
-      transactionIndex: encode_hex(index),
-      blockHash: encode_hex(block.block_hash),
-      blockNumber: encode_hex(block.header.number),
-      from: encode_hex(sender),
-      to: encode_hex(transaction.to),
-      cumulativeGasUsed: encode_hex(receipt.cumulative_gas),
+      transactionIndex: encode_quantity(index),
+      blockHash: encode_unformatted_data(block.block_hash),
+      blockNumber: encode_quantity(block.header.number),
+      from: encode_unformatted_data(sender),
+      to: encode_unformatted_data(transaction.to),
+      cumulativeGasUsed: encode_quantity(receipt.cumulative_gas),
       gasUsed: calculate_gas_used(block, index, receipt),
       contractAddress: new_contract_address(transaction, sender),
       logs: format_logs(receipt, index, transaction_hash, block),
-      logsBloom: encode_hex(receipt.bloom_filter)
+      logsBloom: encode_unformatted_data(receipt.bloom_filter)
     }
 
     if is_integer(receipt.state) do
-      params = Map.put(params, :status, encode_hex(receipt.state))
+      params = Map.put(params, :status, encode_quantity(receipt.state))
 
       struct(JSONRPC2.Response.Receipt.ByzantiumReceipt, params)
     else
-      params = Map.put(params, :root, encode_hex(receipt.state))
+      params = Map.put(params, :root, encode_unformatted_data(receipt.state))
 
       struct(JSONRPC2.Response.Receipt.PreByzantiumReceipt, params)
     end
@@ -131,7 +131,7 @@ defmodule JSONRPC2.Response.Receipt do
   defp transaction_hash(transaction) do
     transaction
     |> Signature.transaction_hash()
-    |> encode_hex()
+    |> encode_unformatted_data()
   end
 
   defp transaction_index(transaction, block) do
@@ -160,7 +160,7 @@ defmodule JSONRPC2.Response.Receipt do
           receipt.cumulative_gas - previous_receipt.cumulative_gas
       end
 
-    encode_hex(result)
+    encode_quantity(result)
   end
 
   defp new_contract_address(transaction, sender) do
@@ -169,7 +169,7 @@ defmodule JSONRPC2.Response.Receipt do
         Address.new(sender, transaction.nonce)
       end
 
-    encode_hex(result)
+    encode_unformatted_data(result)
   end
 
   defp format_logs(receipt, transaction_index, transaction_hash, block) do
@@ -184,14 +184,14 @@ defmodule JSONRPC2.Response.Receipt do
       |> Enum.reduce({prev_logs_count, []}, fn log, {current_log_index, acc} ->
         current_log = %{
           removed: false,
-          logIndex: encode_hex(current_log_index),
-          transactionIndex: encode_hex(transaction_index),
-          transactionHash: encode_hex(transaction_hash),
-          blockHash: encode_hex(block.block_hash),
-          blockNumber: encode_hex(block.header.number),
-          address: encode_hex(log.address),
-          data: encode_hex(log.data),
-          topics: Enum.map(log.topics, fn topic -> encode_hex(topic) end)
+          logIndex: encode_quantity(current_log_index),
+          transactionIndex: encode_quantity(transaction_index),
+          transactionHash: encode_unformatted_data(transaction_hash),
+          blockHash: encode_unformatted_data(block.block_hash),
+          blockNumber: encode_quantity(block.header.number),
+          address: encode_unformatted_data(log.address),
+          data: encode_unformatted_data(log.data),
+          topics: Enum.map(log.topics, fn topic -> encode_unformatted_data(topic) end)
         }
 
         {current_log_index + 1, acc ++ [current_log]}
