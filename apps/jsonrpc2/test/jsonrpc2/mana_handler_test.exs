@@ -447,6 +447,94 @@ defmodule JSONRPC2.ManaHandlerTest do
     end
   end
 
+  describe "eth_getBalance" do
+    test "fetches balance of an existing account" do
+      trie = BridgeSyncMock.get_trie()
+
+      address = <<6::160>>
+
+      block =
+        TestFactory.build(:block,
+          block_hash: <<0x119::256>>,
+          header: TestFactory.build(:header, number: 7007)
+        )
+
+      account = %Account{
+        nonce: 5,
+        balance: 10,
+        storage_root: Account.empty_trie(),
+        code_hash: Account.empty_keccak()
+      }
+
+      trie_with_account =
+        trie
+        |> TrieStorage.set_root_hash(block.header.state_root)
+        |> Account.put_account(address, account)
+
+      updated_block = %{
+        block
+        | header: %{block.header | state_root: TrieStorage.root_hash(trie_with_account)}
+      }
+
+      :ok = BridgeSyncMock.put_block(updated_block)
+      :ok = BridgeSyncMock.set_highest_block_number(updated_block.header.number)
+      :ok = BridgeSyncMock.set_trie(trie_with_account)
+
+      assert_rpc_reply(
+        SpecHandler,
+        ~s({"jsonrpc": "2.0", "method": "eth_getBalance", "params": ["0x0000000000000000000000000000000000000006", "latest"], "id": 71}),
+        ~s({"id":71, "jsonrpc":"2.0", "result":"0x0a"})
+      )
+    end
+
+    test "fetches balance of a nonexisting account" do
+      assert_rpc_reply(
+        SpecHandler,
+        ~s({"jsonrpc": "2.0", "method": "eth_getBalance", "params": ["0x0000000000000000000000000000000000000011", "latest"], "id": 71}),
+        ~s({"id":71, "jsonrpc":"2.0", "result":null})
+      )
+    end
+  end
+
+  describe "eth_getTransactionByHash" do
+    test "fetches transaction by hash" do
+      transaction = TestFactory.build(:transaction)
+
+      block = TestFactory.build(:block, block_hash: <<0x1AA1::256>>, transactions: [transaction])
+
+      :ok = BridgeSyncMock.put_block(block)
+
+      assert_rpc_reply(
+        SpecHandler,
+        ~s({"jsonrpc": "2.0", "method": "eth_getTransactionByHash", "params": ["0x7f71d14c13c402ce13c6f063b83e085f097a878e33163d6146cece277936531b"], "id": 71}),
+        ~s({"id":71, "jsonrpc":"2.0", "result":{"blockHash":"0x0000000000000000000000000000000000000000000000000000000000001aa1", "from":"0x619f56e8bed07fe196c0dbc41b52e2bc64817b3a", "hash":"0x7f71d14c13c402ce13c6f063b83e085f097a878e33163d6146cece277936531b", "input":"0x01", "r":"0x55fa77ee62e6c42e83b4f868c1e41643e45fd6f02a381a663318884751cb690a", "s":"0x7bd63c407cea7d619d598fb5766980ab8497b1b11c26d8bc59a132af96317793", "to":"0x", "v":"0x1b", "blockNumber":"0x1", "gas":"0x7", "gasPrice":"0x6", "nonce":"0x5", "transactionIndex":"0x0", "value":"0x5"}})
+      )
+    end
+  end
+
+  describe "eth_getTransactionReceipt" do
+    test "fetch receipt by transaction hash" do
+      transaction = TestFactory.build(:transaction)
+
+      receipt = TestFactory.build(:receipt)
+
+      block =
+        TestFactory.build(:block,
+          block_hash: <<0x1AAA::256>>,
+          transactions: [transaction],
+          receipts: [receipt]
+        )
+
+      :ok = BridgeSyncMock.put_block(block)
+
+      assert_rpc_reply(
+        SpecHandler,
+        ~s({"jsonrpc": "2.0", "method": "eth_getTransactionReceipt", "params": ["0x7f71d14c13c402ce13c6f063b83e085f097a878e33163d6146cece277936531b"], "id": 71}),
+        ~s({"id":71, "jsonrpc":"2.0", "result":{"blockHash":"0x0000000000000000000000000000000000000000000000000000000000001aaa", "contractAddress":"0x2e07fda729826779d050aa629355211735ce350d", "from":"0x619f56e8bed07fe196c0dbc41b52e2bc64817b3a", "logs":[], "logsBloom":"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000", "to":"0x", "transactionHash":"0x7f71d14c13c402ce13c6f063b83e085f097a878e33163d6146cece277936531b", "blockNumber":"0x1", "cumulativeGasUsed":"0x3e8", "gasUsed":"0x3e8", "status":"0x1", "transactionIndex":"0x0"}})
+      )
+    end
+  end
+
   defp assert_rpc_reply(handler, call, expected_reply) do
     assert {:reply, reply} = handler.handle(call)
 
