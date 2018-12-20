@@ -106,24 +106,17 @@ defmodule ExWire.Sync do
       warp_processor: warp_processor
     }
 
-    next_state =
       if warp do
         if warp_queue.manifest do
-          warp_queue
-          |> dispatch_new_warp_queue_requests()
-          |> save_and_check_warp_complete(state, false)
+          Process.send_after(self(), :resume_warp, @startup_delay)
         else
           Process.send_after(self(), :request_manifest, @startup_delay)
-
-          state
         end
       else
         request_next_block(@startup_delay)
-
-        state
       end
 
-    {:ok, next_state}
+    {:ok, state}
   end
 
   defp request_next_block(timeout \\ 0) do
@@ -167,6 +160,15 @@ defmodule ExWire.Sync do
         state = %{block_queue: block_queue, block_tree: block_tree}
       ) do
     new_state = handle_request_next_block(block_queue, block_tree, state)
+
+    {:noreply, new_state}
+  end
+
+  def handle_info(:resume_warp, state = %{warp_queue: warp_queue}) do
+    new_state =
+      warp_queue
+      |> dispatch_new_warp_queue_requests()
+      |> save_and_check_warp_complete(state, false)
 
     {:noreply, new_state}
   end
