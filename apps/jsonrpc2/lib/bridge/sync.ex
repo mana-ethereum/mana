@@ -224,7 +224,7 @@ defmodule JSONRPC2.Bridge.Sync do
   def get_uncle_by_block_number_and_index(block_number, index) do
     trie = get_last_sync_state().trie
 
-    case Block.get_block(block_index, trie) do
+    case Block.get_block(block_number, trie) do
       {:ok, block} ->
         case Enum.at(block.ommers, index) do
           nil ->
