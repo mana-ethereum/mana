@@ -904,6 +904,30 @@ defmodule Blockchain.Block do
     {updated_block, state}
   end
 
+  @spec add_metadata(t(), TrieStorage.t(), binary() | nil) :: t()
+  def add_metadata(block, trie, predefined_hash \\ nil) do
+    block_rlp_size =
+      block
+      |> serialize
+      |> ExRLP.encode()
+      |> byte_size()
+
+    total_difficulty =
+      case get_block(block.header.parent_hash, trie) do
+        {:ok, parent_block} ->
+          parent_block.header.total_difficulty + block.header.difficulty
+
+        _ ->
+          block.header.difficulty
+      end
+
+    hash = if predefined_hash, do: predefined_hash, else: hash(block)
+
+    updated_block = %{block.header | size: block_rlp_size, total_difficulty: total_difficulty}
+
+    %{block | block_hash: hash, header: updated_block}
+  end
+
   defp add_miner_reward(state, block, base_reward) do
     ommer_reward = round(base_reward * length(block.ommers) / @block_reward_ommer_divisor)
     reward = ommer_reward + base_reward
@@ -934,29 +958,6 @@ defmodule Blockchain.Block do
       nil -> default
       property_value -> property_value
     end
-  end
-
-  defp add_metadata(block, trie, predefined_hash) do
-    block_rlp_size =
-      block
-      |> serialize
-      |> ExRLP.encode()
-      |> byte_size()
-
-    total_difficulty =
-      case get_block(block.header.parent_hash, trie) do
-        {:ok, parent_block} ->
-          parent_block.header.total_difficulty + block.header.difficulty
-
-        _ ->
-          block.header.difficulty
-      end
-
-    hash = if predefined_hash, do: predefined_hash, else: hash(block)
-
-    updated_block = %{block.header | size: block_rlp_size, total_difficulty: total_difficulty}
-
-    %{block | block_hash: hash, header: updated_block}
   end
 
   defp store_transaction_locations_by_hash(trie, block) do
