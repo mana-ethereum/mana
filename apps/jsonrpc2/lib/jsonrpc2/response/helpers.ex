@@ -2,7 +2,7 @@ defmodule JSONRPC2.Response.Helpers do
   @moduledoc """
   Encodes an usigned integer as a binary as described in Ethereum JSON RPC spec.
   """
-  @spec encode_quantity(binary() | non_neg_integer() | nil) :: binary() | nil
+  @spec encode_quantity(nil | binary() | non_neg_integer()) :: nil | <<_::24>>
   def encode_quantity(binary) when is_binary(binary) do
     hex_binary = Base.encode16(binary, case: :lower)
 
