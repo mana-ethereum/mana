@@ -106,15 +106,15 @@ defmodule ExWire.Sync do
       warp_processor: warp_processor
     }
 
-      if warp do
-        if warp_queue.manifest do
-          Process.send_after(self(), :resume_warp, @startup_delay)
-        else
-          Process.send_after(self(), :request_manifest, @startup_delay)
-        end
+    if warp do
+      if warp_queue.manifest do
+        Process.send_after(self(), :resume_warp, @startup_delay)
       else
-        request_next_block(@startup_delay)
+        Process.send_after(self(), :request_manifest, @startup_delay)
       end
+    else
+      request_next_block(@startup_delay)
+    end
 
     {:ok, state}
   end
