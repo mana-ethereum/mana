@@ -9,6 +9,7 @@ defmodule MerklePatriciaTree.TrieStorage do
 
   @type t :: struct()
 
+  @callback with_new_cache(t) :: t
   @callback fetch_node(t) :: Node.trie_node()
   @callback put_node(node, t) :: nil | binary()
   @callback remove_key(t, Trie.key()) :: t
@@ -28,6 +29,11 @@ defmodule MerklePatriciaTree.TrieStorage do
   @callback commit!(t) :: t
 
   @default_batch_size 1000
+
+  @spec with_new_cache(t) :: t
+  def with_new_cache(implementation) do
+    storage(implementation).with_new_cache(implementation)
+  end
 
   @spec fetch_node(t) :: Node.trie_node()
   def fetch_node(implementation) do

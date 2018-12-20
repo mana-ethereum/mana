@@ -38,6 +38,11 @@ defmodule MerklePatriciaTree.CachingTrie do
   end
 
   @impl true
+  def with_new_cache(trie) do
+    new(trie.trie)
+  end
+
+  @impl true
   def root_hash(caching_trie) do
     TrieStorage.root_hash(caching_trie.in_memory_trie)
   end

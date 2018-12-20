@@ -32,12 +32,14 @@ defmodule ExWire.P2P.Server do
 
   We spawn a temporary child process for each inbound connection.
   """
-  @spec child_spec({:inbound, TCP.socket()} | {:outbound, Peer.t(), list(subscription())}) ::
-          Supervisor.child_spec()
-  def child_spec({:inbound, socket}) do
+  @spec child_spec(
+          {:inbound, TCP.socket(), list(subscription())}
+          | {:outbound, Peer.t(), list(subscription())}
+        ) :: Supervisor.child_spec()
+  def child_spec({:inbound, socket, connection_observer}) do
     %{
       id: ExWire.P2P.Inbound,
-      start: {__MODULE__, :start_link, [:inbound, socket]},
+      start: {__MODULE__, :start_link, [:inbound, socket, connection_observer]},
       restart: :temporary
     }
   end
