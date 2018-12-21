@@ -382,56 +382,61 @@ defmodule ExWire.Sync do
           highest_block_number: highest_block_number
         }
       ) do
-    {next_highest_block_number, next_block_queue, next_block_tree, next_trie, header_hashes} =
-      Enum.reduce(
-        block_headers.headers,
-        {highest_block_number, block_queue, block_tree, trie, []},
-        fn header, {highest_block_number, block_queue, block_tree, trie, header_hashes} ->
-          header_hash = header |> Header.hash()
+    if Enum.empty?(block_headers.headers) do
+      :ok = maybe_request_next_block(block_queue)
+      state
+    else
+      {next_highest_block_number, next_block_queue, next_block_tree, next_trie, header_hashes} =
+        Enum.reduce(
+          block_headers.headers,
+          {highest_block_number, block_queue, block_tree, trie, []},
+          fn header, {highest_block_number, block_queue, block_tree, trie, header_hashes} ->
+            header_hash = header |> Header.hash()
 
-          {next_block_queue, next_block_tree, next_trie, should_request_block} =
-            BlockQueue.add_header(
-              block_queue,
-              block_tree,
-              header,
-              header_hash,
-              peer.remote_id,
-              chain,
-              trie
-            )
+            {next_block_queue, next_block_tree, next_trie, should_request_block} =
+              BlockQueue.add_header(
+                block_queue,
+                block_tree,
+                header,
+                header_hash,
+                peer.remote_id,
+                chain,
+                trie
+              )
 
-          next_header_hashes =
-            if should_request_block do
-              :ok = Logger.debug(fn -> "[Sync] Requesting block body #{header.number}" end)
+            next_header_hashes =
+              if should_request_block do
+                :ok = Logger.debug(fn -> "[Sync] Requesting block body #{header.number}" end)
 
-              [header_hash | header_hashes]
-            else
-              header_hashes
-            end
+                [header_hash | header_hashes]
+              else
+                header_hashes
+              end
 
-          next_highest_block_number = Kernel.max(highest_block_number, header.number)
+            next_highest_block_number = Kernel.max(highest_block_number, header.number)
 
-          {next_highest_block_number, next_block_queue, next_block_tree, next_trie,
-           next_header_hashes}
-        end
-      )
+            {next_highest_block_number, next_block_queue, next_block_tree, next_trie,
+             next_header_hashes}
+          end
+        )
 
-    :ok =
-      PeerSupervisor.send_packet(
-        %GetBlockBodies{
-          hashes: header_hashes
-        },
-        :random
-      )
+      :ok =
+        PeerSupervisor.send_packet(
+          %GetBlockBodies{
+            hashes: header_hashes
+          },
+          :random
+        )
 
-    next_maybe_saved_trie = maybe_save(block_tree, next_block_tree, next_trie)
-    :ok = maybe_request_next_block(next_block_queue)
+      next_maybe_saved_trie = maybe_save(block_tree, next_block_tree, next_trie)
+      :ok = maybe_request_next_block(next_block_queue)
 
-    state
-    |> Map.put(:block_queue, next_block_queue)
-    |> Map.put(:block_tree, next_block_tree)
-    |> Map.put(:trie, next_maybe_saved_trie)
-    |> Map.put(:highest_block_number, next_highest_block_number)
+      state
+      |> Map.put(:block_queue, next_block_queue)
+      |> Map.put(:block_tree, next_block_tree)
+      |> Map.put(:trie, next_maybe_saved_trie)
+      |> Map.put(:highest_block_number, next_highest_block_number)
+    end
   end
 
   @doc """
