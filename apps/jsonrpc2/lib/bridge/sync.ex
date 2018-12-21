@@ -9,6 +9,8 @@ defmodule JSONRPC2.Bridge.Sync do
   alias JSONRPC2.Response.Transaction, as: ResponseTransaction
   alias MerklePatriciaTree.TrieStorage
 
+  import JSONRPC2.Response.Helpers
+
   @spec connected_peer_count :: 0 | non_neg_integer()
   def connected_peer_count, do: PeerSupervisor.connected_peer_count()
 
@@ -32,38 +34,16 @@ defmodule JSONRPC2.Bridge.Sync do
   @spec get_last_sync_state() :: Sync.state()
   defp get_last_sync_state(), do: Sync.get_state()
 
-  def get_block_by_number(number, include_full_transactions) do
+  def get_block(hash_or_number, include_full_transactions) do
     state_trie = get_last_sync_state().trie
 
-    case Block.get_block(number, state_trie) do
+    case Block.get_block(hash_or_number, state_trie) do
       {:ok, block} -> ResponseBlock.new(block, include_full_transactions)
       _ -> nil
     end
   end
 
-  def get_block_by_hash(hash, include_full_transactions) do
-    state_trie = get_last_sync_state().trie
-
-    case Block.get_block(hash, state_trie) do
-      {:ok, block} -> ResponseBlock.new(block, include_full_transactions)
-      _ -> nil
-    end
-  end
-
-  def get_transaction_by_block_hash_and_index(block_hash, trx_index) do
-    trie = get_last_sync_state().trie
-
-    with {:ok, block} <- Block.get_block(block_hash, trie) do
-      case Enum.at(block.transactions, trx_index) do
-        nil -> nil
-        transaction -> ResponseTransaction.new(transaction, block)
-      end
-    else
-      _ -> nil
-    end
-  end
-
-  def get_transaction_by_block_number_and_index(block_number, trx_index) do
+  def get_transaction_by_block_and_index(block_number, trx_index) do
     trie = get_last_sync_state().trie
 
     with {:ok, block} <- Block.get_block(block_number, trie) do
@@ -76,56 +56,28 @@ defmodule JSONRPC2.Bridge.Sync do
     end
   end
 
-  def get_block_transaction_count_by_number(number) do
+  def get_block_transaction_count(number_or_hash) do
     state_trie = get_last_sync_state().trie
 
-    case Block.get_block(number, state_trie) do
+    case Block.get_block(number_or_hash, state_trie) do
       {:ok, block} ->
         block.transactions
         |> Enum.count()
-        |> Exth.encode_unsigned_hex()
+        |> encode_quantity()
 
       _ ->
         nil
     end
   end
 
-  def get_block_transaction_count_by_hash(hash) do
+  def get_uncle_count(number_or_hash) do
     state_trie = get_last_sync_state().trie
 
-    case Block.get_block(hash, state_trie) do
-      {:ok, block} ->
-        block.transactions
-        |> Enum.count()
-        |> Exth.encode_unsigned_hex()
-
-      _ ->
-        nil
-    end
-  end
-
-  def get_uncle_count_by_block_hash(hash) do
-    state_trie = get_last_sync_state().trie
-
-    case Block.get_block(hash, state_trie) do
+    case Block.get_block(number_or_hash, state_trie) do
       {:ok, block} ->
         block.ommers
         |> Enum.count()
-        |> Exth.encode_unsigned_hex()
-
-      _ ->
-        nil
-    end
-  end
-
-  def get_uncle_count_by_block_number(number) do
-    state_trie = get_last_sync_state().trie
-
-    case Block.get_block(number, state_trie) do
-      {:ok, block} ->
-        block.ommers
-        |> Enum.count()
-        |> Exth.encode_unsigned_hex()
+        |> encode_quantity()
 
       _ ->
         nil
@@ -152,7 +104,7 @@ defmodule JSONRPC2.Bridge.Sync do
         block_state = TrieStorage.set_root_hash(state_trie, block.header.state_root)
 
         case Account.machine_code(block_state, address) do
-          {:ok, code} -> Exth.encode_hex(code)
+          {:ok, code} -> encode_unformatted_data(code)
           _ -> nil
         end
 
@@ -173,7 +125,7 @@ defmodule JSONRPC2.Bridge.Sync do
             nil
 
           account ->
-            Exth.encode_unsigned_hex(account.balance)
+            encode_quantity(account.balance)
         end
 
       _ ->
@@ -199,32 +151,10 @@ defmodule JSONRPC2.Bridge.Sync do
     end
   end
 
-  def get_uncle_by_block_hash_and_index(block_hash, index) do
+  def get_uncle(block_hash_or_number, index) do
     trie = get_last_sync_state().trie
 
-    case Block.get_block(block_hash, trie) do
-      {:ok, block} ->
-        case Enum.at(block.ommers, index) do
-          nil ->
-            nil
-
-          ommer_header ->
-            uncle_block = %Block{header: ommer_header, transactions: [], ommers: []}
-
-            uncle_block
-            |> Block.add_metadata(trie)
-            |> ResponseBlock.new()
-        end
-
-      _ ->
-        nil
-    end
-  end
-
-  def get_uncle_by_block_number_and_index(block_number, index) do
-    trie = get_last_sync_state().trie
-
-    case Block.get_block(block_number, trie) do
+    case Block.get_block(block_hash_or_number, trie) do
       {:ok, block} ->
         case Enum.at(block.ommers, index) do
           nil ->

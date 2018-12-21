@@ -4,6 +4,9 @@ defmodule JSONRPC2.SpecHandler do
   alias ExthCrypto.Hash.Keccak
   alias JSONRPC2.Bridge.Sync
   alias JSONRPC2.Struct.EthSyncing
+
+  import JSONRPC2.Response.Helpers
+
   @sync Application.get_env(:jsonrpc2, :bridge_mock, Sync)
   # web3 Methods
 
@@ -27,7 +30,7 @@ defmodule JSONRPC2.SpecHandler do
   def handle_request("net_peerCount", _) do
     connected_peer_count = @sync.connected_peer_count()
 
-    Exth.encode_unsigned_hex(connected_peer_count)
+    encode_quantity(connected_peer_count)
   end
 
   # eth Methods
@@ -70,25 +73,25 @@ defmodule JSONRPC2.SpecHandler do
   def handle_request("eth_getBlockTransactionCountByHash", [block_hash_hex]) do
     block_hash_hex
     |> Exth.decode_hex()
-    |> @sync.get_block_transaction_count_by_hash()
+    |> @sync.get_block_transaction_count()
   end
 
   def handle_request("eth_getBlockTransactionCountByNumber", [block_number_hex]) do
     block_number_hex
     |> Exth.decode_unsigned_from_hex()
-    |> @sync.get_block_transaction_count_by_number()
+    |> @sync.get_block_transaction_count()
   end
 
   def handle_request("eth_getUncleCountByBlockHash", [block_hash_hex]) do
     block_hash_hex
     |> Exth.decode_hex()
-    |> @sync.get_uncle_count_by_block_hash()
+    |> @sync.get_uncle_count()
   end
 
   def handle_request("eth_getUncleCountByBlockNumber", [block_number_hex]) do
     block_number_hex
     |> Exth.decode_unsigned_from_hex()
-    |> @sync.get_uncle_count_by_block_number()
+    |> @sync.get_uncle_count()
   end
 
   def handle_request("eth_getCode", [hex_address, hex_number_or_tag]) do
@@ -108,13 +111,13 @@ defmodule JSONRPC2.SpecHandler do
   def handle_request("eth_getBlockByHash", [hash, include_full_transactions]) do
     hash
     |> Exth.decode_hex()
-    |> @sync.get_block_by_hash(include_full_transactions)
+    |> @sync.get_block(include_full_transactions)
   end
 
   def handle_request("eth_getBlockByNumber", [number_hex, include_full_transactions]) do
     number = Exth.decode_unsigned_from_hex(number_hex)
 
-    @sync.get_block_by_number(number, include_full_transactions)
+    @sync.get_block(number, include_full_transactions)
   end
 
   def handle_request("eth_getTransactionByHash", [hex_transaction_hash]) do
@@ -130,7 +133,7 @@ defmodule JSONRPC2.SpecHandler do
     block_hash = Exth.decode_hex(block_hash_hex)
     transaction_index = Exth.decode_unsigned_from_hex(transaction_index_hex)
 
-    @sync.get_transaction_by_block_hash_and_index(block_hash, transaction_index)
+    @sync.get_transaction_by_block_and_index(block_hash, transaction_index)
   end
 
   def handle_request("eth_getTransactionByBlockNumberAndIndex", [
@@ -140,7 +143,7 @@ defmodule JSONRPC2.SpecHandler do
     block_number = Exth.decode_unsigned_from_hex(block_number_hex)
     transaction_index = Exth.decode_unsigned_from_hex(transaction_index_hex)
 
-    @sync.get_transaction_by_block_number_and_index(block_number, transaction_index)
+    @sync.get_transaction_by_block_and_index(block_number, transaction_index)
   end
 
   def handle_request("eth_getTransactionReceipt", [hex_transaction_hash]) do
@@ -153,14 +156,14 @@ defmodule JSONRPC2.SpecHandler do
     block_hash = Exth.decode_hex(hex_block_hash)
     index = Exth.decode_unsigned_from_hex(hex_index)
 
-    @sync.get_uncle_by_block_hash_and_index(block_hash, index)
+    @sync.get_uncle(block_hash, index)
   end
 
   def handle_request("eth_getUncleByBlockNumberAndIndex", [hex_block_number, hex_index]) do
     block_number = Exth.decode_unsigned_from_hex(hex_block_number)
     index = Exth.decode_unsigned_from_hex(hex_index)
 
-    @sync.get_uncle_by_block_number_and_index(block_number, index)
+    @sync.get_uncle(block_number, index)
   end
 
   # eth_getCompilers is deprecated
