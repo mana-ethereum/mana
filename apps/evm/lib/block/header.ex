@@ -92,6 +92,30 @@ defmodule Block.Header do
 
   @dao_extra_data "dao-hard-fork"
 
+  @spec to_string(t) :: String.t()
+  def to_string(header) do
+    """
+      Header {
+        hash: #{Exth.encode_hex(hash(header))},
+        parent_hash: #{Exth.encode_hex(header.parent_hash)},
+        ommers_hash: #{Exth.encode_hex(header.ommers_hash)},
+        beneficiary: #{Exth.encode_hex(header.beneficiary)},
+        state_root: #{Exth.encode_hex(header.state_root)},
+        transactions_root: #{Exth.encode_hex(header.transactions_root)},
+        receipts_root: #{Exth.encode_hex(header.receipts_root)},
+        logs_bloom: #{Exth.encode_hex(header.logs_bloom)},
+        difficulty: #{header.difficulty},
+        number: #{header.number},
+        gas_limit: #{header.gas_limit},
+        gas_used: #{header.gas_used},
+        timestamp: #{header.timestamp},
+        extra_data: #{Exth.encode_hex(header.extra_data)},
+        mix_hash: #{Exth.encode_hex(header.mix_hash)},
+        nonce: #{Exth.encode_hex(header.nonce)},
+      }
+    """
+  end
+
   @doc """
   Returns the block that defines the start of Homestead.
 
