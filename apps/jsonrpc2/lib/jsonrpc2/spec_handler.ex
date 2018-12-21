@@ -111,13 +111,13 @@ defmodule JSONRPC2.SpecHandler do
   def handle_request("eth_getBlockByHash", [hash, include_full_transactions]) do
     hash
     |> Exth.decode_hex()
-    |> @sync.get_block_by_hash(include_full_transactions)
+    |> @sync.get_block(include_full_transactions)
   end
 
   def handle_request("eth_getBlockByNumber", [number_hex, include_full_transactions]) do
     number = Exth.decode_unsigned_from_hex(number_hex)
 
-    @sync.get_block_by_number(number, include_full_transactions)
+    @sync.get_block(number, include_full_transactions)
   end
 
   def handle_request("eth_getTransactionByHash", [hex_transaction_hash]) do
