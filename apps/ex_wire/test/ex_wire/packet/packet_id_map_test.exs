@@ -23,6 +23,20 @@ defmodule ExWire.Packet.PacketIdMapTest do
     end
   end
 
+  describe "has_any_capabilities?/1" do
+    test "No capabilities besides protocol" do
+      map = ExWire.Packet.PacketIdMap.new()
+
+      assert !ExWire.Packet.PacketIdMap.has_any_capabilities?(map)
+    end
+
+    test "Capabilities present" do
+      map = ExWire.Packet.PacketIdMap.new([ExWire.Packet.Capability.new({"eth", 62})])
+
+      assert ExWire.Packet.PacketIdMap.has_any_capabilities?(map)
+    end
+  end
+
   describe "new/1" do
     test "Empty Map" do
       map1 = ExWire.Packet.PacketIdMap.new()
