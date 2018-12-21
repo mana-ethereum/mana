@@ -32,7 +32,7 @@ defmodule JSONRPC2.Response.Helpers do
     nil
   end
 
-  @spec decode_hex(String.t()) :: {:ok, binary()} | :error
+  @spec decode_hex(String.t()) :: {:ok, binary()} | {:error, :invalid_params}
   def decode_hex("0x" <> bin), do: decode_hex(bin)
 
   def decode_hex(bin) do
