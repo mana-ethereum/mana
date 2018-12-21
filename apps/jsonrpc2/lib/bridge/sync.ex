@@ -9,6 +9,8 @@ defmodule JSONRPC2.Bridge.Sync do
   alias JSONRPC2.Response.Transaction, as: ResponseTransaction
   alias MerklePatriciaTree.TrieStorage
 
+  import JSONRPC2.Response.Helpers
+
   @spec connected_peer_count :: 0 | non_neg_integer()
   def connected_peer_count, do: PeerSupervisor.connected_peer_count()
 
@@ -61,7 +63,7 @@ defmodule JSONRPC2.Bridge.Sync do
       {:ok, block} ->
         block.transactions
         |> Enum.count()
-        |> Exth.encode_unsigned_hex()
+        |> encode_quantity()
 
       _ ->
         nil
@@ -75,7 +77,7 @@ defmodule JSONRPC2.Bridge.Sync do
       {:ok, block} ->
         block.ommers
         |> Enum.count()
-        |> Exth.encode_unsigned_hex()
+        |> encode_quantity()
 
       _ ->
         nil
@@ -102,7 +104,7 @@ defmodule JSONRPC2.Bridge.Sync do
         block_state = TrieStorage.set_root_hash(state_trie, block.header.state_root)
 
         case Account.machine_code(block_state, address) do
-          {:ok, code} -> Exth.encode_hex(code)
+          {:ok, code} -> encode_unformatted_data(code)
           _ -> nil
         end
 
@@ -123,7 +125,7 @@ defmodule JSONRPC2.Bridge.Sync do
             nil
 
           account ->
-            Exth.encode_unsigned_hex(account.balance)
+            encode_quantity(account.balance)
         end
 
       _ ->
