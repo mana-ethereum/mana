@@ -7,6 +7,8 @@ defmodule JSONRPC2.BridgeSyncMock do
   alias JSONRPC2.Struct.EthSyncing
   alias MerklePatriciaTree.TrieStorage
 
+  import JSONRPC2.Response.Helpers
+
   use GenServer
 
   def connected_peer_count() do
@@ -73,36 +75,23 @@ defmodule JSONRPC2.BridgeSyncMock do
     GenServer.call(__MODULE__, {:get_block_by_hash, hash, include_full_transactions})
   end
 
-  def get_transaction_by_block_hash_and_index(block_hash, index) do
-    GenServer.call(__MODULE__, {:get_transaction_by_block_hash_and_index, block_hash, index})
+  def get_transaction_by_block_and_index(block_hash_or_number, index) do
+    GenServer.call(
+      __MODULE__,
+      {:get_transaction_by_block_and_index, block_hash_or_number, index}
+    )
   end
 
-  def get_transaction_by_block_number_and_index(block_hash, index) do
-    GenServer.call(__MODULE__, {:get_transaction_by_block_number_and_index, block_hash, index})
+  def get_block_transaction_count(block_hash_or_number) do
+    GenServer.call(__MODULE__, {:get_block_transaction_count, block_hash_or_number})
   end
 
-  def get_block_transaction_count_by_hash(block_hash) do
-    GenServer.call(__MODULE__, {:get_block_transaction_count_by_hash, block_hash})
+  def get_uncle_count(block_number_or_hash) do
+    GenServer.call(__MODULE__, {:get_uncle_count, block_number_or_hash})
   end
 
-  def get_block_transaction_count_by_number(block_number) do
-    GenServer.call(__MODULE__, {:get_block_transaction_count_by_number, block_number})
-  end
-
-  def get_uncle_count_by_block_hash(block_hash) do
-    GenServer.call(__MODULE__, {:get_uncle_count_by_block_hash, block_hash})
-  end
-
-  def get_uncle_count_by_block_number(block_number) do
-    GenServer.call(__MODULE__, {:get_uncle_count_by_block_number, block_number})
-  end
-
-  def get_uncle_by_block_hash_and_index(block_hash, index) do
-    GenServer.call(__MODULE__, {:get_uncle_by_block_and_index, {block_hash, index}})
-  end
-
-  def get_uncle_by_block_number_and_index(block_number, index) do
-    GenServer.call(__MODULE__, {:get_uncle_by_block_and_index, {block_number, index}})
+  def get_uncle(block_number_or_hash, index) do
+    GenServer.call(__MODULE__, {:get_uncle, {block_number_or_hash, index}})
   end
 
   def get_transaction_by_hash(transaction_hash) do
@@ -181,12 +170,12 @@ defmodule JSONRPC2.BridgeSyncMock do
   end
 
   def handle_call(
-        {:get_transaction_by_block_hash_and_index, block_hash, trx_index},
+        {:get_transaction_by_block_and_index, block_hash_or_number, trx_index},
         _,
         state = %{trie: trie}
       ) do
     result =
-      with {:ok, block} <- Block.get_block(block_hash, trie) do
+      with {:ok, block} <- Block.get_block(block_hash_or_number, trie) do
         case Enum.at(block.transactions, trx_index) do
           nil -> nil
           transaction -> ResponseTransaction.new(transaction, block)
@@ -199,34 +188,16 @@ defmodule JSONRPC2.BridgeSyncMock do
   end
 
   def handle_call(
-        {:get_transaction_by_block_number_and_index, block_number, trx_index},
+        {:get_block_transaction_count, block_hash_or_number},
         _,
         state = %{trie: trie}
       ) do
     result =
-      with {:ok, block} <- Block.get_block(block_number, trie) do
-        case Enum.at(block.transactions, trx_index) do
-          nil -> nil
-          transaction -> ResponseTransaction.new(transaction, block)
-        end
-      else
-        _ -> nil
-      end
-
-    {:reply, result, state}
-  end
-
-  def handle_call(
-        {:get_block_transaction_count_by_hash, block_hash},
-        _,
-        state = %{trie: trie}
-      ) do
-    result =
-      case Block.get_block(block_hash, trie) do
+      case Block.get_block(block_hash_or_number, trie) do
         {:ok, block} ->
           block.transactions
           |> Enum.count()
-          |> Exth.encode_unsigned_hex()
+          |> encode_quantity()
 
         _ ->
           nil
@@ -236,35 +207,16 @@ defmodule JSONRPC2.BridgeSyncMock do
   end
 
   def handle_call(
-        {:get_block_transaction_count_by_number, block_number},
+        {:get_uncle_count, block_number_or_hash},
         _,
         state = %{trie: trie}
       ) do
     result =
-      case Block.get_block(block_number, trie) do
-        {:ok, block} ->
-          block.transactions
-          |> Enum.count()
-          |> Exth.encode_unsigned_hex()
-
-        _ ->
-          nil
-      end
-
-    {:reply, result, state}
-  end
-
-  def handle_call(
-        {:get_uncle_count_by_block_hash, block_hash},
-        _,
-        state = %{trie: trie}
-      ) do
-    result =
-      case Block.get_block(block_hash, trie) do
+      case Block.get_block(block_number_or_hash, trie) do
         {:ok, block} ->
           block.ommers
           |> Enum.count()
-          |> Exth.encode_unsigned_hex()
+          |> encode_quantity()
 
         _ ->
           nil
@@ -274,31 +226,12 @@ defmodule JSONRPC2.BridgeSyncMock do
   end
 
   def handle_call(
-        {:get_uncle_count_by_block_number, block_number},
+        {:get_uncle, {block_hash_or_number, index}},
         _,
         state = %{trie: trie}
       ) do
     result =
-      case Block.get_block(block_number, trie) do
-        {:ok, block} ->
-          block.ommers
-          |> Enum.count()
-          |> Exth.encode_unsigned_hex()
-
-        _ ->
-          nil
-      end
-
-    {:reply, result, state}
-  end
-
-  def handle_call(
-        {:get_uncle_by_block_and_index, {block_hash_or_index, index}},
-        _,
-        state = %{trie: trie}
-      ) do
-    result =
-      case Block.get_block(block_hash_or_index, trie) do
+      case Block.get_block(block_hash_or_number, trie) do
         {:ok, block} ->
           case Enum.at(block.ommers, index) do
             nil ->
@@ -326,7 +259,7 @@ defmodule JSONRPC2.BridgeSyncMock do
           block_state = TrieStorage.set_root_hash(trie, block.header.state_root)
 
           case Account.machine_code(block_state, address) do
-            {:ok, code} -> Exth.encode_hex(code)
+            {:ok, code} -> encode_unformatted_data(code)
             _ -> nil
           end
 
@@ -348,7 +281,7 @@ defmodule JSONRPC2.BridgeSyncMock do
               nil
 
             account ->
-              Exth.encode_unsigned_hex(account.balance)
+              encode_quantity(account.balance)
           end
 
         _ ->

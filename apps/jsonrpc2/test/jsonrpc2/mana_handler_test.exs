@@ -84,7 +84,7 @@ defmodule JSONRPC2.ManaHandlerTest do
       connected_peer_count = 0
       :ok = BridgeSyncMock.set_connected_peer_count(connected_peer_count)
 
-      expected_result_count = "0x00"
+      expected_result_count = "0x0"
 
       assert_rpc_reply(
         SpecHandler,
@@ -97,7 +97,7 @@ defmodule JSONRPC2.ManaHandlerTest do
       connected_peer_count = 2
       :ok = BridgeSyncMock.set_connected_peer_count(connected_peer_count)
 
-      expected_result_count = "0x02"
+      expected_result_count = "0x2"
 
       assert_rpc_reply(
         SpecHandler,
@@ -279,7 +279,7 @@ defmodule JSONRPC2.ManaHandlerTest do
       assert_rpc_reply(
         SpecHandler,
         ~s({"jsonrpc": "2.0", "method": "eth_getBlockTransactionCountByHash", "params": ["0x0000000000000000000000000000000000000000000000000000000000000101"], "id": 71}),
-        ~s({"id":71, "jsonrpc":"2.0", "result":"0x03"})
+        ~s({"id":71, "jsonrpc":"2.0", "result":"0x3"})
       )
     end
   end
@@ -304,7 +304,7 @@ defmodule JSONRPC2.ManaHandlerTest do
       assert_rpc_reply(
         SpecHandler,
         ~s({"jsonrpc": "2.0", "method": "eth_getBlockTransactionCountByNumber", "params": ["0x03e8"], "id": 71}),
-        ~s({"id":71, "jsonrpc":"2.0", "result":"0x03"})
+        ~s({"id":71, "jsonrpc":"2.0", "result":"0x3"})
       )
     end
   end
@@ -330,7 +330,7 @@ defmodule JSONRPC2.ManaHandlerTest do
       assert_rpc_reply(
         SpecHandler,
         ~s({"jsonrpc": "2.0", "method": "eth_getUncleCountByBlockHash", "params": ["0x0000000000000000000000000000000000000000000000000000000000000111"], "id": 71}),
-        ~s({"id":71, "jsonrpc":"2.0", "result":"0x04"})
+        ~s({"id":71, "jsonrpc":"2.0", "result":"0x4"})
       )
     end
   end
@@ -356,7 +356,7 @@ defmodule JSONRPC2.ManaHandlerTest do
       assert_rpc_reply(
         SpecHandler,
         ~s({"jsonrpc": "2.0", "method": "eth_getUncleCountByBlockNumber", "params": ["0x1388"], "id": 71}),
-        ~s({"id":71, "jsonrpc":"2.0", "result":"0x04"})
+        ~s({"id":71, "jsonrpc":"2.0", "result":"0x4"})
       )
     end
   end
@@ -483,7 +483,7 @@ defmodule JSONRPC2.ManaHandlerTest do
       assert_rpc_reply(
         SpecHandler,
         ~s({"jsonrpc": "2.0", "method": "eth_getBalance", "params": ["0x0000000000000000000000000000000000000006", "latest"], "id": 71}),
-        ~s({"id":71, "jsonrpc":"2.0", "result":"0x0a"})
+        ~s({"id":71, "jsonrpc":"2.0", "result":"0xa"})
       )
     end
 
