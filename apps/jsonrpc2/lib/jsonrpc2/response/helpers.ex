@@ -31,4 +31,25 @@ defmodule JSONRPC2.Response.Helpers do
   def encode_unformatted_data(binary) when is_nil(binary) do
     nil
   end
+
+  @spec decode_hex(String.t()) :: {:ok, binary()} | :error
+  def decode_hex("0x" <> bin), do: decode_hex(bin)
+
+  def decode_hex(bin) do
+    case Base.decode16(bin, case: :mixed) do
+      :error -> {:error, :invalid_params}
+      {:ok, result} -> {:ok, result}
+    end
+  end
+
+  @spec decode_unsigned(String.t()) :: {:ok, non_neg_integer()} | {:error, :invalid_params}
+  def decode_unsigned(binary) do
+    with {:ok, binary} <- decode_hex(binary) do
+      try do
+        {:ok, :binary.decode_unsigned(binary)}
+      rescue
+        _ -> {:error, :invalid_params}
+      end
+    end
+  end
 end
