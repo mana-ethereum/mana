@@ -67,27 +67,27 @@ defmodule JSONRPC2.SpecHandler do
   def handle_request("eth_getStorageAt", _), do: {:error, :not_supported}
   def handle_request("eth_getTransactionCount", _), do: {:error, :not_supported}
 
-  def handle_request("eth_getUncleCountByBlockNumber", [block_number_hex]) do
+  def handle_request("eth_getBlockTransactionCountByHash", [block_hash_hex]) do
     with {:ok, block_hash} <- decode_hex(block_hash_hex) do
-      @sync.get_block_transaction_count_by_hash(block_hash)
+      @sync.get_block_transaction_count(block_hash)
     end
   end
 
   def handle_request("eth_getBlockTransactionCountByNumber", [block_number_hex]) do
     with {:ok, block_number} <- decode_unsigned(block_number_hex) do
-      @sync.get_block_transaction_count_by_number(block_number)
+      @sync.get_block_transaction_count(block_number)
     end
   end
 
   def handle_request("eth_getUncleCountByBlockHash", [block_hash_hex]) do
     with {:ok, block_hash} <- decode_hex(block_hash_hex) do
-      @sync.get_uncle_count_by_block_hash(block_hash)
+      @sync.get_uncle_count(block_hash)
     end
   end
 
   def handle_request("eth_getUncleCountByBlockNumber", [block_number_hex]) do
     with {:ok, block_number} <- decode_unsigned(block_number_hex) do
-      @sync.get_uncle_count_by_block_number(block_number)
+      @sync.get_uncle_count(block_number)
     end
   end
 
@@ -106,13 +106,13 @@ defmodule JSONRPC2.SpecHandler do
 
   def handle_request("eth_getBlockByHash", [hex_hash, include_full_transactions]) do
     with {:ok, hash} <- decode_hex(hex_hash) do
-      @sync.get_block_by_hash(hash, include_full_transactions)
+      @sync.get_block(hash, include_full_transactions)
     end
   end
 
   def handle_request("eth_getBlockByNumber", [number_hex, include_full_transactions]) do
     with {:ok, number} <- decode_unsigned(number_hex) do
-      @sync.get_block_by_number(number, include_full_transactions)
+      @sync.get_block(number, include_full_transactions)
     end
   end
 
@@ -128,7 +128,7 @@ defmodule JSONRPC2.SpecHandler do
       ]) do
     with {:ok, block_hash} <- decode_hex(block_hash_hex),
          {:ok, transaction_index} <- decode_unsigned(transaction_index_hex) do
-      @sync.get_transaction_by_block_hash_and_index(block_hash, transaction_index)
+      @sync.get_transaction_by_block_and_index(block_hash, transaction_index)
     end
   end
 
@@ -138,7 +138,7 @@ defmodule JSONRPC2.SpecHandler do
       ]) do
     with {:ok, block_number} <- decode_unsigned(block_number_hex),
          {:ok, transaction_index} <- decode_unsigned(transaction_index_hex) do
-      @sync.get_transaction_by_block_number_and_index(block_number, transaction_index)
+      @sync.get_transaction_by_block_and_index(block_number, transaction_index)
     end
   end
 
@@ -151,14 +151,14 @@ defmodule JSONRPC2.SpecHandler do
   def handle_request("eth_getUncleByBlockHashAndIndex", [hex_block_hash, hex_index]) do
     with {:ok, block_hash} <- decode_hex(hex_block_hash),
          {:ok, index} <- decode_unsigned(hex_index) do
-      @sync.get_uncle_by_block_hash_and_index(block_hash, index)
+      @sync.get_uncle(block_hash, index)
     end
   end
 
   def handle_request("eth_getUncleByBlockNumberAndIndex", [hex_block_number, hex_index]) do
     with {:ok, block_number} <- decode_unsigned(hex_block_number),
          {:ok, index} <- decode_unsigned(hex_index) do
-      @sync.get_uncle_by_block_number_and_index(block_number, index)
+      @sync.get_uncle(block_number, index)
     end
   end
 
