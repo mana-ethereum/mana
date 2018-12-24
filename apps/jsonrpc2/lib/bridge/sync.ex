@@ -172,4 +172,30 @@ defmodule JSONRPC2.Bridge.Sync do
         nil
     end
   end
+
+  def get_storage(storage_address, storage_key, block_number) do
+    trie = get_last_sync_state().trie
+
+    case Block.get_block(block_number, trie) do
+      {:ok, block} ->
+        block_state = TrieStorage.set_root_hash(trie, block.header.state_root)
+
+        case Account.get_storage(block_state, storage_address, storage_key) do
+          {:ok, value} ->
+            if is_integer(value) do
+              value
+              |> :binary.encode_unsigned()
+              |> encode_unformatted_data
+            else
+              encode_unformatted_data(value)
+            end
+
+          _ ->
+            nil
+        end
+
+      _ ->
+        nil
+    end
+  end
 end
