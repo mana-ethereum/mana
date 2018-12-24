@@ -64,7 +64,18 @@ defmodule JSONRPC2.SpecHandler do
     end
   end
 
-  def handle_request("eth_getStorageAt", _), do: {:error, :not_supported}
+  def handle_request("eth_getStorageAt", [
+        hex_storage_address,
+        hex_storage_position,
+        hex_block_number_or_tag
+      ]) do
+    with {:ok, storage_address} <- decode_hex(hex_storage_address),
+         {:ok, storage_key} <- decode_unsigned(hex_storage_position),
+         {:ok, block_number} <- decode_block_number(hex_block_number_or_tag) do
+      @sync.get_storage(storage_address, storage_key, block_number)
+    end
+  end
+
   def handle_request("eth_getTransactionCount", _), do: {:error, :not_supported}
 
   def handle_request("eth_getBlockTransactionCountByHash", [block_hash_hex]) do

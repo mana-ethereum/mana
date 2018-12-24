@@ -595,6 +595,105 @@ defmodule JSONRPC2.ManaHandlerTest do
     end
   end
 
+  describe "eth_getStorageAt" do
+    test "gets value from the storage" do
+      trie = BridgeSyncMock.get_trie()
+
+      address = <<89::160>>
+
+      account = %Account{
+        nonce: 5,
+        balance: 10,
+        storage_root: Account.empty_trie(),
+        code_hash: nil
+      }
+
+      key = 66
+      value = 77
+
+      state_with_storage =
+        trie
+        |> Account.put_account(address, account)
+        |> Account.put_storage(address, key, value)
+
+      block =
+        TestFactory.build(:block,
+          block_hash: <<0x11115::256>>,
+          header:
+            TestFactory.build(:header,
+              number: 7091,
+              state_root: TrieStorage.root_hash(state_with_storage)
+            )
+        )
+
+      :ok = BridgeSyncMock.put_block(block)
+      :ok = BridgeSyncMock.set_highest_block_number(block.header.number)
+      :ok = BridgeSyncMock.set_trie(state_with_storage)
+
+      assert_rpc_reply(
+        SpecHandler,
+        ~s({"jsonrpc": "2.0", "method": "eth_getStorageAt", "params": ["0x0000000000000000000000000000000000000059", "0x42", "latest"], "id": 71}),
+        ~s({"id":71, "jsonrpc":"2.0", "result":"0x4d"})
+      )
+    end
+
+    test "fetches value from the storage from an intermediate block" do
+      trie = BridgeSyncMock.get_trie()
+
+      address = <<89::160>>
+
+      account = %Account{
+        nonce: 5,
+        balance: 10,
+        storage_root: Account.empty_trie(),
+        code_hash: nil
+      }
+
+      key = 66
+      latest_value = 77
+
+      latest_storage =
+        trie
+        |> Account.put_account(address, account)
+        |> Account.put_storage(address, key, latest_value)
+
+      block =
+        TestFactory.build(:block,
+          block_hash: <<0x111151::256>>,
+          header:
+            TestFactory.build(:header,
+              number: 7181,
+              state_root: TrieStorage.root_hash(latest_storage)
+            )
+        )
+
+      :ok = BridgeSyncMock.put_block(block)
+      :ok = BridgeSyncMock.set_highest_block_number(block.header.number)
+
+      intermediate_value = 88
+
+      intermediate_storage = Account.put_storage(latest_storage, address, key, intermediate_value)
+
+      intermediate_block =
+        TestFactory.build(:block,
+          block_hash: <<0x1111511::256>>,
+          header:
+            TestFactory.build(:header,
+              number: 7180,
+              state_root: TrieStorage.root_hash(intermediate_storage)
+            )
+        )
+
+      :ok = BridgeSyncMock.put_block(intermediate_block)
+
+      assert_rpc_reply(
+        SpecHandler,
+        ~s({"jsonrpc": "2.0", "method": "eth_getStorageAt", "params": ["0x0000000000000000000000000000000000000059", "0x42", "0x1c0c"], "id": 71}),
+        ~s({"id":71, "jsonrpc":"2.0", "result":"0x58"})
+      )
+    end
+  end
+
   defp assert_rpc_reply(handler, call, expected_reply) do
     assert {:reply, reply} = handler.handle(call)
 
