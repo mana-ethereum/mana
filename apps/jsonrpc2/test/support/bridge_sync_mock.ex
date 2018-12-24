@@ -313,13 +313,9 @@ defmodule JSONRPC2.BridgeSyncMock do
 
           case Account.get_storage(block_state, storage_address, storage_key) do
             {:ok, value} ->
-              if is_integer(value) do
-                value
-                |> :binary.encode_unsigned()
-                |> encode_unformatted_data
-              else
-                encode_unformatted_data(value)
-              end
+              value
+              |> :binary.encode_unsigned()
+              |> encode_unformatted_data
 
             _ ->
               nil
