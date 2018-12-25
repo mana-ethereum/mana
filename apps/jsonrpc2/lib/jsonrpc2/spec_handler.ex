@@ -76,7 +76,12 @@ defmodule JSONRPC2.SpecHandler do
     end
   end
 
-  def handle_request("eth_getTransactionCount", _), do: {:error, :not_supported}
+  def handle_request("eth_getTransactionCount", [hex_address, hex_block_number_or_tag]) do
+    with {:ok, block_number} <- decode_block_number(hex_block_number_or_tag),
+         {:ok, address} <- decode_hex(hex_address) do
+      @sync.get_transaction_count(address, block_number)
+    end
+  end
 
   def handle_request("eth_getBlockTransactionCountByHash", [block_hash_hex]) do
     with {:ok, block_hash} <- decode_hex(block_hash_hex) do

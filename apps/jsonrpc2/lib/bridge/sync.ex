@@ -189,6 +189,23 @@ defmodule JSONRPC2.Bridge.Sync do
           _ ->
             nil
         end
+    end
+  end
+
+  def get_transaction_count(address, block_number) do
+    trie = get_last_sync_state().trie
+
+    case Block.get_block(block_number, trie) do
+      {:ok, block} ->
+        block_state = TrieStorage.set_root_hash(trie, block.header.state_root)
+
+        case Account.get_account(block_state, address) do
+          nil ->
+            nil
+
+          account ->
+            encode_quantity(account.nonce)
+        end
 
       _ ->
         nil

@@ -98,6 +98,10 @@ defmodule JSONRPC2.BridgeSyncMock do
     GenServer.call(__MODULE__, {:get_storage, address, storage_key, block_number})
   end
 
+  def get_transaction_count(address, block_number) do
+    GenServer.call(__MODULE__, {:get_transaction_count, address, block_number})
+  end
+
   def start_link(state) do
     GenServer.start_link(__MODULE__, state, name: __MODULE__)
   end
@@ -319,6 +323,24 @@ defmodule JSONRPC2.BridgeSyncMock do
 
             _ ->
               nil
+          end
+      end
+
+    {:reply, result, state}
+  end
+
+  def handle_call({:get_transaction_count, address, block_number}, _, state = %{trie: trie}) do
+    result =
+      case Block.get_block(block_number, trie) do
+        {:ok, block} ->
+          block_state = TrieStorage.set_root_hash(trie, block.header.state_root)
+
+          case Account.get_account(block_state, address) do
+            nil ->
+              nil
+
+            account ->
+              encode_quantity(account.nonce)
           end
 
         _ ->
