@@ -129,6 +129,18 @@ defmodule JSONRPC2.ManaHandlerTest do
     end
   end
 
+  describe "eth_blockNumber" do
+    test "fetches current block number" do
+      :ok = BridgeSyncMock.set_last_sync_block_stats({77, 88, 99})
+
+      assert_rpc_reply(
+        SpecHandler,
+        ~s({"jsonrpc": "2.0", "method": "eth_blockNumber", "params": [], "id": 71}),
+        ~s({"jsonrpc": "2.0", "result": "0x4d", "id": 71})
+      )
+    end
+  end
+
   describe "eth_getBlockByNumber" do
     test "fetches block by number" do
       block =
