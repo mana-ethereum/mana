@@ -9,14 +9,15 @@ defmodule JSONRPC2.Bridge.Sync do
   alias JSONRPC2.Response.Transaction, as: ResponseTransaction
   alias MerklePatriciaTree.TrieStorage
 
+  @behaviour JSONRPC2.Client
+
   import JSONRPC2.Response.Helpers
 
-  @spec connected_peer_count :: 0 | non_neg_integer()
+  @impl true
   def connected_peer_count, do: PeerSupervisor.connected_peer_count()
 
-  @spec get_last_sync_block_stats() ::
-          {non_neg_integer(), non_neg_integer(), non_neg_integer()} | false
-  def get_last_sync_block_stats() do
+  @impl true
+  def last_sync_block_stats() do
     case Process.whereis(Sync) do
       nil ->
         false
@@ -31,10 +32,8 @@ defmodule JSONRPC2.Bridge.Sync do
     end
   end
 
-  @spec get_last_sync_state() :: Sync.state()
-  defp get_last_sync_state(), do: Sync.get_state()
-
-  def get_block(hash_or_number, include_full_transactions) do
+  @impl true
+  def block(hash_or_number, include_full_transactions) do
     state_trie = get_last_sync_state().trie
 
     case Block.get_block(hash_or_number, state_trie) do
@@ -43,7 +42,8 @@ defmodule JSONRPC2.Bridge.Sync do
     end
   end
 
-  def get_transaction_by_block_and_index(block_number, trx_index) do
+  @impl true
+  def transaction_by_block_and_index(block_number, trx_index) do
     trie = get_last_sync_state().trie
 
     with {:ok, block} <- Block.get_block(block_number, trie) do
@@ -56,7 +56,18 @@ defmodule JSONRPC2.Bridge.Sync do
     end
   end
 
-  def get_block_transaction_count(number_or_hash) do
+  @impl true
+  def transaction_by_hash(transaction_hash) do
+    state_trie = get_last_sync_state().trie
+
+    case Block.get_transaction_by_hash(transaction_hash, state_trie, true) do
+      {transaction, block} -> ResponseTransaction.new(transaction, block)
+      nil -> nil
+    end
+  end
+
+  @impl true
+  def block_transaction_count(number_or_hash) do
     state_trie = get_last_sync_state().trie
 
     case Block.get_block(number_or_hash, state_trie) do
@@ -70,7 +81,8 @@ defmodule JSONRPC2.Bridge.Sync do
     end
   end
 
-  def get_uncle_count(number_or_hash) do
+  @impl true
+  def uncle_count(number_or_hash) do
     state_trie = get_last_sync_state().trie
 
     case Block.get_block(number_or_hash, state_trie) do
@@ -84,19 +96,22 @@ defmodule JSONRPC2.Bridge.Sync do
     end
   end
 
-  def get_starting_block_number do
+  @impl true
+  def starting_block_number do
     state = get_last_sync_state()
 
     Map.get(state, :starting_block_number, 0)
   end
 
-  def get_highest_block_number do
+  @impl true
+  def highest_block_number do
     state = get_last_sync_state()
 
     Map.get(state, :highest_block_number, 0)
   end
 
-  def get_code(address, block_number) do
+  @impl true
+  def code(address, block_number) do
     state_trie = get_last_sync_state().trie
 
     case Block.get_block(block_number, state_trie) do
@@ -113,7 +128,18 @@ defmodule JSONRPC2.Bridge.Sync do
     end
   end
 
-  def get_balance(address, block_number) do
+  @impl true
+  def transaction_receipt(transaction_hash) do
+    state_trie = get_last_sync_state().trie
+
+    case Block.get_receipt_by_transaction_hash(transaction_hash, state_trie) do
+      {receipt, transaction, block} -> ResponseReceipt.new(receipt, transaction, block)
+      nil -> nil
+    end
+  end
+
+  @impl true
+  def balance(address, block_number) do
     state_trie = get_last_sync_state().trie
 
     case Block.get_block(block_number, state_trie) do
@@ -133,25 +159,8 @@ defmodule JSONRPC2.Bridge.Sync do
     end
   end
 
-  def get_transaction_by_hash(transaction_hash) do
-    state_trie = get_last_sync_state().trie
-
-    case Block.get_transaction_by_hash(transaction_hash, state_trie, true) do
-      {transaction, block} -> ResponseTransaction.new(transaction, block)
-      nil -> nil
-    end
-  end
-
-  def get_transaction_receipt(transaction_hash) do
-    state_trie = get_last_sync_state().trie
-
-    case Block.get_receipt_by_transaction_hash(transaction_hash, state_trie) do
-      {receipt, transaction, block} -> ResponseReceipt.new(receipt, transaction, block)
-      nil -> nil
-    end
-  end
-
-  def get_uncle(block_hash_or_number, index) do
+  @impl true
+  def uncle(block_hash_or_number, index) do
     trie = get_last_sync_state().trie
 
     case Block.get_block(block_hash_or_number, trie) do
@@ -173,7 +182,8 @@ defmodule JSONRPC2.Bridge.Sync do
     end
   end
 
-  def get_storage(storage_address, storage_key, block_number) do
+  @impl true
+  def storage(storage_address, storage_key, block_number) do
     trie = get_last_sync_state().trie
 
     case Block.get_block(block_number, trie) do
@@ -192,7 +202,8 @@ defmodule JSONRPC2.Bridge.Sync do
     end
   end
 
-  def get_transaction_count(address, block_number) do
+  @impl true
+  def transaction_count(address, block_number) do
     trie = get_last_sync_state().trie
 
     case Block.get_block(block_number, trie) do
@@ -211,4 +222,7 @@ defmodule JSONRPC2.Bridge.Sync do
         nil
     end
   end
+
+  @spec get_last_sync_state() :: Sync.state()
+  defp get_last_sync_state(), do: Sync.get_state()
 end
