@@ -3,6 +3,7 @@ defmodule JSONRPC2.SpecHandler do
 
   alias ExthCrypto.Hash.Keccak
   alias JSONRPC2.Bridge.Sync
+  alias JSONRPC2.SpecHandler.CallRequest
   alias JSONRPC2.Struct.EthSyncing
 
   import JSONRPC2.Response.Helpers
@@ -118,7 +119,10 @@ defmodule JSONRPC2.SpecHandler do
   def handle_request("eth_sendRawTransaction", _), do: {:error, :not_supported}
   def handle_request("eth_call", _), do: {:error, :not_supported}
 
-  def handle_request("eth_estimateGas", [_raw_call_request, _hex_block_number_or_tag]) do
+  def handle_request("eth_estimateGas", [raw_call_request, hex_block_number_or_tag]) do
+    with {:ok, _call_request} <- CallRequest.new(raw_call_request),
+         {:ok, _block_number} <- decode_block_number(hex_block_number_or_tag) do
+    end
   end
 
   def handle_request("eth_getBlockByHash", [hex_hash, include_full_transactions]) do

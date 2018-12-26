@@ -12,7 +12,7 @@ defmodule JSONRPC2.SpecHandler.CallRequestTest do
         "value" => "0x01"
       }
 
-      result = CallRequest.new(params)
+      {:ok, result} = CallRequest.new(params)
 
       assert result == %JSONRPC2.SpecHandler.CallRequest{
                data: nil,
@@ -31,7 +31,7 @@ defmodule JSONRPC2.SpecHandler.CallRequestTest do
     test "creates new CallRequest when map is empty" do
       params = %{}
 
-      result = CallRequest.new(params)
+      {:ok, result} = CallRequest.new(params)
 
       assert result == %JSONRPC2.SpecHandler.CallRequest{
                data: nil,
