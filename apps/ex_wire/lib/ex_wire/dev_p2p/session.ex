@@ -17,9 +17,11 @@ defmodule ExWire.DEVp2p.Session do
           packet_id_map: PacketIdMap.t()
         }
 
+  @default_packet_id_map PacketIdMap.default_map()
+
   defstruct hello_sent: nil,
             hello_received: nil,
-            packet_id_map: PacketIdMap.default_map()
+            packet_id_map: @default_packet_id_map
 
   @doc """
   Checks whether or not the session is active.
@@ -65,7 +67,7 @@ defmodule ExWire.DEVp2p.Session do
   """
   @spec disconnect(t) :: t
   def disconnect(session = %__MODULE__{}) do
-    %{session | hello_sent: nil, hello_received: nil, packet_id_map: PacketIdMap.default_map()}
+    %{session | hello_sent: nil, hello_received: nil, packet_id_map: @default_packet_id_map}
   end
 
   @doc """
@@ -100,6 +102,6 @@ defmodule ExWire.DEVp2p.Session do
   """
   @spec compatible_capabilities?(t) :: boolean()
   def compatible_capabilities?(%__MODULE__{packet_id_map: packet_id_map}) do
-    packet_id_map != PacketIdMap.default_map()
+    PacketIdMap.has_any_capabilities?(packet_id_map)
   end
 end
