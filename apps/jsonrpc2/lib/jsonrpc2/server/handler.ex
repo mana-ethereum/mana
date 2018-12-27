@@ -289,6 +289,10 @@ defmodule JSONRPC2.Server.Handler do
   defp error_code_and_message(:internal_error), do: @internal_error
   defp error_code_and_message(:server_error), do: @server_error
 
+  defp error_code_and_message(error_message) when is_binary(error_message) do
+    {-32_603, error_message}
+  end
+
   defp encode_response(:noreply, _module, _json) do
     :noreply
   end
