@@ -65,10 +65,15 @@ defmodule Blockchain.Transaction.Validity do
 
   @spec check_sender_nonce([atom()], Transaction.t(), Account.t()) :: [atom()]
   defp check_sender_nonce(errors, transaction, account) do
-    if account.nonce != transaction.nonce do
-      [:nonce_mismatch | errors]
-    else
-      errors
+    cond do
+      !is_nil(transaction.from) ->
+        errors
+
+      account.nonce != transaction.nonce ->
+        [:nonce_mismatch | errors]
+
+      true ->
+        errors
     end
   end
 
