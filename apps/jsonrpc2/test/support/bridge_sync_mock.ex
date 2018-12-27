@@ -94,6 +94,10 @@ defmodule JSONRPC2.BridgeSyncMock do
     GenServer.call(__MODULE__, {:get_transaction_by_hash, transaction_hash})
   end
 
+  def get_storage(address, storage_key, block_number) do
+    GenServer.call(__MODULE__, {:get_storage, address, storage_key, block_number})
+  end
+
   def start_link(state) do
     GenServer.start_link(__MODULE__, state, name: __MODULE__)
   end
@@ -292,6 +296,33 @@ defmodule JSONRPC2.BridgeSyncMock do
       case Block.get_receipt_by_transaction_hash(transaction_hash, trie) do
         {receipt, transaction, block} -> ResponseReceipt.new(receipt, transaction, block)
         _ -> nil
+      end
+
+    {:reply, result, state}
+  end
+
+  def handle_call(
+        {:get_storage, storage_address, storage_key, block_number},
+        _,
+        state = %{trie: trie}
+      ) do
+    result =
+      case Block.get_block(block_number, trie) do
+        {:ok, block} ->
+          block_state = TrieStorage.set_root_hash(trie, block.header.state_root)
+
+          case Account.get_storage(block_state, storage_address, storage_key) do
+            {:ok, value} ->
+              value
+              |> :binary.encode_unsigned()
+              |> encode_unformatted_data
+
+            _ ->
+              nil
+          end
+
+        _ ->
+          nil
       end
 
     {:reply, result, state}
