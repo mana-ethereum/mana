@@ -32,6 +32,7 @@ defmodule Blockchain.Transaction do
             v: nil,
             r: nil,
             s: nil,
+            from: nil,
             init: <<>>,
             data: <<>>
 

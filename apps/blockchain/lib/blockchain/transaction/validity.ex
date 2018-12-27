@@ -20,7 +20,7 @@ defmodule Blockchain.Transaction.Validity do
     evm_config = Chain.evm_config(chain, block_header.number)
 
     with :ok <- validate_signature(trx, chain, evm_config),
-         {:ok, sender_address} <- Transaction.Signature.sender(trx, chain.params.network_id) do
+         {:ok, sender_address} <- fetch_sender_address(trx, chain.params.network_id) do
       errors =
         []
         |> check_intristic_gas(trx, evm_config)
@@ -28,6 +28,14 @@ defmodule Blockchain.Transaction.Validity do
         |> check_gas_limit(trx, block_header)
 
       if errors == [], do: :valid, else: {:invalid, errors}
+    end
+  end
+
+  defp fetch_sender_address(trx, network_id) do
+    if is_nil(trx.from) do
+      Transaction.Signature.sender(trx, network_id)
+    else
+      {:ok, trx.from}
     end
   end
 
