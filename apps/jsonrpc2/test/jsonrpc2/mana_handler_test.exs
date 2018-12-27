@@ -737,6 +737,47 @@ defmodule JSONRPC2.ManaHandlerTest do
     end
   end
 
+  describe "eth_getTransactionCount" do
+    test "fetches transaction's nonce" do
+      trie = BridgeSyncMock.get_trie()
+
+      block =
+        TestFactory.build(:block,
+          block_hash: <<0x11398::256>>,
+          header: TestFactory.build(:header, number: 7661)
+        )
+
+      address = <<5::160>>
+
+      account = %Account{
+        nonce: 5,
+        balance: 10,
+        storage_root: Account.empty_trie(),
+        code_hash: Account.empty_keccak()
+      }
+
+      trie_with_account =
+        trie
+        |> TrieStorage.set_root_hash(block.header.state_root)
+        |> Account.put_account(address, account)
+
+      updated_block = %{
+        block
+        | header: %{block.header | state_root: TrieStorage.root_hash(trie_with_account)}
+      }
+
+      :ok = BridgeSyncMock.put_block(updated_block)
+      :ok = BridgeSyncMock.set_highest_block_number(updated_block.header.number)
+      :ok = BridgeSyncMock.set_trie(trie_with_account)
+
+      assert_rpc_reply(
+        SpecHandler,
+        ~s({"jsonrpc": "2.0", "method": "eth_getTransactionCount", "params": ["0x0000000000000000000000000000000000000005", "latest"], "id": 71}),
+        ~s({"id":71, "jsonrpc":"2.0", "result":"0x5"})
+      )
+    end
+  end
+
   defp assert_rpc_reply(handler, call, expected_reply) do
     assert {:reply, reply} = handler.handle(call)
 
