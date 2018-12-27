@@ -54,7 +54,7 @@ defmodule JSONRPC2.SpecHandler do
     {current_block_header_number, _starting_block, _highest_block} =
       @sync.get_last_sync_block_stats()
 
-    current_block_header_number
+    encode_quantity(current_block_header_number)
   end
 
   def handle_request("eth_getBalance", [hex_address, hex_number_or_tag]) do
