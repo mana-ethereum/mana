@@ -66,13 +66,18 @@ defmodule JSONRPC2.SpecHandler.GasEstimater do
   defp estimate_gas(state, transaction, gas, block_header, chain) do
     transaction = %{transaction | gas_limit: gas}
 
-    {repo, gas_used, _receipt} =
+    {_repo, gas_used, receipt} =
       Transaction.execute_with_validation(state, transaction, block_header, chain)
 
-    if TrieStorage.root_hash(repo.state) == TrieStorage.root_hash(state) do
-      {:error, "Transaction failed with provided gas #{gas}"}
-    else
-      {:ok, gas_used}
+    cond do
+      receipt.state == 0 ->
+        {:error, "Transaction failed with provided gas #{gas}"}
+
+      receipt.state == TrieStorage.root_hash(state) ->
+        {:error, "Transaction failed with provided gas #{gas}"}
+
+      true ->
+        {:ok, gas_used}
     end
   end
 end

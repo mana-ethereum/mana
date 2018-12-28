@@ -1,6 +1,7 @@
 defmodule JSONRPC2.SpecHandler do
   use JSONRPC2.Server.Handler
 
+  alias Blockchain.Chain
   alias ExthCrypto.Hash.Keccak
   alias JSONRPC2.Bridge.Sync
   alias JSONRPC2.SpecHandler.CallRequest
@@ -125,7 +126,7 @@ defmodule JSONRPC2.SpecHandler do
          {:ok, block_number} <- decode_block_number(hex_block_number_or_tag) do
       sync_data = @sync.last_sync_state()
       state = sync_data.trie
-      chain = sync_data.chain
+      chain = Map.get(sync_data, :chain, Chain.load_chain(:foundation))
 
       with {:ok, gas} <- GasEstimater.run(state, call_request, block_number, chain) do
         encode_quantity(gas)

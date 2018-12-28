@@ -778,6 +778,42 @@ defmodule JSONRPC2.ManaHandlerTest do
     end
   end
 
+  describe "eth_estimateGas" do
+    test "estimates gas" do
+      block =
+        TestFactory.build(:block, header: TestFactory.build(:header, gas_limit: 100_000_000))
+
+      from_address = <<0x10::160>>
+      from_account = TestFactory.build(:account, balance: 10_000_000)
+
+      to_address = <<0x11::160>>
+      to_account = TestFactory.build(:account)
+
+      :ok = BridgeSyncMock.put_block(block)
+
+      trie = BridgeSyncMock.get_trie()
+
+      trie_with_accounts =
+        trie
+        |> Account.put_account(from_address, from_account)
+        |> Account.put_account(to_address, to_account)
+
+      :ok = BridgeSyncMock.put_block(block)
+      :ok = BridgeSyncMock.set_highest_block_number(block.header.number)
+      :ok = BridgeSyncMock.set_trie(trie_with_accounts)
+
+      assert_rpc_reply(
+        SpecHandler,
+        ~s({"jsonrpc": "2.0", "method": "eth_estimateGas", "params": [{"from": "#{
+          encode_hex(from_address)
+        }", "to": "#{encode_hex(to_address)}", "gas": "#{encode_hex(10_000)}", "gas_price": "#{
+          encode_hex(1)
+        }", "value": "#{encode_hex(1)}", "data": "#{encode_hex("")}"}, "latest"], "id": 71}),
+        ~s({"id":71, "jsonrpc":"2.0", "result":"#{encode_hex(21_000)}"})
+      )
+    end
+  end
+
   defp assert_rpc_reply(handler, call, expected_reply) do
     assert {:reply, reply} = handler.handle(call)
 
