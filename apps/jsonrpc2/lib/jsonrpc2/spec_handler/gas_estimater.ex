@@ -22,7 +22,7 @@ defmodule JSONRPC2.SpecHandler.GasEstimater do
   end
 
   defp transaction_from_call_request(call_request) do
-    gas_limit = call_request.gas_price || @max_gas_limit
+    gas_limit = call_request.gas || @max_gas_limit
     value = call_request.value || 0
     data = call_request.data || <<>>
     gas_price = call_request.gas_price || 0

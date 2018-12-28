@@ -202,7 +202,13 @@ defmodule Blockchain.Transaction do
   """
   @spec execute(Trie.t(), t, Header.t(), Chain.t()) :: {Repo.t(), Gas.t(), Receipt.t()}
   def execute(state, tx, block_header, chain) do
-    {:ok, sender} = Transaction.Signature.sender(tx, chain.params.network_id)
+    sender =
+      if is_nil(tx.from) do
+        {:ok, sender} = Transaction.Signature.sender(tx, chain.params.network_id)
+        sender
+      else
+        tx.from
+      end
 
     evm_config = Chain.evm_config(chain, block_header.number)
     initial_account_repo = Repo.new(state)

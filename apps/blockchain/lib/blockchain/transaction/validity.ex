@@ -54,12 +54,17 @@ defmodule Blockchain.Transaction.Validity do
   defp validate_signature(trx, chain, evm_config) do
     max_s_value = evm_config.max_signature_s
 
-    if Transaction.Signature.is_signature_valid?(trx.r, trx.s, trx.v, chain.params.network_id,
-         max_s: max_s_value
-       ) do
-      :ok
-    else
-      {:invalid, :invalid_sender}
+    cond do
+      !is_nil(trx.from) ->
+        :ok
+
+      Transaction.Signature.is_signature_valid?(trx.r, trx.s, trx.v, chain.params.network_id,
+        max_s: max_s_value
+      ) ->
+        :ok
+
+      true ->
+        {:invalid, :invalid_sender}
     end
   end
 
