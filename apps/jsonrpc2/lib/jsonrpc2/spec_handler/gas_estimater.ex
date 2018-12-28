@@ -41,7 +41,7 @@ defmodule JSONRPC2.SpecHandler.GasEstimater do
 
   defp find_estimate(_state, _transaction, lower_limit, upper_limit, _block_header, _chain)
        when upper_limit - lower_limit <= 1 do
-    upper_limit
+    {:ok, upper_limit}
   end
 
   defp find_estimate(state, transaction, lower_limit, upper_limit, block_header, chain) do
