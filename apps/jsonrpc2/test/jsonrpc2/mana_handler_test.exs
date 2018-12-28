@@ -812,6 +812,14 @@ defmodule JSONRPC2.ManaHandlerTest do
         ~s({"id":71, "jsonrpc":"2.0", "result":"#{encode_hex(21_000)}"})
       )
     end
+
+    test "can't find block" do
+      assert_rpc_reply(
+        SpecHandler,
+        ~s({"jsonrpc": "2.0", "method": "eth_estimateGas", "params": [{}, "0x01"], "id": 71}),
+        ~s({"id":71, "jsonrpc":"2.0", "result":"#{encode_hex(21_000)}"})
+      )
+    end
   end
 
   defp assert_rpc_reply(handler, call, expected_reply) do

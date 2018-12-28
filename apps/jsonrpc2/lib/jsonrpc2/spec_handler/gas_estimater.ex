@@ -59,7 +59,7 @@ defmodule JSONRPC2.SpecHandler.GasEstimater do
   defp find_block(state, block_number) do
     case Block.get_block(block_number, state) do
       {:ok, block} -> {:ok, block}
-      _ -> {:error, "Block is not found"}
+      _ -> %{error: "Block is not found"}
     end
   end
 
@@ -71,10 +71,10 @@ defmodule JSONRPC2.SpecHandler.GasEstimater do
 
     cond do
       receipt.state == 0 ->
-        {:error, "Transaction failed with provided gas #{gas}"}
+        %{error: "Transaction failed with provided gas #{gas}"}
 
       receipt.state == TrieStorage.root_hash(state) ->
-        {:error, "Transaction failed with provided gas #{gas}"}
+        %{error: "Transaction failed with provided gas #{gas}"}
 
       true ->
         {:ok, gas_used}

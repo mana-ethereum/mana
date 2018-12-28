@@ -21,7 +21,7 @@ defmodule JSONRPC2.SpecHandler.GasEstimaterTest do
 
       result = GasEstimater.run(trie, call_request, 10, chain)
 
-      assert result == {:error, "Block is not found"}
+      assert result == %{error: "Block is not found"}
     end
 
     test "returns lower gas limit", %{trie: trie, chain: chain} do

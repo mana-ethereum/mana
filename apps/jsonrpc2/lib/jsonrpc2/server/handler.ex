@@ -281,10 +281,6 @@ defmodule JSONRPC2.Server.Handler do
     }
   end
 
-  defp error_code_and_message(error_message) when is_binary(error_message) do
-    {-32_603, error_message}
-  end
-
   defp error_code_and_message(:parse_error), do: @parse_error
   defp error_code_and_message(:invalid_request), do: @invalid_request
   defp error_code_and_message(:method_not_found), do: @method_not_found
