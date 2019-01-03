@@ -144,14 +144,10 @@ defmodule ExWire.Struct.BlockQueue do
         block_receipts_to_request: receipts_to_request
     }
 
-    if fast_sync_in_progress do
-      {updated_block_queue, block_tree, trie, should_request_body}
-    else
-      {new_block_queue, new_block_tree, new_trie} =
-        process_block_queue(updated_block_queue, block_tree, chain, trie)
+    {new_block_queue, new_block_tree, new_trie} =
+      process_block_queue(updated_block_queue, block_tree, chain, trie)
 
-      {new_block_queue, new_block_tree, new_trie, should_request_body}
-    end
+    {new_block_queue, new_block_tree, new_trie, should_request_body}
   end
 
   @doc """
@@ -334,6 +330,36 @@ defmodule ExWire.Struct.BlockQueue do
   defp do_process_blocks([], block_queue, block_tree, _chain, trie),
     do: {block_queue, block_tree, trie}
 
+  defp do_process_blocks(
+         [block | rest],
+         block_queue = %__MODULE__{fast_sync_in_progress: true},
+         block_tree,
+         chain,
+         trie
+       ) do
+    {:ok, {updated_blocktree, updated_trie, block_hash}} =
+      Blocktree.add_block_without_validation(block_tree, block, trie)
+
+    :ok =
+      Logger.debug(fn ->
+        "[Block Queue] Added block #{block.header.number} (0x#{
+          Base.encode16(block_hash, case: :lower)
+        }) to new block tree without validation during fast sync."
+      end)
+
+    {backlogged_blocks, new_backlog} = Map.pop(block_queue.backlog, block_hash, [])
+
+    new_block_queue = %{block_queue | backlog: new_backlog}
+
+    do_process_blocks(
+      backlogged_blocks ++ rest,
+      new_block_queue,
+      updated_blocktree,
+      chain,
+      updated_trie
+    )
+  end
+
   defp do_process_blocks([block | rest], block_queue, block_tree, chain, trie) do
     {new_block_tree, new_trie, new_backlog, extra_blocks} =
       case Blocktree.verify_and_add_block(
@@ -464,12 +490,14 @@ defmodule ExWire.Struct.BlockQueue do
       }
   """
   @spec get_complete_blocks(t) :: {t, [Block.t()]}
-  def get_complete_blocks(block_queue = %__MODULE__{queue: queue}) do
+  def get_complete_blocks(
+        block_queue = %__MODULE__{queue: queue, fast_sync_in_progress: fast_syncing}
+      ) do
     {queue, blocks} =
       Enum.reduce(queue, {queue, []}, fn {number, block_map}, {queue, blocks} ->
         {final_block_map, new_blocks} =
           Enum.reduce(block_map, {block_map, []}, fn {hash, block_item}, {block_map, blocks} ->
-            if block_item.ready and
+            if block_item.ready and (not fast_syncing or block_item.receipts_added) and
                  MapSet.size(block_item.commitments) >= ExWire.Config.commitment_count() do
               {Map.delete(block_map, hash), [block_item.block | blocks]}
             else

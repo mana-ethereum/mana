@@ -130,21 +130,6 @@ defmodule ExWire.Sync do
         {:processed_block_chunk, chunk_hash, processed_blocks, block},
         state = %{warp_queue: warp_queue}
       ) do
-    #
-    #    ######
-    #    ## TODO: REMOVE THIS !!!!
-    #    ######
-    #
-    #    if block do
-    #      block_hashes = [
-    #        Block.hash(block),
-    #        Exth.decode_hex("0x8e9726d8a4fd1ece78e2cac3aa0eb73f22444c99320c24cc879440398304fb60"),
-    #        Exth.decode_hex("0x4a4e2470a6b55b2af27dfdf5562ba1ceafa6f75d92e0859b2db6225184a74f9b")
-    #      ]
-    #      :ok = Logger.debug(fn -> "[Sync] Sending GetReceipts request: #{Exth.encode_hex(Block.hash(block))}, Header: #{Header.to_string(block.header)}" end)
-    #      true = send_with_retry(GetReceipts.new(block_hashes), :random, :request_receipts)
-    #    end
-
     next_state =
       warp_queue
       |> WarpQueue.processed_block_chunk(chunk_hash, block, processed_blocks)
@@ -387,22 +372,38 @@ defmodule ExWire.Sync do
   def handle_receipts(
         %Receipts{receipts: blocks_receipts},
         _peer,
-        state = %{block_queue: block_queue}
+        state = %{
+          trie: trie,
+          chain: chain,
+          block_tree: block_tree,
+          block_queue: block_queue
+        }
       ) do
-    case BlockQueue.add_receipts(block_queue, blocks_receipts) do
-      {updated_block_queue, []} ->
-        :ok = Logger.debug("Processed receipts, no new ones queued to fetch.")
-        %{state | block_queue: updated_block_queue}
+    updated_block_queue =
+      case BlockQueue.add_receipts(block_queue, blocks_receipts) do
+        {updated_block_queue, []} ->
+          :ok = Logger.debug("Processed receipts, no new ones queued to fetch.")
+          updated_block_queue
 
-      {updated_block_queue, hashes_to_request} ->
-        :ok =
-          Logger.debug(fn ->
-            "[Sync] Sending GetReceipts request for [#{Enum.count(hashes_to_request)}] receipts."
-          end)
+        {updated_block_queue, hashes_to_request} ->
+          :ok =
+            Logger.debug(fn ->
+              "[Sync] Sending GetReceipts request for [#{Enum.count(hashes_to_request)}] receipts."
+            end)
 
-        _ = send_with_retry(GetReceipts.new(hashes_to_request), :random, :request_receipts)
-        %{state | block_queue: updated_block_queue}
-    end
+          _ = send_with_retry(GetReceipts.new(hashes_to_request), :random, :request_receipts)
+          updated_block_queue
+      end
+
+    {final_queue, final_tree, final_trie} =
+      BlockQueue.process_block_queue(updated_block_queue, block_tree, chain, trie)
+
+    %{
+      state
+      | trie: final_trie,
+        block_tree: final_tree,
+        block_queue: final_queue
+    }
   end
 
   @doc """
