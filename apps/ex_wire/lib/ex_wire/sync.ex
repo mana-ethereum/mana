@@ -28,7 +28,9 @@ defmodule ExWire.Sync do
     BlockBodies,
     BlockHeaders,
     GetBlockBodies,
-    GetBlockHeaders
+    GetBlockHeaders,
+    GetReceipts,
+    Receipts
   }
 
   alias ExWire.Packet.Capability.Par.{
@@ -128,6 +130,21 @@ defmodule ExWire.Sync do
         {:processed_block_chunk, chunk_hash, processed_blocks, block},
         state = %{warp_queue: warp_queue}
       ) do
+    #
+    #    ######
+    #    ## TODO: REMOVE THIS !!!!
+    #    ######
+    #
+    #    if block do
+    #      block_hashes = [
+    #        Block.hash(block),
+    #        Exth.decode_hex("0x8e9726d8a4fd1ece78e2cac3aa0eb73f22444c99320c24cc879440398304fb60"),
+    #        Exth.decode_hex("0x4a4e2470a6b55b2af27dfdf5562ba1ceafa6f75d92e0859b2db6225184a74f9b")
+    #      ]
+    #      :ok = Logger.debug(fn -> "[Sync] Sending GetReceipts request: #{Exth.encode_hex(Block.hash(block))}, Header: #{Header.to_string(block.header)}" end)
+    #      true = send_with_retry(GetReceipts.new(block_hashes), :random, :request_receipts)
+    #    end
+
     next_state =
       warp_queue
       |> WarpQueue.processed_block_chunk(chunk_hash, block, processed_blocks)
@@ -202,6 +219,10 @@ defmodule ExWire.Sync do
         state
       ) do
     {:noreply, handle_snapshot_data(snapshot_data, peer, state)}
+  end
+
+  def handle_info({:packet, %Receipts{} = receipts_data, peer}, state) do
+    {:noreply, handle_receipts(receipts_data, peer, state)}
   end
 
   def handle_info({:packet, packet, peer}, state) do
@@ -358,6 +379,33 @@ defmodule ExWire.Sync do
   end
 
   @doc """
+  When we receive the Receipts payload that we requested, add them to the BlockQueue,
+  request new receipts if there are any to be fetched, and return the state with the
+  updated BlockQueue that accounts for the processed Receipts as well as any newly-requested ones.
+  """
+  @spec handle_receipts(Receipts.t(), Peer.t(), state()) :: state()
+  def handle_receipts(
+        %Receipts{receipts: blocks_receipts},
+        _peer,
+        state = %{block_queue: block_queue}
+      ) do
+    case BlockQueue.add_receipts(block_queue, blocks_receipts) do
+      {updated_block_queue, []} ->
+        :ok = Logger.debug("Processed receipts, no new ones queued to fetch.")
+        %{state | block_queue: updated_block_queue}
+
+      {updated_block_queue, hashes_to_request} ->
+        :ok =
+          Logger.debug(fn ->
+            "[Sync] Sending GetReceipts request for [#{Enum.count(hashes_to_request)}] receipts."
+          end)
+
+        _ = send_with_retry(GetReceipts.new(hashes_to_request), :random, :request_receipts)
+        %{state | block_queue: updated_block_queue}
+    end
+  end
+
+  @doc """
   When we get block headers from peers, we add them to our current block
   queue to incorporate the blocks into our state chain.
 
@@ -386,7 +434,7 @@ defmodule ExWire.Sync do
       :ok = maybe_request_next_block(block_queue)
       state
     else
-      {next_highest_block_number, next_block_queue, next_block_tree, next_trie, header_hashes} =
+      {next_highest_block_number, updated_block_queue, next_block_tree, next_trie, header_hashes} =
         Enum.reduce(
           block_headers.headers,
           {highest_block_number, block_queue, block_tree, trie, []},
@@ -420,12 +468,28 @@ defmodule ExWire.Sync do
           end
         )
 
-      :ok =
-        PeerSupervisor.send_packet(
+      next_block_queue =
+        case BlockQueue.get_receipts_to_request(updated_block_queue) do
+          {:ok, block_hashes, modified_queue} ->
+            :ok =
+              Logger.debug(fn ->
+                "[Sync] Sending GetReceipts request for [#{Enum.count(block_hashes)}] receipts."
+              end)
+
+            _ = send_with_retry(GetReceipts.new(block_hashes), :random, :request_receipts)
+            modified_queue
+
+          :do_not_request ->
+            updated_block_queue
+        end
+
+      _ =
+        send_with_retry(
           %GetBlockBodies{
             hashes: header_hashes
           },
-          :random
+          :random,
+          :request_block_bodies
         )
 
       next_maybe_saved_trie = maybe_save(block_tree, next_block_tree, next_trie)
@@ -586,7 +650,11 @@ defmodule ExWire.Sync do
   @spec send_with_retry(
           Packet.packet(),
           PeerSupervisor.node_selector(),
-          :request_manifest | :request_next_block | {:request_chunk, EVM.hash()}
+          :request_manifest
+          | :request_next_block
+          | :request_block_bodies
+          | :request_receipts
+          | {:request_chunk, EVM.hash()}
         ) :: boolean()
   defp send_with_retry(packet, node_selector, retry_message) do
     send_packet_result =

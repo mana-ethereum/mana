@@ -59,6 +59,26 @@ defmodule EVM.LogEntry do
     }
   end
 
+  @spec serialize(t) :: ExRLP.t()
+  def serialize(log) do
+    [
+      log.address,
+      log.topics,
+      log.data
+    ]
+  end
+
+  @spec deserialize(ExRLP.t()) :: t
+  def deserialize(rlp) do
+    [
+      address,
+      topics,
+      data
+    ] = rlp
+
+    new(address, topics, data)
+  end
+
   @doc """
   Converts log struct to standard Ethereum list representation.
 
