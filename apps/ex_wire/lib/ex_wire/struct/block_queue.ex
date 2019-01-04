@@ -102,12 +102,12 @@ defmodule ExWire.Struct.BlockQueue do
             Map.put(block_map, header_hash, %{
               commitments: MapSet.new([remote_id]),
               block: %Block{header: header},
-              receipts_added: false,
+              receipts_added: is_empty,
               ready: is_empty
             })
 
           {receipts_set, receipts_to_request} =
-            if fast_sync_in_progress do
+            if fast_sync_in_progress and not is_empty do
               {
                 MapSet.put(block_receipts_set, header_num_and_hash),
                 block_queue.block_receipts_to_request ++ [header_num_and_hash]
@@ -120,7 +120,8 @@ defmodule ExWire.Struct.BlockQueue do
 
         block_item ->
           {receipts_set, receipts_to_request} =
-            if fast_sync_in_progress and Enum.empty?(block_item.block.receipts) and
+            if fast_sync_in_progress and header.number != 0 and
+                 Enum.empty?(block_item.block.receipts) and
                  not MapSet.member?(block_receipts_set, header_num_and_hash) do
               {
                 MapSet.put(block_receipts_set, header_num_and_hash),
@@ -219,7 +220,6 @@ defmodule ExWire.Struct.BlockQueue do
         }
       ) do
     if is_fast and Enum.empty?(requested) and not Enum.empty?(to_request) do
-
       {new_requests, to_request_tail} = Enum.split(to_request, @max_receipts_to_request)
 
       {
@@ -232,7 +232,6 @@ defmodule ExWire.Struct.BlockQueue do
         }
       }
     else
-      # TODO: check if we're done with Fast Sync and update BlockQueue.fast_sync_in_progress
       :do_not_request
     end
   end
@@ -243,7 +242,7 @@ defmodule ExWire.Struct.BlockQueue do
   This will return the updated BlockQueue and the hashes of the blocks to request Receipts for next.
   """
   @spec add_receipts(t(), [[Receipt.t()]]) :: {t(), [EVM.hash()]} | {t(), []}
-  def add_receipts(queue = %__MODULE__{block_receipts_requested: req}, receipts)
+  def add_receipts(block_queue = %__MODULE__{block_receipts_requested: req}, receipts)
       when length(req) != length(receipts) do
     :ok =
       Logger.warn(fn ->
@@ -252,7 +251,7 @@ defmodule ExWire.Struct.BlockQueue do
         }], Requested # [#{Enum.count(req)}]"
       end)
 
-    {queue, req |> Enum.map(fn {_number, hash} -> hash end)}
+    {block_queue, req |> Enum.map(fn {_number, hash} -> hash end)}
   end
 
   def add_receipts(
@@ -266,8 +265,8 @@ defmodule ExWire.Struct.BlockQueue do
     number_hash_tuple_receipts = Enum.zip(requested, block_receipts)
 
     updated_queue =
-      Enum.reduce(number_hash_tuple_receipts, block_queue, fn {{number, hash}, receipts},
-                                                              updated_queue ->
+      Enum.reduce(number_hash_tuple_receipts, queue, fn {{number, hash}, receipts},
+                                                        updated_queue ->
         block_map = Map.get(queue, number)
         block_item = Map.get(block_map, hash)
         block = Map.get(block_item, :block)

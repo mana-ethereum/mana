@@ -398,6 +398,8 @@ defmodule ExWire.Sync do
     {final_queue, final_tree, final_trie} =
       BlockQueue.process_block_queue(updated_block_queue, block_tree, chain, trie)
 
+    :ok = maybe_request_next_block(final_queue)
+
     %{
       state
       | trie: final_trie,
@@ -469,6 +471,17 @@ defmodule ExWire.Sync do
           end
         )
 
+      if not Enum.empty?(header_hashes) do
+        _ =
+          send_with_retry(
+            %GetBlockBodies{
+              hashes: header_hashes
+            },
+            :random,
+            :request_block_bodies
+          )
+      end
+
       next_block_queue =
         case BlockQueue.get_receipts_to_request(updated_block_queue) do
           {:ok, block_hashes, modified_queue} ->
@@ -483,15 +496,6 @@ defmodule ExWire.Sync do
           :do_not_request ->
             updated_block_queue
         end
-
-      _ =
-        send_with_retry(
-          %GetBlockBodies{
-            hashes: header_hashes
-          },
-          :random,
-          :request_block_bodies
-        )
 
       next_maybe_saved_trie = maybe_save(block_tree, next_block_tree, next_trie)
       :ok = maybe_request_next_block(next_block_queue)
