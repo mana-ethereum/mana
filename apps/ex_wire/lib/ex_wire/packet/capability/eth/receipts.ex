@@ -67,8 +67,6 @@ defmodule ExWire.Packet.Capability.Eth.Receipts do
         end
       end
 
-    :ok = Logger.info("[RECEIPTS] Decoded Receipt!!!!!!!!!!")
-
     new(block_receipts)
   end
 

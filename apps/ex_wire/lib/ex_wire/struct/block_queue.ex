@@ -32,7 +32,7 @@ defmodule ExWire.Struct.BlockQueue do
             backlog: %{},
             do_validation: true,
             block_numbers: MapSet.new(),
-            fast_sync_in_progress: false,
+            fast_sync_in_progress: true,
             block_receipts_set: MapSet.new(),
             block_receipts_to_request: [],
             block_receipts_requested: []
@@ -102,7 +102,7 @@ defmodule ExWire.Struct.BlockQueue do
             Map.put(block_map, header_hash, %{
               commitments: MapSet.new([remote_id]),
               block: %Block{header: header},
-              receits_added: false,
+              receipts_added: false,
               ready: is_empty
             })
 
@@ -110,7 +110,7 @@ defmodule ExWire.Struct.BlockQueue do
             if fast_sync_in_progress do
               {
                 MapSet.put(block_receipts_set, header_num_and_hash),
-                [block_queue.block_receipts_to_request | header_num_and_hash]
+                block_queue.block_receipts_to_request ++ [header_num_and_hash]
               }
             else
               {block_receipts_set, block_receipts_to_request}
@@ -124,7 +124,7 @@ defmodule ExWire.Struct.BlockQueue do
                  not MapSet.member?(block_receipts_set, header_num_and_hash) do
               {
                 MapSet.put(block_receipts_set, header_num_and_hash),
-                [block_queue.block_receipts_to_request | header_num_and_hash]
+                block_queue.block_receipts_to_request ++ [header_num_and_hash]
               }
             else
               {block_receipts_set, block_receipts_to_request}
@@ -219,6 +219,7 @@ defmodule ExWire.Struct.BlockQueue do
         }
       ) do
     if is_fast and Enum.empty?(requested) and not Enum.empty?(to_request) do
+
       {new_requests, to_request_tail} = Enum.split(to_request, @max_receipts_to_request)
 
       {
@@ -251,7 +252,7 @@ defmodule ExWire.Struct.BlockQueue do
         }], Requested # [#{Enum.count(req)}]"
       end)
 
-    {queue, req}
+    {queue, req |> Enum.map(fn {_number, hash} -> hash end)}
   end
 
   def add_receipts(
