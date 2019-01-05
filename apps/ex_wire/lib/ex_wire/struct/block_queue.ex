@@ -32,7 +32,7 @@ defmodule ExWire.Struct.BlockQueue do
             backlog: %{},
             do_validation: true,
             block_numbers: MapSet.new(),
-            fast_sync_in_progress: true,
+            fast_sync_in_progress: false,
             block_receipts_set: MapSet.new(),
             block_receipts_to_request: [],
             block_receipts_requested: []

@@ -23,7 +23,7 @@ defmodule ExWire.Packet.Capability.Eth.Receipts do
     :receipts
   ]
 
-  @spec new([Receipt.t()]) :: t()
+  @spec new([[Receipt.t()]]) :: t()
   def new(receipts) do
     %__MODULE__{
       receipts: receipts
