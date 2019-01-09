@@ -79,6 +79,36 @@ defmodule Blockchain.Transaction.ValidityTest do
       assert Enum.member?(errors, :nonce_mismatch)
     end
 
+    test "doesn't invalidate account when nonces mismatch but transaction hash `from` field" do
+      private_key = <<1::256>>
+      # based on simple private key
+      sender =
+        <<126, 95, 69, 82, 9, 26, 105, 18, 93, 93, 252, 183, 184, 194, 101, 144, 41, 57, 91, 223>>
+
+      trx =
+        %Transaction{
+          data: <<>>,
+          gas_limit: 10_000_000,
+          gas_price: 0,
+          init: <<1>>,
+          nonce: 4,
+          to: <<>>,
+          value: 5,
+          from:
+            <<126, 95, 69, 82, 9, 26, 105, 18, 93, 93, 252, 183, 184, 194, 101, 144, 41, 57, 91,
+              223>>
+        }
+        |> Transaction.Signature.sign_transaction(private_key)
+
+      {:invalid, errors} =
+        MerklePatriciaTree.Test.random_ets_db()
+        |> MerklePatriciaTree.Trie.new()
+        |> Account.put_account(sender, %Account{balance: 1000, nonce: 5})
+        |> Validity.validate(trx, %Block.Header{}, Chain.test_config("Frontier"))
+
+      assert !Enum.member?(errors, :nonce_mismatch)
+    end
+
     test "invalidates account when insufficient starting gas" do
       private_key = <<1::256>>
       # based on simple private key

@@ -91,6 +91,11 @@ defmodule JSONRPC2.BridgeSyncMock do
     GenServer.call(__MODULE__, {:get_transaction_count, address, block_number})
   end
 
+  @impl true
+  def last_sync_state() do
+    GenServer.call(__MODULE__, :last_sync_state)
+  end
+
   def set_trie(trie) do
     GenServer.call(__MODULE__, {:set_trie, trie})
   end
@@ -367,6 +372,10 @@ defmodule JSONRPC2.BridgeSyncMock do
       end
 
     {:reply, result, state}
+  end
+
+  def handle_call(:last_sync_state, _, state) do
+    {:reply, state, state}
   end
 
   @spec handle_call(:get_last_sync_block_stats, {pid, any}, map()) ::

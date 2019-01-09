@@ -57,3 +57,7 @@ apps/blockchain/lib/mix/tasks/sync/from_file.ex
 -------------------------------
 apps/blockchain/lib/eth_common_test/blockchain_test_runner.ex
 apps/blockchain/lib/eth_common_test/state_test_runner.ex
+
+apps/jsonrpc2/lib/jsonrpc2/spec_handler.ex:131
+apps/jsonrpc2/lib/jsonrpc2/spec_handler/gas_estimater.ex:42
+apps/jsonrpc2/lib/jsonrpc2/spec_handler/gas_estimater.ex:66

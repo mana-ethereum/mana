@@ -23,7 +23,7 @@ defmodule JSONRPC2.Bridge.Sync do
         false
 
       _ ->
-        state = get_last_sync_state()
+        state = last_sync_state()
 
         {:ok, {block, _caching_trie}} =
           Blocktree.get_best_block(state.block_tree, state.chain, state.trie)
@@ -34,7 +34,7 @@ defmodule JSONRPC2.Bridge.Sync do
 
   @impl true
   def block(hash_or_number, include_full_transactions) do
-    state_trie = get_last_sync_state().trie
+    state_trie = last_sync_state().trie
 
     case Block.get_block(hash_or_number, state_trie) do
       {:ok, block} -> ResponseBlock.new(block, include_full_transactions)
@@ -44,7 +44,7 @@ defmodule JSONRPC2.Bridge.Sync do
 
   @impl true
   def transaction_by_block_and_index(block_number, trx_index) do
-    trie = get_last_sync_state().trie
+    trie = last_sync_state().trie
 
     with {:ok, block} <- Block.get_block(block_number, trie) do
       case Enum.at(block.transactions, trx_index) do
@@ -58,7 +58,7 @@ defmodule JSONRPC2.Bridge.Sync do
 
   @impl true
   def transaction_by_hash(transaction_hash) do
-    state_trie = get_last_sync_state().trie
+    state_trie = last_sync_state().trie
 
     case Block.get_transaction_by_hash(transaction_hash, state_trie, true) do
       {transaction, block} -> ResponseTransaction.new(transaction, block)
@@ -68,7 +68,7 @@ defmodule JSONRPC2.Bridge.Sync do
 
   @impl true
   def block_transaction_count(number_or_hash) do
-    state_trie = get_last_sync_state().trie
+    state_trie = last_sync_state().trie
 
     case Block.get_block(number_or_hash, state_trie) do
       {:ok, block} ->
@@ -83,7 +83,7 @@ defmodule JSONRPC2.Bridge.Sync do
 
   @impl true
   def uncle_count(number_or_hash) do
-    state_trie = get_last_sync_state().trie
+    state_trie = last_sync_state().trie
 
     case Block.get_block(number_or_hash, state_trie) do
       {:ok, block} ->
@@ -98,21 +98,21 @@ defmodule JSONRPC2.Bridge.Sync do
 
   @impl true
   def starting_block_number do
-    state = get_last_sync_state()
+    state = last_sync_state()
 
     Map.get(state, :starting_block_number, 0)
   end
 
   @impl true
   def highest_block_number do
-    state = get_last_sync_state()
+    state = last_sync_state()
 
     Map.get(state, :highest_block_number, 0)
   end
 
   @impl true
   def code(address, block_number) do
-    state_trie = get_last_sync_state().trie
+    state_trie = last_sync_state().trie
 
     case Block.get_block(block_number, state_trie) do
       {:ok, block} ->
@@ -130,7 +130,7 @@ defmodule JSONRPC2.Bridge.Sync do
 
   @impl true
   def transaction_receipt(transaction_hash) do
-    state_trie = get_last_sync_state().trie
+    state_trie = last_sync_state().trie
 
     case Block.get_receipt_by_transaction_hash(transaction_hash, state_trie) do
       {receipt, transaction, block} -> ResponseReceipt.new(receipt, transaction, block)
@@ -140,7 +140,7 @@ defmodule JSONRPC2.Bridge.Sync do
 
   @impl true
   def balance(address, block_number) do
-    state_trie = get_last_sync_state().trie
+    state_trie = last_sync_state().trie
 
     case Block.get_block(block_number, state_trie) do
       {:ok, block} ->
@@ -161,7 +161,7 @@ defmodule JSONRPC2.Bridge.Sync do
 
   @impl true
   def uncle(block_hash_or_number, index) do
-    trie = get_last_sync_state().trie
+    trie = last_sync_state().trie
 
     case Block.get_block(block_hash_or_number, trie) do
       {:ok, block} ->
@@ -184,7 +184,7 @@ defmodule JSONRPC2.Bridge.Sync do
 
   @impl true
   def storage(storage_address, storage_key, block_number) do
-    trie = get_last_sync_state().trie
+    trie = last_sync_state().trie
 
     case Block.get_block(block_number, trie) do
       {:ok, block} ->
@@ -204,7 +204,7 @@ defmodule JSONRPC2.Bridge.Sync do
 
   @impl true
   def transaction_count(address, block_number) do
-    trie = get_last_sync_state().trie
+    trie = last_sync_state().trie
 
     case Block.get_block(block_number, trie) do
       {:ok, block} ->
@@ -223,6 +223,6 @@ defmodule JSONRPC2.Bridge.Sync do
     end
   end
 
-  @spec get_last_sync_state() :: Sync.state()
-  defp get_last_sync_state(), do: Sync.get_state()
+  @impl true
+  def last_sync_state(), do: Sync.get_state()
 end

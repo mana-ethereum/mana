@@ -1,9 +1,8 @@
 defmodule JSONRPC2.Client do
+  alias ExWire.Sync
   alias JSONRPC2.Response.Block, as: ResponseBlock
   alias JSONRPC2.Response.Receipt, as: ResponseReceipt
   alias JSONRPC2.Response.Transaction, as: ResponseTransaction
-
-  @type implementation :: struct()
 
   @callback connected_peer_count() :: 0 | non_neg_integer()
   @callback last_sync_block_stats() ::
@@ -22,4 +21,5 @@ defmodule JSONRPC2.Client do
   @callback uncle(binary() | non_neg_integer(), non_neg_integer()) :: ResponseBlock.t() | nil
   @callback storage(binary(), non_neg_integer(), non_neg_integer) :: binary() | nil
   @callback transaction_count(binary(), non_neg_integer()) :: binary() | nil
+  @callback last_sync_state() :: Sync.state()
 end

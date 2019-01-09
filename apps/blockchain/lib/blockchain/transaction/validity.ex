@@ -20,7 +20,7 @@ defmodule Blockchain.Transaction.Validity do
     evm_config = Chain.evm_config(chain, block_header.number)
 
     with :ok <- validate_signature(trx, chain, evm_config),
-         {:ok, sender_address} <- Transaction.Signature.sender(trx, chain.params.network_id) do
+         {:ok, sender_address} <- fetch_sender_address(trx, chain.params.network_id) do
       errors =
         []
         |> check_intristic_gas(trx, evm_config)
@@ -28,6 +28,14 @@ defmodule Blockchain.Transaction.Validity do
         |> check_gas_limit(trx, block_header)
 
       if errors == [], do: :valid, else: {:invalid, errors}
+    end
+  end
+
+  defp fetch_sender_address(trx, network_id) do
+    if is_nil(trx.from) do
+      Transaction.Signature.sender(trx, network_id)
+    else
+      {:ok, trx.from}
     end
   end
 
@@ -46,21 +54,31 @@ defmodule Blockchain.Transaction.Validity do
   defp validate_signature(trx, chain, evm_config) do
     max_s_value = evm_config.max_signature_s
 
-    if Transaction.Signature.is_signature_valid?(trx.r, trx.s, trx.v, chain.params.network_id,
-         max_s: max_s_value
-       ) do
-      :ok
-    else
-      {:invalid, :invalid_sender}
+    cond do
+      !is_nil(trx.from) ->
+        :ok
+
+      Transaction.Signature.is_signature_valid?(trx.r, trx.s, trx.v, chain.params.network_id,
+        max_s: max_s_value
+      ) ->
+        :ok
+
+      true ->
+        {:invalid, :invalid_sender}
     end
   end
 
   @spec check_sender_nonce([atom()], Transaction.t(), Account.t()) :: [atom()]
   defp check_sender_nonce(errors, transaction, account) do
-    if account.nonce != transaction.nonce do
-      [:nonce_mismatch | errors]
-    else
-      errors
+    cond do
+      !is_nil(transaction.from) ->
+        errors
+
+      account.nonce != transaction.nonce ->
+        [:nonce_mismatch | errors]
+
+      true ->
+        errors
     end
   end
 
