@@ -146,9 +146,9 @@ Ethereum common tests are created for all clients to test against. See the [comm
 | Homestead         | 100% (2211/2211)          | 100% (2069/2069)            | ✓         |
 | HomesteadToDaoAt5 | 100% (4/4)                | N/A                         | ✓         |
 | TangerineWhistle  | 100% (1270/1270)          | 100% (1120/1120)            | ✓         |
-| SpuriousDragon    | 100% (1201/1201)          | 100% (1180/1180)            | ✓         |
-| Byzantium         | 100% (4954/4954)          | 100% (4800/4800)            | ✓         |
-| Constantinople    | 100% (10606/10606)        | 100% (10571/10571)          | ✓         |
+| SpuriousDragon    | 100% (1201/1201)          | 100% (1193/1193)            | ✓         |
+| Byzantium         | 100% (4954/4954)          | 100% (4813/4813)            | ✓         |
+| Constantinople    | 100% (10622/10622)        | 100% (10588/10588)          | ✓         |
 
 View the community [Constantinople Project Tracker](https://github.com/ethereum/pm/issues/53).
 
