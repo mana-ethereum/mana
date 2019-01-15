@@ -71,14 +71,6 @@ if ! command -v mix > /dev/null; then
   exit 1
 fi
 
-ELIXIR_PATCH_VERSION=`elixir -v |grep Elixir | sed -n 's/.*1\.7\.\([0-9]\).*$/\1/p'`
-if [ $ELIXIR_PATCH_VERSION -lt 4 ]; then
-  fancy_echo "Your elixir version must be ~> 1.7.4"
-  fancy_echo "Your current version:"
-  elixir -v
-  exit 1
-fi
-
 mix local.hex --force
 
 if ! command -v mix > /dev/null; then

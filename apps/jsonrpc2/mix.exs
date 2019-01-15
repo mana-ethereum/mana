@@ -19,7 +19,7 @@ defmodule JSONRPC2.Mixfile do
       name: "JSONRPC2",
       elixirc_paths: elixirc_paths(Mix.env()),
       elixirc_options: [warnings_as_errors: true],
-      elixir: "~> 1.7.4",
+      elixir: "~> 1.8",
       start_permanent: Mix.env() == :prod,
       dialyzer: [
         flags: [:underspecs, :unknown, :unmatched_returns],
