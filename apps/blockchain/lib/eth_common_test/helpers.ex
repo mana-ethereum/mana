@@ -111,12 +111,12 @@ defmodule EthCommonTest.Helpers do
 
   @spec ethereum_common_tests_path :: String.t()
   def ethereum_common_tests_path do
-    Path.join(File.cwd(), "/../../ethereum_common_tests")
+    Path.join(File.cwd!(), "/../../ethereum_common_tests")
   end
 
   @spec known_failures_path :: String.t()
   def known_failures_path do
-    Path.join(File.cwd(), "/test/support/known_failures.txt")
+    Path.join(File.cwd!(), "/test/support/known_failures.txt")
   end
 
   @spec run_common_tests(
