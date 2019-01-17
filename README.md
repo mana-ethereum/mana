@@ -15,7 +15,7 @@ Mana-Ethereum is currently in development. See the [Project Status] and [Project
 
 # Dependencies
 
-- Elixir ~> 1.7.4
+- Elixir ~> 1.8.0
 
 # Installation
 

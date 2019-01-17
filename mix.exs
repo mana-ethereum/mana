@@ -17,7 +17,7 @@ defmodule Mana.MixProject do
         :jsonrpc2
       ],
       elixirc_options: [warnings_as_errors: true],
-      elixir: "~> 1.7.4",
+      elixir: "~> 1.8",
       start_permanent: Mix.env() == :prod,
       dialyzer: [
         flags: [:underspecs, :unknown, :unmatched_returns],

@@ -14,7 +14,7 @@ defmodule Release do
   end
 
   defp untar_and_start() do
-    dir = Path.join(System.cwd(), "/../../")
+    dir = Path.join(File.cwd!(), "/../../")
     path = recursive_search(dir, "mana.tar.gz")
     path
   end
