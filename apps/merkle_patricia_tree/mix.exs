@@ -33,7 +33,7 @@ defmodule MerklePatriciaTree.Mixfile do
     [
       # External deps
       {:logger_file_backend, "~> 0.0.10"},
-      {:ex_rlp, "~> 0.5.0"},
+      {:ex_rlp, "~> 0.5.2"},
       {:rocksdb, "~> 0.26.0"},
       {:jason, "~> 1.1"},
       # Umbrella deps

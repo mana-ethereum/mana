@@ -36,7 +36,7 @@ defmodule EVM.Mixfile do
       # External deps
       {:logger_file_backend, "~> 0.0.10"},
       {:decimal, "~>1.5.0"},
-      {:ex_rlp, "~> 0.5.0"},
+      {:ex_rlp, "~> 0.5.2"},
       {:bn, "~> 0.2.1"},
       # Umbrella deps
       {:merkle_patricia_tree, in_umbrella: true},
