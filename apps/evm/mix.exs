@@ -40,7 +40,7 @@ defmodule EVM.Mixfile do
       {:bn, "~> 0.2.1"},
       # Umbrella deps
       {:merkle_patricia_tree, in_umbrella: true},
-      {:exth_crypto, in_umbrella: true},
+      {:exth_crypto, "~> 0.1.6"},
       {:exth, in_umbrella: true},
       {:jason, "~> 1.1", test: true}
     ]

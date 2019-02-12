@@ -44,7 +44,7 @@ defmodule Blockchain.Mixfile do
       # Umbrella deps
       {:evm, in_umbrella: true},
       {:exth, in_umbrella: true},
-      {:exth_crypto, in_umbrella: true},
+      {:exth_crypto, "~> 0.1.6"},
       {:merkle_patricia_tree, in_umbrella: true}
     ]
   end

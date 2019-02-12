@@ -41,7 +41,7 @@ defmodule ExWire.Mixfile do
       # Umbrella deps
       {:blockchain, in_umbrella: true},
       {:exth, in_umbrella: true},
-      {:exth_crypto, in_umbrella: true},
+      {:exth_crypto, "~> 0.1.6"},
       {:evm, in_umbrella: true}
     ]
   end

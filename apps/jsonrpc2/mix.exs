@@ -39,7 +39,7 @@ defmodule JSONRPC2.Mixfile do
     [
       # Umbrella deps
       {:ex_wire, in_umbrella: true},
-      {:exth_crypto, in_umbrella: true},
+      {:exth_crypto, "~> 0.1.6"},
       # External deps
       {:logger_file_backend, "~> 0.0.10"},
       {:cowboy, "~> 2.5"},

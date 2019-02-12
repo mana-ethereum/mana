@@ -37,7 +37,7 @@ defmodule MerklePatriciaTree.Mixfile do
       {:rocksdb, "~> 0.26.0"},
       {:jason, "~> 1.1"},
       # Umbrella deps
-      {:exth_crypto, in_umbrella: true}
+      {:exth_crypto, "~> 0.1.6"},
     ]
   end
 end
