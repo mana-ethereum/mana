@@ -13,10 +13,10 @@ install_linux_deps() {
   echo $flavor
   case $flavor in
     debian|ubuntu)
-      sudo apt-get install -y $LINUX_DEPS libgmp-dev erlang-dev
+      sudo apt-get install -y $LINUX_DEPS libgmp-dev erlang-dev libbz2-dev
       ;;
     fedora|centos)
-      sudo yum install $LINUX_DEPS gmp-devel
+      sudo yum install $LINUX_DEPS gmp-devel bzip2 bzip2-devel
       ;;
     *)
       fancy_echo "Unrecognized distribution $flavor"
