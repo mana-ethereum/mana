@@ -55,15 +55,21 @@ defmodule Blockchain.Blocktree do
         else: {:valid, trie}
 
     with {:valid, trie} <- validation do
-      {:ok, {block_hash, updated_trie}} = Block.put_block(block, trie, specified_block_hash)
-
-      # Cache computed block hash
-      block = %{block | block_hash: block_hash}
-
-      updated_blocktree = update_best_block(blocktree, block)
-
-      {:ok, {updated_blocktree, updated_trie, block_hash}}
+      add_block_without_validation(blocktree, block, trie, specified_block_hash)
     end
+  end
+
+  @spec add_block_without_validation(t, Block.t(), TrieStorage.t(), EVM.hash() | nil) ::
+          {:ok, {t, TrieStorage.t(), EVM.hash()}}
+  def add_block_without_validation(blocktree, block, trie, specified_block_hash \\ nil) do
+    {:ok, {block_hash, updated_trie}} = Block.put_block(block, trie, specified_block_hash)
+
+    # Cache computed block hash
+    block = %{block | block_hash: block_hash}
+
+    updated_blocktree = update_best_block(blocktree, block)
+
+    {:ok, {updated_blocktree, updated_trie, block_hash}}
   end
 
   @spec update_best_block(t, Block.t()) :: t

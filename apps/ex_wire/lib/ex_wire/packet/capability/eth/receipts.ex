@@ -11,18 +11,19 @@ defmodule ExWire.Packet.Capability.Eth.Receipts do
   """
 
   require Logger
+  alias Blockchain.Transaction.Receipt
 
   @behaviour ExWire.Packet
 
   @type t :: %__MODULE__{
-          receipts: [any()]
+          receipts: [[Receipt.t()]]
         }
 
   defstruct [
     :receipts
   ]
 
-  @spec new([any()]) :: t()
+  @spec new([[Receipt.t()]]) :: t()
   def new(receipts) do
     %__MODULE__{
       receipts: receipts
@@ -45,7 +46,11 @@ defmodule ExWire.Packet.Capability.Eth.Receipts do
   @impl true
   @spec serialize(t) :: ExRLP.t()
   def serialize(packet = %__MODULE__{}) do
-    for receipt <- packet.receipts, do: receipt
+    for receipts <- packet.receipts do
+      for receipt <- receipts do
+        Receipt.serialize(receipt)
+      end
+    end
   end
 
   @doc """
@@ -55,9 +60,14 @@ defmodule ExWire.Packet.Capability.Eth.Receipts do
   @impl true
   @spec deserialize(ExRLP.t()) :: t
   def deserialize(rlp) do
-    receipts = for receipt <- rlp, do: receipt
+    block_receipts =
+      for receipts <- rlp do
+        for receipt <- receipts do
+          Receipt.deserialize(receipt)
+        end
+      end
 
-    new(receipts)
+    new(block_receipts)
   end
 
   @doc """

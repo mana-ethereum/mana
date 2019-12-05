@@ -28,7 +28,9 @@ defmodule ExWire.Sync do
     BlockBodies,
     BlockHeaders,
     GetBlockBodies,
-    GetBlockHeaders
+    GetBlockHeaders,
+    GetReceipts,
+    Receipts
   }
 
   alias ExWire.Packet.Capability.Par.{
@@ -204,6 +206,10 @@ defmodule ExWire.Sync do
     {:noreply, handle_snapshot_data(snapshot_data, peer, state)}
   end
 
+  def handle_info({:packet, %Receipts{} = receipts_data, peer}, state) do
+    {:noreply, handle_receipts(receipts_data, peer, state)}
+  end
+
   def handle_info({:packet, packet, peer}, state) do
     :ok = Exth.trace(fn -> "[Sync] Ignoring packet #{packet.__struct__} from #{peer}" end)
 
@@ -358,6 +364,51 @@ defmodule ExWire.Sync do
   end
 
   @doc """
+  When we receive the Receipts payload that we requested, add them to the BlockQueue,
+  request new receipts if there are any to be fetched, and return the state with the
+  updated BlockQueue that accounts for the processed Receipts as well as any newly-requested ones.
+  """
+  @spec handle_receipts(Receipts.t(), Peer.t(), state()) :: state()
+  def handle_receipts(
+        %Receipts{receipts: blocks_receipts},
+        _peer,
+        state = %{
+          trie: trie,
+          chain: chain,
+          block_tree: block_tree,
+          block_queue: block_queue
+        }
+      ) do
+    updated_block_queue =
+      case BlockQueue.add_receipts(block_queue, blocks_receipts) do
+        {updated_block_queue, []} ->
+          :ok = Logger.debug("Processed receipts, no new ones queued to fetch.")
+          updated_block_queue
+
+        {updated_block_queue, hashes_to_request} ->
+          :ok =
+            Logger.debug(fn ->
+              "[Sync] Sending GetReceipts request for [#{Enum.count(hashes_to_request)}] receipts."
+            end)
+
+          _ = send_with_retry(GetReceipts.new(hashes_to_request), :random, :request_receipts)
+          updated_block_queue
+      end
+
+    {final_queue, final_tree, final_trie} =
+      BlockQueue.process_block_queue(updated_block_queue, block_tree, chain, trie)
+
+    :ok = maybe_request_next_block(final_queue)
+
+    %{
+      state
+      | trie: final_trie,
+        block_tree: final_tree,
+        block_queue: final_queue
+    }
+  end
+
+  @doc """
   When we get block headers from peers, we add them to our current block
   queue to incorporate the blocks into our state chain.
 
@@ -386,7 +437,7 @@ defmodule ExWire.Sync do
       :ok = maybe_request_next_block(block_queue)
       state
     else
-      {next_highest_block_number, next_block_queue, next_block_tree, next_trie, header_hashes} =
+      {next_highest_block_number, updated_block_queue, next_block_tree, next_trie, header_hashes} =
         Enum.reduce(
           block_headers.headers,
           {highest_block_number, block_queue, block_tree, trie, []},
@@ -420,13 +471,31 @@ defmodule ExWire.Sync do
           end
         )
 
-      :ok =
-        PeerSupervisor.send_packet(
-          %GetBlockBodies{
-            hashes: header_hashes
-          },
-          :random
-        )
+      if not Enum.empty?(header_hashes) do
+        _ =
+          send_with_retry(
+            %GetBlockBodies{
+              hashes: header_hashes
+            },
+            :random,
+            :request_block_bodies
+          )
+      end
+
+      next_block_queue =
+        case BlockQueue.get_receipts_to_request(updated_block_queue) do
+          {:ok, block_hashes, modified_queue} ->
+            :ok =
+              Logger.debug(fn ->
+                "[Sync] Sending GetReceipts request for [#{Enum.count(block_hashes)}] receipts."
+              end)
+
+            _ = send_with_retry(GetReceipts.new(block_hashes), :random, :request_receipts)
+            modified_queue
+
+          :do_not_request ->
+            updated_block_queue
+        end
 
       next_maybe_saved_trie = maybe_save(block_tree, next_block_tree, next_trie)
       :ok = maybe_request_next_block(next_block_queue)
@@ -586,7 +655,11 @@ defmodule ExWire.Sync do
   @spec send_with_retry(
           Packet.packet(),
           PeerSupervisor.node_selector(),
-          :request_manifest | :request_next_block | {:request_chunk, EVM.hash()}
+          :request_manifest
+          | :request_next_block
+          | :request_block_bodies
+          | :request_receipts
+          | {:request_chunk, EVM.hash()}
         ) :: boolean()
   defp send_with_retry(packet, node_selector, retry_message) do
     send_packet_result =
