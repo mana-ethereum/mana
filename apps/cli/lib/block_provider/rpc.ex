@@ -148,6 +148,9 @@ defmodule CLI.BlockProvider.RPC do
   @spec load_new_block(integer(), ethereumex_client(), integer()) :: {:ok, %{}} | {:error, any()}
   defp load_new_block(number, client, retries \\ @max_retries) do
     case client.eth_get_block_by_number(to_hex(number), true) do
+      {:ok, nil} ->
+        {:error, :not_found}
+
       {:ok, block} ->
         {:ok, block}
 

@@ -3,10 +3,10 @@ defer = fn fun ->
 end
 
 app_root = fn ->
-  if String.contains?(System.cwd!(), "apps") do
-    Path.join([System.cwd!(), "/../../"])
+  if String.contains?(File.cwd!(), "apps") do
+    Path.join([File.cwd!(), "/../../"])
   else
-    System.cwd!()
+    File.cwd!()
   end
 end
 

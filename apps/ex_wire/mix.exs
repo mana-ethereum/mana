@@ -35,7 +35,7 @@ defmodule ExWire.Mixfile do
       # External deps
       {:binary, "~> 0.0.5"},
       {:ex_doc, "~> 0.16", only: :dev, runtime: false},
-      {:ex_rlp, "~> 0.5.0"},
+      {:ex_rlp, "~> 0.5.2"},
       {:snappyer, "~> 1.2"},
       {:logger_file_backend, "~> 0.0.10"},
       # Umbrella deps

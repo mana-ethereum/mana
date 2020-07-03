@@ -1,26 +1,27 @@
 defmodule JSONRPC2.SpecHandler do
   use JSONRPC2.Server.Handler
 
+  alias Blockchain.Chain
   alias ExthCrypto.Hash.Keccak
   alias JSONRPC2.Bridge.Sync
+  alias JSONRPC2.SpecHandler.CallRequest
+  alias JSONRPC2.SpecHandler.GasEstimater
   alias JSONRPC2.Struct.EthSyncing
 
   import JSONRPC2.Response.Helpers
 
   @sync Application.get_env(:jsonrpc2, :bridge_mock, Sync)
-  # web3 Methods
 
+  # web3 Methods
   def handle_request("web3_clientVersion", _),
     do: Application.get_env(:jsonrpc2, :mana_version)
 
   def handle_request("web3_sha3", [param]) do
-    param
-    |> Exth.decode_hex()
-    |> Keccak.kec()
-    |> Exth.encode_hex()
-  rescue
-    _ ->
-      {:error, :invalid_params}
+    with {:ok, binary} <- decode_hex(param) do
+      binary
+      |> Keccak.kec()
+      |> encode_unformatted_data()
+    end
   end
 
   # net Methods
@@ -37,7 +38,7 @@ defmodule JSONRPC2.SpecHandler do
   def handle_request("eth_protocolVersion", _), do: {:error, :not_supported}
 
   def handle_request("eth_syncing", _) do
-    case @sync.get_last_sync_block_stats() do
+    case @sync.last_sync_block_stats() do
       {_current_block_header_number, _starting_block, _highest_block} = params ->
         EthSyncing.output(params)
 
@@ -53,117 +54,142 @@ defmodule JSONRPC2.SpecHandler do
   def handle_request("eth_accounts", _), do: {:error, :not_supported}
 
   def handle_request("eth_blockNumber", _) do
-    {current_block_header_number, _starting_block, _highest_block} =
-      @sync.get_last_sync_block_stats()
+    {current_block_header_number, _starting_block, _highest_block} = @sync.last_sync_block_stats()
 
-    current_block_header_number
+    encode_quantity(current_block_header_number)
   end
 
   def handle_request("eth_getBalance", [hex_address, hex_number_or_tag]) do
-    block_number = decode_block_number(hex_number_or_tag)
-
-    address = Exth.decode_hex(hex_address)
-
-    @sync.get_balance(address, block_number)
+    with {:ok, block_number} <- decode_block_number(hex_number_or_tag),
+         {:ok, address} <- decode_hex(hex_address) do
+      @sync.balance(address, block_number)
+    end
   end
 
-  def handle_request("eth_getStorageAt", _), do: {:error, :not_supported}
-  def handle_request("eth_getTransactionCount", _), do: {:error, :not_supported}
+  def handle_request("eth_getStorageAt", [
+        hex_storage_address,
+        hex_storage_position,
+        hex_block_number_or_tag
+      ]) do
+    with {:ok, storage_address} <- decode_hex(hex_storage_address),
+         {:ok, storage_key} <- decode_unsigned(hex_storage_position),
+         {:ok, block_number} <- decode_block_number(hex_block_number_or_tag) do
+      @sync.storage(storage_address, storage_key, block_number)
+    end
+  end
+
+  def handle_request("eth_getTransactionCount", [hex_address, hex_block_number_or_tag]) do
+    with {:ok, block_number} <- decode_block_number(hex_block_number_or_tag),
+         {:ok, address} <- decode_hex(hex_address) do
+      @sync.transaction_count(address, block_number)
+    end
+  end
 
   def handle_request("eth_getBlockTransactionCountByHash", [block_hash_hex]) do
-    block_hash_hex
-    |> Exth.decode_hex()
-    |> @sync.get_block_transaction_count()
+    with {:ok, block_hash} <- decode_hex(block_hash_hex) do
+      @sync.block_transaction_count(block_hash)
+    end
   end
 
   def handle_request("eth_getBlockTransactionCountByNumber", [block_number_hex]) do
-    block_number_hex
-    |> Exth.decode_unsigned_from_hex()
-    |> @sync.get_block_transaction_count()
+    with {:ok, block_number} <- decode_unsigned(block_number_hex) do
+      @sync.block_transaction_count(block_number)
+    end
   end
 
   def handle_request("eth_getUncleCountByBlockHash", [block_hash_hex]) do
-    block_hash_hex
-    |> Exth.decode_hex()
-    |> @sync.get_uncle_count()
+    with {:ok, block_hash} <- decode_hex(block_hash_hex) do
+      @sync.uncle_count(block_hash)
+    end
   end
 
   def handle_request("eth_getUncleCountByBlockNumber", [block_number_hex]) do
-    block_number_hex
-    |> Exth.decode_unsigned_from_hex()
-    |> @sync.get_uncle_count()
+    with {:ok, block_number} <- decode_unsigned(block_number_hex) do
+      @sync.uncle_count(block_number)
+    end
   end
 
   def handle_request("eth_getCode", [hex_address, hex_number_or_tag]) do
-    block_number = decode_block_number(hex_number_or_tag)
-
-    address = Exth.decode_hex(hex_address)
-
-    @sync.get_code(address, block_number)
+    with {:ok, block_number} <- decode_block_number(hex_number_or_tag),
+         {:ok, address} <- decode_hex(hex_address) do
+      @sync.code(address, block_number)
+    end
   end
 
   def handle_request("eth_sign", _), do: {:error, :not_supported}
   def handle_request("eth_sendTransaction", _), do: {:error, :not_supported}
   def handle_request("eth_sendRawTransaction", _), do: {:error, :not_supported}
   def handle_request("eth_call", _), do: {:error, :not_supported}
-  def handle_request("eth_estimateGas", _), do: {:error, :not_supported}
 
-  def handle_request("eth_getBlockByHash", [hash, include_full_transactions]) do
-    hash
-    |> Exth.decode_hex()
-    |> @sync.get_block(include_full_transactions)
+  def handle_request("eth_estimateGas", [raw_call_request, hex_block_number_or_tag]) do
+    with {:ok, call_request} <- CallRequest.new(raw_call_request),
+         {:ok, block_number} <- decode_block_number(hex_block_number_or_tag) do
+      sync_data = @sync.last_sync_state()
+      state = sync_data.trie
+      chain = Map.get(sync_data, :chain, Chain.load_chain(:foundation))
+
+      with {:ok, gas} <- GasEstimater.run(state, call_request, block_number, chain) do
+        encode_quantity(gas)
+      end
+    end
+  end
+
+  def handle_request("eth_getBlockByHash", [hex_hash, include_full_transactions]) do
+    with {:ok, hash} <- decode_hex(hex_hash) do
+      @sync.block(hash, include_full_transactions)
+    end
   end
 
   def handle_request("eth_getBlockByNumber", [number_hex, include_full_transactions]) do
-    number = Exth.decode_unsigned_from_hex(number_hex)
-
-    @sync.get_block(number, include_full_transactions)
+    with {:ok, number} <- decode_unsigned(number_hex) do
+      @sync.block(number, include_full_transactions)
+    end
   end
 
   def handle_request("eth_getTransactionByHash", [hex_transaction_hash]) do
-    transaction_hash = Exth.decode_hex(hex_transaction_hash)
-
-    @sync.get_transaction_by_hash(transaction_hash)
+    with {:ok, transaction_hash} <- decode_hex(hex_transaction_hash) do
+      @sync.transaction_by_hash(transaction_hash)
+    end
   end
 
   def handle_request("eth_getTransactionByBlockHashAndIndex", [
         block_hash_hex,
         transaction_index_hex
       ]) do
-    block_hash = Exth.decode_hex(block_hash_hex)
-    transaction_index = Exth.decode_unsigned_from_hex(transaction_index_hex)
-
-    @sync.get_transaction_by_block_and_index(block_hash, transaction_index)
+    with {:ok, block_hash} <- decode_hex(block_hash_hex),
+         {:ok, transaction_index} <- decode_unsigned(transaction_index_hex) do
+      @sync.transaction_by_block_and_index(block_hash, transaction_index)
+    end
   end
 
   def handle_request("eth_getTransactionByBlockNumberAndIndex", [
         block_number_hex,
         transaction_index_hex
       ]) do
-    block_number = Exth.decode_unsigned_from_hex(block_number_hex)
-    transaction_index = Exth.decode_unsigned_from_hex(transaction_index_hex)
-
-    @sync.get_transaction_by_block_and_index(block_number, transaction_index)
+    with {:ok, block_number} <- decode_unsigned(block_number_hex),
+         {:ok, transaction_index} <- decode_unsigned(transaction_index_hex) do
+      @sync.transaction_by_block_and_index(block_number, transaction_index)
+    end
   end
 
   def handle_request("eth_getTransactionReceipt", [hex_transaction_hash]) do
-    transaction_hash = Exth.decode_hex(hex_transaction_hash)
-
-    @sync.get_transaction_receipt(transaction_hash)
+    with {:ok, transaction_hash} <- decode_hex(hex_transaction_hash) do
+      @sync.transaction_receipt(transaction_hash)
+    end
   end
 
   def handle_request("eth_getUncleByBlockHashAndIndex", [hex_block_hash, hex_index]) do
-    block_hash = Exth.decode_hex(hex_block_hash)
-    index = Exth.decode_unsigned_from_hex(hex_index)
-
-    @sync.get_uncle(block_hash, index)
+    with {:ok, block_hash} <- decode_hex(hex_block_hash),
+         {:ok, index} <- decode_unsigned(hex_index) do
+      @sync.uncle(block_hash, index)
+    end
   end
 
   def handle_request("eth_getUncleByBlockNumberAndIndex", [hex_block_number, hex_index]) do
-    block_number = Exth.decode_unsigned_from_hex(hex_block_number)
-    index = Exth.decode_unsigned_from_hex(hex_index)
-
-    @sync.get_uncle(block_number, index)
+    with {:ok, block_number} <- decode_unsigned(hex_block_number),
+         {:ok, index} <- decode_unsigned(hex_index) do
+      @sync.uncle(block_number, index)
+    end
   end
 
   # eth_getCompilers is deprecated
@@ -206,10 +232,10 @@ defmodule JSONRPC2.SpecHandler do
 
   defp decode_block_number(hex_block_number_or_tag) do
     case hex_block_number_or_tag do
-      "pending" -> @sync.get_highest_block_number()
-      "latest" -> @sync.get_highest_block_number()
-      "earliest" -> @sync.get_starting_block_number()
-      hex_number -> Exth.decode_unsigned_from_hex(hex_number)
+      "pending" -> {:ok, @sync.highest_block_number()}
+      "latest" -> {:ok, @sync.highest_block_number()}
+      "earliest" -> {:ok, @sync.starting_block_number()}
+      hex_number -> decode_unsigned(hex_number)
     end
   end
 end

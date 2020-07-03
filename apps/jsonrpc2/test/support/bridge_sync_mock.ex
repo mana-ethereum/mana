@@ -9,10 +9,91 @@ defmodule JSONRPC2.BridgeSyncMock do
 
   import JSONRPC2.Response.Helpers
 
+  @behaviour JSONRPC2.Client
+
   use GenServer
 
+  @impl true
   def connected_peer_count() do
     GenServer.call(__MODULE__, :connected_peer_count)
+  end
+
+  @impl true
+  def last_sync_block_stats() do
+    GenServer.call(__MODULE__, :get_last_sync_block_stats)
+  end
+
+  @impl true
+  def block(hash_or_number, include_full_transactions) do
+    GenServer.call(__MODULE__, {:get_block, hash_or_number, include_full_transactions})
+  end
+
+  @impl true
+  def transaction_by_block_and_index(block_hash_or_number, index) do
+    GenServer.call(
+      __MODULE__,
+      {:get_transaction_by_block_and_index, block_hash_or_number, index}
+    )
+  end
+
+  @impl true
+  def transaction_by_hash(transaction_hash) do
+    GenServer.call(__MODULE__, {:get_transaction_by_hash, transaction_hash})
+  end
+
+  @impl true
+  def block_transaction_count(block_hash_or_number) do
+    GenServer.call(__MODULE__, {:get_block_transaction_count, block_hash_or_number})
+  end
+
+  @impl true
+  def uncle_count(block_number_or_hash) do
+    GenServer.call(__MODULE__, {:get_uncle_count, block_number_or_hash})
+  end
+
+  @impl true
+  def starting_block_number do
+    GenServer.call(__MODULE__, :get_starting_block_number)
+  end
+
+  @impl true
+  def highest_block_number do
+    GenServer.call(__MODULE__, :get_highest_block_number)
+  end
+
+  @impl true
+  def code(address, block_number) do
+    GenServer.call(__MODULE__, {:get_code, address, block_number})
+  end
+
+  @impl true
+  def balance(address, block_number) do
+    GenServer.call(__MODULE__, {:get_balance, address, block_number})
+  end
+
+  @impl true
+  def transaction_receipt(transaction_hash) do
+    GenServer.call(__MODULE__, {:get_transaction_receipt, transaction_hash})
+  end
+
+  @impl true
+  def uncle(block_number_or_hash, index) do
+    GenServer.call(__MODULE__, {:get_uncle, {block_number_or_hash, index}})
+  end
+
+  @impl true
+  def storage(address, storage_key, block_number) do
+    GenServer.call(__MODULE__, {:get_storage, address, storage_key, block_number})
+  end
+
+  @impl true
+  def transaction_count(address, block_number) do
+    GenServer.call(__MODULE__, {:get_transaction_count, address, block_number})
+  end
+
+  @impl true
+  def last_sync_state() do
+    GenServer.call(__MODULE__, :last_sync_state)
   end
 
   def set_trie(trie) do
@@ -35,30 +116,6 @@ defmodule JSONRPC2.BridgeSyncMock do
     GenServer.call(__MODULE__, {:set_highest_block_number, block_number})
   end
 
-  def get_code(address, block_number) do
-    GenServer.call(__MODULE__, {:get_code, address, block_number})
-  end
-
-  def get_transaction_receipt(transaction_hash) do
-    GenServer.call(__MODULE__, {:get_transaction_receipt, transaction_hash})
-  end
-
-  def get_balance(address, block_number) do
-    GenServer.call(__MODULE__, {:get_balance, address, block_number})
-  end
-
-  def get_starting_block_number do
-    GenServer.call(__MODULE__, :get_starting_block_number)
-  end
-
-  def get_highest_block_number do
-    GenServer.call(__MODULE__, :get_highest_block_number)
-  end
-
-  def get_last_sync_block_stats() do
-    GenServer.call(__MODULE__, :get_last_sync_block_stats)
-  end
-
   def set_last_sync_block_stats(block_stats) do
     GenServer.call(__MODULE__, {:set_last_sync_block_stats, block_stats})
   end
@@ -67,41 +124,16 @@ defmodule JSONRPC2.BridgeSyncMock do
     GenServer.call(__MODULE__, {:put_block, block})
   end
 
-  def get_block(hash_or_number, include_full_transactions) do
-    GenServer.call(__MODULE__, {:get_block, hash_or_number, include_full_transactions})
-  end
-
-  def get_transaction_by_block_and_index(block_hash_or_number, index) do
-    GenServer.call(
-      __MODULE__,
-      {:get_transaction_by_block_and_index, block_hash_or_number, index}
-    )
-  end
-
-  def get_block_transaction_count(block_hash_or_number) do
-    GenServer.call(__MODULE__, {:get_block_transaction_count, block_hash_or_number})
-  end
-
-  def get_uncle_count(block_number_or_hash) do
-    GenServer.call(__MODULE__, {:get_uncle_count, block_number_or_hash})
-  end
-
-  def get_uncle(block_number_or_hash, index) do
-    GenServer.call(__MODULE__, {:get_uncle, {block_number_or_hash, index}})
-  end
-
-  def get_transaction_by_hash(transaction_hash) do
-    GenServer.call(__MODULE__, {:get_transaction_by_hash, transaction_hash})
-  end
-
   def start_link(state) do
     GenServer.start_link(__MODULE__, state, name: __MODULE__)
   end
 
+  @impl true
   def init(state) do
     {:ok, state}
   end
 
+  @impl true
   def handle_call(:connected_peer_count, _, state) do
     {:reply, state.connected_peer_count, state}
   end
@@ -295,6 +327,55 @@ defmodule JSONRPC2.BridgeSyncMock do
       end
 
     {:reply, result, state}
+  end
+
+  def handle_call(
+        {:get_storage, storage_address, storage_key, block_number},
+        _,
+        state = %{trie: trie}
+      ) do
+    result =
+      case Block.get_block(block_number, trie) do
+        {:ok, block} ->
+          block_state = TrieStorage.set_root_hash(trie, block.header.state_root)
+
+          case Account.get_storage(block_state, storage_address, storage_key) do
+            {:ok, value} ->
+              value
+              |> :binary.encode_unsigned()
+              |> encode_unformatted_data
+
+            _ ->
+              nil
+          end
+      end
+
+    {:reply, result, state}
+  end
+
+  def handle_call({:get_transaction_count, address, block_number}, _, state = %{trie: trie}) do
+    result =
+      case Block.get_block(block_number, trie) do
+        {:ok, block} ->
+          block_state = TrieStorage.set_root_hash(trie, block.header.state_root)
+
+          case Account.get_account(block_state, address) do
+            nil ->
+              nil
+
+            account ->
+              encode_quantity(account.nonce)
+          end
+
+        _ ->
+          nil
+      end
+
+    {:reply, result, state}
+  end
+
+  def handle_call(:last_sync_state, _, state) do
+    {:reply, state, state}
   end
 
   @spec handle_call(:get_last_sync_block_stats, {pid, any}, map()) ::

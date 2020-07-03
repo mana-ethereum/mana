@@ -39,7 +39,7 @@ defmodule Blockchain.Mixfile do
     [
       # External deps
       {:ethereumex, "~> 0.5.0"},
-      {:ex_rlp, "~> 0.5.0"},
+      {:ex_rlp, "~> 0.5.2"},
       {:logger_file_backend, "~> 0.0.10"},
       # Umbrella deps
       {:evm, in_umbrella: true},

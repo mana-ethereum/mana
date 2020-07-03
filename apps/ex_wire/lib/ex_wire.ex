@@ -10,9 +10,9 @@ defmodule ExWire do
   @type node_id :: binary()
 
   alias ExWire.Config
-  alias ExWire.ConnectionObserver
   alias ExWire.NodeDiscoverySupervisor
   alias ExWire.PeerSupervisor
+  alias ExWire.Rank.ConnectionObserver
   alias ExWire.Sync
   alias ExWire.Sync.WarpProcessor.PowProcessor
   alias ExWire.Sync.WarpState

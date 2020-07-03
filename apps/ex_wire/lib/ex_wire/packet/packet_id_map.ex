@@ -8,6 +8,7 @@ defmodule ExWire.Packet.PacketIdMap do
   alias ExWire.Packet
   alias ExWire.Packet.Capability
   alias ExWire.Packet.Capability.Mana
+  alias ExWire.Packet.PacketIdMap
   alias ExWire.Packet.Protocol.{Disconnect, Hello, Ping, Pong}
 
   @starting_id 0x10
@@ -30,11 +31,20 @@ defmodule ExWire.Packet.PacketIdMap do
   ]
 
   @doc """
+  Determines whether or not the provided `PacketIdMap` has any capabilities other than the protocol-level ones.
+  """
+  @spec has_any_capabilities?(t()) :: boolean()
+  def has_any_capabilities?(packet_id_map),
+    do: PacketIdMap.get_packet_module(packet_id_map, @starting_id) != :unsupported_packet
+
+  @doc """
   Returns the default protocol message id to packet module map that applies to all DEVp2p participants.
   """
-  @spec default_map() :: t
   def default_map() do
-    new()
+    %__MODULE__{
+      ids_to_modules: @protocol_ids_to_modules,
+      modules_to_ids: for({k, v} <- @protocol_ids_to_modules, do: {v, k}) |> Enum.into(%{})
+    }
   end
 
   @doc """
