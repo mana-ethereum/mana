@@ -1,9 +1,11 @@
 defmodule JSONRPC2.TestFactory do
   alias Block.Header
+  alias Blockchain.Account
   alias Blockchain.Block
   alias Blockchain.Transaction
   alias Blockchain.Transaction.Receipt
   alias Blockchain.Transaction.Receipt.Bloom
+  alias JSONRPC2.SpecHandler.CallRequest
 
   @empty_trie MerklePatriciaTree.Trie.empty_trie_root_hash()
 
@@ -104,5 +106,31 @@ defmodule JSONRPC2.TestFactory do
     args = Map.merge(defaults, opts)
 
     struct(EVM.LogEntry, args)
+  end
+
+  def factory(:call_request, opts) do
+    defaults = %{
+      from: <<0x10::160>>,
+      to: <<0x11::160>>,
+      gas: 10_000,
+      gas_price: 1,
+      value: 1,
+      data: <<>>
+    }
+
+    args = Map.merge(defaults, opts)
+
+    struct(CallRequest, args)
+  end
+
+  def factory(:account, opts) do
+    defaults = %{
+      nonce: 0,
+      balance: 10
+    }
+
+    args = Map.merge(defaults, opts)
+
+    struct(Account, args)
   end
 end

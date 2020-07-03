@@ -13,10 +13,10 @@ install_linux_deps() {
   echo $flavor
   case $flavor in
     debian|ubuntu)
-      sudo apt-get install -y $LINUX_DEPS libgmp-dev erlang-dev
+      sudo apt-get install -y $LINUX_DEPS libgmp-dev erlang-dev libbz2-dev
       ;;
     fedora|centos)
-      sudo yum install $LINUX_DEPS gmp-devel
+      sudo yum install $LINUX_DEPS gmp-devel bzip2 bzip2-devel
       ;;
     *)
       fancy_echo "Unrecognized distribution $flavor"
@@ -68,14 +68,6 @@ install_deps
 if ! command -v mix > /dev/null; then
   fancy_echo "It looks like you don't have Elixir installed."
   echo "See http://elixir-lang.org/install.html for instructions."
-  exit 1
-fi
-
-ELIXIR_PATCH_VERSION=`elixir -v |grep Elixir | sed -n 's/.*1\.7\.\([0-9]\).*$/\1/p'`
-if [ $ELIXIR_PATCH_VERSION -lt 4 ]; then
-  fancy_echo "Your elixir version must be ~> 1.7.4"
-  fancy_echo "Your current version:"
-  elixir -v
   exit 1
 fi
 

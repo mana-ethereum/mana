@@ -5,7 +5,7 @@ defmodule GenerateBlockchainTests do
   alias MerklePatriciaTree.Trie
   import EthCommonTest.Helpers
 
-  @base_path System.cwd() <> "/../../ethereum_common_tests/BlockchainTests/"
+  @base_path File.cwd!() <> "/../../ethereum_common_tests/BlockchainTests/"
   @allowed_forks [
     "Constantinople",
     "Byzantium",

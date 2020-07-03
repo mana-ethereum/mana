@@ -3,13 +3,13 @@ defmodule ExWire.FakeKademlia do
   Kademlia interface mock.
   """
   use GenServer
-
+  # API
   def get_peers() do
     _ = GenServer.call(__MODULE__, :get_peers_call)
     []
   end
 
-  def start_link(), do: GenServer.start_link(__MODULE__, [], name: __MODULE__)
+  def start_link(_), do: GenServer.start_link(__MODULE__, [], name: __MODULE__)
   def init(_), do: {:ok, %{}}
 
   def handle_call(:setup_get_peers_call, {reporter, _ref}, _state) do

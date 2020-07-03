@@ -186,7 +186,7 @@ defmodule GenerateStateTests do
     file_name = Path.join(~w(st#{group} #{test}.json))
     relative_path = Path.join(~w(.. .. ethereum_common_tests GeneralStateTests #{file_name}))
 
-    System.cwd()
+    File.cwd!()
     |> Path.join(relative_path)
     |> Path.expand()
   end
