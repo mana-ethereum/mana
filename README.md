@@ -76,7 +76,7 @@ _Updated Dec-5-2018_
 - Ropsten sync is in progress as we've reached the Constantinople fork. Current block is ~ [4,253,000] - Oct-18-2018
 
 [2,470,630]: https://etherscan.io/block/2470630
-[4,253,000]: https://ropsten.etherscan.io/block/4253000
+[4,253,000]: https://etherscan.io/block/4253000
 [#622]: https://github.com/mana-ethereum/mana/issues/622
 [#623]: https://github.com/mana-ethereum/mana/issues/623
 [#624]: https://github.com/mana-ethereum/mana/issues/624
